@@ -1,3 +1,32 @@
 # torchq
 Quantum systems simulation with PyTorch.
 
+This library provides differentiable solvers for the Schrödinger Equation, the Lindblad Master Equation and the Stochastic Master Equation. All the solvers are implemented using PyTorch and can run on GPUs.
+
+## Installation
+Clone the repository, install the dependencies and install the repository in editable mode in any Python virtual environment:
+```shell
+# pip
+pip install -e /path/to/torchq
+
+# conda
+conda develop /path/to/torchq
+```
+
+## Usage
+:construction: WIP
+
+## Performance
+:construction: WIP
+
+## Contribute
+Install developer dependencies:
+```shell
+pip install isort black
+```
+
+Run the following before each commit:
+```shell
+isort torchq
+black torchq
+```

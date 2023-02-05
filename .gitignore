@@ -1,0 +1,18 @@
+# python's bytecode compiled files
+__pycache__/
+*.pyc
+
+# distribution / packaging
+*.egg-info/
+build/
+dist/
+
+# IDE settings directory
+.idea/
+.vscode/
+
+# macOS specific
+.DS_Store
+
+# Jupyter Notebook backups
+.ipynb_checkpoints/

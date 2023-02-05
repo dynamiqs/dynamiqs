@@ -1,0 +1,30 @@
+[project]
+name = "torchq"
+version = "0.1.0"
+description = "Quantum systems simulation with PyTorch."
+dependencies = [
+    "qutip",
+    "numpy",
+    "matplotlib",
+    "tqdm",
+    "torch",
+    "torchdiffeq",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["torchq"]
+
+[tool.black]
+line-length = 80
+preview = true
+target-version = ["py38"]
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+line_length = 80  # to be consistent with black
+skip = ["__init__.py"]
