@@ -1,2 +1,2 @@
 from .utils import *
-from .q_tensor import *
+from .qtensor import *
