@@ -30,3 +30,9 @@ Run the following before each commit:
 isort torchq
 black torchq
 ```
+
+Alternatively you can use `pre-commit` to run theses automatically before commit:
+```shell
+pip install pre-commit
+pre-commit install
+```
