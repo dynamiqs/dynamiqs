@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 
+# python virtual environments
+venv
+
 # distribution / packaging
 *.egg-info/
 build/
