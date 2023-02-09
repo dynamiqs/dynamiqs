@@ -50,12 +50,10 @@ class QTensor(torch.Tensor):
             x: QuTiP quantum object.
 
         Returns:
-            TorchQ QTensor.
+            TorchQDynamics QTensor.
         """
         return QTensor(torch.from_numpy(x.full()), dims=x.dims)
 
     @staticmethod
     def from_numpy(x: np.array, dims: List[int]):
         return QTensor(torch.from_numpy(x.full()), dims=dims)
-
-

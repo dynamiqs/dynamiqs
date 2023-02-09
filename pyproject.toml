@@ -1,5 +1,5 @@
 [project]
-name = "torchq"
+name = "torchqdynamics"
 version = "0.1.0"
 description = "Quantum systems simulation with PyTorch."
 dependencies = [
@@ -16,7 +16,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["torchq"]
+packages = ["torchqdynamics"]
 
 [tool.black]
 line-length = 80
