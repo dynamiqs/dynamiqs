@@ -24,10 +24,10 @@ class QTensor(torch.Tensor):
         super().__init__(*args, **kwargs)
 
         if dims is None:
-            raise ValueError("Argument 'dims' must be specified")
+            raise ValueError("Argument 'dims' must be specified at QTensor initialisation.")
         self.dims = dims
 
-    def to_qutip(self) -> qt.Qobj:
+    def qutip(self) -> qt.Qobj:
         """Convert a PyTorch tensor to a QuTiP quantum object.
 
         Note:
