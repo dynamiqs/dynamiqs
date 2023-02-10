@@ -1,8 +1,7 @@
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import torch
-import torchdiffeq
 from tqdm import tqdm
 
 from torchqdynamics import hermitian
@@ -30,10 +29,7 @@ def mesolve(
     )
     inv_sqrt_R = _inv_sqrtm(R)
 
-    M_r = (
-        torch.eye(*H.shape, dtype=torch.complex128)
-        - (1j * H + 0.5 * c_dag_c) * dt
-    )
+    M_r = torch.eye(*H.shape, dtype=H.dtype) - (1j * H + 0.5 * c_dag_c) * dt
     M_r_tilde = M_r @ inv_sqrt_R
 
     c_ops_tilde = [op @ inv_sqrt_R for op in c_ops]
@@ -48,9 +44,7 @@ def mesolve(
     for _ in times:
         for _ in range(n_substeps):
             next_rho = M_r_tilde @ rho
-            next_rho = (
-                M_r_tilde.conj() @ next_rho.T
-            ).T  # todo: refactor in a less weird way
+            next_rho = next_rho @ hermitian(M_r_tilde)
             next_rho += sum(
                 [
                     c_op_tilde @ rho @ hermitian(c_op_tilde) * dt
