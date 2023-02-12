@@ -148,6 +148,7 @@ def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, bac
 
 def odeint_rouchon(f, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, backward_mode=False):
     return
+    
 # -------------------------------------------------------------------------------------------------
 #     Utility functions
 # -------------------------------------------------------------------------------------------------
