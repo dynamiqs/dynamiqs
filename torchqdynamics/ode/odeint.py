@@ -12,9 +12,10 @@ def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
            atol=1e-8, rtol=1e-6, backward_mode=False):
     """Solve an initial value problem determined by function `f` and initial condition `y0`.
 
-    If a Runge-Kutta solver is called (such as 'dopri5'), this solves the ordinary 
-    differential equation (ODE) defined by ``dy / dt = f(t, y(t))``. If instead a Rouchon
-    solver is called, this solves the ODE defined by ``y(t+dt) = f(t, y(t), dt)``.
+    If a regular solver is called (such as `solver="dopri5"`), this solves the ordinary 
+    differential equation (ODE) defined by ``dy / dt = f(t, y(t))``. If instead 
+    the `solver="outsource"` solver is called, this solves the ODE defined by 
+    ``y(t+dt) = f(t, y(t), dt)``.
 
     Automatic differentiation (AD) is supported either through torch-based backward AD,
     or through a custom-made adjoint state AD. The latter is only supported for linear 
@@ -25,12 +26,14 @@ def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
 
     Args:
         f (callable): Function or nn.Module that yields the ODE derivative at time t,
-            or the next solution of the ODE at time t for time step dt in case of a
-            Rouchon solver. 
+            or the next solution of the ODE at time t for time step dt in case of the
+            outsourced solver. 
         y0 (tensor): Initial condition of the ODE.
         tspan (tensor-like): Sorted list, array or tensor of time points. For adaptive 
-            solvers, only the first and last values of the tensor are used.
+            time step solvers, only the first and last values of the tensor are used. 
+            For fixed time steps solvers, time points correspond to time evaluations.
         solver (str, optional): Solver algorithm. Defaults to an order 5 Dormand-Prince.
+            Can also be outsourced by calling `solver="outsource"` or `solver="out"`.
         save_at (tensor-like, optional): Sorted list, array or tensor of time points to
             for which the ODE solution is saved and returned. Defaults to ().
         sensitivity (str, optional): Sensitivity algorithm for AD. Defaults to None.
@@ -48,14 +51,14 @@ def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
     """
     tspan = init_tspan(tspan)
     y0, tspan, solver = init_solver(y0, tspan, solver)
-    save_at = init_saveat(save_at, tspan)
+    save_at = init_saveat(save_at, tspan, backward_mode)
 
-    # Send to appropriate solver
+    # Dispatch to appropriate solver
     if sensitivity in (None, "autograd"): #TODO: Separate these two cases
         if solver.solver_type == "rk":
             return odeint_adaptive(f, y0, tspan, solver, save_at, atol, rtol, backward_mode)
-        elif solver.solver_type == "rouchon":
-            return odeint_rouchon(f, y0, tspan, solver, save_at, atol, rtol, backward_mode)
+        elif solver.solver_type == "out":
+            return odeint_outsource(f, y0, tspan, solver, save_at, backward_mode)
     elif sensitivity == "adjoint":
         return odeint_adjoint(f, y0, tspan, solver, save_at, atol, rtol)
 
@@ -83,7 +86,8 @@ def odeint_adjoint(f, y0, tspan, solver='dopri5', save_at=(), atol=1e-8, rtol=1e
     return t, y
 
 def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, backward_mode=False):
-    """Core ODE solver subroutine for adaptive step solvers."""
+    """Core ODE solver subroutine for adaptive step size solvers. Solves an ODE of the form
+    `dy / dt = f(t, y(t))`."""
     # Check for backward mode
     if backward_mode:
         f = lambda t, y: -f_(-t, y)
@@ -146,9 +150,44 @@ def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, bac
     else:
         return t_saved, y_saved
 
-def odeint_rouchon(f, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, backward_mode=False):
-    return
-    
+def odeint_outsource(f_, y0, tspan, solver, save_at=(), backward_mode=False):
+    """Core ODE solver subroutine for outsourced solvers. Solves an ODE of the form
+    `y(t+dt) = f(t, dt, y(t))`."""
+    # Combine tspan and save_at
+    tspan = mergesort(tspan, save_at)
+
+    # Check for backward mode
+    if backward_mode:
+        f = lambda t, dt, y: f_(-t, -dt, y)
+        tspan = -tspan.flip(0)
+        save_at = -save_at.flip(0)
+    else: f = f_
+
+    # Initialize save arrays
+    t0, T = tspan[0], tspan[-1]
+    t_saved = torch.zeros((len(save_at),), dtype=t0.dtype)
+    y_saved = torch.zeros((len(save_at),) + y0.shape, dtype=y0.dtype)
+    ckpt_counter, ckpt_flag = 0, False
+    if len(save_at) > 0 and save_at[0] == t0:
+        t_saved[0], y_saved[0] = t0, y0
+        ckpt_counter += 1
+        
+    # Compute time steps
+    dtspan = torch.diff(tspan)
+
+    # Run the ODE routine
+    y = y0
+    for i, t in enumerate(tspan[:-1] + 0.5 * dtspan):
+        y = f(t, dtspan[i], y)
+        if len(save_at) > 0 and tspan[i+1] == save_at[ckpt_counter]:
+            t_saved[ckpt_counter] = tspan[i+1]
+            y_saved[ckpt_counter] = y
+            ckpt_counter += 1
+    if len(save_at) == 0:
+        return t, y
+    else:
+        return t_saved, y_saved
+
 # -------------------------------------------------------------------------------------------------
 #     Utility functions
 # -------------------------------------------------------------------------------------------------
@@ -169,7 +208,7 @@ def init_solver(y0, tspan, solver):
     y0, tspan = solver.sync_device_dtype(y0, tspan)
     return y0, tspan, solver
 
-def init_saveat(save_at, tspan):
+def init_saveat(save_at, tspan, backward_mode=False):
     """Prepare `save_at` tensor by trimming values below t0 and above T"""
     # Check type
     if isinstance(save_at, tuple):
@@ -180,12 +219,22 @@ def init_saveat(save_at, tspan):
     t0, T = tspan[0], tspan[-1]
     if not torch.all(torch.diff(save_at) > 0):
         raise ValueError("Argument `save_at` is not sorted or contains duplicate values.")
-    save_at = save_at[torch.logical_and(save_at >= t0, save_at < T)]
-    # Always save last time point. 
-    if len(save_at) > 0:
+    save_at = save_at[torch.logical_and(save_at >= t0, save_at <= T)]
+    # Always save last time point (or first in backward mode)
+    if len(save_at) > 0 and not backward_mode and save_at[-1] != T:
         save_at = torch.cat((save_at, torch.tensor([T])))
+    elif len(save_at) > 0 and backward_mode and save_at[0] != t0:
+        save_at = torch.cat((torch.tensor([t0]), save_at))
     return save_at
 
 def count_params(model):
     """Counter the total number of parameters with required gradient in a model."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+def mergesort(a, b):
+    """Merge two sorted tensors into a sorted tensor while removing duplicates."""
+    c = torch.cat([a,b])
+    c, _ = torch.sort(c)
+    flag = torch.ones(c.numel(), dtype=bool)
+    torch.ne(c[1:], c[:-1], out=flag[1:])
+    return c[flag]

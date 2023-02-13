@@ -50,7 +50,7 @@ def adapt_step(dt, error_ratio, safety, min_factor, max_factor, order):
 # -------------------------------------------------------------------------------------------------
 
 class BaseSolver(nn.Module):
-    def __init__(self, order, min_factor:float=0.2, 
+    def __init__(self, order=None, min_factor:float=0.2, 
                  max_factor:float=10, safety:float=0.9):
         super().__init__()
         self.order = order
@@ -109,17 +109,36 @@ class DormandPrince45(BaseSolver):
         f1 = k[-1]
         return f1, y1, y1_err, k
 
+class Outsource(BaseSolver):
+    def __init__(self, y_dtype=torch.complex64, t_dtype=torch.float32):
+        super().__init__()
+        self.y_dtype = y_dtype
+        self.t_dtype = t_dtype
+        self.tableau = None
+        self.solver_type = 'out'
+
+    def step(self, f, y0, t0, dt):
+        return f(t0, dt, y0)
+
 # -------------------------------------------------------------------------------------------------
 #     Solver utility functions
 # -------------------------------------------------------------------------------------------------
 
 SOLVER_DICT = {
-    'dopri5': DormandPrince45, 
-    'DormandPrince45': DormandPrince45, 
-    'DormandPrince5': DormandPrince45}
+    'dopri5': DormandPrince45, 'DormandPrince45': DormandPrince45, 'DormandPrince5': DormandPrince45,
+    'outsource': Outsource, 'out': Outsource}
+
+SOLVERTYPE_DICT = {'dopri5': 'rk', 'DormandPrince45': 'rk', 'DormandPrince5': 'rk', 
+                   'outsource': 'out', 'out': 'out'}
 
 def str_to_solver(solver_name, y_dtype=torch.complex64):
     """Transforms string specifying desired solver into an instance of the Solver class."""
     solver = SOLVER_DICT[solver_name]
     t_dtype = DTYPE_EQUIV[y_dtype]
     return solver(y_dtype, t_dtype)
+
+def solver_to_solvertype(solver):
+    if isinstance(solver, str):
+        return SOLVERTYPE_DICT[solver]
+    else:
+        return solver.solver_type

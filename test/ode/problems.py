@@ -3,6 +3,10 @@ import torch
 import torch.nn as nn
 from torch.linalg import matrix_exp as expm
 
+# -------------------------------------------------------------------------------------------------
+#     Test problems for regular solver
+# -------------------------------------------------------------------------------------------------
+
 class RabiODE(nn.Module):
     """Test problem for complex-valued ODEs, corresponding to Rabi oscillations
     of a quantum two-level system."""
@@ -76,7 +80,7 @@ class LinearODE(torch.nn.Module):
         self.atol, self.rtol = 1e-8, 1e-8
         self.test_tol = 1e-2
         self.dim = dim
-        U = torch.randn(dim, dim) * 0.1
+        U = 0.1 * torch.randn(dim, dim)
         self.A = nn.Parameter((U + U.T).to(self.dtype))
 
     def forward(self, t, y):
@@ -89,7 +93,46 @@ class LinearODE(torch.nn.Module):
         sol = expm(self.cst * self.tspan[:, None, None] * self.A) @ self.y0
         return sol
 
+# -------------------------------------------------------------------------------------------------
+#     Test problems for outsourced solver
+# -------------------------------------------------------------------------------------------------
+
+class LinearODE_OUT(torch.nn.Module):
+    """Test problem with a 2-D matrix problem (taken from torchdiffeq).
+    dy/dt = A @ y
+    """
+    def __init__(self, dtype, dim=10):
+        super().__init__()
+        torch.manual_seed(0)
+        self.dtype = dtype
+        self.tspan = torch.linspace(0., 1., 1000)
+        self.save_at = torch.linspace(0., 1., 10)
+        self.cst = nn.Parameter(torch.rand(1, dtype=self.dtype))
+        self.y0 = nn.Parameter(torch.ones(dim, 1, dtype=self.dtype))
+        self.atol, self.rtol = 1e-8, 1e-8
+        self.test_tol = 1e-3
+        self.dim = dim
+        U = 0.1 * torch.randn(dim, dim)
+        self.A = nn.Parameter((U + U.T).to(self.dtype))
+
+    def forward(self, t, dt, y):
+        Ay = dt * self.cst * self.A @ y
+        return y + Ay + 0.5 * dt * self.cst * self.A @ Ay
+
+    def forward_adj(self, t, dt, a):
+        Aa = dt * self.cst * self.A.T @ a
+        return a - Aa + 0.5 * dt * self.cst * self.A.T @ Aa
+    
+    def solution(self):
+        sol = expm(self.cst * self.save_at[:, None, None] * self.A) @ self.y0
+        return sol
+
+# -------------------------------------------------------------------------------------------------
+#     Dictionnaries
+# -------------------------------------------------------------------------------------------------
+
 DTYPE_EQUIV = {torch.float16: torch.complex32, 
                torch.float32: torch.complex64, 
                torch.float64: torch.complex128}
 PROBLEMS = {'rabi': RabiODE, 'sine': SineODE, 'linear': LinearODE}
+PROBLEMS_OUT = {'linear': LinearODE_OUT}
