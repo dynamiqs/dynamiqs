@@ -8,10 +8,10 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
+  - repo: https://github.com/google/yapf
+    rev: v0.32.0
     hooks:
-      - id: black
+      - id: yapf
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
