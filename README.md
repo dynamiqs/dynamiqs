@@ -28,7 +28,7 @@ pip install isort yapf
 Run the following before each commit:
 ```shell
 isort torchqdynamics
-yapf torchqdynamics
+yapf -i -r torchqdynamics
 ```
 
 Alternatively you can use `pre-commit` to run theses automatically before commit:
