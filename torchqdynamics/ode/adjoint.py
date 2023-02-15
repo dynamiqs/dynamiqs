@@ -44,12 +44,14 @@ class ODEIntAdjoint(torch.autograd.Function):
         params_shapes = tuple(p.shape for p in params)
         params_numels = torch.tensor([p.numel() for p in params])
         params_indices = torch.cat(
-            [torch.tensor([0]), torch.cumsum(params_numels, dim=0)])
+            [torch.tensor([0]), torch.cumsum(params_numels, dim=0)]
+        )
 
         # Initialize the augmented state as a flat tensor
         # y is the state, a is the adjoint, g is the gradient w.r.t. parameters
         yT, aT, gT = y_saved[-1], grad_y[-1][-1], torch.zeros(
-            n_params, dtype=y_saved.dtype)
+            n_params, dtype=y_saved.dtype
+        )
         y_len, a_len, g_len = yT.numel(), aT.numel(), gT.numel()
         y_shape, a_shape, g_shape = yT.shape, aT.shape, gT.shape
         aug_y = torch.cat([yT.view(-1), aT.view(-1), gT.view(-1)])
@@ -67,13 +69,17 @@ class ODEIntAdjoint(torch.autograd.Function):
                     dy, da = f(t, y), f_adj(t, a)
                     dy, da = dy.view(-1), da.view(-1)
                     # Compute dg/dt = - (d(da/dt)/dtheta @ y)
-                    dg = torch.autograd.grad(da, params, y.view(-1), allow_unused=True,
-                                             retain_graph=True)
+                    dg = torch.autograd.grad(
+                        da, params, y.view(-1), allow_unused=True, retain_graph=True
+                    )
                     # Convert back dg to flat tensor
-                    dg = torch.cat([
-                        torch.zeros_like(p).view(-1) if dg_ is None else dg_.view(-1)
-                        for p, dg_ in zip(params, dg)
-                    ]).conj()
+                    dg = torch.cat(
+                        [
+                            torch.zeros_like(p).view(-1)
+                            if dg_ is None else dg_.view(-1)
+                            for p, dg_ in zip(params, dg)
+                        ]
+                    ).conj()
 
                 # Repack and return
                 return torch.cat([dy, da, dg])
@@ -91,13 +97,17 @@ class ODEIntAdjoint(torch.autograd.Function):
                     dy, da = f(t, dt, y), f_adj(t, dt, a)
                     dy, da = dy.view(-1), da.view(-1)
                     # Compute dg = - (d(da)/dtheta @ y)
-                    dg = torch.autograd.grad(da, params, y.view(-1), allow_unused=True,
-                                             retain_graph=True)
+                    dg = torch.autograd.grad(
+                        da, params, y.view(-1), allow_unused=True, retain_graph=True
+                    )
                     # Convert back dg to flat tensor
-                    dg = torch.cat([
-                        torch.zeros_like(p).view(-1) if dg_ is None else dg_.view(-1)
-                        for p, dg_ in zip(params, dg)
-                    ]).conj()
+                    dg = torch.cat(
+                        [
+                            torch.zeros_like(p).view(-1)
+                            if dg_ is None else dg_.view(-1)
+                            for p, dg_ in zip(params, dg)
+                        ]
+                    ).conj()
                     # Add previous value
                     dg = g.view(-1) + dg
 
@@ -111,8 +121,10 @@ class ODEIntAdjoint(torch.autograd.Function):
             tspan_ = tspan[torch.logical_and(tspan > t0, tspan < t1)]
             tspan_ = torch.cat([torch.tensor([t0]), tspan_, torch.tensor([t1])])
             # Compute the augmented ODE
-            _, aug_y = ode.odeint(aug_f, aug_y, tspan_, solver=solver, save_at=(),
-                                  atol=atol, rtol=rtol, backward_mode=True)
+            _, aug_y = ode.odeint(
+                aug_f, aug_y, tspan_, solver=solver, save_at=(), atol=atol, rtol=rtol,
+                backward_mode=True
+            )
             aug_y = aug_y[-1]
             # Replace y with its checkpointed version
             aug_y[:y_len] = y_saved[i - 1].view(-1)
@@ -126,5 +138,12 @@ class ODEIntAdjoint(torch.autograd.Function):
         adjoint_out = a.reshape(a_shape)
         grads_out = tuple(
             g[params_indices[i]:params_indices[i + 1]].reshape(params_shapes[i])
-            for i in range(len(params)))
+            for i in range(len(params))
+        )
+
+        # Convert gradients of real-valued parameters to real-valued gradients
+        grads_out = tuple(
+            g.real if p.is_floating_point() else g for (g, p) in zip(grads_out, params)
+        )
+
         return (None, None, adjoint_out, None, None, None, None, None, *grads_out)
