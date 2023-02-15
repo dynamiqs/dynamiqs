@@ -1,3 +1,4 @@
+import warnings
 import torch
 import torch.nn as nn
 import numpy as np
@@ -9,21 +10,29 @@ from .adjoint import ODEIntAdjoint
 # -------------------------------------------------------------------------------------------------
 
 def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
-           atol=1e-8, rtol=1e-6, backward_mode=False):
+           model_params=None, atol=1e-8, rtol=1e-6, backward_mode=False):
     """Solve an initial value problem determined by function `f` and initial condition `y0`.
 
     If a regular solver is called (such as `solver="dopri5"`), this solves the ordinary 
-    differential equation (ODE) defined by ``dy / dt = f(t, y(t))``. If instead 
-    the `solver="outsource"` solver is called, this solves the ODE defined by 
-    ``y(t+dt) = f(t, y(t), dt)``.
+    differential equation (ODE) defined by ``dy / dt = f(t, y(t))``. If instead the
+    `solver="outsource"` solver is called, this outsources the ODE integration to the
+    user. In this case, `f` should be such that ``y(t+dt) = f(t, y(t), dt)``.
 
-    Automatic differentiation (AD) is supported either through torch-based backward AD,
-    or through a custom-made adjoint state AD. The latter is only supported for linear 
-    functions of the form `f(t, y(t)) = f(t) y(t)` or `f(t, y(t), dt) = f(t, dt) y(t)`.
-    In this case, the forward propagation of the adjoint state should be implemented in
-    the input model `f`, according to `def forward_adj(self, t, a) -> da/dt` which returns
-    the forward-pass derivative of the adjoint state `a` at time `t`.
+    This ODE integrator supports automatic differentiation (AD) either through torch-based 
+    backward AD, or through a tailor-made adjoint-method AD. The latter is only supported for 
+    linear ODEs of the form `f(t, y(t)) = A(t) @ y(t)` or `f(t, y(t), dt) = B(t, dt) @ y(t)`.
+    For adjoint-method AD, the forward propagation of the adjoint state should be implemented 
+    in the input model `f`, such that `f.forward_adj(t, a)` returns `da/dt` where a is the
+    adjoint state, or `f.forward_adj(t, dt, a)` returns `a(t+dt)` in case of the outsourced
+    solver.
 
+    For adjoint-based AD, the model parameters can be supplied either:
+    (1) directly in `f`, where `f` is an instance of `nn.Module` with a non-empty
+        `f.parameter()` argument;
+    (2) through the optional argument `model_params`.
+
+    More details on adjoint-based AD can be found in https://arxiv.org/abs/1806.07366.
+    
     Args:
         f (callable): Function or nn.Module that yields the ODE derivative at time t,
             or the next solution of the ODE at time t for time step dt in case of the
@@ -37,6 +46,8 @@ def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
         save_at (tensor-like, optional): Sorted list, array or tensor of time points to
             for which the ODE solution is saved and returned. Defaults to ().
         sensitivity (str, optional): Sensitivity algorithm for AD. Defaults to None.
+        model_params(tuple, optional): Tuple of model parameters for adjoint-based AD.
+            Defaults to None. 
         atol (float, optional): Absolute solver tolerence. Only for adaptive time step.
             Defaults to 1e-8.
         rtol (float, optional): Relative solver tolerence. Only for adaptive time step.
@@ -46,8 +57,8 @@ def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
             given in forward-time order. Defaults to False.
 
     Returns:
-        (tensor, tensor): Tuple of tensors containing the saved time points, and the ODE
-            solution at these time points.
+        (1-D tensor, N-D tensor): Tuple of tensors containing the saved time points, 
+            and the ODE solution at these time points.
     """
     tspan = init_tspan(tspan)
     y0, tspan, solver = init_solver(y0, tspan, solver)
@@ -60,34 +71,54 @@ def odeint(f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None,
         elif solver.solver_type == "out":
             return odeint_outsource(f, y0, tspan, solver, save_at, backward_mode)
     elif sensitivity == "adjoint":
-        return odeint_adjoint(f, y0, tspan, solver, save_at, atol, rtol)
+        return odeint_adjoint(f, y0, tspan, solver, save_at, model_params, atol, rtol)
 
 
 # -------------------------------------------------------------------------------------------------
 #     ODE subroutines
 # -------------------------------------------------------------------------------------------------
 
-def odeint_adjoint(f, y0, tspan, solver='dopri5', save_at=(), atol=1e-8, rtol=1e-6):
-    """Solve an ODE with an adjoint method in the backward pass."""
-    # Check inputs
-    if not isinstance(f, nn.Module) or count_params(f) == 0:
-        raise TypeError("For adjoint-based autodiff, `f` must be an instance of nn.Module "
-                        "with a non-empty set of parameters.")
-
-    if not (hasattr(f.__class__, 'forward_adj') and callable(getattr(f.__class__, 'forward_adj'))):
-        raise TypeError("For adjoint-based autodiff, `f` must have a method "
-                        "`forward_adj(self, t, a)`.")
-
+def odeint_adjoint(f, y0, tspan, solver='dopri5', save_at=(), model_params=None, atol=1e-8, rtol=1e-6):
+    """Solve an ODE with adjoint method AD in the backward pass."""
     # Extract model parameters
-    params = torch.cat([p.view(-1) for p in f.parameters() if p.requires_grad])
+    if model_params is None and not isinstance(f, nn.Module):
+        raise TypeError("For adjoint method automatic differentiation, either `f` must be an "
+                        "instance of `nn.Module`, or parameters should be supplied through the "
+                        "optional `model_params` argument. Supplying an empty tuple () is also "
+                        "acceptable if there are no model parameters.")
+    if model_params is None:
+        n_params = sum(1 for _ in f.parameters())
+        params = tuple(p for p in f.parameters() if p.requires_grad)
+    else:
+        n_params = sum(1 for _ in model_params)
+        params = tuple(p for p in model_params if p.requires_grad)
+    if len(params) != n_params:
+        warnings.warn("Some of the model parameters passed do not require gradients. They will "
+                      "be excluded from the adjoint-based AD for efficiency.")
+    
+    # Extract the adjoint state forward method.
+    if not (hasattr(f.__class__, 'forward_adj') and callable(getattr(f.__class__, 'forward_adj'))):
+        raise TypeError("For adjoint-based autodiff, `f` must have a method `forward_adj` "
+                        "with signature `f.forward_adj(t, a)` or `f.forward_adj(t, dt, a)` "
+                        "in case of the outsourced solver is used.")
     f_adj = f.forward_adj
+
+    # Save at least the first and last elements in the forward pass.
+    if len(save_at) == 0 or not save_at[0] == tspan[0]:
+        save_at = torch.cat((torch.tensor([tspan[0]]), save_at))
+    if len(save_at) == 0 or not save_at[-1] == tspan[-1]:
+        save_at = torch.cat((save_at, torch.tensor([tspan[-1]])))
+            
     # Run the ODE integrator
-    t, y = ODEIntAdjoint.apply(f, f_adj, y0, tspan, params, solver, save_at, atol, rtol)
-    return t, y
+    return ODEIntAdjoint.apply(f, f_adj, y0, tspan, solver, save_at, atol, rtol, *params)
 
 def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, backward_mode=False):
     """Core ODE solver subroutine for adaptive step size solvers. Solves an ODE of the form
     `dy / dt = f(t, y(t))`."""
+    # Initialize save_at
+    if save_at == ():
+        save_at = init_saveat(save_at, tspan, backward_mode)
+        
     # Check for backward mode
     if backward_mode:
         f = lambda t, y: -f_(-t, y)
@@ -99,10 +130,10 @@ def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, bac
     t0, T = tspan[0], tspan[-1]
     t_saved = torch.zeros((len(save_at),), dtype=t0.dtype)
     y_saved = torch.zeros((len(save_at),) + y0.shape, dtype=y0.dtype)
-    ckpt_counter, ckpt_flag = 0, False
-    if len(save_at) > 0 and save_at[0] == t0:
+    checkpt_counter, checkpt_flag = 0, False
+    if save_at[0] == t0:
         t_saved[0], y_saved[0] = t0, y0
-        ckpt_counter += 1
+        checkpt_counter += 1
 
     # Initialize the ODE routine
     f0 = f(t0, y0)
@@ -112,9 +143,9 @@ def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, bac
     t, y, ft = t0, y0, f0
     while t < T:         
         # Check if checkpointing required, or final time is reached
-        if len(save_at) > 0 and (ckpt_counter < len(save_at)) and (t + dt >= save_at[ckpt_counter]):
-            dt_old, ckpt_flag = dt, True
-            dt = save_at[ckpt_counter] - t
+        if (checkpt_counter < len(save_at)) and (t + dt >= save_at[checkpt_counter]):
+            dt_old, checkpt_flag = dt, True
+            dt = save_at[checkpt_counter] - t
         elif t + dt >= T:
             dt = T - t
 
@@ -127,33 +158,32 @@ def odeint_adaptive(f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, bac
         accept_step = error_ratio <= 1
         # Update results
         if accept_step:
-            if ckpt_flag:
-                t_saved[ckpt_counter] = t + dt
-                y_saved[ckpt_counter] = y_new
-                ckpt_counter += 1
-                ckpt_flag = False
+            if checkpt_flag:
+                t_saved[checkpt_counter] = t + dt
+                y_saved[checkpt_counter] = y_new
+                checkpt_counter += 1
+                checkpt_flag = False
             t, y = t + dt, y_new
             ft = ft_new
-        elif ckpt_flag:
+        elif checkpt_flag:
             # reset dt value in case checkpoint flag raised but step not accepted
             dt = dt_old
-            ckpt_flag = False
+            checkpt_flag = False
         # Compute new dt
         dt = adapt_step(dt, error_ratio, solver.safety, solver.min_factor, 
                         solver.max_factor, solver.order)
 
     # Return results with forward-valued times
-    if backward_mode:
-        t, t_saved = -t, -t_saved
-    if len(save_at) == 0:
-        return t, y
-    else:
-        return t_saved, y_saved
+    return -t_saved if backward_mode else t_saved, y_saved
 
 def odeint_outsource(f_, y0, tspan, solver, save_at=(), backward_mode=False):
     """Core ODE solver subroutine for outsourced solvers. Solves an ODE of the form
     `y(t+dt) = f(t, dt, y(t))`."""
-    # Combine tspan and save_at
+    # Initialize `save_at`
+    if save_at == ():
+        save_at = init_saveat(save_at, tspan, backward_mode)
+        
+    # Merge tspan with `save_at` (such that all `save_at` values are in `tspan`)
     tspan = mergesort(tspan, save_at)
 
     # Check for backward mode
@@ -167,10 +197,10 @@ def odeint_outsource(f_, y0, tspan, solver, save_at=(), backward_mode=False):
     t0, T = tspan[0], tspan[-1]
     t_saved = torch.zeros((len(save_at),), dtype=t0.dtype)
     y_saved = torch.zeros((len(save_at),) + y0.shape, dtype=y0.dtype)
-    ckpt_counter, ckpt_flag = 0, False
+    checkpt_counter, checkpt_flag = 0, False
     if len(save_at) > 0 and save_at[0] == t0:
         t_saved[0], y_saved[0] = t0, y0
-        ckpt_counter += 1
+        checkpt_counter += 1
         
     # Compute time steps
     dtspan = torch.diff(tspan)
@@ -179,14 +209,13 @@ def odeint_outsource(f_, y0, tspan, solver, save_at=(), backward_mode=False):
     y = y0
     for i, t in enumerate(tspan[:-1] + 0.5 * dtspan):
         y = f(t, dtspan[i], y)
-        if len(save_at) > 0 and tspan[i+1] == save_at[ckpt_counter]:
-            t_saved[ckpt_counter] = tspan[i+1]
-            y_saved[ckpt_counter] = y
-            ckpt_counter += 1
-    if len(save_at) == 0:
-        return t, y
-    else:
-        return t_saved, y_saved
+        if len(save_at) > 0 and tspan[i+1] == save_at[checkpt_counter]:
+            t_saved[checkpt_counter] = tspan[i+1]
+            y_saved[checkpt_counter] = y
+            checkpt_counter += 1
+
+    # Return results with forward-valued times
+    return -t_saved if backward_mode else t_saved, y_saved
 
 # -------------------------------------------------------------------------------------------------
 #     Utility functions
@@ -215,16 +244,21 @@ def init_saveat(save_at, tspan, backward_mode=False):
         save_at = torch.tensor(save_at)
     elif isinstance(save_at, (list, np.ndarray)): 
         save_at = torch.cat(save_at)
+        
     # Check if sorted
-    t0, T = tspan[0], tspan[-1]
     if not torch.all(torch.diff(save_at) > 0):
         raise ValueError("Argument `save_at` is not sorted or contains duplicate values.")
-    save_at = save_at[torch.logical_and(save_at >= t0, save_at <= T)]
+    
     # Always save last time point (or first in backward mode)
-    if len(save_at) > 0 and not backward_mode and save_at[-1] != T:
-        save_at = torch.cat((save_at, torch.tensor([T])))
-    elif len(save_at) > 0 and backward_mode and save_at[0] != t0:
-        save_at = torch.cat((torch.tensor([t0]), save_at))
+    t0, T = tspan[0], tspan[-1]
+    save_at = save_at[torch.logical_and(save_at >= t0, save_at <= T)]
+    if not backward_mode:
+        if len(save_at) == 0 or not save_at[-1] == T:
+            save_at = torch.cat((save_at, torch.tensor([T])))
+    else:
+        if len(save_at) == 0 or not save_at[0] == t0:
+            save_at = torch.cat((torch.tensor([t0]), save_at))
+        
     return save_at
 
 def count_params(model):
