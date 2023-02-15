@@ -7,6 +7,7 @@ from torch.linalg import matrix_exp as expm
 #     Test problems for regular solver
 # -------------------------------------------------------------------------------------------------
 
+
 class RabiODE(nn.Module):
     """Test problem for complex-valued ODEs, corresponding to Rabi oscillations
     of a quantum two-level system."""
@@ -22,7 +23,7 @@ class RabiODE(nn.Module):
         self.test_tol = 3e-3
         self.sx = torch.tensor([[0, 1], [1, 0]], dtype=self.dtype)
         self.si = torch.tensor([[1, 0], [0, 1]], dtype=self.dtype)
-    
+
     def forward(self, t, y):
         yt = -1.0j * self.cst * self.sx @ y
         yt += yt.adjoint()
@@ -34,9 +35,10 @@ class RabiODE(nn.Module):
         return at
 
     def solution(self):
-        U_t = torch.cos(self.cst * self.tspan)[:, None, None] * self.si 
+        U_t = torch.cos(self.cst * self.tspan)[:, None, None] * self.si
         U_t += -1j * torch.sin(self.cst * self.tspan)[:, None, None] * self.sx
         return U_t @ self.y0 @ U_t.adjoint()
+
 
 class SineODE(nn.Module):
     """Test problem with a scalar sine problem (taken from torchdiffeq).
@@ -58,13 +60,14 @@ class SineODE(nn.Module):
 
     def forward_adj(self, t, a):
         return
-    
+
     def sol_t(self, t):
-        return ((0.25 * t**2 - 0.5 * t**4) * torch.cos(2 * t) + 0.5 * t**3 * torch.sin(2 * t) 
-                + 2 * t**4 - t**3 + self.cst * t**2)
+        return ((0.25 * t**2 - 0.5 * t**4) * torch.cos(2 * t) +
+                0.5 * t**3 * torch.sin(2 * t) + 2 * t**4 - t**3 + self.cst * t**2)
 
     def solution(self):
         return self.sol_t(self.tspan).unsqueeze(1)
+
 
 class LinearODE(torch.nn.Module):
     """Test problem with a 2-D matrix problem (taken from torchdiffeq).
@@ -87,15 +90,17 @@ class LinearODE(torch.nn.Module):
         return self.cst * self.A @ y
 
     def forward_adj(self, t, a):
-        return - self.cst * self.A.T @ a
-    
+        return -self.cst * self.A.T @ a
+
     def solution(self):
         sol = expm(self.cst * self.tspan[:, None, None] * self.A) @ self.y0
         return sol
 
+
 # -------------------------------------------------------------------------------------------------
 #     Test problems for outsourced solver
 # -------------------------------------------------------------------------------------------------
+
 
 class LinearODE_OUT(torch.nn.Module):
     """Test problem with a 2-D matrix problem (taken from torchdiffeq).
@@ -122,17 +127,20 @@ class LinearODE_OUT(torch.nn.Module):
     def forward_adj(self, t, dt, a):
         Aa = dt * self.cst * self.A.T @ a
         return a - Aa + 0.5 * dt * self.cst * self.A.T @ Aa
-    
+
     def solution(self):
         sol = expm(self.cst * self.save_at[:, None, None] * self.A) @ self.y0
         return sol
+
 
 # -------------------------------------------------------------------------------------------------
 #     Dictionnaries
 # -------------------------------------------------------------------------------------------------
 
-DTYPE_EQUIV = {torch.float16: torch.complex32, 
-               torch.float32: torch.complex64, 
-               torch.float64: torch.complex128}
+DTYPE_EQUIV = {
+    torch.float16: torch.complex32,
+    torch.float32: torch.complex64,
+    torch.float64: torch.complex128
+}
 PROBLEMS = {'rabi': RabiODE, 'sine': SineODE, 'linear': LinearODE}
 PROBLEMS_OUT = {'linear': LinearODE_OUT}
