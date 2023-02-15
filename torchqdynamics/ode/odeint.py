@@ -1,9 +1,11 @@
 import warnings
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from .solver import str_to_solver, init_step, adapt_step, hairer_norm
+
 from .adjoint import ODEIntAdjoint
+from .solver import adapt_step, hairer_norm, init_step, str_to_solver
 
 # -------------------------------------------------------------------------------------------------
 #     Main ODE integrator

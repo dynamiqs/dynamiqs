@@ -1,7 +1,9 @@
+from math import sqrt
+
 import torch
 import torch.nn as nn
+
 from .tableaus import construct_dopri5
-from math import sqrt
 
 # -------------------------------------------------------------------------------------------------
 #     Solver common functions

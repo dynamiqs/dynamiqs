@@ -1,8 +1,10 @@
+from test.problems import PROBLEMS, PROBLEMS_OUT
+
 import pytest
 import torch
 import torch.nn as nn
+
 from torchqdynamics.ode.odeint import odeint, odeint_adjoint
-from test.problems import PROBLEMS, PROBLEMS_OUT
 
 SOLVERS = ['dopri5']
 SOLVERS_OUT = ['out']
