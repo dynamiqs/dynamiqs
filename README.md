@@ -28,7 +28,7 @@ pip install isort yapf
 Run the following before each commit:
 ```shell
 isort torchqdynamics
-yapf --style={based_on_style: facebook, column_limit: 88, split_before_named_assigns: False} torchqdynamics
+yapf torchqdynamics
 ```
 
 Alternatively you can use `pre-commit` to run theses automatically before commit:

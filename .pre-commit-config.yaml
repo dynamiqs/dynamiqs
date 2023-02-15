@@ -7,7 +7,7 @@ repos:
         name: yapf
         language: python
         entry: yapf
-        args: [-i, -vv]
+        args: [-i]
         types: [python]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
