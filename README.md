@@ -22,7 +22,7 @@ conda develop /path/to/torchqdynamics
 ## Contribute
 Install developer dependencies:
 ```shell
-pip install isort yapf
+pip install isort yapf toml
 ```
 
 Run the following before each commit:
