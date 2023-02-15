@@ -23,7 +23,7 @@ based_on_style = "facebook"
 column_limit = 88
 indent_width = 4
 SPLIT_BEFORE_NAMED_ASSIGNS = false
-DEDENT_CLOSING_BRACKETS = false
+DEDENT_CLOSING_BRACKETS = true
 SPLIT_ARGUMENTS_WHEN_COMMA_TERMINATED = false
 INDENT_DICTIONARY_VALUE = true
 
