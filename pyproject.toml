@@ -18,13 +18,17 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["torchqdynamics"]
 
-[tool.black]
-line-length = 80
-preview = true
-target-version = ["py38"]
-skip-string-normalization = true
+[tool.yapf]
+based_on_style = "facebook"
+column_limit = 88
+indent_width = 4
+SPLIT_BEFORE_NAMED_ASSIGNS = false
+DEDENT_CLOSING_BRACKETS = false
+SPLIT_ARGUMENTS_WHEN_COMMA_TERMINATED = false
+INDENT_DICTIONARY_VALUE = true
 
 [tool.isort]
 profile = "black"
-line_length = 80  # to be consistent with black
+line_length = 88  # to be consistent with yapf
 skip = ["__init__.py"]
+
