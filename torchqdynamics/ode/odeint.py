@@ -32,10 +32,10 @@ def odeint(
     returns `da/dt` where a is the adjoint state, or `f.forward_adj(t, dt, a)` returns
     `a(t+dt)` in case of the outsourced solver.
 
-    For adjoint-based AD, the model parameters can be supplied either: (1) directly in
-    `f`, where `f` is an instance of `nn.Module` with a non-empty
-        `f.parameter()` argument;
-    (2) through the optional argument `model_params`.
+    For adjoint-based AD, the model parameters can be supplied either:
+        (1) directly in `f`, where `f` is an instance of `nn.Module` with a non-empty
+            `f.parameter()` argument;
+        (2) through the optional argument `model_params`.
 
     More details on adjoint-based AD can be found in https://arxiv.org/abs/1806.07366.
 
