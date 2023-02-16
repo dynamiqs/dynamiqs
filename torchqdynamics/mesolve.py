@@ -33,7 +33,7 @@ def mesolve(
     M_r_tilde = M_r @ inv_sqrt_R
 
     c_ops_tilde = [op @ inv_sqrt_R for op in c_ops]
-    e_ops = torch.stack(e_ops)
+    e_ops = torch.stack(e_ops) if len(e_ops) > 0 else []
 
     rho = torch.clone(rho0)
     states, measures = [], []
