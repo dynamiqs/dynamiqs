@@ -4,60 +4,58 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from torchqdynamics import hermitian
-
 
 def mesolve(
     H: torch.Tensor,
     rho0: torch.Tensor,
-    times: np.ndarray,
-    c_ops: List[torch.Tensor] = None,
-    e_ops: List[torch.Tensor] = None,
+    t_save: np.ndarray,
+    jump_ops: List[torch.Tensor] = None,
+    observable_ops: List[torch.Tensor] = None,
     n_substeps: int = 1,
     save_states=True,
     progress_bar=False,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    assert n_substeps > 0
-    c_ops = c_ops or []
-    e_ops = e_ops or []
+    """ Master equation solver. The schema is taken from
+     https://journals.aps.org/pra/abstract/10.1103/PhysRevA.91.012118 """
 
-    dt = (times[1] - times[0]) / n_substeps
-    c_dag_c = torch.stack([hermitian(op) @ op for op in c_ops]).sum(dim=0)
+    assert n_substeps > 0
+    jump_ops = jump_ops or []
+    observable_ops = observable_ops or []
+
+    dt = (t_save[1] - t_save[0]) / n_substeps
+    c_dag_c = torch.stack([op.adjoint() @ op for op in jump_ops]).sum(dim=0)
     R = (
-        torch.eye(*H.shape)
-        + (-1j * H + 0.5 * c_dag_c) @ (1j * H + 0.5 * c_dag_c) * dt**2
+        torch.eye(*H.shape) +
+        (-1j * H + 0.5 * c_dag_c) @ (1j * H + 0.5 * c_dag_c) * dt**2
     )
     inv_sqrt_R = _inv_sqrtm(R)
 
     M_r = torch.eye(*H.shape, dtype=H.dtype) - (1j * H + 0.5 * c_dag_c) * dt
     M_r_tilde = M_r @ inv_sqrt_R
 
-    c_ops_tilde = [op @ inv_sqrt_R for op in c_ops]
-    e_ops = torch.stack(e_ops) if len(e_ops) > 0 else []
+    jump_ops_tilde = [op @ inv_sqrt_R for op in jump_ops]
+    observable_ops = torch.stack(observable_ops) if len(observable_ops) > 0 else []
 
     rho = torch.clone(rho0)
     states, measures = [], []
 
-    if progress_bar:
-        times = tqdm(times)
-
-    for _ in times:
+    for _ in tqdm(t_save, disable=not progress_bar):
         for _ in range(n_substeps):
             next_rho = M_r_tilde @ rho
-            next_rho = next_rho @ hermitian(M_r_tilde)
+            next_rho = next_rho @ M_r_tilde.adjoint()
             next_rho += sum(
                 [
-                    c_op_tilde @ rho @ hermitian(c_op_tilde) * dt
-                    for c_op_tilde in c_ops_tilde
+                    jump_op_tilde @ rho @ jump_op_tilde.adjoint() * dt
+                    for jump_op_tilde in jump_ops_tilde
                 ]
             )
 
             next_rho /= torch.trace(next_rho)
             rho = next_rho
 
-        if len(e_ops) > 0:
-            measure = e_ops @ rho
-            measure = torch.einsum("bii->b", measure)
+        if len(observable_ops) > 0:
+            measure = observable_ops @ rho
+            measure = torch.einsum('bii->b', measure)
             measures.append(measure)
 
         if save_states:
@@ -74,9 +72,8 @@ def _inv_sqrtm(matrix: torch.Tensor) -> torch.Tensor:
     Power of a matrix using Eigen Decomposition.
     Args:
         matrix: matrix
-        p: power
     Returns:
-        Power of a matrix
+        Square root of a matrix
     """
     vals, vecs = torch.linalg.eig(matrix)
     vals = vals.contiguous()

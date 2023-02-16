@@ -1,10 +1,6 @@
 import torch
 
 
-def hermitian(x):
-    return torch.conj(x.T)
-
-
 def ket_to_bra(x: torch.Tensor) -> torch.Tensor:
     """Linear map (bra) representation of a state vector (ket).
 
