@@ -79,7 +79,7 @@ class ODEIntAdjoint(torch.autograd.Function):
                             if dg_ is None else dg_.view(-1)
                             for p, dg_ in zip(params, dg)
                         ]
-                    ).conj()
+                    )
 
                 # Repack and return
                 return torch.cat([dy, da, dg])
@@ -107,7 +107,7 @@ class ODEIntAdjoint(torch.autograd.Function):
                             if dg_ is None else dg_.view(-1)
                             for p, dg_ in zip(params, dg)
                         ]
-                    ).conj()
+                    )
                     # Add previous value
                     dg = g.view(-1) + dg
 
