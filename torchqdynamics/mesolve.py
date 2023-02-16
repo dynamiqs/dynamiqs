@@ -69,6 +69,9 @@ def mesolve(
 
 def _inv_sqrtm(matrix: torch.Tensor) -> torch.Tensor:
     r"""
+    TODO: replace with Schur decomposition method
+    See https://www.sciencedirect.com/science/article/pii/002437958380010X
+
     Power of a matrix using Eigen Decomposition.
     Args:
         matrix: matrix
