@@ -22,13 +22,13 @@ conda develop /path/to/torchqdynamics
 ## Contribute
 Install developer dependencies:
 ```shell
-pip install isort black
+pip install isort yapf toml
 ```
 
 Run the following before each commit:
 ```shell
 isort torchqdynamics
-black torchqdynamics
+yapf -i -r torchqdynamics
 ```
 
 Alternatively you can use `pre-commit` to run theses automatically before commit:
