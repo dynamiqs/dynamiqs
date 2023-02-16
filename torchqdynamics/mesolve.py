@@ -87,9 +87,7 @@ def _inv_sqrtm(matrix: torch.Tensor) -> torch.Tensor:
     return matrix_pow
 
 
-def _dissipator(
-    L: torch.tensor, Ldag: torch.tensor, rho: torch.tensor
-) -> torch.tensor:
+def _dissipator(L: torch.tensor, Ldag: torch.tensor, rho: torch.tensor) -> torch.tensor:
     # [speedup] by using the precomputed jump operator adjoint
     return L @ rho @ Ldag - 0.5 * Ldag @ L @ rho - 0.5 * rho @ Ldag @ L
 
