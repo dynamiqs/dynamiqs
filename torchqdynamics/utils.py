@@ -78,9 +78,8 @@ def dissipator(L: torch.tensor, rho: torch.tensor) -> torch.tensor:
         dissipation superoperator.
     """
     return (
-        L @ rho @ L.adjoint()
-        - 0.5 * L.adjoint() @ L @ rho
-        - 0.5 * rho @ L.adjoint() @ L
+        L @ rho @ L.adjoint() - 0.5 * L.adjoint() @ L @ rho -
+        0.5 * rho @ L.adjoint() @ L
     )
 
 

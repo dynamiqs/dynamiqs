@@ -13,18 +13,19 @@ class QTensor(torch.Tensor):
     TODO: check performance impact and implement mitigations
     Ref : https://benjaminwarner.dev/2022/06/14/debugging-pytorch-performance-decrease
     """
-
     def __init__(self, *args, **kwargs):
         """ Creates a QTensor
             Args:
                 - arguments inherited from torch.Tensor
                 - dims: the dimension of the Hilbert sub-spaces
          """
-        dims = kwargs.pop("dims", None)
+        dims = kwargs.pop('dims', None)
         super().__init__(*args, **kwargs)
 
         if dims is None:
-            raise ValueError("Argument 'dims' must be specified at QTensor initialisation.")
+            raise ValueError(
+                "Argument 'dims' must be specified at QTensor initialisation."
+            )
         self.dims = dims
 
     def qutip(self) -> qt.Qobj:
