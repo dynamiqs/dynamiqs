@@ -7,32 +7,33 @@ import torch.nn as nn
 from .adjoint import ODEIntAdjoint
 from .solver import adapt_step, hairer_norm, init_step, str_to_solver
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Main ODE integrator
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 def odeint(
     f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None, model_params=None,
     atol=1e-8, rtol=1e-6, backward_mode=False
 ):
-    """Solve an initial value problem determined by function `f` and initial condition `y0`.
+    """Solve an initial value problem determined by function `f` and initial condition
+    `y0`.
 
     If a regular solver is called (such as `solver="dopri5"`), this solves the ordinary
     differential equation (ODE) defined by ``dy / dt = f(t, y(t))``. If instead the
     `solver="outsource"` solver is called, this outsources the ODE integration to the
     user. In this case, `f` should be such that ``y(t+dt) = f(t, y(t), dt)``.
 
-    This ODE integrator supports automatic differentiation (AD) either through torch-based
-    backward AD, or through a tailor-made adjoint-method AD. The latter is only supported for
-    linear ODEs of the form `f(t, y(t)) = A(t) @ y(t)` or `f(t, y(t), dt) = B(t, dt) @ y(t)`.
-    For adjoint-method AD, the forward propagation of the adjoint state should be implemented
-    in the input model `f`, such that `f.forward_adj(t, a)` returns `da/dt` where a is the
-    adjoint state, or `f.forward_adj(t, dt, a)` returns `a(t+dt)` in case of the outsourced
-    solver.
+    This ODE integrator supports automatic differentiation (AD) either through torch-
+    based backward AD, or through a tailor-made adjoint-method AD. The latter is only
+    supported for linear ODEs of the form `f(t, y(t)) = A(t) @ y(t)` or `f(t, y(t), dt)
+    = B(t, dt) @ y(t)`. For adjoint-method AD, the forward propagation of the adjoint
+    state should be implemented in the input model `f`, such that `f.forward_adj(t, a)`
+    returns `da/dt` where a is the adjoint state, or `f.forward_adj(t, dt, a)` returns
+    `a(t+dt)` in case of the outsourced solver.
 
-    For adjoint-based AD, the model parameters can be supplied either:
-    (1) directly in `f`, where `f` is an instance of `nn.Module` with a non-empty
+    For adjoint-based AD, the model parameters can be supplied either: (1) directly in
+    `f`, where `f` is an instance of `nn.Module` with a non-empty
         `f.parameter()` argument;
     (2) through the optional argument `model_params`.
 
@@ -42,8 +43,8 @@ def odeint(
         f (callable): Function or nn.Module that yields the ODE derivative at time t,
             or the next solution of the ODE at time t for time step dt in case of the
             outsourced solver.
-        y0 (tensor): Initial condition of the ODE.
-        tspan (tensor-like): Sorted list, array or tensor of time points. For adaptive
+        y0 (tensor): Initial condition of the ODE. tspan (tensor-like): Sorted list,
+        array or tensor of time points. For adaptive
             time step solvers, only the first and last values of the tensor are used.
             For fixed time steps solvers, time points correspond to time evaluations.
         solver (str, optional): Solver algorithm. Defaults to an order 5 Dormand-Prince.
@@ -81,9 +82,9 @@ def odeint(
         return odeint_adjoint(f, y0, tspan, solver, save_at, model_params, atol, rtol)
 
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     ODE subroutines
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 def odeint_adjoint(
@@ -146,8 +147,8 @@ def odeint_adjoint(
 def odeint_adaptive(
     f_, y0, tspan, solver, save_at=(), atol=1e-8, rtol=1e-6, backward_mode=False
 ):
-    """Core ODE solver subroutine for adaptive step size solvers. Solves an ODE of the form
-    `dy / dt = f(t, y(t))`."""
+    """Core ODE solver subroutine for adaptive step size solvers. Solves an ODE of the
+    form `dy / dt = f(t, y(t))`."""
     # Initialize save_at
     if save_at == ():
         save_at = init_saveat(save_at, tspan, backward_mode)
@@ -256,9 +257,9 @@ def odeint_outsource(f_, y0, tspan, solver, save_at=(), backward_mode=False):
     return -t_saved if backward_mode else t_saved, y_saved
 
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Utility functions
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 def init_tspan(tspan):

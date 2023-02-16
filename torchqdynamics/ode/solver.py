@@ -5,9 +5,9 @@ import torch.nn as nn
 
 from .tableaus import construct_dopri5
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Solver common functions
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 DTYPE_EQUIV = {
     torch.complex32: torch.float16,
@@ -56,9 +56,9 @@ def adapt_step(dt, error_ratio, safety, min_factor, max_factor, order):
     return dt * factor
 
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Solver classes
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 class BaseSolver(nn.Module):
@@ -74,7 +74,8 @@ class BaseSolver(nn.Module):
         self.tableau = None
 
     def sync_device_dtype(self, y0, tspan):
-        """Ensures `y0`, `tspan`, `tableau` and other solver tensors are on the same device with compatible dtypes"""
+        """Ensures `y0`, `tspan`, `tableau` and other solver tensors are on the same
+        device with compatible dtypes"""
         # Check compatilibity of `y0`` and `tspan`` types.
         t_dtype = DTYPE_EQUIV[y0.dtype]
         if tspan.dtype != t_dtype:
@@ -136,9 +137,9 @@ class Outsource(BaseSolver):
         return f(t0, dt, y0)
 
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Solver utility functions
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 SOLVER_DICT = {
     'dopri5': DormandPrince45,
@@ -158,7 +159,8 @@ SOLVERTYPE_DICT = {
 
 
 def str_to_solver(solver_name, y_dtype=torch.complex64):
-    """Transforms string specifying desired solver into an instance of the Solver class."""
+    """Transforms string specifying desired solver into an instance of the Solver
+    class."""
     solver = SOLVER_DICT[solver_name]
     t_dtype = DTYPE_EQUIV[y_dtype]
     return solver(y_dtype, t_dtype)

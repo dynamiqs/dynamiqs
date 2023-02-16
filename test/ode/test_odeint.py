@@ -12,9 +12,9 @@ SOLVERS_OUT = ['out']
 DTYPES = [torch.float32, torch.float64]
 TEST_ITERATIONS = range(1)
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Problem tests for regular solvers
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("prob", PROBLEMS.keys())
@@ -45,7 +45,8 @@ def test_odeint(prob, solver, dtype, test_iter):
 @pytest.mark.parametrize("dtype", DTYPES)
 @pytest.mark.parametrize("test_iter", TEST_ITERATIONS)
 def test_odeint_adjoint(prob, solver, dtype, test_iter):
-    """Test odeint_adjoint for multiple test problems. Only the forward pass is tested."""
+    """Test odeint_adjoint for multiple test problems. Only the forward pass is
+    tested."""
     p = PROBLEMS[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
@@ -84,9 +85,9 @@ def test_odeint_backward(prob, solver, dtype, test_iter):
     assert torch.norm((yt - yt_bw.flip(0)) / yt) < p.test_tol
 
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Problems tests for outsourced solvers
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("prob", PROBLEMS_OUT.keys())
@@ -120,7 +121,8 @@ def test_odeint_out(prob, solver, dtype, test_iter):
 @pytest.mark.parametrize("dtype", DTYPES)
 @pytest.mark.parametrize("test_iter", TEST_ITERATIONS)
 def test_odeint_out_adjoint(prob, solver, dtype, test_iter):
-    """Test outsourced odeint_adjoint for multiple test problems. Only the forward pass is tested."""
+    """Test outsourced odeint_adjoint for multiple test problems. Only the forward pass
+    is tested."""
     p = PROBLEMS_OUT[prob](dtype)
     p_ref = PROBLEMS[prob](dtype)
     # Compute solutions

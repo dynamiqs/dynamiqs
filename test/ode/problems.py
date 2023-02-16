@@ -4,9 +4,9 @@ import torch
 import torch.nn as nn
 from torch.linalg import matrix_exp as expm
 
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 #     Test problems for regular solver
-# -------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 class RabiODE(nn.Module):
@@ -43,10 +43,9 @@ class RabiODE(nn.Module):
 
 class SineODE(nn.Module):
     """Test problem with a scalar sine problem (taken from torchdiffeq).
-    dy/dt = f(t,y) = 2y/t + t^4 sin(2t) - t^2 + 4t^3
-    da/dt = -2a / t
-    y(t) = -t^4 cos(2t) / 2 + t^3 sin(2t) / 2 + t^2 cos(2t) / 4 + 2t^4 - t^3 + (pi - 1/4) t^2
-    """
+    dy/dt = f(t,y) = 2y/t + t^4 sin(2t) - t^2 + 4t^3;
+    da/dt = -2a / t y(t) = -t^4 cos(2t) / 2 + t^3 sin(2t) / 2
+    + t^2 cos(2t) / 4 + 2t^4 - t^3 + (pi - 1/4) t^2"""
     def __init__(self, dtype):
         super().__init__()
         self.dtype = dtype
