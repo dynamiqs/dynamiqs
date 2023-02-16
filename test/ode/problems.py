@@ -63,8 +63,10 @@ class SineODE(nn.Module):
         return
 
     def sol_t(self, t):
-        return ((0.25 * t**2 - 0.5 * t**4) * torch.cos(2 * t) +
-                0.5 * t**3 * torch.sin(2 * t) + 2 * t**4 - t**3 + self.cst * t**2)
+        return (
+            (0.25 * t**2 - 0.5 * t**4) * torch.cos(2 * t) +
+            0.5 * t**3 * torch.sin(2 * t) + 2 * t**4 - t**3 + self.cst * t**2
+        )
 
     def solution(self):
         return self.sol_t(self.tspan).unsqueeze(1)

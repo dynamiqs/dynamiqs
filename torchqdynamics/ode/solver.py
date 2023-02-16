@@ -50,8 +50,9 @@ def adapt_step(dt, error_ratio, safety, min_factor, max_factor, order):
     if error_ratio < 1:
         min_factor = torch.ones_like(dt)
     exponent = torch.tensor(order, dtype=dt.dtype, device=dt.device).reciprocal()
-    factor = torch.min(max_factor, torch.max(safety / error_ratio**exponent,
-                                             min_factor))
+    factor = torch.min(
+        max_factor, torch.max(safety / error_ratio**exponent, min_factor)
+    )
     return dt * factor
 
 
@@ -61,8 +62,10 @@ def adapt_step(dt, error_ratio, safety, min_factor, max_factor, order):
 
 
 class BaseSolver(nn.Module):
-    def __init__(self, order=None, min_factor: float = 0.2, max_factor: float = 10,
-                 safety: float = 0.9):
+    def __init__(
+        self, order=None, min_factor: float = 0.2, max_factor: float = 10,
+        safety: float = 0.9
+    ):
         super().__init__()
         self.order = order
         self.min_factor = torch.tensor([min_factor])
@@ -90,7 +93,7 @@ class BaseSolver(nn.Module):
         return y0, tspan
 
     def step(self, f, f0, y0, t0, dt):
-        raise NotImplementedError("Stepping rule not implemented for the solver")
+        raise NotImplementedError('Stepping rule not implemented for the solver')
 
 
 class DormandPrince45(BaseSolver):

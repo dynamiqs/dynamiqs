@@ -26,8 +26,9 @@ def test_odeint(prob, solver, dtype, test_iter):
     p = PROBLEMS[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
-    t, yt = odeint(p, p.y0, p.tspan, save_at=p.tspan, solver=solver, atol=p.atol,
-                   rtol=p.rtol)
+    t, yt = odeint(
+        p, p.y0, p.tspan, save_at=p.tspan, solver=solver, atol=p.atol, rtol=p.rtol
+    )
     _, yt_tdyn = odeint_tdyn(p, p.y0, p.tspan, solver, atol=p.atol, rtol=p.rtol)
     # Check solutions
     assert torch.norm((yt - yt_exp) / yt_exp) < p.test_tol
@@ -48,8 +49,9 @@ def test_odeint_adjoint(prob, solver, dtype, test_iter):
     p = PROBLEMS[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
-    t, yt = odeint_adjoint(p, p.y0, p.tspan, save_at=p.tspan, solver=solver,
-                           atol=p.atol, rtol=p.rtol)
+    t, yt = odeint_adjoint(
+        p, p.y0, p.tspan, save_at=p.tspan, solver=solver, atol=p.atol, rtol=p.rtol
+    )
     _, yt_tdyn = odeint_tdyn(p, p.y0, p.tspan, solver, atol=p.atol, rtol=p.rtol)
     # Check solutions
     assert torch.norm((yt - yt_exp) / yt_exp) < p.test_tol
@@ -70,10 +72,14 @@ def test_odeint_backward(prob, solver, dtype, test_iter):
     p = PROBLEMS[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
-    t, yt = odeint(p, p.y0, p.tspan, save_at=p.tspan, solver=solver, atol=p.atol,
-                   rtol=p.rtol, backward_mode=False)
-    t_bw, yt_bw = odeint(p, yt[-1], p.tspan, save_at=p.tspan, solver=solver,
-                         atol=p.atol, rtol=p.rtol, backward_mode=True)
+    t, yt = odeint(
+        p, p.y0, p.tspan, save_at=p.tspan, solver=solver, atol=p.atol, rtol=p.rtol,
+        backward_mode=False
+    )
+    t_bw, yt_bw = odeint(
+        p, yt[-1], p.tspan, save_at=p.tspan, solver=solver, atol=p.atol, rtol=p.rtol,
+        backward_mode=True
+    )
     # Check solutions
     assert torch.norm((yt - yt_bw.flip(0)) / yt) < p.test_tol
 
@@ -93,10 +99,12 @@ def test_odeint_out(prob, solver, dtype, test_iter):
     p_ref = PROBLEMS[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
-    t, yt = odeint(p, p.y0, p.tspan, save_at=p.save_at, solver=solver, atol=p.atol,
-                   rtol=p.rtol)
-    _, yt_tdyn = odeint_tdyn(p_ref, p_ref.y0, p_ref.tspan, 'dopri5', atol=p_ref.atol,
-                             rtol=p_ref.rtol)
+    t, yt = odeint(
+        p, p.y0, p.tspan, save_at=p.save_at, solver=solver, atol=p.atol, rtol=p.rtol
+    )
+    _, yt_tdyn = odeint_tdyn(
+        p_ref, p_ref.y0, p_ref.tspan, 'dopri5', atol=p_ref.atol, rtol=p_ref.rtol
+    )
     # Check solutions
     assert torch.norm((yt - yt_exp) / yt_exp) < p.test_tol
     assert torch.norm((yt - yt_tdyn) / yt_tdyn) < p.test_tol
@@ -117,10 +125,12 @@ def test_odeint_out_adjoint(prob, solver, dtype, test_iter):
     p_ref = PROBLEMS[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
-    t, yt = odeint_adjoint(p, p.y0, p.tspan, save_at=p.save_at, solver=solver,
-                           atol=p.atol, rtol=p.rtol)
-    _, yt_tdyn = odeint_tdyn(p_ref, p_ref.y0, p_ref.tspan, 'dopri5', atol=p_ref.atol,
-                             rtol=p_ref.rtol)
+    t, yt = odeint_adjoint(
+        p, p.y0, p.tspan, save_at=p.save_at, solver=solver, atol=p.atol, rtol=p.rtol
+    )
+    _, yt_tdyn = odeint_tdyn(
+        p_ref, p_ref.y0, p_ref.tspan, 'dopri5', atol=p_ref.atol, rtol=p_ref.rtol
+    )
     # Check solutions
     assert torch.norm((yt - yt_exp) / yt_exp) < p.test_tol
     assert torch.norm((yt - yt_tdyn) / yt_tdyn) < p.test_tol
@@ -140,9 +150,13 @@ def test_odeint_out_backward(prob, solver, dtype, test_iter):
     p = PROBLEMS_OUT[prob](dtype)
     # Compute solutions
     yt_exp = p.solution()
-    t, yt = odeint(p, p.y0, p.tspan, save_at=p.save_at, solver=solver, atol=p.atol,
-                   rtol=p.rtol, backward_mode=False)
-    t_bw, yt_bw = odeint(p, yt[-1], p.tspan, save_at=p.save_at, solver=solver,
-                         atol=p.atol, rtol=p.rtol, backward_mode=True)
+    t, yt = odeint(
+        p, p.y0, p.tspan, save_at=p.save_at, solver=solver, atol=p.atol, rtol=p.rtol,
+        backward_mode=False
+    )
+    t_bw, yt_bw = odeint(
+        p, yt[-1], p.tspan, save_at=p.save_at, solver=solver, atol=p.atol, rtol=p.rtol,
+        backward_mode=True
+    )
     # Check solutions
     assert torch.norm((yt - yt_bw.flip(0)) / yt) < p.test_tol

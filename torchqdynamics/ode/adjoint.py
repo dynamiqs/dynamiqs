@@ -56,63 +56,70 @@ class ODEIntAdjoint(torch.autograd.Function):
         y_shape, a_shape, g_shape = yT.shape, aT.shape, gT.shape
         aug_y = torch.cat([yT.view(-1), aT.view(-1), gT.view(-1)])
 
+        # Define the augmented function for RK solvers
+        def aug_f_rk(t, aug_y):
+            # Unpack and reshape state
+            y, a = aug_y[:y_len], aug_y[y_len:y_len + a_len]
+            y, a = y.view(y_shape), a.view(a_shape)
+
+            # Compute the augmented state
+            with torch.enable_grad():
+                y, a = y.requires_grad_(True), a.requires_grad_(True)
+                dy, da = f(t, y), f_adj(t, a)
+                dy, da = dy.view(-1), da.view(-1)
+
+                # Compute dg/dt = - (d(da/dt)/dtheta @ y)
+                dg = torch.autograd.grad(
+                    da, params, y.view(-1), allow_unused=True, retain_graph=True
+                )
+                # Convert back dg to flat tensor
+                dg = torch.cat(
+                    [
+                        torch.zeros_like(p).view(-1) if dg_ is None else dg_.view(-1)
+                        for p, dg_ in zip(params, dg)
+                    ]
+                )
+
+            # Repack and return
+            return torch.cat([dy, da, dg])
+
+        # Define the augmented function for outsourced solvers
+        def aug_f_out(t, dt, aug_y):
+            # Unpack and reshape state
+            y, a, g = aug_y[:y_len], aug_y[y_len:y_len + a_len], aug_y[-g_len:]
+            y, a, g = y.view(y_shape), a.view(a_shape), g.view(g_shape)
+
+            # Compute the augmented state
+            with torch.enable_grad():
+                y, a = y.requires_grad_(True), a.requires_grad_(True)
+                dy, da = f(t, dt, y), f_adj(t, dt, a)
+                dy, da = dy.view(-1), da.view(-1)
+
+                # Compute dg = - (d(da)/dtheta @ y)
+                dg = torch.autograd.grad(
+                    da, params, y.view(-1), allow_unused=True, retain_graph=True
+                )
+                # Convert back dg to flat tensor
+                dg = torch.cat(
+                    [
+                        torch.zeros_like(p).view(-1) if dg_ is None else dg_.view(-1)
+                        for p, dg_ in zip(params, dg)
+                    ]
+                )
+                # Add previous value
+                dg = g.view(-1) + dg
+
+            # Repack and return
+            return torch.cat([dy, da, dg])
+
+        # Get the augmented dynamics function that corresponds to the solver
         solver_type = grt.solver_to_solvertype(solver)
-        if solver_type == "rk":
-            # Define the augmented function for RK solvers
-            def aug_f(t, aug_y):
-                # Unpack and reshape state
-                y, a = aug_y[:y_len], aug_y[y_len:y_len + a_len]
-                y, a = y.view(y_shape), a.view(a_shape)
-                # Compute the augmented state
-                with torch.enable_grad():
-                    y, a = y.requires_grad_(True), a.requires_grad_(True)
-                    dy, da = f(t, y), f_adj(t, a)
-                    dy, da = dy.view(-1), da.view(-1)
-                    # Compute dg/dt = - (d(da/dt)/dtheta @ y)
-                    dg = torch.autograd.grad(
-                        da, params, y.view(-1), allow_unused=True, retain_graph=True
-                    )
-                    # Convert back dg to flat tensor
-                    dg = torch.cat(
-                        [
-                            torch.zeros_like(p).view(-1)
-                            if dg_ is None else dg_.view(-1)
-                            for p, dg_ in zip(params, dg)
-                        ]
-                    )
-
-                # Repack and return
-                return torch.cat([dy, da, dg])
-
-        elif solver_type == "out":
-            # Define the augmented function for outsourced solvers
-            def aug_f(t, dt, aug_y):
-                # Unpack and reshape state
-                y, a, g = aug_y[:y_len], aug_y[y_len:y_len + a_len], aug_y[-g_len:]
-                y, a, g = y.view(y_shape), a.view(a_shape), g.view(g_shape)
-
-                # Compute the augmented state
-                with torch.enable_grad():
-                    y, a = y.requires_grad_(True), a.requires_grad_(True)
-                    dy, da = f(t, dt, y), f_adj(t, dt, a)
-                    dy, da = dy.view(-1), da.view(-1)
-                    # Compute dg = - (d(da)/dtheta @ y)
-                    dg = torch.autograd.grad(
-                        da, params, y.view(-1), allow_unused=True, retain_graph=True
-                    )
-                    # Convert back dg to flat tensor
-                    dg = torch.cat(
-                        [
-                            torch.zeros_like(p).view(-1)
-                            if dg_ is None else dg_.view(-1)
-                            for p, dg_ in zip(params, dg)
-                        ]
-                    )
-                    # Add previous value
-                    dg = g.view(-1) + dg
-
-                # Repack and return
-                return torch.cat([dy, da, dg])
+        if solver_type == 'rk':
+            aug_f = aug_f_rk
+        elif solver_type == 'out':
+            aug_f = aug_f_out
+        else:
+            raise (f'Augmented dynamics not implemented for solver type {solver_type}.')
 
         # Solve the augmented equation backward between every checkpoints
         for i in range(len(t_saved) - 1, 0, -1):
