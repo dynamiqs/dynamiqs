@@ -1,4 +1,5 @@
 import warnings
+from enum import Enum
 
 import numpy as np
 import torch
@@ -12,14 +13,28 @@ from .solver import adapt_step, hairer_norm, init_step, str_to_solver
 # --------------------------------------------------------------------------------------
 
 
+class Solver(Enum):
+    DOPRI5 = 'dopri5'
+    RK = 'rk'
+    OUT = 'out'
+
+
 def odeint(
-    f, y0, tspan, solver='dopri5', save_at=(), sensitivity=None, model_params=None,
-    atol=1e-8, rtol=1e-6, backward_mode=False
+    f,
+    y0,
+    tspan,
+    solver=Solver.DOPRI5,
+    save_at=(),
+    sensitivity=None,
+    model_params=None,
+    atol=1e-8,
+    rtol=1e-6,
+    backward_mode=False,
 ):
     """Solve an initial value problem determined by function `f` and initial condition
     `y0`.
 
-    If a regular solver is called (such as `solver="dopri5"`), this solves the ordinary
+    If a regular solver is called (such as `solver=Solver.DOPRI5`), this solves the ordinary
     differential equation (ODE) defined by ``dy / dt = f(t, y(t))``. If instead the
     `solver="outsource"` solver is called, this outsources the ODE integration to the
     user. In this case, `f` should be such that ``y(t+dt) = f(t, y(t), dt)``.
@@ -71,12 +86,12 @@ def odeint(
     save_at = init_saveat(save_at, tspan, backward_mode)
 
     # Dispatch to appropriate solver
-    if sensitivity in (None, 'autograd'):  #TODO: Separate these two cases
-        if solver.solver_type == 'rk':
+    if sensitivity in (None, 'autograd'):  # TODO: Separate these two cases
+        if solver.solver_type == Solver.RK:
             return odeint_adaptive(
                 f, y0, tspan, solver, save_at, atol, rtol, backward_mode
             )
-        elif solver.solver_type == 'out':
+        elif solver.solver_type == Solver.OUT:
             return odeint_outsource(f, y0, tspan, solver, save_at, backward_mode)
     elif sensitivity == 'adjoint':
         return odeint_adjoint(f, y0, tspan, solver, save_at, model_params, atol, rtol)
@@ -88,7 +103,14 @@ def odeint(
 
 
 def odeint_adjoint(
-    f, y0, tspan, solver='dopri5', save_at=(), model_params=None, atol=1e-8, rtol=1e-6
+    f,
+    y0,
+    tspan,
+    solver=Solver.DOPRI5,
+    save_at=(),
+    model_params=None,
+    atol=1e-8,
+    rtol=1e-6,
 ):
     """Solve an ODE with adjoint method AD in the backward pass."""
     # Extract model parameters
@@ -112,7 +134,7 @@ def odeint_adjoint(
         )
 
     # Warning if using a RK solver with the adjoint method
-    if solver_to_solvertype(solver) == 'rk':
+    if solver_to_solvertype(solver) == Solver.RK:
         warnings.warn(
             'Using a Runga-Kutta solver with adjoint-based automatic differentiation. '
             'Runge-Kutta solvers are numerically unstable in the backward pass and may '
@@ -207,8 +229,12 @@ def odeint_adaptive(
             checkpt_flag = False
         # Compute new dt
         dt = adapt_step(
-            dt, error_ratio, solver.safety, solver.min_factor, solver.max_factor,
-            solver.order
+            dt,
+            error_ratio,
+            solver.safety,
+            solver.min_factor,
+            solver.max_factor,
+            solver.order,
         )
 
     # Return results with forward-valued times
