@@ -116,8 +116,9 @@ def odeint_adjoint(
         warnings.warn(
             'Using a Runga-Kutta solver with adjoint-based automatic differentiation. '
             'Runge-Kutta solvers are numerically unstable in the backward pass and may '
-            'diverge. We recommand using a physically-informed solver such as the Rouchon '
-            'method, and to use checkpoints in the forward pass (by supplying `save_at`).'
+            'diverge. We recommand using a physically-informed solver such as the '
+            'Rouchon method, and to use checkpoints in the forward pass (by supplying '
+            '`save_at`).'
         )
 
     # Extract the adjoint state forward method.
