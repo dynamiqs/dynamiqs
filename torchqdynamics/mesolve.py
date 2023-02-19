@@ -50,14 +50,11 @@ def _mesolve_torchdiffeq(
     # [speedup] by precomputing the jump operators adjoint
     Lsdag = Ls.adjoint().resolve_conj()
 
-    def f(t, x):
-        rho = torch.view_as_complex(x)
-        drho = _lindbladian(H, Ls, Lsdag, rho)
-        return torch.view_as_real(drho)
-
-    y0 = torch.view_as_real(rho0)
     t = torch.from_numpy(tlist)
     options = {'step_size': options['step_size']}
 
-    ys = torchdiffeq.odeint(f, y0, t, method='rk4', options=options)
-    return torch.view_as_complex(ys)
+    # This function takes as an argument the current state $\rho$, and
+    # returns $d\rho/dt$ by computing the Lindbladian applied to $\rho$.
+    f = lambda t, rho: _lindbladian(H, Ls, Lsdag, rho)
+
+    return torchdiffeq.odeint(f, rho0, t, method='rk4', options=options)
