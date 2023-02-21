@@ -16,6 +16,6 @@ class RK4(FixedStepOption):
 
 
 @dataclass
-class Dopri6(VariableStepOption):
+class DOPRI6(VariableStepOption):
     """ TODO: write description """
     pass
