@@ -22,16 +22,18 @@ conda develop /path/to/torchqdynamics
 ## Contribute
 Install developer dependencies:
 ```shell
-pip install isort yapf toml
+pip install -r requirements-dev.txt
 ```
 
 Run the following before each commit:
 ```shell
-isort torchqdynamics
-yapf -i -r torchqdynamics
+isort torchqdynamics  # sort the imports
+yapf -i -r torchqdynamics  # auto-format the code
+pytest  # run the test suite
 ```
 
-Alternatively you can use `pre-commit` to run theses automatically before commit:
+Alternatively you can use `pre-commit` to run automatically the sorting (isort)
+and auto-formatting (yapf) automatically before each commit:
 ```shell
 pip install pre-commit
 pre-commit install
