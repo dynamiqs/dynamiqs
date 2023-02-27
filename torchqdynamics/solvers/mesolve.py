@@ -1,21 +1,36 @@
 from dataclasses import dataclass
+from typing import List
 
-from torchqdynamics.solvers._base import FixedStepOption, VariableStepOption
+import torch
+
+
+@dataclass
+class MESolverOption:
+    jump_ops: List[torch.Tensor]
+
+
+@dataclass
+class FixedStepOption(MESolverOption):
+    step: float
+
+
+@dataclass
+class VariableStepOption(MESolverOption):
+    atol: float = 1e-6
+    rtol: float = 1e-6
+    max_steps: int = 100_000
 
 
 @dataclass
 class Rouchon(FixedStepOption):
-    """ TODO: write description """
     pass
 
 
 @dataclass
 class RK4(FixedStepOption):
-    """ TODO: write description """
     pass
 
 
 @dataclass
 class DOPRI6(VariableStepOption):
-    """ TODO: write description """
     pass
