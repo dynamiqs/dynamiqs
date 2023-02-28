@@ -9,7 +9,7 @@ import torch
 
 def odeint(qsolver, y0, tsave, sensitivity='autograd', model_params=None):
     # Check arguments
-    init_tsave(tsave)
+    tsave = check_tsave(tsave)
     if (model_params is not None) and (sensitivity in [None, 'autograd']):
         warnings.warn('Argument `model_params` was supplied in `odeint` but not used.')
 
@@ -81,7 +81,7 @@ def _fixed_odeint(qsolver, y0, tsave):
 # --------------------------------------------------------------------------------------
 
 
-def init_tsave(tsave):
+def check_tsave(tsave):
     """Check tsave is a sorted 1-D torch.tensor"""
     if isinstance(tsave, (list, np.ndarray)):
         tsave = torch.cat(tsave)

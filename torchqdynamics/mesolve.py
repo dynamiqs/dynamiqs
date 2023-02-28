@@ -80,7 +80,7 @@ class MERouchon2(MERouchon):
 
         # Compute rho(t+dt)
         drho_ = dt * torch.sum(M1s @ rho.unsqueeze(0) @ M1s.adjoint(), dim=0)
-        drho += 0.5 * dt * torch.sum(M1s @ drho_.unsqueeze(0) @ M1s.adjoint(), dim=0)
+        drho = 0.5 * dt * torch.sum(M1s @ drho_.unsqueeze(0) @ M1s.adjoint(), dim=0)
         drho += drho_ + M0 @ rho @ M0.adjoint()
 
         return drho
