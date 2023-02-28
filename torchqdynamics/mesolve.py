@@ -10,7 +10,8 @@ from .odeint import odeint
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver, sensitivity='autograd', model_params=None
+    H, jump_ops, rho0, tsave, solver=Rouchon(), sensitivity='autograd',
+    model_params=None
 ):
     # Define the QSolver
     if isinstance(solver, Rouchon):
@@ -97,5 +98,6 @@ class MERouchon2(MERouchon):
 
 @dataclass
 class Rouchon:
-    dt: float
+    dt: float = 1e-2
+    order: int = 1
     stepclass: str = 'fixed'
