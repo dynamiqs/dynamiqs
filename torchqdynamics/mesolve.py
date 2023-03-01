@@ -54,14 +54,12 @@ class MERouchon1(MERouchon):
         # Non-hermitian Hamiltonian at time t
         H_nh = self.H(t) - 0.5j * self.sum_nojump
 
-        # Build time-dependent Kraus operators
+        # Build time-dependent Kraus operator
         M0 = self.I - 1j * dt * H_nh
-        M1s = self.jump_ops
 
         # Compute rho(t+dt)
-        drho = M0 @ rho @ M0.adjoint(
-        ) + dt * (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
-
+        drho = M0 @ rho @ M0.adjoint()
+        drho += dt * (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
         return drho
 
     def forward_adjoint(self, t, dt, phi):
@@ -77,13 +75,13 @@ class MERouchon2(MERouchon):
         # Build time-dependent Kraus operators
         # TODO: Add the missing time derivative term in -0.5j * dt**2 * \dot{H}
         M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
-        M1s = 0.5 * (self.Ls @ M0 + M0 @ self.Ls)
+        M1s = 0.5 * self.Ls @ M0
+        M1s += M1s.adjoint()
 
         # Compute rho(t+dt)
-        drho_ = dt * torch.sum(M1s @ rho.unsqueeze(0) @ M1s.adjoint(), dim=0)
-        drho = 0.5 * dt * torch.sum(M1s @ drho_.unsqueeze(0) @ M1s.adjoint(), dim=0)
-        drho += drho_ + M0 @ rho @ M0.adjoint()
-
+        drho_ = dt * (M1s @ rho.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
+        drho = M0 @ rho @ M0.adjoint() + drho_
+        drho += 0.5 * dt * (M1s @ drho_.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
         return drho
 
     def forward_adjoint(self, t, dt, phi):
