@@ -49,7 +49,7 @@ def _adaptive_odeint(qsolver, y0, tsave):
 def _fixed_odeint(qsolver, y0, tsave):
     # Initialize save tensor
     ysave = torch.zeros((len(tsave), ) + y0.shape).to(y0)
-    save_counter, save_flag = 0, False
+    save_counter = 0
     if tsave[0] == 0:
         ysave[0] = y0
         save_counter += 1

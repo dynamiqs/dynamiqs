@@ -75,7 +75,8 @@ class MERouchon2(MERouchon):
         H_nh = self.H(t) - 0.5j * self.sum_nojump
 
         # Build time-dependent Kraus operators
-        M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh**2
+        # TODO: Add the missing time derivative term in -0.5j * dt**2 * \dot{H}
+        M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
         M1s = 0.5 * (self.Ls @ M0 + M0 @ self.Ls)
 
         # Compute rho(t+dt)
@@ -99,5 +100,5 @@ class MERouchon2(MERouchon):
 @dataclass
 class Rouchon:
     dt: float = 1e-2
-    order: int = 1
+    order: float = 1
     stepclass: str = 'fixed'
