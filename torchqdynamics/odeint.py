@@ -44,9 +44,9 @@ def _adaptive_odeint(qsolver, y0, tsave):
 
 def _fixed_odeint(qsolver, y0, tsave):
     # initialize save tensor
-    ysave = torch.zeros((len(tsave), ) + y0.shape).to(y0)
+    ysave = torch.zeros(len(tsave), *y0.shape).to(y0)
     save_counter = 0
-    if tsave[0] == 0:
+    if tsave[0] == 0.0:
         ysave[0] = y0
         save_counter += 1
 
@@ -54,7 +54,7 @@ def _fixed_odeint(qsolver, y0, tsave):
     dt = qsolver.options.dt
 
     # run the ODE routine
-    t, y = 0, y0
+    t, y = 0.0, y0
     while t < tsave[-1]:
         # check if final time is reached
         if t + dt > tsave[-1]:
@@ -69,18 +69,15 @@ def _fixed_odeint(qsolver, y0, tsave):
             ysave[save_counter] = y
             save_counter += 1
 
-    return tsave, ysave
+    return ysave
 
 
 def check_tsave(tsave):
     """Check tsave is a sorted 1-D `torch.tensor`."""
-    if isinstance(tsave, (list, np.ndarray)):
-        tsave = torch.cat(tsave)
-    if tsave.dim != 1 or len(tsave) == 0:
-        raise ValueError('Argument `tsave` should be a non-empty 1-D torch.Tensor.')
+    tsave = torch.tensor(tsave)
+
+    if tsave.dim() != 1 or len(tsave) == 0:
+        raise ValueError('Argument `tsave` must be a non-empty 1D torch.Tensor.')
     if not torch.all(torch.diff(tsave) > 0):
-        raise ValueError(
-            'Argument `tsave` is not sorted in ascending order '
-            'or contains duplicate values.'
-        )
+        raise ValueError('Argument `tsave` must be sorted in strictly ascending order.')
     return tsave
