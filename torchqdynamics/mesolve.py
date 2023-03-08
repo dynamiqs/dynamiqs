@@ -58,6 +58,7 @@ class MERouchon1(MERouchon):
         # compute rho(t+dt)
         rho = M0 @ rho @ M0.adjoint()
         rho += dt * (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
+        rho = rho / rho.trace()
         return rho
 
     def forward_adjoint(self, t, dt, phi):
