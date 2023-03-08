@@ -29,6 +29,12 @@ class QSolver:
     def __init__(self):
         pass
 
+    def forward(self, t, dt, rho):
+        pass
+
+    def forward_adjoint(self, t, dt, phi):
+        pass
+
 
 class MERouchon(QSolver):
     def __init__(self, H, jump_ops, solver_options):
