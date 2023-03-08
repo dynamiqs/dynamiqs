@@ -69,11 +69,12 @@ def _fixed_odeint(qsolver, y0, tsave):
 
 
 def check_tsave(tsave):
-    """Check tsave is a sorted 1-D `torch.tensor`."""
-    tsave = torch.tensor(tsave)
-
+    """Check that `tsave` is valid (it must be a non-empty 1D tensor sorted in
+    strictly ascending order and containing only positive values)."""
     if tsave.dim() != 1 or len(tsave) == 0:
         raise ValueError('Argument `tsave` must be a non-empty 1D torch.Tensor.')
     if not torch.all(torch.diff(tsave) > 0):
         raise ValueError('Argument `tsave` must be sorted in strictly ascending order.')
+    if not torch.all(tsave >= 0):
+        raise ValueError('Argument `tsave` must contain positive values only.')
     return tsave
