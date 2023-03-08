@@ -7,7 +7,8 @@ from .solver import AdaptativeStep, FixedStep
 
 def odeint(qsolver, y0, tsave, sensitivity='autograd', variables=None):
     # check arguments
-    tsave = check_tsave(tsave)
+    tsave = torch.tensor(tsave)
+    check_tsave(tsave)
     if (variables is not None) and (sensitivity in [None, 'autograd']):
         warnings.warn('Argument `variables` was supplied in `odeint` but not used.')
 
@@ -77,4 +78,3 @@ def check_tsave(tsave):
         raise ValueError('Argument `tsave` must be sorted in strictly ascending order.')
     if not torch.all(tsave >= 0):
         raise ValueError('Argument `tsave` must contain positive values only.')
-    return tsave
