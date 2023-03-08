@@ -56,9 +56,9 @@ class MERouchon1(MERouchon):
         M0 = self.I - 1j * dt * H_nh
 
         # compute rho(t+dt)
-        drho = M0 @ rho @ M0.adjoint()
-        drho += dt * (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
-        return drho
+        rho = M0 @ rho @ M0.adjoint()
+        rho += dt * (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
+        return rho
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
