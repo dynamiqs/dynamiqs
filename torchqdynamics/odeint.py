@@ -5,12 +5,12 @@ import torch
 from .solver import AdaptativeStep, FixedStep
 
 
-def odeint(qsolver, y0, tsave, sensitivity='autograd', variables=None):
+def odeint(qsolver, y0, tsave, sensitivity='autograd', parameters=None):
     # check arguments
     tsave = torch.tensor(tsave)
     check_tsave(tsave)
-    if (variables is not None) and (sensitivity in [None, 'autograd']):
-        warnings.warn('Argument `variables` was supplied in `odeint` but not used.')
+    if (parameters is not None) and (sensitivity in [None, 'autograd']):
+        warnings.warn('Argument `parameters` was supplied in `odeint` but not used.')
 
     # dispatch to appropriate odeint subroutine
     if sensitivity is None:
@@ -18,7 +18,7 @@ def odeint(qsolver, y0, tsave, sensitivity='autograd', variables=None):
     elif sensitivity == 'autograd':
         return odeint_main(qsolver, y0, tsave)
     elif sensitivity == 'adjoint':
-        return odeint_adjoint(qsolver, y0, tsave, variables)
+        return odeint_adjoint(qsolver, y0, tsave, parameters)
 
 
 def odeint_main(qsolver, y0, tsave):
@@ -35,7 +35,7 @@ def odeint_inplace(qsolver, y0, tsave):
         return odeint_main(qsolver, y0, tsave)
 
 
-def odeint_adjoint(qsolver, y0, tsave, variables):
+def odeint_adjoint(qsolver, y0, tsave, parameters):
     raise NotImplementedError
 
 

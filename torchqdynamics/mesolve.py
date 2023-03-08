@@ -5,7 +5,7 @@ from .solver import Rouchon
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', variables=None
+    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', parameters=None
 ):
     if solver is None:
         # TODO: The default dt should not be choosen in such an arbitrary
@@ -22,7 +22,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, tsave, sensitivity=sensitivity, variables=variables)
+    return odeint(qsolver, rho0, tsave, sensitivity=sensitivity, parameters=parameters)
 
 
 class QSolver:
