@@ -66,21 +66,7 @@ class MERouchon1(MERouchon):
 
 class MERouchon2(MERouchon):
     def forward(self, t, dt, rho):
-        """Compute rho(t+dt) using a Rouchon method of order 2."""
-        # non-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
-
-        # build time-dependent Kraus operators
-        # TODO: Add the missing time derivative term in -0.5j * dt**2 * \dot{H}
-        M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
-        M1s = 0.5 * self.Ls @ M0
-        M1s += M1s.adjoint()
-
-        # compute rho(t+dt)
-        drho_ = dt * (M1s @ rho.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
-        drho = M0 @ rho @ M0.adjoint() + drho_
-        drho += 0.5 * dt * (M1s @ drho_.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
-        return drho
+        raise NotImplementedError
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
