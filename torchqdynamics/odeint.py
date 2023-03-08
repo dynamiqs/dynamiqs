@@ -28,7 +28,10 @@ def odeint_main(qsolver, y0, tsave):
 
 
 def odeint_inplace(qsolver, y0, tsave):
-    raise NotImplementedError
+    # TODO: Simple solution for now so torch does not store gradients. This
+    #       is probably slower than a genuine in-place solver.
+    with torch.no_grad():
+        return odeint_main(qsolver, y0, tsave)
 
 
 def odeint_adjoint(qsolver, y0, tsave, model_params):
