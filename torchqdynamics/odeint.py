@@ -56,10 +56,6 @@ def _fixed_odeint(qsolver, y0, tsave):
     # run the ODE routine
     t, y = 0.0, y0
     while t < tsave[-1]:
-        # check if final time is reached
-        if t + dt > tsave[-1]:
-            dt = tsave[-1] - t
-
         # iterate solution
         y = qsolver.forward(t, dt, y)
         t = t + dt
