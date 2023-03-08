@@ -2,6 +2,8 @@ import warnings
 
 import torch
 
+from .solver import AdaptativeStep, FixedStep
+
 
 def odeint(qsolver, y0, tsave, sensitivity='autograd', model_params=None):
     # check arguments
@@ -19,9 +21,9 @@ def odeint(qsolver, y0, tsave, sensitivity='autograd', model_params=None):
 
 
 def odeint_main(qsolver, y0, tsave):
-    if qsolver.options.stepclass == 'fixed':
+    if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint(qsolver, y0, tsave)
-    elif qsolver.options.stepclass == 'adaptive':
+    elif isinstance(qsolver.options, AdaptativeStep):
         return _adaptive_odeint(qsolver, y0, tsave)
 
 

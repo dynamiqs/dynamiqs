@@ -1,14 +1,17 @@
-from dataclasses import dataclass
-
 import torch
 
 from .odeint import odeint
+from .solver import Rouchon
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver=Rouchon(), sensitivity='autograd',
-    model_params=None
+    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', model_params=None
 ):
+    if solver is None:
+        # TODO: The default dt should not be choosen in such an arbitrary
+        # fashion, which depends on the time unit used by the user.
+        solver = Rouchon(dt=1e-2)
+
     # define the QSolver
     if isinstance(solver, Rouchon):
         if solver.order == 1:
@@ -77,17 +80,3 @@ class MERouchon2(MERouchon):
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
-
-
-# --------------------------------------------------------------------------------------
-#     ME Solver Options
-# --------------------------------------------------------------------------------------
-
-# See the PR by @abocquet at https://github.com/PierreGuilmin/torchqdynamics/pull/10
-
-
-@dataclass
-class Rouchon:
-    dt: float = 1e-2
-    order: float = 1
-    stepclass: str = 'fixed'

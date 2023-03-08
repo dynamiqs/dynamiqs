@@ -8,11 +8,11 @@ class SolverOption:
 
 @dataclass
 class FixedStep(SolverOption):
-    step: float
+    dt: float
 
 
 @dataclass
-class VariableStep(SolverOption):
+class AdaptativeStep(SolverOption):
     atol: float = 1e-6
     rtol: float = 1e-6
     max_steps: int = 100_000
@@ -20,7 +20,7 @@ class VariableStep(SolverOption):
 
 @dataclass
 class Rouchon(FixedStep):
-    pass
+    order: float = 1.0
 
 
 @dataclass
@@ -29,5 +29,5 @@ class RK4(FixedStep):
 
 
 @dataclass
-class DOPRI6(VariableStep):
+class DOPRI6(AdaptativeStep):
     pass
