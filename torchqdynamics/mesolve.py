@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import Function
 
 from .odeint import odeint
 from .solver import Rouchon
@@ -62,7 +63,7 @@ class MERouchon1(MERouchon):
             M0 @ rho @ M0.adjoint() + dt *
             (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
         )
-        rho = rho / rho.trace()
+        rho = rho / rho.trace().real
         return rho
 
     def forward_adjoint(self, t, dt, phi):
@@ -105,7 +106,7 @@ class MERouchon2(MERouchon):
     def forward(self, t, dt, rho):
         """Compute rho(t+dt) using a Rouchon method of order 2.
 
-        NB: For fast time-varying Hamiltonians, this method is not order 2 because the
+        NOTE: For fast time-varying Hamiltonians, this method is not order 2 because the
         second-order time derivative term is neglected. This term should be added in the
         zero-th order Kraus operator, as M0 += -0.5j * dt**2 * \dot{H}.
         """
@@ -119,10 +120,10 @@ class MERouchon2(MERouchon):
         # compute rho(t+dt)
         rho_ = dt * (M1s @ rho.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
         rho = (
-            M0 @ rho @ M0.adjoint() + drho_ + 0.5 * dt *
+            M0 @ rho @ M0.adjoint() + rho_ + 0.5 * dt *
             (M1s @ rho_.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
         )
-        rho = rho / rho.trace()
+        rho = rho / rho.trace().real
         return drho
 
     def forward_adjoint(self, t, dt, phi):
