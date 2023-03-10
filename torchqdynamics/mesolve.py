@@ -97,6 +97,9 @@ class MERouchon1_5(MERouchon):
 
         TODO: Replace with Schur decomposition once released by PyTorch.
         See the feature request at https://github.com/pytorch/pytorch/issues/78809.
+        Alternatively, see
+        https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176
+        for sqrtm implementation.
         """
         vals, vecs = torch.linalg.eigh(A)
         return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
