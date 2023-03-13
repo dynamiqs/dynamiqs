@@ -20,7 +20,7 @@ class AdaptativeStep(SolverOption):
 
 @dataclass
 class Rouchon(FixedStep):
-    order: float = 1.0
+    order: int = 2
 
 
 @dataclass

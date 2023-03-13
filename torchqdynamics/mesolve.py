@@ -1,75 +1,39 @@
+from typing import List
+
+import numpy as np
 import torch
 
-from .odeint import odeint
+from torchqdynamics.mesolve.rouchon import Rouchon1Solver, Rouchon2Solver
+
+from .odeint import GradientAlgorithm, odeint
 from .solver import Rouchon
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', parameters=None
+    H: torch.Tensor, rho0: torch.Tensor, t_save: torch.Tensor, solver,
+    t_step: torch.Tensor = None, jump_ops: List[torch.Tensor] = None,
+    exp_ops: List[torch.Tensor] = None, compute_gradient=True, save_states=True
 ):
+    jump_ops = jump_ops or []
+    exp_ops = exp_ops or []
+    t_step = t_step or t_save
+
     if solver is None:
-        # TODO: The default dt should not be choosen in such an arbitrary
-        # fashion, which depends on the time unit used by the user.
-        solver = Rouchon(dt=1e-2)
+        solver = Rouchon(dt=np.min(t_step[:-1] - t_step[1:]))
+
+    gradient_algorithm = GradientAlgorithm.AUTOGRAD if compute_gradient else GradientAlgorithm.NONE
 
     # define the QSolver
+    qsolver = None
     if isinstance(solver, Rouchon):
         if solver.order == 1:
-            qsolver = MERouchon1(H, jump_ops, solver)
+            qsolver = Rouchon1Solver(solver, H, jump_ops)
         elif solver.order == 2:
-            qsolver = MERouchon2(H, jump_ops, solver)
+            qsolver = Rouchon2Solver(solver, H, jump_ops)
     else:
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, tsave, sensitivity=sensitivity, parameters=parameters)
-
-
-class QSolver:
-    def __init__(self):
-        pass
-
-    def forward(self, t, dt, rho):
-        pass
-
-    def forward_adjoint(self, t, dt, phi):
-        pass
-
-
-class MERouchon(QSolver):
-    def __init__(self, H, jump_ops, solver_options):
-        self.H = H
-        self.jump_ops = jump_ops
-        self.jumpdag_ops = jump_ops.adjoint()
-        self.sum_nojump = (self.jumpdag_ops @ self.jump_ops).sum(dim=0)
-        self.I = torch.eye(H(0).shape[-1]).to(H(0))
-        self.options = solver_options
-
-
-class MERouchon1(MERouchon):
-    def forward(self, t, dt, rho):
-        """Compute rho(t+dt) using a Rouchon method of order 1."""
-        # mon-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
-
-        # build time-dependent Kraus operator
-        M0 = self.I - 1j * dt * H_nh
-
-        # compute rho(t+dt)
-        rho = (
-            M0 @ rho @ M0.adjoint() + dt *
-            (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
-        )
-        rho = rho / rho.trace()
-        return rho
-
-    def forward_adjoint(self, t, dt, phi):
-        raise NotImplementedError
-
-
-class MERouchon2(MERouchon):
-    def forward(self, t, dt, rho):
-        raise NotImplementedError
-
-    def forward_adjoint(self, t, dt, phi):
-        raise NotImplementedError
+    return odeint(
+        qsolver, rho0, t_save, t_step, exp_ops, save_states, gradient_algorithm
+    )
