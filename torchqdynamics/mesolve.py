@@ -5,7 +5,7 @@ from .solver import Rouchon
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver=Rouchon(), sensitivity='autograd', parameters=None
+    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', parameters=None
 ):
     if solver is None:
         # TODO: The default dt should not be choosen in such an arbitrary
@@ -110,8 +110,8 @@ class MERouchon2(MERouchon):
         """Compute rho(t+dt) using a Rouchon method of order 2.
 
         NOTE: For fast time-varying Hamiltonians, this method is not order 2 because the
-        second-order time derivative term is neglected. This term should be added in the
-        zero-th order Kraus operator, as M0 += -0.5j * dt**2 * \dot{H}.
+        second-order time derivative term is neglected. This term could be added in the
+        zero-th order Kraus operator if needed, as M0 += -0.5j * dt**2 * \dot{H}.
         """
         # non-hermitian Hamiltonian at time t
         H_nh = self.H(t) - 0.5j * self.sum_nojump
