@@ -1,16 +1,16 @@
 import torch
-from torch.autograd import Function
 
 from .odeint import odeint
 from .solver import Rouchon
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', parameters=None
+    H, jump_ops, rho0, tsave, solver=Rouchon(), sensitivity='autograd', parameters=None
 ):
     if solver is None:
         # TODO: The default dt should not be choosen in such an arbitrary
         # fashion, which depends on the time unit used by the user.
+        # Will be replaced by adaptive time step solver when implemented.
         solver = Rouchon(dt=1e-2)
 
     # define the QSolver
@@ -87,7 +87,7 @@ class MERouchon1_5(MERouchon):
             M0 @ rho @ M0.adjoint() + dt *
             (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
         )
-        return drho
+        return rho
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
@@ -127,7 +127,7 @@ class MERouchon2(MERouchon):
             (M1s @ rho_.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
         )
         rho = rho / rho.trace().real
-        return drho
+        return rho
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
