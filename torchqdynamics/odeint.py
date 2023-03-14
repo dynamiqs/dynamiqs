@@ -1,5 +1,5 @@
 import warnings
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List
 
@@ -9,6 +9,7 @@ from .solver import AdaptativeStep, FixedStep
 
 
 class ForwardQSolver(ABC):
+    @abstractmethod
     def forward(self, t, dt, rho):
         pass
 
@@ -74,44 +75,57 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, t_step, exp_ops, save_states):
-    # initialize save tensor
+    # Initialize save tensor
     y_save = None
-    exp_save = []
     if save_states:
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
+    if len(exp_ops) > 0:
+        exp_save = torch.zeros(len(t_save), len(exp_ops)).to(
+            device=y0.get_device(), dtype=torch.float
+        )
+    else:
+        exp_save = None
+
+    # Save first step
     save_counter = 0
     if t_save[0] == 0.0:
         if save_states:
             y_save[0] = y0
-        exp_save.append([torch.trace(op @ y0) for op in exp_ops])
+        for j, op in enumerate(exp_ops):
+            exp_save[save_counter, j] = torch.trace(op @ y0)
         save_counter += 1
 
-    # run the ODE routine
+    # Run the ODE routine
     y = y0
     for i, t in t_step:
-        # iterate solution
+        # Iterate solution
         y = qsolver.forward(t, t[i + 1] - t, y)
 
-        # save solution
+        # Save solution
         if t >= t_save[save_counter]:
             if save_states:
                 y_save[save_counter] = y
 
-            exp_save.append([torch.trace(op @ y) for op in exp_ops])
+            for j, op in enumerate(exp_ops):
+                exp_save[save_counter, j] = torch.trace(op @ y)
             save_counter += 1
 
     return y_save, exp_save
 
 
-def check_t(t_save):
-    """Check that `tsave` is valid (it must be a non-empty 1D tensor sorted in
+def check_t(t):
+    """Check that `t_save` or `t_step` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
-    if t_save.dim() != 1 or len(t_save) == 0:
-        raise ValueError('Argument `t_save` must be a non-empty 1D torch.Tensor.')
-    if not torch.all(torch.diff(t_save) > 0):
+    if t.dim() != 1 or len(t) == 0:
         raise ValueError(
-            'Argument `t_save` must be sorted in strictly ascending order.'
+            'Argument `t_save` and `t_step` must be a non-empty 1D torch.Tensor.'
         )
-    if not torch.all(t_save >= 0):
-        raise ValueError('Argument `t_save` must contain positive values only.')
+    if not torch.all(torch.diff(t) > 0):
+        raise ValueError(
+            'Argument `t_save` and `t_step` must be sorted in strictly ascending order.'
+        )
+    if not torch.all(t >= 0):
+        raise ValueError(
+            'Argument `t_save` and `t_step` must contain positive values only.'
+        )
