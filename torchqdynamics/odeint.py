@@ -24,18 +24,15 @@ def odeint(
     qsolver,
     y0,
     t_save: torch.Tensor,
-    t_step: torch.Tensor = None,
     exp_ops: List[torch.Tensor] = None,
     save_states: bool = True,
     gradient_algorithm=GradientAlgorithm.AUTOGRAD,
 ):
-    exp_ops = exp_ops or []
     # check arguments
     check_t(t_save)
-    t_step is None or check_t(t_step)
 
     # dispatch to appropriate odeint subroutine
-    params = (qsolver, y0, t_save, t_step, exp_ops, save_states)
+    params = (qsolver, y0, t_save, exp_ops, save_states)
     if gradient_algorithm == GradientAlgorithm.NONE:
         return _odeint_inplace(*params)
     elif gradient_algorithm == GradientAlgorithm.AUTOGRAD:
@@ -46,13 +43,12 @@ def odeint(
         raise ValueError(f'Gradient algorithm {gradient_algorithm} not defined')
 
 
-def _odeint_main(qsolver, y0, t_save, t_step, exp_ops, save_states):
+def _odeint_main(qsolver, y0, t_save, exp_ops, save_states):
     if isinstance(qsolver.options, FixedStep):
-        return _fixed_odeint(qsolver, y0, t_save, t_step, exp_ops, save_states)
-    elif isinstance(qsolver.options, AdaptativeStep):
-        warnings.warn(
-            't_step argument is not taken into account for adaptative step solvers'
+        return _fixed_odeint(
+            qsolver, y0, t_save, qsolver.options.dt, exp_ops, save_states
         )
+    elif isinstance(qsolver.options, AdaptativeStep):
         return _adaptive_odeint(qsolver, y0, t_save, exp_ops, save_states)
 
 
@@ -74,7 +70,7 @@ def _adaptive_odeint(*_args, **_kwargs):
     raise NotImplementedError
 
 
-def _fixed_odeint(qsolver, y0, t_save, t_step, exp_ops, save_states):
+def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     # Initialize save tensor
     y_save = None
     if save_states:
@@ -98,9 +94,10 @@ def _fixed_odeint(qsolver, y0, t_save, t_step, exp_ops, save_states):
 
     # Run the ODE routine
     y = y0
-    for i, t in t_step:
+    t, t_max = 0, max(t_save)
+    while t < t_max:
         # Iterate solution
-        y = qsolver.forward(t, t[i + 1] - t, y)
+        y = qsolver.forward(t, dt, y)
 
         # Save solution
         if t >= t_save[save_counter]:
@@ -115,17 +112,13 @@ def _fixed_odeint(qsolver, y0, t_save, t_step, exp_ops, save_states):
 
 
 def check_t(t):
-    """Check that `t_save` or `t_step` is valid (it must be a non-empty 1D tensor sorted in
+    """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
     if t.dim() != 1 or len(t) == 0:
-        raise ValueError(
-            'Argument `t_save` and `t_step` must be a non-empty 1D torch.Tensor.'
-        )
+        raise ValueError('Argument `t_save` must be a non-empty 1D torch.Tensor.')
     if not torch.all(torch.diff(t) > 0):
         raise ValueError(
-            'Argument `t_save` and `t_step` must be sorted in strictly ascending order.'
+            'Argument `t_save` must be sorted in strictly ascending order.'
         )
     if not torch.all(t >= 0):
-        raise ValueError(
-            'Argument `t_save` and `t_step` must contain positive values only.'
-        )
+        raise ValueError('Argument `t_save` must contain positive values only.')
