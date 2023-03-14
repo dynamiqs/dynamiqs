@@ -28,7 +28,7 @@ def odeint(
     gradient_algorithm=GradientAlgorithm.AUTOGRAD,
 ):
     # check arguments
-    check_t(t_save)
+    check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
     params = (qsolver, y0, t_save, exp_ops, save_states)
@@ -109,12 +109,14 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     return y_save, exp_save
 
 
-def check_t(t):
-    """Check that time tensor is valid (it must be a non-empty 1D tensor sorted in
+def check_t_save(tsave):
+    """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
-    if t.dim() != 1 or len(t) == 0:
-        raise ValueError('Time tensor argument must be a non-empty 1D torch.Tensor.')
-    if not torch.all(torch.diff(t) > 0):
-        raise ValueError('Time tensor must be sorted in strictly ascending order.')
-    if not torch.all(t >= 0):
-        raise ValueError('Time tensor argument must contain positive values only.')
+    if tsave.dim() != 1 or len(tsave) == 0:
+        raise ValueError('Argument `t_save` must be a non-empty 1D torch.Tensor.')
+    if not torch.all(torch.diff(tsave) > 0):
+        raise ValueError(
+            'Argument `t_save` must be sorted in strictly ascending order.'
+        )
+    if not torch.all(tsave >= 0):
+        raise ValueError('Argument `t_save` must contain positive values only.')
