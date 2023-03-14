@@ -1,7 +1,6 @@
-import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 import torch
 
@@ -24,7 +23,7 @@ def odeint(
     qsolver,
     y0,
     t_save: torch.Tensor,
-    exp_ops: List[torch.Tensor] = None,
+    exp_ops: Optional[List[torch.Tensor]] = None,
     save_states: bool = True,
     gradient_algorithm=GradientAlgorithm.AUTOGRAD,
 ):
@@ -52,7 +51,7 @@ def _odeint_main(qsolver, y0, t_save, exp_ops, save_states):
         return _adaptive_odeint(qsolver, y0, t_save, exp_ops, save_states)
 
 
-# For now we use *args and **kwargs for helper methods that are not implemented to ease the potential API
+# for now we use *args and **kwargs for helper methods that are not implemented to ease the potential api
 # changes that could occur later. When a method is implemented the methods should take the same arguments
 # as all others
 def _odeint_inplace(*args, **kwargs):
@@ -71,8 +70,8 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
-    # Initialize save tensor
-    y_save = None
+    # initialize save tensor
+    y_save, exp_save = None, None
     if save_states:
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
@@ -80,10 +79,8 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         exp_save = torch.zeros(len(t_save), len(exp_ops)).to(
             device=y0.get_device(), dtype=torch.float
         )
-    else:
-        exp_save = None
 
-    # Save first step
+    # save first step
     save_counter = 0
     if t_save[0] == 0.0:
         if save_states:
@@ -92,14 +89,14 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
             exp_save[save_counter, j] = torch.trace(op @ y0)
         save_counter += 1
 
-    # Run the ODE routine
+    # run the ode routine
     y = y0
     t, t_max = 0, max(t_save)
     while t < t_max:
-        # Iterate solution
+        # iterate solution
         y = qsolver.forward(t, dt, y)
 
-        # Save solution
+        # save solution
         if t >= t_save[save_counter]:
             if save_states:
                 y_save[save_counter] = y
@@ -107,18 +104,17 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
             for j, op in enumerate(exp_ops):
                 exp_save[save_counter, j] = torch.trace(op @ y)
             save_counter += 1
+        t += dt
 
     return y_save, exp_save
 
 
 def check_t(t):
-    """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
+    """Check that time tensor is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
     if t.dim() != 1 or len(t) == 0:
-        raise ValueError('Argument `t_save` must be a non-empty 1D torch.Tensor.')
+        raise ValueError('Time tensor argument must be a non-empty 1D torch.Tensor.')
     if not torch.all(torch.diff(t) > 0):
-        raise ValueError(
-            'Argument `t_save` must be sorted in strictly ascending order.'
-        )
+        raise ValueError('Time tensor must be sorted in strictly ascending order.')
     if not torch.all(t >= 0):
-        raise ValueError('Argument `t_save` must contain positive values only.')
+        raise ValueError('Time tensor argument must contain positive values only.')
