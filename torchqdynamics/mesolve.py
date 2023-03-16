@@ -25,7 +25,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, tsave, sensitivity=sensitivity, parameters=parameters)
+    return odeint(qsolver, rho0, tsave)
 
 
 class QSolver:
