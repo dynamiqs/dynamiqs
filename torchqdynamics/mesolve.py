@@ -120,7 +120,7 @@ class MERouchon2(MERouchon):
 def btrace(input):
     """Compute the batched trace of a tensor over its last two dimensions, and return a
     tensor of the same number of dimensions as input."""
-    return input.diagonal(dim1=-1, dim2=-2).sum(-1)[(..., ) + (None, ) * 2]
+    return input.diagonal(dim1=-1, dim2=-2).sum(-1).real[(..., ) + (None, ) * 2]
 
 
 def inv_sqrtm(input):
