@@ -72,7 +72,7 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
-    if torch.any(torch.remainder(t_save, dt) != 0.0):
+    if not torch.all(torch.isclose(torch.round(t_save / dt), t_save / dt)):
         raise ValueError(
             'Every value of argument `t_save` must be a multiple of the time step `dt`.'
         )
