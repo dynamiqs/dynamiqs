@@ -8,9 +8,7 @@ def mesolve(
     H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', parameters=None
 ):
     if solver is None:
-        # TODO: The default dt should not be choosen in such an arbitrary
-        # fashion, which depends on the time unit used by the user.
-        # Will be replaced by adaptive time step solver when implemented.
+        # TODO: Replace by adaptive time step solver when implemented.
         solver = Rouchon(dt=1e-2)
 
     # define the QSolver
@@ -63,8 +61,7 @@ class MERouchon1(MERouchon):
             M0 @ rho @ M0.adjoint() + dt *
             (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
         )
-        rho = rho / rho.trace().real
-        return rho
+        return rho / btrace(rho)
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
@@ -79,7 +76,7 @@ class MERouchon1_5(MERouchon):
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh
         S = M0.adjoint() @ M0 + dt * self.sum_nojump
-        S_inv_sqrtm = self.inv_sqrtm(S)
+        S_inv_sqrtm = inv_sqrtm(S)
 
         # compute rho(t+dt)
         rho = S_inv_sqrtm @ rho @ S_inv_sqrtm.adjoint()
@@ -91,18 +88,6 @@ class MERouchon1_5(MERouchon):
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
-
-    def inv_sqrtm(self, A):
-        """Compute the inverse square root of a matrix using its eigendecomposition.
-
-        TODO: Replace with Schur decomposition once released by PyTorch.
-        See the feature request at https://github.com/pytorch/pytorch/issues/78809.
-        Alternatively, see
-        https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176
-        for sqrtm implementation.
-        """
-        vals, vecs = torch.linalg.eigh(A)
-        return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
 
 
 class MERouchon2(MERouchon):
@@ -126,8 +111,26 @@ class MERouchon2(MERouchon):
             M0 @ rho @ M0.adjoint() + rho_ + 0.5 * dt *
             (M1s @ rho_.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
         )
-        rho = rho / rho.trace().real
-        return rho
+        return rho / btrace(rho)
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
+
+
+def btrace(input):
+    """Compute the batched trace of a tensor over its last two dimensions, and return a
+    tensor of the same number of dimensions as input."""
+    return input.diagonal(dim1=-1, dim2=-2).sum(-1)[(..., ) + (None, ) * 2]
+
+
+def inv_sqrtm(input):
+    """Compute the inverse square root of a matrix using its eigendecomposition.
+
+    TODO: Replace with Schur decomposition once released by PyTorch.
+    See the feature request at https://github.com/pytorch/pytorch/issues/78809.
+    Alternatively, see
+    https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176
+    for sqrtm implementation.
+    """
+    vals, vecs = torch.linalg.eigh(input)
+    return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
