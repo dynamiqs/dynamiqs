@@ -1,80 +1,129 @@
-import warnings
+from abc import ABC, abstractmethod
+from enum import Enum
+from typing import List, Optional
 
 import torch
 
 from .solver import AdaptativeStep, FixedStep
 
 
-def odeint(qsolver, y0, tsave, sensitivity='autograd', parameters=None):
+class ForwardQSolver(ABC):
+    @abstractmethod
+    def forward(self, t, dt, rho):
+        pass
+
+
+class AutoDiffAlgorithm(Enum):
+    AUTOGRAD = 'autograd'  # gradient computed by torch
+    NONE = 'none'  # don't compute the gradients
+    ADJOINT = 'adjoint'  # compute the gradient using the adjoint method
+
+
+def odeint(
+    qsolver,
+    y0,
+    t_save: torch.Tensor,
+    exp_ops: Optional[List[torch.Tensor]] = None,
+    save_states: bool = True,
+    autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
+):
     # check arguments
-    tsave = torch.tensor(tsave)
-    check_tsave(tsave)
-    if (parameters is not None) and (sensitivity in [None, 'autograd']):
-        warnings.warn('Argument `parameters` was supplied in `odeint` but not used.')
+    check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
-    if sensitivity is None:
-        return odeint_inplace(qsolver, y0, tsave)
-    elif sensitivity == 'autograd':
-        return odeint_main(qsolver, y0, tsave)
-    elif sensitivity == 'adjoint':
-        return odeint_adjoint(qsolver, y0, tsave, parameters)
+    args = (qsolver, y0, t_save, exp_ops, save_states)
+    if autodiff_algorithm == AutoDiffAlgorithm.NONE:
+        return _odeint_inplace(*args)
+    elif autodiff_algorithm == AutoDiffAlgorithm.AUTOGRAD:
+        return _odeint_main(*args)
+    elif autodiff_algorithm == AutoDiffAlgorithm.ADJOINT:
+        return _odeint_adjoint(*args)
+    else:
+        raise ValueError(
+            f'Auto differentiation algorithm {autodiff_algorithm} not defined'
+        )
 
 
-def odeint_main(qsolver, y0, tsave):
+def _odeint_main(qsolver, y0, t_save, exp_ops, save_states):
     if isinstance(qsolver.options, FixedStep):
-        return _fixed_odeint(qsolver, y0, tsave)
+        return _fixed_odeint(
+            qsolver, y0, t_save, qsolver.options.dt, exp_ops, save_states
+        )
     elif isinstance(qsolver.options, AdaptativeStep):
-        return _adaptive_odeint(qsolver, y0, tsave)
+        return _adaptive_odeint(qsolver, y0, t_save, exp_ops, save_states)
 
 
-def odeint_inplace(qsolver, y0, tsave):
+# for now we use *args and **kwargs for helper methods that are not implemented to ease the potential api
+# changes that could occur later. When a method is implemented the methods should take the same arguments
+# as all others
+def _odeint_inplace(*args, **kwargs):
     # TODO: Simple solution for now so torch does not store gradients. This
     #       is probably slower than a genuine in-place solver.
     with torch.no_grad():
-        return odeint_main(qsolver, y0, tsave)
+        return _odeint_main(*args, **kwargs)
 
 
-def odeint_adjoint(qsolver, y0, tsave, parameters):
+def _odeint_adjoint(*_args, **_kwargs):
     raise NotImplementedError
 
 
-def _adaptive_odeint(qsolver, y0, tsave):
+def _adaptive_odeint(*_args, **_kwargs):
     raise NotImplementedError
 
 
-def _fixed_odeint(qsolver, y0, tsave):
+def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
+    if not torch.all(torch.isclose(torch.round(t_save / dt), t_save / dt)):
+        raise ValueError(
+            'Every value of argument `t_save` must be a multiple of the time step `dt`.'
+        )
+
     # initialize save tensor
-    ysave = torch.zeros(len(tsave), *y0.shape).to(y0)
+    y_save, exp_save = None, None
+    if save_states:
+        y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
+
+    if len(exp_ops) > 0:
+        exp_save = torch.zeros(len(t_save), len(exp_ops)).to(
+            device=y0.get_device(), dtype=torch.float
+        )
+
+    # save first step
     save_counter = 0
-    if tsave[0] == 0.0:
-        ysave[0] = y0
+    if t_save[0] == 0.0:
+        if save_states:
+            y_save[0] = y0
+        for j, op in enumerate(exp_ops):
+            exp_save[save_counter, j] = torch.trace(op @ y0)
         save_counter += 1
 
-    # get qsolver fixed time step
-    dt = qsolver.options.dt
-
-    # run the ODE routine
-    t, y = 0.0, y0
-    while t < tsave[-1]:
+    # run the ode routine
+    y = y0
+    t, t_max = 0, max(t_save)
+    while t < t_max:
         # iterate solution
         y = qsolver.forward(t, dt, y)
-        t = t + dt
 
         # save solution
-        if t >= tsave[save_counter]:
-            ysave[save_counter] = y
+        if t >= t_save[save_counter]:
+            if save_states:
+                y_save[save_counter] = y
+
+            for j, op in enumerate(exp_ops):
+                exp_save[save_counter, j] = torch.trace(op @ y)
             save_counter += 1
+        t += dt
 
-    return ysave
+    return y_save, exp_save
 
 
-def check_tsave(tsave):
-    """Check that `tsave` is valid (it must be a non-empty 1D tensor sorted in
+def check_t_save(t_save):
+    """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
-    if tsave.dim() != 1 or len(tsave) == 0:
-        raise ValueError('Argument `tsave` must be a non-empty 1D torch.Tensor.')
-    if not torch.all(torch.diff(tsave) > 0):
-        raise ValueError('Argument `tsave` must be sorted in strictly ascending order.')
-    if not torch.all(tsave >= 0):
-        raise ValueError('Argument `tsave` must contain positive values only.')
+    if t_save.dim() != 1 or len(t_save) == 0:
+        raise ValueError('Argument `t_save` must be a non-empty 1D torch.Tensor.')
+    if not torch.all(torch.diff(t_save) > 0):
+        raise ValueError(
+            'Argument `t_save` must be sorted in strictly ascending order.'
+        )
+    if not torch.all(t_save >= 0):
+        raise ValueError('Argument `t_save` must contain positive values only.')
