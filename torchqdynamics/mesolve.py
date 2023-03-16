@@ -1,3 +1,5 @@
+from cmath import sqrt
+
 import torch
 
 from .odeint import odeint
@@ -57,10 +59,7 @@ class MERouchon1(MERouchon):
         M0 = self.I - 1j * dt * H_nh
 
         # compute rho(t+dt)
-        rho = (
-            M0 @ rho @ M0.adjoint() + dt *
-            (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
-        )
+        rho = kraus_map(rho, M0, sqrt(dt) * self.jump_ops)
         return rho / btrace(rho)
 
     def forward_adjoint(self, t, dt, phi):
@@ -79,11 +78,8 @@ class MERouchon1_5(MERouchon):
         S_inv_sqrtm = inv_sqrtm(S)
 
         # compute rho(t+dt)
-        rho = S_inv_sqrtm @ rho @ S_inv_sqrtm.adjoint()
-        rho = (
-            M0 @ rho @ M0.adjoint() + dt *
-            (self.jump_ops @ rho.unsqueeze(0) @ self.jumpdag_ops).sum(dim=0)
-        )
+        rho = kraus_map(rho, S_inv_sqrtm)
+        rho = kraus_map(rho, M0, sqrt(dt) * self.jump_ops)
         return rho
 
     def forward_adjoint(self, t, dt, phi):
@@ -103,27 +99,44 @@ class MERouchon2(MERouchon):
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
-        M1s = 0.5 * (self.jump_ops @ M0 + M0 @ self.jump_ops)
+        M1s = 0.5 * sqrt(dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
 
         # compute rho(t+dt)
-        rho_ = dt * (M1s @ rho.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
-        rho = (
-            M0 @ rho @ M0.adjoint() + rho_ + 0.5 * dt *
-            (M1s @ rho_.unsqueeze(0) @ M1s.adjoint()).sum(dim=0)
-        )
+        rho_ = kraus_map(rho, M1s)
+        rho = kraus_map(rho, M0) + rho_ + 0.5 * kraus_map(rho_, M1s)
         return rho / btrace(rho)
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
 
 
-def btrace(input):
+def kraus_map(rho, *operators):
+    """Compute the application of a Kraus map on an input density matrix.
+
+    This is equivalent to `torch.sum(op @ rho @ op.adjoint())`.
+
+    Kraus operators are batched together such that only a single matrix operation is
+    called. The use of einsum yields better performances on large matrices, but may
+    cause a small overhead on smaller matrices (N <~ 50).
+    """
+    if any(op.ndim > 3 or op.ndim < 2 for op in operators):
+        raise ValueError(
+            'Kraus operators should be 2-D tensors, or 3-D tensors if batched.'
+        )
+
+    ops_batch = torch.cat(
+        tuple(op if op.ndim == 3 else op.unsqueeze(0) for op in operators)
+    )
+    return torch.einsum('kin,...nm,kjm->...ij', ops_batch, rho, ops_batch.conj())
+
+
+def btrace(rho):
     """Compute the batched trace of a tensor over its last two dimensions, and return a
-    tensor of the same number of dimensions as input."""
-    return torch.einsum('...ii', input).real[(..., ) + (None, ) * 2]
+    tensor of the same number of dimensions as rho."""
+    return torch.einsum('...ii', rho).real[(..., ) + (None, ) * 2]
 
 
-def inv_sqrtm(input):
+def inv_sqrtm(mat):
     """Compute the inverse square root of a matrix using its eigendecomposition.
 
     TODO: Replace with Schur decomposition once released by PyTorch.
@@ -132,5 +145,5 @@ def inv_sqrtm(input):
     https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176
     for sqrtm implementation.
     """
-    vals, vecs = torch.linalg.eigh(input)
+    vals, vecs = torch.linalg.eigh(mat)
     return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
