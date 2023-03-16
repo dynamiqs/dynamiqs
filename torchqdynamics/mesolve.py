@@ -133,7 +133,7 @@ def kraus_map(rho, *operators):
 def btrace(rho):
     """Compute the batched trace of a tensor over its last two dimensions, and return a
     tensor of the same number of dimensions as rho."""
-    return torch.einsum('...ii', rho).real[(..., ) + (None, ) * 2]
+    return torch.einsum('...ii', rho).real[..., None, None]
 
 
 def inv_sqrtm(mat):
