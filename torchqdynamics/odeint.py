@@ -13,7 +13,7 @@ class ForwardQSolver(ABC):
         pass
 
 
-class GradientAlgorithm(Enum):
+class AutoDiffAlgorithm(Enum):
     AUTOGRAD = 'autograd'  # gradient computed by torch
     NONE = 'none'  # don't compute the gradients
     ADJOINT = 'adjoint'  # compute the gradient using the adjoint method
@@ -25,21 +25,23 @@ def odeint(
     t_save: torch.Tensor,
     exp_ops: Optional[List[torch.Tensor]] = None,
     save_states: bool = True,
-    gradient_algorithm=GradientAlgorithm.AUTOGRAD,
+    autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
 ):
     # check arguments
     check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
-    params = (qsolver, y0, t_save, exp_ops, save_states)
-    if gradient_algorithm == GradientAlgorithm.NONE:
-        return _odeint_inplace(*params)
-    elif gradient_algorithm == GradientAlgorithm.AUTOGRAD:
-        return _odeint_main(*params)
-    elif gradient_algorithm == GradientAlgorithm.ADJOINT:
-        return _odeint_adjoint(*params)
+    args = (qsolver, y0, t_save, exp_ops, save_states)
+    if autodiff_algorithm == AutoDiffAlgorithm.NONE:
+        return _odeint_inplace(*args)
+    elif autodiff_algorithm == AutoDiffAlgorithm.AUTOGRAD:
+        return _odeint_main(*args)
+    elif autodiff_algorithm == AutoDiffAlgorithm.ADJOINT:
+        return _odeint_adjoint(*args)
     else:
-        raise ValueError(f'Gradient algorithm {gradient_algorithm} not defined')
+        raise ValueError(
+            f'Auto differentiation algorithm {autodiff_algorithm} not defined'
+        )
 
 
 def _odeint_main(qsolver, y0, t_save, exp_ops, save_states):
@@ -70,6 +72,11 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
+    if torch.any(torch.remainder(t_save, dt) != 0.0):
+        raise ValueError(
+            'Every value of argument `t_save` must be a multiple of the time step `dt`.'
+        )
+
     # initialize save tensor
     y_save, exp_save = None, None
     if save_states:
@@ -109,14 +116,14 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     return y_save, exp_save
 
 
-def check_t_save(tsave):
+def check_t_save(t_save):
     """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
-    if tsave.dim() != 1 or len(tsave) == 0:
+    if t_save.dim() != 1 or len(t_save) == 0:
         raise ValueError('Argument `t_save` must be a non-empty 1D torch.Tensor.')
-    if not torch.all(torch.diff(tsave) > 0):
+    if not torch.all(torch.diff(t_save) > 0):
         raise ValueError(
             'Argument `t_save` must be sorted in strictly ascending order.'
         )
-    if not torch.all(tsave >= 0):
+    if not torch.all(t_save >= 0):
         raise ValueError('Argument `t_save` must contain positive values only.')
