@@ -11,6 +11,7 @@ def mesolve(
     H, jump_ops, rho0, tsave, exp_ops: Optional[List[torch.Tensor]] = None, solver=None,
     sensitivity='autograd', parameters=None
 ):
+    tsave = torch.tensor(tsave)
     if exp_ops is None:
         exp_ops = exp_ops
     if solver is None:
