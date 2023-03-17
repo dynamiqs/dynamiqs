@@ -89,8 +89,8 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(len(t_save),
-                               len(exp_ops)).to(device=y0.device, dtype=torch.float)
+        exp_save = torch.zeros(len(exp_ops),
+                               len(t_save)).to(device=y0.device, dtype=torch.float)
 
     # save first step
     save_counter = 0
@@ -98,7 +98,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         if save_states:
             y_save[0] = y0
         for j, op in enumerate(exp_ops):
-            exp_save[save_counter, j] = torch.trace(op @ y0).real
+            exp_save[j, save_counter] = torch.trace(op @ y0).real
         save_counter += 1
 
     # run the ode routine
@@ -112,9 +112,8 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         if t >= t_save[save_counter]:
             if save_states:
                 y_save[save_counter] = y
-
             for j, op in enumerate(exp_ops):
-                exp_save[save_counter, j] = torch.trace(op @ y).real
+                exp_save[j, save_counter] = torch.trace(op @ y).real
             save_counter += 1
         t += dt
 
