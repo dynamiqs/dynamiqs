@@ -1,5 +1,4 @@
-![torchqdynamics Logo](https://github.com/PierreGuilmin/torchqdynamics/blob/795768e392760ebf097392396367191f03fe39aa/media/torchqdynamics_logo.png)
----
+![torchqdynamics logo](./media/torchqdynamics_logo.png)
 
 Quantum systems simulation with PyTorch.
 
