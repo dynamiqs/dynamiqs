@@ -2,7 +2,7 @@ from math import sqrt
 
 import torch
 
-from .odeint import odeint
+from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon
 
 
@@ -28,18 +28,7 @@ def mesolve(
     return odeint(qsolver, rho0, tsave)
 
 
-class QSolver:
-    def __init__(self):
-        pass
-
-    def forward(self, t, dt, rho):
-        pass
-
-    def forward_adjoint(self, t, dt, phi):
-        pass
-
-
-class MERouchon(QSolver):
+class MERouchon(AdjointQSolver):
     def __init__(self, H, jump_ops, solver_options):
         self.H = H
         self.jump_ops = jump_ops

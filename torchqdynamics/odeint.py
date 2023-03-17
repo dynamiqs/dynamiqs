@@ -13,6 +13,12 @@ class ForwardQSolver(ABC):
         pass
 
 
+class AdjointQSolver(ForwardQSolver):
+    @abstractmethod
+    def forward_adjoint(self, t, dt, phi):
+        pass
+
+
 class AutoDiffAlgorithm(Enum):
     AUTOGRAD = 'autograd'  # gradient computed by torch
     NONE = 'none'  # don't compute the gradients
