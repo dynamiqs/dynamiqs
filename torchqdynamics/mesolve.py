@@ -1,4 +1,4 @@
-from cmath import sqrt
+from math import sqrt
 
 import torch
 
@@ -55,12 +55,13 @@ class MERouchon1(MERouchon):
         # non-hermitian Hamiltonian at time t
         H_nh = self.H(t) - 0.5j * self.sum_nojump
 
-        # build time-dependent Kraus operator
+        # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh
+        Ms = torch.cat((M0[None, ...], sqrt(dt) * self.jump_ops))
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0, sqrt(dt) * self.jump_ops)
-        return rho / btrace(rho)
+        rho = kraus_map(rho, Ms)
+        return rho / trace(rho).real
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
@@ -74,12 +75,15 @@ class MERouchon1_5(MERouchon):
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh
+        Ms = torch.cat((M0[None, ...], sqrt(dt) * self.jump_ops))
+
+        # build normalization matrix
         S = M0.adjoint() @ M0 + dt * self.sum_nojump
         S_inv_sqrtm = inv_sqrtm(S)
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, S_inv_sqrtm)
-        rho = kraus_map(rho, M0, sqrt(dt) * self.jump_ops)
+        rho = kraus_map(rho, S_inv_sqrtm[None, ...])
+        rho = kraus_map(rho, Ms)
         return rho
 
     def forward_adjoint(self, t, dt, phi):
@@ -103,37 +107,33 @@ class MERouchon2(MERouchon):
 
         # compute rho(t+dt)
         rho_ = kraus_map(rho, M1s)
-        rho = kraus_map(rho, M0) + rho_ + 0.5 * kraus_map(rho_, M1s)
-        return rho / btrace(rho)
+        rho = kraus_map(rho, M0[None, ...]) + rho_ + 0.5 * kraus_map(rho_, M1s)
+        return rho / trace(rho).real
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
 
 
-def kraus_map(rho, *operators):
+def kraus_map(rho, operators):
     """Compute the application of a Kraus map on an input density matrix.
 
-    This is equivalent to `torch.sum(op @ rho @ op.adjoint())`.
-
-    Kraus operators are batched together such that only a single matrix operation is
-    called. The use of einsum yields better performances on large matrices, but may
+    This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.adjoint(),
+    dim=0)`. The use of einsum yields better performances on large matrices, but may
     cause a small overhead on smaller matrices (N <~ 50).
+
+    Args:
+        rho: Density matrix of shape (..., n, n).
+        operators: Kraus operators of shape (b, n, n).
+    Returns:
+        Density matrix of shape (..., n, n) with the Kraus map applied.
     """
-    if any(op.ndim > 3 or op.ndim < 2 for op in operators):
-        raise ValueError(
-            'Kraus operators should be 2-D tensors, or 3-D tensors if batched.'
-        )
-
-    ops_batch = torch.cat(
-        tuple(op if op.ndim == 3 else op.unsqueeze(0) for op in operators)
-    )
-    return torch.einsum('kin,...nm,kjm->...ij', ops_batch, rho, ops_batch.conj())
+    return torch.einsum('mij,...jk,mkl->...il', operators, rho, operators.adjoint())
 
 
-def btrace(rho):
-    """Compute the batched trace of a tensor over its last two dimensions, and return a
-    tensor of the same number of dimensions as rho."""
-    return torch.einsum('...ii', rho).real[..., None, None]
+def trace(rho):
+    """Compute the batched trace of a tensor over its last two dimensions, and
+    return a tensor of the same number of dimensions as rho."""
+    return torch.einsum('...ii', rho)[..., None, None]
 
 
 def inv_sqrtm(mat):
