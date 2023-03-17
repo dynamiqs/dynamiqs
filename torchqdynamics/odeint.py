@@ -29,7 +29,7 @@ def odeint(
     qsolver,
     y0,
     t_save: torch.Tensor,
-    exp_ops: Optional[List[torch.Tensor]] = None,
+    exp_ops: List[torch.Tensor],
     save_states: bool = True,
     autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
 ):
