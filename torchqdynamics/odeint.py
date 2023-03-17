@@ -99,7 +99,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         if save_states:
             y_save[0] = y0
         for j, op in enumerate(exp_ops):
-            exp_save[save_counter, j] = torch.trace(op @ y0)
+            exp_save[save_counter, j] = torch.trace(op @ y0).real
         save_counter += 1
 
     # run the ode routine
@@ -115,7 +115,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
                 y_save[save_counter] = y
 
             for j, op in enumerate(exp_ops):
-                exp_save[save_counter, j] = torch.trace(op @ y)
+                exp_save[save_counter, j] = torch.trace(op @ y).real
             save_counter += 1
         t += dt
 
