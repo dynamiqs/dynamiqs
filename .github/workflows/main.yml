@@ -42,7 +42,7 @@ jobs:
         run: isort --check torchqdynamics
 
       - name: Run code autoformatting (yapf)
-        run: yapf --diff -i -r torchqdynamics
+        run: yapf --diff --recursive torchqdynamics
 
       - name: Run test suite (pytest)
         run: pytest
