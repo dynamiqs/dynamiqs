@@ -90,12 +90,11 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(len(exp_ops),
-                               len(t_save)).to(device=y0.device, dtype=torch.float)
+        exp_save = torch.zeros(len(exp_ops), len(t_save)).to(y0)
 
     # run the ode routine
     y = y0
-    times = torch.arange(0.0, t_save[-1] + dt, dt)
+    times = torch.arange(0.0, t_save[-1], dt)
     save_counter = 0
     for t in tqdm(times):
         # save solution
@@ -103,11 +102,17 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
             if save_states:
                 y_save[save_counter] = y
             for j, op in enumerate(exp_ops):
-                exp_save[j, save_counter] = torch.trace(op @ y).real
+                exp_save[j, save_counter] = torch.trace(op @ y)
             save_counter += 1
 
         # iterate solution
         y = qsolver.forward(t, dt, y)
+
+    # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
+    if save_states:
+        y_save[save_counter] = y
+    for j, op in enumerate(exp_ops):
+        exp_save[j, save_counter] = torch.trace(op @ y)
 
     return y_save, exp_save
 

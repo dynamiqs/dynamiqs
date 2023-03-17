@@ -1,6 +1,7 @@
 from math import sqrt
 from typing import List, Optional
 
+import numpy as np
 import torch
 
 from .odeint import AdjointQSolver, odeint
@@ -10,12 +11,13 @@ from .utils import trace
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, exp_ops: Optional[List[torch.Tensor]] = None, solver=None,
-    sensitivity='autograd', parameters=None
+    H, jump_ops, rho0, t_save, exp_ops: Optional[List[torch.Tensor]] = None,
+    solver=None, sensitivity=None, parameters=None
 ):
-    tsave = torch.tensor(tsave)
+    if isinstance(t_save, (list, np.ndarray)):
+        t_save = torch.tensor(t_save)
     if exp_ops is None:
-        exp_ops = exp_ops
+        exp_ops = []
     if solver is None:
         # TODO: Replace by adaptive time step solver when implemented.
         solver = Rouchon(dt=1e-2)
@@ -32,7 +34,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, tsave, exp_ops)
+    return odeint(qsolver, rho0, t_save, exp_ops)
 
 
 class MERouchon(AdjointQSolver):
