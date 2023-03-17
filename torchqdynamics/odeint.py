@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List, Optional
 
 import torch
+from tqdm import tqdm
 
 from .solver import AdaptativeStep, FixedStep
 
@@ -96,7 +97,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     y = y0
     times = torch.arange(0.0, t_save[-1] + dt, dt)
     save_counter = 0
-    for t in times:
+    for t in tqdm(times):
         # save solution
         if t >= t_save[save_counter]:
             if save_states:
