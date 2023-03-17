@@ -1,4 +1,9 @@
-# torchqdynamics
+<p align="center">
+<img src="https://github.com/PierreGuilmin/torchqdynamics/blob/795768e392760ebf097392396367191f03fe39aa/media/torchqdynamics_logo.png" width="600">
+</p>
+
+---
+
 Quantum systems simulation with PyTorch.
 
 This library provides differentiable solvers for the Schrödinger Equation, the Lindblad Master Equation and the Stochastic Master Equation. All the solvers are implemented using PyTorch and can run on GPUs.
