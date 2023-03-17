@@ -61,7 +61,7 @@ class MERouchon1(MERouchon):
 
         # compute rho(t+dt)
         rho = kraus_map(rho, Ms)
-        return rho / trace(rho).real
+        return rho / trace(rho)[..., None, None].real
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
@@ -108,7 +108,7 @@ class MERouchon2(MERouchon):
         # compute rho(t+dt)
         rho_ = kraus_map(rho, M1s)
         rho = kraus_map(rho, M0[None, ...]) + rho_ + 0.5 * kraus_map(rho_, M1s)
-        return rho / trace(rho).real
+        return rho / trace(rho)[..., None, None].real
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
@@ -131,9 +131,8 @@ def kraus_map(rho, operators):
 
 
 def trace(rho):
-    """Compute the batched trace of a tensor over its last two dimensions, and
-    return a tensor of the same number of dimensions as rho."""
-    return torch.einsum('...ii', rho)[..., None, None]
+    """Compute the batched trace of a tensor over its last two dimensions."""
+    return torch.einsum('...ii', rho)
 
 
 def inv_sqrtm(mat):
