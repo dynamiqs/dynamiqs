@@ -106,3 +106,8 @@ def lindbladian(
         Lindbladian.
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
+
+
+def trace(rho):
+    """Compute the batched trace of a tensor over its last two dimensions."""
+    return torch.einsum('...ii', rho)
