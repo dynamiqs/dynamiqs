@@ -89,9 +89,8 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(len(t_save), len(exp_ops)).to(
-            device=y0.get_device(), dtype=torch.float
-        )
+        exp_save = torch.zeros(len(t_save),
+                               len(exp_ops)).to(device=y0.device, dtype=torch.float)
 
     # save first step
     save_counter = 0
