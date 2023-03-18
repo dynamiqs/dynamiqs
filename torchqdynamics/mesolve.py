@@ -19,7 +19,7 @@ def mesolve(
     *,
     exp_ops: list[torch.Tensor] = None,
     save_states: bool = True,
-    autodiff: str = None,
+    autodiff_alg: str = None,
     parameters: tuple[nn.Parameter, ...] = None,
     solver: SolverOption = None,
 ):
@@ -43,7 +43,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, t_save, exp_ops, save_states, autodiff)
+    return odeint(qsolver, rho0, t_save, exp_ops, save_states, autodiff_alg)
 
 
 class MERouchon(AdjointQSolver):

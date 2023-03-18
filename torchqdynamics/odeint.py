@@ -26,22 +26,22 @@ def odeint(
     t_save: torch.Tensor,
     exp_ops: list[torch.Tensor],
     save_states: bool,
-    autodiff: str | None,
+    autodiff_alg: str | None,
 ):
     # check arguments
     check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
     args = (qsolver, y0, t_save, exp_ops, save_states)
-    if autodiff is None:
+    if autodiff_alg is None:
         return _odeint_inplace(*args)
-    elif autodiff == 'autograd':
+    elif autodiff_alg == 'autograd':
         return _odeint_main(*args)
-    elif autodiff == 'adjoint':
+    elif autodiff_alg == 'adjoint':
         return _odeint_adjoint(*args)
     else:
         raise ValueError(
-            f'Automatic differentiation algorithm {autodiff} is not defined.'
+            f'Automatic differentiation algorithm {autodiff_alg} is not defined.'
         )
 
 
