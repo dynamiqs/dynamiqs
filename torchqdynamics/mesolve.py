@@ -1,26 +1,27 @@
 from math import sqrt
-from typing import List, Optional
+from typing import Callable
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 from .odeint import AdjointQSolver, odeint
-from .solver import Rouchon
+from .solver import Rouchon, SolverOption
 from .solver_utils import inv_sqrtm, kraus_map
 from .utils import trace
 
 
 def mesolve(
-    H,
-    jump_ops,
-    rho0,
-    t_save,
+    H: torch.Tensor | Callable[[float], torch.Tensor],
+    jump_ops: list[torch.Tensor],
+    rho0: torch.Tensor,
+    t_save: torch.Tensor,
     *,
-    exp_ops: Optional[List[torch.Tensor]] = None,
+    exp_ops: list[torch.Tensor] = None,
     save_states: bool = True,
-    solver=None,
-    sensitivity=None,
-    parameters=None,
+    autodiff: str = None,
+    parameters: tuple[nn.Parameter, ...] = None,
+    solver: SolverOption = None,
 ):
     if isinstance(t_save, (list, np.ndarray)):
         t_save = torch.tensor(t_save)
@@ -42,7 +43,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, t_save, exp_ops, save_states)
+    return odeint(qsolver, rho0, t_save, exp_ops, save_states, autodiff)
 
 
 class MERouchon(AdjointQSolver):

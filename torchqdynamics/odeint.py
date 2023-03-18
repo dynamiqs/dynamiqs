@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
 
 import torch
 from tqdm import tqdm
@@ -21,34 +20,28 @@ class AdjointQSolver(ForwardQSolver):
         pass
 
 
-class AutoDiffAlgorithm(Enum):
-    AUTOGRAD = 'autograd'  # gradient computed by torch
-    NONE = 'none'  # don't compute the gradients
-    ADJOINT = 'adjoint'  # compute the gradient using the adjoint method
-
-
 def odeint(
-    qsolver,
-    y0,
+    qsolver: ForwardQSolver,
+    y0: torch.Tensor,
     t_save: torch.Tensor,
-    exp_ops: List[torch.Tensor],
+    exp_ops: list[torch.Tensor],
     save_states: bool,
-    autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
+    autodiff: str | None,
 ):
     # check arguments
     check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
     args = (qsolver, y0, t_save, exp_ops, save_states)
-    if autodiff_algorithm == AutoDiffAlgorithm.NONE:
+    if autodiff is None:
         return _odeint_inplace(*args)
-    elif autodiff_algorithm == AutoDiffAlgorithm.AUTOGRAD:
+    elif autodiff == 'autograd':
         return _odeint_main(*args)
-    elif autodiff_algorithm == AutoDiffAlgorithm.ADJOINT:
+    elif autodiff == 'adjoint':
         return _odeint_adjoint(*args)
     else:
         raise ValueError(
-            f'Auto differentiation algorithm {autodiff_algorithm} not defined'
+            f'Automatic differentiation algorithm {autodiff} is not defined.'
         )
 
 
