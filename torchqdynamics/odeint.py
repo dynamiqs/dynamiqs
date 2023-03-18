@@ -74,6 +74,8 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
+    # assert that `t_save` values are multiples of `dt` (with the default
+    # `rtol=1e-5` they differ by at most 0.001% from a multiple of `dt`)
     if not torch.allclose(torch.round(t_save / dt), t_save / dt):
         raise ValueError(
             'Every value of argument `t_save` must be a multiple of the time step `dt`.'
@@ -87,10 +89,19 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     if len(exp_ops) > 0:
         exp_save = torch.zeros(len(exp_ops), len(t_save)).to(y0)
 
-    # run the ode routine
-    y = y0
+    # define time values
+    # Note that defining the solver times as `torch.arange(0.0, t_save[-1], dt)`
+    # could result in an error of order `dt` in the save time (e.g. for
+    # `t_save[-1]=1.0` and `dt=0.999999` -> `times=[0.000000, 0.999999]`, so
+    # the final state would be saved one time step too far at
+    # `0.999999 + dt ~ 2.0`). The previous definition ensures that we never
+    # perform an extra step, so the error on the correct save time is of
+    # `0.001% * dt` instead of `dt`.
     num_times = round(t_save[-1].item() / dt) + 1
     times = torch.linspace(0.0, t_save[-1], num_times)
+
+    # run the ode routine
+    y = y0
     save_counter = 0
     for t in tqdm(times[:-1]):
         # save solution
