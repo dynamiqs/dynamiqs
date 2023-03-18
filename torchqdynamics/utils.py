@@ -115,7 +115,14 @@ def trace(rho):
 
 def expect(operator, state):
     """Compute the expectation value of an operator on a quantum state or density
-    matrix. The method is batchable over the state, but not over the operator."""
+    matrix. The method is batchable over the state, but not over the operator.
+
+    Args:
+        operator: tensor of shape (n, n)
+        state: tensor of shape (..., n, n) or (..., n)
+    Returns:
+        expectation value of shape (...)
+    """
     # TODO: Once QTensor is implemented, check if state is a density matrix or ket.
     # For now, we assume it is a density matrix.
     return torch.einsum('ij,...ji', operator, state)
