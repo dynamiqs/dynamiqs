@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
