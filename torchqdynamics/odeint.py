@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import List, Optional
 
 import torch
 from tqdm import tqdm
@@ -24,24 +25,24 @@ def odeint(
     qsolver: ForwardQSolver,
     y0: torch.Tensor,
     t_save: torch.Tensor,
-    exp_ops: list[torch.Tensor],
+    exp_ops: List[torch.Tensor],
     save_states: bool,
-    autodiff_alg: str | None,
+    gradient_alg: Optional[str],
 ):
     # check arguments
     check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
     args = (qsolver, y0, t_save, exp_ops, save_states)
-    if autodiff_alg is None:
+    if gradient_alg is None:
         return _odeint_inplace(*args)
-    elif autodiff_alg == 'autograd':
+    elif gradient_alg == 'autograd':
         return _odeint_main(*args)
-    elif autodiff_alg == 'adjoint':
+    elif gradient_alg == 'adjoint':
         return _odeint_adjoint(*args)
     else:
         raise ValueError(
-            f'Automatic differentiation algorithm {autodiff_alg} is not defined.'
+            f'Automatic differentiation algorithm {gradient_alg} is not defined.'
         )
 
 

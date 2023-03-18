@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import Callable
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -12,16 +12,16 @@ from .utils import trace
 
 
 def mesolve(
-    H: torch.Tensor | Callable[[float], torch.Tensor],
-    jump_ops: list[torch.Tensor],
+    H: Union[torch.Tensor, Callable[[float], torch.Tensor]],
+    jump_ops: List[torch.Tensor],
     rho0: torch.Tensor,
     t_save: torch.Tensor,
     *,
-    exp_ops: list[torch.Tensor] = None,
+    exp_ops: Optional[List[torch.Tensor]] = None,
     save_states: bool = True,
-    autodiff_alg: str = None,
-    parameters: tuple[nn.Parameter, ...] = None,
-    solver: SolverOption = None,
+    gradient_alg: Optional[str] = None,
+    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
+    solver: Optional[SolverOption] = None,
 ):
     if isinstance(t_save, (list, np.ndarray)):
         t_save = torch.tensor(t_save)
@@ -43,7 +43,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, t_save, exp_ops, save_states, autodiff_alg)
+    return odeint(qsolver, rho0, t_save, exp_ops, save_states, gradient_alg)
 
 
 class MERouchon(AdjointQSolver):
