@@ -92,7 +92,7 @@ def _fixed_odeint(
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(len(exp_ops), len(t_save)).to(y0)
+        exp_save = torch.zeros(*y0.shape[:-2], len(exp_ops), len(t_save)).to(y0)
 
     # define time values
     # Note that defining the solver times as `torch.arange(0.0, t_save[-1], dt)`
@@ -114,7 +114,7 @@ def _fixed_odeint(
             if save_states:
                 y_save[save_counter] = y
             for j, op in enumerate(exp_ops):
-                exp_save[j, save_counter] = expect(op, y)
+                exp_save[:, j, save_counter] = expect(op, y)
             save_counter += 1
 
         # iterate solution
@@ -124,7 +124,7 @@ def _fixed_odeint(
     if save_states:
         y_save[save_counter] = y
     for j, op in enumerate(exp_ops):
-        exp_save[j, save_counter] = expect(op, y)
+        exp_save[:, j, save_counter] = expect(op, y)
 
     return y_save, exp_save
 
