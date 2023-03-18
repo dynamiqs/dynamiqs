@@ -40,7 +40,7 @@ class QTensor(torch.Tensor):
         return qt.Qobj(self.numpy(force=True), dims=self.dims)
 
     @staticmethod
-    def from_qutip(x: qt.Qobj) -> torch.tensor:
+    def from_qutip(x: qt.Qobj) -> torch.Tensor:
         """Convert a QuTiP quantum object to a PyTorch tensor.
 
         Note:

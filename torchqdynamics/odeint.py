@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import List, Optional
+from typing import List, Literal
 
 import torch
 from tqdm import tqdm
@@ -11,13 +10,13 @@ from .utils import expect
 
 class ForwardQSolver(ABC):
     @abstractmethod
-    def forward(self, t, dt, rho):
+    def forward(self, t: float, dt: float, rho: torch.Tensor):
         pass
 
 
 class AdjointQSolver(ForwardQSolver):
     @abstractmethod
-    def forward_adjoint(self, t, dt, phi):
+    def forward_adjoint(self, t: float, dt: float, phi):
         pass
 
 
@@ -27,7 +26,7 @@ def odeint(
     t_save: torch.Tensor,
     exp_ops: List[torch.Tensor],
     save_states: bool,
-    gradient_alg: Optional[str],
+    gradient_alg: Literal[None, 'autograd', 'adjoint'],
 ):
     # check arguments
     check_t_save(t_save)
@@ -46,7 +45,10 @@ def odeint(
         )
 
 
-def _odeint_main(qsolver, y0, t_save, exp_ops, save_states):
+def _odeint_main(
+    qsolver: ForwardQSolver, y0: torch.Tensor, t_save: torch.Tensor,
+    exp_ops: List[torch.Tensor], save_states: bool
+):
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint(
             qsolver, y0, t_save, qsolver.options.dt, exp_ops, save_states
@@ -73,7 +75,10 @@ def _adaptive_odeint(*_args, **_kwargs):
     raise NotImplementedError
 
 
-def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
+def _fixed_odeint(
+    qsolver: ForwardQSolver, y0: torch.Tensor, t_save: torch.Tensor, dt: float,
+    exp_ops: List[torch.Tensor], save_states: bool
+):
     # assert that `t_save` values are multiples of `dt` (with the default
     # `rtol=1e-5` they differ by at most 0.001% from a multiple of `dt`)
     if not torch.allclose(torch.round(t_save / dt), t_save / dt):
@@ -124,7 +129,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     return y_save, exp_save
 
 
-def check_t_save(t_save):
+def check_t_save(t_save: torch.Tensor):
     """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
     if t_save.dim() != 1 or len(t_save) == 0:
