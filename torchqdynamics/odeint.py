@@ -6,6 +6,7 @@ import torch
 from tqdm import tqdm
 
 from .solver import AdaptativeStep, FixedStep
+from .utils import expect
 
 
 class ForwardQSolver(ABC):
@@ -31,7 +32,7 @@ def odeint(
     y0,
     t_save: torch.Tensor,
     exp_ops: List[torch.Tensor],
-    save_states: bool = True,
+    save_states: bool,
     autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
 ):
     # check arguments
@@ -79,7 +80,7 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
-    if not torch.all(torch.isclose(torch.round(t_save / dt), t_save / dt)):
+    if not torch.allclose(torch.round(t_save / dt), t_save / dt):
         raise ValueError(
             'Every value of argument `t_save` must be a multiple of the time step `dt`.'
         )
@@ -94,15 +95,16 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
 
     # run the ode routine
     y = y0
-    times = torch.arange(0.0, t_save[-1], dt)
+    num_times = round(t_save[-1].item() / dt) + 1
+    times = torch.linspace(0.0, t_save[-1], num_times)
     save_counter = 0
-    for t in tqdm(times):
+    for t in tqdm(times[:-1]):
         # save solution
         if t >= t_save[save_counter]:
             if save_states:
                 y_save[save_counter] = y
             for j, op in enumerate(exp_ops):
-                exp_save[j, save_counter] = torch.trace(op @ y)
+                exp_save[j, save_counter] = expect(op, y)
             save_counter += 1
 
         # iterate solution
@@ -112,7 +114,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     if save_states:
         y_save[save_counter] = y
     for j, op in enumerate(exp_ops):
-        exp_save[j, save_counter] = torch.trace(op @ y)
+        exp_save[j, save_counter] = expect(op, y)
 
     return y_save, exp_save
 

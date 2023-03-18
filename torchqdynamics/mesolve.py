@@ -11,8 +11,16 @@ from .utils import trace
 
 
 def mesolve(
-    H, jump_ops, rho0, t_save, exp_ops: Optional[List[torch.Tensor]] = None,
-    solver=None, sensitivity=None, parameters=None
+    H,
+    jump_ops,
+    rho0,
+    t_save,
+    *,
+    exp_ops: Optional[List[torch.Tensor]] = None,
+    save_states: bool = True,
+    solver=None,
+    sensitivity=None,
+    parameters=None,
 ):
     if isinstance(t_save, (list, np.ndarray)):
         t_save = torch.tensor(t_save)
@@ -34,7 +42,7 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, t_save, exp_ops)
+    return odeint(qsolver, rho0, t_save, exp_ops, save_states)
 
 
 class MERouchon(AdjointQSolver):
