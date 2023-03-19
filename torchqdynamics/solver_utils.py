@@ -35,11 +35,11 @@ def bexpect(operators: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
     density matrix. The method is batchable over the operators and the state.
 
     Args:
-        operators: tensor of shape (m, n, n)
+        operators: tensor of shape (b, n, n)
         state: tensor of shape (..., n, n) or (..., n)
     Returns:
         expectation value of shape (..., m)
     """
     # TODO: Once QTensor is implemented, check if state is a density matrix or ket.
     # For now, we assume it is a density matrix.
-    return torch.einsum('mij,...ji->...m', operators, state)
+    return torch.einsum('bij,...ji->...b', operators, state)

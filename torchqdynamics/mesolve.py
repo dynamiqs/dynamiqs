@@ -25,7 +25,7 @@ def mesolve(
 ):
     t_save = torch.as_tensor(t_save)
     if exp_ops is None:
-        exp_ops = []
+        exp_ops = torch.tensor([])
     else:
         exp_ops = torch.stack(exp_ops)
     if solver is None:
