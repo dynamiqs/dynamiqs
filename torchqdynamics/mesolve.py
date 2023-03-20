@@ -1,14 +1,23 @@
 from math import sqrt
+from typing import List, Optional
 
+import numpy as np
 import torch
 
-from .odeint import odeint
+from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon
+from .solver_utils import inv_sqrtm, kraus_map
+from .utils import trace
 
 
 def mesolve(
-    H, jump_ops, rho0, tsave, solver=None, sensitivity='autograd', parameters=None
+    H, jump_ops, rho0, t_save, exp_ops: Optional[List[torch.Tensor]] = None,
+    solver=None, sensitivity=None, parameters=None
 ):
+    if isinstance(t_save, (list, np.ndarray)):
+        t_save = torch.tensor(t_save)
+    if exp_ops is None:
+        exp_ops = []
     if solver is None:
         # TODO: Replace by adaptive time step solver when implemented.
         solver = Rouchon(dt=1e-2)
@@ -25,21 +34,10 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    return odeint(qsolver, rho0, tsave)
+    return odeint(qsolver, rho0, t_save, exp_ops)
 
 
-class QSolver:
-    def __init__(self):
-        pass
-
-    def forward(self, t, dt, rho):
-        pass
-
-    def forward_adjoint(self, t, dt, phi):
-        pass
-
-
-class MERouchon(QSolver):
+class MERouchon(AdjointQSolver):
     def __init__(self, H, jump_ops, solver_options):
         self.H = H
         self.jump_ops = jump_ops
@@ -112,37 +110,3 @@ class MERouchon2(MERouchon):
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
-
-
-def kraus_map(rho, operators):
-    """Compute the application of a Kraus map on an input density matrix.
-
-    This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.adjoint(),
-    dim=0)`. The use of einsum yields better performances on large matrices, but may
-    cause a small overhead on smaller matrices (N <~ 50).
-
-    Args:
-        rho: Density matrix of shape (..., n, n).
-        operators: Kraus operators of shape (b, n, n).
-    Returns:
-        Density matrix of shape (..., n, n) with the Kraus map applied.
-    """
-    return torch.einsum('mij,...jk,mkl->...il', operators, rho, operators.adjoint())
-
-
-def trace(rho):
-    """Compute the batched trace of a tensor over its last two dimensions."""
-    return torch.einsum('...ii', rho)
-
-
-def inv_sqrtm(mat):
-    """Compute the inverse square root of a matrix using its eigendecomposition.
-
-    TODO: Replace with Schur decomposition once released by PyTorch.
-    See the feature request at https://github.com/pytorch/pytorch/issues/78809.
-    Alternatively, see
-    https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176
-    for sqrtm implementation.
-    """
-    vals, vecs = torch.linalg.eigh(mat)
-    return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)

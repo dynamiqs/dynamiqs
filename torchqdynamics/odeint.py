@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 import torch
+from tqdm import tqdm
 
 from .solver import AdaptativeStep, FixedStep
 
@@ -10,6 +11,12 @@ from .solver import AdaptativeStep, FixedStep
 class ForwardQSolver(ABC):
     @abstractmethod
     def forward(self, t, dt, rho):
+        pass
+
+
+class AdjointQSolver(ForwardQSolver):
+    @abstractmethod
+    def forward_adjoint(self, t, dt, phi):
         pass
 
 
@@ -23,7 +30,7 @@ def odeint(
     qsolver,
     y0,
     t_save: torch.Tensor,
-    exp_ops: Optional[List[torch.Tensor]] = None,
+    exp_ops: List[torch.Tensor],
     save_states: bool = True,
     autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
 ):
@@ -83,35 +90,29 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
         y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(len(t_save), len(exp_ops)).to(
-            device=y0.get_device(), dtype=torch.float
-        )
-
-    # save first step
-    save_counter = 0
-    if t_save[0] == 0.0:
-        if save_states:
-            y_save[0] = y0
-        for j, op in enumerate(exp_ops):
-            exp_save[save_counter, j] = torch.trace(op @ y0)
-        save_counter += 1
+        exp_save = torch.zeros(len(exp_ops), len(t_save)).to(y0)
 
     # run the ode routine
     y = y0
-    t, t_max = 0, max(t_save)
-    while t < t_max:
-        # iterate solution
-        y = qsolver.forward(t, dt, y)
-
+    times = torch.arange(0.0, t_save[-1], dt)
+    save_counter = 0
+    for t in tqdm(times):
         # save solution
         if t >= t_save[save_counter]:
             if save_states:
                 y_save[save_counter] = y
-
             for j, op in enumerate(exp_ops):
-                exp_save[save_counter, j] = torch.trace(op @ y)
+                exp_save[j, save_counter] = torch.trace(op @ y)
             save_counter += 1
-        t += dt
+
+        # iterate solution
+        y = qsolver.forward(t, dt, y)
+
+    # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
+    if save_states:
+        y_save[save_counter] = y
+    for j, op in enumerate(exp_ops):
+        exp_save[j, save_counter] = torch.trace(op @ y)
 
     return y_save, exp_save
 
