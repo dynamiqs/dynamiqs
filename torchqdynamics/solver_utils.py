@@ -28,3 +28,18 @@ def inv_sqrtm(mat: torch.Tensor) -> torch.Tensor:
     """
     vals, vecs = torch.linalg.eigh(mat)
     return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
+
+
+def bexpect(operators: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
+    """Compute the expectation values of many operators on a quantum state or
+    density matrix. The method is batchable over the operators and the state.
+
+    Args:
+        operators: tensor of shape (b, n, n)
+        state: tensor of shape (..., n, n) or (..., n)
+    Returns:
+        expectation value of shape (..., m)
+    """
+    # TODO: Once QTensor is implemented, check if state is a density matrix or ket.
+    # For now, we assume it is a density matrix.
+    return torch.einsum('bij,...ji->...b', operators, state)
