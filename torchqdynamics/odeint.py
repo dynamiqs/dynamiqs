@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 import torch
 from tqdm import tqdm
 
 from .solver import AdaptativeStep, FixedStep
+from .utils import expect
 
 
 class ForwardQSolver(ABC):
@@ -20,34 +21,28 @@ class AdjointQSolver(ForwardQSolver):
         pass
 
 
-class AutoDiffAlgorithm(Enum):
-    AUTOGRAD = 'autograd'  # gradient computed by torch
-    NONE = 'none'  # don't compute the gradients
-    ADJOINT = 'adjoint'  # compute the gradient using the adjoint method
-
-
 def odeint(
-    qsolver,
-    y0,
+    qsolver: ForwardQSolver,
+    y0: torch.Tensor,
     t_save: torch.Tensor,
     exp_ops: List[torch.Tensor],
-    save_states: bool = True,
-    autodiff_algorithm=AutoDiffAlgorithm.AUTOGRAD,
+    save_states: bool,
+    gradient_alg: Optional[str],
 ):
     # check arguments
     check_t_save(t_save)
 
     # dispatch to appropriate odeint subroutine
     args = (qsolver, y0, t_save, exp_ops, save_states)
-    if autodiff_algorithm == AutoDiffAlgorithm.NONE:
+    if gradient_alg is None:
         return _odeint_inplace(*args)
-    elif autodiff_algorithm == AutoDiffAlgorithm.AUTOGRAD:
+    elif gradient_alg == 'autograd':
         return _odeint_main(*args)
-    elif autodiff_algorithm == AutoDiffAlgorithm.ADJOINT:
+    elif gradient_alg == 'adjoint':
         return _odeint_adjoint(*args)
     else:
         raise ValueError(
-            f'Auto differentiation algorithm {autodiff_algorithm} not defined'
+            f'Automatic differentiation algorithm {gradient_alg} is not defined.'
         )
 
 
@@ -79,7 +74,9 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
-    if not torch.all(torch.isclose(torch.round(t_save / dt), t_save / dt)):
+    # assert that `t_save` values are multiples of `dt` (with the default
+    # `rtol=1e-5` they differ by at most 0.001% from a multiple of `dt`)
+    if not torch.allclose(torch.round(t_save / dt), t_save / dt):
         raise ValueError(
             'Every value of argument `t_save` must be a multiple of the time step `dt`.'
         )
@@ -92,17 +89,27 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     if len(exp_ops) > 0:
         exp_save = torch.zeros(len(exp_ops), len(t_save)).to(y0)
 
+    # define time values
+    # Note that defining the solver times as `torch.arange(0.0, t_save[-1], dt)`
+    # could result in an error of order `dt` in the save time (e.g. for
+    # `t_save[-1]=1.0` and `dt=0.999999` -> `times=[0.000000, 0.999999]`, so
+    # the final state would be saved one time step too far at
+    # `0.999999 + dt ~ 2.0`). The previous definition ensures that we never
+    # perform an extra step, so the error on the correct save time is of
+    # `0.001% * dt` instead of `dt`.
+    num_times = round(t_save[-1].item() / dt) + 1
+    times = torch.linspace(0.0, t_save[-1], num_times)
+
     # run the ode routine
     y = y0
-    times = torch.arange(0.0, t_save[-1], dt)
     save_counter = 0
-    for t in tqdm(times):
+    for t in tqdm(times[:-1]):
         # save solution
         if t >= t_save[save_counter]:
             if save_states:
                 y_save[save_counter] = y
             for j, op in enumerate(exp_ops):
-                exp_save[j, save_counter] = torch.trace(op @ y)
+                exp_save[j, save_counter] = expect(op, y)
             save_counter += 1
 
         # iterate solution
@@ -112,7 +119,7 @@ def _fixed_odeint(qsolver, y0, t_save, dt, exp_ops, save_states):
     if save_states:
         y_save[save_counter] = y
     for j, op in enumerate(exp_ops):
-        exp_save[j, save_counter] = torch.trace(op @ y)
+        exp_save[j, save_counter] = expect(op, y)
 
     return y_save, exp_save
 
