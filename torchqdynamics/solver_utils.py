@@ -1,7 +1,7 @@
 import torch
 
 
-def kraus_map(rho, operators):
+def kraus_map(rho: torch.Tensor, operators: torch.Tensor) -> torch.Tensor:
     """Compute the application of a Kraus map on an input density matrix.
 
     This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.adjoint(),
@@ -17,7 +17,7 @@ def kraus_map(rho, operators):
     return torch.einsum('mij,...jk,mkl->...il', operators, rho, operators.adjoint())
 
 
-def inv_sqrtm(mat):
+def inv_sqrtm(mat: torch.Tensor) -> torch.Tensor:
     """Compute the inverse square root of a matrix using its eigendecomposition.
 
     TODO: Replace with Schur decomposition once released by PyTorch.
