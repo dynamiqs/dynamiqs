@@ -16,7 +16,7 @@ class ForwardQSolver(ABC):
 
 class AdjointQSolver(ForwardQSolver):
     @abstractmethod
-    def forward_adjoint(self, t: float, dt: float, phi):
+    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
         pass
 
 

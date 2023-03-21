@@ -72,7 +72,7 @@ class MERouchon1(MERouchon):
         rho = kraus_map(rho, Ms)
         return rho / trace(rho)[..., None, None].real
 
-    def forward_adjoint(self, t: float, dt: float, phi):
+    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
         raise NotImplementedError
 
 
@@ -95,7 +95,7 @@ class MERouchon1_5(MERouchon):
         rho = kraus_map(rho, Ms)
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi):
+    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
         raise NotImplementedError
 
 
@@ -119,5 +119,5 @@ class MERouchon2(MERouchon):
         rho = kraus_map(rho, M0[None, ...]) + rho_ + 0.5 * kraus_map(rho_, M1s)
         return rho / trace(rho)[..., None, None].real
 
-    def forward_adjoint(self, t: float, dt: float, phi):
+    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
         raise NotImplementedError
