@@ -74,7 +74,7 @@ class MERouchon(AdjointQSolver):
         self.jump_ops = jump_ops
         self.jumpdag_ops = jump_ops.adjoint()
         self.sum_nojump = (self.jumpdag_ops @ self.jump_ops).sum(dim=0)
-        self.I = torch.eye(H(0).shape[-1]).to(H(0))
+        self.I = torch.eye(H.shape[-1]).to(H)
         self.options = solver_options
 
 
@@ -88,7 +88,7 @@ class MERouchon1(MERouchon):
         #     (b_rho0, n, n)
 
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
+        H_nh = self.H - 0.5j * self.sum_nojump
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh
@@ -112,7 +112,7 @@ class MERouchon1_5(MERouchon):
         #     (b_rho0, n, n)
 
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
+        H_nh = self.H - 0.5j * self.sum_nojump
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh
@@ -146,7 +146,7 @@ class MERouchon2(MERouchon):
         #     (b_rho0, n, n)
 
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
+        H_nh = self.H - 0.5j * self.sum_nojump
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
