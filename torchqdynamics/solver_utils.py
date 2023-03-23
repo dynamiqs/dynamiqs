@@ -1,7 +1,7 @@
 import torch
 
 
-def kraus_map(rho: torch.Tensor, operators: torch.Tensor) -> torch.Tensor:
+def kraus_map(rho: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
     """Compute the application of a Kraus map on an input density matrix.
 
     This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.adjoint(),
@@ -9,12 +9,13 @@ def kraus_map(rho: torch.Tensor, operators: torch.Tensor) -> torch.Tensor:
     cause a small overhead on smaller matrices (N <~ 50).
 
     Args:
-        rho: Density matrix of shape (..., n, n).
-        operators: Kraus operators of shape (b, n, n).
+        rho: Density matrix of shape (a, ..., n, n).
+        operators: Kraus operators of shape (a, b, n, n).
     Returns:
-        Density matrix of shape (..., n, n) with the Kraus map applied.
+        Density matrix of shape (a, ..., n, n) with the Kraus map applied.
     """
-    return torch.einsum('mij,...jk,mkl->...il', operators, rho, operators.adjoint())
+    # TODO: fix doc
+    return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.adjoint())
 
 
 def inv_sqrtm(mat: torch.Tensor) -> torch.Tensor:

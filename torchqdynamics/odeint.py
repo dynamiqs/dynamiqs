@@ -11,6 +11,11 @@ from .solver_utils import bexpect
 class ForwardQSolver(ABC):
     @abstractmethod
     def forward(self, t: float, dt: float, rho: torch.Tensor):
+        # Args:
+        #     rho: (..., m, n)
+        #
+        # Returns:
+        #     (..., m, n)
         pass
 
 
@@ -28,6 +33,9 @@ def odeint(
     save_states: bool,
     gradient_alg: Literal[None, 'autograd', 'adjoint'],
 ):
+    # Args:
+    #     y0: (..., m, n)
+
     # check arguments
     check_t_save(t_save)
 
@@ -79,6 +87,14 @@ def _fixed_odeint(
     qsolver: ForwardQSolver, y0: torch.Tensor, t_save: torch.Tensor, dt: float,
     exp_ops: torch.Tensor, save_states: bool
 ):
+    # Args:
+    #     y0: (..., m, n)
+    #
+    # Returns:
+    #     (y_save, exp_save) with
+    #     - y_save: (..., len(t_save), m, n)
+    #     - exp_save: (..., len(exp_ops), len(t_save))
+
     # assert that `t_save` values are multiples of `dt` (with the default
     # `rtol=1e-5` they differ by at most 0.001% from a multiple of `dt`)
     if not torch.allclose(torch.round(t_save / dt), t_save / dt):
@@ -88,11 +104,12 @@ def _fixed_odeint(
 
     # initialize save tensor
     y_save, exp_save = None, None
+    batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
     if save_states:
-        y_save = torch.zeros(len(t_save), *y0.shape).to(y0)
+        y_save = torch.zeros(*batch_sizes, len(t_save), m, n).to(y0)
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(*y0.shape[:-2], len(exp_ops), len(t_save)).to(y0)
+        exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(t_save)).to(y0)
 
     # define time values
     # Note that defining the solver times as `torch.arange(0.0, t_save[-1], dt)`
@@ -112,7 +129,7 @@ def _fixed_odeint(
         # save solution
         if t >= t_save[save_counter]:
             if save_states:
-                y_save[save_counter] = y
+                y_save[..., save_counter, :, :] = y
             if len(exp_ops) > 0:
                 exp_save[..., save_counter] = bexpect(exp_ops, y)
             save_counter += 1
@@ -122,7 +139,7 @@ def _fixed_odeint(
 
     # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
     if save_states:
-        y_save[save_counter] = y
+        y_save[..., save_counter, :, :] = y
     if len(exp_ops) > 0:
         exp_save[..., save_counter] = bexpect(exp_ops, y)
 
