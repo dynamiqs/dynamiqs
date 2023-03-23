@@ -27,3 +27,4 @@ split_before_named_assigns = false
 profile = "black"
 line_length = 88  # to be consistent with yapf
 skip = ["__init__.py"]
+src_paths = ["torchqdynamics", "tests"]
