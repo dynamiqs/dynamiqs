@@ -1,4 +1,7 @@
+from typing import List, Optional
+
 import torch
+from qutip import Qobj
 
 
 def ket_to_bra(x: torch.Tensor) -> torch.Tensor:
@@ -126,3 +129,28 @@ def expect(operator: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
     # TODO: Once QTensor is implemented, check if state is a density matrix or ket.
     # For now, we assume it is a density matrix.
     return torch.einsum('ij,...ji', operator, state)
+
+
+def from_qutip(x: Qobj) -> torch.Tensor:
+    """Convert a QuTiP quantum object to a PyTorch tensor.
+
+    Args:
+        x: QuTiP quantum object.
+
+    Returns:
+        PyTorch tensor.
+    """
+    return torch.from_numpy(x.full())
+
+
+def to_qutip(x: torch.Tensor, dims: Optional[List] = None) -> Qobj:
+    """Convert a PyTorch tensor to a QuTiP quantum object.
+
+    Args:
+        x: PyTorch tensor.
+        dims: QuTiP object dimensions.
+
+    Returns:
+        QuTiP quantum object.
+    """
+    return Qobj(x.numpy(force=True), dims=dims)
