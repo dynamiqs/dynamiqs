@@ -54,7 +54,7 @@ def mesolve(
 
 class MERouchon(AdjointQSolver):
     def __init__(
-        self, H: TimeDependentOperator, jump_ops: List[torch.Tensor],
+        self, H: TimeDependentOperator, jump_ops: torch.Tensor,
         solver_options: SolverOption
     ):
         self.H = H
