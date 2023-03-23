@@ -8,7 +8,7 @@ from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon, SolverOption
 from .solver_utils import inv_sqrtm, kraus_map
 from .types import TensorLike, TimeDependentOperator
-from .utils import trace
+from .utils import is_ket, ket_to_dm, trace
 
 
 def mesolve(
@@ -42,6 +42,8 @@ def mesolve(
     jump_ops = torch.stack(jump_ops)
 
     # batch rho0 by default
+    if is_ket(rho0):
+        rho0 = ket_to_dm(rho0)
     rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
 
     t_save = torch.as_tensor(t_save)
