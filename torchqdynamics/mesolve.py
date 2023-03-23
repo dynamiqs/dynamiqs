@@ -80,11 +80,10 @@ class MERouchon(AdjointQSolver):
         # Args:
         #     H: (b_H, n, n)
 
-        # we convert H and jump_ops to compatible sizes, i.e. tensors of size
-        # (a, b, n, n) where a is b_H or 1 and b is len(jump_ops) or 1
-        self.H = H[:, None]  # (b_H, 1, n, n)
+        # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
+        self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
-        self.sum_nojump = (jump_ops @ jump_ops.adjoint()).sum(dim=0)  # (n, n)
+        self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
         n = H.shape[-1]
         self.I = torch.eye(n).to(H)  # (n, n)
         self.options = solver_options
@@ -104,10 +103,10 @@ class MERouchon1(MERouchon):
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh  # (b_H, 1, n, n)
-        Ms = sqrt(dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        M1s = sqrt(dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, Ms)
+        rho = kraus_map(rho, M0) + kraus_map(rho, M1s)
 
         # normalize by the trace
         rho = rho / trace(rho)[..., None, None].real
