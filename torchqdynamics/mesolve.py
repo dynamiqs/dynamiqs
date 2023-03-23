@@ -38,6 +38,11 @@ def mesolve(
     rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
     y0 = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
+    if len(jump_ops) == 0:
+        raise ValueError(
+            'Argument `jump_ops` must be a non-empty list of torch.Tensor.'
+        )
+    jump_ops = torch.stack(jump_ops)
     t_save = torch.as_tensor(t_save)
     if exp_ops is None:
         exp_ops = torch.tensor([])
@@ -74,7 +79,7 @@ def mesolve(
 
 class MERouchon(AdjointQSolver):
     def __init__(
-        self, H: TimeDependentOperator, jump_ops: List[torch.Tensor],
+        self, H: TimeDependentOperator, jump_ops: torch.Tensor,
         solver_options: SolverOption
     ):
         # Args:
