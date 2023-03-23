@@ -5,6 +5,7 @@ from typing import List
 import torch
 from tqdm import tqdm
 
+from .decorators import cached_main
 from .solver import AdaptativeStep, FixedStep
 
 
@@ -13,11 +14,28 @@ class ForwardQSolver(ABC):
     def forward(self, t, dt, rho):
         pass
 
+    @abstractmethod
+    def H(self, t):
+        pass
+
 
 class AdjointQSolver(ForwardQSolver):
+    def __init__(self, H):
+        self._H = H
+
     @abstractmethod
     def forward_adjoint(self, t, dt, phi):
         pass
+
+    @cached_main
+    def H(self, t):
+        if isinstance(self._H, torch.Tensor):
+            return self._H, False
+        elif callable(self._H):
+            return self._H(t), True
+        else:
+            # Will come in a next PR
+            raise NotImplementedError('Piecewise constant H is not supported yet')
 
 
 class AutoDiffAlgorithm(Enum):

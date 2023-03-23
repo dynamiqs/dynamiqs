@@ -4,6 +4,7 @@ from typing import List, Optional
 import numpy as np
 import torch
 
+from .decorators import cached_depends_on, cached_main
 from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon
 from .solver_utils import inv_sqrtm, kraus_map
@@ -39,7 +40,7 @@ def mesolve(
 
 class MERouchon(AdjointQSolver):
     def __init__(self, H, jump_ops, solver_options):
-        self.H = H
+        super().__init__(H)
         self.jump_ops = jump_ops
         self.jumpdag_ops = jump_ops.adjoint()
         self.sum_nojump = (self.jumpdag_ops @ self.jump_ops).sum(dim=0)
@@ -54,12 +55,17 @@ class MERouchon1(MERouchon):
         H_nh = self.H(t) - 0.5j * self.sum_nojump
 
         # build time-dependent Kraus operators
-        M0 = self.I - 1j * dt * H_nh
-        Ms = torch.cat((M0[None, ...], sqrt(dt) * self.jump_ops))
+        Ms = self.Ms(H_nh, dt)
 
         # compute rho(t+dt)
         rho = kraus_map(rho, Ms)
         return rho / trace(rho)[..., None, None].real
+
+    @cached_depends_on({'H_nh': 'H'})
+    def Ms(self, H_nh, dt):
+        M0 = self.I - 1j * dt * H_nh
+        Ms = torch.cat((M0[None, ...], sqrt(dt) * self.jump_ops))
+        return Ms
 
     def forward_adjoint(self, t, dt, phi):
         raise NotImplementedError
