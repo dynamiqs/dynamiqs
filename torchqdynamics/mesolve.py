@@ -32,17 +32,18 @@ def mesolve(
     #     - y_save: (b_H?, b_rho0?, len(t_save), n, n)
     #     - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
 
-    # batch H and rho0 by default
+    # batch H by default
     H_batched = H[None, ...] if H.dim() == 2 else H
-    b_H = H_batched.size(0)
-    rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
-    y0 = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
     if len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of torch.Tensor.'
         )
     jump_ops = torch.stack(jump_ops)
+
+    # batch rho0 by default
+    rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
+
     t_save = torch.as_tensor(t_save)
     if exp_ops is None:
         exp_ops = torch.tensor([])
@@ -64,6 +65,8 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
+    b_H = H_batched.size(0)
+    y0 = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
     y_save, exp_save = odeint(qsolver, y0, t_save, exp_ops, save_states, gradient_alg)
 
     # restore correct batching
