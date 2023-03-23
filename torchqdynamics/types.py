@@ -31,6 +31,6 @@ def to_torch(x: QTensorLike) -> torch.Tensor:
         return torch.as_tensor(x)
     else:
         raise TypeError(
-            'invalid type (supported: QuTiP quantum object, NumPy array, '
-            'Python list or PyTorch tensor)'
+            f'Input of type {type(x)} is not supported. `to_torch` only supports QuTiP '
+            'quantum object, NumPy array, Python list or PyTorch tensor.'
         )
