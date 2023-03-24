@@ -1,7 +1,8 @@
 import torch
+from torch import Tensor
 
 
-def kraus_map(rho: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
+def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     """Compute the application of a Kraus map on an input density matrix.
 
     This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.adjoint(),
@@ -18,7 +19,7 @@ def kraus_map(rho: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
     return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.adjoint())
 
 
-def inv_sqrtm(mat: torch.Tensor) -> torch.Tensor:
+def inv_sqrtm(mat: Tensor) -> Tensor:
     """Compute the inverse square root of a matrix using its eigendecomposition.
 
     TODO: Replace with Schur decomposition once released by PyTorch.
@@ -31,7 +32,7 @@ def inv_sqrtm(mat: torch.Tensor) -> torch.Tensor:
     return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
 
 
-def bexpect(operators: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
+def bexpect(operators: Tensor, state: Tensor) -> Tensor:
     """Compute the expectation values of many operators on a quantum state or
     density matrix. The method is batchable over the operators and the state.
 

@@ -3,25 +3,26 @@ from typing import List, Literal, Optional, Tuple
 
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon, SolverOption
 from .solver_utils import inv_sqrtm, kraus_map
-from .types import TensorLike, TimeDependentOperator
+from .types import TensorLike, TensorTD
 from .utils import trace
 
 
 def mesolve(
-    H: TimeDependentOperator,
-    jump_ops: List[torch.Tensor],
-    rho0: torch.Tensor,
+    H: TensorTD,
+    jump_ops: List[Tensor],
+    rho0: Tensor,
     t_save: TensorLike,
     *,
-    exp_ops: Optional[List[torch.Tensor]] = None,
     save_states: bool = True,
-    gradient_alg: Literal[None, 'autograd', 'adjoint'] = None,
-    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
+    exp_ops: Optional[List[Tensor]] = None,
     solver: Optional[SolverOption] = None,
+    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
+    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
 ):
     # Args:
     #     H: (b_H?, n, n)
@@ -36,9 +37,7 @@ def mesolve(
     H_batched = H[None, ...] if H.dim() == 2 else H
 
     if len(jump_ops) == 0:
-        raise ValueError(
-            'Argument `jump_ops` must be a non-empty list of torch.Tensor.'
-        )
+        raise ValueError('Argument `jump_ops` must be a non-empty list of Tensors.')
     jump_ops = torch.stack(jump_ops)
 
     # batch rho0 by default
@@ -81,10 +80,7 @@ def mesolve(
 
 
 class MERouchon(AdjointQSolver):
-    def __init__(
-        self, H: TimeDependentOperator, jump_ops: torch.Tensor,
-        solver_options: SolverOption
-    ):
+    def __init__(self, H: TensorTD, jump_ops: Tensor, solver_options: SolverOption):
         # Args:
         #     H: (b_H, n, n)
 
@@ -98,7 +94,7 @@ class MERouchon(AdjointQSolver):
 
 
 class MERouchon1(MERouchon):
-    def forward(self, t: float, dt: float, rho: torch.Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1."""
         # Args:
         #     rho: (b_H, b_rho0, n, n)
@@ -121,12 +117,12 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
+    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
         raise NotImplementedError
 
 
 class MERouchon1_5(MERouchon):
-    def forward(self, t: float, dt: float, rho: torch.Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1.5."""
         # Args:
         #     rho: (b_H, b_rho0, n, n)
@@ -155,12 +151,12 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
+    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
         raise NotImplementedError
 
 
 class MERouchon2(MERouchon):
-    def forward(self, t: float, dt: float, rho: torch.Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 2.
 
         NOTE: For fast time-varying Hamiltonians, this method is not order 2 because the
@@ -191,5 +187,5 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
+    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
         raise NotImplementedError

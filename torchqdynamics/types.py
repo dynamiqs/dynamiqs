@@ -3,20 +3,21 @@ from typing import Callable, List, Union, get_args
 import numpy as np
 import torch
 from qutip import Qobj
+from torch import Tensor
 
 from .utils import from_qutip
 
 # TODO: add typing for Hamiltonian with piecewise-constant factor
-TimeDependentOperator = Union[torch.Tensor, Callable[[float], torch.Tensor]]
+TensorTD = Union[Tensor, Callable[[float], Tensor]]
 
 # type for objects convertible to a torch tensor using `torch.as_tensor`
-TensorLike = Union[List, np.ndarray, torch.Tensor]
+TensorLike = Union[List, np.ndarray, Tensor]
 
 # type for objects convertible to a torch tensor using `torchqdynamics.to_tensor`
 QTensorLike = Union[TensorLike, Qobj]
 
 
-def to_torch(x: QTensorLike) -> torch.Tensor:
+def to_torch(x: QTensorLike) -> Tensor:
     """Convert a `QTensorLike` object to a PyTorch tensor.
 
     Args:

@@ -2,19 +2,20 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
+from torch import Tensor
 
 
 def smesolve(
-    H: torch.Tensor,
-    Ls: List[torch.Tensor],
-    Ms: List[torch.Tensor],
+    H: Tensor,
+    Ls: List[Tensor],
+    Ms: List[Tensor],
     etas: List[float],
-    rho0: torch.Tensor,
+    rho0: Tensor,
     tlist: np.ndarray,
     ntrajs: int,
     solver: str,
     options: Optional[Dict[str, Any]] = None,
-) -> torch.Tensor:
+) -> Tensor:
     raise NotImplementedError(
         'the Stochastic Master Equation solvers are not implemented yet, come '
         'back soon!'
