@@ -8,7 +8,7 @@ from ..solver import SolverOption
 from ..types import OperatorLike, TensorLike, TimeDependentOperatorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
-from .solver_options import Rouchon
+from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 
 def mesolve(
@@ -57,16 +57,15 @@ def mesolve(
 
     if solver is None:
         # TODO: Replace by adaptive time step solver when implemented.
-        solver = Rouchon(dt=1e-2)
+        solver = Rouchon1(dt=1e-2)
 
     # define the QSolver
-    if isinstance(solver, Rouchon):
-        if solver.order == 1:
-            qsolver = MERouchon1(H_batched, jump_ops, solver)
-        elif solver.order == 1.5:
-            qsolver = MERouchon1_5(H_batched, jump_ops, solver)
-        elif solver.order == 2:
-            qsolver = MERouchon2(H_batched, jump_ops, solver)
+    if isinstance(solver, Rouchon1):
+        qsolver = MERouchon1(H_batched, jump_ops, solver)
+    elif isinstance(solver, Rouchon1_5):
+        qsolver = MERouchon1_5(H_batched, jump_ops, solver)
+    elif isinstance(solver, Rouchon2):
+        qsolver = MERouchon2(H_batched, jump_ops, solver)
     else:
         raise NotImplementedError
 
