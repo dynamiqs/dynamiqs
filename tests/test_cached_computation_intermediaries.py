@@ -42,45 +42,45 @@ class TestCachedComputationIntermediaries(unittest.TestCase):
         solver = FakeSolver()
         solver.H(0.1)
         solver.Q(None, 0.1)
-        assert solver.H_calls == 1
-        assert solver.Q_calls == 1
+        self.assertEqual(solver.H_calls, 1)
+        self.assertEqual(solver.Q_calls, 1)
 
         solver.H(0.1)
         solver.Q(None, 0.1)
-        assert solver.H_calls == 1
-        assert solver.Q_calls == 1
+        self.assertEqual(solver.H_calls, 1)
+        self.assertEqual(solver.Q_calls, 1)
 
     def test_values_are_freezed(self):
         solver = FakeSolver()
         solver.H(0.1)
         solver.Q(None, 0.0)
-        assert solver.Q_calls == 1
+        self.assertEqual(solver.Q_calls, 1)
 
         solver.H(0.2)
         solver.Q(None, 0.0)
-        assert solver.Q_calls == 2
+        self.assertEqual(solver.Q_calls, 2)
 
         solver.H_is_constant = True
         solver.H(0.3)
         solver.Q(None, 0.0)
-        assert solver.Q_calls == 2
+        self.assertEqual(solver.Q_calls, 2)
 
     def test_cache_is_flushed_on_arguments_change(self):
         solver = FakeSolver()
         solver.H(0.1)
         solver.Q(None, 0.1)
-        assert solver.H_calls == 1
-        assert solver.Q_calls == 1
+        self.assertEqual(solver.H_calls, 1)
+        self.assertEqual(solver.Q_calls, 1)
 
         solver.H(0.1)
         solver.Q(None, 0.2)
-        assert solver.H_calls == 1
-        assert solver.Q_calls == 2
+        self.assertEqual(solver.H_calls, 1)
+        self.assertEqual(solver.Q_calls, 2)
 
         solver.H(0.1)
         solver.Q(None, 0.2)
-        assert solver.H_calls == 1
-        assert solver.Q_calls == 2
+        self.assertEqual(solver.H_calls, 1)
+        self.assertEqual(solver.Q_calls, 2)
 
 
 if __name__ == '__main__':
