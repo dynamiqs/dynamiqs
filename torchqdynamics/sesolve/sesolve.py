@@ -4,8 +4,9 @@ import torch
 import torch.nn as nn
 
 from ..odeint import odeint
-from ..solver_options import SolverOption
+from ..solver_options import Euler, SolverOption
 from ..types import OperatorLike, TensorLike, TimeDependentOperatorLike, to_tensor
+from .euler import SEEuler
 
 
 def sesolve(
@@ -46,12 +47,14 @@ def sesolve(
 
     exp_ops = to_tensor(exp_ops)
 
-    # TODO: placeholder, to remove
     if solver is None:
-        pass
+        solver = Euler(dt=1e-2)
 
-    # TODO: placeholder, to remove
-    qsolver = None
+    # define the QSolver
+    if isinstance(solver, Euler):
+        qsolver = SEEuler(H_batched, solver)
+    else:
+        raise NotImplementedError
 
     # compute the result
     y_save, exp_save = odeint(
