@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 
-def ssolve(
+def sesolve(
     H: torch.Tensor,
     rho0: torch.Tensor,
     tlist: np.ndarray,
