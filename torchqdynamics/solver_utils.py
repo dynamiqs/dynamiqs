@@ -45,3 +45,15 @@ def bexpect(operators: Tensor, state: Tensor) -> Tensor:
     # TODO: Once QTensor is implemented, check if state is a density matrix or ket.
     # For now, we assume it is a density matrix.
     return torch.einsum('bij,...ji->...b', operators, state)
+
+
+def dissipator(rho: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
+    return (
+        torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.adjoint()) -
+        0.5 * torch.einsum('abij,abjk,a...kl->a...il', O.adjoint(), O, rho) -
+        0.5 * torch.einsum('a...ij,abjk,abkl->a...il', rho, O.adjoint(), O)
+    )
+
+
+def lindbladian(rho: torch.Tensor, H: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
+    return -1j * (H @ rho - rho @ H) + dissipator(rho, O)
