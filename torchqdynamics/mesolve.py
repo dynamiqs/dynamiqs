@@ -41,9 +41,9 @@ def mesolve(
     passed as... TODO: complete with Hamiltonian format
 
     Available solvers:
-      - `Rouchon` (alias of `Rouchon2`)
-      - `Rouchon1`
+      - `Rouchon1` (alias of `Rouchon`)
       - `Rouchon1_5`
+      - `Rouchon2`
 
     Args:
         H (Tensor or Callable): Hamiltonian.
