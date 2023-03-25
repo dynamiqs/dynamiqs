@@ -23,22 +23,20 @@ def mesolve(
     solver: Optional[SolverOption] = None,
     gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
     parameters: Optional[Tuple[nn.Parameter, ...]] = None,
-):
-    """
-    Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
+) -> Tuple[Tensor, Tensor]:
+    r"""Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
-    The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
-    solve multiple master equations in a single run. The jump operators `jump_ops` and
-    time list `t_save` should however be common to all batches.
+    The Hamiltonian ``H`` and the initial density matrix ``rho0`` can be batched over to
+    solve multiple master equations in a single run. The jump operators ``jump_ops`` and
+    time list ``t_save`` should however be common to all batches.
 
-    The function can be differentiated over using either the default Pytorch autograd
-    library (`gradient_alg="autograd"`), or a custom adjoint state differentiation
-    (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward
-    pass should be used (e.g. a Rouchon solver). By default, `gradient_alg=None` is
-    called, in which case the graph of operation is not stored for improved solver
-    performance.
+    ``mesolve`` can be differentiated over using either the default Pytorch autograd
+    library (``gradient_alg="autograd"``), or a custom adjoint state differentiation
+    (``gradient_alg="adjoint"``). For the latter, a solver that is stable in the
+    backward pass should be used (e.g. Rouchon solver). By default, the graph of
+    operations is not stored for improved performance of the solver.
 
-    For time-dependent problems, the Hamiltonian `H` can be passed as a callable with
+    For time-dependent problems, the Hamiltonian ``H`` can be passed as a function with
     signature float -> Tensor. Piece-wise constant Hamiltonians can also be passed as...
     TODO: complete with Hamiltonian format
 
@@ -48,18 +46,28 @@ def mesolve(
         `Rouchon1_5`
 
     Args:
-        H : Hamiltonian of shape (n,n) or (b_H, n, n) if batched.
-        jump_ops : List of jump operators of shape (n, n).
-        rho0 : Initial density matrix of shape (n, n) or (b_rho, n, n) if batched.
-        t_save : Array of times to save results at. `t_save[-1]` defines the total
-            evolution time of the master equation.
-        save_states : Whether to save the computed density matrices at every time
-            specified by `t_save` or not. Defaults to True.
-        exp_ops : List of operators to compute the expectation value of.
-        solver : Solver used to compute the master equation solutions.
-        gradient_alg : Algorithm used to differentiate through the function.
-        parameters : Parameters that gradients are computed with respect to in the
-            backward pass.
+        H (Tensor or Callable): Hamiltonian.
+            Can be a tensor of shape (n, n), a tensor of shape (b_H, n, n) if batched,
+            or a callable ``H(t: float) -> Tensor`` that returns a tensor of either
+            possible shapes at every time between ``t=0`` and ``t=t_save[-1]``.
+        jump_ops (List[Tensor]): List of jump operators.
+            Each jump operator should be a tensor of shape (n, n).
+        rho0 (Tensor): Initial density matrix.
+            Tensor of shape (n, n), or tensor of shape (b_rho, n, n) if batched.
+        t_save (TensorLike): Array of times for which results are saved.
+            The last value ``t_save[-1]`` defines the total time of evolution.
+        save_states (bool, optional):
+            If ``True``, the density matrix is saved at every time value in ``t_save``.
+            Defaults to ``True``.
+        exp_ops (List[Tensor], optional):
+            List of operators for which the expectation value is computed at every time
+            value in ``t_save``.
+        solver (SolverOption, optional): Solver used to compute the master equation
+            solutions. See the list of available solvers.
+        gradient_alg (str, optional): Algorithm used for computing gradients in the
+            backward pass. Defaults to ``None``.
+        parameters (tuple of nn.Parameter): Parameters that gradients are computed with
+            respect to during the backward pass.
 
     Returns:
         A tuple `(rho_save, exp_save)` where
