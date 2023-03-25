@@ -68,11 +68,11 @@ def mesolve(
             respect to during the backward pass.
 
     Returns:
-        A tuple `(rho_save, exp_save)` where
-            `rho_save` is a tensor with the computed density matrices at `t_save`
+        A tuple ``(rho_save, exp_save)`` where
+            ``rho_save`` is a tensor with the computed density matrices at ``t_save``
                 times, and of shape (len(t_save), n, n) or
                 (b_H, b_rho, len(t_save), n, n) if batched.
-            `exp_save` is a tensor with the computed expectation values at `t_save`
+            ``exp_save`` is a tensor with the computed expectation values at ``t_save``
                 times, and of shape (len(exp_ops), len(t_save)) or
                 (b_H, b_rho, len(exp_ops), len(t_save)) if batched.
     """
