@@ -34,14 +34,18 @@ def mesolve(
     The function can be differentiated over using either the default Pytorch autograd
     library (`gradient_alg="autograd"`), or a custom adjoint state differentiation
     (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward
-    pass, such as a Rouchon solver, should be called. The parameters to compute the
-    gradients with respect to should also be passed with the `parameters` argument. If
-    differentiation is not required (`gradient_alg=None`), the graph of operation is
-    not stored thus increasing the solver performance.
+    pass should be used (e.g. a Rouchon solver). By default, `gradient_alg=None` is
+    called, in which case the graph of operation is not stored for improved solver
+    performance.
 
-    For time-dependent Hamiltonians, `H` can be TODO
+    For time-dependent problems, the Hamiltonian `H` can be passed as a callable with
+    signature float -> Tensor. Piece-wise constant Hamiltonians can also be passed as...
+    TODO: complete with Hamiltonian format
 
-    Available solvers: `Rouchon` (alias of `Rouchon2`), `Rouchon1`, `Rouchon1_5`.
+    Available solvers:
+        `Rouchon` (alias of `Rouchon2`)
+        `Rouchon1`
+        `Rouchon1_5`
 
     Args:
         H : Hamiltonian of shape (n,n) or (b_H, n, n) if batched.
