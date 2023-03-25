@@ -139,9 +139,6 @@ class MERouchon(AdjointQSolver):
         self.I = torch.eye(self.n).to(H)  # (n, n)
         self.options = solver_options
 
-        # reference time, default to 0.0
-        self.t0 = 0.0
-
 
 class MERouchon1(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):

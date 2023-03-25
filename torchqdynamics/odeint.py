@@ -151,6 +151,7 @@ def _odeint_adjoint(
     qsolver: AdjointQSolver, y0: Tensor, t_save: Tensor, exp_ops: Tensor,
     save_states: bool, parameters: Tuple[nn.Parameter, ...]
 ):
+    """Integrate an ODE using the adjoint method in the backward pass."""
     return ODEIntAdjoint.apply(qsolver, y0, t_save, exp_ops, save_states, *parameters)
 
 
@@ -158,6 +159,7 @@ def _odeint_augmented_main(
     qsolver: AdjointQSolver, y0: Tensor, a0: Tensor, g0: Tuple[Tensor, ...],
     t_span: Tensor, parameters: Tuple[nn.Parameter, ...]
 ):
+    """Integrate the augmented ODE backward."""
     if isinstance(qsolver.options, FixedStep):
         dt = qsolver.options.dt
         return _fixed_odeint_augmented(qsolver, y0, a0, g0, t_span, dt, parameters)
@@ -166,6 +168,7 @@ def _odeint_augmented_main(
 
 
 def _adaptive_odeint_augmented(*_args, **_kwargs):
+    """Integrate the augmented ODE backward using an adaptive time step solver."""
     raise NotImplementedError
 
 
@@ -173,6 +176,7 @@ def _fixed_odeint_augmented(
     qsolver: AdjointQSolver, y0: Tensor, a0: Tensor, g0: Tuple[Tensor, ...],
     t_span: Tensor, dt: float, parameters: Tuple[nn.Parameter, ...]
 ):
+    """Integrate the augmented ODE backward using a fixed time step solver."""
     # check t_span
     if not (t_span.ndim == 1 and len(t_span) == 2):
         raise ValueError(
@@ -207,7 +211,7 @@ def _fixed_odeint_augmented(
 
 
 class ODEIntAdjoint(torch.autograd.Function):
-    """ODE integrator with a custom adjoint method backward pass."""
+    """Class for ODE integration with a custom adjoint method backward pass."""
     @staticmethod
     def forward(ctx, qsolver, y0, t_save, exp_ops, save_states, *parameters):
         """Forward pass of the ODE integrator."""
