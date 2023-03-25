@@ -28,17 +28,17 @@ def mesolve(
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
     solve multiple master equations in a single run. The jump operators `jump_ops` and
-    time list `t_save` should however be common to all batches.
+    time list `t_save` are common to all batches.
 
-    `mesolve` can be differentiated over using either the default Pytorch autograd
+    `mesolve` can be differentiated through using either the default Pytorch autograd
     library (`gradient_alg="autograd"`), or a custom adjoint state differentiation
-    (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the
-    backward pass should be used (e.g. Rouchon solver). By default, the graph of
-    operations is not stored for improved performance of the solver.
+    (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward
+    pass should be used (e.g. Rouchon solver). By default (if no gradient is required),
+    the graph of operations is not stored for improved performance of the solver.
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
-    signature float -> Tensor. Piece-wise constant Hamiltonians can also be passed as...
-    TODO: complete with Hamiltonian format
+    signature `H(t: float) -> Tensor`. Piecewise constant Hamiltonians can also be
+    passed as... TODO: complete with Hamiltonian format
 
     Available solvers:
       - `Rouchon` (alias of `Rouchon2`)
