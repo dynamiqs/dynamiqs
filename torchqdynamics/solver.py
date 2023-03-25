@@ -1,28 +1,4 @@
-from dataclasses import dataclass
+"""Gather all solver options under the same namespace `solver`."""
 
-
-@dataclass
-class SolverOption:
-    pass
-
-
-@dataclass
-class FixedStep(SolverOption):
-    dt: float
-
-
-@dataclass
-class AdaptativeStep(SolverOption):
-    atol: float = 1e-6
-    rtol: float = 1e-6
-    max_steps: int = 100_000
-
-
-@dataclass
-class RK4(FixedStep):
-    pass
-
-
-@dataclass
-class DOPRI6(AdaptativeStep):
-    pass
+from .mesolve.solver_options import Rouchon, Rouchon1, Rouchon1_5, Rouchon2
+from .solver_options import DOPRI6, RK4

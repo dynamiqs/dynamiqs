@@ -3,7 +3,7 @@ from math import sqrt
 import torch
 
 from ..odeint import AdjointQSolver
-from ..solver import SolverOption
+from ..solver_options import SolverOption
 from ..solver_utils import inv_sqrtm, kraus_map
 from ..types import TimeDependentOperator
 from ..utils import trace

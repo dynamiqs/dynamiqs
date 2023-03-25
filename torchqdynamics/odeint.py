@@ -4,7 +4,7 @@ from typing import Literal
 import torch
 from tqdm import tqdm
 
-from .solver import AdaptativeStep, FixedStep
+from .solver_options import AdaptativeStep, FixedStep
 from .solver_utils import bexpect
 
 

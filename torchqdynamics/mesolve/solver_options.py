@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 
-from ..solver import FixedStep
+from ..solver_options import FixedStep
 
 
 @dataclass
 class Rouchon1(FixedStep):
     pass
+
+
+Rouchon = Rouchon1
 
 
 @dataclass

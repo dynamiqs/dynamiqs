@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from ..odeint import odeint
-from ..solver import SolverOption
+from ..solver_options import SolverOption
 from ..types import OperatorLike, TensorLike, TimeDependentOperatorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
