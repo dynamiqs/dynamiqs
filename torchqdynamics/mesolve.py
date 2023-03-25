@@ -30,7 +30,7 @@ def mesolve(
     solve multiple master equations in a single run. The jump operators `jump_ops` and
     time list `t_save` are common to all batches.
 
-    `mesolve` can be differentiated through using either the default Pytorch autograd
+    `mesolve` can be differentiated through using either the default PyTorch autograd
     library (`gradient_alg="autograd"`), or a custom adjoint state differentiation
     (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward
     pass should be used (e.g. Rouchon solver). By default (if no gradient is required),
@@ -71,11 +71,12 @@ def mesolve(
     Returns:
         A tuple `(rho_save, exp_save)` where
             `rho_save` is a tensor with the computed density matrices at `t_save`
-                times, and of shape (len(t_save), n, n) or
-                (b_H, b_rho, len(t_save), n, n) if batched.
+                times, and of shape (len(t_save), n, n) or (b_H, b_rho, len(t_save), n,
+                n) if batched. If `save_states` is `False`, only the final density
+                matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
-                times, and of shape (len(exp_ops), len(t_save)) or
-                (b_H, b_rho, len(exp_ops), len(t_save)) if batched.
+                times, and of shape (len(exp_ops), len(t_save)) or (b_H, b_rho,
+                len(exp_ops), len(t_save)) if batched.
     """
     # batch H by default
     H_batched = H[None, ...] if H.dim() == 2 else H
