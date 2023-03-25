@@ -1,6 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Literal, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -203,7 +203,6 @@ class ODEIntAdjoint(torch.autograd.Function):
         # unpack context
         qsolver = ctx.qsolver
         t_save = ctx.t_save
-        save_states = ctx.save_states
         y_save, *parameters = ctx.saved_tensors
 
         # prepare checkpoints time list
