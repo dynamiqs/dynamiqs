@@ -7,7 +7,7 @@ from torch import Tensor
 
 from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon, SolverOption
-from .solver_utils import inv_sqrtm, kraus_map
+from .solver_utils import inv_sqrtm, kraus_map, none_to_zeros_like
 from .types import TDOperator, TensorLike
 from .utils import trace
 
@@ -135,9 +135,12 @@ class MERouchon(AdjointQSolver):
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
-        n = H.shape[-1]
-        self.I = torch.eye(n).to(H)  # (n, n)
+        self.n = H.shape[-1]
+        self.I = torch.eye(self.n).to(H)  # (n, n)
         self.options = solver_options
+
+        # reference time, default to 0.0
+        self.t0 = 0.0
 
 
 class MERouchon1(MERouchon):
@@ -167,7 +170,37 @@ class MERouchon1(MERouchon):
     def _backward_augmented(
         self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
     ):
-        pass
+        """Compute augmented_rho(t-dt) using a Rouchon method of order 1."""
+        rho = aug_rho[0][0].requires_grad_(True)
+        phi = aug_rho[0][1].requires_grad_(True)
+        grad = aug_rho[1]
+
+        with torch.enable_grad():
+            # non-hermitian Hamiltonian at time (t0 - t)
+            # TODO: When time-dependent Hamiltonians are implemented, the Hamiltonian
+            #       should be computed at time `self.t0 - t`.
+            H_nh = self.H - 0.5j * self.sum_nojump
+            Hdag_nh = H_nh.adjoint()
+
+            # compute rho(t-dt)
+            M0 = self.I + 1j * dt * H_nh
+            M1s = sqrt(dt) * self.jump_ops
+            rho = kraus_map(rho, M0) - kraus_map(rho, M1s)
+            rho = rho / trace(rho)[..., None, None].real
+
+            # compute phi(t-dt)
+            M0_adj = self.I + 1j * dt * Hdag_nh
+            Ms_adj = torch.cat((M0_adj[None, ...], sqrt(dt) * self.jump_ops.adjoint()))
+            phi = kraus_map(phi, Ms_adj)
+
+            # compute grad(t-dt)
+            dgrad = torch.autograd.grad(
+                phi, parameters, rho, allow_unused=True, retain_graph=True
+            )
+            dgrad = none_to_zeros_like(dgrad, parameters)
+            grad = tuple(dg + g for dg, g in zip(dgrad, grad))
+
+        return (torch.stack((rho, phi)), grad)
 
 
 class MERouchon1_5(MERouchon):
