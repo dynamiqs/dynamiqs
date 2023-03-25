@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Literal
 
 import torch
+import torch.nn as nn
 from torch import Tensor
 from tqdm import tqdm
 
@@ -11,19 +12,32 @@ from .solver_utils import bexpect
 
 
 class ForwardQSolver(ABC):
-    @abstractmethod
-    def forward(self, t: float, dt: float, rho: Tensor):
+    def iterate(self, t: float, dt: float, y: Tensor, **kwargs):
         # Args:
-        #     rho: (..., m, n)
+        #     y: (..., m, n)
         #
         # Returns:
         #     (..., m, n)
+        return self._forward(t, dt, y)
+
+    @abstractmethod
+    def _forward(self, t: float, dt: float, y: Tensor):
         pass
 
 
 class AdjointQSolver(ForwardQSolver):
+    def iterate(
+        self, t: float, dt: float, y: Tensor, parameters: Tuple[nn.Parameter, ...]
+    ):
+        if self.forward_mode:
+            return self._forward(t, dt, y)
+        else:
+            return self._backward_augmented(t, dt, y, parameters)
+
     @abstractmethod
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
+    def _backward_augmented(
+        self, t: float, dt: float, aug_y: Tensor, parameters: Tuple[nn.Parameter, ...]
+    ):
         pass
 
 
@@ -140,7 +154,7 @@ def _fixed_odeint(
             save_counter += 1
 
         # iterate solution
-        y = qsolver.forward(t, dt, y, parameters)
+        y = qsolver.iterate(t, dt, y, parameters)
 
     # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
     if save_states:

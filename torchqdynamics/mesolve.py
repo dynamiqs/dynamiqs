@@ -112,7 +112,7 @@ def mesolve(
 
     # compute the result
     rho_save, exp_save = odeint(
-        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg
+        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg, parameters
     )
 
     # restore correct batching
@@ -141,7 +141,7 @@ class MERouchon(AdjointQSolver):
 
 
 class MERouchon1(MERouchon):
-    def forward(self, t: float, dt: float, rho: Tensor):
+    def _forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1."""
         # Args:
         #     rho: (b_H, b_rho, n, n)
@@ -164,12 +164,14 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
-        raise NotImplementedError
+    def _backward_augmented(
+        self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
+    ):
+        pass
 
 
 class MERouchon1_5(MERouchon):
-    def forward(self, t: float, dt: float, rho: Tensor):
+    def _forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1.5."""
         # Args:
         #     rho: (b_H, b_rho, n, n)
@@ -198,12 +200,14 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
-        raise NotImplementedError
+    def _backward_augmented(
+        self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
+    ):
+        pass
 
 
 class MERouchon2(MERouchon):
-    def forward(self, t: float, dt: float, rho: Tensor):
+    def _forward(self, t: float, dt: float, rho: Tensor):
         r"""Compute rho(t+dt) using a Rouchon method of order 2.
 
         Note:
@@ -236,5 +240,7 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
-        raise NotImplementedError
+    def _backward_augmented(
+        self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
+    ):
+        pass
