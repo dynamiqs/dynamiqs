@@ -56,12 +56,10 @@ def mesolve(
             Tensor of shape (n, n), or tensor of shape (b_rho, n, n) if batched.
         t_save (TensorLike): Array of times for which results are saved.
             The last value ``t_save[-1]`` defines the total time of evolution.
-        save_states (bool, optional):
-            If ``True``, the density matrix is saved at every time value in ``t_save``.
-            Defaults to ``True``.
-        exp_ops (List[Tensor], optional):
-            List of operators for which the expectation value is computed at every time
-            value in ``t_save``.
+        save_states (bool, optional): If ``True``, the density matrix is saved at every
+            time value in ``t_save``. Defaults to ``True``.
+        exp_ops (List[Tensor], optional): List of operators for which the expectation
+            value is computed at every time value in ``t_save``.
         solver (SolverOption, optional): Solver used to compute the master equation
             solutions. See the list of available solvers.
         gradient_alg (str, optional): Algorithm used for computing gradients in the
