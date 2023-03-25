@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 from torch import Tensor
 
@@ -53,3 +55,8 @@ def none_to_zeros_like(input, shaping_tuple):
     return tuple(
         torch.zeros_like(s) if a is None else a for a, s in zip(input, shaping_tuple)
     )
+
+
+def add_tuples(a: Tuple, b: Tuple):
+    """Element-wise sum of two tuples of the same shape."""
+    return tuple(map(sum, zip(a, b)))

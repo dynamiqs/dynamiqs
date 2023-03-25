@@ -7,7 +7,7 @@ from torch import Tensor
 
 from .odeint import AdjointQSolver, odeint
 from .solver import Rouchon, SolverOption
-from .solver_utils import inv_sqrtm, kraus_map, none_to_zeros_like
+from .solver_utils import inv_sqrtm, kraus_map
 from .types import TDOperator, TensorLike
 from .utils import trace
 
@@ -144,7 +144,7 @@ class MERouchon(AdjointQSolver):
 
 
 class MERouchon1(MERouchon):
-    def _forward(self, t: float, dt: float, rho: Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1."""
         # Args:
         #     rho: (b_H, b_rho, n, n)
@@ -167,44 +167,31 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def _backward_augmented(
-        self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
+    def backward_augmented(
+        self, t: float, dt: float, rho: Tensor, phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...]
     ):
-        """Compute augmented_rho(t-dt) using a Rouchon method of order 1."""
-        rho = aug_rho[0][0].requires_grad_(True)
-        phi = aug_rho[0][1].requires_grad_(True)
-        grad = aug_rho[1]
+        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 1."""
+        # non-hermitian Hamiltonian at time t
+        H_nh = self.H - 0.5j * self.sum_nojump
+        Hdag_nh = H_nh.adjoint()
 
-        with torch.enable_grad():
-            # non-hermitian Hamiltonian at time (t0 - t)
-            # TODO: When time-dependent Hamiltonians are implemented, the Hamiltonian
-            #       should be computed at time `self.t0 - t`.
-            H_nh = self.H - 0.5j * self.sum_nojump
-            Hdag_nh = H_nh.adjoint()
+        # compute rho(t-dt)
+        M0 = self.I + 1j * dt * H_nh
+        M1s = sqrt(dt) * self.jump_ops
+        rho = kraus_map(rho, M0) - kraus_map(rho, M1s)
+        rho = rho / trace(rho)[..., None, None].real
 
-            # compute rho(t-dt)
-            M0 = self.I + 1j * dt * H_nh
-            M1s = sqrt(dt) * self.jump_ops
-            rho = kraus_map(rho, M0) - kraus_map(rho, M1s)
-            rho = rho / trace(rho)[..., None, None].real
+        # compute phi(t-dt)
+        M0_adj = self.I + 1j * dt * Hdag_nh
+        Ms_adj = torch.cat((M0_adj[None, ...], sqrt(dt) * self.jump_ops.adjoint()))
+        phi = kraus_map(phi, Ms_adj)
 
-            # compute phi(t-dt)
-            M0_adj = self.I + 1j * dt * Hdag_nh
-            Ms_adj = torch.cat((M0_adj[None, ...], sqrt(dt) * self.jump_ops.adjoint()))
-            phi = kraus_map(phi, Ms_adj)
-
-            # compute grad(t-dt)
-            dgrad = torch.autograd.grad(
-                phi, parameters, rho, allow_unused=True, retain_graph=True
-            )
-            dgrad = none_to_zeros_like(dgrad, parameters)
-            grad = tuple(dg + g for dg, g in zip(dgrad, grad))
-
-        return (torch.stack((rho, phi)), grad)
+        return rho, phi
 
 
 class MERouchon1_5(MERouchon):
-    def _forward(self, t: float, dt: float, rho: Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1.5."""
         # Args:
         #     rho: (b_H, b_rho, n, n)
@@ -233,14 +220,15 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def _backward_augmented(
-        self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
+    def backward_augmented(
+        self, t: float, dt: float, rho: Tensor, phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...]
     ):
         raise NotImplementedError
 
 
 class MERouchon2(MERouchon):
-    def _forward(self, t: float, dt: float, rho: Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         r"""Compute rho(t+dt) using a Rouchon method of order 2.
 
         Note:
@@ -273,41 +261,28 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def _backward_augmented(
-        self, t: float, dt: float, aug_rho: Tensor, parameters: Tuple[nn.Parameter, ...]
+    def backward_augmented(
+        self, t: float, dt: float, rho: Tensor, phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...]
     ):
-        """Compute augmented_rho(t-dt) using a Rouchon method of order 2."""
-        rho = aug_rho[0][0].requires_grad_(True)
-        phi = aug_rho[0][1].requires_grad_(True)
-        grad = aug_rho[1]
+        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 2."""
+        # non-hermitian Hamiltonian at time t
+        H_nh = self.H - 0.5j * self.sum_nojump
+        Hdag_nh = H_nh.adjoint()
 
-        with torch.enable_grad():
-            # non-hermitian Hamiltonian at time (t0 - t)
-            # TODO: When time-dependent Hamiltonians are implemented, the Hamiltonian
-            #       should be computed at time `self.t0 - t`.
-            H_nh = self.H - 0.5j * self.sum_nojump
-            Hdag_nh = H_nh.adjoint()
+        # compute rho(t-dt)
+        M0 = self.I + 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
+        M1s = 0.5 * sqrt(dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
+        tmp = kraus_map(rho, M1s)
+        rho = kraus_map(rho, M0) - tmp + 0.5 * kraus_map(tmp, M1s)
+        rho = rho / trace(rho)[..., None, None].real
 
-            # compute rho(t-dt)
-            M0 = self.I + 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
-            M1s = 0.5 * sqrt(dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
-            tmp = kraus_map(rho, M1s)
-            rho = kraus_map(rho, M0) - tmp + 0.5 * kraus_map(tmp, M1s)
-            rho = rho / trace(rho)[..., None, None].real
+        # compute phi(t-dt)
+        M0_adj = self.I + 1j * dt * Hdag_nh - 0.5 * dt**2 * Hdag_nh @ Hdag_nh
+        M1s_adj = 0.5 * sqrt(dt) * (
+            self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint()
+        )
+        tmp = kraus_map(phi, M1s_adj)
+        phi = (kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj))
 
-            # compute phi(t-dt)
-            M0_adj = self.I + 1j * dt * Hdag_nh - 0.5 * dt**2 * Hdag_nh @ Hdag_nh
-            M1s_adj = 0.5 * sqrt(dt) * (
-                self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint()
-            )
-            tmp = kraus_map(phi, M1s_adj)
-            phi = (kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj))
-
-            # compute grad(t-dt)
-            dgrad = torch.autograd.grad(
-                phi, parameters, rho, allow_unused=True, retain_graph=True
-            )
-            dgrad = none_to_zeros_like(dgrad, parameters)
-            grad = tuple(dg + g for dg, g in zip(dgrad, grad))
-
-        return (torch.stack((rho, phi)), grad)
+        return rho, phi
