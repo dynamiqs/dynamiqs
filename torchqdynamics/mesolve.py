@@ -27,7 +27,9 @@ def mesolve(
     """
     Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
-    The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to solve multiple master equations in a single run. The jump operators `jump_ops` and time list `t_save` should however be common to all batches.
+    The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
+    solve multiple master equations in a single run. The jump operators `jump_ops` and
+    time list `t_save` should however be common to all batches.
 
     The function can be differentiated over using either the default Pytorch autograd library (`gradient_alg="autograd"`), or a custom adjoint state differentiation (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward pass, such as a Rouchon solver, should be called. The parameters to compute the gradients with respect to should also be passed with the `parameters` argument. If differentiation is not required (`gradient_alg=None`), the graph of operation is not stored thus increasing the solver performance.
 
