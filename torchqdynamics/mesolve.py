@@ -50,8 +50,8 @@ def mesolve(
             backward pass.
 
     Returns:
-        A tuple `(y_save, exp_save)` where
-            `y_save` is a tensor with the computed density matrices at `t_save`
+        A tuple `(rho_save, exp_save)` where
+            `rho_save` is a tensor with the computed density matrices at `t_save`
                 times, and of shape (len(t_save), n, n) or
                 (b_H, b_rho, len(t_save), n, n) if batched.
             `exp_save` is a tensor with the computed expectation values at `t_save`
@@ -66,7 +66,9 @@ def mesolve(
     jump_ops = torch.stack(jump_ops)
 
     # batch rho0 by default
+    b_H = H_batched.size(0)
     rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
+    rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho?, n, n)
 
     t_save = torch.as_tensor(t_save)
     if exp_ops is None:
@@ -89,19 +91,19 @@ def mesolve(
         raise NotImplementedError
 
     # compute the result
-    b_H = H_batched.size(0)
-    y0 = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho, n, n)
-    y_save, exp_save = odeint(qsolver, y0, t_save, exp_ops, save_states, gradient_alg)
+    rho_save, exp_save = odeint(
+        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg
+    )
 
     # restore correct batching
     if rho0.dim() == 2:
-        y_save = y_save.squeeze(1)
+        rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
     if H.dim() == 2:
-        y_save = y_save.squeeze(0)
+        rho_save = rho_save.squeeze(0)
         exp_save = exp_save.squeeze(0)
 
-    return y_save, exp_save
+    return rho_save, exp_save
 
 
 class MERouchon(AdjointQSolver):
