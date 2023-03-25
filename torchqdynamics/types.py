@@ -8,7 +8,7 @@ from torch import Tensor
 from .utils import from_qutip
 
 # TODO: add typing for Hamiltonian with piecewise-constant factor
-TensorTD = Union[Tensor, Callable[[float], Tensor]]
+TDOperator = Union[Tensor, Callable[[float], Tensor]]
 
 # type for objects convertible to a torch tensor using `torch.as_tensor`
 TensorLike = Union[List, np.ndarray, Tensor]
