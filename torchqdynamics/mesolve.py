@@ -58,15 +58,6 @@ def mesolve(
                 times, and of shape (len(exp_ops), len(t_save)) or
                 (b_H, b_rho, len(exp_ops), len(t_save)) if batched.
     """
-    # Args:
-    #     H: (b_H?, n, n)
-    #     rho0: (b_rho0?, n, n)
-    #
-    # Returns:
-    #     (y_save, exp_save) with
-    #     - y_save: (b_H?, b_rho0?, len(t_save), n, n)
-    #     - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
-
     # batch H by default
     H_batched = H[None, ...] if H.dim() == 2 else H
 
@@ -99,7 +90,7 @@ def mesolve(
 
     # compute the result
     b_H = H_batched.size(0)
-    y0 = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
+    y0 = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho, n, n)
     y_save, exp_save = odeint(qsolver, y0, t_save, exp_ops, save_states, gradient_alg)
 
     # restore correct batching
@@ -131,10 +122,10 @@ class MERouchon1(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1."""
         # Args:
-        #     rho: (b_H, b_rho0, n, n)
+        #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
-        #     (b_H, b_rho0, n, n)
+        #     (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -159,10 +150,10 @@ class MERouchon1_5(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1.5."""
         # Args:
-        #     rho: (b_H, b_rho0, n, n)
+        #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
-        #     (b_H, b_rho0, n, n)
+        #     (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -198,10 +189,10 @@ class MERouchon2(MERouchon):
         zero-th order Kraus operator if needed, as M0 += -0.5j * dt**2 * \dot{H}.
         """
         # Args:
-        #     rho: (b_H, b_rho0, n, n)
+        #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
-        #     (b_H, b_rho0, n, n)
+        #     (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
