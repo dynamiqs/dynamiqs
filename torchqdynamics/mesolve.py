@@ -24,6 +24,40 @@ def mesolve(
     gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
     parameters: Optional[Tuple[nn.Parameter, ...]] = None,
 ):
+    """
+    Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
+
+    The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to solve multiple master equations in a single run. The jump operators `jump_ops` and time list `t_save` should however be common to all batches.
+
+    The function can be differentiated over using either the default Pytorch autograd library (`gradient_alg="autograd"`), or a custom adjoint state differentiation (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward pass, such as a Rouchon solver, should be called. The parameters to compute the gradients with respect to should also be passed with the `parameters` argument. If differentiation is not required (`gradient_alg=None`), the graph of operation is not stored thus increasing the solver performance.
+
+    For time-dependent Hamiltonians, `H` can be TODO
+
+    Available solvers: `Rouchon` (alias of `Rouchon2`), `Rouchon1`, `Rouchon1_5`.
+
+    Args:
+        H : Hamiltonian of shape (n,n) or (b_H, n, n) if batched.
+        jump_ops : List of jump operators of shape (n, n).
+        rho0 : Initial density matrix of shape (n, n) or (b_rho, n, n) if batched.
+        t_save : Array of times to save results at. `t_save[-1]` defines the total
+            evolution time of the master equation.
+        save_states : Whether to save the computed density matrices at every time
+            specified by `t_save` or not. Defaults to True.
+        exp_ops : List of operators to compute the expectation value of.
+        solver : Solver used to compute the master equation solutions.
+        gradient_alg : Algorithm used to differentiate through the function.
+        parameters : Parameters that gradients are computed with respect to in the
+            backward pass.
+
+    Returns:
+        A tuple `(y_save, exp_save)` where
+            `y_save` is a tensor with the computed density matrices at `t_save`
+                times, and of shape (len(t_save), n, n) or
+                (b_H, b_rho, len(t_save), n, n) if batched.
+            `exp_save` is a tensor with the computed expectation values at `t_save`
+                times, and of shape (len(exp_ops), len(t_save)) or
+                (b_H, b_rho, len(exp_ops), len(t_save)) if batched.
+    """
     # Args:
     #     H: (b_H?, n, n)
     #     rho0: (b_rho0?, n, n)
