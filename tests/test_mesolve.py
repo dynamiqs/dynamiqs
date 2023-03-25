@@ -16,7 +16,7 @@ def test_mesolve_batching():
     a = qt.destroy(n)
     adag = a.dag()
     H = delta * adag * a
-    H_batched = [0.5 * delta * adag * a, delta * adag * a, 2 * delta * adag * a]
+    H_batched = [0.5 * H, H, 2 * H]
     b_H = len(H_batched)
     jump_ops = [np.sqrt(kappa) * a, np.sqrt(kappa) * a]
     exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
@@ -32,7 +32,7 @@ def test_mesolve_batching():
     ]
     b_rho0 = len(rho0_batched)
     num_t_save = 51
-    t_save = np.linspace(0.0, delta / (2 * np.pi), num_t_save)  # a full tour
+    t_save = np.linspace(0.0, delta / (2 * np.pi), num_t_save)  # a full rotation
     solver = tq.solver.Rouchon(dt=1e-4, order=1)
 
     run_mesolve = lambda H, rho0: tq.mesolve(
@@ -55,7 +55,6 @@ def test_mesolve_batching():
     assert exp.shape == (b_rho0, num_exp_ops, num_t_save)
 
     # batched H and rho0
-    H_batched = [0.5 * H, H, 2 * H]
     states, exp = run_mesolve(H_batched, rho0_batched)
     assert states.shape == (b_H, b_rho0, num_t_save, n, n)
     assert exp.shape == (b_H, b_rho0, num_exp_ops, num_t_save)
