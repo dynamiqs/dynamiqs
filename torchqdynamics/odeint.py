@@ -140,6 +140,9 @@ def _fixed_odeint(
     # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
     if save_states:
         y_save[..., save_counter, :, :] = y
+    else:
+        y_save = y
+
     if len(exp_ops) > 0:
         exp_save[..., save_counter] = bexpect(exp_ops, y)
 
