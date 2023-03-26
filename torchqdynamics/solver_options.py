@@ -19,6 +19,11 @@ class AdaptativeStep(SolverOption):
 
 
 @dataclass
+class Euler(FixedStep):
+    pass
+
+
+@dataclass
 class RK4(FixedStep):
     pass
 
