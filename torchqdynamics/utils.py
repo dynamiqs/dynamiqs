@@ -2,13 +2,14 @@ from typing import List, Optional
 
 import torch
 from qutip import Qobj
+from torch import Tensor
 
 
-def is_ket(x: torch.Tensor) -> torch.Tensor:
+def is_ket(x: Tensor) -> Tensor:
     return x.size(-1) == 1
 
 
-def ket_to_bra(x: torch.Tensor) -> torch.Tensor:
+def ket_to_bra(x: Tensor) -> Tensor:
     """Linear map (bra) representation of a state vector (ket).
 
     Args:
@@ -20,7 +21,7 @@ def ket_to_bra(x: torch.Tensor) -> torch.Tensor:
     return x.adjoint()
 
 
-def ket_to_dm(x: torch.Tensor) -> torch.Tensor:
+def ket_to_dm(x: Tensor) -> Tensor:
     """Density matrix formed by the outer product of a state vector (ket).
 
     Args:
@@ -32,7 +33,7 @@ def ket_to_dm(x: torch.Tensor) -> torch.Tensor:
     return x @ ket_to_bra(x)
 
 
-def ket_overlap(x: torch.Tensor, y: torch.Tensor) -> torch.complex:
+def ket_overlap(x: Tensor, y: Tensor) -> torch.complex:
     """Return the overlap (inner product) between two state vectors (kets).
 
     Args:
@@ -45,7 +46,7 @@ def ket_overlap(x: torch.Tensor, y: torch.Tensor) -> torch.complex:
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
 
-def ket_fidelity(x: torch.Tensor, y: torch.Tensor) -> float:
+def ket_fidelity(x: Tensor, y: Tensor) -> float:
     """Return the fidelity between two state vectors (kets).
 
     The fidelity between two pure states $\varphi$, $\psi$ is defined by their
@@ -68,7 +69,7 @@ def ket_fidelity(x: torch.Tensor, y: torch.Tensor) -> float:
     return ket_overlap(x, y).abs().pow(2)
 
 
-def dissipator(L: torch.Tensor, rho: torch.Tensor) -> torch.Tensor:
+def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     """Apply the dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L](\cdot)$ is defined by
@@ -90,11 +91,7 @@ def dissipator(L: torch.Tensor, rho: torch.Tensor) -> torch.Tensor:
     )
 
 
-def lindbladian(
-    H: torch.Tensor,
-    Ls: torch.Tensor,
-    rho: torch.Tensor,
-) -> torch.Tensor:
+def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     """Apply the Lindbladian superoperator to a density matrix.
 
     The system Lindbladian $\mathcal{L}(\cdot)$ is the superoperator
@@ -115,12 +112,12 @@ def lindbladian(
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
 
-def trace(rho: torch.Tensor) -> torch.Tensor:
+def trace(rho: Tensor) -> Tensor:
     """Compute the batched trace of a tensor over its last two dimensions."""
     return torch.einsum('...ii', rho)
 
 
-def expect(operator: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
+def expect(operator: Tensor, state: Tensor) -> Tensor:
     """Compute the expectation value of an operator on a quantum state or density
     matrix. The method is batchable over the state, but not over the operator.
 
@@ -135,7 +132,7 @@ def expect(operator: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
     return torch.einsum('ij,...ji', operator, state)
 
 
-def from_qutip(x: Qobj) -> torch.Tensor:
+def from_qutip(x: Qobj) -> Tensor:
     """Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
@@ -147,7 +144,7 @@ def from_qutip(x: Qobj) -> torch.Tensor:
     return torch.from_numpy(x.full())
 
 
-def to_qutip(x: torch.Tensor, dims: Optional[List] = None) -> Qobj:
+def to_qutip(x: Tensor, dims: Optional[List] = None) -> Qobj:
     """Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:
