@@ -22,4 +22,4 @@ class SEEuler(ForwardQSolver):
         # Returns:
         #     (b_H, b_psi, n, 1)
 
-        return psi - 1j * self.H @ psi * dt
+        return psi - dt * 1j * self.H @ psi
