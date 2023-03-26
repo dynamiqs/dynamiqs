@@ -40,9 +40,7 @@ def mesolve(
 
     # convert jump_ops to a tensor
     if len(jump_ops) == 0:
-        raise ValueError(
-            'Argument `jump_ops` must be a non-empty list of torch.Tensor.'
-        )
+        raise ValueError('Argument `jump_ops` must be a non-empty list of tensors.')
     jump_ops = to_tensor(jump_ops)
 
     # convert rho0 to a tensor and density matrix and batch by default

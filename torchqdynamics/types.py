@@ -3,14 +3,15 @@ from typing import Callable, List, Optional, Union, get_args
 import numpy as np
 import torch
 from qutip import Qobj
+from torch import Tensor
 
 from .utils import from_qutip
 
 # TODO: add typing for Hamiltonian with piecewise-constant factor
-TimeDependentOperator = Union[torch.Tensor, Callable[[float], torch.Tensor]]
+TimeDependentOperator = Union[Tensor, Callable[[float], Tensor]]
 
 # type for objects convertible to a torch tensor using `torch.as_tensor`
-TensorLike = Union[List, np.ndarray, torch.Tensor]
+TensorLike = Union[List, np.ndarray, Tensor]
 
 # type for objects convertible to a torch tensor using `to_tensor`
 OperatorLike = Union[TensorLike, Qobj]
@@ -19,7 +20,7 @@ OperatorLike = Union[TensorLike, Qobj]
 TimeDependentOperatorLike = Union[OperatorLike, Callable[[float], OperatorLike]]
 
 
-def to_tensor(x: Optional[Union[OperatorLike, List[OperatorLike]]]) -> torch.Tensor:
+def to_tensor(x: Optional[Union[OperatorLike, List[OperatorLike]]]) -> Tensor:
     """Convert a `OperatorLike` object or a list of `OperatorLike` object to a PyTorch
     tensor.
 

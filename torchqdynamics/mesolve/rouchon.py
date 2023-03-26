@@ -1,6 +1,7 @@
 from math import sqrt
 
 import torch
+from torch import Tensor
 
 from ..odeint import AdjointQSolver
 from ..solver_options import SolverOption
@@ -11,8 +12,7 @@ from ..utils import trace
 
 class MERouchon(AdjointQSolver):
     def __init__(
-        self, H: TimeDependentOperator, jump_ops: torch.Tensor,
-        solver_options: SolverOption
+        self, H: TimeDependentOperator, jump_ops: Tensor, solver_options: SolverOption
     ):
         # Args:
         #     H: (b_H, n, n)
@@ -27,7 +27,7 @@ class MERouchon(AdjointQSolver):
 
 
 class MERouchon1(MERouchon):
-    def forward(self, t: float, dt: float, rho: torch.Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1."""
         # Args:
         #     rho: (b_H, b_rho0, n, n)
@@ -50,12 +50,12 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
+    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
         raise NotImplementedError
 
 
 class MERouchon1_5(MERouchon):
-    def forward(self, t: float, dt: float, rho: torch.Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1.5."""
         # Args:
         #     rho: (b_H, b_rho0, n, n)
@@ -84,12 +84,12 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
+    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
         raise NotImplementedError
 
 
 class MERouchon2(MERouchon):
-    def forward(self, t: float, dt: float, rho: torch.Tensor):
+    def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 2.
 
         NOTE: For fast time-varying Hamiltonians, this method is not order 2 because the
@@ -120,5 +120,5 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: torch.Tensor):
+    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
         raise NotImplementedError

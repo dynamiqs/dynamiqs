@@ -2,6 +2,7 @@ from typing import List, Literal, Optional, Tuple
 
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 from ..odeint import odeint
 from ..solver_options import Euler, SolverOption
@@ -19,7 +20,7 @@ def sesolve(
     solver: Optional[SolverOption] = None,
     gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
     parameters: Optional[Tuple[nn.Parameter, ...]] = None,
-) -> torch.Tensor:
+) -> Tuple[Tensor, Tensor]:
     # Args:
     #     H: (b_H?, n, n)
     #     psi0: (b_psi0?, n, 1)

@@ -1,4 +1,4 @@
-import torch
+from torch import Tensor
 
 from ..odeint import ForwardQSolver
 from ..solver_options import SolverOption
@@ -15,7 +15,7 @@ class SEEuler(ForwardQSolver):
 
         self.options = solver_options
 
-    def forward(self, t: float, dt: float, psi: torch.Tensor):
+    def forward(self, t: float, dt: float, psi: Tensor):
         # Args:
         #     psi: (b_H, b_psi, n, 1)
         #
