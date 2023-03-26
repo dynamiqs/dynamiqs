@@ -19,8 +19,8 @@ class MERouchon(AdjointQSolver):
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
-        n = H.shape[-1]
-        self.I = torch.eye(n).to(H)  # (n, n)
+        self.n = H.shape[-1]
+        self.I = torch.eye(self.n).to(H)  # (n, n)
         self.options = solver_options
 
 
@@ -48,8 +48,27 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
-        raise NotImplementedError
+    def backward_augmented(
+        self, t: float, dt: float, rho: Tensor, phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...]
+    ):
+        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 1."""
+        # non-hermitian Hamiltonian at time t
+        H_nh = self.H - 0.5j * self.sum_nojump
+        Hdag_nh = H_nh.adjoint()
+
+        # compute rho(t-dt)
+        M0 = self.I + 1j * dt * H_nh
+        M1s = sqrt(dt) * self.jump_ops
+        rho = kraus_map(rho, M0) - kraus_map(rho, M1s)
+        rho = rho / trace(rho)[..., None, None].real
+
+        # compute phi(t-dt)
+        M0_adj = self.I + 1j * dt * Hdag_nh
+        Ms_adj = torch.cat((M0_adj[None, ...], sqrt(dt) * self.jump_ops.adjoint()))
+        phi = kraus_map(phi, Ms_adj)
+
+        return rho, phi
 
 
 class MERouchon1_5(MERouchon):
@@ -82,7 +101,10 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
+    def backward_augmented(
+        self, t: float, dt: float, rho: Tensor, phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...]
+    ):
         raise NotImplementedError
 
 
@@ -120,5 +142,28 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def forward_adjoint(self, t: float, dt: float, phi: Tensor):
-        raise NotImplementedError
+    def backward_augmented(
+        self, t: float, dt: float, rho: Tensor, phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...]
+    ):
+        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 2."""
+        # non-hermitian Hamiltonian at time t
+        H_nh = self.H - 0.5j * self.sum_nojump
+        Hdag_nh = H_nh.adjoint()
+
+        # compute rho(t-dt)
+        M0 = self.I + 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
+        M1s = 0.5 * sqrt(dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
+        tmp = kraus_map(rho, M1s)
+        rho = kraus_map(rho, M0) - tmp + 0.5 * kraus_map(tmp, M1s)
+        rho = rho / trace(rho)[..., None, None].real
+
+        # compute phi(t-dt)
+        M0_adj = self.I + 1j * dt * Hdag_nh - 0.5 * dt**2 * Hdag_nh @ Hdag_nh
+        M1s_adj = 0.5 * sqrt(dt) * (
+            self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint()
+        )
+        tmp = kraus_map(phi, M1s_adj)
+        phi = (kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj))
+
+        return rho, phi

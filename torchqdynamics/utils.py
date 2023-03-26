@@ -47,7 +47,7 @@ def ket_overlap(x: Tensor, y: Tensor) -> torch.complex:
 
 
 def ket_fidelity(x: Tensor, y: Tensor) -> float:
-    """Return the fidelity between two state vectors (kets).
+    r"""Return the fidelity between two state vectors (kets).
 
     The fidelity between two pure states $\varphi$, $\psi$ is defined by their
     squared overlap
@@ -70,7 +70,7 @@ def ket_fidelity(x: Tensor, y: Tensor) -> float:
 
 
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
-    """Apply the dissipation superoperator to a density matrix.
+    r"""Apply the dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L](\cdot)$ is defined by
     $$
@@ -92,7 +92,7 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
 
 
 def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
-    """Apply the Lindbladian superoperator to a density matrix.
+    r"""Apply the Lindbladian superoperator to a density matrix.
 
     The system Lindbladian $\mathcal{L}(\cdot)$ is the superoperator
     generating the evolution of the system. It is defined by
