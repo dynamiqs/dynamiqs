@@ -51,8 +51,12 @@ class MERouchon1(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, dt: float, rho: Tensor, phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...]
+        self,
+        t: float,
+        dt: float,
+        rho: Tensor,
+        phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...],
     ):
         """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
@@ -104,8 +108,12 @@ class MERouchon1_5(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, dt: float, rho: Tensor, phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...]
+        self,
+        t: float,
+        dt: float,
+        rho: Tensor,
+        phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...],
     ):
         raise NotImplementedError
 
@@ -145,8 +153,12 @@ class MERouchon2(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, dt: float, rho: Tensor, phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...]
+        self,
+        t: float,
+        dt: float,
+        rho: Tensor,
+        phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...],
     ):
         """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
@@ -162,10 +174,12 @@ class MERouchon2(MERouchon):
 
         # compute phi(t-dt)
         M0_adj = self.I + 1j * dt * Hdag_nh - 0.5 * dt**2 * Hdag_nh @ Hdag_nh
-        M1s_adj = 0.5 * sqrt(dt) * (
-            self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint()
+        M1s_adj = (
+            0.5
+            * sqrt(dt)
+            * (self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint())
         )
         tmp = kraus_map(phi, M1s_adj)
-        phi = (kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj))
+        phi = kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj)
 
         return rho, phi
