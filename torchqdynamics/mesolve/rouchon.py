@@ -1,6 +1,8 @@
 from math import sqrt
+from typing import Tuple
 
 import torch
+import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import AdjointQSolver
@@ -110,7 +112,7 @@ class MERouchon1_5(MERouchon):
 
 class MERouchon2(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 2.
+        r"""Compute rho(t+dt) using a Rouchon method of order 2.
 
         Note:
             For fast time-varying Hamiltonians, this method is not order 2 because the
