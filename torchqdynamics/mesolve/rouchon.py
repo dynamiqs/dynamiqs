@@ -28,10 +28,10 @@ class MERouchon1(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1."""
         # Args:
-        #     rho: (b_H, b_rho0, n, n)
+        #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
-        #     (b_H, b_rho0, n, n)
+        #     (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -56,10 +56,10 @@ class MERouchon1_5(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 1.5."""
         # Args:
-        #     rho: (b_H, b_rho0, n, n)
+        #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
-        #     (b_H, b_rho0, n, n)
+        #     (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -90,15 +90,17 @@ class MERouchon2(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
         """Compute rho(t+dt) using a Rouchon method of order 2.
 
-        NOTE: For fast time-varying Hamiltonians, this method is not order 2 because the
-        second-order time derivative term is neglected. This term could be added in the
-        zero-th order Kraus operator if needed, as M0 += -0.5j * dt**2 * \dot{H}.
+        Note:
+            For fast time-varying Hamiltonians, this method is not order 2 because the
+            second-order time derivative term is neglected. This term could be added in
+            the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
+            \dot{H}`.
         """
         # Args:
-        #     rho: (b_H, b_rho0, n, n)
+        #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
-        #     (b_H, b_rho0, n, n)
+        #     (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
