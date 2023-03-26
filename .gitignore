@@ -19,3 +19,6 @@ dist/
 
 # Jupyter Notebook backups
 .ipynb_checkpoints/
+
+# pyenv local Python version
+.python-version
