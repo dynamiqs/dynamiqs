@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Literal, Optional
 
 import torch
 from torch import Tensor
@@ -32,7 +32,7 @@ def odeint(
     t_save: Tensor,
     exp_ops: Tensor,
     save_states: bool,
-    gradient_alg: Literal[None, 'autograd', 'adjoint'],
+    gradient_alg: Optional[Literal['autograd', 'adjoint']],
 ):
     # Args:
     #     y0: (..., m, n)

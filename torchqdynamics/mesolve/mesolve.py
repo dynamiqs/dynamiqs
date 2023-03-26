@@ -19,7 +19,7 @@ def mesolve(
     *,
     exp_ops: Optional[List[OperatorLike]] = None,
     save_states: bool = True,
-    gradient_alg: Literal[None, 'autograd', 'adjoint'] = None,
+    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
     parameters: Optional[Tuple[nn.Parameter, ...]] = None,
     solver: Optional[SolverOption] = None,
 ):
