@@ -226,11 +226,11 @@ def _fixed_odeint_augmented(
             f'`t_span` should be a tensor of shape (2,), but has shape {t_span.shape}.'
         )
     if t_span[1] <= t_span[0]:
-        raise ValueError(f'`t_span` should be sorted in ascending order.')
+        raise ValueError('`t_span` should be sorted in ascending order.')
 
     T = t_span[0] - t_span[1]
     if not torch.allclose(torch.round(T / dt), T / dt):
-        raise ValueError(f'The total time of evolution should be a multiple of dt.')
+        raise ValueError('The total time of evolution should be a multiple of dt.')
 
     # define time values
     times = torch.linspace(t_span[0], t_span[-1], torch.round(T / dt).int() + 1)
@@ -247,7 +247,7 @@ def _fixed_odeint_augmented(
             dg = torch.autograd.grad(
                 a, parameters, y, allow_unused=True, retain_graph=True
             )
-            dg = none_to_zeros_like(dgrad, parameters)
+            dg = none_to_zeros_like(dg, parameters)
             g = add_tuples(g, dg)
 
     return y, a, g
@@ -313,7 +313,7 @@ class ODEIntAdjoint(torch.autograd.Function):
             t_span_segment = t_span[i - 1:i + 1]
 
             # run odeint on augmented solution
-            y, a, g = _odeint_augmented(
+            y, a, g = _odeint_augmented_main(
                 qsolver, y, a, g, t_span_segment, parameters=parameters
             )
 
