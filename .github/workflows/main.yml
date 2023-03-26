@@ -39,10 +39,10 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run import sorting (isort)
-        run: isort --check torchqdynamics
+        run: isort --check .
 
       - name: Run code autoformatting (yapf)
-        run: yapf --diff --recursive torchqdynamics
+        run: yapf --diff --recursive torchqdynamics tests
 
       - name: Run test suite (pytest)
         run: pytest

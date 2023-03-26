@@ -1,4 +1,4 @@
-files: torchqdynamics
+files: (torchqdynamics|tests)
 repos:
   - repo: https://github.com/google/yapf
     rev: v0.32.0

@@ -29,8 +29,8 @@ pip install -r requirements-dev.txt
 
 Run the following before each commit:
 ```shell
-isort torchqdynamics  # sort the imports
-yapf -i -r torchqdynamics  # auto-format the code
+isort .  # sort the imports
+yapf -i -r torchqdynamics tests  # auto-format the code
 pytest  # run the test suite
 ```
 
