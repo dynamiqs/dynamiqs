@@ -122,7 +122,11 @@ def _fixed_odeint(
     """Integrate a quantum ODE with a fixed time step solver.
 
     Note:
-        The solver times are defined using `torch.linspace` which ensures that the overall solution is evolved from the user-defined time (up to an error of `rtol=1e-5`). However, this may induce a small mismatch between the time step inside `qsolver` and the time step inside the iteration loop. A small error can thus buildup throughout the ODE integration. TODO Fix this.
+        The solver times are defined using `torch.linspace` which ensures that the
+        overall solution is evolved from the user-defined time (up to an error of
+        `rtol=1e-5`). However, this may induce a small mismatch between the time step
+        inside `qsolver` and the time step inside the iteration loop. A small error can
+        thus buildup throughout the ODE integration. TODO Fix this.
 
     Args:
         qsolver ():
