@@ -55,8 +55,11 @@ def odeint(
 
 
 def _odeint_main(
-    qsolver: ForwardQSolver, y0: Tensor, t_save: Tensor, exp_ops: Tensor,
-    save_states: bool
+    qsolver: ForwardQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    exp_ops: Tensor,
+    save_states: bool,
 ):
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint(
@@ -85,8 +88,12 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(
-    qsolver: ForwardQSolver, y0: Tensor, t_save: Tensor, dt: float, exp_ops: Tensor,
-    save_states: bool
+    qsolver: ForwardQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    dt: float,
+    exp_ops: Tensor,
+    save_states: bool,
 ):
     # Args:
     #     y0: (..., m, n)
