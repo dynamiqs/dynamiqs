@@ -9,10 +9,10 @@ This library provides differentiable solvers for the Schrödinger Equation, the 
 Clone the repository, install the dependencies and install the repository in editable mode in any Python virtual environment:
 ```shell
 # pip
-pip install -e /path/to/torchqdynamics
+pip install -e .
 
 # conda
-conda develop /path/to/torchqdynamics
+conda develop .
 ```
 
 ## Usage
@@ -24,18 +24,18 @@ conda develop /path/to/torchqdynamics
 ## Contribute
 Install developer dependencies:
 ```shell
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 ```
 
 Run the following before each commit:
 ```shell
 isort .  # sort the imports
-yapf -i -r torchqdynamics tests  # auto-format the code
+black .  # auto-format the code
 pytest  # run the test suite
 ```
 
 Alternatively you can use `pre-commit` to run automatically the sorting (isort)
-and auto-formatting (yapf) automatically before each commit:
+and auto-formatting (black) automatically before each commit:
 ```shell
 pip install pre-commit
 pre-commit install
