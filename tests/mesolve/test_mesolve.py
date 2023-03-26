@@ -33,7 +33,7 @@ def test_mesolve_batching():
     b_rho0 = len(rho0_batched)
     num_t_save = 51
     t_save = np.linspace(0.0, delta / (2 * np.pi), num_t_save)  # a full rotation
-    solver = tq.solver.Rouchon(dt=1e-4, order=1)
+    solver = tq.solver.Rouchon1(dt=1e-4)
 
     run_mesolve = lambda H, rho0: tq.mesolve(
         H, jump_ops, rho0, t_save, exp_ops=exp_ops, solver=solver
