@@ -28,7 +28,7 @@ def test_mesolve_batching():
         qt.coherent(n, alpha0),
         qt.coherent(n, 1j * alpha0),
         qt.coherent(n, -alpha0),
-        qt.coherent(n, -1j * alpha0)
+        qt.coherent(n, -1j * alpha0),
     ]
     b_rho0 = len(rho0_batched)
     num_t_save = 51
