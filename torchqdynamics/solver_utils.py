@@ -31,7 +31,7 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
     for sqrtm implementation.
     """
     vals, vecs = torch.linalg.eigh(mat)
-    return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
+    return vecs @ torch.linalg.solve(vecs, torch.diag(vals ** (-0.5)), left=False)
 
 
 def bexpect(operators: Tensor, state: Tensor) -> Tensor:

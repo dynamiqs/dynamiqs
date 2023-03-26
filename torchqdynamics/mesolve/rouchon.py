@@ -131,8 +131,8 @@ class MERouchon2(MERouchon):
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh  # (b_H, 1, n, n)
-        M1s = 0.5 * sqrt(dt) * (
-            self.jump_ops @ M0 + M0 @ self.jump_ops
+        M1s = (
+            0.5 * sqrt(dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
         )  # (b_H, len(jump_ops), n, n)
 
         # compute rho(t+dt)
