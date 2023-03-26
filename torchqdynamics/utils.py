@@ -4,6 +4,10 @@ import torch
 from qutip import Qobj
 
 
+def is_ket(x: torch.Tensor) -> torch.Tensor:
+    return x.size(-1) == 1
+
+
 def ket_to_bra(x: torch.Tensor) -> torch.Tensor:
     """Linear map (bra) representation of a state vector (ket).
 
