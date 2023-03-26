@@ -5,14 +5,14 @@ import torch.nn as nn
 
 from ..odeint import odeint
 from ..solver_options import SolverOption
-from ..types import OperatorLike, TensorLike, TimeDependentOperatorLike, to_tensor
+from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
 from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 
 def mesolve(
-    H: TimeDependentOperatorLike,
+    H: TDOperatorLike,
     jump_ops: List[OperatorLike],
     rho0: OperatorLike,
     t_save: TensorLike,

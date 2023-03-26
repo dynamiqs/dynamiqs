@@ -6,14 +6,12 @@ from torch import Tensor
 from ..odeint import AdjointQSolver
 from ..solver_options import SolverOption
 from ..solver_utils import inv_sqrtm, kraus_map
-from ..types import TimeDependentOperator
+from ..types import TDOperator
 from ..utils import trace
 
 
 class MERouchon(AdjointQSolver):
-    def __init__(
-        self, H: TimeDependentOperator, jump_ops: Tensor, solver_options: SolverOption
-    ):
+    def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
         # Args:
         #     H: (b_H, n, n)
 

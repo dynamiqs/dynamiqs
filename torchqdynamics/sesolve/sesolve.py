@@ -6,12 +6,12 @@ from torch import Tensor
 
 from ..odeint import odeint
 from ..solver_options import Euler, SolverOption
-from ..types import OperatorLike, TensorLike, TimeDependentOperatorLike, to_tensor
+from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from .euler import SEEuler
 
 
 def sesolve(
-    H: TimeDependentOperatorLike,
+    H: TDOperatorLike,
     psi0: OperatorLike,
     t_save: TensorLike,
     *,
