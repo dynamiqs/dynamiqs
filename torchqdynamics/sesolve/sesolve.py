@@ -10,23 +10,23 @@ from ..types import OperatorLike, TensorLike, TimeDependentOperatorLike, to_tens
 
 def sesolve(
     H: TimeDependentOperatorLike,
-    psi: OperatorLike,
+    psi0: OperatorLike,
     t_save: TensorLike,
     *,
-    exp_ops: Optional[List[OperatorLike]] = None,
     save_states: bool = True,
-    gradient_alg: Literal[None, 'autograd', 'adjoint'] = None,
-    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
+    exp_ops: Optional[List[OperatorLike]] = None,
     solver: Optional[SolverOption] = None,
+    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
+    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
 ) -> torch.Tensor:
     # Args:
     #     H: (b_H?, n, n)
-    #     psi: (b_psi?, n, 1)
+    #     psi0: (b_psi0?, n, 1)
     #
     # Returns:
     #     (y_save, exp_save) with
-    #     - y_save: (b_H?, b_psi?, len(t_save), n, 1)
-    #     - exp_save: (b_H?, b_psi?, len(exp_ops), len(t_save))
+    #     - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
+    #     - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
 
     # TODO: support density matrices too
     # TODO: H is assumed to be time-independent from here (temporary)
@@ -35,9 +35,12 @@ def sesolve(
     H = to_tensor(H)
     H_batched = H[None, ...] if H.dim() == 2 else H
 
-    # convert psi to a tensor and batch by default
-    psi = to_tensor(psi)
-    psi_batched = psi[None, ...] if psi.dim() == 2 else psi
+    # convert psi0 to a tensor and batch by default
+    # TODO: add test to check that psi0 has the correct shape
+    b_H = H_batched.size(0)
+    psi0 = to_tensor(psi0)
+    psi0_batched = psi0[None, ...] if psi0.dim() == 2 else psi0
+    psi0_batched = psi0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi0, n, 1)
 
     t_save = torch.as_tensor(t_save)
 
@@ -51,12 +54,12 @@ def sesolve(
     qsolver = None
 
     # compute the result
-    b_H = H_batched.size(0)
-    y0 = psi_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi, n, n)
-    y_save, exp_save = odeint(qsolver, y0, t_save, exp_ops, save_states, gradient_alg)
+    y_save, exp_save = odeint(
+        qsolver, psi0_batched, t_save, exp_ops, save_states, gradient_alg
+    )
 
     # restore correct batching
-    if psi.dim() == 2:
+    if psi0.dim() == 2:
         y_save = y_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
     if H.dim() == 2:
