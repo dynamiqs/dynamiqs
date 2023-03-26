@@ -12,9 +12,12 @@ from ..utils import trace
 
 class MERouchon(AdjointQSolver):
     def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
-        # Args:
-        #     H: (b_H, n, n)
-
+        """
+        Args:
+            H (): Hamiltonian, of shape (b_H, n, n).
+            jump_ops (Tensor): Jump operators.
+            solver_options ():
+        """
         # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
@@ -25,13 +28,18 @@ class MERouchon(AdjointQSolver):
 
 
 class MERouchon1(MERouchon):
-    def forward(self, t: float, dt: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 1."""
-        # Args:
-        #     rho: (b_H, b_rho, n, n)
-        #
-        # Returns:
-        #     (b_H, b_rho, n, n)
+    def forward(self, t: float, rho: Tensor) -> Tensor:
+        """Compute rho(t+dt) using a Rouchon method of order 1.
+
+        Args:
+            t (float): Time.
+            rho (Tensor): Density matrix of shape (b_H, b_rho, n, n).
+
+        Returns:
+            Density matrix at next time step, as tensor of shape (b_H, b_rho, n, n).
+        """
+        # get time step
+        dt = self.options.dt
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -49,10 +57,12 @@ class MERouchon1(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, dt: float, rho: Tensor, phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...]
+        self, t: float, rho: Tensor, phi: Tensor, parameters: Tuple[nn.Parameter, ...]
     ):
         """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 1."""
+        # get time step
+        dt = self.options.dt
+
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
@@ -72,13 +82,22 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon1_5(MERouchon):
-    def forward(self, t: float, dt: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 1.5."""
-        # Args:
-        #     rho: (b_H, b_rho, n, n)
-        #
-        # Returns:
-        #     (b_H, b_rho, n, n)
+    def forward(self, t: float, rho: Tensor):
+        """Compute rho(t+dt) using a Rouchon method of order 1.5.
+
+        Note:
+            No need for trace renormalization since the scheme is trace-preserving
+            by construction.
+
+        Args:
+            t (float): Time.
+            rho (Tensor): Density matrix of shape (b_H, b_rho, n, n).
+
+        Returns:
+            Density matrix at next time step, as tensor of shape (b_H, b_rho, n, n).
+        """
+        # get time step
+        dt = self.options.dt
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -89,40 +108,40 @@ class MERouchon1_5(MERouchon):
 
         # build normalization matrix
         S = M0.adjoint() @ M0 + dt * self.sum_nojump  # (b_H, 1, n, n)
-        # TODO: fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
+        # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
         S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
 
         # compute rho(t+dt)
         rho = kraus_map(rho, S_inv_sqrtm)
         rho = kraus_map(rho, M0) + kraus_map(rho, Ms)
 
-        # no need to normalize by the trace because this scheme is trace
-        # preserving by construction
-
         return rho
 
     def backward_augmented(
-        self, t: float, dt: float, rho: Tensor, phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...]
+        self, t: float, rho: Tensor, phi: Tensor, parameters: Tuple[nn.Parameter, ...]
     ):
         raise NotImplementedError
 
 
 class MERouchon2(MERouchon):
-    def forward(self, t: float, dt: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 2.
+    def forward(self, t: float, rho: Tensor):
+        r"""Compute rho(t+dt) using a Rouchon method of order 2.
 
         Note:
             For fast time-varying Hamiltonians, this method is not order 2 because the
             second-order time derivative term is neglected. This term could be added in
             the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
             \dot{H}`.
+
+        Args:
+            t (float): Time.
+            rho (Tensor): Density matrix of shape (b_H, b_rho, n, n).
+
+        Returns:
+            Density matrix at next time step, as tensor of shape (b_H, b_rho, n, n).
         """
-        # Args:
-        #     rho: (b_H, b_rho, n, n)
-        #
-        # Returns:
-        #     (b_H, b_rho, n, n)
+        # get time step
+        dt = self.options.dt
 
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
@@ -143,10 +162,12 @@ class MERouchon2(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, dt: float, rho: Tensor, phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...]
+        self, t: float, rho: Tensor, phi: Tensor, parameters: Tuple[nn.Parameter, ...]
     ):
         """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 2."""
+        # get time step
+        dt = self.options.dt
+
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
@@ -164,6 +185,6 @@ class MERouchon2(MERouchon):
             self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint()
         )
         tmp = kraus_map(phi, M1s_adj)
-        phi = (kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj))
+        phi = kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj)
 
         return rho, phi

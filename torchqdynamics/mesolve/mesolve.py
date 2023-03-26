@@ -38,7 +38,7 @@ def mesolve(
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
     signature `H(t: float) -> Tensor`. Piecewise constant Hamiltonians can also be
-    passed as... TODO: complete with Hamiltonian format
+    passed as... TODO Complete with full Hamiltonian format
 
     Available solvers:
       - `Rouchon1` (alias of `Rouchon`)
@@ -84,7 +84,7 @@ def mesolve(
     #   - rho_save: (b_H?, b_rho0?, len(t_save), n, n)
     #   - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
 
-    # TODO: H is assumed to be time-independent from here (temporary)
+    # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
     H = to_tensor(H)
@@ -108,7 +108,7 @@ def mesolve(
     exp_ops = to_tensor(exp_ops)
 
     if solver is None:
-        # TODO: Replace by adaptive time step solver when implemented.
+        # TODO Replace by adaptive time step solver when implemented.
         solver = Rouchon1(dt=1e-2)
 
     # define the QSolver
@@ -123,7 +123,8 @@ def mesolve(
 
     # compute the result
     rho_save, exp_save = odeint(
-        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg, parameters
+        qsolver, rho0_batched, t_save, save_states=save_states, exp_ops=exp_ops,
+        gradient_alg=gradient_alg, parameters=parameters
     )
 
     # restore correct batching

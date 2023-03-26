@@ -30,15 +30,15 @@ def sesolve(
     #     - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
     #     - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
 
-    # TODO: support density matrices too
-    # TODO: H is assumed to be time-independent from here (temporary)
+    # TODO support density matrices too
+    # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
     H = to_tensor(H)
     H_batched = H[None, ...] if H.dim() == 2 else H
 
     # convert psi0 to a tensor and batch by default
-    # TODO: add test to check that psi0 has the correct shape
+    # TODO add test to check that psi0 has the correct shape
     b_H = H_batched.size(0)
     psi0 = to_tensor(psi0)
     psi0_batched = psi0[None, ...] if psi0.dim() == 2 else psi0
