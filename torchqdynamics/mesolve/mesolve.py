@@ -78,12 +78,6 @@ def mesolve(
                 times, and of shape (len(exp_ops), len(t_save)) or (b_H, b_rho,
                 len(exp_ops), len(t_save)) if batched.
     """
-    # H: (b_H?, n, n)
-    # rho0: (b_rho0?, n, n)
-    # -> (rho_save, exp_save) with
-    #   - rho_save: (b_H?, b_rho0?, len(t_save), n, n)
-    #   - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
-
     # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
