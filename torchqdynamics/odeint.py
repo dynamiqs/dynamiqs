@@ -169,7 +169,7 @@ def _adaptive_odeint(
             dt = t_save[save_counter] - t
 
         # perform a single solver step of size dt
-        ft_new, y_new, y_err, stages = solver.step(ft, y, t, dt)
+        ft_new, y_new, y_err = solver.step(ft, y, t, dt)
 
         # compute estimated error of this step
         accept_step = solver.get_error(y_err, y, y_new) <= 1
