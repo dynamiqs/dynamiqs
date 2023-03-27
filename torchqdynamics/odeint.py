@@ -100,6 +100,9 @@ def _odeint_main(
         return _adaptive_odeint(qsolver, y0, t_save, save_states, exp_ops)
 
 
+# For now we use *args and **kwargs for helper methods that are not implemented to ease
+# the potential api changes that could occur later. When a method is implemented the
+# methods should take the same arguments as all others.
 def _odeint_inplace(*args, **kwargs):
     """Integrate a quantum ODE with an in-place solver.
 

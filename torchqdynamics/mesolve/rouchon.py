@@ -17,7 +17,7 @@ class MERouchon(AdjointQSolver):
         """
         Args:
             H: Hamiltonian, of shape `(b_H, n, n)`.
-            jump_ops: Jump operators.
+            jump_ops: Jump operators, of shape `(len(jump_ops), n, n)`.
             solver_options:
         """
         # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
