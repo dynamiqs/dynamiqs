@@ -32,7 +32,7 @@ class MERouchon(AdjointQSolver):
 
 class MERouchon1(MERouchon):
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        """Compute rho(t+dt) using a Rouchon method of order 1.
+        """Compute $\rho(t+dt)$ using a Rouchon method of order 1.
 
         Args:
             t: Time.
@@ -57,9 +57,13 @@ class MERouchon1(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, rho: Tensor, phi: Tensor, parameters: Tuple[nn.Parameter, ...]
+        self,
+        t: float,
+        rho: Tensor,
+        phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...],
     ):
-        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 1."""
+        """Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
@@ -71,16 +75,16 @@ class MERouchon1(MERouchon):
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
-        M0_adj = self.I + 1j * self.dt * Hdag_nh
-        Ms_adj = torch.cat((M0_adj[None, ...], sqrt(self.dt) * self.jump_ops.adjoint()))
-        phi = kraus_map(phi, Ms_adj)
+        M0_adj = self.I + 1j * dt * Hdag_nh
+        M1s_adj = sqrt(dt) * self.jump_ops.adjoint()
+        phi = kraus_map(phi, M0_adj) + kraus_map(phi, M1s_adj)
 
         return rho, phi
 
 
 class MERouchon1_5(MERouchon):
     def forward(self, t: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 1.5.
+        """Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
 
         Note:
             No need for trace renormalization since the scheme is trace-preserving
@@ -112,14 +116,18 @@ class MERouchon1_5(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, rho: Tensor, phi: Tensor, parameters: Tuple[nn.Parameter, ...]
+        self,
+        t: float,
+        rho: Tensor,
+        phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...],
     ):
         raise NotImplementedError
 
 
 class MERouchon2(MERouchon):
     def forward(self, t: float, rho: Tensor):
-        r"""Compute rho(t+dt) using a Rouchon method of order 2.
+        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
         Note:
             For fast time-varying Hamiltonians, this method is not order 2 because the
@@ -140,8 +148,8 @@ class MERouchon2(MERouchon):
         # build time-dependent Kraus operators
         # M0: (b_H, 1, n, n)
         M0 = self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
-        M1s = 0.5 * sqrt(self.dt) * (
-            self.jump_ops @ M0 + M0 @ self.jump_ops
+        M1s = (
+            0.5 * sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
         )  # (b_H, len(jump_ops), n, n)
 
         # compute rho(t+dt)
@@ -154,9 +162,13 @@ class MERouchon2(MERouchon):
         return rho
 
     def backward_augmented(
-        self, t: float, rho: Tensor, phi: Tensor, parameters: Tuple[nn.Parameter, ...]
+        self,
+        t: float,
+        rho: Tensor,
+        phi: Tensor,
+        parameters: Tuple[nn.Parameter, ...],
     ):
-        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 2."""
+        """Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
@@ -169,10 +181,14 @@ class MERouchon2(MERouchon):
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
-        M0_adj = self.I + 1j * self.dt * Hdag_nh - 0.5 * self.dt**2 * Hdag_nh @ Hdag_nh
-        M1s_adj = 0.5 * sqrt(
-            self.dt
-        ) * (self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint())
+        M0_adj = (
+            self.I + 1j * self.dt * Hdag_nh - 0.5 * self.dt**2 * Hdag_nh @ Hdag_nh
+        )
+        M1s_adj = (
+            0.5
+            * sqrt(self.dt)
+            * (self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint())
+        )
         tmp = kraus_map(phi, M1s_adj)
         phi = kraus_map(phi, M0_adj) + tmp + 0.5 * kraus_map(tmp, M1s_adj)
 

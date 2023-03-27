@@ -31,7 +31,7 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
          https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176.
     """
     vals, vecs = torch.linalg.eigh(mat)
-    return vecs @ torch.linalg.solve(vecs, torch.diag(vals**(-0.5)), left=False)
+    return vecs @ torch.linalg.solve(vecs, torch.diag(vals ** (-0.5)), left=False)
 
 
 def bexpect(operators: Tensor, state: Tensor) -> Tensor:
@@ -52,14 +52,13 @@ def bexpect(operators: Tensor, state: Tensor) -> Tensor:
 def none_to_zeros_like(
     in_tuple: Tuple[Union[Tensor, None], ...], shaping_tuple: Tuple[Tensor, ...]
 ) -> Tuple[Tensor, ...]:
-    """Convert None values of `in_tuple` to zero-valued tensors with the same shape
+    """Convert `None` values of `in_tuple` to zero-valued tensors with the same shape
     as `shaping_tuple`."""
     return tuple(
-        torch.zeros_like(s) if a is None else a
-        for a, s in zip(in_tuple, shaping_tuple)
+        torch.zeros_like(s) if a is None else a for a, s in zip(in_tuple, shaping_tuple)
     )
 
 
 def add_tuples(a: Tuple, b: Tuple) -> Tuple:
     """Element-wise sum of two tuples of the same shape."""
-    return tuple(map(sum, zip(a, b)))
+    return tuple(x + y for x, y in zip(a, b))

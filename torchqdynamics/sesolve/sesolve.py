@@ -59,7 +59,7 @@ def sesolve(
 
     # compute the result
     y_save, exp_save = odeint(
-        qsolver, psi0_batched, t_save, exp_ops, save_states, gradient_alg
+        qsolver, psi0_batched, t_save, exp_ops, save_states, gradient_alg, parameters
     )
 
     # restore correct batching

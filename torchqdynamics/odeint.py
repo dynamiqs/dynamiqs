@@ -1,3 +1,4 @@
+import time
 import warnings
 from abc import ABC, abstractmethod
 from typing import Literal, Optional, Tuple
@@ -47,9 +48,14 @@ class AdjointQSolver(ForwardQSolver):
 
 
 def odeint(
-    qsolver: ForwardQSolver, y0: Tensor, t_save: Tensor, *, save_states: bool,
-    exp_ops: Tensor, gradient_alg: Optional[Literal['autograd', 'adjoint']],
-    parameters: Optional[Tuple[nn.Parameter, ...]]
+    qsolver: ForwardQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    *,
+    save_states: bool,
+    exp_ops: Tensor,
+    gradient_alg: Optional[Literal['autograd', 'adjoint']],
+    parameters: Optional[Tuple[nn.Parameter, ...]],
 ) -> Tuple[Tensor, Tensor]:
     """Integrate a quantum ODE starting from an initial state.
 
@@ -72,7 +78,7 @@ def odeint(
     check_t_save(t_save)
 
     # raise warning if parameters are defined but not used
-    if not (parameters is None or gradient_alg == 'adjoint'):
+    if parameters is not None and gradient_alg != 'adjoint':
         warnings.warn('Parameters were supplied in `odeint` but not used.')
 
     # dispatch to appropriate odeint subroutine
@@ -90,8 +96,11 @@ def odeint(
 
 
 def _odeint_main(
-    qsolver: ForwardQSolver, y0: Tensor, t_save: Tensor, save_states: bool,
-    exp_ops: Tensor
+    qsolver: ForwardQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    save_states: bool,
+    exp_ops: Tensor,
 ) -> Tuple[Tensor, Tensor]:
     """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
     if isinstance(qsolver.options, FixedStep):
@@ -119,8 +128,11 @@ def _adaptive_odeint(*_args, **_kwargs):
 
 
 def _fixed_odeint(
-    qsolver: ForwardQSolver, y0: Tensor, t_save: Tensor, save_states: bool,
-    exp_ops: Tensor
+    qsolver: ForwardQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    save_states: bool,
+    exp_ops: Tensor,
 ) -> Tuple[Tensor, Tensor]:
     """Integrate a quantum ODE with a fixed time step solver.
 
@@ -162,7 +174,8 @@ def _fixed_odeint(
         exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(t_save)).to(y0)
 
     # define time values
-    times = torch.linspace(0.0, t_save[-1], torch.round(t_save[-1] / dt).int() + 1)
+    num_times = torch.round(t_save[-1] / dt).int() + 1
+    times = torch.linspace(0.0, t_save[-1], num_times)
 
     # run the ode routine
     y = y0
@@ -192,16 +205,40 @@ def _fixed_odeint(
 
 
 def _odeint_adjoint(
-    qsolver: AdjointQSolver, y0: Tensor, t_save: Tensor, save_states: bool,
-    exp_ops: Tensor, parameters: Tuple[nn.Parameter, ...]
+    qsolver: AdjointQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    save_states: bool,
+    exp_ops: Tensor,
+    parameters: Tuple[nn.Parameter, ...],
 ) -> Tuple[Tensor, Tensor]:
-    """Integrate an ODE using the adjoint method in the backward pass."""
+    """Integrate an ODE using the adjoint method in the backward pass.
+
+    Within this function, the following calls are sequentially made:
+      - Forward pass: `odeint` --> `_odeint_adjoint` --> `ODEIntAdjoint.forward` -->
+                      `_odeint_inplace` --> `_odeint_main` --> `_fixed_odeint` or
+                      `_adaptive_odeint` --> `qsolver.forward`.
+      - Backward pass: `odeint` --> `_odeint_adjoint` --> `ODEIntAdjoint.backward` -->
+                       `_odeint_augmented_main` --> `_fixed_odeint_augmented` or
+                       `_adaptive_odeint_augmented` --> `qsolver.backward_augmented`.
+    """
+    # check parameters were passed
+    if parameters is None:
+        raise TypeError(
+            'For adjoint state gradient computation, parameters must be passed to the'
+            ' solver.'
+        )
+
     return ODEIntAdjoint.apply(qsolver, y0, t_save, save_states, exp_ops, *parameters)
 
 
 def _odeint_augmented_main(
-    qsolver: AdjointQSolver, y0: Tensor, a0: Tensor, g0: Tuple[Tensor, ...],
-    t_span: Tensor, parameters: Tuple[nn.Parameter, ...]
+    qsolver: AdjointQSolver,
+    y0: Tensor,
+    a0: Tensor,
+    g0: Tuple[Tensor, ...],
+    t_span: Tensor,
+    parameters: Tuple[nn.Parameter, ...],
 ) -> Tuple[Tensor, Tensor]:
     """Integrate the augmented ODE backward."""
     if isinstance(qsolver.options, FixedStep):
@@ -216,8 +253,12 @@ def _adaptive_odeint_augmented(*_args, **_kwargs):
 
 
 def _fixed_odeint_augmented(
-    qsolver: AdjointQSolver, y0: Tensor, a0: Tensor, g0: Tuple[Tensor, ...],
-    t_span: Tensor, parameters: Tuple[nn.Parameter, ...]
+    qsolver: AdjointQSolver,
+    y0: Tensor,
+    a0: Tensor,
+    g0: Tuple[Tensor, ...],
+    t_span: Tensor,
+    parameters: Tuple[nn.Parameter, ...],
 ) -> Tuple[Tensor, Tensor, Tuple[Tensor, ...]]:
     """Integrate the augmented ODE backward using a fixed time step solver."""
     # get time step from qsolver
@@ -231,7 +272,7 @@ def _fixed_odeint_augmented(
     if t_span[1] <= t_span[0]:
         raise ValueError('`t_span` should be sorted in ascending order.')
 
-    T = t_span[0] - t_span[1]
+    T = t_span[1] - t_span[0]
     if not torch.allclose(torch.round(T / dt), T / dt):
         raise ValueError('The total time of evolution should be a multiple of dt.')
 
@@ -240,8 +281,9 @@ def _fixed_odeint_augmented(
 
     # run the ode routine
     y, a, g = y0, a0, g0
-    y, a = y.requires_grad_(True), a.requires_grad_(True)
     for t in tqdm(times[:-1], leave=False):
+        y, a = y.requires_grad_(True), a.requires_grad_(True)
+
         with torch.enable_grad():
             # compute y(t-dt) and a(t-dt) with the qsolver
             y, a = qsolver.backward_augmented(t, y, a, parameters)
@@ -253,15 +295,24 @@ def _fixed_odeint_augmented(
             dg = none_to_zeros_like(dg, parameters)
             g = add_tuples(g, dg)
 
+        # free the graph of y and a
+        y, a = y.data, a.data
+
     return y, a, g
 
 
 class ODEIntAdjoint(torch.autograd.Function):
     """Class for ODE integration with a custom adjoint method backward pass."""
+
     @staticmethod
     def forward(
-        ctx: FunctionCtx, qsolver: AdjointQSolver, y0: Tensor, t_save: Tensor,
-        save_states: bool, exp_ops: Tensor, *parameters: Tuple[nn.Parameter, ...]
+        ctx: FunctionCtx,
+        qsolver: AdjointQSolver,
+        y0: Tensor,
+        t_save: Tensor,
+        save_states: bool,
+        exp_ops: Tensor,
+        *parameters: Tuple[nn.Parameter, ...],
     ) -> Tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
@@ -288,13 +339,7 @@ class ODEIntAdjoint(torch.autograd.Function):
         Throughout this function, `y` is the state, `a = dL/dy` is the adjoint state,
         and `g = dL/dp` is the gradient w.r.t. the parameters, where `L` is the loss
         function and `p` the parameters.
-
-        TODO Check that stacking `y` and `a` does not improve performance of the
-             solver. There was funky stuff happening in this regard in some tests I ran.
         """
-        # disable gradient computation
-        torch.set_grad_enabled(False)
-
         # unpack context
         qsolver = ctx.qsolver
         t_save = ctx.t_save
@@ -305,31 +350,32 @@ class ODEIntAdjoint(torch.autograd.Function):
         if t_span[0] != 0.0:
             t_span = torch.cat((torch.zeros(1), t_span))
 
-        # initialize state, adjoint and gradients
-        y = y_save[-1]
-        a = grad_y[-1][-1]
-        g = tuple(torch.zeros_like(_p).to(y) for _p in parameters)
+        # locally disable gradient computation
+        with torch.no_grad():
+            # initialize state, adjoint and gradients
+            y = y_save[..., -1, :, :]
+            a = grad_y[0][..., -1, :, :]
+            g = tuple(torch.zeros_like(_p).to(y) for _p in parameters)
 
-        # solve the augmented equation backward between every checkpoint
-        for i in tqdm(range(len(t_span) - 1, 0, -1)):
-            # initialize time between both checkpoints
-            t_span_segment = t_span[i - 1:i + 1]
+            # solve the augmented equation backward between every checkpoint
+            for i in tqdm(range(len(t_span) - 1, 0, -1)):
+                # initialize time between both checkpoints
+                t_span_segment = t_span[i - 1 : i + 1]
 
-            # run odeint on augmented solution
-            y, a, g = _odeint_augmented_main(
-                qsolver, y, a, g, t_span_segment, parameters=parameters
-            )
+                # run odeint on augmented state
+                y, a, g = _odeint_augmented_main(
+                    qsolver, y, a, g, t_span_segment, parameters=parameters
+                )
 
-            # replace y with its checkpointed version
-            y = y_save[i - 1]
+                # replace y with its checkpointed version
+                y = y_save[..., i - 1, :, :]
 
-            # update adjoint wrt this time point by adding dL / dy(t)
-            a += grad_y[-1][i - 1]
+                # update adjoint wrt this time point by adding dL / dy(t)
+                a += grad_y[0][..., i - 1, :, :]
 
         # convert gradients of real-valued parameters to real-valued gradients
         g = tuple(
-            _g.real if _p.is_floating_point() else _g
-            for (_g, _p) in zip(g, parameters)
+            _g.real if _p.is_floating_point() else _g for (_g, _p) in zip(g, parameters)
         )
 
         # return the computed gradients w.r.t. each argument in `forward`
