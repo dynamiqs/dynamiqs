@@ -7,7 +7,7 @@ from torch import Tensor
 from ..odeint import odeint
 from ..solver_options import Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
-from .euler import SEEuler
+from .qsolver import SEEuler
 
 
 def sesolve(
@@ -52,8 +52,11 @@ def sesolve(
         solver = Euler(dt=1e-2)
 
     # define the QSolver
+    args = (H_batched, solver)
     if isinstance(solver, Euler):
-        qsolver = SEEuler(H_batched, solver)
+        qsolver = SEEuler(*args)
+    elif isinstance(solver, AdaptiveStep):
+        qsolver = SEAdaptive(*args)
     else:
         raise NotImplementedError
 

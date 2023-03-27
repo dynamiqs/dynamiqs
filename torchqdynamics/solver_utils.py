@@ -73,3 +73,7 @@ def hairer_norm(y: Tensor) -> Tensor:
     (1993), Springer Series in Computational Mathematics`.
     """
     return torch.linalg.norm(y) / sqrt(y.numel())
+
+
+def lindbladian(*args, **kwargs):
+    pass
