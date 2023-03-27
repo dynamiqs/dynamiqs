@@ -1,4 +1,5 @@
-from typing import Tuple, Union
+from math import sqrt
+from typing import Callable, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -63,3 +64,12 @@ def none_to_zeros_like(
 def add_tuples(a: Tuple, b: Tuple) -> Tuple:
     """Element-wise sum of two tuples of the same shape."""
     return tuple(map(sum, zip(a, b)))
+
+
+def hairer_norm(y: Tensor) -> Tensor:
+    """Rescaled frobenius norm of a tensor.
+
+    See Equation (4.11) of `Hairer et al., Solving Ordinary Differential Equations I
+    (1993), Springer Series in Computational Mathematics`.
+    """
+    return torch.linalg.norm(y) / sqrt(y.numel())
