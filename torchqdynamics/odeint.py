@@ -147,7 +147,7 @@ def _adaptive_odeint(
         qsolver.options.max_factor, qsolver.options.atol, qsolver.options.rtol,
         t_save.dtype, y0.dtype, y0.device
     )
-    if isinstance(qsolver.options, DormandPrince45):
+    if isinstance(qsolver.options, Dopri45):
         solver = DormandPrince45(*args)
 
     # initialize the ODE routine
@@ -155,9 +155,13 @@ def _adaptive_odeint(
     f0 = f(t0, y0)
     dt = solver.init_tstep(f0, y0, t0)
 
+    # initialize the progress bar
+    pbar = tqdm(total=t_save[-1].item())
+
     # run the ODE routine
     t, y, ft = t0, y0, f0
-    while t < t_save[-1]:
+    step_counter, max_steps = 0, qsolver.options.max_steps
+    while t < t_save[-1] and step_counter < max_steps:
         # if a time in `t_save` is reached, raise a flag and rescale dt accordingly
         if save_counter < len(t_save) and t + dt >= t_save[save_counter]:
             save_flag = True
@@ -174,6 +178,9 @@ def _adaptive_odeint(
         if accept_step:
             t, y, ft = t + dt, y_new, ft_new
 
+            # update the progress bar
+            pbar.update(dt)
+
             # save results if flag is raised
             if save_flag:
                 if save_states:
@@ -189,6 +196,7 @@ def _adaptive_odeint(
 
         # compute the next dt
         dt = solver.update_tstep(dt, error)
+        step_counter += 1
 
     # save last state if not already done
     if not save_states:
