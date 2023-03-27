@@ -47,13 +47,12 @@ def bexpect(operators: Tensor, state: Tensor) -> Tensor:
     return torch.einsum('bij,...ji->...b', operators, state)
 
 
-def dissipator(rho: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
-    return (
-        torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.adjoint()) -
-        0.5 * torch.einsum('abij,abjk,a...kl->a...il', O.adjoint(), O, rho) -
-        0.5 * torch.einsum('a...ij,abjk,abkl->a...il', rho, O.adjoint(), O)
-    )
+def lindbladian(rho: torch.Tensor, H: torch.Tensor, L: torch.Tensor) -> torch.Tensor:
+    sum_nojump = (L.adjoint() @ L).sum(dim=0)
 
+    # non-hermitian Hamiltonian
+    H_nh = H - 0.5j * sum_nojump
 
-def lindbladian(rho: torch.Tensor, H: torch.Tensor, O: torch.Tensor) -> torch.Tensor:
-    return -1j * (H @ rho - rho @ H) + dissipator(rho, O)
+    H_nh_rho = H_nh @ rho
+    L_rho_Ldag = kraus_map(rho, L[None, ...])
+    return -1j * (H_nh_rho - H_nh_rho.adjoint()) + L_rho_Ldag

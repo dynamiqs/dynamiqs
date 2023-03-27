@@ -4,7 +4,7 @@ import qutip as qt
 import torchqdynamics as tq
 
 
-def test_sesolve_euler():
+def test_sesolve_euler_cheap():
     """Cheap test of the Euler method of sesolve."""
     # parameters
     n = 8
