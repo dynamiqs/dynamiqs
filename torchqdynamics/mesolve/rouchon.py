@@ -28,7 +28,7 @@ class MERouchon(AdjointQSolver):
 
 class MERouchon1(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 1."""
+        """Compute $\rho(t+dt)$ using a Rouchon method of order 1."""
         # Args:
         #     rho: (b_H, b_rho, n, n)
         #
@@ -58,7 +58,7 @@ class MERouchon1(MERouchon):
         phi: Tensor,
         parameters: Tuple[nn.Parameter, ...],
     ):
-        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 1."""
+        """Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
@@ -71,15 +71,15 @@ class MERouchon1(MERouchon):
 
         # compute phi(t-dt)
         M0_adj = self.I + 1j * dt * Hdag_nh
-        Ms_adj = torch.cat((M0_adj[None, ...], sqrt(dt) * self.jump_ops.adjoint()))
-        phi = kraus_map(phi, Ms_adj)
+        M1s_adj = sqrt(dt) * self.jump_ops.adjoint()
+        phi = kraus_map(phi, M0) + kraus_map(phi, M1s_adj)
 
         return rho, phi
 
 
 class MERouchon1_5(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
-        """Compute rho(t+dt) using a Rouchon method of order 1.5."""
+        """Compute $\rho(t+dt)$ using a Rouchon method of order 1.5."""
         # Args:
         #     rho: (b_H, b_rho, n, n)
         #
@@ -120,7 +120,7 @@ class MERouchon1_5(MERouchon):
 
 class MERouchon2(MERouchon):
     def forward(self, t: float, dt: float, rho: Tensor):
-        r"""Compute rho(t+dt) using a Rouchon method of order 2.
+        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
         Note:
             For fast time-varying Hamiltonians, this method is not order 2 because the
@@ -160,7 +160,7 @@ class MERouchon2(MERouchon):
         phi: Tensor,
         parameters: Tuple[nn.Parameter, ...],
     ):
-        """Compute rho(t-dt) and phi(t-dt) using a Rouchon method of order 2."""
+        """Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()

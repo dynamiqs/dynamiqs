@@ -50,13 +50,13 @@ def bexpect(operators: Tensor, state: Tensor) -> Tensor:
 
 
 def none_to_zeros_like(input, shaping_tuple):
-    """Convert None values of an input tuple to zero-valued tensors with the same shape
-    as shaping_tuple."""
+    """Convert `None` values of an input tuple to zero-valued tensors with the same
+    shape as `shaping_tuple`."""
     return tuple(
         torch.zeros_like(s) if a is None else a for a, s in zip(input, shaping_tuple)
     )
 
 
-def add_tuples(a: Tuple, b: Tuple):
+def add_tuples(a: Tuple, b: Tuple) -> Tuple:
     """Element-wise sum of two tuples of the same shape."""
-    return tuple(map(sum, zip(a, b)))
+    return tuple(x + y for x, y in zip(a, b))
