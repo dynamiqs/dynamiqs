@@ -14,10 +14,10 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     TODO Fix documentation
 
     Args:
-        rho: Density matrix of shape (a, ..., n, n).
-        operators: Kraus operators of shape (a, b, n, n).
+        rho: Density matrix of shape `(a, ..., n, n)`.
+        operators: Kraus operators of shape `(a, b, n, n)`.
     Returns:
-        Density matrix of shape (a, ..., n, n) with the Kraus map applied.
+        Density matrix of shape `(a, ..., n, n)` with the Kraus map applied.
     """
     return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.adjoint())
 
@@ -41,10 +41,10 @@ def bexpect(operators: Tensor, state: Tensor) -> Tensor:
     TODO Adapt to both density matrices, kets and bras.
 
     Args:
-        operators: tensor of shape (b, n, n)
-        state: tensor of shape (..., n, n) or (..., n)
+        operators: tensor of shape `(b, n, n)`
+        state: tensor of shape `(..., n, n)` or `(..., n)`
     Returns:
-        expectation value of shape (..., m)
+        expectation value of shape `(..., m)`
     """
     return torch.einsum('bij,...ji->...b', operators, state)
 

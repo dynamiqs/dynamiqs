@@ -18,11 +18,11 @@ class ForwardQSolver(ABC):
         """Iterate the quantum state forward.
 
         Args:
-            t (float): Time.
-            y (Tensor): Quantum state, of shape (..., m, n).
+            t: Time.
+            y: Quantum state, of shape `(..., m, n)`.
 
         Returns:
-            Tensor of shape (..., m, n).
+            Tensor of shape `(..., m, n)`.
         """
         pass
 
@@ -35,13 +35,13 @@ class AdjointQSolver(ForwardQSolver):
         """Iterate the augmented quantum state backward.
 
         Args:
-            t (float): Time.
-            y (Tensor): Quantum state, of shape (..., m, n).
-            a (Tensor): Adjoint quantum state, of shape (..., m, n).
+            t: Time.
+            y: Quantum state, of shape `(..., m, n)`.
+            a: Adjoint quantum state, of shape `(..., m, n)`.
             parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
 
         Returns:
-            Tuple of two tensors of shape (..., m, n).
+            Tuple of two tensors of shape `(..., m, n)`.
         """
         pass
 
@@ -54,19 +54,19 @@ def odeint(
     """Integrate a quantum ODE starting from an initial state.
 
     Args:
-        qsolver ():
-        y0 (Tensor): Initial quantum state, of shape (..., m, n).
-        t_save (Tensor): Times for which results are saved. The ODE is solved from
-            time `t=0.0` to `t=t_save[-1]`.
-        save_states ():
-        exp_ops ():
-        gradient_alg ():
-        parameters ():
+        qsolver:
+        y0: Initial quantum state, of shape `(..., m, n)`.
+        t_save: Times for which results are saved. The ODE is solved from time `t=0.0`
+            to `t=t_save[-1]`.
+        save_states:
+        exp_ops:
+        gradient_alg:
+        parameters:
 
     Returns:
         Tuple `(y_save, exp_save)` with
-            - `y_save` a tensor of shape (..., len(t_save), m, n)
-            - `exp_save` a tensor of shape (..., len(exp_ops), len(t_save))
+            - `y_save` a tensor of shape `(..., len(t_save), m, n)`
+            - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
     # check arguments
     check_t_save(t_save)
@@ -129,16 +129,16 @@ def _fixed_odeint(
         thus buildup throughout the ODE integration. TODO Fix this.
 
     Args:
-        qsolver ():
-        y0 (): Initial quantum state, of shape (..., m, n).
-        t_save ():
-        save_states ():
-        exp_ops ():
+        qsolver:
+        y0: Initial quantum state, of shape `(..., m, n)`.
+        t_save:
+        save_states:
+        exp_ops:
 
     Returns:
         Tuple `(y_save, exp_save)` with
-            - `y_save` a tensor of shape (..., len(t_save), m, n)
-            - `exp_save` a tensor of shape (..., len(exp_ops), len(t_save))
+            - `y_save` a tensor of shape `(..., len(t_save), m, n)`
+            - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
     # get time step from qsolver
     dt = qsolver.options.dt

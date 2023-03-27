@@ -16,9 +16,9 @@ class MERouchon(AdjointQSolver):
     def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
         """
         Args:
-            H (): Hamiltonian, of shape (b_H, n, n).
-            jump_ops (Tensor): Jump operators.
-            solver_options ():
+            H: Hamiltonian, of shape `(b_H, n, n)`.
+            jump_ops: Jump operators.
+            solver_options:
         """
         # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
@@ -34,11 +34,11 @@ class MERouchon1(MERouchon):
         """Compute rho(t+dt) using a Rouchon method of order 1.
 
         Args:
-            t (float): Time.
-            rho (Tensor): Density matrix of shape (b_H, b_rho, n, n).
+            t: Time.
+            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
 
         Returns:
-            Density matrix at next time step, as tensor of shape (b_H, b_rho, n, n).
+            Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
         # get time step
         dt = self.options.dt
@@ -92,11 +92,11 @@ class MERouchon1_5(MERouchon):
             by construction.
 
         Args:
-            t (float): Time.
-            rho (Tensor): Density matrix of shape (b_H, b_rho, n, n).
+            t: Time.
+            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
 
         Returns:
-            Density matrix at next time step, as tensor of shape (b_H, b_rho, n, n).
+            Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
         # get time step
         dt = self.options.dt
@@ -136,11 +136,11 @@ class MERouchon2(MERouchon):
             \dot{H}`.
 
         Args:
-            t (float): Time.
-            rho (Tensor): Density matrix of shape (b_H, b_rho, n, n).
+            t: Time.
+            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
 
         Returns:
-            Density matrix at next time step, as tensor of shape (b_H, b_rho, n, n).
+            Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
         # get time step
         dt = self.options.dt

@@ -71,12 +71,12 @@ def mesolve(
     Returns:
         A tuple `(rho_save, exp_save)` where
             `rho_save` is a tensor with the computed density matrices at `t_save`
-                times, and of shape (len(t_save), n, n) or (b_H, b_rho, len(t_save), n,
-                n) if batched. If `save_states` is `False`, only the final density
+                times, and of shape `(len(t_save), n, n)` or `(b_H, b_rho, len(t_save),
+                n, n)` if batched. If `save_states` is `False`, only the final density
                 matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
-                times, and of shape (len(exp_ops), len(t_save)) or (b_H, b_rho,
-                len(exp_ops), len(t_save)) if batched.
+                times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
+                len(exp_ops), len(t_save))` if batched.
     """
     # TODO H is assumed to be time-independent from here (temporary)
 
