@@ -72,7 +72,7 @@ class MERouchon1(MERouchon):
         # compute phi(t-dt)
         M0_adj = self.I + 1j * dt * Hdag_nh
         M1s_adj = sqrt(dt) * self.jump_ops.adjoint()
-        phi = kraus_map(phi, M0) + kraus_map(phi, M1s_adj)
+        phi = kraus_map(phi, M0_adj) + kraus_map(phi, M1s_adj)
 
         return rho, phi
 

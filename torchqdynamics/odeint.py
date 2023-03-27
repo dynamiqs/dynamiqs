@@ -1,3 +1,4 @@
+import time
 import warnings
 from abc import ABC, abstractmethod
 from typing import Literal, Optional, Tuple
@@ -184,6 +185,13 @@ def _odeint_adjoint(
                        `_odeint_augmented_main` --> `_fixed_odeint_augmented` or
                        `_adaptive_odeint_augmented` --> `qsolver.backward_augmented`.
     """
+    # check parameters were passed
+    if parameters is None:
+        raise TypeError(
+            'For adjoint state gradient computation, parameters must be passed to the'
+            ' solver.'
+        )
+
     return ODEIntAdjoint.apply(qsolver, y0, t_save, exp_ops, save_states, *parameters)
 
 
@@ -226,7 +234,7 @@ def _fixed_odeint_augmented(
     if t_span[1] <= t_span[0]:
         raise ValueError('`t_span` should be sorted in ascending order.')
 
-    T = t_span[0] - t_span[1]
+    T = t_span[1] - t_span[0]
     if not torch.allclose(torch.round(T / dt), T / dt):
         raise ValueError('The total time of evolution should be a multiple of dt.')
 
@@ -235,8 +243,9 @@ def _fixed_odeint_augmented(
 
     # run the ode routine
     y, a, g = y0, a0, g0
-    y, a = y.requires_grad_(True), a.requires_grad_(True)
     for t in tqdm(times[:-1], leave=False):
+        y, a = y.requires_grad_(True), a.requires_grad_(True)
+
         with torch.enable_grad():
             # compute y(t-dt) and a(t-dt) with the qsolver
             y, a = qsolver.backward_augmented(t, dt, y, a, parameters)
@@ -247,6 +256,9 @@ def _fixed_odeint_augmented(
             )
             dg = none_to_zeros_like(dg, parameters)
             g = add_tuples(g, dg)
+
+        # free the graph of y and a
+        y, a = y.data, a.data
 
     return y, a, g
 
@@ -281,9 +293,6 @@ class ODEIntAdjoint(torch.autograd.Function):
         Throughout this function, `y` is the state, `a = dL/dy` is the adjoint state,
         and `g = dL/dp` is the gradient w.r.t. the parameters, where `L` is the loss
         function and `p` the parameters.
-
-        TODO: Check that stacking `y` and `a` does not improve performance of the
-        solver. There was funky stuff happening in this regard in some tests I ran.
         """
         # unpack context
         qsolver = ctx.qsolver
@@ -298,8 +307,8 @@ class ODEIntAdjoint(torch.autograd.Function):
         # locally disable gradient computation
         with torch.no_grad():
             # initialize state, adjoint and gradients
-            y = y_save[-1]
-            a = grad_y[-1][-1]
+            y = y_save[..., -1, :, :]
+            a = grad_y[0][..., -1, :, :]
             g = tuple(torch.zeros_like(_p).to(y) for _p in parameters)
 
             # solve the augmented equation backward between every checkpoint
@@ -313,10 +322,10 @@ class ODEIntAdjoint(torch.autograd.Function):
                 )
 
                 # replace y with its checkpointed version
-                y = y_save[i - 1]
+                y = y_save[..., i - 1, :, :]
 
                 # update adjoint wrt this time point by adding dL / dy(t)
-                a += grad_y[-1][i - 1]
+                a += grad_y[0][..., i - 1, :, :]
 
         # convert gradients of real-valued parameters to real-valued gradients
         g = tuple(
