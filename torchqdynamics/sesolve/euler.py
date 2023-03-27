@@ -14,12 +14,13 @@ class SEEuler(ForwardQSolver):
         self.H = H[:, None, ...]
 
         self.options = solver_options
+        self.dt = self.options.dt
 
-    def forward(self, t: float, dt: float, psi: Tensor):
+    def forward(self, t: float, psi: Tensor):
         # Args:
         #     psi: (b_H, b_psi, n, 1)
         #
         # Returns:
         #     (b_H, b_psi, n, 1)
 
-        return psi - dt * 1j * self.H @ psi
+        return psi - self.dt * 1j * self.H @ psi

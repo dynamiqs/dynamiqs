@@ -141,7 +141,7 @@ def _fixed_odeint(
             - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
     # get time step from qsolver
-    dt = qsolver.options.dt
+    dt = qsolver.dt
 
     # assert that `t_save` values are multiples of `dt`
     if not torch.allclose(torch.round(t_save / dt), t_save / dt):
@@ -218,7 +218,7 @@ def _fixed_odeint_augmented(
 ) -> Tuple[Tensor, Tensor, Tuple[Tensor, ...]]:
     """Integrate the augmented ODE backward using a fixed time step solver."""
     # get time step from qsolver
-    dt = qsolver.options.dt
+    dt = qsolver.dt
 
     # check t_span
     if not (t_span.ndim == 1 and len(t_span) == 2):
