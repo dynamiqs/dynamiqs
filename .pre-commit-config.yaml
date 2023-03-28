@@ -35,3 +35,8 @@ repos:
         entry: task
         args: ["codespell"]
         language: system
+      - id: flake8
+        name: flake8
+        entry: task
+        args: ["flake8"]
+        language: system

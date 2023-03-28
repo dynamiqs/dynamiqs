@@ -59,8 +59,9 @@ task --list
 isort     sort the imports (isort)
 black     auto-format the code (black)
 codespell check for misspellings (codespell)
-lint      lint the code (isort + black + codespell)
+flake8    check code style (flake8)
+lint      lint the code and check style (isort + black + codespell + flake8)
 test      run the unit tests suite (pytest)
-all       run all tasks before a commit (isort + black + codespell + pytest)
+all       run all tasks before a commit (isort + black + codespell + flake8 + pytest)
 ci        run all the CI checks
 ```
