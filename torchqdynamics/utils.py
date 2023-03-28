@@ -128,7 +128,7 @@ def expect(operator: Tensor, state: Tensor) -> Tensor:
     Returns:
         expectation value of shape (...)
     """
-    # TODO: Once QTensor is implemented, check if state is a density matrix or ket.
+    # TODO Once QTensor is implemented, check if state is a density matrix or ket.
     # For now, we assume it is a density matrix.
     return torch.einsum('ij,...ji', operator, state)
 

@@ -39,7 +39,7 @@ def mesolve(
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
     signature `H(t: float) -> Tensor`. Piecewise constant Hamiltonians can also be
-    passed as... TODO: complete with Hamiltonian format
+    passed as... TODO Complete with full Hamiltonian format
 
     Available solvers:
       - `Rouchon1` (alias of `Rouchon`)
@@ -72,20 +72,14 @@ def mesolve(
     Returns:
         A tuple `(rho_save, exp_save)` where
             `rho_save` is a tensor with the computed density matrices at `t_save`
-                times, and of shape (len(t_save), n, n) or (b_H, b_rho, len(t_save), n,
-                n) if batched. If `save_states` is `False`, only the final density
+                times, and of shape `(len(t_save), n, n)` or `(b_H, b_rho, len(t_save),
+                n, n)` if batched. If `save_states` is `False`, only the final density
                 matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
-                times, and of shape (len(exp_ops), len(t_save)) or (b_H, b_rho,
-                len(exp_ops), len(t_save)) if batched.
+                times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
+                len(exp_ops), len(t_save))` if batched.
     """
-    # H: (b_H?, n, n)
-    # rho0: (b_rho0?, n, n)
-    # -> (rho_save, exp_save) with
-    #   - rho_save: (b_H?, b_rho0?, len(t_save), n, n)
-    #   - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
-
-    # TODO: H is assumed to be time-independent from here (temporary)
+    # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
     H = to_tensor(H)
@@ -109,7 +103,7 @@ def mesolve(
     exp_ops = to_tensor(exp_ops)
 
     if solver is None:
-        # TODO: Replace by adaptive time step solver when implemented.
+        # TODO Replace by adaptive time step solver when implemented.
         solver = Rouchon1(dt=1e-2)
 
     # define the QSolver
@@ -126,7 +120,13 @@ def mesolve(
 
     # compute the result
     rho_save, exp_save = odeint(
-        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg, parameters
+        qsolver,
+        rho0_batched,
+        t_save,
+        save_states=save_states,
+        exp_ops=exp_ops,
+        gradient_alg=gradient_alg,
+        parameters=parameters,
     )
 
     # restore correct batching

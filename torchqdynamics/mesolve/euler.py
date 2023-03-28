@@ -15,12 +15,13 @@ class MEEuler(ForwardQSolver):
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
         self.options = solver_options
+        self.dt = self.options.dt
 
-    def forward(self, t: float, dt: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor):
         # Args:
         #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
         #     (b_H, b_rho, n, n)
 
-        return rho + dt * lindbladian(rho, self.H, self.jump_ops)
+        return rho + self.dt * lindbladian(rho, self.H, self.jump_ops)

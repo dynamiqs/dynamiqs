@@ -7,7 +7,7 @@ from torch import Tensor
 
 from .utils import from_qutip
 
-# TODO: add typing for Hamiltonian with piecewise-constant factor
+# TODO add typing for Hamiltonian with piecewise-constant factor
 TDOperator = Union[Tensor, Callable[[float], Tensor]]
 
 # type for objects convertible to a torch tensor using `torch.as_tensor`
