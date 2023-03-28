@@ -30,3 +30,8 @@ repos:
         entry: task
         args: ["black"]
         language: system
+      - id: codespell
+        name: codespell
+        entry: task
+        args: ["codespell"]
+        language: system

@@ -56,10 +56,11 @@ You can also execute tasks individually:
 
 ```shell
 task --list
-isort sort the imports (isort)
-black auto-format the code (black)
-lint  lint the code (isort + black)
-test  run the unit tests suite (pytest)
-all   run all tasks before a commit (isort + black + pytest)
-ci    run all the CI checks
+isort     sort the imports (isort)
+black     auto-format the code (black)
+codespell check for misspellings (codespell)
+lint      lint the code (isort + black + codespell)
+test      run the unit tests suite (pytest)
+all       run all tasks before a commit (isort + black + codespell + pytest)
+ci        run all the CI checks
 ```
