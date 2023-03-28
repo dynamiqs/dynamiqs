@@ -37,8 +37,8 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
 
 
 def bexpect(O: Tensor, x: Tensor) -> Tensor:
-    """Compute the expectation values of many operators on a state vector or a density
-    matrix.
+    """Compute the expectation values of batched operators on a state vector or a
+    density matrix.
 
     The expectation value $\braket{O}$ of a single operator $O$ is computed
     - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
