@@ -35,11 +35,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run import sorting (isort)
-        run: isort --check .
-
-      - name: Run code autoformatting (black)
-        run: black --check .
-
-      - name: Run test suite (pytest)
-        run: pytest
+      - name: Run CI checks
+        run: task ci
