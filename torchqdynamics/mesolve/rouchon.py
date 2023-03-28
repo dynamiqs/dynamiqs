@@ -32,7 +32,7 @@ class MERouchon(AdjointQSolver):
 
 class MERouchon1(MERouchon):
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        """Compute $\rho(t+dt)$ using a Rouchon method of order 1.
+        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
 
         Args:
             t: Time.
@@ -63,7 +63,7 @@ class MERouchon1(MERouchon):
         phi: Tensor,
         parameters: Tuple[nn.Parameter, ...],
     ):
-        """Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
+        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
@@ -84,7 +84,7 @@ class MERouchon1(MERouchon):
 
 class MERouchon1_5(MERouchon):
     def forward(self, t: float, rho: Tensor):
-        """Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
+        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
 
         Note:
             No need for trace renormalization since the scheme is trace-preserving
@@ -168,7 +168,7 @@ class MERouchon2(MERouchon):
         phi: Tensor,
         parameters: Tuple[nn.Parameter, ...],
     ):
-        """Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
+        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
