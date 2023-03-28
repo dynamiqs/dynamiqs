@@ -3,6 +3,8 @@ from typing import Tuple, Union
 import torch
 from torch import Tensor
 
+from .utils import is_ket
+
 
 def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     """Compute the application of a Kraus map on an input density matrix.
@@ -34,19 +36,29 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
     return vecs @ torch.linalg.solve(vecs, torch.diag(vals ** (-0.5)), left=False)
 
 
-def bexpect(operators: Tensor, state: Tensor) -> Tensor:
-    """Compute the expectation values of many operators on a quantum state or
-    density matrix. The method is batchable over the operators and the state.
+def bexpect(O: Tensor, x: Tensor) -> Tensor:
+    """Compute the expectation values of batched operators on a state vector or a
+    density matrix.
+
+    The expectation value $\braket{O}$ of a single operator $O$ is computed
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
+    - as $\braket{O}=\tr(O\rho)$ if `x` is a density matrix $\rho$.
+
+    Note:
+        The returned tensor is complex-valued.
 
     TODO Adapt to both density matrices, kets and bras.
 
     Args:
-        operators: tensor of shape `(b, n, n)`
-        state: tensor of shape `(..., n, n)` or `(..., n)`
+        O: Tensor of size `(b, n, n)`.
+        x: Tensor of size `(..., n, 1)` or `(..., n, n)`.
+
     Returns:
-        expectation value of shape `(..., m)`
+        Tensor of size `(..., b)` holding the operators expectation values.
     """
-    return torch.einsum('bij,...ji->...b', operators, state)
+    if is_ket(x):
+        return torch.einsum('...ij,bjk,...kl->...b', x.adjoint(), O, x)  # <x|O|x>
+    return torch.einsum('bij,...ji->...b', O, x)  # tr(Ox)
 
 
 def none_to_zeros_like(
