@@ -5,9 +5,10 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import SolverOption
+from ..solver_options import Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
+from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
 from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
@@ -112,6 +113,8 @@ def mesolve(
         qsolver = MERouchon1_5(H_batched, jump_ops, solver)
     elif isinstance(solver, Rouchon2):
         qsolver = MERouchon2(H_batched, jump_ops, solver)
+    elif isinstance(solver, Euler):
+        qsolver = MEEuler(H_batched, jump_ops, solver)
     else:
         raise NotImplementedError
 

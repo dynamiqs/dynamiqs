@@ -61,6 +61,17 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     return torch.einsum('bij,...ji->...b', O, x)  # tr(Ox)
 
 
+def lindbladian(rho: Tensor, H: Tensor, L: Tensor) -> Tensor:
+    sum_nojump = (L.adjoint() @ L).sum(dim=0)
+
+    # non-hermitian Hamiltonian
+    H_nh = H - 0.5j * sum_nojump
+
+    H_nh_rho = H_nh @ rho
+    L_rho_Ldag = kraus_map(rho, L[None, ...])
+    return -1j * (H_nh_rho - H_nh_rho.adjoint()) + L_rho_Ldag
+
+
 def none_to_zeros_like(
     in_tuple: Tuple[Union[Tensor, None], ...], shaping_tuple: Tuple[Tensor, ...]
 ) -> Tuple[Tensor, ...]:

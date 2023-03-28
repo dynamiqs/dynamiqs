@@ -18,7 +18,7 @@ def test_mesolve_batching():
     H = delta * adag * a
     H_batched = [0.5 * H, H, 2 * H]
     b_H = len(H_batched)
-    jump_ops = [np.sqrt(kappa) * a, np.sqrt(kappa) * a]
+    jump_ops = [np.sqrt(kappa) * a, np.eye(n)]
     exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
     num_exp_ops = len(exp_ops)
 
