@@ -47,7 +47,7 @@ def bexpect(operators: Tensor, state: Tensor) -> Tensor:
     return torch.einsum('bij,...ji->...b', operators, state)
 
 
-def lindbladian(rho: torch.Tensor, H: torch.Tensor, L: torch.Tensor) -> torch.Tensor:
+def lindbladian(rho: Tensor, H: Tensor, L: Tensor) -> Tensor:
     sum_nojump = (L.adjoint() @ L).sum(dim=0)
 
     # non-hermitian Hamiltonian
