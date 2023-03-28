@@ -75,8 +75,8 @@ class MERouchon1(MERouchon):
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
-        M0_adj = self.I + 1j * dt * Hdag_nh
-        M1s_adj = sqrt(dt) * self.jump_ops.adjoint()
+        M0_adj = self.I + 1j * self.dt * Hdag_nh
+        M1s_adj = sqrt(self.dt) * self.jump_ops.adjoint()
         phi = kraus_map(phi, M0_adj) + kraus_map(phi, M1s_adj)
 
         return rho, phi
