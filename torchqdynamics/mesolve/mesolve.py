@@ -126,7 +126,7 @@ def mesolve(
 
     # compute the result
     rho_save, exp_save = odeint(
-        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg
+        qsolver, rho0_batched, t_save, exp_ops, save_states, gradient_alg, parameters
     )
 
     # restore correct batching

@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 from torch import Tensor
 
@@ -56,3 +58,16 @@ def lindbladian(rho: Tensor, H: Tensor, L: Tensor) -> Tensor:
     H_nh_rho = H_nh @ rho
     L_rho_Ldag = kraus_map(rho, L[None, ...])
     return -1j * (H_nh_rho - H_nh_rho.adjoint()) + L_rho_Ldag
+
+
+def none_to_zeros_like(input, shaping_tuple):
+    """Convert `None` values of an input tuple to zero-valued tensors with the same
+    shape as `shaping_tuple`."""
+    return tuple(
+        torch.zeros_like(s) if a is None else a for a, s in zip(input, shaping_tuple)
+    )
+
+
+def add_tuples(a: Tuple, b: Tuple) -> Tuple:
+    """Element-wise sum of two tuples of the same shape."""
+    return tuple(x + y for x, y in zip(a, b))
