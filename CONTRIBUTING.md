@@ -43,7 +43,7 @@ task all
 
 ### Run some tasks automatically before each commit
 
-Alternatively, you can use `pre-commit` to automatically run the linting tasks (isort + black) before each commit:
+Alternatively, you can use `pre-commit` to automatically run the linting tasks (isort + black + codespell + flake8) before each commit:
 
 ```shell
 pip install pre-commit
@@ -54,7 +54,7 @@ pre-commit install
 
 You can also execute tasks individually:
 
-```shell
+```text
 task --list
 isort     sort the imports (isort)
 black     auto-format the code (black)
