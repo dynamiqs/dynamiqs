@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import torch
+from torch._prims_common import corresponding_real_dtype
 
 from .solver_utils import hairer_norm
 
@@ -140,11 +141,11 @@ class DormandPrince45(AdaptiveSolver):
 
         # extract target information
         dtype = target.dtype
-        float_dtype = getattr(torch, torch.finfo(dtype).dtype)
+        real_dtype = corresponding_real_dtype(dtype)
         device = target.device
 
         # initialize tensors
-        alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
+        alpha = torch.tensor(alpha, dtype=real_dtype, device=device)
         beta = torch.tensor(beta, dtype=dtype, device=device)
         csol = torch.tensor(csol, dtype=dtype, device=device)
         cerr = torch.tensor(cerr, dtype=dtype, device=device)
