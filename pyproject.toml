@@ -13,8 +13,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "taskipy",
     "isort",
     "black[jupyter]",
+    "codespell",
+    "flake8",
     "pytest",
     "pytest-sugar",
 ]
@@ -22,12 +25,30 @@ dev = [
 [tool.setuptools]
 packages = ["torchqdynamics"]
 
+[tool.isort]
+profile = "black"
+skip = ["__init__.py"]
+
 [tool.black]
 preview = true
 target-version = ["py38"]
 skip-string-normalization = true
 jupyter = true
 
-[tool.isort]
-profile = "black"
-skip = ["__init__.py"]
+[tool.codespell]
+skip = ".git,*.ipynb"
+ignore-words-list = "ket, braket"
+
+[tool.taskipy.tasks]
+isort = { cmd = "echo '\n>>> isort' && isort .", help = "sort the imports (isort)" }
+black = { cmd = "echo '\n>>> black' && black .", help = "auto-format the code (black)" }
+codespell = { cmd = "echo '\n>>> codespell' && codespell tests torchqdynamics", help = "check for misspellings (codespell)" }
+flake8 = { cmd = "echo '\n>>> flake8' && flake8 tests torchqdynamics", help = "check code style (flake8)" }
+lint = { cmd = "task isort && task black && task codespell && task flake8", help = "lint the code and check style (isort + black + codespell + flake8)" }
+test = { cmd = "echo '\n>>> pytest' && pytest", help = "run the unit tests suite (pytest)" }
+all = { cmd = "task lint && task test", help = "run all tasks before a commit (isort + black + codespell + flake8 + pytest)" }
+ci = { cmd = """echo '\n>>> isort' && isort --check . &&
+                echo '\n>>> black' && black --check . &&
+                task codespell &&
+                task flake8 &&
+                task test""", help = "run all the CI checks" }

@@ -74,7 +74,8 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
 
     The dissipation superoperator $\mathcal{D}[L](\cdot)$ is defined by
     $$
-        \mathcal{D}[L](\rho) = L\rho L^dag - \frac{1}{2}L^\dag L \rho - \frac{1}{2}\rho L^\dag L.
+        \mathcal{D}[L](\rho) = L\rho L^dag - \frac{1}{2}L^\dag L \rho
+                               - \frac{1}{2}\rho L^\dag L.
     $$
 
     Args:
@@ -98,7 +99,8 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     The system Lindbladian $\mathcal{L}(\cdot)$ is the superoperator
     generating the evolution of the system. It is defined by
     $$
-        \frac{\mathrm{d}\rho}{\mathrm{d}t} = \mathcal{L}(\rho) = -i[H,\rho] + \sum_{i=1}^n \mathcal{D}[L_i](\rho).
+        \frac{\mathrm{d}\rho}{\mathrm{d}t} = \mathcal{L}(\rho) = -i[H,\rho]
+                                             + \sum_{i=1}^n \mathcal{D}[L_i](\rho).
     $$
 
     Args:

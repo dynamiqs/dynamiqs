@@ -1,4 +1,3 @@
-import time
 import warnings
 from abc import ABC, abstractmethod
 from typing import Literal, Optional, Tuple
@@ -123,7 +122,7 @@ def _odeint_inplace(*args, **kwargs):
 
 
 def _adaptive_odeint(*_args, **_kwargs):
-    """Integrate a quantum ODE with an adapative time step solver."""
+    """Integrate a quantum ODE with an adaptive time step solver."""
     raise NotImplementedError
 
 
