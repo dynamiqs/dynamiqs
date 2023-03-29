@@ -115,9 +115,8 @@ class DormandPrince45(AdaptiveSolver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.order = 5
-        self.tableau = self.build_tableau()
 
-    def build_tableau(self):
+    def build_tableau(self, target):
         """Build the Butcher tableau of the integrator."""
         alpha = [1 / 5, 3 / 10, 4 / 5, 8 / 9, 1.0, 1.0, 0.0]
         beta = [
@@ -139,15 +138,26 @@ class DormandPrince45(AdaptiveSolver):
             1 / 60,
         ]
 
-        alpha = torch.tensor(alpha, dtype=self.t_dtype, device=self.device)
-        beta = torch.tensor(beta, dtype=self.y_dtype, device=self.device)
-        csol = torch.tensor(csol, dtype=self.y_dtype, device=self.device)
-        cerr = torch.tensor(cerr, dtype=self.y_dtype, device=self.device)
+        # extract target information
+        dtype = target.dtype
+        float_dtype = getattr(torch, torch.finfo(dtype).dtype)
+        device = target.device
+
+        # initialize tensors
+        alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
+        beta = torch.tensor(beta, dtype=dtype, device=device)
+        csol = torch.tensor(csol, dtype=dtype, device=device)
+        cerr = torch.tensor(cerr, dtype=dtype, device=device)
+
         return (alpha, beta, csol, csol - cerr)
 
     def step(self, f0: Tensor, y0: Tensor, t0: float,
              dt: float) -> Tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
+        # create butcher tableau if not already done
+        if self.tableau is None:
+            self.tableau = self.build_tableau(f0)
+
         # import butcher tableau
         alpha, beta, csol, cerr = self.tableau
 
