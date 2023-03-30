@@ -53,4 +53,4 @@ ci = { cmd = """echo '\n>>> isort' && isort --check . &&
                 echo '\n>>> black' && black --check . &&
                 task codespell &&
                 task flake8 &&
-                task test-all""", help = "run all the CI checks" }
+                task test""", help = "run all the CI checks" }
