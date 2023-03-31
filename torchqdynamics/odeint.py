@@ -223,6 +223,9 @@ def _adaptive_odeint(
     if not save_states:
         y_save = y
 
+    if len(exp_ops) == 0:
+        exp_save = torch.empty(*batch_sizes, len(exp_ops))
+
     return y_save, exp_save
 
 
@@ -299,6 +302,8 @@ def _fixed_odeint(
 
     if len(exp_ops) > 0:
         exp_save[..., save_counter] = bexpect(exp_ops, y)
+    else:
+        exp_save = torch.empty(*batch_sizes, len(exp_ops))
 
     return y_save, exp_save
 
