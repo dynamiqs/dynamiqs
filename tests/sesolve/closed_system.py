@@ -34,7 +34,9 @@ class Cavity(ClosedSystem):
     # `exp_ops`: (2, n, n)
 
     def __init__(self, *, n: int, delta: float, alpha0: complex):
-        self.n, self.delta, self.alpha0 = n, delta, alpha0
+        self.n = n
+        self.delta = delta
+        self.alpha0 = alpha0
 
         a = qt.destroy(n)
         adag = a.dag()

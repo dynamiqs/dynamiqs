@@ -16,7 +16,7 @@ class SESolverTest:
         b_psi0 = len(system.psi0_batched)
         nt = 11
 
-        run_mesolve = lambda H, psi0: tq.sesolve(
+        run_sesolve = lambda H, psi0: tq.sesolve(
             H,
             psi0,
             system.t_save(nt),
@@ -25,22 +25,22 @@ class SESolverTest:
         )
 
         # no batching
-        psi_save, exp_save = run_mesolve(system.H, system.psi0)
+        psi_save, exp_save = run_sesolve(system.H, system.psi0)
         assert psi_save.shape == (nt, n, 1)
         assert exp_save.shape == (n_exp_ops, nt)
 
         # batched H
-        psi_save, exp_save = run_mesolve(system.H_batched, system.psi0)
+        psi_save, exp_save = run_sesolve(system.H_batched, system.psi0)
         assert psi_save.shape == (b_H, nt, n, 1)
         assert exp_save.shape == (b_H, n_exp_ops, nt)
 
         # batched psi0
-        psi_save, exp_save = run_mesolve(system.H, system.psi0_batched)
+        psi_save, exp_save = run_sesolve(system.H, system.psi0_batched)
         assert psi_save.shape == (b_psi0, nt, n, 1)
         assert exp_save.shape == (b_psi0, n_exp_ops, nt)
 
         # batched H and psi0
-        psi_save, exp_save = run_mesolve(system.H_batched, system.psi0_batched)
+        psi_save, exp_save = run_sesolve(system.H_batched, system.psi0_batched)
         assert psi_save.shape == (b_H, b_psi0, nt, n, 1)
         assert exp_save.shape == (b_H, b_psi0, n_exp_ops, nt)
 
