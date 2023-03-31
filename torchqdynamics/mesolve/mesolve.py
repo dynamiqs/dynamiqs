@@ -5,12 +5,12 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import Euler, AdaptiveStep, SolverOption
+from ..solver_options import AdaptiveStep, Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
+from .adaptive import MEAdaptive
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
-from .adaptive import MEAdaptive
 from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 

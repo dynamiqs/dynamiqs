@@ -5,9 +5,10 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import Euler, SolverOption
+from ..solver_options import AdaptiveStep, Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
-from .qsolver import SEEuler
+from .adaptive import SEAdaptive
+from .euler import SEEuler
 
 
 def sesolve(
@@ -58,7 +59,7 @@ def sesolve(
     elif isinstance(solver, AdaptiveStep):
         qsolver = SEAdaptive(*args)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
     y_save, exp_save = odeint(

@@ -9,7 +9,7 @@ from torch.autograd.function import FunctionCtx
 from tqdm.auto import tqdm
 
 from .adaptive import DormandPrince45
-from .solver_options import AdaptativeStep, FixedStep
+from .solver_options import AdaptiveStep, Dopri45, FixedStep
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
 
 
@@ -105,7 +105,7 @@ def _odeint_main(
     """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint(qsolver, y0, t_save, save_states, exp_ops)
-    elif isinstance(qsolver.options, AdaptativeStep):
+    elif isinstance(qsolver.options, AdaptiveStep):
         return _adaptive_odeint(qsolver, y0, t_save, save_states, exp_ops)
 
 
@@ -129,7 +129,10 @@ def _adaptive_odeint(
     save_states: bool,
     exp_ops: Tensor,
 ) -> Tuple[Tensor, Tensor]:
-    """Integrate a quantum ODE with an adapative time step solver.
+    """Integrate a quantum ODE with an adaptive time step solver.
+
+    This function integrates an ODE of the form `dy / dt = f(t, y)` with `y(0) = y0`,
+    using a Runge-Kutta adaptive time step solver.
 
     For details about the integration method, see Chapter II.4 of `Hairer et al.,
     Solving Ordinary Differential Equations I (1993), Springer Series in Computational
@@ -144,18 +147,33 @@ def _adaptive_odeint(
     if len(exp_ops) > 0:
         exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(t_save)).to(y0)
 
+    # save initial solution
+    save_counter = 0
+    if t_save[0] == 0.0:
+        if save_states:
+            y_save[..., save_counter, :, :] = y0
+
+        if len(exp_ops) > 0:
+            exp_save[..., save_counter] = bexpect(exp_ops, y0)
+
     # initialize the adaptive solver
     args = (
-        qsolver.forward, qsolver.options.factor, qsolver.options.min_factor,
-        qsolver.options.max_factor, qsolver.options.atol, qsolver.options.rtol,
-        t_save.dtype, y0.dtype, y0.device
+        qsolver.forward,
+        qsolver.options.factor,
+        qsolver.options.min_factor,
+        qsolver.options.max_factor,
+        qsolver.options.atol,
+        qsolver.options.rtol,
+        t_save.dtype,
+        y0.dtype,
+        y0.device,
     )
     if isinstance(qsolver.options, Dopri45):
         solver = DormandPrince45(*args)
 
     # initialize the ODE routine
     t0 = 0.0
-    f0 = f(t0, y0)
+    f0 = solver.f(t0, y0)
     dt = solver.init_tstep(f0, y0, t0)
 
     # initialize the progress bar
@@ -169,13 +187,14 @@ def _adaptive_odeint(
         if save_counter < len(t_save) and t + dt >= t_save[save_counter]:
             save_flag = True
             dt_old = dt
-            dt = t_save[save_counter] - t
+            dt = float(t_save[save_counter] - t)
 
         # perform a single solver step of size dt
         ft_new, y_new, y_err = solver.step(ft, y, t, dt)
 
         # compute estimated error of this step
-        accept_step = solver.get_error(y_err, y, y_new) <= 1
+        error = solver.get_error(y_err, y, y_new)
+        accept_step = error <= 1
 
         # update results if step is accepted
         if accept_step:
@@ -187,7 +206,7 @@ def _adaptive_odeint(
             # save results if flag is raised
             if save_flag:
                 if save_states:
-                    y_save[save_counter] = y
+                    y_save[..., save_counter, :, :] = y
                 if len(exp_ops) > 0:
                     exp_save[..., save_counter] = bexpect(exp_ops, y)
                 save_counter += 1
@@ -324,7 +343,7 @@ def _odeint_augmented_main(
     """Integrate the augmented ODE backward."""
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
-    elif isinstance(qsolver.options, AdaptativeStep):
+    elif isinstance(qsolver.options, AdaptiveStep):
         return _adaptive_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
 
 

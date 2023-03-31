@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Callable, Optional, Tuple
 
 import torch
-from torch._prims_common import corresponding_real_dtype
+from torch import Tensor
+from torch._prims_common import corresponding_real_dtype as to_float
 
 from .solver_utils import hairer_norm
 
@@ -15,6 +16,7 @@ class AdaptiveSolver(ABC):
     integration method, see Chapter II.4 of `Hairer et al., Solving Ordinary
     Differential Equations I (1993), Springer Series in Computational Mathematics`.
     """
+
     def __init__(
         self,
         f: Callable,
@@ -45,19 +47,20 @@ class AdaptiveSolver(ABC):
         pass
 
     @abstractmethod
-    def step(self, f0: Tensor, y0: Tensor, t0: float,
-             dt: float) -> Tuple[Tensor, Tensor, Tensor]:
+    def step(
+        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+    ) -> Tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         pass
 
-    def get_error(self, y_err: Tensor, y0: Tensor, y1: Tensor) -> Tensor:
+    def get_error(self, y_err: Tensor, y0: Tensor, y1: Tensor) -> float:
         """Compute the error of a given solution.
 
         See Equation (4.11) of `Hairer et al., Solving Ordinary Differential Equations I
         (1993), Springer Series in Computational Mathematics`.
         """
         scale = self.atol + self.rtol * torch.max(y0.abs(), y1.abs())
-        return hairer_norm(y_err / scale)
+        return float(hairer_norm(y_err / scale))
 
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
         """Initialize the time step of an adaptive step size solver.
@@ -80,7 +83,7 @@ class AdaptiveSolver(ABC):
         if d1 <= 1e-15 and d2 <= 1e-15:
             h1 = max(1e-6, h0 * 1e-3)
         else:
-            h1 = (0.01 / max(d1, d2))**(1.0 / float(self.order + 1))
+            h1 = (0.01 / max(d1, d2)) ** (1.0 / float(self.order + 1))
 
         return min(100 * h0, h1)
 
@@ -96,7 +99,7 @@ class AdaptiveSolver(ABC):
             return dt * self.max_factor
 
         # optimal time step
-        dt_opt = dt * error**(-1.0 / self.order)
+        dt_opt = dt * error ** (-1.0 / self.order)
 
         if error <= 1:  # time step accepted -> take next time step at least as large
             return dt * min(self.max_factor, max(1.0, self.factor * dt_opt))
@@ -113,6 +116,7 @@ class DormandPrince45(AdaptiveSolver):
     Prince, A family of embedded Runge-Kutta formulae (1980), Journal of Computational
     and Applied Mathematics`.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.order = 5
@@ -141,7 +145,7 @@ class DormandPrince45(AdaptiveSolver):
 
         # extract target information
         dtype = target.dtype
-        real_dtype = corresponding_real_dtype(dtype)
+        real_dtype = to_float(dtype)
         device = target.device
 
         # initialize tensors
@@ -152,8 +156,9 @@ class DormandPrince45(AdaptiveSolver):
 
         return (alpha, beta, csol, csol - cerr)
 
-    def step(self, f0: Tensor, y0: Tensor, t0: float,
-             dt: float) -> Tuple[Tensor, Tensor, Tensor]:
+    def step(
+        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+    ) -> Tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         # create butcher tableau if not already done
         if self.tableau is None:
@@ -163,7 +168,7 @@ class DormandPrince45(AdaptiveSolver):
         alpha, beta, csol, cerr = self.tableau
 
         # compute iterated Runge-Kutta values
-        k = torch.zeros(7, *f0.shape, dtype=self.y_dtype, device=self.device)
+        k = torch.zeros(7, *f0.shape, dtype=f0.dtype, device=f0.device)
         k[0] = f0
         for i in range(1, 7):
             ti = t0 + dt * alpha[i - 1]

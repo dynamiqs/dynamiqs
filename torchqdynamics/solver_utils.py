@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import Callable, Tuple, Union
+from typing import Tuple, Union
 
 import torch
 from torch import Tensor
@@ -50,8 +50,6 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
 
     TODO Adapt to both density matrices, kets and bras.
 
-    TODO Adapt to both density matrices, kets and bras.
-
     Args:
         O: Tensor of size `(b, n, n)`.
         x: Tensor of size `(..., n, 1)` or `(..., n, n)`.
@@ -90,10 +88,16 @@ def add_tuples(a: Tuple, b: Tuple) -> Tuple:
     return tuple(x + y for x, y in zip(a, b))
 
 
-def hairer_norm(y: Tensor) -> Tensor:
-    """Rescaled frobenius norm of a tensor.
+def hairer_norm(x: Tensor) -> Tensor:
+    """Rescaled Frobenius norm of a batched matrix.
 
     See Equation (4.11) of `Hairer et al., Solving Ordinary Differential Equations I
     (1993), Springer Series in Computational Mathematics`.
+
+    Args:
+        x: Tensor of size `(..., n, n)`.
+
+    Returns:
+        Tensor of size `(...)` holding the norm of each matrix in the batch.
     """
-    return torch.linalg.norm(y) / sqrt(y.numel())
+    return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))

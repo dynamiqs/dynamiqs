@@ -1,15 +1,9 @@
-from math import sqrt
-from typing import Tuple
-
-import torch
-import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import AdjointQSolver
+from ..odeint import ForwardQSolver
 from ..solver_options import SolverOption
-from ..solver_utils import inv_sqrtm, kraus_map, lindbladian
+from ..solver_utils import lindbladian
 from ..types import TDOperator
-from ..utils import trace
 
 
 class MEAdaptive(ForwardQSolver):
