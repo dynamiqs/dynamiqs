@@ -85,3 +85,18 @@ def none_to_zeros_like(
 def add_tuples(a: Tuple, b: Tuple) -> Tuple:
     """Element-wise sum of two tuples of the same shape."""
     return tuple(x + y for x, y in zip(a, b))
+
+
+def hairer_norm(x: Tensor) -> Tensor:
+    """Rescaled Frobenius norm of a batched matrix.
+
+    See Equation (4.11) of `Hairer et al., Solving Ordinary Differential Equations I
+    (1993), Springer Series in Computational Mathematics`.
+
+    Args:
+        x: Tensor of size `(..., n, n)`.
+
+    Returns:
+        Tensor of size `(...)` holding the norm of each matrix in the batch.
+    """
+    return torch.linalg.matrix_norm(x) / torch.sqrt(x.size(-1) * x.size(-2))

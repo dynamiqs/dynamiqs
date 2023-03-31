@@ -12,7 +12,6 @@ class SEEuler(ForwardQSolver):
 
         # convert H to size compatible with (b_H, b_psi, n, n)
         self.H = H[:, None, ...]
-
         self.options = solver_options
         self.dt = self.options.dt
 
