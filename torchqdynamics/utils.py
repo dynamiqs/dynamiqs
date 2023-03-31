@@ -1,8 +1,24 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 from qutip import Qobj
 from torch import Tensor
+
+__all__ = [
+    'is_ket',
+    'ket_to_bra',
+    'ket_to_dm',
+    'ket_overlap',
+    'ket_fidelity',
+    'dissipator',
+    'lindbladian',
+    'trace',
+    'ptrace',
+    'expect',
+    'from_qutip',
+    'to_qutip',
+]
 
 
 def is_ket(x: Tensor) -> Tensor:
@@ -120,19 +136,122 @@ def trace(rho: Tensor) -> Tensor:
     return torch.einsum('...ii', rho)
 
 
-def expect(operator: Tensor, state: Tensor) -> Tensor:
-    """Compute the expectation value of an operator on a quantum state or density
-    matrix. The method is batchable over the state, but not over the operator.
+def ptrace(
+    x: Tensor, dims_kept: Union[int, Tuple[int, ...]], hilbert_shape: Tuple[int, ...]
+) -> Tensor:
+    """Compute the partial trace of a state vector or density matrix, keeping only the
+    dimensions specified by `kept_dims`.
+
+    The structure of the Hilbert space should be specified using `hilbert_shape`. For
+    instance, for the tensor product of a cavity (of size 20) and two qubits (of sizes
+    2 and 2), `hilbert_space` should be `(20, 2, 2)`. Furthermore, if `dims_kept=0`,
+    then the returned density matrix will be of size `(..., 20, 20)`. If instead,
+    `dims_kept=(1,2)`, then the returned density matrix will be of size `(..., 4, 4)`.
+
+    # TODO Test properly against qutip
 
     Args:
-        operator: tensor of shape (n, n)
-        state: tensor of shape (..., n, n) or (..., n)
+        x: Tensor of size `(..., n, 1)` or `(..., n, n)`
+        dims_kept: Int or tuple of ints containing the dimensions to keep for the
+            partial trace.
+        hilbert_shape: Tuple of ints specifying the dimensions of each mode in the
+            Hilbert space tensor product.
+
     Returns:
-        expectation value of shape (...)
+        Tensor of size `(..., m, m)` with `m <= n` containing the partially traced out
+            state vector or density matrix.
     """
-    # TODO Once QTensor is implemented, check if state is a density matrix or ket.
-    # For now, we assume it is a density matrix.
-    return torch.einsum('ij,...ji', operator, state)
+    # convert dims_kept and hilbert_shape to tensors
+    hilbert_shape = torch.as_tensor(hilbert_shape)
+    if isinstance(dims_kept, int):
+        dims_kept = torch.as_tensor([dims_kept])
+    elif isinstance(dims_kept, tuple):
+        dims_kept = torch.as_tensor(dims_kept)
+
+    # check that input dimensions match
+    if not torch.prod(hilbert_shape) == x.size(-2):
+        raise ValueError(
+            f'Input `hilbert_shape` {hilbert_shape} does not match the input tensor'
+            f' size of {x.size(-2)}.'
+        )
+    if torch.any(dims_kept < 0) or torch.any(dims_kept > len(hilbert_shape) - 1):
+        raise ValueError(
+            f'The specified dimension {dims_kept} does not match the Hilbert space'
+            f' structure {hilbert_shape}.'
+        )
+
+    # sort dims_kept
+    dims_kept = dims_kept.sort()[0]
+
+    # find dimensions to trace out
+    ndims = len(hilbert_shape)
+    dims = torch.arange(0, ndims)
+    dims_trace = torch.as_tensor(np.setdiff1d(dims, dims_kept))
+
+    # find sizes to keep and trace out
+    size_kept = torch.prod(hilbert_shape[dims_kept])
+    size_trace = torch.prod(hilbert_shape[dims_trace])
+
+    # find batch shape
+    ndims_b = x.ndim - 2
+    dims_b = torch.arange(0, ndims_b)
+    b_shape = x.shape[:-2]
+
+    if is_ket(x):
+        # find permutation that puts traced out dimensions last
+        perm = tuple(dims_b) + tuple(dims_kept + ndims_b) + tuple(dims_trace + ndims_b)
+
+        # reshape to the Hilbert space shape, permute and reshape again
+        x = x.reshape(*b_shape, *hilbert_shape)
+        x = x.permute(perm)
+        x = x.reshape(*b_shape, size_kept, 1, size_trace)
+        y = x.transpose(-2, -3).conj()
+
+        # trace out last dimension
+        return torch.linalg.vecdot(x, y)
+    else:
+        # find permutation that puts traced out dimensions last
+        perm = (
+            tuple(dims_b)
+            + tuple(dims_kept + ndims_b)
+            + tuple(dims_kept + ndims_b + ndims)
+            + tuple(dims_trace + ndims_b)
+            + tuple(dims_trace + ndims_b + ndims)
+        )
+
+        # reshape to the Hilbert space shape, permute and reshape again
+        x = x.reshape(*b_shape, *hilbert_shape, *hilbert_shape)
+        x = x.permute(perm)
+        x = x.reshape(*b_shape, size_kept, size_kept, size_trace, size_trace)
+
+        # trace out the last dimensions
+        return trace(x)
+
+
+def expect(O: Tensor, x: Tensor) -> Tensor:
+    r"""Compute the expectation values of an operator on a state vector or a density
+    matrix.
+
+    The expectation value $\braket{O}$ of a single operator $O$ is computed
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
+    - as $\braket{O}=\tr(O\rho)$ if `x` is a density matrix $\rho$.
+
+    Note:
+        The returned tensor is complex-valued.
+
+    TODO Adapt to bras.
+
+    Args:
+        O: Tensor of size `(n, n)`
+        x: Tensor of size `(..., n, 1)` or `(..., n, n)`
+
+    Returns:
+        Tensor of size `(...)` holding the operator expectation values.
+        expectation value of size (...)
+    """
+    if is_ket(x):
+        return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
+    return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
 
 
 def from_qutip(x: Qobj) -> Tensor:
