@@ -1,14 +1,15 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class SolverOption:
-    pass
+    verbose: bool = True
 
 
 @dataclass
 class FixedStep(SolverOption):
-    dt: float
+    dt: Optional[float] = None
 
 
 @dataclass
