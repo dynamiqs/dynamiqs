@@ -150,9 +150,9 @@ def _adaptive_odeint(
     # save initial solution
     save_counter = 0
     if t_save[0] == 0.0:
+        save_counter += 1
         if save_states:
             y_save[..., save_counter, :, :] = y0
-
         if len(exp_ops) > 0:
             exp_save[..., save_counter] = bexpect(exp_ops, y0)
 
@@ -184,7 +184,7 @@ def _adaptive_odeint(
     step_counter, max_steps = 0, qsolver.options.max_steps
     while t < t_save[-1] and step_counter < max_steps:
         # if a time in `t_save` is reached, raise a flag and rescale dt accordingly
-        if save_counter < len(t_save) and t + dt >= t_save[save_counter]:
+        if t + dt >= t_save[save_counter]:
             save_flag = True
             dt_old = dt
             dt = float(t_save[save_counter] - t)
@@ -194,10 +194,9 @@ def _adaptive_odeint(
 
         # compute estimated error of this step
         error = solver.get_error(y_err, y, y_new)
-        accept_step = error <= 1
 
         # update results if step is accepted
-        if accept_step:
+        if error <= 1:
             t, y, ft = t + dt, y_new, ft_new
 
             # update the progress bar

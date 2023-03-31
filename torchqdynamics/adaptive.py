@@ -114,7 +114,8 @@ class DormandPrince45(AdaptiveSolver):
     This is a fifth order solver that uses a fourth order solution to estimate the
     integration error. It does so using only six function evaluations. See `Dormand and
     Prince, A family of embedded Runge-Kutta formulae (1980), Journal of Computational
-    and Applied Mathematics`.
+    and Applied Mathematics`. See also `Shampine, Some Practical Runge-Kutta Formulas
+    (1986), Mathematics of Computation`.
     """
 
     def __init__(self, *args, **kwargs):
@@ -132,8 +133,8 @@ class DormandPrince45(AdaptiveSolver):
             [9017 / 3168, -355 / 33, 46732 / 5247, 49 / 176, -5103 / 18656, 0, 0],
             [35 / 384, 0, 500 / 1113, 125 / 192, -2187 / 6784, 11 / 84, 0],
         ]
-        csol = [35 / 384, 0, 500 / 1113, 125 / 192, -2187 / 6784, 11 / 84, 0]
-        cerr = [
+        csol5 = [35 / 384, 0, 500 / 1113, 125 / 192, -2187 / 6784, 11 / 84, 0]
+        csol4 = [
             1951 / 21600,
             0,
             22642 / 50085,
@@ -151,10 +152,10 @@ class DormandPrince45(AdaptiveSolver):
         # initialize tensors
         alpha = torch.tensor(alpha, dtype=real_dtype, device=device)
         beta = torch.tensor(beta, dtype=dtype, device=device)
-        csol = torch.tensor(csol, dtype=dtype, device=device)
-        cerr = torch.tensor(cerr, dtype=dtype, device=device)
+        csol5 = torch.tensor(csol5, dtype=dtype, device=device)
+        csol4 = torch.tensor(csol4, dtype=dtype, device=device)
 
-        return (alpha, beta, csol, csol - cerr)
+        return alpha, beta, csol5, csol5 - csol4
 
     def step(
         self, f0: Tensor, y0: Tensor, t0: float, dt: float
