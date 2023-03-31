@@ -120,7 +120,8 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     eig_vals = torch.linalg.eigvalsh(tmp)
 
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    eig_vals[eig_vals < 0] = 0.0
+    zero = torch.zeros((), device=x.device, dtype=x.dtype)
+    eig_vals = eig_vals.where(eig_vals >= 0, zero)
 
     trace_sqrtm_tmp = torch.sqrt(eig_vals).sum(-1)
 
