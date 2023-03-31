@@ -117,13 +117,13 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
     # we don't need the whole matrix `sqrtm(tmp)`, just its trace, which can be computed
     # by summing the square roots of `tmp` eigenvalues
-    eig_vals = torch.linalg.eigvalsh(tmp)
+    eigvals_tmp = torch.linalg.eigvalsh(tmp)
 
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     zero = torch.zeros((), device=x.device, dtype=x.dtype)
-    eig_vals = eig_vals.where(eig_vals >= 0, zero)
+    eigvals_tmp = eigvals_tmp.where(eigvals_tmp >= 0, zero)
 
-    trace_sqrtm_tmp = torch.sqrt(eig_vals).sum(-1)
+    trace_sqrtm_tmp = torch.sqrt(eigvals_tmp).sum(-1)
 
     return trace_sqrtm_tmp.pow(2).real
 
