@@ -1,12 +1,5 @@
 files: (torchqdynamics|tests)
 repos:
-  - repo: https://github.com/google/yapf
-    rev: v0.32.0
-    hooks:
-      - id: yapf
-        name: yapf
-        additional_dependencies: [toml]
-        args: [-i]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
@@ -25,8 +18,25 @@ repos:
     hooks:
       - id: check-hooks-apply
       - id: check-useless-excludes
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+  - repo: local
     hooks:
       - id: isort
         name: isort
+        entry: task
+        args: ["isort"]
+        language: system
+      - id: black
+        name: black
+        entry: task
+        args: ["black"]
+        language: system
+      - id: codespell
+        name: codespell
+        entry: task
+        args: ["codespell"]
+        language: system
+      - id: flake8
+        name: flake8
+        entry: task
+        args: ["flake8"]
+        language: system

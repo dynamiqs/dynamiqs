@@ -1,6 +1,0 @@
-qutip
-numpy
-matplotlib
-tqdm
-torch
-torchdiffeq

@@ -4,10 +4,11 @@ import qutip as qt
 import torchqdynamics as tq
 
 
-def test_sesolve_euler_cheap():
-    """Cheap test of the Euler method of sesolve."""
+def test_mesolve_euler_cheap():
+    """Cheap test of the Euler method of mesolve."""
     # parameters
     n = 8
+    kappa = 1.0
     delta = 2 * np.pi
     alpha0 = 1.0
 
@@ -15,6 +16,7 @@ def test_sesolve_euler_cheap():
     a = qt.destroy(n)
     adag = a.dag()
     H = delta * adag * a
+    jump_ops = [np.sqrt(kappa) * a, np.eye(n)]
     exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
     num_exp_ops = len(exp_ops)
 
@@ -25,6 +27,6 @@ def test_sesolve_euler_cheap():
     solver = tq.solver.Euler(dt=1e-3)
 
     # run solver
-    states, exp = tq.sesolve(H, rho0, t_save, exp_ops=exp_ops, solver=solver)
-    assert states.shape == (num_t_save, n, 1)
+    states, exp = tq.mesolve(H, jump_ops, rho0, t_save, exp_ops=exp_ops, solver=solver)
+    assert states.shape == (num_t_save, n, n)
     assert exp.shape == (num_exp_ops, num_t_save)

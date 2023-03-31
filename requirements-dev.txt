@@ -1,5 +1,0 @@
-yapf
-isort
-toml
-pytest
-pytest-sugar

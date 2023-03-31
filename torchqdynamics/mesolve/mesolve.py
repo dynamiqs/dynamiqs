@@ -5,10 +5,12 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import SolverOption
+from ..solver_options import Euler, AdaptiveStep, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
-from .qsolver import MEAdaptive, MERouchon1, MERouchon1_5, MERouchon2
+from .euler import MEEuler
+from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
+from .adaptive import MEAdaptive
 from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 
@@ -71,12 +73,12 @@ def mesolve(
     Returns:
         A tuple `(rho_save, exp_save)` where
             `rho_save` is a tensor with the computed density matrices at `t_save`
-                times, and of shape (len(t_save), n, n) or (b_H, b_rho, len(t_save), n,
-                n) if batched. If `save_states` is `False`, only the final density
+                times, and of shape `(len(t_save), n, n)` or `(b_H, b_rho, len(t_save),
+                n, n)` if batched. If `save_states` is `False`, only the final density
                 matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
-                times, and of shape (len(exp_ops), len(t_save)) or (b_H, b_rho,
-                len(exp_ops), len(t_save)) if batched.
+                times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
+                len(exp_ops), len(t_save))` if batched.
     """
     # TODO H is assumed to be time-independent from here (temporary)
 
@@ -115,13 +117,20 @@ def mesolve(
         qsolver = MERouchon2(*args)
     elif isinstance(solver, AdaptiveStep):
         qsolver = MEAdaptive(*args)
+    elif isinstance(solver, Euler):
+        qsolver = MEEuler(*args)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
     rho_save, exp_save = odeint(
-        qsolver, rho0_batched, t_save, save_states=save_states, exp_ops=exp_ops,
-        gradient_alg=gradient_alg, parameters=parameters
+        qsolver,
+        rho0_batched,
+        t_save,
+        save_states=save_states,
+        exp_ops=exp_ops,
+        gradient_alg=gradient_alg,
+        parameters=parameters,
     )
 
     # restore correct batching
