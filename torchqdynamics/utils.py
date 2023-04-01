@@ -143,8 +143,6 @@ def ptrace(
     dimensions `dims_kept`. The Hilbert space structure should be specified with
     `hilbert_shape`.
 
-    # TODO Test properly against qutip
-
     Args:
         x: Tensor of size `(..., n, 1)` or `(..., n, n)`
         dims_kept: Int or tuple of ints containing the dimensions to keep for the
