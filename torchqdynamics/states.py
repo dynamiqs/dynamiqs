@@ -2,9 +2,10 @@ from math import prod
 from typing import Tuple, Union
 
 import torch
-from operators import displace
 from torch import Tensor, device, dtype
-from utils import ket_to_dm
+
+from .operators import displace
+from .utils import ket_to_dm
 
 __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
 

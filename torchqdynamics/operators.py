@@ -3,7 +3,8 @@ from typing import Tuple, Union
 
 import torch
 from torch import Tensor, device, dtype
-from utils import _extract_tuple_from_varargs, kron
+
+from .utils import _extract_tuple_from_varargs, kron
 
 __all__ = [
     'sigmax',
