@@ -6,14 +6,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
-from tqdm.auto import tqdm
 
 from .adaptive import DormandPrince45
+from .progressbar import tqdm
 from .solver_options import AdaptiveStep, Dopri45, FixedStep
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
-
-# Define a default progress bar format
-PBAR_FORMAT = '{desc}: {percentage:3.1f}% - Time {elapsed}/{remaining}'
 
 
 class ForwardQSolver(ABC):
@@ -180,7 +177,7 @@ def _adaptive_odeint(
     dt = solver.init_tstep(f0, y0, t0)
 
     # initialize the progress bar
-    pbar = tqdm(total=t_save[-1].item(), bar_format=PBAR_FORMAT)
+    pbar = tqdm(total=t_save[-1].item())
 
     # run the ODE routine
     t, y, ft = t0, y0, f0
@@ -282,7 +279,7 @@ def _fixed_odeint(
     # run the ode routine
     y = y0
     save_counter = 0
-    for t in tqdm(times[:-1], bar_format=PBAR_FORMAT):
+    for t in tqdm(times[:-1]):
         # save solution
         if t >= t_save[save_counter]:
             if save_states:
@@ -383,7 +380,7 @@ def _fixed_odeint_augmented(
 
     # run the ode routine
     y, a, g = y0, a0, g0
-    for t in tqdm(times[:-1], leave=False, bar_format=PBAR_FORMAT):
+    for t in tqdm(times[:-1], leave=False):
         y, a = y.requires_grad_(True), a.requires_grad_(True)
 
         with torch.enable_grad():
@@ -460,7 +457,7 @@ class ODEIntAdjoint(torch.autograd.Function):
             g = tuple(torch.zeros_like(_p).to(y) for _p in parameters)
 
             # solve the augmented equation backward between every checkpoint
-            for i in tqdm(range(len(t_span) - 1, 0, -1), bar_format=PBAR_FORMAT):
+            for i in tqdm(range(len(t_span) - 1, 0, -1)):
                 # initialize time between both checkpoints
                 t_span_segment = t_span[i - 1 : i + 1]
 
