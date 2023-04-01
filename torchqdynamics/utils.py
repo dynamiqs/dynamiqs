@@ -139,14 +139,9 @@ def trace(rho: Tensor) -> Tensor:
 def ptrace(
     x: Tensor, dims_kept: Union[int, Tuple[int, ...]], hilbert_shape: Tuple[int, ...]
 ) -> Tensor:
-    """Compute the partial trace of a state vector or density matrix, keeping only the
-    dimensions specified by `kept_dims`.
-
-    The structure of the Hilbert space should be specified using `hilbert_shape`. For
-    instance, for the tensor product of a cavity (of size 20) and two qubits (of sizes
-    2 and 2), `hilbert_space` should be `(20, 2, 2)`. Furthermore, if `dims_kept=0`,
-    then the returned density matrix will be of size `(..., 20, 20)`. If instead,
-    `dims_kept=(1,2)`, then the returned density matrix will be of size `(..., 4, 4)`.
+    """Compute the partial trace of a state vector or density matrix, keeping only
+    dimensions `dims_kept`. The Hilbert space structure should be specified with
+    `hilbert_shape`.
 
     # TODO Test properly against qutip
 
@@ -160,6 +155,15 @@ def ptrace(
     Returns:
         Tensor of size `(..., m, m)` with `m <= n` containing the partially traced out
             state vector or density matrix.
+
+    Example:
+        >>> rho = tq.kron(tq.coherent_dm(20, 2.0), tq.fock_dm(2, 0), tq.fock_dm(3, 1))
+        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 3))
+        >>> rhoA.shape
+        torch.Size([20, 20])
+        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 3))
+        >>> rhoBC.shape
+        torch.Size([6, 6])
     """
     # convert dims_kept and hilbert_shape to tensors
     hilbert_shape = torch.as_tensor(hilbert_shape)
