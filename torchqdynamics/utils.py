@@ -22,6 +22,7 @@ __all__ = [
 
 
 def is_ket(x: Tensor) -> Tensor:
+    """Check if a tensor is in state vector format."""
     return x.size(-1) == 1
 
 
@@ -133,7 +134,11 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 def kron(*x: Tensor):
     """Compute the tensor product of a sequence of state vectors, density matrices or
-    operators."""
+    operators.
+
+    Note:
+        This function is the equivalent of `qutip.tensor`.
+    """
     x = _extract_tuple_from_varargs(x)
     y = x[0]
     for _x in x[1:]:

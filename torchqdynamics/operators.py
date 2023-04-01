@@ -19,27 +19,27 @@ __all__ = [
 ]
 
 
-def sigmax(dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmax(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
     """Pauli X operator."""
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmay(dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmay(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
     """Pauli Y operator."""
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
 
-def sigmaz(dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmaz(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
     """Pauli Z operator."""
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
 
-def sigmap(dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmap(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
     """Pauli raising operator."""
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmam(dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmam(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
     """Pauli lowering operator."""
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -113,7 +113,7 @@ def destroy(
 
 
 def _destroy_single(
-    dim: int, dtype: dtype = torch.complex128, device: device = None
+    dim: int, *, dtype: dtype = torch.complex128, device: device = None
 ) -> Tensor:
     """Bosonic annihilation operator of a single mode."""
     return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), 1).to(dtype)
@@ -181,20 +181,24 @@ def create(
 
 
 def _create_single(
-    dim: int, dtype: dtype = torch.complex128, device: device = None
+    dim: int, *, dtype: dtype = torch.complex128, device: device = None
 ) -> Tensor:
     """Bosonic creation operator of a single mode."""
     return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), -1).to(dtype)
 
 
-def displace(dim: int, alpha: complex):
+def displace(
+    dim: int, alpha: complex, *, dtype: dtype = torch.complex128, device: device = None
+) -> Tensor:
     """Single-mode displacement operator."""
-    a = destroy(dim)
+    a = destroy(dim, dtype=dtype, device=device)
     return torch.matrix_exp(alpha * a.adjoint() - alpha.conjugate() * a)
 
 
-def squeeze(dim: int, z: complex):
+def squeeze(
+    dim: int, z: complex, *, dtype: dtype = torch.complex128, device: device = None
+) -> Tensor:
     """Single-mode displacement operator."""
-    a = destroy(dim)
+    a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
     return torch.matrix_exp(0.5 * (z.conjugate() * a2 - z * a2.adjoint()))
