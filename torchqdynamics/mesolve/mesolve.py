@@ -103,7 +103,7 @@ def mesolve(
     rho0 = to_tensor(rho0)
     if is_ket(rho0):
         rho0 = ket_to_dm(rho0)
-    b_H = H_batched.size(0) if isinstance(H, TensorLike) else len(H)
+    b_H = H_batched.size(0) if isinstance(H, TensorLike.__args__) else len(H)
     rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
     rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
