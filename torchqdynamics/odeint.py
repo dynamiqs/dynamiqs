@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.autograd.function import FunctionCtx
 
 from .adaptive import DormandPrince45
-from .progressbar import tqdm
+from .progress_bar import tqdm
 from .solver_options import AdaptiveStep, Dopri45, FixedStep
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
 
