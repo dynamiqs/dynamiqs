@@ -65,7 +65,7 @@ class ForwardQSolver(ABC):
 
     @H_dependent
     def H(self, t):
-        if isinstance(self._H, OperatorLike):
+        if isinstance(self._H, OperatorLike.__args__):
             return self._H
         elif callable(self._H):
             return self._H(t)
@@ -73,7 +73,7 @@ class ForwardQSolver(ABC):
             raise Exception('Piece-wise constant Hamiltonians not supported yet')
 
     def _H_changed(self, _t):
-        if isinstance(self._H, OperatorLike):
+        if isinstance(self._H, OperatorLike.__args__):
             return False
         elif callable(self._H):
             return True
