@@ -1,4 +1,3 @@
-from math import sqrt
 from typing import Tuple
 
 import torch
@@ -29,8 +28,8 @@ class MERouchon(AdjointQSolver):
         self.options = solver_options
         self.dt = self.options.dt
 
-        self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
-        self.M1s_adj = sqrt(self.dt) * self.jump_ops.adjoint()
+        self.M1s = torch.sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        self.M1s_adj = torch.sqrt(self.dt) * self.jump_ops.adjoint()
 
 
 class MERouchon1(MERouchon):
@@ -114,7 +113,7 @@ class MERouchon1_5(MERouchon):
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
-        Ms = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        Ms = torch.sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # build normalization matrix
         S = M0.adjoint() @ M0 + self.dt * self.sum_nojump  # (b_H, 1, n, n)
@@ -161,7 +160,7 @@ class MERouchon2(MERouchon):
         # M0: (b_H, 1, n, n)
         M0 = self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
         M1s = (
-            0.5 * sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
+            0.5 * torch.sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
         )  # (b_H, len(jump_ops), n, n)
 
         # compute rho(t+dt)
@@ -187,7 +186,7 @@ class MERouchon2(MERouchon):
 
         # compute rho(t-dt)
         M0 = self.I + 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
-        M1s = 0.5 * sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
+        M1s = 0.5 * torch.sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
         tmp = kraus_map(rho, M1s)
         rho = kraus_map(rho, M0) - tmp + 0.5 * kraus_map(tmp, M1s)
         rho = rho / trace(rho)[..., None, None].real
@@ -198,7 +197,7 @@ class MERouchon2(MERouchon):
         )
         M1s_adj = (
             0.5
-            * sqrt(self.dt)
+            * torch.sqrt(self.dt)
             * (self.jump_ops.adjoint() @ M0_adj + M0_adj @ self.jump_ops.adjoint())
         )
         tmp = kraus_map(phi, M1s_adj)
