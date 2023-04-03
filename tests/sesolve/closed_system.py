@@ -61,6 +61,3 @@ class Cavity(ClosedSystem):
         alpha_t = self.alpha0 * np.exp(-1j * self.delta * t)
         psi_t = qt.coherent(self.n, alpha_t)
         return tq.from_qutip(psi_t)
-
-
-cavity_8 = Cavity(n=8, delta=2 * np.pi, alpha0=1.0)

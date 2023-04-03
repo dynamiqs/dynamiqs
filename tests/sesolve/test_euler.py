@@ -1,9 +1,12 @@
+import numpy as np
 import pytest
 
 import torchqdynamics as tq
 
-from .closed_system import cavity_8
+from .closed_system import Cavity
 from .sesolver_test import SESolverTest
+
+cavity_8 = Cavity(n=8, delta=2 * np.pi, alpha0=1.0)
 
 
 class TestSEEuler(SESolverTest):

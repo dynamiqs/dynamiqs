@@ -1,9 +1,12 @@
+import numpy as np
 import pytest
 
 import torchqdynamics as tq
 
 from .mesolver_test import MESolverTest
-from .open_system import leaky_cavity_8
+from .open_system import LeakyCavity
+
+leaky_cavity_8 = LeakyCavity(n=8, kappa=1.0, delta=2 * np.pi, alpha0=1.0)
 
 
 class TestMEEuler(MESolverTest):

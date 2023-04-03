@@ -64,6 +64,3 @@ class LeakyCavity(OpenSystem):
         )
         rho_t = qt.coherent(self.n, alpha_t)
         return tq.ket_to_dm(tq.from_qutip(rho_t))
-
-
-leaky_cavity_8 = LeakyCavity(n=8, kappa=1.0, delta=2 * np.pi, alpha0=1.0)
