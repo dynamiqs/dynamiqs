@@ -56,7 +56,7 @@ class ForwardQSolver(ABC):
         Args:
             H: Hamiltonian, of shape `(b_H, n, n)`.
         """
-        if isinstance(H, OperatorLike):
+        if isinstance(H, OperatorLike.__args__):
             if H.ndim == 3:
                 H = H[:, None, ...]  # (b_H, 1, n, n)
         self._H = H
