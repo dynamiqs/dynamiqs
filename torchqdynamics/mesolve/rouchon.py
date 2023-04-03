@@ -60,9 +60,7 @@ class MERouchon1(MERouchon):
 
     @H_dependent
     def Hdag_nh(self, t):
-        Hdag_nh = self.H_nh(t).adjoint()
-
-        return Hdag_nh
+        return self.H_nh(t).adjoint()
 
     @H_dependent
     def H_nh(self, t):
@@ -83,8 +81,7 @@ class MERouchon1(MERouchon):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
 
         # compute rho(t-dt)
-        M0 = self.M0(t)
-        rho = kraus_map(rho, M0) - kraus_map(rho, self.M1s)
+        rho = kraus_map(rho, self.M0(t)) - kraus_map(rho, self.M1s)
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
