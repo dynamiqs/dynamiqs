@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import AdjointQSolver
+from ..odeint import AdjointQSolver, H_dependent
 from ..solver_options import SolverOption
 from ..solver_utils import inv_sqrtm, kraus_map
 from ..types import TDOperator
@@ -21,13 +21,16 @@ class MERouchon(AdjointQSolver):
             solver_options:
         """
         # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
-        self.H = H[:, None, ...]  # (b_H, 1, n, n)
+        super().__init__(H)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
         self.n = H.shape[-1]
         self.I = torch.eye(self.n).to(H)  # (n, n)
         self.options = solver_options
         self.dt = self.options.dt
+
+        self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        self.M1s_adj = sqrt(self.dt) * self.jump_ops.adjoint()
 
 
 class MERouchon1(MERouchon):
@@ -41,20 +44,35 @@ class MERouchon1(MERouchon):
         Returns:
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
-        # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
-
-        # build time-dependent Kraus operators
-        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
-        M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        M0 = self.M0(t)
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, M1s)
+        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)
 
         # normalize by the trace
         rho = rho / trace(rho)[..., None, None].real
 
         return rho
+
+    @H_dependent
+    def M0(self, t):
+        # build time-dependent Kraus operators
+        return self.I - 1j * self.dt * self.H_nh(t)  # (b_H, 1, n, n)
+
+    @H_dependent
+    def Hdag_nh(self, t):
+        Hdag_nh = self.H_nh(t).adjoint()
+
+        return Hdag_nh
+
+    @H_dependent
+    def H_nh(self, t):
+        # non-hermitian Hamiltonian at time t
+        return self.H(t) - 0.5j * self.sum_nojump
+
+    @H_dependent
+    def M0_adj(self, t):
+        return self.I + 1j * self.dt * self.Hdag_nh(t)
 
     def backward_augmented(
         self,
@@ -64,20 +82,14 @@ class MERouchon1(MERouchon):
         parameters: Tuple[nn.Parameter, ...],
     ):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
-        # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump
-        Hdag_nh = H_nh.adjoint()
 
         # compute rho(t-dt)
-        M0 = self.I + 1j * self.dt * H_nh
-        M1s = sqrt(self.dt) * self.jump_ops
-        rho = kraus_map(rho, M0) - kraus_map(rho, M1s)
+        M0 = self.M0(t)
+        rho = kraus_map(rho, M0) - kraus_map(rho, self.M1s)
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
-        M0_adj = self.I + 1j * self.dt * Hdag_nh
-        M1s_adj = sqrt(self.dt) * self.jump_ops.adjoint()
-        phi = kraus_map(phi, M0_adj) + kraus_map(phi, M1s_adj)
+        phi = kraus_map(phi, self.M0_adj(t)) + kraus_map(phi, self.M1s_adj)
 
         return rho, phi
 
@@ -98,7 +110,7 @@ class MERouchon1_5(MERouchon):
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
+        H_nh = self.H(t) - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
@@ -143,7 +155,7 @@ class MERouchon2(MERouchon):
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
+        H_nh = self.H(t) - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
         # M0: (b_H, 1, n, n)

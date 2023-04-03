@@ -10,9 +10,9 @@ class MEEuler(ForwardQSolver):
     def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
         # Args:
         #     H: (b_H, n, n)
+        super().__init__(H)
 
         # convert H to size compatible with (b_H, len(jump_ops), n, n)
-        self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
         self.options = solver_options
         self.dt = self.options.dt
@@ -24,4 +24,4 @@ class MEEuler(ForwardQSolver):
         # Returns:
         #     (b_H, b_rho, n, n)
 
-        return rho + self.dt * lindbladian(rho, self.H, self.jump_ops)
+        return rho + self.dt * lindbladian(rho, self.H(t), self.jump_ops)

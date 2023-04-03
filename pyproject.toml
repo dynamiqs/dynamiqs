@@ -27,13 +27,14 @@ packages = ["torchqdynamics"]
 
 [tool.isort]
 profile = "black"
-skip = ["__init__.py"]
+skip = ["__init__.py", "venv"]
 
 [tool.black]
 preview = true
 target-version = ["py38"]
 skip-string-normalization = true
 jupyter = true
+skip = ["venv"]
 
 [tool.codespell]
 skip = ".git,*.ipynb"
