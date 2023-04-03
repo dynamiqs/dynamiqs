@@ -16,7 +16,7 @@ class TestMERouchon1(MESolverTest):
 
     def test_rho_save(self):
         solver = tq.solver.Rouchon1(dt=1e-4)
-        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11, norm_atol=1e-1)
+        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11)
 
 
 class TestMERouchon1_5(MESolverTest):
@@ -28,7 +28,7 @@ class TestMERouchon1_5(MESolverTest):
     @pytest.mark.skip(reason='failing - to fix')
     def test_rho_save(self):
         solver = tq.solver.Rouchon1_5(dt=1e-4)
-        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11, norm_atol=1e-2)
+        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11)
 
 
 class TestMERouchon2(MESolverTest):
@@ -37,5 +37,5 @@ class TestMERouchon2(MESolverTest):
         self._test_batching(solver, leaky_cavity_8)
 
     def test_rho_save(self):
-        solver = tq.solver.Rouchon2(dt=1e-4)
-        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11, norm_atol=1e-2)
+        solver = tq.solver.Rouchon2(dt=1e-3)
+        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11)

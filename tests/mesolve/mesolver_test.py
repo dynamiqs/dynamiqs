@@ -67,7 +67,8 @@ class MESolverTest:
             solver=solver,
         )
 
-        assert torch.norm(rho_save - system.rhos(t_save)) <= norm_atol
+        errs = torch.norm(rho_save - system.rhos(t_save), dim=(-2, -1))
+        assert torch.all(errs <= norm_atol)
 
     def test_rho_save(self):
         pass

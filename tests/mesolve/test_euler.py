@@ -15,4 +15,4 @@ class TestMEEuler(MESolverTest):
 
     def test_rho_save(self):
         solver = tq.solver.Euler(dt=1e-4)
-        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11, norm_atol=1e-2)
+        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11)
