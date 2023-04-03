@@ -22,3 +22,6 @@ dist/
 
 # pyenv local Python version
 .python-version
+
+# pytest cache
+.pytest_cache
