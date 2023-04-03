@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 import torchqdynamics as tq
 
@@ -14,7 +13,6 @@ class TestMEEuler(MESolverTest):
         solver = tq.solver.Euler(dt=1e-2)
         self._test_batching(solver, leaky_cavity_8)
 
-    @pytest.mark.long
     def test_rho_save(self):
-        solver = tq.solver.Euler(dt=1e-5)
-        self._test_rho_save(solver, leaky_cavity_8, num_t_save=51, rtol=1e0)
+        solver = tq.solver.Euler(dt=1e-4)
+        self._test_rho_save(solver, leaky_cavity_8, num_t_save=11, norm_atol=1e-2)

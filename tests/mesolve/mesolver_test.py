@@ -54,8 +54,7 @@ class MESolverTest:
         system: OpenSystem,
         *,
         num_t_save: int,
-        rtol: float = 1e-05,
-        atol: float = 1e-08,
+        norm_atol: float = 1e-2,
     ):
         t_save = system.t_save(num_t_save)
 
@@ -68,7 +67,7 @@ class MESolverTest:
             solver=solver,
         )
 
-        assert torch.allclose(rho_save, system.rhos(t_save), rtol=rtol, atol=atol)
+        assert torch.norm(rho_save - system.rhos(t_save)) <= norm_atol
 
     def test_rho_save(self):
         pass

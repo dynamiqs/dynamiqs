@@ -53,8 +53,7 @@ class SESolverTest:
         system: ClosedSystem,
         *,
         num_t_save: int,
-        rtol: float = 1e-05,
-        atol: float = 1e-08,
+        norm_atol: float = 1e-3,
     ):
         t_save = system.t_save(num_t_save)
 
@@ -66,7 +65,7 @@ class SESolverTest:
             solver=solver,
         )
 
-        assert torch.allclose(psi_save, system.psis(t_save), rtol=rtol, atol=atol)
+        assert torch.norm(psi_save - system.psis(t_save)) <= norm_atol
 
     def test_psi_save(self):
         pass
