@@ -14,4 +14,4 @@ class TestMEEuler(MESolverTest):
     @pytest.mark.long
     def test_rho_save(self):
         solver = tq.solver.Euler(dt=1e-5)
-        self._test_rho_save(solver, leaky_cavity_8, nt=51, rtol=1e0)
+        self._test_rho_save(solver, leaky_cavity_8, num_t_save=51, rtol=1e0)

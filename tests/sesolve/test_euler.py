@@ -14,4 +14,4 @@ class TestSEEuler(SESolverTest):
     @pytest.mark.long
     def test_psi_save(self):
         solver = tq.solver.Euler(dt=1e-5)
-        self._test_psi_save(solver, cavity_8, nt=51, rtol=1e-2)
+        self._test_psi_save(solver, cavity_8, num_t_save=51, rtol=1e-2)

@@ -14,36 +14,36 @@ class MESolverTest:
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)
         b_rho0 = len(system.rho0_batched)
-        nt = 11
+        num_t_save = 11
 
         run_mesolve = lambda H, rho0: tq.mesolve(
             H,
             system.jump_ops,
             rho0,
-            system.t_save(nt),
+            system.t_save(num_t_save),
             exp_ops=system.exp_ops,
             solver=solver,
         )
 
         # no batching
         rho_save, exp_save = run_mesolve(system.H, system.rho0)
-        assert rho_save.shape == (nt, n, n)
-        assert exp_save.shape == (n_exp_ops, nt)
+        assert rho_save.shape == (num_t_save, n, n)
+        assert exp_save.shape == (n_exp_ops, num_t_save)
 
         # batched H
         rho_save, exp_save = run_mesolve(system.H_batched, system.rho0)
-        assert rho_save.shape == (b_H, nt, n, n)
-        assert exp_save.shape == (b_H, n_exp_ops, nt)
+        assert rho_save.shape == (b_H, num_t_save, n, n)
+        assert exp_save.shape == (b_H, n_exp_ops, num_t_save)
 
         # batched rho0
         rho_save, exp_save = run_mesolve(system.H, system.rho0_batched)
-        assert rho_save.shape == (b_rho0, nt, n, n)
-        assert exp_save.shape == (b_rho0, n_exp_ops, nt)
+        assert rho_save.shape == (b_rho0, num_t_save, n, n)
+        assert exp_save.shape == (b_rho0, n_exp_ops, num_t_save)
 
         # batched H and rho0
         rho_save, exp_save = run_mesolve(system.H_batched, system.rho0_batched)
-        assert rho_save.shape == (b_H, b_rho0, nt, n, n)
-        assert exp_save.shape == (b_H, b_rho0, n_exp_ops, nt)
+        assert rho_save.shape == (b_H, b_rho0, num_t_save, n, n)
+        assert exp_save.shape == (b_H, b_rho0, n_exp_ops, num_t_save)
 
     def test_batching(self):
         pass
@@ -53,11 +53,11 @@ class MESolverTest:
         solver: SolverOption,
         system: OpenSystem,
         *,
-        nt: int,
+        num_t_save: int,
         rtol: float = 1e-05,
         atol: float = 1e-08,
     ):
-        t_save = system.t_save(nt)
+        t_save = system.t_save(num_t_save)
 
         rho_save, _ = tq.mesolve(
             system.H,
