@@ -135,10 +135,14 @@ def mesolve(
 
     # restore correct batching
     if rho0.dim() == 2:
-        rho_save = rho_save.squeeze(1)
-        exp_save = exp_save.squeeze(1)
+        if rho_save is not None:
+            rho_save = rho_save.squeeze(1)
+        if exp_save is not None:
+            exp_save = exp_save.squeeze(1)
     if H.dim() == 2:
-        rho_save = rho_save.squeeze(0)
-        exp_save = exp_save.squeeze(0)
+        if rho_save is not None:
+            rho_save = rho_save.squeeze(0)
+        if exp_save is not None:
+            exp_save = exp_save.squeeze(0)
 
     return rho_save, exp_save
