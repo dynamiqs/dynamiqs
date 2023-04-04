@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
-from tqdm.auto import tqdm
 
 from .adaptive import DormandPrince45
+from .progress_bar import tqdm
 from .solver_options import AdaptiveStep, Dopri45, FixedStep
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
 
