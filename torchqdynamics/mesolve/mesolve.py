@@ -5,9 +5,10 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import Euler, SolverOption
+from ..solver_options import AdaptiveStep, Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
+from .adaptive import MEAdaptive
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
 from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
@@ -107,16 +108,19 @@ def mesolve(
         solver = Rouchon1(dt=1e-2)
 
     # define the QSolver
+    args = (H_batched, jump_ops, solver)
     if isinstance(solver, Rouchon1):
-        qsolver = MERouchon1(H_batched, jump_ops, solver)
+        qsolver = MERouchon1(*args)
     elif isinstance(solver, Rouchon1_5):
-        qsolver = MERouchon1_5(H_batched, jump_ops, solver)
+        qsolver = MERouchon1_5(*args)
     elif isinstance(solver, Rouchon2):
-        qsolver = MERouchon2(H_batched, jump_ops, solver)
+        qsolver = MERouchon2(*args)
+    elif isinstance(solver, AdaptiveStep):
+        qsolver = MEAdaptive(*args)
     elif isinstance(solver, Euler):
-        qsolver = MEEuler(H_batched, jump_ops, solver)
+        qsolver = MEEuler(*args)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
     rho_save, exp_save = odeint(

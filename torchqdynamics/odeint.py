@@ -8,7 +8,8 @@ from torch import Tensor
 from torch.autograd.function import FunctionCtx
 from tqdm.auto import tqdm
 
-from .solver_options import AdaptativeStep, FixedStep
+from .adaptive import DormandPrince45
+from .solver_options import AdaptiveStep, Dopri45, FixedStep
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
 
 
@@ -104,7 +105,7 @@ def _odeint_main(
     """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint(qsolver, y0, t_save, save_states, exp_ops)
-    elif isinstance(qsolver.options, AdaptativeStep):
+    elif isinstance(qsolver.options, AdaptiveStep):
         return _adaptive_odeint(qsolver, y0, t_save, save_states, exp_ops)
 
 
@@ -121,9 +122,108 @@ def _odeint_inplace(*args, **kwargs):
         return _odeint_main(*args, **kwargs)
 
 
-def _adaptive_odeint(*_args, **_kwargs):
-    """Integrate a quantum ODE with an adaptive time step solver."""
-    raise NotImplementedError
+def _adaptive_odeint(
+    qsolver: ForwardQSolver,
+    y0: Tensor,
+    t_save: Tensor,
+    save_states: bool,
+    exp_ops: Tensor,
+) -> Tuple[Tensor, Tensor]:
+    """Integrate a quantum ODE with an adaptive time step solver.
+
+    This function integrates an ODE of the form `dy / dt = f(t, y)` with `y(0) = y0`,
+    using a Runge-Kutta adaptive time step solver.
+
+    For details about the integration method, see Chapter II.4 of `Hairer et al.,
+    Solving Ordinary Differential Equations I (1993), Springer Series in Computational
+    Mathematics`.
+    """
+    # initialize save tensors
+    y_save, exp_save = None, None
+    batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
+    if save_states:
+        y_save = torch.zeros(*batch_sizes, len(t_save), m, n).to(y0)
+
+    if len(exp_ops) > 0:
+        exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(t_save)).to(y0)
+
+    # save initial solution
+    save_counter = 0
+    if t_save[0] == 0.0:
+        save_counter += 1
+        if save_states:
+            y_save[..., save_counter, :, :] = y0
+        if len(exp_ops) > 0:
+            exp_save[..., save_counter] = bexpect(exp_ops, y0)
+
+    # initialize the adaptive solver
+    args = (
+        qsolver.forward,
+        qsolver.options.factor,
+        qsolver.options.min_factor,
+        qsolver.options.max_factor,
+        qsolver.options.atol,
+        qsolver.options.rtol,
+        t_save.dtype,
+        y0.dtype,
+        y0.device,
+    )
+    if isinstance(qsolver.options, Dopri45):
+        solver = DormandPrince45(*args)
+
+    # initialize the ODE routine
+    t0 = 0.0
+    f0 = solver.f(t0, y0)
+    dt = solver.init_tstep(f0, y0, t0)
+
+    # initialize the progress bar
+    pbar = tqdm(total=t_save[-1].item())
+
+    # run the ODE routine
+    t, y, ft = t0, y0, f0
+    step_counter, max_steps = 0, qsolver.options.max_steps
+    while t < t_save[-1] and step_counter < max_steps:
+        # if a time in `t_save` is reached, raise a flag and rescale dt accordingly
+        if t + dt >= t_save[save_counter]:
+            save_flag = True
+            dt_old = dt
+            dt = float(t_save[save_counter] - t)
+
+        # perform a single solver step of size dt
+        ft_new, y_new, y_err = solver.step(ft, y, t, dt)
+
+        # compute estimated error of this step
+        error = solver.get_error(y_err, y, y_new)
+
+        # update results if step is accepted
+        if error <= 1:
+            t, y, ft = t + dt, y_new, ft_new
+
+            # update the progress bar
+            pbar.update(dt)
+
+            # save results if flag is raised
+            if save_flag:
+                if save_states:
+                    y_save[..., save_counter, :, :] = y
+                if len(exp_ops) > 0:
+                    exp_save[..., save_counter] = bexpect(exp_ops, y)
+                save_counter += 1
+
+        # return to the original dt and lower the flag
+        if save_flag:
+            dt = dt_old
+            save_flag = False
+
+        # compute the next dt
+        dt = solver.update_tstep(dt, error)
+        step_counter += 1
+
+    # save last state if not already done
+    if not save_states:
+        y_save = y
+
+    return y_save, exp_save
 
 
 def _fixed_odeint(
@@ -163,7 +263,7 @@ def _fixed_odeint(
             'Every value of argument `t_save` must be a multiple of the time step `dt`.'
         )
 
-    # initialize save tensor
+    # initialize save tensors
     y_save, exp_save = None, None
     batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
     if save_states:
@@ -242,7 +342,7 @@ def _odeint_augmented_main(
     """Integrate the augmented ODE backward."""
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
-    elif isinstance(qsolver.options, AdaptativeStep):
+    elif isinstance(qsolver.options, AdaptiveStep):
         return _adaptive_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
 
 
