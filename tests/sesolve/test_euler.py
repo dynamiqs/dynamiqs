@@ -1,30 +1,18 @@
 import numpy as np
-import qutip as qt
 
 import torchqdynamics as tq
 
+from .closed_system import Cavity
+from .sesolver_test import SESolverTest
 
-def test_sesolve_euler_cheap():
-    """Cheap test of the Euler method of sesolve."""
-    # parameters
-    n = 8
-    delta = 2 * np.pi
-    alpha0 = 1.0
+cavity_8 = Cavity(n=8, delta=2 * np.pi, alpha0=1.0)
 
-    # operators
-    a = qt.destroy(n)
-    adag = a.dag()
-    H = delta * adag * a
-    exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
-    num_exp_ops = len(exp_ops)
 
-    # other arguments
-    rho0 = qt.coherent(n, alpha0)
-    num_t_save = 51
-    t_save = np.linspace(0.0, delta / (2 * np.pi), num_t_save)  # a full tour
-    solver = tq.solver.Euler(dt=1e-3)
+class TestSEEuler(SESolverTest):
+    def test_batching(self):
+        solver = tq.solver.Euler(dt=1e-2)
+        self._test_batching(solver, cavity_8)
 
-    # run solver
-    states, exp = tq.sesolve(H, rho0, t_save, exp_ops=exp_ops, solver=solver)
-    assert states.shape == (num_t_save, n, 1)
-    assert exp.shape == (num_exp_ops, num_t_save)
+    def test_psi_save(self):
+        solver = tq.solver.Euler(dt=1e-4)
+        self._test_psi_save(solver, cavity_8, num_t_save=11)
