@@ -137,17 +137,15 @@ def trace(rho: Tensor) -> Tensor:
 
 
 def ptrace(
-    x: Tensor, dims_kept: Union[int, Tuple[int, ...]], hilbert_shape: Tuple[int, ...]
+    x: Tensor, keep: Union[int, Tuple[int, ...]], dims: Tuple[int, ...]
 ) -> Tensor:
-    """Compute the partial trace of a state vector or density matrix, keeping only
-    dimensions `dims_kept`. The Hilbert space structure should be specified with
-    `hilbert_shape`.
+    """Compute the partial trace of a state vector or density matrix.
 
     Args:
         x: Tensor of size `(..., n, 1)` or `(..., n, n)`
-        dims_kept: Int or tuple of ints containing the dimensions to keep for the
+        keep: Int or tuple of ints containing the dimensions to keep for the
             partial trace.
-        hilbert_shape: Tuple of ints specifying the dimensions of each mode in the
+        dims: Tuple of ints specifying the dimensions of each subsystem in the
             Hilbert space tensor product.
 
     Returns:
@@ -155,7 +153,9 @@ def ptrace(
             state vector or density matrix.
 
     Example:
-        >>> rho = tq.kron(tq.coherent_dm(20, 2.0), tq.fock_dm(2, 0), tq.fock_dm(3, 1))
+        >>> rho = tq.tensprod(tq.coherent_dm(20, 2.0),
+                              tq.fock_dm(2, 0),
+                              tq.fock_dm(3, 1))
         >>> rhoA = tq.ptrace(rho, 0, (20, 2, 3))
         >>> rhoA.shape
         torch.Size([20, 20])
@@ -163,36 +163,36 @@ def ptrace(
         >>> rhoBC.shape
         torch.Size([6, 6])
     """
-    # convert dims_kept and hilbert_shape to tensors
-    hilbert_shape = torch.as_tensor(hilbert_shape)
-    if isinstance(dims_kept, int):
-        dims_kept = torch.as_tensor([dims_kept])
-    elif isinstance(dims_kept, tuple):
-        dims_kept = torch.as_tensor(dims_kept)
+    # convert keep and dims to tensors
+    if isinstance(keep, int):
+        keep = torch.as_tensor([keep])
+    elif isinstance(keep, tuple):
+        keep = torch.as_tensor(keep)
+    dims = torch.as_tensor(dims)
 
     # check that input dimensions match
-    if not torch.prod(hilbert_shape) == x.size(-2):
+    if not torch.prod(dims) == x.size(-2):
         raise ValueError(
-            f'Input `hilbert_shape` {hilbert_shape} does not match the input tensor'
-            f' size of {x.size(-2)}.'
+            f'Input `dims` {dims.tolist()} does not match the input '
+            f'tensor size of {x.size(-2)}.'
         )
-    if torch.any(dims_kept < 0) or torch.any(dims_kept > len(hilbert_shape) - 1):
+    if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
         raise ValueError(
-            f'The specified dimension {dims_kept} does not match the Hilbert space'
-            f' structure {hilbert_shape}.'
+            f'Input `keep` {keep.tolist()} does not match the Hilbert '
+            f'space structure {dims.tolist()}.'
         )
 
-    # sort dims_kept
-    dims_kept = dims_kept.sort()[0]
+    # sort keep
+    keep = keep.sort()[0]
 
     # find dimensions to trace out
-    ndims = len(hilbert_shape)
-    dims = torch.arange(0, ndims)
-    dims_trace = torch.as_tensor(np.setdiff1d(dims, dims_kept))
+    ndims = len(dims)
+    dims_ = torch.arange(0, ndims)
+    dims_trace = torch.as_tensor(np.setdiff1d(dims_, keep))
 
     # find sizes to keep and trace out
-    size_kept = torch.prod(hilbert_shape[dims_kept])
-    size_trace = torch.prod(hilbert_shape[dims_trace])
+    size_kept = torch.prod(dims[keep])
+    size_trace = torch.prod(dims[dims_trace])
 
     # find batch shape
     ndims_b = x.ndim - 2
@@ -201,10 +201,10 @@ def ptrace(
 
     if is_ket(x):
         # find permutation that puts traced out dimensions last
-        perm = tuple(dims_b) + tuple(dims_kept + ndims_b) + tuple(dims_trace + ndims_b)
+        perm = tuple(dims_b) + tuple(keep + ndims_b) + tuple(dims_trace + ndims_b)
 
         # reshape to the Hilbert space shape, permute and reshape again
-        x = x.reshape(*b_shape, *hilbert_shape)
+        x = x.reshape(*b_shape, *dims)
         x = x.permute(perm)
         x = x.reshape(*b_shape, size_kept, 1, size_trace)
         y = x.transpose(-2, -3).conj()
@@ -215,14 +215,14 @@ def ptrace(
         # find permutation that puts traced out dimensions last
         perm = (
             tuple(dims_b)
-            + tuple(dims_kept + ndims_b)
-            + tuple(dims_kept + ndims_b + ndims)
+            + tuple(keep + ndims_b)
+            + tuple(keep + ndims_b + ndims)
             + tuple(dims_trace + ndims_b)
             + tuple(dims_trace + ndims_b + ndims)
         )
 
         # reshape to the Hilbert space shape, permute and reshape again
-        x = x.reshape(*b_shape, *hilbert_shape, *hilbert_shape)
+        x = x.reshape(*b_shape, *dims, *dims)
         x = x.permute(perm)
         x = x.reshape(*b_shape, size_kept, size_kept, size_trace, size_trace)
 
@@ -249,7 +249,6 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
     Returns:
         Tensor of size `(...)` holding the operator expectation values.
-        expectation value of size (...)
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
