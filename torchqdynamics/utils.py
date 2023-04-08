@@ -10,6 +10,8 @@ __all__ = [
     'ket_to_dm',
     'ket_overlap',
     'ket_fidelity',
+    'dm_fidelity',
+    'sqrtm',
     'dissipator',
     'lindbladian',
     'trace',
