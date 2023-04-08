@@ -1,6 +1,5 @@
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import torch
 from qutip import Qobj
 from torch import Tensor
@@ -155,20 +154,21 @@ def ptrace(
     Example:
         >>> rho = tq.tensprod(tq.coherent_dm(20, 2.0),
                               tq.fock_dm(2, 0),
-                              tq.fock_dm(3, 1))
-        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 3))
+                              tq.fock_dm(5, 1))
+        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
-        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 3))
+        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
-        torch.Size([6, 6])
+        torch.Size([10, 10])
     """
     # convert keep and dims to tensors
     if isinstance(keep, int):
         keep = torch.as_tensor([keep])
     elif isinstance(keep, tuple):
-        keep = torch.as_tensor(keep)
-    dims = torch.as_tensor(dims)
+        keep = torch.as_tensor(keep)  # e.g. [1, 2]
+    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
+    ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
     if not torch.prod(dims) == x.size(-2):
@@ -185,49 +185,27 @@ def ptrace(
     # sort keep
     keep = keep.sort()[0]
 
-    # find dimensions to trace out
-    ndims = len(dims)
-    dims_ = torch.arange(0, ndims)
-    dims_trace = torch.as_tensor(np.setdiff1d(dims_, keep))
+    # create einsum alphabet
+    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
-    # find sizes to keep and trace out
-    size_kept = torch.prod(dims[keep])
-    size_trace = torch.prod(dims[dims_trace])
+    # compute einsum equations
+    eq1 = alphabet[:ndims]  # e.g. 'abc'
+    unused = iter(alphabet[ndims:])
+    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
 
-    # find batch shape
-    ndims_b = x.ndim - 2
-    dims_b = torch.arange(0, ndims_b)
-    b_shape = x.shape[:-2]
-
+    # trace out x over unkept dimensions
     if is_ket(x):
-        # find permutation that puts traced out dimensions last
-        perm = tuple(dims_b) + tuple(keep + ndims_b) + tuple(dims_trace + ndims_b)
-
-        # reshape to the Hilbert space shape, permute and reshape again
-        x = x.reshape(*b_shape, *dims)
-        x = x.permute(perm)
-        x = x.reshape(*b_shape, size_kept, 1, size_trace)
-        y = x.transpose(-2, -3).conj()
-
-        # trace out last dimension
-        return torch.linalg.vecdot(x, y)
+        x = x.reshape(-1, *dims)  # e.g. (..., 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
+        x = torch.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     else:
-        # find permutation that puts traced out dimensions last
-        perm = (
-            tuple(dims_b)
-            + tuple(keep + ndims_b)
-            + tuple(keep + ndims_b + ndims)
-            + tuple(dims_trace + ndims_b)
-            + tuple(dims_trace + ndims_b + ndims)
-        )
+        x = x.reshape(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
+        x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
 
-        # reshape to the Hilbert space shape, permute and reshape again
-        x = x.reshape(*b_shape, *dims, *dims)
-        x = x.permute(perm)
-        x = x.reshape(*b_shape, size_kept, size_kept, size_trace, size_trace)
-
-        # trace out the last dimensions
-        return trace(x)
+    # reshape to final dimension
+    nkeep = torch.prod(dims[keep])  # e.g. 10
+    return x.reshape(-1, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
