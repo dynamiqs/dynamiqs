@@ -1,6 +1,5 @@
 from typing import List, Optional, Sequence, Tuple, Union
 
-import numpy as np
 import torch
 from qutip import Qobj
 from torch import Tensor
@@ -63,10 +62,28 @@ def ket_overlap(x: Tensor, y: Tensor) -> torch.complex:
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
 
-def ket_fidelity(x: Tensor, y: Tensor) -> float:
-    r"""Return the fidelity between two state vectors (kets).
+def sqrtm(x: Tensor) -> Tensor:
+    """Compute the square root of a symmetric or Hermitian positive definite matrix.
 
-    The fidelity between two pure states $\varphi$, $\psi$ is defined by their
+    Args:
+        x: Tensor of dimension `(..., n, n)`.
+
+    Returns:
+        Tensor of dimension `(..., n, n)` holding the square root of `x`.
+    """
+    # code copied from
+    # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
+    L, Q = torch.linalg.eigh(x)
+    zero = torch.zeros((), device=L.device, dtype=L.dtype)
+    threshold = L.max(-1).values * L.size(-1) * torch.finfo(L.dtype).eps
+    L = L.where(L > threshold.unsqueeze(-1), zero)  # zero out small components
+    return (Q * L.sqrt().unsqueeze(-2)) @ Q.mH
+
+
+def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    r"""Return the fidelity between two state vectors.
+
+    The fidelity between two pure states $\varphi$ and $\psi$ is defined by their
     squared overlap
     $$
         F(\varphi, \psi) = |\braket{\varphi, \psi}|^2.
@@ -76,14 +93,55 @@ def ket_fidelity(x: Tensor, y: Tensor) -> float:
         This definition is different from QuTiP `fidelity()` function which
         uses the square root fidelity $F' = \sqrt{F}`.
 
+    Note:
+        This fidelity is also sometimes called the *Uhlmann state fidelity*.
+
     Args:
-        x: Tensor of dimension `(..., d, 1)`.
-        y: Tensor of dimension `(..., d, 1)`.
+        x: Tensor of size `(..., n, 1)`.
+        y: Tensor of size `(..., n, 1)`.
 
     Returns:
-        Real-valued fidelity (`torch.float32` or `torch.float64`).
+        Tensor of size `(...)` holding the real-valued fidelity.
     """
-    return ket_overlap(x, y).abs().pow(2)
+    return ket_overlap(x, y).abs().pow(2).real
+
+
+def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    r"""Return the fidelity between two density matrices.
+
+    The fidelity between two density matrices $\rho$ and $\sigma$ is defined by
+    $$
+        F(\rho, \sigma) = \mathrm{Tr}\left[\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}\right]^2
+    $$
+
+    Warning:
+        This definition is different from QuTiP `fidelity()` function which
+        uses the square root fidelity $F' = \sqrt{F}`.
+
+    Note:
+        This fidelity is also sometimes called the *Uhlmann state fidelity*.
+
+    Args:
+        x: Tensor of size `(..., n, n)`.
+        y: Tensor of size `(..., n, n)`.
+
+    Returns:
+        Tensor of size `(...)` holding the real-valued fidelity.
+    """
+    sqrtm_x = sqrtm(x)
+    tmp = sqrtm_x @ y @ sqrtm_x
+
+    # we don't need the whole matrix `sqrtm(tmp)`, just its trace, which can be computed
+    # by summing the square roots of `tmp` eigenvalues
+    eigvals_tmp = torch.linalg.eigvalsh(tmp)
+
+    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
+    zero = torch.zeros((), device=x.device, dtype=x.dtype)
+    eigvals_tmp = eigvals_tmp.where(eigvals_tmp >= 0, zero)
+
+    trace_sqrtm_tmp = torch.sqrt(eigvals_tmp).sum(-1)
+
+    return trace_sqrtm_tmp.pow(2).real
 
 
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
@@ -169,17 +227,15 @@ def trace(rho: Tensor) -> Tensor:
 
 
 def ptrace(
-    x: Tensor, dims_kept: Union[int, Tuple[int, ...]], hilbert_shape: Tuple[int, ...]
+    x: Tensor, keep: Union[int, Tuple[int, ...]], dims: Tuple[int, ...]
 ) -> Tensor:
-    """Compute the partial trace of a state vector or density matrix, keeping only
-    dimensions `dims_kept`. The Hilbert space structure should be specified with
-    `hilbert_shape`.
+    """Compute the partial trace of a state vector or density matrix.
 
     Args:
         x: Tensor of size `(..., n, 1)` or `(..., n, n)`
-        dims_kept: Int or tuple of ints containing the dimensions to keep for the
+        keep: Int or tuple of ints containing the dimensions to keep for the
             partial trace.
-        hilbert_shape: Tuple of ints specifying the dimensions of each mode in the
+        dims: Tuple of ints specifying the dimensions of each subsystem in the
             Hilbert space tensor product.
 
     Returns:
@@ -187,79 +243,60 @@ def ptrace(
             state vector or density matrix.
 
     Example:
-        >>> rho = tq.kron(tq.coherent_dm(20, 2.0), tq.fock_dm(2, 0), tq.fock_dm(3, 1))
-        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 3))
+        >>> rho = tq.tensprod(tq.coherent_dm(20, 2.0),
+                              tq.fock_dm(2, 0),
+                              tq.fock_dm(5, 1))
+        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
-        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 3))
+        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
-        torch.Size([6, 6])
+        torch.Size([10, 10])
     """
-    # convert dims_kept and hilbert_shape to tensors
-    hilbert_shape = torch.as_tensor(hilbert_shape)
-    if isinstance(dims_kept, int):
-        dims_kept = torch.as_tensor([dims_kept])
-    elif isinstance(dims_kept, tuple):
-        dims_kept = torch.as_tensor(dims_kept)
+    # convert keep and dims to tensors
+    if isinstance(keep, int):
+        keep = torch.as_tensor([keep])
+    elif isinstance(keep, tuple):
+        keep = torch.as_tensor(keep)  # e.g. [1, 2]
+    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
+    ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
-    if not torch.prod(hilbert_shape) == x.size(-2):
+    if not torch.prod(dims) == x.size(-2):
         raise ValueError(
-            f'Input `hilbert_shape` {hilbert_shape} does not match the input tensor'
-            f' size of {x.size(-2)}.'
+            f'Input `dims` {dims.tolist()} does not match the input '
+            f'tensor size of {x.size(-2)}.'
         )
-    if torch.any(dims_kept < 0) or torch.any(dims_kept > len(hilbert_shape) - 1):
+    if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
         raise ValueError(
-            f'The specified dimension {dims_kept} does not match the Hilbert space'
-            f' structure {hilbert_shape}.'
+            f'Input `keep` {keep.tolist()} does not match the Hilbert '
+            f'space structure {dims.tolist()}.'
         )
 
-    # sort dims_kept
-    dims_kept = dims_kept.sort()[0]
+    # sort keep
+    keep = keep.sort()[0]
 
-    # find dimensions to trace out
-    ndims = len(hilbert_shape)
-    dims = torch.arange(0, ndims)
-    dims_trace = torch.as_tensor(np.setdiff1d(dims, dims_kept))
+    # create einsum alphabet
+    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
-    # find sizes to keep and trace out
-    size_kept = torch.prod(hilbert_shape[dims_kept])
-    size_trace = torch.prod(hilbert_shape[dims_trace])
+    # compute einsum equations
+    eq1 = alphabet[:ndims]  # e.g. 'abc'
+    unused = iter(alphabet[ndims:])
+    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
 
-    # find batch shape
-    ndims_b = x.ndim - 2
-    dims_b = torch.arange(0, ndims_b)
-    b_shape = x.shape[:-2]
-
+    # trace out x over unkept dimensions
     if is_ket(x):
-        # find permutation that puts traced out dimensions last
-        perm = tuple(dims_b) + tuple(dims_kept + ndims_b) + tuple(dims_trace + ndims_b)
-
-        # reshape to the Hilbert space shape, permute and reshape again
-        x = x.reshape(*b_shape, *hilbert_shape)
-        x = x.permute(perm)
-        x = x.reshape(*b_shape, size_kept, 1, size_trace)
-        y = x.transpose(-2, -3).conj()
-
-        # trace out last dimension
-        return torch.linalg.vecdot(x, y)
+        x = x.reshape(-1, *dims)  # e.g. (..., 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
+        x = torch.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     else:
-        # find permutation that puts traced out dimensions last
-        perm = (
-            tuple(dims_b)
-            + tuple(dims_kept + ndims_b)
-            + tuple(dims_kept + ndims_b + ndims)
-            + tuple(dims_trace + ndims_b)
-            + tuple(dims_trace + ndims_b + ndims)
-        )
+        x = x.reshape(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
+        x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
 
-        # reshape to the Hilbert space shape, permute and reshape again
-        x = x.reshape(*b_shape, *hilbert_shape, *hilbert_shape)
-        x = x.permute(perm)
-        x = x.reshape(*b_shape, size_kept, size_kept, size_trace, size_trace)
-
-        # trace out the last dimensions
-        return trace(x)
+    # reshape to final dimension
+    nkeep = torch.prod(dims[keep])  # e.g. 10
+    return x.reshape(-1, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
@@ -281,7 +318,6 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
     Returns:
         Tensor of size `(...)` holding the operator expectation values.
-        expectation value of size (...)
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
