@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from math import prod
-from typing import Tuple, Union
 
 import torch
 from torch import Tensor, device, dtype
@@ -11,8 +12,8 @@ __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
 
 
 def fock(
-    dims: Union[int, Tuple[int, ...]],
-    states: Union[int, Tuple[int, ...]],
+    dims: int | tuple[int, ...],
+    states: int | tuple[int, ...],
     *,
     dtype: dtype = torch.complex128,
     device: device = None,
@@ -54,8 +55,8 @@ def fock(
 
 
 def fock_dm(
-    dims: Union[int, Tuple[int, ...]],
-    states: Union[int, Tuple[int, ...]],
+    dims: int | tuple[int, ...],
+    states: int | tuple[int, ...],
     *,
     dtype: dtype = torch.complex128,
     device: device = None,

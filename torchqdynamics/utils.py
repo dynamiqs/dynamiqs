@@ -1,4 +1,6 @@
-from typing import List, Optional, Sequence, Tuple, Union
+from __future__ import annotations
+
+from typing import Sequence
 
 import torch
 from qutip import Qobj
@@ -207,7 +209,7 @@ def tensprod(*x: Tensor):
     return y
 
 
-def _extract_tuple_from_varargs(x: Union[Tuple, Tuple[Tuple]]) -> Tuple:
+def _extract_tuple_from_varargs(x: tuple | tuple[tuple]) -> tuple:
     """Returns a tuple from varargs.
 
     This copies the behavior of PyTorch which accepts both varargs as `foo(1,2,3)` or
@@ -229,9 +231,7 @@ def trace(rho: Tensor) -> Tensor:
     return torch.einsum('...ii', rho)
 
 
-def ptrace(
-    x: Tensor, keep: Union[int, Tuple[int, ...]], dims: Tuple[int, ...]
-) -> Tensor:
+def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
     """Compute the partial trace of a state vector or density matrix.
 
     Args:
@@ -339,7 +339,7 @@ def from_qutip(x: Qobj) -> Tensor:
     return torch.from_numpy(x.full())
 
 
-def to_qutip(x: Tensor, dims: Optional[List] = None) -> Qobj:
+def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
     """Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:

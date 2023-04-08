@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from math import prod
-from typing import Tuple, Union
 
 import torch
 from torch import Tensor, device, dtype
@@ -20,32 +21,34 @@ __all__ = [
 ]
 
 
-def sigmax(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmax(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
     """Pauli X operator."""
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmay(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmay(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
     """Pauli Y operator."""
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
 
-def sigmaz(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmaz(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
     """Pauli Z operator."""
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
 
-def sigmap(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmap(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
     """Pauli raising operator."""
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmam(*, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def sigmam(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
     """Pauli lowering operator."""
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def qeye(*dims: int, dtype: dtype = torch.complex128, device: device = None) -> Tensor:
+def qeye(
+    *dims: int, dtype: dtype = torch.complex128, device: device | None = None
+) -> Tensor:
     """Identity operator."""
     dims = _extract_tuple_from_varargs(dims)
     dim = prod(dims)
@@ -54,7 +57,7 @@ def qeye(*dims: int, dtype: dtype = torch.complex128, device: device = None) -> 
 
 def destroy(
     *dims: int, dtype: dtype = torch.complex128, device: device = None
-) -> Union[Tensor, Tuple[Tensor, ...]]:
+) -> Tensor | tuple[Tensor, ...]:
     """Bosonic annihilation operator.
 
     If only a single dimension is provided, `destroy` returns the annihilation operator
@@ -114,15 +117,15 @@ def destroy(
 
 
 def _destroy_single(
-    dim: int, *, dtype: dtype = torch.complex128, device: device = None
+    dim: int, *, dtype: dtype = torch.complex128, device: device | None = None
 ) -> Tensor:
     """Bosonic annihilation operator of a single mode."""
     return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), 1).to(dtype)
 
 
 def create(
-    *dims: int, dtype: dtype = torch.complex128, device: device = None
-) -> Union[Tensor, Tuple[Tensor, ...]]:
+    *dims: int, dtype: dtype = torch.complex128, device: device | None = None
+) -> Tensor | tuple[Tensor, ...]:
     """Bosonic creation operator.
 
     If only a single dimension is provided, `create` returns the creation operator of
@@ -182,14 +185,18 @@ def create(
 
 
 def _create_single(
-    dim: int, *, dtype: dtype = torch.complex128, device: device = None
+    dim: int, *, dtype: dtype = torch.complex128, device: device | None = None
 ) -> Tensor:
     """Bosonic creation operator of a single mode."""
     return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), -1).to(dtype)
 
 
 def displace(
-    dim: int, alpha: complex, *, dtype: dtype = torch.complex128, device: device = None
+    dim: int,
+    alpha: complex,
+    *,
+    dtype: dtype = torch.complex128,
+    device: device | None = None,
 ) -> Tensor:
     """Single-mode displacement operator."""
     a = destroy(dim, dtype=dtype, device=device)
@@ -197,7 +204,11 @@ def displace(
 
 
 def squeeze(
-    dim: int, z: complex, *, dtype: dtype = torch.complex128, device: device = None
+    dim: int,
+    z: complex,
+    *,
+    dtype: dtype = torch.complex128,
+    device: device | None = None,
 ) -> Tensor:
     """Single-mode displacement operator."""
     a = destroy(dim, dtype=dtype, device=device)

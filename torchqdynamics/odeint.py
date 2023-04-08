@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import warnings
 from abc import ABC, abstractmethod
-from typing import Literal, Optional, Tuple
+from typing import Literal
 
 import torch
 import torch.nn as nn
@@ -31,8 +33,8 @@ class ForwardQSolver(ABC):
 class AdjointQSolver(ForwardQSolver):
     @abstractmethod
     def backward_augmented(
-        self, t: float, y: Tensor, a: Tensor, parameters: Tuple[nn.Parameter, ...]
-    ) -> Tuple[Tensor, Tensor]:
+        self, t: float, y: Tensor, a: Tensor, parameters: tuple[nn.Parameter, ...]
+    ) -> tuple[Tensor, Tensor]:
         """Iterate the augmented quantum state backward.
 
         Args:
@@ -42,7 +44,7 @@ class AdjointQSolver(ForwardQSolver):
             parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
 
         Returns:
-            Tuple of two tensors of shape `(..., m, n)`.
+            tuple of two tensors of shape `(..., m, n)`.
         """
         pass
 
@@ -54,9 +56,9 @@ def odeint(
     *,
     save_states: bool,
     exp_ops: Tensor,
-    gradient_alg: Optional[Literal['autograd', 'adjoint']],
-    parameters: Optional[Tuple[nn.Parameter, ...]],
-) -> Tuple[Tensor, Tensor]:
+    gradient_alg: Literal['autograd', 'adjoint'] | None,
+    parameters: tuple[nn.Parameter, ...] | None,
+) -> tuple[Tensor, Tensor]:
     """Integrate a quantum ODE starting from an initial state.
 
     Args:
@@ -70,7 +72,7 @@ def odeint(
         parameters:
 
     Returns:
-        Tuple `(y_save, exp_save)` with
+        tuple `(y_save, exp_save)` with
             - `y_save` a tensor of shape `(..., len(t_save), m, n)`
             - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
@@ -101,7 +103,7 @@ def _odeint_main(
     t_save: Tensor,
     save_states: bool,
     exp_ops: Tensor,
-) -> Tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor]:
     """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint(qsolver, y0, t_save, save_states, exp_ops)
@@ -128,7 +130,7 @@ def _adaptive_odeint(
     t_save: Tensor,
     save_states: bool,
     exp_ops: Tensor,
-) -> Tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor]:
     """Integrate a quantum ODE with an adaptive time step solver.
 
     This function integrates an ODE of the form `dy / dt = f(t, y)` with `y(0) = y0`,
@@ -235,7 +237,7 @@ def _fixed_odeint(
     t_save: Tensor,
     save_states: bool,
     exp_ops: Tensor,
-) -> Tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor]:
     """Integrate a quantum ODE with a fixed time step solver.
 
     Note:
@@ -253,7 +255,7 @@ def _fixed_odeint(
         exp_ops:
 
     Returns:
-        Tuple `(y_save, exp_save)` with
+        tuple `(y_save, exp_save)` with
             - `y_save` a tensor of shape `(..., len(t_save), m, n)`
             - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
@@ -314,8 +316,8 @@ def _odeint_adjoint(
     t_save: Tensor,
     save_states: bool,
     exp_ops: Tensor,
-    parameters: Tuple[nn.Parameter, ...],
-) -> Tuple[Tensor, Tensor]:
+    parameters: tuple[nn.Parameter, ...],
+) -> tuple[Tensor, Tensor]:
     """Integrate an ODE using the adjoint method in the backward pass.
 
     Within this function, the following calls are sequentially made:
@@ -340,10 +342,10 @@ def _odeint_augmented_main(
     qsolver: AdjointQSolver,
     y0: Tensor,
     a0: Tensor,
-    g0: Tuple[Tensor, ...],
+    g0: tuple[Tensor, ...],
     t_span: Tensor,
-    parameters: Tuple[nn.Parameter, ...],
-) -> Tuple[Tensor, Tensor]:
+    parameters: tuple[nn.Parameter, ...],
+) -> tuple[Tensor, Tensor]:
     """Integrate the augmented ODE backward."""
     if isinstance(qsolver.options, FixedStep):
         return _fixed_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
@@ -360,10 +362,10 @@ def _fixed_odeint_augmented(
     qsolver: AdjointQSolver,
     y0: Tensor,
     a0: Tensor,
-    g0: Tuple[Tensor, ...],
+    g0: tuple[Tensor, ...],
     t_span: Tensor,
-    parameters: Tuple[nn.Parameter, ...],
-) -> Tuple[Tensor, Tensor, Tuple[Tensor, ...]]:
+    parameters: tuple[nn.Parameter, ...],
+) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
     """Integrate the augmented ODE backward using a fixed time step solver."""
     # get time step from qsolver
     dt = qsolver.dt
@@ -416,8 +418,8 @@ class ODEIntAdjoint(torch.autograd.Function):
         t_save: Tensor,
         save_states: bool,
         exp_ops: Tensor,
-        *parameters: Tuple[nn.Parameter, ...],
-    ) -> Tuple[Tensor, Tensor]:
+        *parameters: tuple[nn.Parameter, ...],
+    ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.qsolver = qsolver
