@@ -60,7 +60,7 @@ class LeakyCavity(OpenSystem):
 
     def rho(self, t: float) -> Tensor:
         alpha_t = (
-            self.alpha0 * np.exp(-1j * self.delta * t) * np.exp(-self.kappa / 2 * t)
+            self.alpha0 * np.exp(-1j * self.delta * t) * np.exp(-0.5 * self.kappa * t)
         )
         rho_t = qt.coherent(self.n, alpha_t)
         return tq.ket_to_dm(tq.from_qutip(rho_t))
