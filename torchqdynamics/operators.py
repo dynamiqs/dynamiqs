@@ -5,7 +5,7 @@ from math import prod
 import torch
 from torch import Tensor, device, dtype
 
-from .utils import _extract_tuple_from_varargs, kron
+from .utils import _extract_tuple_from_varargs, tensprod
 
 __all__ = [
     'sigmax',
@@ -106,12 +106,12 @@ def destroy(
         _eye = qeye(dim, dtype=dtype, device=device)
 
         # update ops
-        ops.append(kron(eye, _a))
+        ops.append(tensprod(eye, _a))
         for j in range(i + 1):
-            ops[j] = kron(ops[j], _eye)
+            ops[j] = tensprod(ops[j], _eye)
 
         # update eye
-        eye = kron(eye, _eye)
+        eye = tensprod(eye, _eye)
 
     return tuple(ops)
 
@@ -174,12 +174,12 @@ def create(
         _eye = qeye(dim, dtype=dtype, device=device)
 
         # update ops
-        ops.append(kron(eye, _adag))
+        ops.append(tensprod(eye, _adag))
         for j in range(i + 1):
-            ops[j] = kron(ops[j], _eye)
+            ops[j] = tensprod(ops[j], _eye)
 
         # update eye
-        eye = kron(eye, _eye)
+        eye = tensprod(eye, _eye)
 
     return tuple(ops)
 
