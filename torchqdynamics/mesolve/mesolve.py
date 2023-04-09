@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import AdaptiveStep, Euler, SolverOption
+from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
@@ -18,12 +18,12 @@ from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 def mesolve(
     H: TDOperatorLike,
-    jump_ops: list[OperatorLike],
+    jump_ops: OperatorLike | list[OperatorLike],
     rho0: OperatorLike,
     t_save: TensorLike,
     *,
     save_states: bool = True,
-    exp_ops: list[OperatorLike] | None = None,
+    exp_ops: OperatorLike | list[OperatorLike] | None = None,
     solver: SolverOption | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
@@ -45,26 +45,28 @@ def mesolve(
     passed as... TODO Complete with full Hamiltonian format
 
     Available solvers:
-      - `Rouchon1` (alias of `Rouchon`)
-      - `Rouchon1_5`
-      - `Rouchon2`
+      - `Dopri45`: Dormand-Prince of order 5. Default solver.
+      - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`.
+      - `Rouchon1_5`: Rouchon method of order 1 with Kraus map trace renormalization.
+      - `Rouchon2`: Rouchon method of order 2.
+      - `Euler`: Euler method.
 
     Args:
         H (Tensor or Callable): Hamiltonian.
-            Can be a tensor of shape (n, n) or (b_H, n, n) if batched, or a callable
+            Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
             `H(t: float) -> Tensor` that returns a tensor of either possible shapes
             at every time between `t=0` and `t=t_save[-1]`.
-        jump_ops (list of Tensor): List of jump operators.
-            Each jump operator should be a tensor of shape (n, n).
+        jump_ops (Tensor, or list of Tensors): List of jump operators.
+            Each jump operator should be a tensor of shape `(n, n)`.
         rho0 (Tensor): Initial density matrix.
-            Tensor of shape (n, n) or (b_rho, n, n) if batched.
+            Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save (Tensor, np.ndarray or list): Times for which results are saved.
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
         save_states (bool, optional): If `True`, the density matrix is saved at every
             time value in `t_save`. If `False`, only the final density matrix is
             stored and returned. Defaults to `True`.
-        exp_ops (list of Tensor, optional): List of operators for which the expectation
-            value is computed at every time value in `t_save`.
+        exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
+            expectation value is computed at every time value in `t_save`.
         solver (SolverOption, optional): Solver used to compute the master equation
             solutions. See the list of available solvers.
         gradient_alg (str, optional): Algorithm used for computing gradients in the
@@ -84,30 +86,37 @@ def mesolve(
     """
     # TODO H is assumed to be time-independent from here (temporary)
 
+    # default solver
+    if solver is None:
+        solver = Dopri45()
+
     # convert H to a tensor and batch by default
     H = to_tensor(H)
-    H_batched = H[None, ...] if H.dim() == 2 else H
+    H_batched = H[None, ...] if H.ndim == 2 else H
 
     # convert jump_ops to a tensor
     if len(jump_ops) == 0:
-        raise ValueError('Argument `jump_ops` must be a non-empty list of tensors.')
+        raise ValueError(
+            'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
+            ' consider using `sesolve`.'
+        )
     jump_ops = to_tensor(jump_ops)
+    jump_ops = jump_ops[None, ...] if jump_ops.ndim == 2 else jump_ops
 
     # convert rho0 to a tensor and density matrix and batch by default
     rho0 = to_tensor(rho0)
     if is_ket(rho0):
         rho0 = ket_to_dm(rho0)
     b_H = H_batched.size(0)
-    rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
+    rho0_batched = rho0[None, ...] if rho0.ndim == 2 else rho0
     rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
+    # convert t_save to a tensor
     t_save = torch.as_tensor(t_save)
 
+    # convert exp_ops to a tensor
     exp_ops = to_tensor(exp_ops)
-
-    if solver is None:
-        # TODO Replace by adaptive time step solver when implemented.
-        solver = Rouchon1(dt=1e-2)
+    exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
     # define the QSolver
     args = (H_batched, jump_ops, solver)

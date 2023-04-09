@@ -62,7 +62,7 @@ class AdaptiveSolver(ABC):
         (1993), Springer Series in Computational Mathematics`.
         """
         scale = self.atol + self.rtol * torch.max(y0.abs(), y1.abs())
-        return float(hairer_norm(y_err / scale))
+        return hairer_norm(y_err / scale).max()
 
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
         """Initialize the time step of an adaptive step size solver.
@@ -72,7 +72,7 @@ class AdaptiveSolver(ABC):
         For this function, we keep the same notations as in the book.
         """
         sc = self.atol + torch.abs(y0) * self.rtol
-        d0, d1 = hairer_norm(y0 / sc), hairer_norm(f0 / sc)
+        d0, d1 = hairer_norm(y0 / sc).max(), hairer_norm(f0 / sc).max()
 
         if d0 < 1e-5 or d1 < 1e-5:
             h0 = 1e-6
@@ -81,7 +81,7 @@ class AdaptiveSolver(ABC):
 
         y1 = y0 + h0 * f0
         f1 = self.f(t0 + h0, y1)
-        d2 = hairer_norm((f1 - f0) / sc) / h0
+        d2 = hairer_norm((f1 - f0) / sc).max() / h0
         if d1 <= 1e-15 and d2 <= 1e-15:
             h1 = max(1e-6, h0 * 1e-3)
         else:
