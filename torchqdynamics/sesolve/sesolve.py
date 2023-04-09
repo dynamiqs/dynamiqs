@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..odeint import odeint
-from ..solver_options import AdaptiveStep, Euler, SolverOption
+from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
 from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from .adaptive import SEAdaptive
 from .euler import SEEuler
@@ -19,7 +19,7 @@ def sesolve(
     t_save: TensorLike,
     *,
     save_states: bool = True,
-    exp_ops: list[OperatorLike] | None = None,
+    exp_ops: OperatorLike | list[OperatorLike] | None = None,
     solver: SolverOption | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
@@ -36,23 +36,27 @@ def sesolve(
     # TODO support density matrices too
     # TODO H is assumed to be time-independent from here (temporary)
 
+    # default solver
+    if solver is None:
+        solver = Dopri45()
+
     # convert H to a tensor and batch by default
     H = to_tensor(H)
-    H_batched = H[None, ...] if H.dim() == 2 else H
+    H_batched = H[None, ...] if H.ndim == 2 else H
 
     # convert psi0 to a tensor and batch by default
     # TODO add test to check that psi0 has the correct shape
     b_H = H_batched.size(0)
     psi0 = to_tensor(psi0)
-    psi0_batched = psi0[None, ...] if psi0.dim() == 2 else psi0
+    psi0_batched = psi0[None, ...] if psi0.ndim == 2 else psi0
     psi0_batched = psi0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi0, n, 1)
 
+    # convert t_save to tensor
     t_save = torch.as_tensor(t_save)
 
+    # convert exp_ops to tensor
     exp_ops = to_tensor(exp_ops)
-
-    if solver is None:
-        solver = Euler(dt=1e-2)
+    exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
     # define the QSolver
     args = (H_batched, solver)
