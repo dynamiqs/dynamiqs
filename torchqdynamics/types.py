@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, get_args
+from typing import Callable, Union, get_args
 
 import numpy as np
 import torch
@@ -10,16 +10,16 @@ from torch import Tensor
 from .utils import from_qutip
 
 # TODO add typing for Hamiltonian with piecewise-constant factor
-TDOperator = Tensor | Callable[[float], Tensor]
+TDOperator = Union[Tensor, Callable[[float], Tensor]]
 
 # type for objects convertible to a torch tensor using `torch.as_tensor`
-TensorLike = list | np.ndarray | Tensor
+TensorLike = Union[list, np.ndarray, Tensor]
 
 # type for objects convertible to a torch tensor using `to_tensor`
-OperatorLike = TensorLike | Qobj
+OperatorLike = Union[TensorLike, Qobj]
 
 # type for objects convertible to a `TDOperator` using `time_dependent_to_tensor`
-TDOperatorLike = OperatorLike | Callable[[float], OperatorLike]
+TDOperatorLike = Union[OperatorLike, Callable[[float], OperatorLike]]
 
 
 def to_tensor(x: OperatorLike | list[OperatorLike] | None) -> Tensor:
