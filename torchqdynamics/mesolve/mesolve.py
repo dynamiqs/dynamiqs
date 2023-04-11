@@ -8,7 +8,7 @@ from torch import Tensor
 
 from ..odeint import odeint
 from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
-from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
+from ..tensor_types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
 from ..utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
