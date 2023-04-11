@@ -375,17 +375,21 @@ def _fixed_odeint_augmented(
     # check t_span
     if not (t_span.ndim == 1 and len(t_span) == 2):
         raise ValueError(
-            f'`t_span` should be a tensor of shape (2,), but has shape {t_span.shape}.'
+            f'`t_span` should be a tensor of size (2,), but has size {t_span.shape}.'
         )
     if t_span[1] <= t_span[0]:
         raise ValueError('`t_span` should be sorted in ascending order.')
 
     T = t_span[1] - t_span[0]
     if not torch.allclose(torch.round(T / dt), T / dt):
-        raise ValueError('The total time of evolution should be a multiple of dt.')
+        raise ValueError(
+            'For fixed time step adjoint solvers, every value of `t_save` must be a '
+            'multiple of the time step `dt`.'
+        )
 
     # define time values
-    times = torch.linspace(t_span[0], t_span[-1], torch.round(T / dt).int() + 1)
+    num_times = torch.round(T / dt).int() + 1
+    times = torch.linspace(t_span[1], t_span[0], num_times)
 
     # run the ode routine
     y, a, g = y0, a0, g0
