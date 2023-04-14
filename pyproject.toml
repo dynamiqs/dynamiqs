@@ -28,6 +28,7 @@ packages = ["torchqdynamics"]
 [tool.isort]
 profile = "black"
 skip = ["__init__.py"]
+skip_gitignore = true
 
 [tool.black]
 preview = true
