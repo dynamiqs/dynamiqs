@@ -55,7 +55,7 @@ class LeakyCavity(OpenSystem):
         ]
 
     def t_save(self, n: int) -> Tensor:
-        t_end = self.delta / (2 * np.pi)  # a full rotation
+        t_end = 1 / (self.delta / (2 * np.pi))  # a full rotation
         return torch.linspace(0.0, t_end, n)
 
     def rho(self, t: float) -> Tensor:
