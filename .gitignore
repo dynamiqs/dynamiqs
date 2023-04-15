@@ -24,4 +24,4 @@ dist/
 .python-version
 
 # pytest cache
-.pytest_cache
+.pytest_cache/
