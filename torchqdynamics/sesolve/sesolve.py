@@ -32,7 +32,6 @@ def sesolve(
     #     - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
 
     # TODO support density matrices too
-    # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
     H = to_tensor(H)

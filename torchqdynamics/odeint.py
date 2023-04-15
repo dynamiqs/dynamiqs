@@ -1,7 +1,7 @@
 import functools
 import warnings
 from abc import ABC, abstractmethod
-from typing import Literal, Optional, Tuple
+from typing import Callable, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -12,7 +12,6 @@ from .adaptive import DormandPrince45
 from .progress_bar import tqdm
 from .solver_options import AdaptiveStep, Dopri45, FixedStep
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
-from .types import OperatorLike
 
 
 def H_dependent(func):
@@ -51,34 +50,33 @@ class ForwardQSolver(ABC):
         """
         pass
 
-    def __init__(self, H):
+    def __init__(self, H: Union[Tensor, Callable]):
         """
         Args:
             H: Hamiltonian, of shape `(b_H, n, n)`.
         """
-        if isinstance(H, OperatorLike.__args__):
+        if isinstance(H, Tensor):
             if H.ndim == 3:
                 H = H[:, None, ...]  # (b_H, 1, n, n)
         self._H = H
-        self._previous_t = False
         self._cache = {}
 
     @H_dependent
-    def H(self, t):
-        if isinstance(self._H, OperatorLike.__args__):
+    def H(self, t: float) -> Tensor:
+        if isinstance(self._H, Tensor):
             return self._H
         elif callable(self._H):
             return self._H(t)
         else:
-            raise Exception('Piece-wise constant Hamiltonians not supported yet')
+            raise TypeError('Piecewise constant Hamiltonian not supported yet.')
 
-    def _H_changed(self, _t):
-        if isinstance(self._H, OperatorLike.__args__):
+    def _H_changed(self, _t: float) -> bool:
+        if isinstance(self._H, Tensor):
             return False
         elif callable(self._H):
             return True
         else:
-            raise Exception('Piece-wise constant Hamiltonians not supported yet')
+            raise TypeError('Piecewise constant Hamiltonian not supported yet.')
 
 
 class AdjointQSolver(ForwardQSolver):

@@ -80,7 +80,6 @@ def mesolve(
                 times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
                 len(exp_ops), len(t_save))` if batched.
     """
-    # TODO H is assumed to be time-independent from here (temporary)
 
     if isinstance(H, OperatorLike.__args__):
         # convert H to a tensor and batch by default
@@ -91,7 +90,7 @@ def mesolve(
         H_batched = H
     else:
         raise ValueError(
-            'H must be a tensor-like object or a callable or list of callables'
+            'H must be a tensor-like object or a callable or list of callables.'
         )
 
     # convert jump_ops to a tensor

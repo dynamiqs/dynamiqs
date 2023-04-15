@@ -1,8 +1,8 @@
+from math import sqrt
 from typing import Tuple
 
 import torch
 import torch.nn as nn
-from numpy import sqrt
 from torch import Tensor
 
 from ..odeint import AdjointQSolver, H_dependent
@@ -44,10 +44,8 @@ class MERouchon1(MERouchon):
         Returns:
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
-        M0 = self.M0(t)
-
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)
+        rho = kraus_map(rho, self.M0(t)) + kraus_map(rho, self.M1s)
 
         # normalize by the trace
         rho = rho / trace(rho)[..., None, None].real
@@ -55,21 +53,21 @@ class MERouchon1(MERouchon):
         return rho
 
     @H_dependent
-    def M0(self, t):
+    def M0(self, t: float) -> Tensor:
         # build time-dependent Kraus operators
         return self.I - 1j * self.dt * self.H_nh(t)  # (b_H, 1, n, n)
 
     @H_dependent
-    def Hdag_nh(self, t):
+    def Hdag_nh(self, t: float) -> Tensor:
         return self.H_nh(t).adjoint()
 
     @H_dependent
-    def H_nh(self, t):
+    def H_nh(self, t: float) -> Tensor:
         # non-hermitian Hamiltonian at time t
         return self.H(t) - 0.5j * self.sum_nojump
 
     @H_dependent
-    def M0_adj(self, t):
+    def M0_adj(self, t: float) -> Tensor:
         return self.I + 1j * self.dt * self.Hdag_nh(t)
 
     def backward_augmented(
