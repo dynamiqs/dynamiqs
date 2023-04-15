@@ -28,13 +28,13 @@ packages = ["torchqdynamics"]
 [tool.isort]
 profile = "black"
 skip = ["__init__.py", "venv"]
+skip_gitignore = true
 
 [tool.black]
 preview = true
 target-version = ["py38"]
 skip-string-normalization = true
 jupyter = true
-skip = ["venv"]
 
 [tool.codespell]
 skip = ".git,*.ipynb"
@@ -46,7 +46,9 @@ black = { cmd = "echo '\n>>> black' && black .", help = "auto-format the code (b
 codespell = { cmd = "echo '\n>>> codespell' && codespell tests torchqdynamics", help = "check for misspellings (codespell)" }
 flake8 = { cmd = "echo '\n>>> flake8' && flake8 tests torchqdynamics", help = "check code style (flake8)" }
 lint = { cmd = "task isort && task black && task codespell && task flake8", help = "lint the code and check style (isort + black + codespell + flake8)" }
-test = { cmd = "echo '\n>>> pytest' && pytest", help = "run the unit tests suite (pytest)" }
+test = { cmd = "echo '\n>>> pytest -v -m \"not long\"' && pytest -v -m \"not long\"", help = "run the unit tests suite excluding long tests (pytest)" }
+test-long = { cmd = "echo '\n>>> pytest -v -m \"long\"' && pytest -v -m \"long\"", help = "run the unit tests suite including only long tests (pytest)" }
+test-all = { cmd = "echo '\n>>> pytest' && pytest", help = "run the complete unit tests suite (pytest)" }
 all = { cmd = "task lint && task test", help = "run all tasks before a commit (isort + black + codespell + flake8 + pytest)" }
 ci = { cmd = """echo '\n>>> isort' && isort --check . &&
                 echo '\n>>> black' && black --check . &&
