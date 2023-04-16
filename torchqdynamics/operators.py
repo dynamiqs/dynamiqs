@@ -45,14 +45,14 @@ def sigmaz(
 def sigmap(
     *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
 ) -> Tensor:
-    """Pauli raising operator."""
+    r"""Pauli raising operator $\sigma_+$."""
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
 
 def sigmam(
     *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
 ) -> Tensor:
-    """Pauli lowering operator."""
+    r"""Pauli lowering operator $\sigma_-$."""
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
