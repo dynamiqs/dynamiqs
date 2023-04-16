@@ -44,7 +44,7 @@ class AdjointQSolver(ForwardQSolver):
             parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
 
         Returns:
-            tuple of two tensors of shape `(..., m, n)`.
+            Tuple of two tensors of shape `(..., m, n)`.
         """
         pass
 
@@ -72,7 +72,7 @@ def odeint(
         parameters:
 
     Returns:
-        tuple `(y_save, exp_save)` with
+        Tuple `(y_save, exp_save)` with
             - `y_save` a tensor of shape `(..., len(t_save), m, n)`
             - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
@@ -256,7 +256,7 @@ def _fixed_odeint(
         exp_ops:
 
     Returns:
-        tuple `(y_save, exp_save)` with
+        Tuple `(y_save, exp_save)` with
             - `y_save` a tensor of shape `(..., len(t_save), m, n)`
             - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """

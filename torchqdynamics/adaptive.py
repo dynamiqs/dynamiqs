@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Callable
 
 import torch
-from torch import Tensor, device, dtype
+from torch import Tensor
 from torch._prims_common import corresponding_real_dtype as to_float
 
 from .solver_utils import hairer_norm
@@ -27,9 +27,9 @@ class AdaptiveSolver(ABC):
         max_factor: float = 5.0,
         atol: float = 1e-8,
         rtol: float = 1e-6,
-        t_dtype: dtype = torch.float64,
-        y_dtype: dtype = torch.complex128,
-        device: device | None = None,
+        t_dtype: torch.dtype = torch.float64,
+        y_dtype: torch.dtype = torch.complex128,
+        device: torch.device | None = None,
     ):
         self.f = f
         self.factor = factor
