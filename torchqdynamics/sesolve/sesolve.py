@@ -36,10 +36,6 @@ def sesolve(
     # TODO support density matrices too
     # TODO H is assumed to be time-independent from here (temporary)
 
-    # default solver
-    if solver is None:
-        solver = Dopri45()
-
     # convert H to a tensor and batch by default
     H = to_tensor(H)
     H_batched = H[None, ...] if H.ndim == 2 else H
@@ -57,6 +53,10 @@ def sesolve(
     # convert exp_ops to tensor
     exp_ops = to_tensor(exp_ops)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
+
+    # default solver
+    if solver is None:
+        solver = Dopri45()
 
     # define the QSolver
     args = (H_batched, solver)
