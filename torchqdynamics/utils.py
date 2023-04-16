@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Sequence
+from functools import reduce
 
 import torch
 from qutip import Qobj
@@ -195,35 +195,14 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
 
-def tensprod(*x: Tensor):
+def tensprod(*x: Tensor) -> Tensor:
     """Compute the tensor product of a sequence of state vectors, density matrices or
     operators.
 
     Note:
         This function is the equivalent of `qutip.tensor`.
     """
-    x = _extract_tuple_from_varargs(x)
-    y = x[0]
-    for _x in x[1:]:
-        y = torch.tensprod(y, _x)
-    return y
-
-
-def _extract_tuple_from_varargs(x: tuple | tuple[tuple]) -> tuple:
-    """Returns a tuple from varargs.
-
-    This copies the behavior of PyTorch which accepts both varargs as `foo(1,2,3)` or
-    `foo((1,2,3,))`.
-    """
-    # Check tuple is not empty
-    if len(x) == 0:
-        raise TypeError('No arguments were supplied.')
-
-    # Handles tuple unwrapping
-    if len(x) == 1 and isinstance(x[0], Sequence):
-        x = x[0]
-
-    return x
+    return reduce(torch.kron, x)
 
 
 def trace(rho: Tensor) -> Tensor:

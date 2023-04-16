@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import prod
 
 import torch
-from torch import Tensor, device, dtype
+from torch import Tensor
 
 from .operators import displace
 from .utils import ket_to_dm
@@ -15,11 +15,10 @@ def fock(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
-    dtype: dtype = torch.complex128,
-    device: device = None,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device = None,
 ) -> Tensor:
-    """Generate the state vector of a single-mode Fock state, or of a tensor product of
-    Fock states.
+    """State vector of a Fock state, or of a tensor product of Fock states.
 
     Example:
         >>> tq.fock(3, 1)
@@ -34,11 +33,9 @@ def fock(
                 [0.+0.j],
                 [0.+0.j]], dtype=torch.complex128)
     """
-    # Convert integer inputs to tuples by default, and check dimensions match
-    if isinstance(dims, int):
-        dims = (dims,)
-    if isinstance(states, int):
-        states = (states,)
+    # convert integer inputs to tuples by default, and check dimensions match
+    dims = (dims,) if isinstance(dims, int) else dims
+    states = (states,) if isinstance(states, int) else states
     if len(dims) != len(states):
         raise ValueError(
             f'Arguments `dims` ({len(dims)}) and `states` ({len(states)}) do not have'
@@ -58,11 +55,10 @@ def fock_dm(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
-    dtype: dtype = torch.complex128,
-    device: device = None,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device = None,
 ) -> Tensor:
-    """Generate the density matrix of a single-mode Fock state, or of a tensor product
-    of Fock states.
+    """Density matrix of a Fock state, or of a tensor product of Fock states.
 
     Example:
         >>> tq.fock_dm(3, 1)
@@ -82,9 +78,13 @@ def fock_dm(
 
 
 def coherent(
-    dim: int, alpha: complex, *, dtype: dtype = torch.complex128, device: device = None
+    dim: int,
+    alpha: complex,
+    *,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device = None,
 ) -> Tensor:
-    """Generate the state vector of a single-mode coherent state.
+    """State vector of a coherent state.
 
     Example:
         >>> tq.coherent(5, 0.2)
@@ -94,15 +94,17 @@ def coherent(
                 [0.003+0.j],
                 [0.000+0.j]], dtype=torch.complex128)
     """
-    vac = fock(dim, 0)
-    D = displace(dim, alpha, dtype=dtype, device=device)
-    return D @ vac
+    return displace(dim, alpha, dtype=dtype, device=device) @ fock(dim, 0)
 
 
 def coherent_dm(
-    dim: int, alpha: complex, *, dtype: dtype = torch.complex128, device: device = None
+    dim: int,
+    alpha: complex,
+    *,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device = None,
 ) -> Tensor:
-    """Generate the density matrix of a single-mode coherent state.
+    """Density matrix of a coherent state.
 
     Example:
         >>> tq.coherent(5, 0.2)

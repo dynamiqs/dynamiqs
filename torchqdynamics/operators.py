@@ -3,9 +3,9 @@ from __future__ import annotations
 from math import prod
 
 import torch
-from torch import Tensor, device, dtype
+from torch import Tensor
 
-from .utils import _extract_tuple_from_varargs, tensprod
+from .utils import tensprod
 
 __all__ = [
     'sigmax',
@@ -13,7 +13,7 @@ __all__ = [
     'sigmaz',
     'sigmap',
     'sigmam',
-    'qeye',
+    'eye',
     'destroy',
     'create',
     'displace',
@@ -21,42 +21,53 @@ __all__ = [
 ]
 
 
-def sigmax(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
-    """Pauli X operator."""
+def sigmax(
+    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
+) -> Tensor:
+    """Pauli $X$ operator."""
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmay(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
-    """Pauli Y operator."""
+def sigmay(
+    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
+) -> Tensor:
+    """Pauli $Y$ operator."""
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
 
-def sigmaz(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
-    """Pauli Z operator."""
+def sigmaz(
+    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
+) -> Tensor:
+    """Pauli $Z$ operator."""
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
 
-def sigmap(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
+def sigmap(
+    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
+) -> Tensor:
     """Pauli raising operator."""
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmam(*, dtype: dtype = torch.complex128, device: device | None = None) -> Tensor:
+def sigmam(
+    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
+) -> Tensor:
     """Pauli lowering operator."""
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def qeye(
-    *dims: int, dtype: dtype = torch.complex128, device: device | None = None
+def eye(
+    *dims: int,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Identity operator."""
-    dims = _extract_tuple_from_varargs(dims)
     dim = prod(dims)
     return torch.eye(dim, dtype=dtype, device=device)
 
 
 def destroy(
-    *dims: int, dtype: dtype = torch.complex128, device: device = None
+    *dims: int, dtype: torch.dtype = torch.complex128, device: torch.device = None
 ) -> Tensor | tuple[Tensor, ...]:
     """Bosonic annihilation operator.
 
@@ -90,8 +101,6 @@ def destroy(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
     """
-    dims = _extract_tuple_from_varargs(dims)
-
     # compute first destroy operator
     a = _destroy_single(dims[0], dtype=dtype, device=device)
     if len(dims) == 1:
@@ -99,32 +108,37 @@ def destroy(
 
     # compute all annihilation operators
     ops = [a]
-    eye = qeye(dims[0], dtype=dtype, device=device)
+    identity = eye(dims[0], dtype=dtype, device=device)
     for i, dim in enumerate(dims[1:]):
         # single mode operators
         _a = _destroy_single(dim, dtype=dtype, device=device)
-        _eye = qeye(dim, dtype=dtype, device=device)
+        _id = eye(dim, dtype=dtype, device=device)
 
         # update ops
-        ops.append(tensprod(eye, _a))
+        ops.append(tensprod(identity, _a))
         for j in range(i + 1):
-            ops[j] = tensprod(ops[j], _eye)
+            ops[j] = tensprod(ops[j], _id)
 
-        # update eye
-        eye = tensprod(eye, _eye)
+        # update identity
+        identity = tensprod(identity, _id)
 
     return tuple(ops)
 
 
 def _destroy_single(
-    dim: int, *, dtype: dtype = torch.complex128, device: device | None = None
+    dim: int,
+    *,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device | None = None,
 ) -> Tensor:
-    """Bosonic annihilation operator of a single mode."""
+    """Bosonic annihilation operator."""
     return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), 1).to(dtype)
 
 
 def create(
-    *dims: int, dtype: dtype = torch.complex128, device: device | None = None
+    *dims: int,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device | None = None,
 ) -> Tensor | tuple[Tensor, ...]:
     """Bosonic creation operator.
 
@@ -158,8 +172,6 @@ def create(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
     """
-    dims = _extract_tuple_from_varargs(dims)
-
     # compute first destroy operator
     adag = _create_single(dims[0], dtype=dtype, device=device)
     if len(dims) == 1:
@@ -167,27 +179,30 @@ def create(
 
     # compute all creation operators
     ops = [adag]
-    eye = qeye(dims[0], dtype=dtype, device=device)
+    identity = eye(dims[0], dtype=dtype, device=device)
     for i, dim in enumerate(dims[1:]):
         # single mode operators
         _adag = _create_single(dim, dtype=dtype, device=device)
-        _eye = qeye(dim, dtype=dtype, device=device)
+        _id = eye(dim, dtype=dtype, device=device)
 
         # update ops
-        ops.append(tensprod(eye, _adag))
+        ops.append(tensprod(identity, _adag))
         for j in range(i + 1):
-            ops[j] = tensprod(ops[j], _eye)
+            ops[j] = tensprod(ops[j], _id)
 
-        # update eye
-        eye = tensprod(eye, _eye)
+        # update identity
+        identity = tensprod(identity, _id)
 
     return tuple(ops)
 
 
 def _create_single(
-    dim: int, *, dtype: dtype = torch.complex128, device: device | None = None
+    dim: int,
+    *,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device | None = None,
 ) -> Tensor:
-    """Bosonic creation operator of a single mode."""
+    """Bosonic creation operator."""
     return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), -1).to(dtype)
 
 
@@ -195,10 +210,10 @@ def displace(
     dim: int,
     alpha: complex,
     *,
-    dtype: dtype = torch.complex128,
-    device: device | None = None,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device | None = None,
 ) -> Tensor:
-    """Single-mode displacement operator."""
+    """Displacement operator."""
     a = destroy(dim, dtype=dtype, device=device)
     return torch.matrix_exp(alpha * a.adjoint() - alpha.conjugate() * a)
 
@@ -207,10 +222,10 @@ def squeeze(
     dim: int,
     z: complex,
     *,
-    dtype: dtype = torch.complex128,
-    device: device | None = None,
+    dtype: torch.dtype = torch.complex128,
+    device: torch.device | None = None,
 ) -> Tensor:
-    """Single-mode displacement operator."""
+    """Squeezing operator."""
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
     return torch.matrix_exp(0.5 * (z.conjugate() * a2 - z * a2.adjoint()))
