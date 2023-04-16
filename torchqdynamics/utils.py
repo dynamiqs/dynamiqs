@@ -213,9 +213,11 @@ def ptrace(
             state vector or density matrix.
 
     Example:
-        >>> rho = tq.tensprod(tq.coherent_dm(20, 2.0),
-                              tq.fock_dm(2, 0),
-                              tq.fock_dm(5, 1))
+        >>> rho = tq.tensprod(
+                tq.coherent_dm(20, 2.0),
+                tq.fock_dm(2, 0),
+                tq.fock_dm(5, 1)
+            )
         >>> rhoA = tq.ptrace(rho, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
@@ -224,10 +226,7 @@ def ptrace(
         torch.Size([10, 10])
     """
     # convert keep and dims to tensors
-    if isinstance(keep, int):
-        keep = torch.as_tensor([keep])
-    elif isinstance(keep, tuple):
-        keep = torch.as_tensor(keep)  # e.g. [1, 2]
+    keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
     dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
     ndims = len(dims)  # e.g. 3
 
@@ -255,25 +254,26 @@ def ptrace(
     eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
 
     # trace out x over unkept dimensions
+    batch_dims = x.shape[:-2]
     if is_ket(x):
-        x = x.reshape(-1, *dims)  # e.g. (..., 20, 2, 5)
+        x = x.view(-1, *dims)  # e.g. (..., 20, 2, 5)
         eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
         x = torch.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     else:
-        x = x.reshape(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        x = x.view(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
         eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
         x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
 
     # reshape to final dimension
     nkeep = torch.prod(dims[keep])  # e.g. 10
-    return x.reshape(-1, nkeep, nkeep)  # e.g. (..., 10, 10)
+    return x.reshape(*batch_dims, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Compute the expectation values of an operator on a state vector or a density
+    r"""Compute the expectation value of an operator on a state vector or a density
     matrix.
 
-    The expectation value $\braket{O}$ of a single operator $O$ is computed
+    The expectation value $\braket{O}$ of an operator $O$ is computed
     - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
     - as $\braket{O}=\tr(O\rho)$ if `x` is a density matrix $\rho$.
 
