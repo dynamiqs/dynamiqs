@@ -3,7 +3,7 @@ from torch import Tensor
 from ..odeint import ForwardQSolver
 from ..solver_options import SolverOption
 from ..solver_utils import lindbladian
-from ..types import TDOperator
+from ..tensor_types import TDOperator
 
 
 class MEEuler(ForwardQSolver):

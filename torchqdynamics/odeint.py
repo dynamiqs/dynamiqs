@@ -151,12 +151,13 @@ def _adaptive_odeint(
 
     # save initial solution
     save_counter = 0
+    save_flag = False
     if t_save[0] == 0.0:
-        save_counter += 1
         if save_states:
             y_save[..., save_counter, :, :] = y0
         if len(exp_ops) > 0:
             exp_save[..., save_counter] = bexpect(exp_ops, y0)
+        save_counter += 1
 
     # initialize the adaptive solver
     args = (
@@ -189,7 +190,7 @@ def _adaptive_odeint(
         if t + dt >= t_save[save_counter]:
             save_flag = True
             dt_old = dt
-            dt = float(t_save[save_counter] - t)
+            dt = t_save[save_counter] - t
 
         # perform a single solver step of size dt
         ft_new, y_new, y_err = solver.step(ft, y, t, dt)
@@ -202,7 +203,7 @@ def _adaptive_odeint(
             t, y, ft = t + dt, y_new, ft_new
 
             # update the progress bar
-            pbar.update(dt)
+            pbar.update(dt.item())
 
             # save results if flag is raised
             if save_flag:
@@ -265,7 +266,8 @@ def _fixed_odeint(
     # assert that `t_save` values are multiples of `dt`
     if not torch.allclose(torch.round(t_save / dt), t_save / dt):
         raise ValueError(
-            'Every value of argument `t_save` must be a multiple of the time step `dt`.'
+            'For fixed time step solvers, every value of `t_save` must be a multiple of'
+            ' the time step `dt`.'
         )
 
     # initialize save tensors
@@ -373,17 +375,21 @@ def _fixed_odeint_augmented(
     # check t_span
     if not (t_span.ndim == 1 and len(t_span) == 2):
         raise ValueError(
-            f'`t_span` should be a tensor of shape (2,), but has shape {t_span.shape}.'
+            f'`t_span` should be a tensor of size (2,), but has size {t_span.shape}.'
         )
     if t_span[1] <= t_span[0]:
         raise ValueError('`t_span` should be sorted in ascending order.')
 
     T = t_span[1] - t_span[0]
     if not torch.allclose(torch.round(T / dt), T / dt):
-        raise ValueError('The total time of evolution should be a multiple of dt.')
+        raise ValueError(
+            'For fixed time step adjoint solvers, every value of `t_save` must be a '
+            'multiple of the time step `dt`.'
+        )
 
     # define time values
-    times = torch.linspace(t_span[0], t_span[-1], torch.round(T / dt).int() + 1)
+    num_times = torch.round(T / dt).int() + 1
+    times = torch.linspace(t_span[1], t_span[0], num_times)
 
     # run the ode routine
     y, a, g = y0, a0, g0

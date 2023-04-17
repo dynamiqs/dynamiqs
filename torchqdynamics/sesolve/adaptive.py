@@ -2,7 +2,7 @@ from torch import Tensor
 
 from ..odeint import ForwardQSolver
 from ..solver_options import SolverOption
-from ..types import TDOperator
+from ..tensor_types import TDOperator
 
 
 class SEAdaptive(ForwardQSolver):

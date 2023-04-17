@@ -2,8 +2,8 @@ from torch import Tensor
 
 from ..odeint import ForwardQSolver
 from ..solver_options import SolverOption
-from ..solver_utils import lindbladian
-from ..types import TDOperator
+from ..solver_utils import kraus_map
+from ..tensor_types import TDOperator
 
 
 class MEAdaptive(ForwardQSolver):
@@ -15,4 +15,10 @@ class MEAdaptive(ForwardQSolver):
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         """Compute drho / dt = L(rho) at time t."""
-        return lindbladian(rho, self.H, self.jump_ops)
+        # non-hermitian Hamiltonian
+        H_nh = self.H - 0.5j * self.sum_nojump
+
+        # compute Lindblad(t) @ rho
+        H_nh_rho = H_nh @ rho
+        L_rho_Ldag = kraus_map(rho, self.jump_ops)
+        return -1j * (H_nh_rho - H_nh_rho.adjoint()) + L_rho_Ldag

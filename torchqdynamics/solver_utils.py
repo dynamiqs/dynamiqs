@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from math import sqrt
+
 import torch
 from torch import Tensor
 
@@ -99,4 +101,4 @@ def hairer_norm(x: Tensor) -> Tensor:
     Returns:
         Tensor of size `(...)` holding the norm of each matrix in the batch.
     """
-    return torch.linalg.matrix_norm(x) / torch.sqrt(x.size(-1) * x.size(-2))
+    return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))

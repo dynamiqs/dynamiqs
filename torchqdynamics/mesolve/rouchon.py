@@ -9,7 +9,7 @@ from torch import Tensor
 from ..odeint import AdjointQSolver
 from ..solver_options import SolverOption
 from ..solver_utils import inv_sqrtm, kraus_map
-from ..types import TDOperator
+from ..tensor_types import TDOperator
 from ..utils import trace
 
 
