@@ -5,9 +5,9 @@ from typing import Callable
 
 import torch
 from torch import Tensor
-from torch._prims_common import corresponding_real_dtype as to_float
 
 from .solver_utils import hairer_norm
+from .tensor_types import dtype_complex_to_float
 
 
 class AdaptiveSolver(ABC):
@@ -142,11 +142,11 @@ class DormandPrince45(AdaptiveSolver):
 
         # extract target information
         dtype = target.dtype
-        real_dtype = to_float(dtype)
+        float_dtype = dtype_complex_to_float(dtype)
         device = target.device
 
         # initialize tensors
-        alpha = torch.tensor(alpha, dtype=real_dtype, device=device)
+        alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
         beta = torch.tensor(beta, dtype=dtype, device=device)
         csol5 = torch.tensor(csol5, dtype=dtype, device=device)
         csol4 = torch.tensor(csol4, dtype=dtype, device=device)

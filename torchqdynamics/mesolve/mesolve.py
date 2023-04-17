@@ -8,7 +8,13 @@ from torch import Tensor
 
 from ..odeint import odeint
 from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
-from ..tensor_types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
+from ..tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    TensorLike,
+    dtype_complex_to_float,
+    to_tensor,
+)
 from ..utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
@@ -75,9 +81,9 @@ def mesolve(
             backward pass. Defaults to `None`.
         parameters (tuple of nn.Parameter): Parameters with respect to which gradients
             are computed during the adjoint state backward pass.
-        dtype (torch.dtype, optional): Data type of the complex tensors (i.e. all
-            arguments but `t_save`, whose type is inferred from the underlying data
-            type).
+        dtype (torch.dtype, optional): Complex data type to which all complex-valued
+            tensors are converted. `t_save` is also converted to a real data type of
+            the corresponding precision.
         device (torch.device, optional): Device on which the tensors are stored.
 
     Returns:
@@ -114,7 +120,7 @@ def mesolve(
     rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
     # convert t_save to a tensor
-    t_save = torch.as_tensor(t_save, device=device)
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
 
     # convert exp_ops to a tensor
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)

@@ -99,6 +99,13 @@ def complex_tensor(func):
     return wrapper
 
 
+def dtype_complex_to_float(
+    dtype: torch.complex64 | torch.complex128 | None = None,
+) -> torch.float32 | torch.float64:
+    dtype = cdtype(dtype)
+    return torch.float64 if dtype is torch.complex128 else torch.float32
+
+
 @complex_tensor
 def from_qutip(x: Qobj, *, dtype=None, device=None) -> Tensor:
     """Convert a QuTiP quantum object to a PyTorch tensor.

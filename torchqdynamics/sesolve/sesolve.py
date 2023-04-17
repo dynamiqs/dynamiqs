@@ -8,7 +8,13 @@ from torch import Tensor
 
 from ..odeint import odeint
 from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
-from ..tensor_types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
+from ..tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    TensorLike,
+    dtype_complex_to_float,
+    to_tensor,
+)
 from .adaptive import SEAdaptive
 from .euler import SEEuler
 
@@ -50,7 +56,7 @@ def sesolve(
     psi0_batched = psi0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi0, n, 1)
 
     # convert t_save to tensor
-    t_save = torch.as_tensor(t_save)
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
 
     # convert exp_ops to tensor
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
