@@ -101,28 +101,15 @@ def destroy(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
     """
-    # compute first destroy operator
-    a = _destroy_single(dims[0], dtype=dtype, device=device)
     if len(dims) == 1:
-        return a
+        return _destroy_single(dims[0], dtype=dtype, device=device)
 
-    # compute all annihilation operators
-    ops = [a]
-    identity = eye(dims[0], dtype=dtype, device=device)
-    for i, dim in enumerate(dims[1:]):
-        # single mode operators
-        _a = _destroy_single(dim, dtype=dtype, device=device)
-        _id = eye(dim, dtype=dtype, device=device)
-
-        # update ops
-        ops.append(tensprod(identity, _a))
-        for j in range(i + 1):
-            ops[j] = tensprod(ops[j], _id)
-
-        # update identity
-        identity = tensprod(identity, _id)
-
-    return tuple(ops)
+    a = [_destroy_single(dim, dtype=dtype, device=device) for dim in dims]
+    I = [eye(dim, dtype=dtype, device=device) for dim in dims]
+    return tuple(
+        tensprod(*[a[j] if i == j else I[i] for j in range(len(dims))])
+        for i in range(len(dims))
+    )
 
 
 def _destroy_single(
@@ -132,7 +119,7 @@ def _destroy_single(
     device: torch.device | None = None,
 ) -> Tensor:
     """Bosonic annihilation operator."""
-    return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), 1).to(dtype)
+    return torch.arange(1, dim, device=device).sqrt().diag(1).to(dtype)
 
 
 def create(
@@ -172,28 +159,15 @@ def create(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
     """
-    # compute first destroy operator
-    adag = _create_single(dims[0], dtype=dtype, device=device)
     if len(dims) == 1:
-        return adag
+        return _create_single(dims[0], dtype=dtype, device=device)
 
-    # compute all creation operators
-    ops = [adag]
-    identity = eye(dims[0], dtype=dtype, device=device)
-    for i, dim in enumerate(dims[1:]):
-        # single mode operators
-        _adag = _create_single(dim, dtype=dtype, device=device)
-        _id = eye(dim, dtype=dtype, device=device)
-
-        # update ops
-        ops.append(tensprod(identity, _adag))
-        for j in range(i + 1):
-            ops[j] = tensprod(ops[j], _id)
-
-        # update identity
-        identity = tensprod(identity, _id)
-
-    return tuple(ops)
+    adag = [_create_single(dim, dtype=dtype, device=device) for dim in dims]
+    I = [eye(dim, dtype=dtype, device=device) for dim in dims]
+    return tuple(
+        tensprod(*[adag[j] if i == j else I[i] for j in range(len(dims))])
+        for i in range(len(dims))
+    )
 
 
 def _create_single(
@@ -203,7 +177,7 @@ def _create_single(
     device: torch.device | None = None,
 ) -> Tensor:
     """Bosonic creation operator."""
-    return torch.diag(torch.sqrt(torch.arange(1, dim, device=device)), -1).to(dtype)
+    return torch.arange(1, dim, device=device).sqrt().diag(-1).to(dtype)
 
 
 def displace(
