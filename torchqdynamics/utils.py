@@ -1,8 +1,25 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 
 import torch
 from qutip import Qobj
 from torch import Tensor
+
+__all__ = [
+    'is_ket',
+    'ket_to_bra',
+    'ket_to_dm',
+    'ket_overlap',
+    'ket_fidelity',
+    'dm_fidelity',
+    'sqrtm',
+    'dissipator',
+    'lindbladian',
+    'trace',
+    'ptrace',
+    'expect',
+    'from_qutip',
+    'to_qutip',
+]
 
 
 def is_ket(x: Tensor) -> Tensor:
@@ -179,19 +196,102 @@ def trace(rho: Tensor) -> Tensor:
     return torch.einsum('...ii', rho)
 
 
-def expect(operator: Tensor, state: Tensor) -> Tensor:
-    """Compute the expectation value of an operator on a quantum state or density
-    matrix. The method is batchable over the state, but not over the operator.
+def ptrace(
+    x: Tensor, keep: Union[int, Tuple[int, ...]], dims: Tuple[int, ...]
+) -> Tensor:
+    """Compute the partial trace of a state vector or density matrix.
 
     Args:
-        operator: tensor of shape (n, n)
-        state: tensor of shape (..., n, n) or (..., n)
+        x: Tensor of size `(..., n, 1)` or `(..., n, n)`
+        keep: Int or tuple of ints containing the dimensions to keep for the
+            partial trace.
+        dims: Tuple of ints specifying the dimensions of each subsystem in the
+            Hilbert space tensor product.
+
     Returns:
-        expectation value of shape (...)
+        Tensor of size `(..., m, m)` with `m <= n` containing the partially traced out
+            state vector or density matrix.
+
+    Example:
+        >>> rho = tq.tensprod(
+                tq.coherent_dm(20, 2.0),
+                tq.fock_dm(2, 0),
+                tq.fock_dm(5, 1)
+            )
+        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 5))
+        >>> rhoA.shape
+        torch.Size([20, 20])
+        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 5))
+        >>> rhoBC.shape
+        torch.Size([10, 10])
     """
-    # TODO Once QTensor is implemented, check if state is a density matrix or ket.
-    # For now, we assume it is a density matrix.
-    return torch.einsum('ij,...ji', operator, state)
+    # convert keep and dims to tensors
+    keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
+    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
+    ndims = len(dims)  # e.g. 3
+
+    # check that input dimensions match
+    if not torch.prod(dims) == x.size(-2):
+        raise ValueError(
+            f'Input `dims` {dims.tolist()} does not match the input '
+            f'tensor size of {x.size(-2)}.'
+        )
+    if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
+        raise ValueError(
+            f'Input `keep` {keep.tolist()} does not match the Hilbert '
+            f'space structure {dims.tolist()}.'
+        )
+
+    # sort keep
+    keep = keep.sort()[0]
+
+    # create einsum alphabet
+    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+
+    # compute einsum equations
+    eq1 = alphabet[:ndims]  # e.g. 'abc'
+    unused = iter(alphabet[ndims:])
+    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
+
+    # trace out x over unkept dimensions
+    batch_dims = x.shape[:-2]
+    if is_ket(x):
+        x = x.view(-1, *dims)  # e.g. (..., 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
+        x = torch.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
+    else:
+        x = x.view(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
+        x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
+
+    # reshape to final dimension
+    nkeep = torch.prod(dims[keep])  # e.g. 10
+    return x.reshape(*batch_dims, nkeep, nkeep)  # e.g. (..., 10, 10)
+
+
+def expect(O: Tensor, x: Tensor) -> Tensor:
+    r"""Compute the expectation value of an operator on a state vector or a density
+    matrix.
+
+    The expectation value $\braket{O}$ of an operator $O$ is computed
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
+    - as $\braket{O}=\tr(O\rho)$ if `x` is a density matrix $\rho$.
+
+    Note:
+        The returned tensor is complex-valued.
+
+    TODO Adapt to bras.
+
+    Args:
+        O: Tensor of size `(n, n)`
+        x: Tensor of size `(..., n, 1)` or `(..., n, n)`
+
+    Returns:
+        Tensor of size `(...)` holding the operator expectation values.
+    """
+    if is_ket(x):
+        return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
+    return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
 
 
 def from_qutip(x: Qobj) -> Tensor:

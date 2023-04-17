@@ -47,7 +47,7 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     Note:
         The returned tensor is complex-valued.
 
-    TODO Adapt to both density matrices, kets and bras.
+    TODO Adapt to bras.
 
     Args:
         O: Tensor of size `(b, n, n)`.
