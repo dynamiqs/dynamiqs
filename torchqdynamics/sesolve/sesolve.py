@@ -23,6 +23,8 @@ def sesolve(
     solver: SolverOption | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor]:
     # Args:
     #     H: (b_H?, n, n)
@@ -37,13 +39,13 @@ def sesolve(
     # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
-    H = to_tensor(H)
+    H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
     H_batched = H[None, ...] if H.ndim == 2 else H
 
     # convert psi0 to a tensor and batch by default
     # TODO add test to check that psi0 has the correct shape
     b_H = H_batched.size(0)
-    psi0 = to_tensor(psi0)
+    psi0 = to_tensor(psi0, dtype=dtype, device=device, is_complex=True)
     psi0_batched = psi0[None, ...] if psi0.ndim == 2 else psi0
     psi0_batched = psi0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi0, n, 1)
 
@@ -51,7 +53,7 @@ def sesolve(
     t_save = torch.as_tensor(t_save)
 
     # convert exp_ops to tensor
-    exp_ops = to_tensor(exp_ops)
+    exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
     # default solver

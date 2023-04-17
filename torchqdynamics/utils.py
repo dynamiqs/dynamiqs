@@ -3,7 +3,6 @@ from __future__ import annotations
 from functools import reduce
 
 import torch
-from qutip import Qobj
 from torch import Tensor
 
 __all__ = [
@@ -20,8 +19,6 @@ __all__ = [
     'trace',
     'ptrace',
     'expect',
-    'from_qutip',
-    'to_qutip',
 ]
 
 
@@ -123,7 +120,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     eigvals_tmp = torch.linalg.eigvalsh(tmp)
 
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    zero = torch.zeros((), device=x.device, dtype=x.dtype)
+    zero = torch.zeros((), dtype=x.dtype, device=x.device)
     eigvals_tmp = eigvals_tmp.where(eigvals_tmp >= 0, zero)
 
     trace_sqrtm_tmp = torch.sqrt(eigvals_tmp).sum(-1)
@@ -143,7 +140,7 @@ def sqrtm(x: Tensor) -> Tensor:
     # code copied from
     # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
     L, Q = torch.linalg.eigh(x)
-    zero = torch.zeros((), device=L.device, dtype=L.dtype)
+    zero = torch.zeros((), dtype=L.dtype, device=L.device)
     threshold = L.max(-1).values * L.size(-1) * torch.finfo(L.dtype).eps
     L = L.where(L > threshold.unsqueeze(-1), zero)  # zero out small components
     return (Q * L.sqrt().unsqueeze(-2)) @ Q.mH
@@ -304,28 +301,3 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
     return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
-
-
-def from_qutip(x: Qobj) -> Tensor:
-    """Convert a QuTiP quantum object to a PyTorch tensor.
-
-    Args:
-        x: QuTiP quantum object.
-
-    Returns:
-        PyTorch tensor.
-    """
-    return torch.from_numpy(x.full())
-
-
-def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
-    """Convert a PyTorch tensor to a QuTiP quantum object.
-
-    Args:
-        x: PyTorch tensor.
-        dims: QuTiP object dimensions.
-
-    Returns:
-        QuTiP quantum object.
-    """
-    return Qobj(x.numpy(force=True), dims=dims)

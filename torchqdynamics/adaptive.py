@@ -27,9 +27,6 @@ class AdaptiveSolver(ABC):
         max_factor: float = 5.0,
         atol: float = 1e-8,
         rtol: float = 1e-6,
-        t_dtype: torch.dtype = torch.float64,
-        y_dtype: torch.dtype = torch.complex128,
-        device: torch.device | None = None,
     ):
         self.f = f
         self.factor = factor
@@ -37,14 +34,11 @@ class AdaptiveSolver(ABC):
         self.max_factor = max_factor
         self.atol = atol
         self.rtol = rtol
-        self.t_dtype = t_dtype
-        self.y_dtype = y_dtype
-        self.device = device
         self.order = None
         self.tableau = None
 
     @abstractmethod
-    def build_tableau(self):
+    def build_tableau(self, target: Tensor):
         """Build the Butcher tableau of the integrator."""
         pass
 

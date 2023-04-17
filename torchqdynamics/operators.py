@@ -5,6 +5,7 @@ from math import prod
 import torch
 from torch import Tensor
 
+from .tensor_types import complex_tensor
 from .utils import tensprod
 
 __all__ = [
@@ -21,54 +22,45 @@ __all__ = [
 ]
 
 
-def sigmax(
-    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
-) -> Tensor:
+@complex_tensor
+def sigmax(*, dtype=None, device=None) -> Tensor:
     """Pauli $X$ operator."""
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmay(
-    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
-) -> Tensor:
+@complex_tensor
+def sigmay(*, dtype=None, device=None) -> Tensor:
     """Pauli $Y$ operator."""
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
 
-def sigmaz(
-    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
-) -> Tensor:
+@complex_tensor
+def sigmaz(*, dtype=None, device=None) -> Tensor:
     """Pauli $Z$ operator."""
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
 
-def sigmap(
-    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
-) -> Tensor:
+@complex_tensor
+def sigmap(*, dtype=None, device=None) -> Tensor:
     r"""Pauli raising operator $\sigma_+$."""
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
 
-def sigmam(
-    *, dtype: torch.dtype = torch.complex128, device: torch.device | None = None
-) -> Tensor:
+@complex_tensor
+def sigmam(*, dtype=None, device=None) -> Tensor:
     r"""Pauli lowering operator $\sigma_-$."""
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
-def eye(
-    *dims: int,
-    dtype: torch.dtype = torch.complex128,
-    device: torch.device | None = None,
-) -> Tensor:
+@complex_tensor
+def eye(*dims: int, dtype=None, device=None) -> Tensor:
     """Identity operator."""
     dim = prod(dims)
     return torch.eye(dim, dtype=dtype, device=device)
 
 
-def destroy(
-    *dims: int, dtype: torch.dtype = torch.complex128, device: torch.device = None
-) -> Tensor | tuple[Tensor, ...]:
+@complex_tensor
+def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
     """Bosonic annihilation operator.
 
     If only a single dimension is provided, `destroy` returns the annihilation operator
@@ -112,21 +104,14 @@ def destroy(
     )
 
 
-def _destroy_single(
-    dim: int,
-    *,
-    dtype: torch.dtype = torch.complex128,
-    device: torch.device | None = None,
-) -> Tensor:
+@complex_tensor
+def _destroy_single(dim: int, *, dtype=None, device=None) -> Tensor:
     """Bosonic annihilation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(1).to(dtype)
 
 
-def create(
-    *dims: int,
-    dtype: torch.dtype = torch.complex128,
-    device: torch.device | None = None,
-) -> Tensor | tuple[Tensor, ...]:
+@complex_tensor
+def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
     """Bosonic creation operator.
 
     If only a single dimension is provided, `create` returns the creation operator of
@@ -170,35 +155,21 @@ def create(
     )
 
 
-def _create_single(
-    dim: int,
-    *,
-    dtype: torch.dtype = torch.complex128,
-    device: torch.device | None = None,
-) -> Tensor:
+@complex_tensor
+def _create_single(dim: int, *, dtype=None, device=None) -> Tensor:
     """Bosonic creation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(-1).to(dtype)
 
 
-def displace(
-    dim: int,
-    alpha: complex,
-    *,
-    dtype: torch.dtype = torch.complex128,
-    device: torch.device | None = None,
-) -> Tensor:
+@complex_tensor
+def displace(dim: int, alpha: complex, *, dtype=None, device=None) -> Tensor:
     """Displacement operator."""
     a = destroy(dim, dtype=dtype, device=device)
     return torch.matrix_exp(alpha * a.adjoint() - alpha.conjugate() * a)
 
 
-def squeeze(
-    dim: int,
-    z: complex,
-    *,
-    dtype: torch.dtype = torch.complex128,
-    device: torch.device | None = None,
-) -> Tensor:
+@complex_tensor
+def squeeze(dim: int, z: complex, *, dtype=None, device=None) -> Tensor:
     """Squeezing operator."""
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
