@@ -67,7 +67,7 @@ def sesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (H_batched, solver)
+    args = (solver, H_batched)
     if isinstance(solver, Euler):
         qsolver = SEEuler(*args)
     elif isinstance(solver, AdaptiveStep):
