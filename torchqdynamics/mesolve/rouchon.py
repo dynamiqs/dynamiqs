@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from math import sqrt
-from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -61,7 +62,7 @@ class MERouchon1(MERouchon):
         t: float,
         rho: Tensor,
         phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...],
+        parameters: tuple[nn.Parameter, ...],
     ):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
@@ -120,7 +121,7 @@ class MERouchon1_5(MERouchon):
         t: float,
         rho: Tensor,
         phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...],
+        parameters: tuple[nn.Parameter, ...],
     ):
         raise NotImplementedError
 
@@ -166,7 +167,7 @@ class MERouchon2(MERouchon):
         t: float,
         rho: Tensor,
         phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...],
+        parameters: tuple[nn.Parameter, ...],
     ):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t

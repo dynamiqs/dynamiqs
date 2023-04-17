@@ -1,4 +1,6 @@
-from typing import List, Literal, Optional, Tuple
+from __future__ import annotations
+
+from typing import Literal
 
 import torch
 import torch.nn as nn
@@ -17,11 +19,11 @@ def sesolve(
     t_save: TensorLike,
     *,
     save_states: bool = True,
-    exp_ops: Optional[List[OperatorLike]] = None,
-    solver: Optional[SolverOption] = None,
-    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
-    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
-) -> Tuple[Tensor, Tensor]:
+    exp_ops: list[OperatorLike] | None = None,
+    solver: SolverOption | None = None,
+    gradient_alg: Literal['autograd', 'adjoint'] | None = None,
+    parameters: tuple[nn.Parameter, ...] | None = None,
+) -> tuple[Tensor, Tensor]:
     # Args:
     #     H: (b_H?, n, n)
     #     psi0: (b_psi0?, n, 1)

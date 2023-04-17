@@ -1,4 +1,6 @@
-from typing import Callable, List, Optional, Union, get_args
+from __future__ import annotations
+
+from typing import Callable, Union, get_args
 
 import numpy as np
 import torch
@@ -11,7 +13,7 @@ from .utils import from_qutip
 TDOperator = Union[Tensor, Callable[[float], Tensor]]
 
 # type for objects convertible to a torch tensor using `torch.as_tensor`
-TensorLike = Union[List, np.ndarray, Tensor]
+TensorLike = Union[list, np.ndarray, Tensor]
 
 # type for objects convertible to a torch tensor using `to_tensor`
 OperatorLike = Union[TensorLike, Qobj]
@@ -20,7 +22,7 @@ OperatorLike = Union[TensorLike, Qobj]
 TDOperatorLike = Union[OperatorLike, Callable[[float], OperatorLike]]
 
 
-def to_tensor(x: Optional[Union[OperatorLike, List[OperatorLike]]]) -> Tensor:
+def to_tensor(x: OperatorLike | list[OperatorLike] | None) -> Tensor:
     """Convert a `OperatorLike` object or a list of `OperatorLike` object to a PyTorch
     tensor.
 

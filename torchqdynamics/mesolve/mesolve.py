@@ -1,4 +1,6 @@
-from typing import List, Literal, Optional, Tuple
+from __future__ import annotations
+
+from typing import Literal
 
 import torch
 import torch.nn as nn
@@ -16,16 +18,16 @@ from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 def mesolve(
     H: TDOperatorLike,
-    jump_ops: List[OperatorLike],
+    jump_ops: list[OperatorLike],
     rho0: OperatorLike,
     t_save: TensorLike,
     *,
     save_states: bool = True,
-    exp_ops: Optional[List[OperatorLike]] = None,
-    solver: Optional[SolverOption] = None,
-    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
-    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
-) -> Tuple[Tensor, Tensor]:
+    exp_ops: list[OperatorLike] | None = None,
+    solver: SolverOption | None = None,
+    gradient_alg: Literal['autograd', 'adjoint'] | None = None,
+    parameters: tuple[nn.Parameter, ...] | None = None,
+) -> tuple[Tensor, Tensor]:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to

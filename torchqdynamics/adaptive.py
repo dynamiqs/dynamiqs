@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple
+from typing import Callable
 
 import torch
 from torch import Tensor
@@ -27,7 +29,7 @@ class AdaptiveSolver(ABC):
         rtol: float = 1e-6,
         t_dtype: torch.dtype = torch.float64,
         y_dtype: torch.dtype = torch.complex128,
-        device: Optional[torch.device] = None,
+        device: torch.device | None = None,
     ):
         self.f = f
         self.factor = factor
@@ -49,7 +51,7 @@ class AdaptiveSolver(ABC):
     @abstractmethod
     def step(
         self, f0: Tensor, y0: Tensor, t0: float, dt: float
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         pass
 
@@ -159,7 +161,7 @@ class DormandPrince45(AdaptiveSolver):
 
     def step(
         self, f0: Tensor, y0: Tensor, t0: float, dt: float
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         # create butcher tableau if not already done
         if self.tableau is None:

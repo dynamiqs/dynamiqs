@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from __future__ import annotations
 
 import torch
 from torch import Tensor
@@ -73,8 +73,8 @@ def lindbladian(rho: Tensor, H: Tensor, L: Tensor) -> Tensor:
 
 
 def none_to_zeros_like(
-    in_tuple: Tuple[Union[Tensor, None], ...], shaping_tuple: Tuple[Tensor, ...]
-) -> Tuple[Tensor, ...]:
+    in_tuple: tuple[Tensor | None, ...], shaping_tuple: tuple[Tensor, ...]
+) -> tuple[Tensor, ...]:
     """Convert `None` values of `in_tuple` to zero-valued tensors with the same shape
     as `shaping_tuple`."""
     return tuple(
@@ -82,7 +82,7 @@ def none_to_zeros_like(
     )
 
 
-def add_tuples(a: Tuple, b: Tuple) -> Tuple:
+def add_tuples(a: tuple, b: tuple) -> tuple:
     """Element-wise sum of two tuples of the same shape."""
     return tuple(x + y for x, y in zip(a, b))
 

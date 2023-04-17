@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
 from torch import Tensor
@@ -6,14 +8,14 @@ from torch import Tensor
 
 def smesolve(
     H: Tensor,
-    Ls: List[Tensor],
-    Ms: List[Tensor],
-    etas: List[float],
+    Ls: list[Tensor],
+    Ms: list[Tensor],
+    etas: list[float],
     rho0: Tensor,
     tlist: np.ndarray,
     ntrajs: int,
     solver: str,
-    options: Optional[Dict[str, Any]] = None,
+    options: dict[str, Any] | None = None,
 ) -> Tensor:
     raise NotImplementedError(
         'the Stochastic Master Equation solvers are not implemented yet, come '

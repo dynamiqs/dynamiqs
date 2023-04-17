@@ -1,4 +1,6 @@
-from typing import List, Optional, Tuple, Union
+from __future__ import annotations
+
+from functools import reduce
 
 import torch
 from qutip import Qobj
@@ -14,6 +16,7 @@ __all__ = [
     'sqrtm',
     'dissipator',
     'lindbladian',
+    'tensprod',
     'trace',
     'ptrace',
     'expect',
@@ -23,6 +26,7 @@ __all__ = [
 
 
 def is_ket(x: Tensor) -> Tensor:
+    """Check if a tensor is in state vector format."""
     return x.size(-1) == 1
 
 
@@ -61,24 +65,6 @@ def ket_overlap(x: Tensor, y: Tensor) -> torch.complex:
         Complex-valued overlap (`torch.complex64` or `torch.complex128`).
     """
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
-
-
-def sqrtm(x: Tensor) -> Tensor:
-    """Compute the square root of a symmetric or Hermitian positive definite matrix.
-
-    Args:
-        x: Tensor of dimension `(..., n, n)`.
-
-    Returns:
-        Tensor of dimension `(..., n, n)` holding the square root of `x`.
-    """
-    # code copied from
-    # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
-    L, Q = torch.linalg.eigh(x)
-    zero = torch.zeros((), device=L.device, dtype=L.dtype)
-    threshold = L.max(-1).values * L.size(-1) * torch.finfo(L.dtype).eps
-    L = L.where(L > threshold.unsqueeze(-1), zero)  # zero out small components
-    return (Q * L.sqrt().unsqueeze(-2)) @ Q.mH
 
 
 def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
@@ -145,6 +131,24 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     return trace_sqrtm_tmp.pow(2).real
 
 
+def sqrtm(x: Tensor) -> Tensor:
+    """Compute the square root of a symmetric or Hermitian positive definite matrix.
+
+    Args:
+        x: Tensor of dimension `(..., n, n)`.
+
+    Returns:
+        Tensor of dimension `(..., n, n)` holding the square root of `x`.
+    """
+    # code copied from
+    # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
+    L, Q = torch.linalg.eigh(x)
+    zero = torch.zeros((), device=L.device, dtype=L.dtype)
+    threshold = L.max(-1).values * L.size(-1) * torch.finfo(L.dtype).eps
+    L = L.where(L > threshold.unsqueeze(-1), zero)  # zero out small components
+    return (Q * L.sqrt().unsqueeze(-2)) @ Q.mH
+
+
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     r"""Apply the dissipation superoperator to a density matrix.
 
@@ -191,14 +195,22 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
 
+def tensprod(*x: Tensor) -> Tensor:
+    """Compute the tensor product of a sequence of state vectors, density matrices or
+    operators.
+
+    Note:
+        This function is the equivalent of `qutip.tensor`.
+    """
+    return reduce(torch.kron, x)
+
+
 def trace(rho: Tensor) -> Tensor:
     """Compute the batched trace of a tensor over its last two dimensions."""
     return torch.einsum('...ii', rho)
 
 
-def ptrace(
-    x: Tensor, keep: Union[int, Tuple[int, ...]], dims: Tuple[int, ...]
-) -> Tensor:
+def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
     """Compute the partial trace of a state vector or density matrix.
 
     Args:
@@ -306,7 +318,7 @@ def from_qutip(x: Qobj) -> Tensor:
     return torch.from_numpy(x.full())
 
 
-def to_qutip(x: Tensor, dims: Optional[List] = None) -> Qobj:
+def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
     """Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:
