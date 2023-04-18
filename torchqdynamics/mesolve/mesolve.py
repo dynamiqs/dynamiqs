@@ -8,7 +8,13 @@ from torch import Tensor
 
 from ..odeint import odeint
 from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
-from ..tensor_types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
+from ..tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    TensorLike,
+    dtype_complex_to_float,
+    to_tensor,
+)
 from ..utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
@@ -27,6 +33,8 @@ def mesolve(
     solver: SolverOption | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
@@ -73,6 +81,10 @@ def mesolve(
             backward pass. Defaults to `None`.
         parameters (tuple of nn.Parameter): Parameters with respect to which gradients
             are computed during the adjoint state backward pass.
+        dtype (torch.dtype, optional): Complex data type to which all complex-valued
+            tensors are converted. `t_save` is also converted to a real data type of
+            the corresponding precision.
+        device (torch.device, optional): Device on which the tensors are stored.
 
     Returns:
         A tuple `(rho_save, exp_save)` where
@@ -87,7 +99,7 @@ def mesolve(
     # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
-    H = to_tensor(H)
+    H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
     H_batched = H[None, ...] if H.ndim == 2 else H
 
     # convert jump_ops to a tensor
@@ -96,11 +108,11 @@ def mesolve(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
             ' consider using `sesolve`.'
         )
-    jump_ops = to_tensor(jump_ops)
+    jump_ops = to_tensor(jump_ops, dtype=dtype, device=device, is_complex=True)
     jump_ops = jump_ops[None, ...] if jump_ops.ndim == 2 else jump_ops
 
     # convert rho0 to a tensor and density matrix and batch by default
-    rho0 = to_tensor(rho0)
+    rho0 = to_tensor(rho0, dtype=dtype, device=device, is_complex=True)
     if is_ket(rho0):
         rho0 = ket_to_dm(rho0)
     b_H = H_batched.size(0)
@@ -108,10 +120,10 @@ def mesolve(
     rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
     # convert t_save to a tensor
-    t_save = torch.as_tensor(t_save)
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
 
     # convert exp_ops to a tensor
-    exp_ops = to_tensor(exp_ops)
+    exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
     # default solver

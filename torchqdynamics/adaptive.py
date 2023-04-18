@@ -5,9 +5,9 @@ from typing import Callable
 
 import torch
 from torch import Tensor
-from torch._prims_common import corresponding_real_dtype as to_float
 
 from .solver_utils import hairer_norm
+from .tensor_types import dtype_complex_to_float
 
 
 class AdaptiveSolver(ABC):
@@ -27,9 +27,6 @@ class AdaptiveSolver(ABC):
         max_factor: float = 5.0,
         atol: float = 1e-8,
         rtol: float = 1e-6,
-        t_dtype: torch.dtype = torch.float64,
-        y_dtype: torch.dtype = torch.complex128,
-        device: torch.device | None = None,
     ):
         self.f = f
         self.factor = factor
@@ -37,14 +34,11 @@ class AdaptiveSolver(ABC):
         self.max_factor = max_factor
         self.atol = atol
         self.rtol = rtol
-        self.t_dtype = t_dtype
-        self.y_dtype = y_dtype
-        self.device = device
         self.order = None
         self.tableau = None
 
     @abstractmethod
-    def build_tableau(self):
+    def build_tableau(self, target: Tensor):
         """Build the Butcher tableau of the integrator."""
         pass
 
@@ -148,11 +142,11 @@ class DormandPrince45(AdaptiveSolver):
 
         # extract target information
         dtype = target.dtype
-        real_dtype = to_float(dtype)
+        float_dtype = dtype_complex_to_float(dtype)
         device = target.device
 
         # initialize tensors
-        alpha = torch.tensor(alpha, dtype=real_dtype, device=device)
+        alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
         beta = torch.tensor(beta, dtype=dtype, device=device)
         csol5 = torch.tensor(csol5, dtype=dtype, device=device)
         csol4 = torch.tensor(csol4, dtype=dtype, device=device)

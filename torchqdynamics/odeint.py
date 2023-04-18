@@ -144,10 +144,14 @@ def _adaptive_odeint(
     y_save, exp_save = None, None
     batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
     if save_states:
-        y_save = torch.zeros(*batch_sizes, len(t_save), m, n).to(y0)
+        y_save = torch.zeros(
+            *batch_sizes, len(t_save), m, n, dtype=y0.dtype, device=y0.device
+        )
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(t_save)).to(y0)
+        exp_save = torch.zeros(
+            *batch_sizes, len(exp_ops), len(t_save), dtype=y0.dtype, device=y0.device
+        )
 
     # save initial solution
     save_counter = 0
@@ -167,9 +171,6 @@ def _adaptive_odeint(
         qsolver.options.max_factor,
         qsolver.options.atol,
         qsolver.options.rtol,
-        t_save.dtype,
-        y0.dtype,
-        y0.device,
     )
     if isinstance(qsolver.options, Dopri45):
         solver = DormandPrince45(*args)
@@ -227,7 +228,9 @@ def _adaptive_odeint(
         y_save = y
 
     if len(exp_ops) == 0:
-        exp_save = torch.empty(*batch_sizes, len(exp_ops))
+        exp_save = torch.empty(
+            *batch_sizes, len(exp_ops), dtype=y0.dtype, device=y0.device
+        )
 
     return y_save, exp_save
 
@@ -274,10 +277,14 @@ def _fixed_odeint(
     y_save, exp_save = None, None
     batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
     if save_states:
-        y_save = torch.zeros(*batch_sizes, len(t_save), m, n).to(y0)
+        y_save = torch.zeros(
+            *batch_sizes, len(t_save), m, n, dtype=y0.dtype, device=y0.device
+        )
 
     if len(exp_ops) > 0:
-        exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(t_save)).to(y0)
+        exp_save = torch.zeros(
+            *batch_sizes, len(exp_ops), len(t_save), dtype=y0.dtype, device=y0.device
+        )
 
     # define time values
     num_times = torch.round(t_save[-1] / dt).int() + 1
@@ -307,7 +314,9 @@ def _fixed_odeint(
     if len(exp_ops) > 0:
         exp_save[..., save_counter] = bexpect(exp_ops, y)
     else:
-        exp_save = torch.empty(*batch_sizes, len(exp_ops))
+        exp_save = torch.empty(
+            *batch_sizes, len(exp_ops), dtype=y0.dtype, device=y0.device
+        )
 
     return y_save, exp_save
 
