@@ -14,20 +14,21 @@ from ..utils import trace
 
 
 class MERouchon(AdjointQSolver):
-    def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
+    def __init__(self, options: SolverOption, H: TDOperator, jump_ops: Tensor):
         """
         Args:
+            options:
             H: Hamiltonian, of shape `(b_H, n, n)`.
             jump_ops: Jump operators, of shape `(len(jump_ops), n, n)`.
-            solver_options:
         """
+        super().__init__(options)
+
         # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
         self.n = H.shape[-1]
         self.I = torch.eye(self.n).to(H)  # (n, n)
-        self.options = solver_options
         self.dt = self.options.dt
 
 

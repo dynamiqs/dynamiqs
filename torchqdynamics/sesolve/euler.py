@@ -6,14 +6,13 @@ from ..tensor_types import TDOperator
 
 
 class SEEuler(ForwardQSolver):
-    def __init__(self, H: TDOperator, solver_options: SolverOption):
+    def __init__(self, options: SolverOption, H: TDOperator):
         # Args:
         #     H: (b_H, n, n)
+        super().__init__(options)
 
         # convert H to size compatible with (b_H, b_psi, n, n)
         self.H = H[:, None, ...]
-        self.options = solver_options
-        self.dt = self.options.dt
 
     def forward(self, t: float, psi: Tensor):
         # Args:
@@ -22,4 +21,4 @@ class SEEuler(ForwardQSolver):
         # Returns:
         #     (b_H, b_psi, n, 1)
 
-        return psi - self.dt * 1j * self.H @ psi
+        return psi - self.options.dt * 1j * self.H @ psi

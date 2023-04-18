@@ -131,7 +131,7 @@ def mesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (H_batched, jump_ops, solver)
+    args = (solver, H_batched, jump_ops)
     if isinstance(solver, Rouchon1):
         qsolver = MERouchon1(*args)
     elif isinstance(solver, Rouchon1_5):

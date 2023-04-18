@@ -6,9 +6,10 @@ from ..tensor_types import TDOperator
 
 
 class SEAdaptive(ForwardQSolver):
-    def __init__(self, H: TDOperator, solver_options: SolverOption):
+    def __init__(self, options: SolverOption, H: TDOperator):
+        super().__init__(options)
+
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
-        self.options = solver_options
 
     def forward(self, t: float, psi: Tensor) -> Tensor:
         """Compute dpsi / dt = -1j * H(psi) at time t."""

@@ -11,11 +11,14 @@ from torch.autograd.function import FunctionCtx
 
 from .adaptive import DormandPrince45
 from .progress_bar import tqdm
-from .solver_options import AdaptiveStep, Dopri45, FixedStep
+from .solver_options import AdaptiveStep, Dopri45, FixedStep, SolverOption
 from .solver_utils import add_tuples, bexpect, none_to_zeros_like
 
 
 class ForwardQSolver(ABC):
+    def __init__(self, solver_options: SolverOption):
+        self.options = solver_options
+
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Iterate the quantum state forward.
@@ -264,7 +267,7 @@ def _fixed_odeint(
             - `exp_save` a tensor of shape `(..., len(exp_ops), len(t_save))`
     """
     # get time step from qsolver
-    dt = qsolver.dt
+    dt = qsolver.options.dt
 
     # assert that `t_save` values are multiples of `dt`
     if not torch.allclose(torch.round(t_save / dt), t_save / dt):
@@ -379,7 +382,7 @@ def _fixed_odeint_augmented(
 ) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
     """Integrate the augmented ODE backward using a fixed time step solver."""
     # get time step from qsolver
-    dt = qsolver.dt
+    dt = qsolver.options.dt
 
     # check t_span
     if not (t_span.ndim == 1 and len(t_span) == 2):

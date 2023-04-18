@@ -7,11 +7,12 @@ from ..tensor_types import TDOperator
 
 
 class MEAdaptive(ForwardQSolver):
-    def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
+    def __init__(self, options: SolverOption, H: TDOperator, jump_ops: Tensor):
+        super().__init__(options)
+
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
-        self.options = solver_options
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         """Compute drho / dt = L(rho) at time t."""
