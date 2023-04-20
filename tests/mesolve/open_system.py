@@ -40,7 +40,7 @@ class LeakyCavity(OpenSystem):
         a = tq.destroy(n)
         adag = a.adjoint()
 
-        self.H = delta * adag * a
+        self.H = delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
         self.jump_ops = [np.sqrt(kappa) * a, tq.eye(n)]
         self.exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
