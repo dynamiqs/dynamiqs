@@ -150,10 +150,10 @@ def mesolve(
     rho_save, exp_save = qsolver.y_save, qsolver.exp_save
 
     # restore correct batching
-    if rho0.dim() == 2:
+    if rho0.ndim == 2:
         rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
-    if H.dim() == 2:
+    if H.ndim == 2:
         rho_save = rho_save.squeeze(0)
         exp_save = exp_save.squeeze(0)
 

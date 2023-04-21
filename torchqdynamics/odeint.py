@@ -463,7 +463,7 @@ class ODEIntAdjoint(torch.autograd.Function):
 def check_t_save(t_save: Tensor):
     """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
     strictly ascending order and containing only positive values)."""
-    if t_save.dim() != 1 or len(t_save) == 0:
+    if t_save.ndim != 1 or len(t_save) == 0:
         raise ValueError('Argument `t_save` must be a non-empty 1D tensor.')
     if not torch.all(torch.diff(t_save) > 0):
         raise ValueError(

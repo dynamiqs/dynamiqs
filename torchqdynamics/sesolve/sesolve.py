@@ -83,10 +83,10 @@ def sesolve(
     psi_save, exp_save = qsolver.y_save, qsolver.exp_save
 
     # restore correct batching
-    if psi0.dim() == 2:
+    if psi0.ndim == 2:
         psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
-    if H.dim() == 2:
+    if H.ndim == 2:
         psi_save = psi_save.squeeze(0)
         exp_save = exp_save.squeeze(0)
 
