@@ -220,7 +220,7 @@ def _adaptive_odeint(qsolver: ForwardQSolver, y0: Tensor, t_save: Tensor):
 
             # save results if flag is raised
             if save_flag:
-                qsolver.save(t, y)
+                qsolver.save(y)
 
         # return to the original dt, lower the flag and get next save time
         if save_flag:
