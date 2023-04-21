@@ -38,6 +38,18 @@ class QSolver(ABC):
         self.gradient_alg = gradient_alg
         self.parameters = parameters
 
+        # check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
+        # strictly ascending order and containing only positive values)
+        if t_save.ndim != 1 or len(t_save) == 0:
+            raise ValueError('Argument `t_save` must be a non-empty 1D tensor.')
+        if not torch.all(torch.diff(t_save) > 0):
+            raise ValueError(
+                'Argument `t_save` must be sorted in strictly ascending order.'
+            )
+        if not torch.all(t_save >= 0):
+            raise ValueError('Argument `t_save` must contain positive values only.')
+
+        # check that the gradient algorithm is supported
         if gradient_alg is not None and gradient_alg not in self.GRADIENT_ALG:
             raise ValueError(
                 f'Gradient algorithm {gradient_alg} is not defined or not yet'

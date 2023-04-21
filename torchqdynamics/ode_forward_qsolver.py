@@ -30,9 +30,6 @@ class ODEForwardQSolver(QSolver):
 
         The ODE is solved from time `t=0.0` to `t=t_save[-1]`.
         """
-        # check arguments
-        check_t_save(self.t_save)
-
         # dispatch to appropriate odeint subroutine
         if self.gradient_alg is None:
             self._odeint_inplace()
@@ -168,16 +165,3 @@ class ODEForwardQSolver(QSolver):
 
         # save last state if not already done
         self.save_final(y)
-
-
-def check_t_save(t_save: Tensor):
-    """Check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
-    strictly ascending order and containing only positive values)."""
-    if t_save.ndim != 1 or len(t_save) == 0:
-        raise ValueError('Argument `t_save` must be a non-empty 1D tensor.')
-    if not torch.all(torch.diff(t_save) > 0):
-        raise ValueError(
-            'Argument `t_save` must be sorted in strictly ascending order.'
-        )
-    if not torch.all(t_save >= 0):
-        raise ValueError('Argument `t_save` must contain positive values only.')
