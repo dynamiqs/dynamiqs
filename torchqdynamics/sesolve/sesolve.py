@@ -16,6 +16,8 @@ from ..tensor_types import (
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
+from .exponentiate import SEExponentiate
+from .solver_options import Exponentiate
 
 
 def sesolve(
@@ -71,6 +73,8 @@ def sesolve(
         qsolver = SEEuler(*args, **kwargs)
     elif isinstance(solver, ODEAdaptiveStep):
         qsolver = SEAdaptive(*args, **kwargs)
+    elif isinstance(solver, Exponentiate):
+        qsolver = SEExponentiate(*args, **kwargs)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
