@@ -31,13 +31,6 @@ class QSolver(ABC):
             gradient_alg:
             parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
         """
-        self.options = options
-        self.y0 = y0
-        self.exp_ops = exp_ops
-        self.t_save = t_save
-        self.gradient_alg = gradient_alg
-        self.parameters = parameters
-
         # check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
         # strictly ascending order and containing only positive values)
         if t_save.ndim != 1 or len(t_save) == 0:
@@ -56,15 +49,26 @@ class QSolver(ABC):
                 f' supported by this solver ({type(self)}).'
             )
 
+        self.options = options
+        self.y0 = y0
+        self.exp_ops = exp_ops
+        self.t_save = t_save
+        self.gradient_alg = gradient_alg
+        self.parameters = parameters
         self.save_counter = 0
 
         # initialize save tensors
-        batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
+        batch_sizes, (m, n) = self.y0.shape[:-2], self.y0.shape[-2:]
 
         if self.options.save_states:
             # y_save: (..., len(t_save), m, n)
             self.y_save = torch.zeros(
-                *batch_sizes, len(self.t_save), m, n, dtype=y0.dtype, device=y0.device
+                *batch_sizes,
+                len(self.t_save),
+                m,
+                n,
+                dtype=self.y0.dtype,
+                device=self.y0.device,
             )
 
         if len(self.exp_ops) > 0:
@@ -73,12 +77,15 @@ class QSolver(ABC):
                 *batch_sizes,
                 len(self.exp_ops),
                 len(self.t_save),
-                dtype=y0.dtype,
-                device=y0.device,
+                dtype=self.y0.dtype,
+                device=self.y0.device,
             )
         else:
             self.exp_save = torch.empty(
-                *batch_sizes, len(self.exp_ops), dtype=y0.dtype, device=y0.device
+                *batch_sizes,
+                len(self.exp_ops),
+                dtype=self.y0.dtype,
+                device=self.y0.device,
             )
 
     def next_tsave(self) -> float:
