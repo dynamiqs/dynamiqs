@@ -85,7 +85,7 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon1_5(MERouchon):
-    def forward(self, t: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
 
         Note:
@@ -128,7 +128,7 @@ class MERouchon1_5(MERouchon):
 
 
 class MERouchon2(MERouchon):
-    def forward(self, t: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
         Note:

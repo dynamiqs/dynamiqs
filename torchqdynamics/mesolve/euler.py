@@ -16,7 +16,7 @@ class MEEuler(ForwardQSolver):
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
 
-    def forward(self, t: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         # Args:
         #     rho: (b_H, b_rho, n, n)
         #

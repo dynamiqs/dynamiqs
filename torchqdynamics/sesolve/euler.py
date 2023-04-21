@@ -14,7 +14,7 @@ class SEEuler(ForwardQSolver):
         # convert H to size compatible with (b_H, b_psi, n, n)
         self.H = H[:, None, ...]
 
-    def forward(self, t: float, psi: Tensor):
+    def forward(self, t: float, psi: Tensor) -> Tensor:
         # Args:
         #     psi: (b_H, b_psi, n, 1)
         #
