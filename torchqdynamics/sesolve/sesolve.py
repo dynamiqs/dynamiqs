@@ -24,7 +24,6 @@ def sesolve(
     psi0: OperatorLike,
     t_save: TensorLike,
     *,
-    save_states: bool = True,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     solver: SolverOption | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
@@ -67,11 +66,12 @@ def sesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, H_batched)
+    args = (solver, psi0_batched, exp_ops, t_save)
+    kwargs = dict(H=H_batched)
     if isinstance(solver, Euler):
-        qsolver = SEEuler(*args)
+        qsolver = SEEuler(*args, **kwargs)
     elif isinstance(solver, AdaptiveStep):
-        qsolver = SEAdaptive(*args)
+        qsolver = SEAdaptive(*args, **kwargs)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
@@ -80,8 +80,6 @@ def sesolve(
         qsolver,
         psi0_batched,
         t_save,
-        save_states=save_states,
-        exp_ops=exp_ops,
         gradient_alg=gradient_alg,
         parameters=parameters,
     )

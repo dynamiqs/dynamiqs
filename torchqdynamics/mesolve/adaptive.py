@@ -1,14 +1,13 @@
 from torch import Tensor
 
 from ..odeint import ForwardQSolver
-from ..solver_options import SolverOption
 from ..solver_utils import kraus_map
 from ..tensor_types import TDOperator
 
 
 class MEAdaptive(ForwardQSolver):
-    def __init__(self, options: SolverOption, H: TDOperator, jump_ops: Tensor):
-        super().__init__(options)
+    def __init__(self, *args, H: TDOperator, jump_ops: Tensor):
+        super().__init__(*args)
 
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)

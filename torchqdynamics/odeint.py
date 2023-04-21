@@ -16,8 +16,37 @@ from .solver_utils import add_tuples, bexpect, none_to_zeros_like
 
 
 class ForwardQSolver(ABC):
-    def __init__(self, solver_options: SolverOption):
-        self.options = solver_options
+    def __init__(
+        self, options: SolverOption, y0: Tensor, exp_ops: Tensor, t_save: Tensor
+    ):
+        self.options = options
+        self.exp_ops = exp_ops
+        self.t_save = t_save
+
+        self.save_counter = 0
+
+        # initialize save tensors
+        batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
+
+        if self.options.save_states:
+            # y_save: (..., len(t_save), m, n)
+            self.y_save = torch.zeros(
+                *batch_sizes, len(self.t_save), m, n, dtype=y0.dtype, device=y0.device
+            )
+
+        if len(self.exp_ops) > 0:
+            # exp_save: (..., len(exp_ops), len(t_save))
+            self.exp_save = torch.zeros(
+                *batch_sizes,
+                len(self.exp_ops),
+                len(self.t_save),
+                dtype=y0.dtype,
+                device=y0.device,
+            )
+        else:
+            self.exp_save = torch.empty(
+                *batch_sizes, len(self.exp_ops), dtype=y0.dtype, device=y0.device
+            )
 
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
@@ -31,6 +60,26 @@ class ForwardQSolver(ABC):
             Tensor of shape `(..., m, n)`.
         """
         pass
+
+    def next_tsave(self) -> float:
+        return self.t_save[self.save_counter]
+
+    def _save_y(self, y: Tensor):
+        if self.options.save_states:
+            self.y_save[..., self.save_counter, :, :] = y
+
+    def _save_exp_ops(self, y: Tensor):
+        if len(self.exp_ops) > 0:
+            self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
+
+    def save(self, y: Tensor):
+        self._save_y(y)
+        self._save_exp_ops(y)
+        self.save_counter += 1
+
+    def save_final(self, y: Tensor):
+        if not self.options.save_states:
+            self.y_save = y
 
 
 class AdjointQSolver(ForwardQSolver):
@@ -57,8 +106,6 @@ def odeint(
     y0: Tensor,
     t_save: Tensor,
     *,
-    save_states: bool,
-    exp_ops: Tensor,
     gradient_alg: Literal['autograd', 'adjoint'] | None,
     parameters: tuple[nn.Parameter, ...] | None,
 ) -> tuple[Tensor, Tensor]:
@@ -69,8 +116,6 @@ def odeint(
         y0: Initial quantum state, of shape `(..., m, n)`.
         t_save: Times for which results are saved. The ODE is solved from time `t=0.0`
             to `t=t_save[-1]`.
-        save_states:
-        exp_ops:
         gradient_alg:
         parameters:
 
@@ -87,7 +132,7 @@ def odeint(
         warnings.warn('Parameters were supplied in `odeint` but not used.')
 
     # dispatch to appropriate odeint subroutine
-    args = (qsolver, y0, t_save, save_states, exp_ops)
+    args = (qsolver, y0, t_save)
     if gradient_alg is None:
         return _odeint_inplace(*args)
     elif gradient_alg == 'autograd':
@@ -104,14 +149,12 @@ def _odeint_main(
     qsolver: ForwardQSolver,
     y0: Tensor,
     t_save: Tensor,
-    save_states: bool,
-    exp_ops: Tensor,
 ) -> tuple[Tensor, Tensor]:
     """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
     if isinstance(qsolver.options, FixedStep):
-        return _fixed_odeint(qsolver, y0, t_save, save_states, exp_ops)
+        return _fixed_odeint(qsolver, y0, t_save)
     elif isinstance(qsolver.options, AdaptiveStep):
-        return _adaptive_odeint(qsolver, y0, t_save, save_states, exp_ops)
+        return _adaptive_odeint(qsolver, y0, t_save)
 
 
 # For now we use *args and **kwargs for helper methods that are not implemented to ease
@@ -131,8 +174,6 @@ def _adaptive_odeint(
     qsolver: ForwardQSolver,
     y0: Tensor,
     t_save: Tensor,
-    save_states: bool,
-    exp_ops: Tensor,
 ) -> tuple[Tensor, Tensor]:
     """Integrate a quantum ODE with an adaptive time step solver.
 
@@ -143,28 +184,10 @@ def _adaptive_odeint(
     Solving Ordinary Differential Equations I (1993), Springer Series in Computational
     Mathematics`.
     """
-    # initialize save tensors
-    y_save, exp_save = None, None
-    batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
-    if save_states:
-        y_save = torch.zeros(
-            *batch_sizes, len(t_save), m, n, dtype=y0.dtype, device=y0.device
-        )
-
-    if len(exp_ops) > 0:
-        exp_save = torch.zeros(
-            *batch_sizes, len(exp_ops), len(t_save), dtype=y0.dtype, device=y0.device
-        )
-
     # save initial solution
-    save_counter = 0
+    qsolver.save(y0)
+
     save_flag = False
-    if t_save[0] == 0.0:
-        if save_states:
-            y_save[..., save_counter, :, :] = y0
-        if len(exp_ops) > 0:
-            exp_save[..., save_counter] = bexpect(exp_ops, y0)
-        save_counter += 1
 
     # initialize the adaptive solver
     args = (
@@ -189,12 +212,13 @@ def _adaptive_odeint(
     # run the ODE routine
     t, y, ft = t0, y0, f0
     step_counter, max_steps = 0, qsolver.options.max_steps
+    next_tsave = qsolver.next_tsave()
     while t < t_save[-1] and step_counter < max_steps:
         # if a time in `t_save` is reached, raise a flag and rescale dt accordingly
-        if t + dt >= t_save[save_counter]:
+        if t + dt >= next_tsave:
             save_flag = True
             dt_old = dt
-            dt = t_save[save_counter] - t
+            dt = next_tsave - t
 
         # perform a single solver step of size dt
         ft_new, y_new, y_err = solver.step(ft, y, t, dt)
@@ -211,39 +235,28 @@ def _adaptive_odeint(
 
             # save results if flag is raised
             if save_flag:
-                if save_states:
-                    y_save[..., save_counter, :, :] = y
-                if len(exp_ops) > 0:
-                    exp_save[..., save_counter] = bexpect(exp_ops, y)
-                save_counter += 1
+                qsolver.save(t, y)
 
-        # return to the original dt and lower the flag
+        # return to the original dt, lower the flag and get next save time
         if save_flag:
             dt = dt_old
             save_flag = False
+            next_tsave = qsolver.next_tsave()
 
         # compute the next dt
         dt = solver.update_tstep(dt, error)
         step_counter += 1
 
     # save last state if not already done
-    if not save_states:
-        y_save = y
+    qsolver.save_final(y)
 
-    if len(exp_ops) == 0:
-        exp_save = torch.empty(
-            *batch_sizes, len(exp_ops), dtype=y0.dtype, device=y0.device
-        )
-
-    return y_save, exp_save
+    return qsolver.y_save, qsolver.exp_save
 
 
 def _fixed_odeint(
     qsolver: ForwardQSolver,
     y0: Tensor,
     t_save: Tensor,
-    save_states: bool,
-    exp_ops: Tensor,
 ) -> tuple[Tensor, Tensor]:
     """Integrate a quantum ODE with a fixed time step solver.
 
@@ -258,8 +271,6 @@ def _fixed_odeint(
         qsolver:
         y0: Initial quantum state, of shape `(..., m, n)`.
         t_save:
-        save_states:
-        exp_ops:
 
     Returns:
         Tuple `(y_save, exp_save)` with
@@ -276,60 +287,31 @@ def _fixed_odeint(
             ' the time step `dt`.'
         )
 
-    # initialize save tensors
-    y_save, exp_save = None, None
-    batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
-    if save_states:
-        y_save = torch.zeros(
-            *batch_sizes, len(t_save), m, n, dtype=y0.dtype, device=y0.device
-        )
-
-    if len(exp_ops) > 0:
-        exp_save = torch.zeros(
-            *batch_sizes, len(exp_ops), len(t_save), dtype=y0.dtype, device=y0.device
-        )
-
     # define time values
     num_times = torch.round(t_save[-1] / dt).int() + 1
     times = torch.linspace(0.0, t_save[-1], num_times)
 
     # run the ode routine
     y = y0
-    save_counter = 0
     for t in tqdm(times[:-1], disable=not qsolver.options.verbose):
         # save solution
-        if t >= t_save[save_counter]:
-            if save_states:
-                y_save[..., save_counter, :, :] = y
-            if len(exp_ops) > 0:
-                exp_save[..., save_counter] = bexpect(exp_ops, y)
-            save_counter += 1
+        if t >= qsolver.next_tsave():
+            qsolver.save(y)
 
         # iterate solution
         y = qsolver.forward(t, y)
 
     # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
-    if save_states:
-        y_save[..., save_counter, :, :] = y
-    else:
-        y_save = y
+    qsolver.save(y)
+    qsolver.save_final(y)
 
-    if len(exp_ops) > 0:
-        exp_save[..., save_counter] = bexpect(exp_ops, y)
-    else:
-        exp_save = torch.empty(
-            *batch_sizes, len(exp_ops), dtype=y0.dtype, device=y0.device
-        )
-
-    return y_save, exp_save
+    return qsolver.y_save, qsolver.exp_save
 
 
 def _odeint_adjoint(
     qsolver: AdjointQSolver,
     y0: Tensor,
     t_save: Tensor,
-    save_states: bool,
-    exp_ops: Tensor,
     parameters: tuple[nn.Parameter, ...],
 ) -> tuple[Tensor, Tensor]:
     """Integrate an ODE using the adjoint method in the backward pass.
@@ -349,7 +331,7 @@ def _odeint_adjoint(
             ' solver.'
         )
 
-    return ODEIntAdjoint.apply(qsolver, y0, t_save, save_states, exp_ops, *parameters)
+    return ODEIntAdjoint.apply(qsolver, y0, t_save, *parameters)
 
 
 def _odeint_augmented_main(
@@ -434,17 +416,15 @@ class ODEIntAdjoint(torch.autograd.Function):
         qsolver: AdjointQSolver,
         y0: Tensor,
         t_save: Tensor,
-        save_states: bool,
-        exp_ops: Tensor,
         *parameters: tuple[nn.Parameter, ...],
     ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.qsolver = qsolver
-        ctx.t_save = t_save if save_states else t_save[-1]
+        ctx.t_save = t_save if qsolver.options.save_states else t_save[-1]
 
         # solve the ODE forward without storing the graph of operations
-        y_save, exp_save = _odeint_inplace(qsolver, y0, t_save, save_states, exp_ops)
+        y_save, exp_save = _odeint_inplace(qsolver, y0, t_save)
 
         # save results and model parameters
         ctx.save_for_backward(y_save, *parameters)

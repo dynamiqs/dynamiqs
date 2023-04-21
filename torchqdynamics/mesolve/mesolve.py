@@ -28,7 +28,6 @@ def mesolve(
     rho0: OperatorLike,
     t_save: TensorLike,
     *,
-    save_states: bool = True,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     solver: SolverOption | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
@@ -70,9 +69,6 @@ def mesolve(
             Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save (Tensor, np.ndarray or list): Times for which results are saved.
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
-        save_states (bool, optional): If `True`, the density matrix is saved at every
-            time value in `t_save`. If `False`, only the final density matrix is
-            stored and returned. Defaults to `True`.
         exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
             expectation value is computed at every time value in `t_save`.
         solver (SolverOption, optional): Solver used to compute the master equation
@@ -131,17 +127,18 @@ def mesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, H_batched, jump_ops)
+    args = (solver, rho0_batched, exp_ops, t_save)
+    kwargs = dict(H=H_batched, jump_ops=jump_ops)
     if isinstance(solver, Rouchon1):
-        qsolver = MERouchon1(*args)
+        qsolver = MERouchon1(*args, **kwargs)
     elif isinstance(solver, Rouchon1_5):
-        qsolver = MERouchon1_5(*args)
+        qsolver = MERouchon1_5(*args, **kwargs)
     elif isinstance(solver, Rouchon2):
-        qsolver = MERouchon2(*args)
+        qsolver = MERouchon2(*args, **kwargs)
     elif isinstance(solver, AdaptiveStep):
-        qsolver = MEAdaptive(*args)
+        qsolver = MEAdaptive(*args, **kwargs)
     elif isinstance(solver, Euler):
-        qsolver = MEEuler(*args)
+        qsolver = MEEuler(*args, **kwargs)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
@@ -150,8 +147,6 @@ def mesolve(
         qsolver,
         rho0_batched,
         t_save,
-        save_states=save_states,
-        exp_ops=exp_ops,
         gradient_alg=gradient_alg,
         parameters=parameters,
     )
