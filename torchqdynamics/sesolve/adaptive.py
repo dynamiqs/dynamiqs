@@ -1,10 +1,10 @@
 from torch import Tensor
 
-from ..odeint import ForwardQSolver
+from ..ode_forward_qsolver import ODEForwardQSolver
 from ..tensor_types import TDOperator
 
 
-class SEAdaptive(ForwardQSolver):
+class SEAdaptive(ODEForwardQSolver):
     def __init__(self, *args, H: TDOperator):
         super().__init__(*args)
 

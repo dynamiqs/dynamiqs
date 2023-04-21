@@ -6,13 +6,13 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import AdjointQSolver
+from ..ode_adjoint_qsolver import ODEAdjointQSolver
 from ..solver_utils import inv_sqrtm, kraus_map
 from ..tensor_types import TDOperator
 from ..utils import trace
 
 
-class MERouchon(AdjointQSolver):
+class MERouchon(ODEAdjointQSolver):
     def __init__(self, *args, H: TDOperator, jump_ops: Tensor):
         """
         Args:

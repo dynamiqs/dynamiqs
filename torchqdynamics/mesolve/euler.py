@@ -1,11 +1,11 @@
 from torch import Tensor
 
-from ..odeint import ForwardQSolver
+from ..ode_forward_qsolver import ODEForwardQSolver
 from ..solver_utils import lindbladian
 from ..tensor_types import TDOperator
 
 
-class MEEuler(ForwardQSolver):
+class MEEuler(ODEForwardQSolver):
     def __init__(self, *args, H: TDOperator, jump_ops: Tensor):
         # Args:
         #     H: (b_H, n, n)

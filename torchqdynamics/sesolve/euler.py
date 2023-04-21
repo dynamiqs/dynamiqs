@@ -1,10 +1,10 @@
 from torch import Tensor
 
-from ..odeint import ForwardQSolver
+from ..ode_forward_qsolver import ODEForwardQSolver
 from ..tensor_types import TDOperator
 
 
-class SEEuler(ForwardQSolver):
+class SEEuler(ODEForwardQSolver):
     def __init__(self, *args, H: TDOperator):
         # Args:
         #     H: (b_H, n, n)
