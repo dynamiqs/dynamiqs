@@ -44,9 +44,7 @@ class ForwardQSolver(ABC):
                 device=y0.device,
             )
         else:
-            self.exp_save = torch.empty(
-                *batch_sizes, len(self.exp_ops), dtype=y0.dtype, device=y0.device
-            )
+            self.exp_save = None
 
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
