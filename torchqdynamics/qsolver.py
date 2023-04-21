@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Literal
 
 import torch
-import torch.nn as nn
 from torch import Tensor
 
 from .solver_options import SolverOption
@@ -12,21 +10,39 @@ from .solver_utils import bexpect
 
 
 class QSolver(ABC):
+    GRADIENT_ALG = ['autograd']
+
     def __init__(
         self,
         options: SolverOption,
         y0: Tensor,
         exp_ops: Tensor,
         t_save: Tensor,
-        gradient_alg: Literal['autograd', 'adjoint'] | None,
-        parameters: tuple[nn.Parameter, ...] | None,
+        gradient_alg: str | None,
+        parameters: tuple[torch.nn.Parameter, ...] | None,
     ):
+        """
+
+        Args:
+            options:
+            y0: Initial quantum state, of shape `(..., m, n)`.
+            exp_ops:
+            t_save: Times for which results are saved.
+            gradient_alg:
+            parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
+        """
         self.options = options
         self.y0 = y0
         self.exp_ops = exp_ops
         self.t_save = t_save
         self.gradient_alg = gradient_alg
         self.parameters = parameters
+
+        if gradient_alg is not None and gradient_alg not in self.GRADIENT_ALG:
+            raise ValueError(
+                f'Gradient algorithm {gradient_alg} is not defined or not yet'
+                f' supported by this solver ({type(self)}).'
+            )
 
         self.save_counter = 0
 
