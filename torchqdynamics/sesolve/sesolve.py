@@ -67,14 +67,13 @@ def sesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, psi0_batched, exp_ops, t_save, gradient_alg, parameters)
-    kwargs = dict(H=H_batched)
+    args = (H_batched, psi0_batched, t_save, exp_ops, solver, gradient_alg, parameters)
     if isinstance(solver, Euler):
-        qsolver = SEEuler(*args, **kwargs)
+        qsolver = SEEuler(*args)
     elif isinstance(solver, ODEAdaptiveStep):
-        qsolver = SEAdaptive(*args, **kwargs)
+        qsolver = SEAdaptive(*args)
     elif isinstance(solver, Exponentiate):
-        qsolver = SEExponentiate(*args, **kwargs)
+        qsolver = SEExponentiate(*args)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 

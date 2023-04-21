@@ -7,6 +7,7 @@ from torch import Tensor
 
 from .solver_options import SolverOption
 from .solver_utils import bexpect
+from .tensor_types import TDOperator
 
 
 class QSolver(ABC):
@@ -14,20 +15,22 @@ class QSolver(ABC):
 
     def __init__(
         self,
-        options: SolverOption,
+        H: TDOperator,
         y0: Tensor,
-        exp_ops: Tensor,
         t_save: Tensor,
+        exp_ops: Tensor,
+        options: SolverOption,
         gradient_alg: str | None,
         parameters: tuple[torch.nn.Parameter, ...] | None,
     ):
         """
 
         Args:
-            options:
+            H:
             y0: Initial quantum state, of shape `(..., m, n)`.
-            exp_ops:
             t_save: Times for which results are saved.
+            exp_ops:
+            options:
             gradient_alg:
             parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
         """
@@ -49,12 +52,14 @@ class QSolver(ABC):
                 f' supported by this solver ({type(self)}).'
             )
 
-        self.options = options
+        self.H = H
         self.y0 = y0
-        self.exp_ops = exp_ops
         self.t_save = t_save
+        self.exp_ops = exp_ops
+        self.options = options
         self.gradient_alg = gradient_alg
         self.parameters = parameters
+
         self.save_counter = 0
 
         # initialize save tensors

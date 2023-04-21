@@ -2,15 +2,13 @@ import torch
 
 from ..progress_bar import tqdm
 from ..qsolver import QSolver
-from ..tensor_types import TDOperator
 
 
 class SEExponentiate(QSolver):
-    def __init__(self, *args, H: TDOperator):
+    def __init__(self, *args):
         super().__init__(*args)
 
-        # convert H to size compatible with (b_H, b_psi, n, n)
-        self.H = H[:, None, ...]
+        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
 
     def run(self):
         y, t1 = self.y0, 0.0

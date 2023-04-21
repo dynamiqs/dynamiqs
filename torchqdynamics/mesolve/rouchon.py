@@ -8,12 +8,11 @@ from torch import Tensor
 
 from ..ode_adjoint_qsolver import ODEAdjointQSolver
 from ..solver_utils import inv_sqrtm, kraus_map
-from ..tensor_types import TDOperator
 from ..utils import trace
 
 
 class MERouchon(ODEAdjointQSolver):
-    def __init__(self, *args, H: TDOperator, jump_ops: Tensor):
+    def __init__(self, *args, jump_ops: Tensor):
         """
         Args:
             H: Hamiltonian, of shape `(b_H, n, n)`.
@@ -21,12 +20,11 @@ class MERouchon(ODEAdjointQSolver):
         """
         super().__init__(*args)
 
-        # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
-        self.H = H[:, None, ...]  # (b_H, 1, n, n)
+        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
-        self.n = H.shape[-1]
-        self.I = torch.eye(self.n).to(H)  # (n, n)
+        self.n = self.H.shape[-1]
+        self.I = torch.eye(self.n).to(self.H)  # (n, n)
         self.dt = self.options.dt
 
 

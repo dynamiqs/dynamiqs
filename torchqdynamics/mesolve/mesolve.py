@@ -126,18 +126,25 @@ def mesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, rho0_batched, exp_ops, t_save, gradient_alg, parameters)
-    kwargs = dict(H=H_batched, jump_ops=jump_ops)
+    args = (
+        H_batched,
+        rho0_batched,
+        t_save,
+        exp_ops,
+        solver,
+        gradient_alg,
+        parameters,
+    )
     if isinstance(solver, Rouchon1):
-        qsolver = MERouchon1(*args, **kwargs)
+        qsolver = MERouchon1(*args, jump_ops=jump_ops)
     elif isinstance(solver, Rouchon1_5):
-        qsolver = MERouchon1_5(*args, **kwargs)
+        qsolver = MERouchon1_5(*args, jump_ops=jump_ops)
     elif isinstance(solver, Rouchon2):
-        qsolver = MERouchon2(*args, **kwargs)
+        qsolver = MERouchon2(*args, jump_ops=jump_ops)
     elif isinstance(solver, ODEAdaptiveStep):
-        qsolver = MEAdaptive(*args, **kwargs)
+        qsolver = MEAdaptive(*args, jump_ops=jump_ops)
     elif isinstance(solver, Euler):
-        qsolver = MEEuler(*args, **kwargs)
+        qsolver = MEEuler(*args, jump_ops=jump_ops)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
