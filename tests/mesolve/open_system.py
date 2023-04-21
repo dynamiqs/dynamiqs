@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-import qutip as qt
 import torch
 from torch import Tensor
 
@@ -38,20 +37,20 @@ class LeakyCavity(OpenSystem):
     def __init__(self, *, n: int, kappa: float, delta: float, alpha0: complex):
         self.n, self.kappa, self.delta, self.alpha0 = n, kappa, delta, alpha0
 
-        a = qt.destroy(n)
-        adag = a.dag()
+        a = tq.destroy(n)
+        adag = a.adjoint()
 
-        self.H = delta * adag * a
+        self.H = delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.jump_ops = [np.sqrt(kappa) * a, np.eye(n)]
+        self.jump_ops = [np.sqrt(kappa) * a, tq.eye(n)]
         self.exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
 
-        self.rho0 = qt.coherent(n, alpha0)
+        self.rho0 = tq.coherent_dm(n, alpha0)
         self.rho0_batched = [
-            qt.coherent(n, alpha0),
-            qt.coherent(n, 1j * alpha0),
-            qt.coherent(n, -alpha0),
-            qt.coherent(n, -1j * alpha0),
+            tq.coherent_dm(n, alpha0),
+            tq.coherent_dm(n, 1j * alpha0),
+            tq.coherent_dm(n, -alpha0),
+            tq.coherent_dm(n, -1j * alpha0),
         ]
 
     def t_save(self, n: int) -> Tensor:
@@ -62,5 +61,4 @@ class LeakyCavity(OpenSystem):
         alpha_t = (
             self.alpha0 * np.exp(-1j * self.delta * t) * np.exp(-0.5 * self.kappa * t)
         )
-        rho_t = qt.coherent(self.n, alpha_t)
-        return tq.ket_to_dm(tq.from_qutip(rho_t))
+        return tq.coherent_dm(self.n, alpha_t)
