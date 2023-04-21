@@ -12,11 +12,11 @@ class MEEuler(ForwardQSolver):
         #     H: (b_H, n, n)
         super().__init__(options)
 
-        # convert H to size compatible with (b_H, len(jump_ops), n, n)
+        # convert H to size compatible with (b_H, b_rho, n, n)
         self.H = H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
 
-    def forward(self, t: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         # Args:
         #     rho: (b_H, b_rho, n, n)
         #

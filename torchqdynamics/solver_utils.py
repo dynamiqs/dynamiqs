@@ -20,6 +20,7 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     Args:
         rho: Density matrix of shape `(a, ..., n, n)`.
         operators: Kraus operators of shape `(a, b, n, n)`.
+
     Returns:
         Density matrix of shape `(a, ..., n, n)` with the Kraus map applied.
     """
