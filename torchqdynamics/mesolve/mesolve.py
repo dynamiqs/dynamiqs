@@ -6,7 +6,6 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import odeint
 from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
 from ..tensor_types import (
     OperatorLike,
@@ -127,7 +126,7 @@ def mesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, rho0_batched, exp_ops, t_save)
+    args = (solver, rho0_batched, exp_ops, t_save, gradient_alg, parameters)
     kwargs = dict(H=H_batched, jump_ops=jump_ops)
     if isinstance(solver, Rouchon1):
         qsolver = MERouchon1(*args, **kwargs)
@@ -143,13 +142,10 @@ def mesolve(
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
-    odeint(
-        qsolver, rho0_batched, t_save, gradient_alg=gradient_alg, parameters=parameters
-    )
+    qsolver.run()
 
+    # get saved tensors and restore correct batching
     rho_save, exp_save = qsolver.y_save, qsolver.exp_save
-
-    # restore correct batching
     if rho0.ndim == 2:
         rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Literal
 
 import torch
@@ -11,41 +11,12 @@ from torch.autograd.function import FunctionCtx
 
 from .adaptive import DormandPrince45
 from .progress_bar import tqdm
-from .solver_options import AdaptiveStep, Dopri45, FixedStep, SolverOption
-from .solver_utils import add_tuples, bexpect, none_to_zeros_like
+from .qsolver import QSolver
+from .solver_options import AdaptiveStep, Dopri45, FixedStep
+from .solver_utils import add_tuples, none_to_zeros_like
 
 
-class ForwardQSolver(ABC):
-    def __init__(
-        self, options: SolverOption, y0: Tensor, exp_ops: Tensor, t_save: Tensor
-    ):
-        self.options = options
-        self.exp_ops = exp_ops
-        self.t_save = t_save
-
-        self.save_counter = 0
-
-        # initialize save tensors
-        batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
-
-        if self.options.save_states:
-            # y_save: (..., len(t_save), m, n)
-            self.y_save = torch.zeros(
-                *batch_sizes, len(self.t_save), m, n, dtype=y0.dtype, device=y0.device
-            )
-
-        if len(self.exp_ops) > 0:
-            # exp_save: (..., len(exp_ops), len(t_save))
-            self.exp_save = torch.zeros(
-                *batch_sizes,
-                len(self.exp_ops),
-                len(self.t_save),
-                dtype=y0.dtype,
-                device=y0.device,
-            )
-        else:
-            self.exp_save = None
-
+class ForwardQSolver(QSolver):
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Iterate the quantum state forward.
@@ -59,25 +30,14 @@ class ForwardQSolver(ABC):
         """
         pass
 
-    def next_tsave(self) -> float:
-        return self.t_save[self.save_counter]
-
-    def _save_y(self, y: Tensor):
-        if self.options.save_states:
-            self.y_save[..., self.save_counter, :, :] = y
-
-    def _save_exp_ops(self, y: Tensor):
-        if len(self.exp_ops) > 0:
-            self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
-
-    def save(self, y: Tensor):
-        self._save_y(y)
-        self._save_exp_ops(y)
-        self.save_counter += 1
-
-    def save_final(self, y: Tensor):
-        if not self.options.save_states:
-            self.y_save = y
+    def run(self):
+        odeint(
+            self,
+            self.y0,
+            self.t_save,
+            gradient_alg=self.gradient_alg,
+            parameters=self.parameters,
+        )
 
 
 class AdjointQSolver(ForwardQSolver):

@@ -6,7 +6,6 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import odeint
 from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
 from ..tensor_types import (
     OperatorLike,
@@ -66,7 +65,7 @@ def sesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, psi0_batched, exp_ops, t_save)
+    args = (solver, psi0_batched, exp_ops, t_save, gradient_alg, parameters)
     kwargs = dict(H=H_batched)
     if isinstance(solver, Euler):
         qsolver = SEEuler(*args, **kwargs)
@@ -76,13 +75,10 @@ def sesolve(
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
-    odeint(
-        qsolver, psi0_batched, t_save, gradient_alg=gradient_alg, parameters=parameters
-    )
+    qsolver.run()
 
+    # get saved tensors and restore correct batching
     psi_save, exp_save = qsolver.y_save, qsolver.exp_save
-
-    # restore correct batching
     if psi0.ndim == 2:
         psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
