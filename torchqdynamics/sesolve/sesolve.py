@@ -76,20 +76,18 @@ def sesolve(
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
-    y_save, exp_save = odeint(
-        qsolver,
-        psi0_batched,
-        t_save,
-        gradient_alg=gradient_alg,
-        parameters=parameters,
+    odeint(
+        qsolver, psi0_batched, t_save, gradient_alg=gradient_alg, parameters=parameters
     )
+
+    psi_save, exp_save = qsolver.y_save, qsolver.exp_save
 
     # restore correct batching
     if psi0.dim() == 2:
-        y_save = y_save.squeeze(1)
+        psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
     if H.dim() == 2:
-        y_save = y_save.squeeze(0)
+        psi_save = psi_save.squeeze(0)
         exp_save = exp_save.squeeze(0)
 
-    return y_save, exp_save
+    return psi_save, exp_save

@@ -143,13 +143,11 @@ def mesolve(
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
-    rho_save, exp_save = odeint(
-        qsolver,
-        rho0_batched,
-        t_save,
-        gradient_alg=gradient_alg,
-        parameters=parameters,
+    odeint(
+        qsolver, rho0_batched, t_save, gradient_alg=gradient_alg, parameters=parameters
     )
+
+    rho_save, exp_save = qsolver.y_save, qsolver.exp_save
 
     # restore correct batching
     if rho0.dim() == 2:
