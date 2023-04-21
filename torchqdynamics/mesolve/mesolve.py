@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
+from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -134,7 +134,7 @@ def mesolve(
         qsolver = MERouchon1_5(*args, **kwargs)
     elif isinstance(solver, Rouchon2):
         qsolver = MERouchon2(*args, **kwargs)
-    elif isinstance(solver, AdaptiveStep):
+    elif isinstance(solver, ODEAdaptiveStep):
         qsolver = MEAdaptive(*args, **kwargs)
     elif isinstance(solver, Euler):
         qsolver = MEEuler(*args, **kwargs)

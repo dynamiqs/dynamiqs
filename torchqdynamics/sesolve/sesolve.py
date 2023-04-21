@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
+from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -69,7 +69,7 @@ def sesolve(
     kwargs = dict(H=H_batched)
     if isinstance(solver, Euler):
         qsolver = SEEuler(*args, **kwargs)
-    elif isinstance(solver, AdaptiveStep):
+    elif isinstance(solver, ODEAdaptiveStep):
         qsolver = SEAdaptive(*args, **kwargs)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')

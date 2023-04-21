@@ -11,13 +11,13 @@ class SolverOption:
         self.save_states = save_states
 
 
-class FixedStep(SolverOption):
+class ODEFixedStep(SolverOption):
     def __init__(self, *, dt: float, **kwargs):
         super().__init__(**kwargs)
         self.dt = dt
 
 
-class AdaptiveStep(SolverOption):
+class ODEAdaptiveStep(SolverOption):
     def __init__(
         self,
         *,
@@ -38,9 +38,9 @@ class AdaptiveStep(SolverOption):
         self.max_factor = max_factor
 
 
-class Euler(FixedStep):
+class Euler(ODEFixedStep):
     pass
 
 
-class Dopri45(AdaptiveStep):
+class Dopri45(ODEAdaptiveStep):
     pass

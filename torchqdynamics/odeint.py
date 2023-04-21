@@ -10,7 +10,7 @@ from torch.autograd.function import FunctionCtx
 from .adaptive import DormandPrince45
 from .progress_bar import tqdm
 from .qsolver import QSolver
-from .solver_options import AdaptiveStep, Dopri45, FixedStep
+from .solver_options import Dopri45, ODEAdaptiveStep, ODEFixedStep
 from .solver_utils import add_tuples, none_to_zeros_like
 
 
@@ -53,9 +53,9 @@ class ForwardQSolver(QSolver):
 
     def _odeint_main(self):
         """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
-        if isinstance(self.options, FixedStep):
+        if isinstance(self.options, ODEFixedStep):
             self._fixed_odeint()
-        elif isinstance(self.options, AdaptiveStep):
+        elif isinstance(self.options, ODEAdaptiveStep):
             self._adaptive_odeint()
 
     def _fixed_odeint(self):
@@ -229,9 +229,9 @@ def _odeint_augmented_main(
     parameters: tuple[nn.Parameter, ...],
 ) -> tuple[Tensor, Tensor]:
     """Integrate the augmented ODE backward."""
-    if isinstance(qsolver.options, FixedStep):
+    if isinstance(qsolver.options, ODEFixedStep):
         return _fixed_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
-    elif isinstance(qsolver.options, AdaptiveStep):
+    elif isinstance(qsolver.options, ODEAdaptiveStep):
         return _adaptive_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
 
 
