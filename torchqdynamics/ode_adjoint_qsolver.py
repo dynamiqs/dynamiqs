@@ -24,7 +24,7 @@ class ODEAdjointQSolver(ODEForwardQSolver):
 
     @abstractmethod
     def backward_augmented(
-        self, t: float, y: Tensor, a: Tensor, parameters: tuple[nn.Parameter, ...]
+        self, t: float, y: Tensor, a: Tensor
     ) -> tuple[Tensor, Tensor]:
         """Iterate the augmented quantum state backward.
 
@@ -43,10 +43,10 @@ class ODEAdjointQSolver(ODEForwardQSolver):
         """Integrate an ODE using the adjoint method in the backward pass.
 
         Within this function, the following calls are sequentially made:
-        - Forward pass: `odeint` --> `_odeint_adjoint` --> `ODEIntAdjoint.forward` -->
+        - Forward pass: `run` --> `_odeint_adjoint` --> `ODEIntAdjoint.forward` -->
                         `_odeint_inplace` --> `_odeint_main` --> `_fixed_odeint` or
                         `_adaptive_odeint` --> `qsolver.forward`.
-        - Backward pass: `odeint` --> `_odeint_adjoint` --> `ODEIntAdjoint.backward` -->
+        - Backward pass: `run` --> `_odeint_adjoint` --> `ODEIntAdjoint.backward` -->
                         `_odeint_augmented_main` --> `_fixed_odeint_augmented` or
                         `_adaptive_odeint_augmented` --> `qsolver.backward_augmented`.
         """
@@ -57,80 +57,67 @@ class ODEAdjointQSolver(ODEForwardQSolver):
                 ' the solver.'
             )
 
-        ODEIntAdjoint.apply(self, self.y0, self.t_save, *self.parameters)
+        ODEIntAdjoint.apply(self, self.y0, *self.parameters)
 
+    def _odeint_augmented_main(self):
+        """Integrate the augmented ODE backward."""
+        if isinstance(self.options, ODEFixedStep):
+            self._fixed_odeint_augmented()
+        elif isinstance(self.options, ODEAdaptiveStep):
+            self._adaptive_odeint_augmented()
 
-def _odeint_augmented_main(
-    qsolver: ODEAdjointQSolver,
-    y0: Tensor,
-    a0: Tensor,
-    g0: tuple[Tensor, ...],
-    t_span: Tensor,
-    parameters: tuple[nn.Parameter, ...],
-) -> tuple[Tensor, Tensor]:
-    """Integrate the augmented ODE backward."""
-    if isinstance(qsolver.options, ODEFixedStep):
-        return _fixed_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
-    elif isinstance(qsolver.options, ODEAdaptiveStep):
-        return _adaptive_odeint_augmented(qsolver, y0, a0, g0, t_span, parameters)
+    def _fixed_odeint_augmented(self):
+        """Integrate the augmented ODE backward using a fixed time step solver."""
+        # get time step from qsolver
+        dt = self.options.dt
 
-
-def _adaptive_odeint_augmented(*_args, **_kwargs):
-    """Integrate the augmented ODE backward using an adaptive time step solver."""
-    raise NotImplementedError
-
-
-def _fixed_odeint_augmented(
-    qsolver: ODEAdjointQSolver,
-    y0: Tensor,
-    a0: Tensor,
-    g0: tuple[Tensor, ...],
-    t_span: Tensor,
-    parameters: tuple[nn.Parameter, ...],
-) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
-    """Integrate the augmented ODE backward using a fixed time step solver."""
-    # get time step from qsolver
-    dt = qsolver.options.dt
-
-    # check t_span
-    if not (t_span.ndim == 1 and len(t_span) == 2):
-        raise ValueError(
-            f'`t_span` should be a tensor of size (2,), but has size {t_span.shape}.'
-        )
-    if t_span[1] <= t_span[0]:
-        raise ValueError('`t_span` should be sorted in ascending order.')
-
-    T = t_span[1] - t_span[0]
-    if not torch.allclose(torch.round(T / dt), T / dt):
-        raise ValueError(
-            'For fixed time step adjoint solvers, every value of `t_save` must be a '
-            'multiple of the time step `dt`.'
-        )
-
-    # define time values
-    num_times = torch.round(T / dt).int() + 1
-    times = torch.linspace(t_span[1], t_span[0], num_times)
-
-    # run the ode routine
-    y, a, g = y0, a0, g0
-    for t in tqdm(times[:-1], leave=False, disable=not qsolver.options.verbose):
-        y, a = y.requires_grad_(True), a.requires_grad_(True)
-
-        with torch.enable_grad():
-            # compute y(t-dt) and a(t-dt) with the qsolver
-            y, a = qsolver.backward_augmented(t, y, a, parameters)
-
-            # compute g(t-dt)
-            dg = torch.autograd.grad(
-                a, parameters, y, allow_unused=True, retain_graph=True
+        # check t_save_bwd
+        if not (self.t_save_bwd.ndim == 1 and len(self.t_save_bwd) == 2):
+            raise ValueError(
+                '`t_save_bwd` should be a tensor of size (2,), but has size'
+                f' {self.t_save_bwd.shape}.'
             )
-            dg = none_to_zeros_like(dg, parameters)
-            g = add_tuples(g, dg)
+        if self.t_save_bwd[1] <= self.t_save_bwd[0]:
+            raise ValueError('`t_save_bwd` should be sorted in ascending order.')
 
-        # free the graph of y and a
-        y, a = y.data, a.data
+        T = self.t_save_bwd[1] - self.t_save_bwd[0]
+        if not torch.allclose(torch.round(T / dt), T / dt):
+            raise ValueError(
+                'For fixed time step adjoint solvers, every value of `t_save_bwd` must'
+                ' be a multiple of the time step `dt`.'
+            )
 
-    return y, a, g
+        # define time values
+        num_times = torch.round(T / dt).int() + 1
+        times = torch.linspace(self.t_save_bwd[1], self.t_save_bwd[0], num_times)
+
+        # run the ode routine
+        y, a, g = self.y_bwd, self.a_bwd, self.g_bwd
+        for t in tqdm(times[:-1], leave=False, disable=not self.options.verbose):
+            y, a = y.requires_grad_(True), a.requires_grad_(True)
+
+            with torch.enable_grad():
+                # compute y(t-dt) and a(t-dt) with the qsolver
+                y, a = self.backward_augmented(t, y, a)
+
+                # compute g(t-dt)
+                dg = torch.autograd.grad(
+                    a, self.parameters, y, allow_unused=True, retain_graph=True
+                )
+                dg = none_to_zeros_like(dg, self.parameters)
+                g = add_tuples(g, dg)
+
+            # free the graph of y and a
+            y, a = y.data, a.data
+
+        # save final augmented state to the qsolver
+        self.y_bwd = y
+        self.a_bwd = a
+        self.g_bwd = g
+
+    def _adaptive_odeint_augmented(self, *_args, **_kwargs):
+        """Integrate the augmented ODE backward using an adaptive time step solver."""
+        raise NotImplementedError
 
 
 class ODEIntAdjoint(torch.autograd.Function):
@@ -141,22 +128,26 @@ class ODEIntAdjoint(torch.autograd.Function):
         ctx: FunctionCtx,
         qsolver: ODEAdjointQSolver,
         y0: Tensor,
-        t_save: Tensor,
         *parameters: tuple[nn.Parameter, ...],
-    ):
+    ) -> Tensor:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.qsolver = qsolver
-        ctx.t_save = t_save if qsolver.options.save_states else t_save[-1]
+        ctx.t_save = (
+            qsolver.t_save if qsolver.options.save_states else qsolver.t_save[-1]
+        )
 
         # solve the ODE forward without storing the graph of operations
         qsolver._odeint_inplace()
 
         # save results and model parameters
-        ctx.save_for_backward(qsolver.y_save, *parameters)
+        ctx.save_for_backward(qsolver.y_save)
+
+        # returning `y_save` is required for custom backward functions
+        return qsolver.y_save
 
     @staticmethod
-    def backward(ctx: FunctionCtx, *grad_y: Tensor):
+    def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:
         """Backward pass of the ODE integrator.
 
         An augmented ODE is integrated backwards starting from the final state computed
@@ -171,42 +162,43 @@ class ODEIntAdjoint(torch.autograd.Function):
         # unpack context
         qsolver = ctx.qsolver
         t_save = ctx.t_save
-        y_save, *parameters = ctx.saved_tensors
+        y_save = ctx.saved_tensors
 
         # initialize time list
-        t_span = t_save
-        if t_span[0] != 0.0:
-            t_span = torch.cat((torch.zeros(1), t_span))
+        t_save = t_save
+        if t_save[0] != 0.0:
+            t_save = torch.cat((torch.zeros(1), t_save))
 
         # locally disable gradient computation
         with torch.no_grad():
             # initialize state, adjoint and gradients
-            y = y_save[..., -1, :, :]
-            a = grad_y[0][..., -1, :, :]
-            g = tuple(torch.zeros_like(_p).to(y) for _p in parameters)
+            qsolver.y_bwd = y_save[..., -1, :, :]
+            qsolver.a_bwd = grad_y[0][..., -1, :, :]
+            qsolver.g_bwd = tuple(
+                torch.zeros_like(_p).to(qsolver.y_bwd) for _p in qsolver.parameters
+            )
 
             # solve the augmented equation backward between every checkpoint
             for i in tqdm(
-                range(len(t_span) - 1, 0, -1), disable=not qsolver.options.verbose
+                range(len(t_save) - 1, 0, -1), disable=not qsolver.options.verbose
             ):
                 # initialize time between both checkpoints
-                t_span_segment = t_span[i - 1 : i + 1]
+                qsolver.t_save_bwd = t_save[i - 1 : i + 1]
 
                 # run odeint on augmented state
-                y, a, g = _odeint_augmented_main(
-                    qsolver, y, a, g, t_span_segment, parameters=parameters
-                )
+                qsolver._odeint_augmented_main()
 
                 # replace y with its checkpointed version
-                y = y_save[..., i - 1, :, :]
+                qsolver.y_bwd = y_save[..., i - 1, :, :]
 
                 # update adjoint wrt this time point by adding dL / dy(t)
-                a += grad_y[0][..., i - 1, :, :]
+                qsolver.a_bwd += grad_y[0][..., i - 1, :, :]
 
         # convert gradients of real-valued parameters to real-valued gradients
-        g = tuple(
-            _g.real if _p.is_floating_point() else _g for (_g, _p) in zip(g, parameters)
+        qsolver.g_bwd = tuple(
+            _g.real if _p.is_floating_point() else _g
+            for (_g, _p) in zip(qsolver.g_bwd, qsolver.parameters)
         )
 
         # return the computed gradients w.r.t. each argument in `forward`
-        return None, a, None, None, None, *g
+        return None, qsolver.a_bwd, *qsolver.g_bwd
