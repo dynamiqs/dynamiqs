@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from ..ode_forward_solver import ODEForwardSolver
+from ..ode.ode_forward_solver import ODEForwardSolver
 
 
 class SEAdaptive(ODEForwardSolver):

@@ -1,7 +1,7 @@
 import torch
 
-from ..progress_bar import tqdm
 from ..solver import Solver
+from ..utils.progress_bar import tqdm
 
 
 class SEPropagator(Solver):

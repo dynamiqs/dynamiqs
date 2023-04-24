@@ -5,10 +5,10 @@ from abc import abstractmethod
 import torch
 from torch import Tensor
 
+from ..options import Dopri45, ODEAdaptiveStep, ODEFixedStep
+from ..solver import Solver
+from ..utils.progress_bar import tqdm
 from .adaptive_ode_solver import DormandPrince45
-from .options import Dopri45, ODEAdaptiveStep, ODEFixedStep
-from .progress_bar import tqdm
-from .solver import Solver
 
 
 class ODEForwardSolver(Solver):

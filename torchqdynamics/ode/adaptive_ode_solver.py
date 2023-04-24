@@ -6,8 +6,8 @@ from typing import Callable
 import torch
 from torch import Tensor
 
-from .solver_utils import hairer_norm
-from .tensor_types import dtype_complex_to_float
+from ..utils.solver_utils import hairer_norm
+from ..utils.tensor_types import dtype_complex_to_float
 
 
 class AdaptiveODESolver(ABC):

@@ -1,7 +1,7 @@
 from torch import Tensor
 
-from ..ode_forward_solver import ODEForwardSolver
-from ..solver_utils import lindbladian
+from ..ode.ode_forward_solver import ODEForwardSolver
+from ..utils.solver_utils import lindbladian
 
 
 class MEEuler(ODEForwardSolver):

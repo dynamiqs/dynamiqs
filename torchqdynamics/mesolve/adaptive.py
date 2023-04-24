@@ -1,7 +1,7 @@
 from torch import Tensor
 
-from ..ode_forward_solver import ODEForwardSolver
-from ..solver_utils import kraus_map
+from ..ode.ode_forward_solver import ODEForwardSolver
+from ..utils.solver_utils import kraus_map
 
 
 class MEAdaptive(ODEForwardSolver):

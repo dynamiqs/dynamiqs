@@ -7,14 +7,14 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
-from ..tensor_types import (
+from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
     TensorLike,
     dtype_complex_to_float,
     to_tensor,
 )
-from ..utils import is_ket, ket_to_dm
+from ..utils.utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
 from .options import Rouchon1, Rouchon1_5, Rouchon2

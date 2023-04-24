@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
-from ..tensor_types import (
+from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
     TensorLike,

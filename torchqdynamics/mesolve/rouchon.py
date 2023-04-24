@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..ode_adjoint_solver import ODEAdjointSolver
-from ..solver_utils import inv_sqrtm, kraus_map
-from ..utils import trace
+from ..ode.ode_adjoint_solver import ODEAdjointSolver
+from ..utils.solver_utils import inv_sqrtm, kraus_map
+from ..utils.utils import trace
 
 
 class MERouchon(ODEAdjointSolver):
