@@ -17,9 +17,9 @@ class ODEAdjointQSolver(ODEForwardQSolver):
     GRADIENT_ALG = ['autograd', 'adjoint']
 
     def run(self):
-        super().run()
-
-        if self.gradient_alg == 'adjoint':
+        if self.gradient_alg in [None, 'autograd']:
+            super().run()
+        elif self.gradient_alg == 'adjoint':
             self._odeint_adjoint()
 
     @abstractmethod
