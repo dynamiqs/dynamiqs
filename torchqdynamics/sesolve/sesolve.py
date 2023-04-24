@@ -62,20 +62,29 @@ def sesolve(
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    # default solver
-    if solver is None:
-        solver = Dopri45()
+    # default solver_option
+    solver_option = solver
+    if solver_option is None:
+        solver_option = Dopri45()
 
     # define the QSolver
-    args = (H_batched, psi0_batched, t_save, exp_ops, solver, gradient_alg, parameters)
-    if isinstance(solver, Euler):
+    args = (
+        H_batched,
+        psi0_batched,
+        t_save,
+        exp_ops,
+        solver_option,
+        gradient_alg,
+        parameters,
+    )
+    if isinstance(solver_option, Euler):
         qsolver = SEEuler(*args)
-    elif isinstance(solver, ODEAdaptiveStep):
+    elif isinstance(solver_option, ODEAdaptiveStep):
         qsolver = SEAdaptive(*args)
-    elif isinstance(solver, Propagator):
+    elif isinstance(solver_option, Propagator):
         qsolver = SEPropagator(*args)
     else:
-        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
+        raise NotImplementedError(f'Solver {type(solver_option)} is not implemented.')
 
     # compute the result
     qsolver.run()

@@ -122,9 +122,10 @@ def mesolve(
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    # default solver
-    if solver is None:
-        solver = Dopri45()
+    # default solver_option
+    solver_option = solver
+    if solver_option is None:
+        solver_option = Dopri45()
 
     # define the QSolver
     args = (
@@ -132,22 +133,22 @@ def mesolve(
         rho0_batched,
         t_save,
         exp_ops,
-        solver,
+        solver_option,
         gradient_alg,
         parameters,
     )
-    if isinstance(solver, Rouchon1):
+    if isinstance(solver_option, Rouchon1):
         qsolver = MERouchon1(*args, jump_ops=jump_ops)
-    elif isinstance(solver, Rouchon1_5):
+    elif isinstance(solver_option, Rouchon1_5):
         qsolver = MERouchon1_5(*args, jump_ops=jump_ops)
-    elif isinstance(solver, Rouchon2):
+    elif isinstance(solver_option, Rouchon2):
         qsolver = MERouchon2(*args, jump_ops=jump_ops)
-    elif isinstance(solver, ODEAdaptiveStep):
+    elif isinstance(solver_option, ODEAdaptiveStep):
         qsolver = MEAdaptive(*args, jump_ops=jump_ops)
-    elif isinstance(solver, Euler):
+    elif isinstance(solver_option, Euler):
         qsolver = MEEuler(*args, jump_ops=jump_ops)
     else:
-        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
+        raise NotImplementedError(f'Solver {type(solver_option)} is not implemented.')
 
     # compute the result
     qsolver.run()
