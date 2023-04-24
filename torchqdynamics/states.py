@@ -81,7 +81,7 @@ def fock_dm(
 
 
 @complex_tensor
-def coherent(dim: int, alpha: complex, *, dtype=None, device=None) -> Tensor:
+def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
     """State vector of a coherent state.
 
     Example:
@@ -96,7 +96,9 @@ def coherent(dim: int, alpha: complex, *, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def coherent_dm(dim: int, alpha: complex, *, dtype=None, device=None) -> Tensor:
+def coherent_dm(
+    dim: int, alpha: complex | Tensor, *, dtype=None, device=None
+) -> Tensor:
     """Density matrix of a coherent state.
 
     Example:
