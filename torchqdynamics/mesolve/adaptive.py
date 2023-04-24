@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from ..ode.ode_forward_solver import ODEForwardSolver
+from ..ode.forward_solver import ODEForwardSolver
 from ..utils.solver_utils import kraus_map
 
 

@@ -10,7 +10,7 @@ from torch.autograd.function import FunctionCtx
 from ..options import ODEAdaptiveStep, ODEFixedStep
 from ..utils.progress_bar import tqdm
 from ..utils.solver_utils import add_tuples, none_to_zeros_like
-from .ode_forward_solver import ODEForwardSolver
+from .forward_solver import ODEForwardSolver
 
 
 class ODEAdjointSolver(ODEForwardSolver):
