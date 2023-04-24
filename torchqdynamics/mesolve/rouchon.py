@@ -6,7 +6,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+<<<<<<< HEAD
 from ..ode.adjoint_solver import AdjointSolver
+=======
+from ..ode.ode_adjoint_solver import ODEAdjointSolver
+>>>>>>> 78bc0c8 (Reorganize main folders)
 from ..utils.solver_utils import inv_sqrtm, kraus_map
 from ..utils.utils import trace
 

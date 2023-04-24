@@ -1,6 +1,10 @@
 from torch import Tensor
 
+<<<<<<< HEAD
 from ..ode.forward_solver import ForwardSolver
+=======
+from ..ode.ode_forward_solver import ODEForwardSolver
+>>>>>>> 78bc0c8 (Reorganize main folders)
 from ..utils.solver_utils import kraus_map
 
 
