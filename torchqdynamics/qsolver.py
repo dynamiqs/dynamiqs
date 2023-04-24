@@ -86,12 +86,7 @@ class QSolver(ABC):
                 device=self.y0.device,
             )
         else:
-            self.exp_save = torch.empty(
-                *batch_sizes,
-                len(self.exp_ops),
-                dtype=self.y0.dtype,
-                device=self.y0.device,
-            )
+            self.exp_save = None
 
     def next_tsave(self) -> float:
         return self.t_save[self.save_counter]

@@ -151,7 +151,7 @@ class ODEForwardQSolver(QSolver):
 
                 # save results if flag is raised
                 if save_flag:
-                    self.save(t, y)
+                    self.save(y)
 
             # return to the original dt, lower the flag and get next save time
             if save_flag:
