@@ -125,7 +125,7 @@ def mesolve(
     if options is None:
         options = Dopri45()
 
-    # define the QSolver
+    # define the solver
     args = (
         H_batched,
         rho0_batched,
@@ -136,23 +136,23 @@ def mesolve(
         parameters,
     )
     if isinstance(options, Rouchon1):
-        qsolver = MERouchon1(*args, jump_ops=jump_ops)
+        solver = MERouchon1(*args, jump_ops=jump_ops)
     elif isinstance(options, Rouchon1_5):
-        qsolver = MERouchon1_5(*args, jump_ops=jump_ops)
+        solver = MERouchon1_5(*args, jump_ops=jump_ops)
     elif isinstance(options, Rouchon2):
-        qsolver = MERouchon2(*args, jump_ops=jump_ops)
+        solver = MERouchon2(*args, jump_ops=jump_ops)
     elif isinstance(options, ODEAdaptiveStep):
-        qsolver = MEAdaptive(*args, jump_ops=jump_ops)
+        solver = MEAdaptive(*args, jump_ops=jump_ops)
     elif isinstance(options, Euler):
-        qsolver = MEEuler(*args, jump_ops=jump_ops)
+        solver = MEEuler(*args, jump_ops=jump_ops)
     else:
         raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
-    qsolver.run()
+    solver.run()
 
     # get saved tensors and restore correct batching
-    rho_save, exp_save = qsolver.y_save, qsolver.exp_save
+    rho_save, exp_save = solver.y_save, solver.exp_save
     if rho0.ndim == 2:
         rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)

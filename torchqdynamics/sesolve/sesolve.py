@@ -66,7 +66,7 @@ def sesolve(
     if options is None:
         options = Dopri45()
 
-    # define the QSolver
+    # define the solver
     args = (
         H_batched,
         psi0_batched,
@@ -77,19 +77,19 @@ def sesolve(
         parameters,
     )
     if isinstance(options, Euler):
-        qsolver = SEEuler(*args)
+        solver = SEEuler(*args)
     elif isinstance(options, ODEAdaptiveStep):
-        qsolver = SEAdaptive(*args)
+        solver = SEAdaptive(*args)
     elif isinstance(options, Propagator):
-        qsolver = SEPropagator(*args)
+        solver = SEPropagator(*args)
     else:
         raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
-    qsolver.run()
+    solver.run()
 
     # get saved tensors and restore correct batching
-    psi_save, exp_save = qsolver.y_save, qsolver.exp_save
+    psi_save, exp_save = solver.y_save, solver.exp_save
     if psi0.ndim == 2:
         psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)

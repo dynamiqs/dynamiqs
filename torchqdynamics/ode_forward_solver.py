@@ -8,10 +8,10 @@ from torch import Tensor
 from .adaptive_ode_solver import DormandPrince45
 from .options import Dopri45, ODEAdaptiveStep, ODEFixedStep
 from .progress_bar import tqdm
-from .qsolver import QSolver
+from .solver import Solver
 
 
-class ODEForwardQSolver(QSolver):
+class ODEForwardSolver(Solver):
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Iterate the quantum state forward.
@@ -59,7 +59,7 @@ class ODEForwardQSolver(QSolver):
             The solver times are defined using `torch.linspace` which ensures that the
             overall solution is evolved from the user-defined time (up to an error of
             `rtol=1e-5`). However, this may induce a small mismatch between the time
-            step inside `qsolver` and the time step inside the iteration loop. A small
+            step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
         # get time step

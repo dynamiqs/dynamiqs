@@ -10,7 +10,7 @@ from .solver_utils import bexpect
 from .tensor_types import TDOperator
 
 
-class QSolver(ABC):
+class Solver(ABC):
     GRADIENT_ALG = ['autograd']
 
     def __init__(
