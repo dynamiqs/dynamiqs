@@ -162,15 +162,17 @@ def _create_single(dim: int, *, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def displace(dim: int, alpha: complex, *, dtype=None, device=None) -> Tensor:
+def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
     """Displacement operator."""
     a = destroy(dim, dtype=dtype, device=device)
-    return torch.matrix_exp(alpha * a.adjoint() - alpha.conjugate() * a)
+    alpha = torch.as_tensor(alpha)
+    return torch.matrix_exp(alpha * a.adjoint() - alpha.conj() * a)
 
 
 @complex_tensor
-def squeeze(dim: int, z: complex, *, dtype=None, device=None) -> Tensor:
+def squeeze(dim: int, z: complex | Tensor, *, dtype=None, device=None) -> Tensor:
     """Squeezing operator."""
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
-    return torch.matrix_exp(0.5 * (z.conjugate() * a2 - z * a2.adjoint()))
+    z = torch.as_tensor(z)
+    return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.adjoint()))
