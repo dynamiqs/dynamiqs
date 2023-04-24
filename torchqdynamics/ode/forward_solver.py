@@ -100,9 +100,7 @@ class ForwardSolver(Solver):
         Computational Mathematics`.
         """
         # save initial solution
-        self.save(self.y0)
-
-        save_flag = False
+        self.save_initial(self.y0)
 
         # initialize the adaptive integrator
         args = (
@@ -127,13 +125,13 @@ class ForwardSolver(Solver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter, max_steps = 0, self.options.max_steps
-        next_tsave = self.next_tsave()
+        save_flag = False
         while t < self.t_save[-1] and step_counter < max_steps:
             # if a time in `t_save` is reached, raise a flag and rescale dt accordingly
-            if t + dt >= next_tsave:
+            if t + dt >= self.next_tsave():
                 save_flag = True
                 dt_old = dt
-                dt = next_tsave - t
+                dt = self.next_tsave() - t
 
             # perform a single ODE integrator step of size dt
             ft_new, y_new, y_err = integrator.step(ft, y, t, dt)
@@ -156,7 +154,6 @@ class ForwardSolver(Solver):
             if save_flag:
                 dt = dt_old
                 save_flag = False
-                next_tsave = self.next_tsave()
 
             # compute the next dt
             dt = integrator.update_tstep(dt, error)
