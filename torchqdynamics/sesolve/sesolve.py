@@ -31,7 +31,7 @@ def sesolve(
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
-) -> tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor | None]:
     # Args:
     #     H: (b_H?, n, n)
     #     psi0: (b_psi0?, n, 1)

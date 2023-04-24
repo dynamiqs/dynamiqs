@@ -33,7 +33,7 @@ def mesolve(
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
-) -> tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor | None]:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
@@ -89,7 +89,8 @@ def mesolve(
                 matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
                 times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
-                len(exp_ops), len(t_save))` if batched.
+                len(exp_ops), len(t_save))` if batched. `None` if no `exp_ops` are
+                passed.
     """
     # TODO H is assumed to be time-independent from here (temporary)
 
