@@ -1,4 +1,5 @@
-import numpy as np
+from math import pi
+
 import pytest
 
 import torchqdynamics as tq
@@ -6,7 +7,7 @@ import torchqdynamics as tq
 from .open_system import LeakyCavity
 from .test_mesolve import TestMESolve
 
-leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * np.pi, delta=2 * np.pi, alpha0=1.0)
+leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
 
 
 class TestMERouchon1(TestMESolve):

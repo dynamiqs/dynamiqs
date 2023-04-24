@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
+from math import pi, sqrt
 
-import numpy as np
 import torch
 from torch import Tensor
 
@@ -32,30 +32,38 @@ class Cavity(ClosedSystem):
     # `psi0_batched`: (4, n, n)
     # `exp_ops`: (2, n, n)
 
-    def __init__(self, *, n: int, delta: float, alpha0: complex):
+    def __init__(
+        self, *, n: int, delta: float, alpha0: complex, requires_grad: bool = False
+    ):
+        # store parameters
         self.n = n
-        self.delta = delta
-        self.alpha0 = alpha0
+        self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
+        self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
-        a = tq.destroy(n)
+        # bosonic operators
+        a = tq.destroy(self.n)
         adag = a.adjoint()
 
-        self.H = delta * adag @ a
+        # prepare quantum operators
+        self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.exp_ops = [(a + adag) / np.sqrt(2), (a - adag) / (np.sqrt(2) * 1j)]
+        self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
-        self.psi0 = tq.coherent(n, alpha0)
+        # prepare initial states
+        self.psi0 = tq.coherent(self.n, self.alpha0)
         self.psi0_batched = [
-            tq.coherent(n, alpha0),
-            tq.coherent(n, 1j * alpha0),
-            tq.coherent(n, -alpha0),
-            tq.coherent(n, -1j * alpha0),
+            tq.coherent(self.n, self.alpha0),
+            tq.coherent(self.n, 1j * self.alpha0),
+            tq.coherent(self.n, -self.alpha0),
+            tq.coherent(self.n, -1j * self.alpha0),
         ]
 
-    def t_save(self, n: int) -> Tensor:
-        t_end = 1 / (self.delta / (2 * np.pi))  # a full rotation
-        return torch.linspace(0.0, t_end, n)
+    def t_save(self, num_t_save: int) -> Tensor:
+        """Compute t_save"""
+        t_end = 2 * pi / self.delta  # a full rotation
+        return torch.linspace(0.0, t_end, num_t_save)
 
     def psi(self, t: float) -> Tensor:
-        alpha_t = self.alpha0 * np.exp(-1j * self.delta * t)
+        """Compute the exact state vector at a given time."""
+        alpha_t = self.alpha0 * torch.exp(-1j * self.delta * t)
         return tq.coherent(self.n, alpha_t)
