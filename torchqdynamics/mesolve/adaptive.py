@@ -1,10 +1,10 @@
 from torch import Tensor
 
-from ..ode_forward_qsolver import ODEForwardQSolver
+from ..ode_forward_solver import ODEForwardSolver
 from ..solver_utils import kraus_map
 
 
-class MEAdaptive(ODEForwardQSolver):
+class MEAdaptive(ODEForwardSolver):
     def __init__(self, *args, jump_ops: Tensor):
         super().__init__(*args)
 

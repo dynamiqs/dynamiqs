@@ -1,9 +1,9 @@
 from torch import Tensor
 
-from ..ode_forward_qsolver import ODEForwardQSolver
+from ..ode_forward_solver import ODEForwardSolver
 
 
-class SEAdaptive(ODEForwardQSolver):
+class SEAdaptive(ODEForwardSolver):
     def __init__(self, *args):
         super().__init__(*args)
 

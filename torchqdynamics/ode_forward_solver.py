@@ -5,13 +5,13 @@ from abc import abstractmethod
 import torch
 from torch import Tensor
 
-from .adaptive import DormandPrince45
+from .adaptive_ode_solver import DormandPrince45
+from .options import Dopri45, ODEAdaptiveStep, ODEFixedStep
 from .progress_bar import tqdm
-from .qsolver import QSolver
-from .solver_options import Dopri45, ODEAdaptiveStep, ODEFixedStep
+from .solver import Solver
 
 
-class ODEForwardQSolver(QSolver):
+class ODEForwardSolver(Solver):
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Iterate the quantum state forward.
@@ -37,7 +37,7 @@ class ODEForwardQSolver(QSolver):
             self._odeint_main()
 
     def _odeint_inplace(self):
-        """Integrate a quantum ODE with an in-place solver.
+        """Integrate a quantum ODE with an in-place ODE solver.
 
         Simple solution for now so torch does not store gradients.
         TODO Implement a genuine in-place solver.
@@ -53,13 +53,13 @@ class ODEForwardQSolver(QSolver):
             self._adaptive_odeint()
 
     def _fixed_odeint(self):
-        """Integrate a quantum ODE with a fixed time step solver.
+        """Integrate a quantum ODE with a fixed time step ODE solver.
 
         Note:
             The solver times are defined using `torch.linspace` which ensures that the
             overall solution is evolved from the user-defined time (up to an error of
             `rtol=1e-5`). However, this may induce a small mismatch between the time
-            step inside `qsolver` and the time step inside the iteration loop. A small
+            step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
         # get time step
@@ -90,7 +90,7 @@ class ODEForwardQSolver(QSolver):
         self.save_final(y)
 
     def _adaptive_odeint(self):
-        """Integrate a quantum ODE with an adaptive time step solver.
+        """Integrate a quantum ODE with an adaptive time step ODE solver.
 
         This function integrates an ODE of the form `dy / dt = f(t, y)` with
         `y(0) = y0`, using a Runge-Kutta adaptive time step solver.
@@ -104,7 +104,7 @@ class ODEForwardQSolver(QSolver):
 
         save_flag = False
 
-        # initialize the adaptive solver
+        # initialize the adaptive ode_solver
         args = (
             self.forward,
             self.options.factor,
@@ -114,12 +114,12 @@ class ODEForwardQSolver(QSolver):
             self.options.rtol,
         )
         if isinstance(self.options, Dopri45):
-            solver = DormandPrince45(*args)
+            ode_solver = DormandPrince45(*args)
 
         # initialize the ODE routine
         t0 = 0.0
-        f0 = solver.f(t0, self.y0)
-        dt = solver.init_tstep(f0, self.y0, t0)
+        f0 = ode_solver.f(t0, self.y0)
+        dt = ode_solver.init_tstep(f0, self.y0, t0)
 
         # initialize the progress bar
         pbar = tqdm(total=self.t_save[-1].item(), disable=not self.options.verbose)
@@ -135,11 +135,11 @@ class ODEForwardQSolver(QSolver):
                 dt_old = dt
                 dt = next_tsave - t
 
-            # perform a single solver step of size dt
-            ft_new, y_new, y_err = solver.step(ft, y, t, dt)
+            # perform a single ODE solver step of size dt
+            ft_new, y_new, y_err = ode_solver.step(ft, y, t, dt)
 
             # compute estimated error of this step
-            error = solver.get_error(y_err, y, y_new)
+            error = ode_solver.get_error(y_err, y, y_new)
 
             # update results if step is accepted
             if error <= 1:
@@ -159,7 +159,7 @@ class ODEForwardQSolver(QSolver):
                 next_tsave = self.next_tsave()
 
             # compute the next dt
-            dt = solver.update_tstep(dt, error)
+            dt = ode_solver.update_tstep(dt, error)
             step_counter += 1
 
         # save last state if not already done
