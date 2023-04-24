@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
+from ..solver_option import Dopri45, Euler, ODEAdaptiveStep, SolverOption
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -18,7 +18,7 @@ from ..utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
-from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
+from .solver_option import Rouchon1, Rouchon1_5, Rouchon2
 
 
 def mesolve(

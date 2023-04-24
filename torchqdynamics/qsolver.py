@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 
-from .solver_options import SolverOption
+from .solver_option import SolverOption
 from .solver_utils import bexpect
 from .tensor_types import TDOperator
 

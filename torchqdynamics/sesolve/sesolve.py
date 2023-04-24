@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
+from ..solver_option import Dopri45, Euler, ODEAdaptiveStep, SolverOption
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -17,7 +17,7 @@ from ..tensor_types import (
 from .adaptive import SEAdaptive
 from .euler import SEEuler
 from .propagator import SEPropagator
-from .solver_options import Propagator
+from .solver_option import Propagator
 
 
 def sesolve(

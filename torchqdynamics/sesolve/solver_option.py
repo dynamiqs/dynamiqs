@@ -1,4 +1,4 @@
-from ..solver_options import SolverOption
+from ..solver_option import SolverOption
 
 
 class Propagator(SolverOption):

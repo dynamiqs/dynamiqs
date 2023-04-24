@@ -1,4 +1,4 @@
-from ..solver_options import ODEFixedStep
+from ..solver_option import ODEFixedStep
 
 
 class Rouchon1(ODEFixedStep):

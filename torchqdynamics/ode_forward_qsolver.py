@@ -8,7 +8,7 @@ from torch import Tensor
 from .adaptive import DormandPrince45
 from .progress_bar import tqdm
 from .qsolver import QSolver
-from .solver_options import Dopri45, ODEAdaptiveStep, ODEFixedStep
+from .solver_option import Dopri45, ODEAdaptiveStep, ODEFixedStep
 
 
 class ODEForwardQSolver(QSolver):

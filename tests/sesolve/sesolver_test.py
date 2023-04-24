@@ -1,7 +1,7 @@
 import torch
 
 import torchqdynamics as tq
-from torchqdynamics.solver_options import SolverOption
+from torchqdynamics.solver_option import SolverOption
 
 from .closed_system import ClosedSystem
 
