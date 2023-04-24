@@ -1,11 +1,19 @@
 class SolverOption:
-    def __init__(self, *, verbose: bool = True):
+    def __init__(self, *, verbose: bool = True, save_states: bool = True):
+        """...
+
+        Args:
+            save_states (bool, optional): If `True`, the state is saved at every
+                time value. If `False`, only the final state is stored and returned.
+                Defaults to `True`.
+        """
         self.verbose = verbose
+        self.save_states = save_states
 
 
 class FixedStep(SolverOption):
-    def __init__(self, *, dt: float, verbose: bool = True):
-        super().__init__(verbose=verbose)
+    def __init__(self, *, dt: float, **kwargs):
+        super().__init__(**kwargs)
         self.dt = dt
 
 
@@ -19,9 +27,9 @@ class AdaptiveStep(SolverOption):
         factor: float = 0.9,
         min_factor: float = 0.2,
         max_factor: float = 5.0,
-        verbose: bool = True,
+        **kwargs,
     ):
-        super().__init__(verbose=verbose)
+        super().__init__(**kwargs)
         self.atol = atol
         self.rtol = rtol
         self.max_steps = max_steps
