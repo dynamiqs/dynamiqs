@@ -105,7 +105,9 @@ class QSolver(ABC):
         self.save_counter += 1
 
     def save_final(self, y: Tensor):
-        if not self.options.save_states:
+        if self.options.save_states:
+            self._save_y(y)
+        else:
             self.y_save = y
 
     @abstractmethod

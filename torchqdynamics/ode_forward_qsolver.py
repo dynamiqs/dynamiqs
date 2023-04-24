@@ -87,7 +87,6 @@ class ODEForwardQSolver(QSolver):
             y = self.forward(t, y)
 
         # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
-        self.save(y)
         self.save_final(y)
 
     def _adaptive_odeint(self):
