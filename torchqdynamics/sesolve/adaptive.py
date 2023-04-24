@@ -1,14 +1,13 @@
 from torch import Tensor
 
-from ..odeint import ForwardQSolver
-from ..tensor_types import TDOperator
+from ..ode_forward_qsolver import ODEForwardQSolver
 
 
-class SEAdaptive(ForwardQSolver):
-    def __init__(self, *args, H: TDOperator):
+class SEAdaptive(ODEForwardQSolver):
+    def __init__(self, *args):
         super().__init__(*args)
 
-        self.H = H[:, None, ...]  # (b_H, 1, n, n)
+        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
 
     def forward(self, t: float, psi: Tensor) -> Tensor:
         """Compute dpsi / dt = -1j * H(psi) at time t."""

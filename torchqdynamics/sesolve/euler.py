@@ -1,17 +1,13 @@
 from torch import Tensor
 
-from ..odeint import ForwardQSolver
-from ..tensor_types import TDOperator
+from ..ode_forward_qsolver import ODEForwardQSolver
 
 
-class SEEuler(ForwardQSolver):
-    def __init__(self, *args, H: TDOperator):
-        # Args:
-        #     H: (b_H, n, n)
+class SEEuler(ODEForwardQSolver):
+    def __init__(self, *args):
         super().__init__(*args)
 
-        # convert H to size compatible with (b_H, b_psi, n, n)
-        self.H = H[:, None, ...]
+        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
 
     def forward(self, t: float, psi: Tensor) -> Tensor:
         # Args:

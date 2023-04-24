@@ -6,8 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import odeint
-from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
+from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -34,7 +33,7 @@ def mesolve(
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
-) -> tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor | None]:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
@@ -90,7 +89,8 @@ def mesolve(
                 matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
                 times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
-                len(exp_ops), len(t_save))` if batched.
+                len(exp_ops), len(t_save))` if batched. `None` if no `exp_ops` are
+                passed.
     """
     # TODO H is assumed to be time-independent from here (temporary)
 
@@ -127,29 +127,33 @@ def mesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, rho0_batched, exp_ops, t_save)
-    kwargs = dict(H=H_batched, jump_ops=jump_ops)
+    args = (
+        H_batched,
+        rho0_batched,
+        t_save,
+        exp_ops,
+        solver,
+        gradient_alg,
+        parameters,
+    )
     if isinstance(solver, Rouchon1):
-        qsolver = MERouchon1(*args, **kwargs)
+        qsolver = MERouchon1(*args, jump_ops=jump_ops)
     elif isinstance(solver, Rouchon1_5):
-        qsolver = MERouchon1_5(*args, **kwargs)
+        qsolver = MERouchon1_5(*args, jump_ops=jump_ops)
     elif isinstance(solver, Rouchon2):
-        qsolver = MERouchon2(*args, **kwargs)
-    elif isinstance(solver, AdaptiveStep):
-        qsolver = MEAdaptive(*args, **kwargs)
+        qsolver = MERouchon2(*args, jump_ops=jump_ops)
+    elif isinstance(solver, ODEAdaptiveStep):
+        qsolver = MEAdaptive(*args, jump_ops=jump_ops)
     elif isinstance(solver, Euler):
-        qsolver = MEEuler(*args, **kwargs)
+        qsolver = MEEuler(*args, jump_ops=jump_ops)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
-    odeint(
-        qsolver, rho0_batched, t_save, gradient_alg=gradient_alg, parameters=parameters
-    )
+    qsolver.run()
 
+    # get saved tensors and restore correct batching
     rho_save, exp_save = qsolver.y_save, qsolver.exp_save
-
-    # restore correct batching
     if rho0.ndim == 2:
         rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)

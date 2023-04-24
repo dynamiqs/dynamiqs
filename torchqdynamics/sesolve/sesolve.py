@@ -6,8 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import odeint
-from ..solver_options import AdaptiveStep, Dopri45, Euler, SolverOption
+from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -17,6 +16,8 @@ from ..tensor_types import (
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
+from .propagator import SEPropagator
+from .solver_options import Propagator
 
 
 def sesolve(
@@ -30,7 +31,7 @@ def sesolve(
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
-) -> tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor | None]:
     # Args:
     #     H: (b_H?, n, n)
     #     psi0: (b_psi0?, n, 1)
@@ -66,23 +67,21 @@ def sesolve(
         solver = Dopri45()
 
     # define the QSolver
-    args = (solver, psi0_batched, exp_ops, t_save)
-    kwargs = dict(H=H_batched)
+    args = (H_batched, psi0_batched, t_save, exp_ops, solver, gradient_alg, parameters)
     if isinstance(solver, Euler):
-        qsolver = SEEuler(*args, **kwargs)
-    elif isinstance(solver, AdaptiveStep):
-        qsolver = SEAdaptive(*args, **kwargs)
+        qsolver = SEEuler(*args)
+    elif isinstance(solver, ODEAdaptiveStep):
+        qsolver = SEAdaptive(*args)
+    elif isinstance(solver, Propagator):
+        qsolver = SEPropagator(*args)
     else:
         raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
 
     # compute the result
-    odeint(
-        qsolver, psi0_batched, t_save, gradient_alg=gradient_alg, parameters=parameters
-    )
+    qsolver.run()
 
+    # get saved tensors and restore correct batching
     psi_save, exp_save = qsolver.y_save, qsolver.exp_save
-
-    # restore correct batching
     if psi0.ndim == 2:
         psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
