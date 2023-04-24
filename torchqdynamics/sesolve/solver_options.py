@@ -1,5 +1,5 @@
 from ..solver_options import SolverOption
 
 
-class Exponentiate(SolverOption):
+class Propagator(SolverOption):
     pass

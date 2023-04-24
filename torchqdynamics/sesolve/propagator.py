@@ -4,7 +4,7 @@ from ..progress_bar import tqdm
 from ..qsolver import QSolver
 
 
-class SEExponentiate(QSolver):
+class SEPropagator(QSolver):
     def __init__(self, *args):
         super().__init__(*args)
 
