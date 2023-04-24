@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
+from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -17,8 +17,8 @@ from ..tensor_types import (
 from ..utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
+from .options import Rouchon1, Rouchon1_5, Rouchon2
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
-from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 
 def mesolve(
@@ -28,7 +28,7 @@ def mesolve(
     t_save: TensorLike,
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
-    solver: SolverOption | None = None,
+    options: Options | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
@@ -70,8 +70,7 @@ def mesolve(
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
         exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
             expectation value is computed at every time value in `t_save`.
-        solver (SolverOption, optional): Solver used to compute the master equation
-            solutions. See the list of available solvers.
+        options (Options, optional): Solver options. See the list of available solvers.
         gradient_alg (str, optional): Algorithm used for computing gradients in the
             backward pass. Defaults to `None`.
         parameters (tuple of nn.Parameter): Parameters with respect to which gradients
@@ -122,38 +121,38 @@ def mesolve(
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    # default solver
-    if solver is None:
-        solver = Dopri45()
+    # default options
+    if options is None:
+        options = Dopri45()
 
-    # define the QSolver
+    # define the solver
     args = (
         H_batched,
         rho0_batched,
         t_save,
         exp_ops,
-        solver,
+        options,
         gradient_alg,
         parameters,
     )
-    if isinstance(solver, Rouchon1):
-        qsolver = MERouchon1(*args, jump_ops=jump_ops)
-    elif isinstance(solver, Rouchon1_5):
-        qsolver = MERouchon1_5(*args, jump_ops=jump_ops)
-    elif isinstance(solver, Rouchon2):
-        qsolver = MERouchon2(*args, jump_ops=jump_ops)
-    elif isinstance(solver, ODEAdaptiveStep):
-        qsolver = MEAdaptive(*args, jump_ops=jump_ops)
-    elif isinstance(solver, Euler):
-        qsolver = MEEuler(*args, jump_ops=jump_ops)
+    if isinstance(options, Rouchon1):
+        solver = MERouchon1(*args, jump_ops=jump_ops)
+    elif isinstance(options, Rouchon1_5):
+        solver = MERouchon1_5(*args, jump_ops=jump_ops)
+    elif isinstance(options, Rouchon2):
+        solver = MERouchon2(*args, jump_ops=jump_ops)
+    elif isinstance(options, ODEAdaptiveStep):
+        solver = MEAdaptive(*args, jump_ops=jump_ops)
+    elif isinstance(options, Euler):
+        solver = MEEuler(*args, jump_ops=jump_ops)
     else:
-        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
+        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
-    qsolver.run()
+    solver.run()
 
     # get saved tensors and restore correct batching
-    rho_save, exp_save = qsolver.y_save, qsolver.exp_save
+    rho_save, exp_save = solver.y_save, solver.exp_save
     if rho0.ndim == 2:
         rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)

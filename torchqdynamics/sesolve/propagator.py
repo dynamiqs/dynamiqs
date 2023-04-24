@@ -1,10 +1,10 @@
 import torch
 
 from ..progress_bar import tqdm
-from ..qsolver import QSolver
+from ..solver import Solver
 
 
-class SEPropagator(QSolver):
+class SEPropagator(Solver):
     def __init__(self, *args):
         super().__init__(*args)
 

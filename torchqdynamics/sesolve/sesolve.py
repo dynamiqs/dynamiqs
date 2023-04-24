@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_options import Dopri45, Euler, ODEAdaptiveStep, SolverOption
+from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -16,8 +16,8 @@ from ..tensor_types import (
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
+from .options import Propagator
 from .propagator import SEPropagator
-from .solver_options import Propagator
 
 
 def sesolve(
@@ -26,7 +26,7 @@ def sesolve(
     t_save: TensorLike,
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
-    solver: SolverOption | None = None,
+    options: Options | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
@@ -62,26 +62,34 @@ def sesolve(
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    # default solver
-    if solver is None:
-        solver = Dopri45()
+    # default options
+    if options is None:
+        options = Dopri45()
 
-    # define the QSolver
-    args = (H_batched, psi0_batched, t_save, exp_ops, solver, gradient_alg, parameters)
-    if isinstance(solver, Euler):
-        qsolver = SEEuler(*args)
-    elif isinstance(solver, ODEAdaptiveStep):
-        qsolver = SEAdaptive(*args)
-    elif isinstance(solver, Propagator):
-        qsolver = SEPropagator(*args)
+    # define the solver
+    args = (
+        H_batched,
+        psi0_batched,
+        t_save,
+        exp_ops,
+        options,
+        gradient_alg,
+        parameters,
+    )
+    if isinstance(options, Euler):
+        solver = SEEuler(*args)
+    elif isinstance(options, ODEAdaptiveStep):
+        solver = SEAdaptive(*args)
+    elif isinstance(options, Propagator):
+        solver = SEPropagator(*args)
     else:
-        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
+        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
-    qsolver.run()
+    solver.run()
 
     # get saved tensors and restore correct batching
-    psi_save, exp_save = qsolver.y_save, qsolver.exp_save
+    psi_save, exp_save = solver.y_save, solver.exp_save
     if psi0.ndim == 2:
         psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
