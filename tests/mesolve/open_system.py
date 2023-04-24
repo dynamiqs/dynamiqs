@@ -49,6 +49,13 @@ class LeakyCavity(OpenSystem):
         self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
+        # define gradient parameters
+        self.parameters = tuple([self.delta, self.kappa, self.alpha0])
+
+        # initialize operators
+        self.init_operators()
+
+    def init_operators(self):
         # bosonic operators
         a = tq.destroy(self.n)
         adag = a.adjoint()
@@ -71,7 +78,7 @@ class LeakyCavity(OpenSystem):
     def t_save(self, num_t_save: int) -> Tensor:
         """Compute t_save"""
         t_end = 2 * pi / self.delta  # a full rotation
-        return torch.linspace(0.0, t_end, num_t_save)
+        return torch.linspace(0.0, t_end.item(), num_t_save)
 
     def rho(self, t: float) -> Tensor:
         """Compute the exact density matrix at a given time."""
@@ -81,3 +88,8 @@ class LeakyCavity(OpenSystem):
             * torch.exp(-0.5 * self.kappa * t)
         )
         return tq.coherent_dm(self.n, alpha_t)
+
+    def loss(self, rho: Tensor) -> float:
+        """Compute the loss function of a given density matrix."""
+        a = tq.destroy(self.n)
+        return tq.expect(a.mH @ a, rho).real

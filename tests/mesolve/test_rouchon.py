@@ -8,6 +8,9 @@ from .open_system import LeakyCavity
 from .test_mesolve import TestMESolve
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
+grad_leaky_cavity_8 = LeakyCavity(
+    n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, requires_grad=True
+)
 
 
 class TestMERouchon1(TestMESolve):
@@ -18,6 +21,10 @@ class TestMERouchon1(TestMESolve):
     def test_rho_save(self):
         options = tq.options.Rouchon1(dt=1e-4)
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
+
+    def test_adjoint(self):
+        options = tq.options.Rouchon1(dt=1e-3)
+        self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
 
 
 class TestMERouchon1_5(TestMESolve):
@@ -40,3 +47,7 @@ class TestMERouchon2(TestMESolve):
     def test_rho_save(self):
         options = tq.options.Rouchon2(dt=1e-3)
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
+
+    def test_adjoint(self):
+        options = tq.options.Rouchon2(dt=1e-3)
+        self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
