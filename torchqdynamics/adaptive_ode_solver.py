@@ -10,8 +10,8 @@ from .solver_utils import hairer_norm
 from .tensor_types import dtype_complex_to_float
 
 
-class AdaptiveSolver(ABC):
-    """A parent class for all adaptive time step solvers.
+class AdaptiveODESolver(ABC):
+    """A parent class for all adaptive time step ODE solvers.
 
     This performs all the necessary steps for the integration of an ODE of the form
     `dy/dt = f(t, y)` with initial condition `y(t0) = y0`. For details about the
@@ -104,7 +104,7 @@ class AdaptiveSolver(ABC):
             return dt * min(0.9, max(self.min_factor, self.factor * dt_opt))
 
 
-class DormandPrince45(AdaptiveSolver):
+class DormandPrince45(AdaptiveODESolver):
     """Dormand-Prince method for adaptive time step ODE integration.
 
     This is a fifth order solver that uses a fourth order solution to estimate the
