@@ -5,7 +5,7 @@ import torchqdynamics as tq
 
 
 class TestUtils:
-    def test_ket_fidelity_correctness():
+    def test_ket_fidelity_correctness(self):
         n = 8
         psi = qt.rand_ket(n, seed=42)
         psi_tensor = tq.from_qutip(psi)
@@ -17,7 +17,7 @@ class TestUtils:
 
         assert qt_fid == approx(tq_fid)
 
-    def test_ket_fidelity_batching():
+    def test_ket_fidelity_batching(self):
         b1, b2, n = 3, 5, 8
         psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
         phi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
@@ -25,7 +25,7 @@ class TestUtils:
         phi = tq.to_tensor(phi)
         assert tq.ket_fidelity(psi, phi).shape == (b1, b2)
 
-    def test_dm_fidelity_correctness():
+    def test_dm_fidelity_correctness(self):
         n = 8
         rho = qt.rand_dm(n, n, seed=42)
         rho_tensor = tq.from_qutip(rho)
@@ -37,7 +37,7 @@ class TestUtils:
 
         assert qt_fid == approx(tq_fid)
 
-    def test_dm_fidelity_batching():
+    def test_dm_fidelity_batching(self):
         b1, b2, n = 3, 5, 8
         rho = [
             [qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)
