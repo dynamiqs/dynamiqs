@@ -104,11 +104,20 @@ class Solver(ABC):
         self._save_exp_ops(y)
         self.save_counter += 1
 
+    def save_initial(self, y: Tensor):
+        if self.options.save_states and self.next_tsave() == 0.0:
+            self.save(y)
+
     def save_final(self, y: Tensor):
-        if self.options.save_states:
-            self._save_y(y)
-        else:
+        if not self.options.save_states:
             self.y_save = y
+        elif self.save_counter < len(self.t_save):
+            self._save_y(y)
+
+        if self.save_counter < len(self.t_save):
+            self._save_exp_ops(y)
+
+        self.save_counter += 1
 
     @abstractmethod
     def run(self):
