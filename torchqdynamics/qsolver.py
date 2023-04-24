@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 
-from .solver_option import SolverOption
+from .options import Options
 from .solver_utils import bexpect
 from .tensor_types import TDOperator
 
@@ -19,7 +19,7 @@ class QSolver(ABC):
         y0: Tensor,
         t_save: Tensor,
         exp_ops: Tensor,
-        options: SolverOption,
+        options: Options,
         gradient_alg: str | None,
         parameters: tuple[torch.nn.Parameter, ...] | None,
     ):

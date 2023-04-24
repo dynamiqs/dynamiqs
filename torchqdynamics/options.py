@@ -1,4 +1,4 @@
-class SolverOption:
+class Options:
     def __init__(self, *, verbose: bool = True, save_states: bool = True):
         """...
 
@@ -11,13 +11,13 @@ class SolverOption:
         self.save_states = save_states
 
 
-class ODEFixedStep(SolverOption):
+class ODEFixedStep(Options):
     def __init__(self, *, dt: float, **kwargs):
         super().__init__(**kwargs)
         self.dt = dt
 
 
-class ODEAdaptiveStep(SolverOption):
+class ODEAdaptiveStep(Options):
     def __init__(
         self,
         *,
@@ -44,3 +44,8 @@ class Euler(ODEFixedStep):
 
 class Dopri45(ODEAdaptiveStep):
     pass
+
+
+# gather all solver options under the same namespace `options`
+from .mesolve.options import *  # noqa: F401, E402
+from .sesolve.options import *  # noqa: F401, E402

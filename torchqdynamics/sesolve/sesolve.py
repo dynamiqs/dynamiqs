@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..solver_option import Dopri45, Euler, ODEAdaptiveStep, SolverOption
+from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
 from ..tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -16,8 +16,8 @@ from ..tensor_types import (
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
+from .options import Propagator
 from .propagator import SEPropagator
-from .solver_option import Propagator
 
 
 def sesolve(
@@ -26,7 +26,7 @@ def sesolve(
     t_save: TensorLike,
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
-    solver: SolverOption | None = None,
+    options: Options | None = None,
     gradient_alg: Literal['autograd', 'adjoint'] | None = None,
     parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
@@ -62,10 +62,9 @@ def sesolve(
     exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
     exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    # default solver_option
-    solver_option = solver
-    if solver_option is None:
-        solver_option = Dopri45()
+    # default options
+    if options is None:
+        options = Dopri45()
 
     # define the QSolver
     args = (
@@ -73,18 +72,18 @@ def sesolve(
         psi0_batched,
         t_save,
         exp_ops,
-        solver_option,
+        options,
         gradient_alg,
         parameters,
     )
-    if isinstance(solver_option, Euler):
+    if isinstance(options, Euler):
         qsolver = SEEuler(*args)
-    elif isinstance(solver_option, ODEAdaptiveStep):
+    elif isinstance(options, ODEAdaptiveStep):
         qsolver = SEAdaptive(*args)
-    elif isinstance(solver_option, Propagator):
+    elif isinstance(options, Propagator):
         qsolver = SEPropagator(*args)
     else:
-        raise NotImplementedError(f'Solver {type(solver_option)} is not implemented.')
+        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
     qsolver.run()

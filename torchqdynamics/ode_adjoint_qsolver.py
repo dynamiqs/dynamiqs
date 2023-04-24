@@ -8,8 +8,8 @@ from torch import Tensor
 from torch.autograd.function import FunctionCtx
 
 from .ode_forward_qsolver import ODEForwardQSolver
+from .options import ODEAdaptiveStep, ODEFixedStep
 from .progress_bar import tqdm
-from .solver_option import ODEAdaptiveStep, ODEFixedStep
 from .solver_utils import add_tuples, none_to_zeros_like
 
 
