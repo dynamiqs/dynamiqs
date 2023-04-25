@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import warnings
 from abc import abstractmethod
 
 import torch
 from torch import Tensor
+from tqdm.std import TqdmWarning
 
 from ..options import Dopri45, ODEAdaptiveStep, ODEFixedStep
 from ..solver import Solver
@@ -122,6 +124,7 @@ class ForwardSolver(Solver):
 
         # initialize the progress bar
         pbar = tqdm(total=self.t_save[-1].item(), disable=not self.options.verbose)
+        warnings.simplefilter('ignore', TqdmWarning)  # ignore tqdm precision overflow
 
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
@@ -159,6 +162,9 @@ class ForwardSolver(Solver):
             # compute the next dt
             dt = integrator.update_tstep(dt, error)
             step_counter += 1
+
+        # close progress bar
+        pbar.close()
 
         # save last state if not already done
         if self.next_tsave() is not None:
