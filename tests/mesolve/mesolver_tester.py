@@ -73,13 +73,16 @@ class MESolverTester:
     def test_rho_save(self):
         pass
 
+
+class AdjointMESolverTester(MESolverTester):
     def _test_adjoint(
         self,
         options: Options,
         system: OpenSystem,
         *,
         num_t_save: int,
-        atol: float = 1e-2,
+        atol: float = 1e-3,
+        rtol: float = 1e-5,
     ):
         # function to run mesolve with a specific gradient algorithm
         def run_mesolve(gradient_alg, parameters):
@@ -108,7 +111,7 @@ class MESolverTester:
 
         # check gradients are equal
         for g1, g2 in zip(grad_autograd, grad_adjoint):
-            assert torch.allclose(g1, g2, atol=atol)
+            assert torch.allclose(g1, g2, atol=atol, rtol=rtol)
 
     def test_adjoint(self):
         pass

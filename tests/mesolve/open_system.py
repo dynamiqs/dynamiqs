@@ -19,13 +19,19 @@ class OpenSystem(ABC):
 
     @abstractmethod
     def t_save(self, n: int) -> Tensor:
+        """Compute the save time tensor."""
         pass
 
     def rho(self, t: float) -> Tensor:
+        """Compute the exact density matrix at a given time."""
         raise NotImplementedError
 
     def rhos(self, t: Tensor) -> Tensor:
         return torch.stack([self.rho(t_.item()) for t_ in t])
+
+    def loss(self, rho: Tensor) -> Tensor:
+        """Compute an example loss function from a given density matrix."""
+        return tq.expect(self.loss_op, rho).real
 
 
 class LeakyCavity(OpenSystem):
@@ -60,6 +66,9 @@ class LeakyCavity(OpenSystem):
         a = tq.destroy(self.n)
         adag = a.adjoint()
 
+        # loss operator
+        self.loss_op = adag @ a
+
         # prepare quantum operators
         self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
@@ -76,20 +85,13 @@ class LeakyCavity(OpenSystem):
         ]
 
     def t_save(self, num_t_save: int) -> Tensor:
-        """Compute t_save"""
         t_end = 2 * pi / self.delta  # a full rotation
         return torch.linspace(0.0, t_end.item(), num_t_save)
 
     def rho(self, t: float) -> Tensor:
-        """Compute the exact density matrix at a given time."""
         alpha_t = (
             self.alpha0
             * torch.exp(-1j * self.delta * t)
             * torch.exp(-0.5 * self.kappa * t)
         )
         return tq.coherent_dm(self.n, alpha_t)
-
-    def loss(self, rho: Tensor) -> float:
-        """Compute the loss function of a given density matrix."""
-        a = tq.destroy(self.n)
-        return tq.expect(a.mH @ a, rho).real

@@ -159,7 +159,7 @@ class ODEIntAdjoint(torch.autograd.Function):
         # unpack context
         solver = ctx.solver
         t_save = ctx.t_save
-        (y_save,) = ctx.saved_tensors
+        y_save = ctx.saved_tensors[0]
 
         # initialize time list
         t_save = t_save

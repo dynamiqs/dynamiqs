@@ -18,9 +18,11 @@ class ClosedSystem(ABC):
 
     @abstractmethod
     def t_save(self, n: int) -> Tensor:
+        """Compute the save time tensor."""
         pass
 
     def psi(self, t: float) -> Tensor:
+        """Compute the exact state vector at a given time."""
         raise NotImplementedError
 
     def psis(self, t: Tensor) -> Tensor:
@@ -59,11 +61,9 @@ class Cavity(ClosedSystem):
         ]
 
     def t_save(self, num_t_save: int) -> Tensor:
-        """Compute t_save"""
         t_end = 2 * pi / self.delta  # a full rotation
         return torch.linspace(0.0, t_end, num_t_save)
 
     def psi(self, t: float) -> Tensor:
-        """Compute the exact state vector at a given time."""
         alpha_t = self.alpha0 * torch.exp(-1j * self.delta * t)
         return tq.coherent(self.n, alpha_t)
