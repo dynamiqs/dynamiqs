@@ -11,7 +11,7 @@ from ..utils.tensor_types import dtype_complex_to_float
 
 
 class AdaptiveODEIntegrator(ABC):
-    """A parent class for all adaptive time step ODE solvers.
+    """A parent class for all adaptive time step ODE integrators.
 
     This performs all the necessary steps for the integration of an ODE of the form
     `dy/dt = f(t, y)` with initial condition `y(t0) = y0`. For details about the
@@ -59,7 +59,7 @@ class AdaptiveODEIntegrator(ABC):
         return hairer_norm(y_err / scale).max()
 
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
-        """Initialize the time step of an adaptive step size solver.
+        """Initialize the time step of an adaptive step size integrator.
 
         See Equation (4.14) of `Hairer et al., Solving Ordinary Differential Equations I
         (1993), Springer Series in Computational Mathematics` for the detailed steps.
@@ -85,7 +85,7 @@ class AdaptiveODEIntegrator(ABC):
 
     @torch.no_grad()
     def update_tstep(self, dt, error):
-        """Update the time step of an adaptive step size solver.
+        """Update the time step of an adaptive step size integrator.
 
         See Equation (4.12) and (4.13) of `Hairer et al., Solving Ordinary Differential
         Equations I (1993), Springer Series in Computational Mathematics` for the
