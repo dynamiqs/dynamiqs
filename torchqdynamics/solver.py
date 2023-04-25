@@ -88,37 +88,28 @@ class Solver(ABC):
         else:
             self.exp_save = None
 
+    @abstractmethod
+    def run(self):
+        pass
+
     def next_tsave(self) -> float:
-        return self.t_save[self.save_counter]
-
-    def _save_y(self, y: Tensor):
-        if self.options.save_states:
-            self.y_save[..., self.save_counter, :, :] = y
-
-    def _save_exp_ops(self, y: Tensor):
-        if len(self.exp_ops) > 0:
-            self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
+        if self.save_counter < len(self.t_save):
+            return self.t_save[self.save_counter]
+        else:
+            return None
 
     def save(self, y: Tensor):
         self._save_y(y)
         self._save_exp_ops(y)
         self.save_counter += 1
 
-    def save_initial(self, y: Tensor):
-        if self.options.save_states and self.next_tsave() == 0.0:
-            self.save(y)
-
-    def save_final(self, y: Tensor):
-        if not self.options.save_states:
+    def _save_y(self, y: Tensor):
+        if self.options.save_states:
+            self.y_save[..., self.save_counter, :, :] = y
+        # otherwise only save the state if it is the final state
+        elif self.next_tsave() is None:
             self.y_save = y
-        elif self.save_counter < len(self.t_save):
-            self._save_y(y)
 
-        if self.save_counter < len(self.t_save):
-            self._save_exp_ops(y)
-
-        self.save_counter += 1
-
-    @abstractmethod
-    def run(self):
-        pass
+    def _save_exp_ops(self, y: Tensor):
+        if len(self.exp_ops) > 0:
+            self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)

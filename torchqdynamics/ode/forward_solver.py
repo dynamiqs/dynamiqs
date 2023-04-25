@@ -87,7 +87,7 @@ class ForwardSolver(Solver):
             y = self.forward(t, y)
 
         # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
-        self.save_final(y)
+        self.save(y)
 
     def _adaptive_odeint(self):
         """Integrate a quantum ODE with an adaptive time step ODE integrator.
@@ -100,7 +100,8 @@ class ForwardSolver(Solver):
         Computational Mathematics`.
         """
         # save initial solution
-        self.save_initial(self.y0)
+        if self.options.save_states and self.next_tsave() == 0.0:
+            self.save(self.y0)
 
         # initialize the adaptive integrator
         args = (
@@ -160,4 +161,5 @@ class ForwardSolver(Solver):
             step_counter += 1
 
         # save last state if not already done
-        self.save_final(y)
+        if self.next_tsave() is not None:
+            self.save(y)
