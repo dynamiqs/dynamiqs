@@ -3,7 +3,7 @@ import numpy as np
 import torchqdynamics as tq
 
 from .closed_system import Cavity
-from .test_sesolve import SESolverTester
+from .sesolver_tester import SESolverTester
 
 cavity_8 = Cavity(n=8, delta=2 * np.pi, alpha0=1.0)
 
