@@ -5,13 +5,13 @@ from abc import abstractmethod
 import torch
 from torch import Tensor
 
-from .adaptive_ode_solver import DormandPrince45
-from .options import Dopri45, ODEAdaptiveStep, ODEFixedStep
-from .progress_bar import tqdm
-from .solver import Solver
+from ..options import Dopri45, ODEAdaptiveStep, ODEFixedStep
+from ..solver import Solver
+from ..utils.progress_bar import tqdm
+from .adaptive_ode_integrator import DormandPrince45
 
 
-class ODEForwardSolver(Solver):
+class ForwardSolver(Solver):
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Iterate the quantum state forward.
@@ -37,10 +37,10 @@ class ODEForwardSolver(Solver):
             self._odeint_main()
 
     def _odeint_inplace(self):
-        """Integrate a quantum ODE with an in-place ODE solver.
+        """Integrate a quantum ODE with an in-place ODE integrator.
 
         Simple solution for now so torch does not store gradients.
-        TODO Implement a genuine in-place solver.
+        TODO Implement a genuine in-place integrator.
         """
         with torch.no_grad():
             self._odeint_main()
@@ -53,7 +53,7 @@ class ODEForwardSolver(Solver):
             self._adaptive_odeint()
 
     def _fixed_odeint(self):
-        """Integrate a quantum ODE with a fixed time step ODE solver.
+        """Integrate a quantum ODE with a fixed time step ODE integrator.
 
         Note:
             The solver times are defined using `torch.linspace` which ensures that the
@@ -90,10 +90,10 @@ class ODEForwardSolver(Solver):
         self.save_final(y)
 
     def _adaptive_odeint(self):
-        """Integrate a quantum ODE with an adaptive time step ODE solver.
+        """Integrate a quantum ODE with an adaptive time step ODE integrator.
 
         This function integrates an ODE of the form `dy / dt = f(t, y)` with
-        `y(0) = y0`, using a Runge-Kutta adaptive time step solver.
+        `y(0) = y0`, using a Runge-Kutta adaptive time step integrator.
 
         For details about the integration method, see Chapter II.4 of `Hairer et al.,
         Solving Ordinary Differential Equations I (1993), Springer Series in
@@ -104,7 +104,7 @@ class ODEForwardSolver(Solver):
 
         save_flag = False
 
-        # initialize the adaptive ode_solver
+        # initialize the adaptive integrator
         args = (
             self.forward,
             self.options.factor,
@@ -114,12 +114,12 @@ class ODEForwardSolver(Solver):
             self.options.rtol,
         )
         if isinstance(self.options, Dopri45):
-            ode_solver = DormandPrince45(*args)
+            integrator = DormandPrince45(*args)
 
         # initialize the ODE routine
         t0 = 0.0
-        f0 = ode_solver.f(t0, self.y0)
-        dt = ode_solver.init_tstep(f0, self.y0, t0)
+        f0 = integrator.f(t0, self.y0)
+        dt = integrator.init_tstep(f0, self.y0, t0)
 
         # initialize the progress bar
         pbar = tqdm(total=self.t_save[-1].item(), disable=not self.options.verbose)
@@ -135,11 +135,11 @@ class ODEForwardSolver(Solver):
                 dt_old = dt
                 dt = next_tsave - t
 
-            # perform a single ODE solver step of size dt
-            ft_new, y_new, y_err = ode_solver.step(ft, y, t, dt)
+            # perform a single ODE integrator step of size dt
+            ft_new, y_new, y_err = integrator.step(ft, y, t, dt)
 
             # compute estimated error of this step
-            error = ode_solver.get_error(y_err, y, y_new)
+            error = integrator.get_error(y_err, y, y_new)
 
             # update results if step is accepted
             if error <= 1:
@@ -159,7 +159,7 @@ class ODEForwardSolver(Solver):
                 next_tsave = self.next_tsave()
 
             # compute the next dt
-            dt = ode_solver.update_tstep(dt, error)
+            dt = integrator.update_tstep(dt, error)
             step_counter += 1
 
         # save last state if not already done

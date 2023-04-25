@@ -7,13 +7,13 @@ import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
 
-from .ode_forward_solver import ODEForwardSolver
-from .options import ODEAdaptiveStep, ODEFixedStep
-from .progress_bar import tqdm
-from .solver_utils import add_tuples, none_to_zeros_like
+from ..options import ODEAdaptiveStep, ODEFixedStep
+from ..utils.progress_bar import tqdm
+from ..utils.solver_utils import add_tuples, none_to_zeros_like
+from .forward_solver import ForwardSolver
 
 
-class ODEAdjointSolver(ODEForwardSolver):
+class AdjointSolver(ForwardSolver):
     GRADIENT_ALG = ['autograd', 'adjoint']
 
     def run(self):
@@ -67,7 +67,7 @@ class ODEAdjointSolver(ODEForwardSolver):
             self._adaptive_odeint_augmented()
 
     def _fixed_odeint_augmented(self):
-        """Integrate the augmented ODE backward using a fixed time step solver."""
+        """Integrate the augmented ODE backward using a fixed time step integrator."""
         # get time step from solver
         dt = self.options.dt
 
@@ -83,8 +83,8 @@ class ODEAdjointSolver(ODEForwardSolver):
         T = self.t_save_bwd[1] - self.t_save_bwd[0]
         if not torch.allclose(torch.round(T / dt), T / dt):
             raise ValueError(
-                'For fixed time step adjoint solvers, every value of `t_save_bwd` must'
-                ' be a multiple of the time step `dt`.'
+                'For fixed time step adjoint solvers, every value of `t_save_bwd` '
+                'must be a multiple of the time step `dt`.'
             )
 
         # define time values
@@ -116,7 +116,7 @@ class ODEAdjointSolver(ODEForwardSolver):
         self.g_bwd = g
 
     def _adaptive_odeint_augmented(self, *_args, **_kwargs):
-        """Integrate the augmented ODE backward using an adaptive time step solver."""
+        """Integrate the augmented ODE backward with an adaptive step integrator."""
         raise NotImplementedError
 
 
@@ -126,7 +126,7 @@ class ODEIntAdjoint(torch.autograd.Function):
     @staticmethod
     def forward(
         ctx: FunctionCtx,
-        solver: ODEAdjointSolver,
+        solver: AdjointSolver,
         y0: Tensor,
         *parameters: tuple[nn.Parameter, ...],
     ) -> Tensor:
@@ -135,7 +135,7 @@ class ODEIntAdjoint(torch.autograd.Function):
         ctx.solver = solver
         ctx.t_save = solver.t_save if solver.options.save_states else solver.t_save[-1]
 
-        # solve the ODE forward without storing the graph of operations
+        # integrate the ODE forward without storing the graph of operations
         solver._odeint_inplace()
 
         # save results and model parameters

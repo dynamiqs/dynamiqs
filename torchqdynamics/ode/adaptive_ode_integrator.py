@@ -6,12 +6,12 @@ from typing import Callable
 import torch
 from torch import Tensor
 
-from .solver_utils import hairer_norm
-from .tensor_types import dtype_complex_to_float
+from ..utils.solver_utils import hairer_norm
+from ..utils.tensor_types import dtype_complex_to_float
 
 
-class AdaptiveODESolver(ABC):
-    """A parent class for all adaptive time step ODE solvers.
+class AdaptiveODEIntegrator(ABC):
+    """A parent class for all adaptive time step ODE integrators.
 
     This performs all the necessary steps for the integration of an ODE of the form
     `dy/dt = f(t, y)` with initial condition `y(t0) = y0`. For details about the
@@ -59,7 +59,7 @@ class AdaptiveODESolver(ABC):
         return hairer_norm(y_err / scale).max()
 
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
-        """Initialize the time step of an adaptive step size solver.
+        """Initialize the time step of an adaptive step size integrator.
 
         See Equation (4.14) of `Hairer et al., Solving Ordinary Differential Equations I
         (1993), Springer Series in Computational Mathematics` for the detailed steps.
@@ -85,7 +85,7 @@ class AdaptiveODESolver(ABC):
 
     @torch.no_grad()
     def update_tstep(self, dt, error):
-        """Update the time step of an adaptive step size solver.
+        """Update the time step of an adaptive step size integrator.
 
         See Equation (4.12) and (4.13) of `Hairer et al., Solving Ordinary Differential
         Equations I (1993), Springer Series in Computational Mathematics` for the
@@ -104,7 +104,7 @@ class AdaptiveODESolver(ABC):
             return dt * min(0.9, max(self.min_factor, self.factor * dt_opt))
 
 
-class DormandPrince45(AdaptiveODESolver):
+class DormandPrince45(AdaptiveODEIntegrator):
     """Dormand-Prince method for adaptive time step ODE integration.
 
     This is a fifth order solver that uses a fourth order solution to estimate the
