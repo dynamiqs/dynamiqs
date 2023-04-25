@@ -6,7 +6,7 @@ from torchqdynamics.options import Options
 from .open_system import OpenSystem
 
 
-class TestMESolve:
+class MESolverTester:
     def _test_batching(self, options: Options, system: OpenSystem):
         """Test the batching of `H` and `rho0` in `mesolve`, and the returned object
         sizes."""

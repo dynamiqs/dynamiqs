@@ -3,12 +3,12 @@ import numpy as np
 import torchqdynamics as tq
 
 from .closed_system import Cavity
-from .test_sesolve import TestSESolve
+from .test_sesolve import SESolverTester
 
 cavity_8 = Cavity(n=8, delta=2 * np.pi, alpha0=1.0)
 
 
-class TestSEEuler(TestSESolve):
+class TestSEEuler(SESolverTester):
     def test_batching(self):
         options = tq.options.Euler(dt=1e-2)
         self._test_batching(options, cavity_8)

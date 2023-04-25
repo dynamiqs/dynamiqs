@@ -6,7 +6,7 @@ from torchqdynamics.options import Options
 from .closed_system import ClosedSystem
 
 
-class TestSESolve:
+class SESolverTester:
     def _test_batching(self, options: Options, system: ClosedSystem):
         """Test the batching of `H` and `psi0` in `sesolve`, and the returned object
         sizes."""
