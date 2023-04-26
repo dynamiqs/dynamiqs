@@ -1,11 +1,11 @@
-import numpy as np
+from math import pi
 
 import torchqdynamics as tq
 
 from .closed_system import Cavity
 from .sesolver_tester import SESolverTester
 
-cavity_8 = Cavity(n=8, delta=2 * np.pi, alpha0=1.0)
+cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
 
 
 class TestAdaptive(SESolverTester):

@@ -72,3 +72,46 @@ class MESolverTester:
 
     def test_rho_save(self):
         pass
+
+
+class MEAdjointSolverTester(MESolverTester):
+    def _test_adjoint(
+        self,
+        options: Options,
+        system: OpenSystem,
+        *,
+        num_t_save: int,
+        rtol: float = 1e-5,
+        atol: float = 1e-3,
+    ):
+        # function to run mesolve with a specific gradient algorithm
+        def run_mesolve(gradient_alg, parameters):
+            return tq.mesolve(
+                system.H,
+                system.jump_ops,
+                system.rho0,
+                system.t_save(num_t_save),
+                exp_ops=system.exp_ops,
+                options=options,
+                gradient_alg=gradient_alg,
+                parameters=parameters,
+            )
+
+        # compute autograd gradients
+        system.init_operators()  # required to not backward through the same graph twice
+        rho_save, _ = run_mesolve('autograd', None)
+        loss = system.loss(rho_save[-1])
+        grad_autograd = torch.autograd.grad(loss, system.parameters)
+
+        # compute adjoint gradients
+        system.init_operators()  # required to not backward through the same graph twice
+        rho_save, _ = run_mesolve('adjoint', system.parameters)
+        loss = system.loss(rho_save[-1])
+        grad_adjoint = torch.autograd.grad(loss, system.parameters)
+
+        # check gradients are equal
+        for g1, g2 in zip(grad_autograd, grad_adjoint):
+            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+
+    def test_adjoint(self):
+        pass

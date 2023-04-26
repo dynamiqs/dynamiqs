@@ -56,7 +56,6 @@ class AdjointSolver(ForwardSolver):
                 'For adjoint state gradient computation, parameters must be passed to'
                 ' the solver.'
             )
-
         ODEIntAdjoint.apply(self, self.y0, *self.parameters)
 
     def _odeint_augmented_main(self):
@@ -160,7 +159,7 @@ class ODEIntAdjoint(torch.autograd.Function):
         # unpack context
         solver = ctx.solver
         t_save = ctx.t_save
-        y_save = ctx.saved_tensors
+        y_save = ctx.saved_tensors[0]
 
         # initialize time list
         t_save = t_save

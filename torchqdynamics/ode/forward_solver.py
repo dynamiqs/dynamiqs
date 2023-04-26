@@ -158,6 +158,7 @@ class ForwardSolver(Solver):
                 # underestimated error and might thus be overestimated. The maximal
                 # dt update is however capped by `integrator.max_factor`.
                 dt = dt_old
+
             dt = integrator.update_tstep(dt, error)
             step_counter += 1
 

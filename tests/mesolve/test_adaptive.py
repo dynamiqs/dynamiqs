@@ -1,11 +1,11 @@
-import numpy as np
+from math import pi
 
 import torchqdynamics as tq
 
 from .mesolver_tester import MESolverTester
 from .open_system import LeakyCavity
 
-leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * np.pi, delta=2 * np.pi, alpha0=1.0)
+leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
 
 
 class TestAdaptive(MESolverTester):

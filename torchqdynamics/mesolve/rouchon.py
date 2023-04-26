@@ -3,7 +3,6 @@ from __future__ import annotations
 from math import sqrt
 
 import torch
-import torch.nn as nn
 from torch import Tensor
 
 from ..ode.adjoint_solver import AdjointSolver
@@ -54,13 +53,7 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def backward_augmented(
-        self,
-        t: float,
-        rho: Tensor,
-        phi: Tensor,
-        parameters: tuple[nn.Parameter, ...],
-    ):
+    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
@@ -113,13 +106,7 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def backward_augmented(
-        self,
-        t: float,
-        rho: Tensor,
-        phi: Tensor,
-        parameters: tuple[nn.Parameter, ...],
-    ):
+    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         raise NotImplementedError
 
 
@@ -159,13 +146,7 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def backward_augmented(
-        self,
-        t: float,
-        rho: Tensor,
-        phi: Tensor,
-        parameters: tuple[nn.Parameter, ...],
-    ):
+    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
         H_nh = self.H - 0.5j * self.sum_nojump
