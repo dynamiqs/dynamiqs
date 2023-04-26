@@ -153,7 +153,10 @@ class ForwardSolver(Solver):
                     pbar.update(dt.item())
 
             # compute the next dt
-            if save_flag:  # return to the original dt
+            if save_flag:
+                # If `save_flag` is raised, the next time step is updated based on an
+                # underestimated error and might thus be overestimated. The maximal
+                # dt update is however capped by `integrator.max_factor`.
                 dt = dt_old
             dt = integrator.update_tstep(dt, error)
             step_counter += 1
