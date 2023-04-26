@@ -4,7 +4,7 @@ import pytest
 
 import torchqdynamics as tq
 
-from .mesolver_tester import AdjointMESolverTester
+from .mesolver_tester import MEAdjointSolverTester
 from .open_system import LeakyCavity
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
@@ -13,7 +13,7 @@ grad_leaky_cavity_8 = LeakyCavity(
 )
 
 
-class TestMERouchon1(AdjointMESolverTester):
+class TestMERouchon1(MEAdjointSolverTester):
     def test_batching(self):
         options = tq.options.Rouchon1(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
@@ -27,7 +27,7 @@ class TestMERouchon1(AdjointMESolverTester):
         self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
 
 
-class TestMERouchon1_5(AdjointMESolverTester):
+class TestMERouchon1_5(MEAdjointSolverTester):
     @pytest.mark.skip(reason='failing - to fix')
     def test_batching(self):
         options = tq.options.Rouchon1_5(dt=1e-2)
@@ -39,7 +39,7 @@ class TestMERouchon1_5(AdjointMESolverTester):
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
 
 
-class TestMERouchon2(AdjointMESolverTester):
+class TestMERouchon2(MEAdjointSolverTester):
     def test_batching(self):
         options = tq.options.Rouchon2(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
