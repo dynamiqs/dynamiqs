@@ -116,11 +116,11 @@ class Solver(ABC):
         pass
 
 
-def H_dependent(func):
-    """
-    Handles caching for functions that only depend on the Hamiltonian.
+def depends_on_H(func):
+    """Handles caching for functions that only depend on the Hamiltonian.
     The functions must take as single argument the time and be decorated
-    by `@H_cached`. For instance::
+    by `@H_cached`.
+    Examples:
         @H_cached
         def H_squared(self, t):
             return self.H(t) @ self.H(t)

@@ -4,7 +4,7 @@ from math import sqrt
 
 import torch
 import torch.nn as nn
-from solver import H_dependent
+from solver import depends_on_H
 from torch import Tensor
 
 from ..ode.adjoint_solver import AdjointSolver
@@ -51,21 +51,21 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    @H_dependent
+    @depends_on_H
     def M0(self, t: float) -> Tensor:
         # build time-dependent Kraus operators
         return self.I - 1j * self.dt * self.H_nh(t)  # (b_H, 1, n, n)
 
-    @H_dependent
+    @depends_on_H
     def Hdag_nh(self, t: float) -> Tensor:
         return self.H_nh(t).adjoint()
 
-    @H_dependent
+    @depends_on_H
     def H_nh(self, t: float) -> Tensor:
         # non-hermitian Hamiltonian at time t
         return self.H(t) - 0.5j * self.sum_nojump
 
-    @H_dependent
+    @depends_on_H
     def M0_adj(self, t: float) -> Tensor:
         return self.I + 1j * self.dt * self.Hdag_nh(t)
 

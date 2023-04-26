@@ -8,7 +8,6 @@ class MEEuler(ForwardSolver):
     def __init__(self, *args, jump_ops: Tensor):
         super().__init__(*args)
 
-        # convert H to size compatible with (b_H, len(jump_ops), n, n)
         self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
 

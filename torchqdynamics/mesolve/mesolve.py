@@ -96,13 +96,8 @@ def mesolve(
         # convert H to a tensor and batch by default
         H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
         H_batched = H[None, ...] if H.ndim == 2 else H
-    elif callable(H) or (isinstance(H, list) and (len(H) == 0 or callable(H[0]))):
-        # H is callable or list of callables
-        H_batched = H
     else:
-        raise ValueError(
-            'H must be a tensor-like object or a callable or list of callables.'
-        )
+        raise ValueError('H must be a tensor-like object.')
 
     # convert jump_ops to a tensor
     if len(jump_ops) == 0:
@@ -117,7 +112,7 @@ def mesolve(
     rho0 = to_tensor(rho0, dtype=dtype, device=device, is_complex=True)
     if is_ket(rho0):
         rho0 = ket_to_dm(rho0)
-    b_H = H_batched.size(0) if isinstance(H, TensorLike.__args__) else len(H)
+    b_H = len(H)
     rho0_batched = rho0[None, ...] if rho0.ndim == 2 else rho0
     rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
