@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple
+from typing import Callable
 
 import torch
 from torch import Tensor
-from torch._prims_common import corresponding_real_dtype as to_float
 
-from .solver_utils import hairer_norm
+from ..utils.solver_utils import hairer_norm
+from ..utils.tensor_types import dtype_complex_to_float
 
 
-class AdaptiveSolver(ABC):
-    """A parent class for all adaptive time step solvers.
+class AdaptiveODEIntegrator(ABC):
+    """A parent class for all adaptive time step ODE integrators.
 
     This performs all the necessary steps for the integration of an ODE of the form
     `dy/dt = f(t, y)` with initial condition `y(t0) = y0`. For details about the
@@ -25,9 +27,6 @@ class AdaptiveSolver(ABC):
         max_factor: float = 5.0,
         atol: float = 1e-8,
         rtol: float = 1e-6,
-        t_dtype: torch.dtype = torch.float64,
-        y_dtype: torch.dtype = torch.complex128,
-        device: Optional[torch.device] = None,
     ):
         self.f = f
         self.factor = factor
@@ -35,21 +34,18 @@ class AdaptiveSolver(ABC):
         self.max_factor = max_factor
         self.atol = atol
         self.rtol = rtol
-        self.t_dtype = t_dtype
-        self.y_dtype = y_dtype
-        self.device = device
         self.order = None
         self.tableau = None
 
     @abstractmethod
-    def build_tableau(self):
+    def build_tableau(self, target: Tensor):
         """Build the Butcher tableau of the integrator."""
         pass
 
     @abstractmethod
     def step(
         self, f0: Tensor, y0: Tensor, t0: float, dt: float
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         pass
 
@@ -60,17 +56,17 @@ class AdaptiveSolver(ABC):
         (1993), Springer Series in Computational Mathematics`.
         """
         scale = self.atol + self.rtol * torch.max(y0.abs(), y1.abs())
-        return float(hairer_norm(y_err / scale))
+        return hairer_norm(y_err / scale).max()
 
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
-        """Initialize the time step of an adaptive step size solver.
+        """Initialize the time step of an adaptive step size integrator.
 
         See Equation (4.14) of `Hairer et al., Solving Ordinary Differential Equations I
         (1993), Springer Series in Computational Mathematics` for the detailed steps.
         For this function, we keep the same notations as in the book.
         """
         sc = self.atol + torch.abs(y0) * self.rtol
-        d0, d1 = hairer_norm(y0 / sc), hairer_norm(f0 / sc)
+        d0, d1 = hairer_norm(y0 / sc).max(), hairer_norm(f0 / sc).max()
 
         if d0 < 1e-5 or d1 < 1e-5:
             h0 = 1e-6
@@ -79,7 +75,7 @@ class AdaptiveSolver(ABC):
 
         y1 = y0 + h0 * f0
         f1 = self.f(t0 + h0, y1)
-        d2 = hairer_norm((f1 - f0) / sc) / h0
+        d2 = hairer_norm((f1 - f0) / sc).max() / h0
         if d1 <= 1e-15 and d2 <= 1e-15:
             h1 = max(1e-6, h0 * 1e-3)
         else:
@@ -89,7 +85,7 @@ class AdaptiveSolver(ABC):
 
     @torch.no_grad()
     def update_tstep(self, dt, error):
-        """Update the time step of an adaptive step size solver.
+        """Update the time step of an adaptive step size integrator.
 
         See Equation (4.12) and (4.13) of `Hairer et al., Solving Ordinary Differential
         Equations I (1993), Springer Series in Computational Mathematics` for the
@@ -108,7 +104,7 @@ class AdaptiveSolver(ABC):
             return dt * min(0.9, max(self.min_factor, self.factor * dt_opt))
 
 
-class DormandPrince45(AdaptiveSolver):
+class DormandPrince45(AdaptiveODEIntegrator):
     """Dormand-Prince method for adaptive time step ODE integration.
 
     This is a fifth order solver that uses a fourth order solution to estimate the
@@ -146,11 +142,11 @@ class DormandPrince45(AdaptiveSolver):
 
         # extract target information
         dtype = target.dtype
-        real_dtype = to_float(dtype)
+        float_dtype = dtype_complex_to_float(dtype)
         device = target.device
 
         # initialize tensors
-        alpha = torch.tensor(alpha, dtype=real_dtype, device=device)
+        alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
         beta = torch.tensor(beta, dtype=dtype, device=device)
         csol5 = torch.tensor(csol5, dtype=dtype, device=device)
         csol4 = torch.tensor(csol4, dtype=dtype, device=device)
@@ -159,7 +155,7 @@ class DormandPrince45(AdaptiveSolver):
 
     def step(
         self, f0: Tensor, y0: Tensor, t0: float, dt: float
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         # create butcher tableau if not already done
         if self.tableau is None:

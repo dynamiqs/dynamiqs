@@ -1,32 +1,31 @@
+from __future__ import annotations
+
 from math import sqrt
-from typing import Tuple
 
 import torch
 import torch.nn as nn
+from solver import H_dependent
 from torch import Tensor
 
-from ..odeint import AdjointQSolver, H_dependent
-from ..solver_options import SolverOption
-from ..solver_utils import inv_sqrtm, kraus_map
-from ..types import TDOperator
-from ..utils import trace
+from ..ode.adjoint_solver import AdjointSolver
+from ..utils.solver_utils import inv_sqrtm, kraus_map
+from ..utils.utils import trace
 
 
-class MERouchon(AdjointQSolver):
-    def __init__(self, H: TDOperator, jump_ops: Tensor, solver_options: SolverOption):
+class MERouchon(AdjointSolver):
+    def __init__(self, *args, jump_ops: Tensor):
         """
         Args:
             H: Hamiltonian, of shape `(b_H, n, n)`.
             jump_ops: Jump operators, of shape `(len(jump_ops), n, n)`.
-            solver_options:
         """
-        # convert H and jump_ops to sizes compatible with (b_H, len(jump_ops), n, n)
-        super().__init__(H)
+        super().__init__(*args)
+
+        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
-        self.n = H.shape[-1]
-        self.I = torch.eye(self.n).to(H)  # (n, n)
-        self.options = solver_options
+        self.n = self.H.shape[-1]
+        self.I = torch.eye(self.n).to(self.H)  # (n, n)
         self.dt = self.options.dt
 
         self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
@@ -75,7 +74,7 @@ class MERouchon1(MERouchon):
         t: float,
         rho: Tensor,
         phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...],
+        parameters: tuple[nn.Parameter, ...],
     ):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
 
@@ -90,7 +89,7 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon1_5(MERouchon):
-    def forward(self, t: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
 
         Note:
@@ -127,13 +126,13 @@ class MERouchon1_5(MERouchon):
         t: float,
         rho: Tensor,
         phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...],
+        parameters: tuple[nn.Parameter, ...],
     ):
         raise NotImplementedError
 
 
 class MERouchon2(MERouchon):
-    def forward(self, t: float, rho: Tensor):
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
         Note:
@@ -173,7 +172,7 @@ class MERouchon2(MERouchon):
         t: float,
         rho: Tensor,
         phi: Tensor,
-        parameters: Tuple[nn.Parameter, ...],
+        parameters: tuple[nn.Parameter, ...],
     ):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t

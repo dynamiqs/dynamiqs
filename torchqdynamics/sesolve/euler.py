@@ -1,24 +1,19 @@
 from torch import Tensor
 
-from ..odeint import ForwardQSolver
-from ..solver_options import SolverOption
-from ..types import TDOperator
+from ..ode.forward_solver import ForwardSolver
 
 
-class SEEuler(ForwardQSolver):
-    def __init__(self, H: TDOperator, solver_options: SolverOption):
-        # Args:
-        #     H: (b_H, n, n)
-        super().__init__(H)
+class SEEuler(ForwardSolver):
+    def __init__(self, *args):
+        super().__init__(*args)
 
-        self.options = solver_options
-        self.dt = self.options.dt
+        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
 
-    def forward(self, t: float, psi: Tensor):
+    def forward(self, t: float, psi: Tensor) -> Tensor:
         # Args:
         #     psi: (b_H, b_psi, n, 1)
         #
         # Returns:
         #     (b_H, b_psi, n, 1)
 
-        return psi - self.dt * 1j * self.H(t) @ psi
+        return psi - self.options.dt * 1j * self.H(t) @ psi

@@ -1,14 +1,23 @@
-from typing import List, Literal, Optional, Tuple
+from __future__ import annotations
+
+from typing import Literal
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import odeint
-from ..solver_options import AdaptiveStep, Euler, SolverOption
-from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
+from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
+from ..utils.tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    TensorLike,
+    dtype_complex_to_float,
+    to_tensor,
+)
 from .adaptive import SEAdaptive
 from .euler import SEEuler
+from .options import Propagator
+from .propagator import SEPropagator
 
 
 def sesolve(
@@ -16,12 +25,13 @@ def sesolve(
     psi0: OperatorLike,
     t_save: TensorLike,
     *,
-    save_states: bool = True,
-    exp_ops: Optional[List[OperatorLike]] = None,
-    solver: Optional[SolverOption] = None,
-    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
-    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
-) -> Tuple[Tensor, Tensor]:
+    exp_ops: OperatorLike | list[OperatorLike] | None = None,
+    options: Options | None = None,
+    gradient_alg: Literal['autograd', 'adjoint'] | None = None,
+    parameters: tuple[nn.Parameter, ...] | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> tuple[Tensor, Tensor | None]:
     # Args:
     #     H: (b_H?, n, n)
     #     psi0: (b_psi0?, n, 1)
@@ -34,49 +44,56 @@ def sesolve(
     # TODO support density matrices too
 
     # convert H to a tensor and batch by default
-    H = to_tensor(H)
-    H_batched = H[None, ...] if H.dim() == 2 else H
+    H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
+    H_batched = H[None, ...] if H.ndim == 2 else H
 
     # convert psi0 to a tensor and batch by default
     # TODO add test to check that psi0 has the correct shape
     b_H = H_batched.size(0)
-    psi0 = to_tensor(psi0)
-    psi0_batched = psi0[None, ...] if psi0.dim() == 2 else psi0
+    psi0 = to_tensor(psi0, dtype=dtype, device=device, is_complex=True)
+    psi0_batched = psi0[None, ...] if psi0.ndim == 2 else psi0
     psi0_batched = psi0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi0, n, 1)
 
-    t_save = torch.as_tensor(t_save)
+    # convert t_save to tensor
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
 
-    exp_ops = to_tensor(exp_ops)
+    # convert exp_ops to tensor
+    exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
+    exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    if solver is None:
-        solver = Euler(dt=1e-2)
+    # default options
+    if options is None:
+        options = Dopri45()
 
-    # define the QSolver
-    args = (H_batched, solver)
-    if isinstance(solver, Euler):
-        qsolver = SEEuler(*args)
-    elif isinstance(solver, AdaptiveStep):
-        qsolver = SEAdaptive(*args)
-    else:
-        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
-
-    # compute the result
-    y_save, exp_save = odeint(
-        qsolver,
+    # define the solver
+    args = (
+        H_batched,
         psi0_batched,
         t_save,
-        save_states=save_states,
-        exp_ops=exp_ops,
-        gradient_alg=gradient_alg,
-        parameters=parameters,
+        exp_ops,
+        options,
+        gradient_alg,
+        parameters,
     )
+    if isinstance(options, Euler):
+        solver = SEEuler(*args)
+    elif isinstance(options, ODEAdaptiveStep):
+        solver = SEAdaptive(*args)
+    elif isinstance(options, Propagator):
+        solver = SEPropagator(*args)
+    else:
+        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
-    # restore correct batching
-    if psi0.dim() == 2:
-        y_save = y_save.squeeze(1)
+    # compute the result
+    solver.run()
+
+    # get saved tensors and restore correct batching
+    psi_save, exp_save = solver.y_save, solver.exp_save
+    if psi0.ndim == 2:
+        psi_save = psi_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
-    if H.dim() == 2:
-        y_save = y_save.squeeze(0)
+    if H.ndim == 2:
+        psi_save = psi_save.squeeze(0)
         exp_save = exp_save.squeeze(0)
 
-    return y_save, exp_save
+    return psi_save, exp_save

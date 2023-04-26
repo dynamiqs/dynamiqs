@@ -1,13 +1,13 @@
 import torch
 
 import torchqdynamics as tq
-from torchqdynamics.solver_options import SolverOption
+from torchqdynamics.options import Options
 
 from .open_system import OpenSystem
 
 
-class MESolverTest:
-    def _test_batching(self, solver: SolverOption, system: OpenSystem):
+class MESolverTester:
+    def _test_batching(self, options: Options, system: OpenSystem):
         """Test the batching of `H` and `rho0` in `mesolve`, and the returned object
         sizes."""
         n = system.n
@@ -22,7 +22,7 @@ class MESolverTest:
             rho0,
             system.t_save(num_t_save),
             exp_ops=system.exp_ops,
-            solver=solver,
+            options=options,
         )
 
         # no batching
@@ -50,7 +50,7 @@ class MESolverTest:
 
     def _test_rho_save(
         self,
-        solver: SolverOption,
+        options: Options,
         system: OpenSystem,
         *,
         num_t_save: int,
@@ -64,7 +64,7 @@ class MESolverTest:
             system.rho0,
             t_save,
             exp_ops=system.exp_ops,
-            solver=solver,
+            options=options,
         )
 
         errs = torch.norm(rho_save - system.rhos(t_save), dim=(-2, -1))

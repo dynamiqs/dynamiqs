@@ -21,8 +21,8 @@ def test_ket_fidelity_batching():
     b1, b2, n = 3, 5, 8
     psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
     phi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
-    psi = tq.types.to_tensor(psi)
-    phi = tq.types.to_tensor(phi)
+    psi = tq.to_tensor(psi)
+    phi = tq.to_tensor(phi)
     assert tq.ket_fidelity(psi, phi).shape == (b1, b2)
 
 
@@ -43,6 +43,6 @@ def test_dm_fidelity_batching():
     b1, b2, n = 3, 5, 8
     rho = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
     sigma = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
-    rho = tq.types.to_tensor(rho)
-    sigma = tq.types.to_tensor(sigma)
+    rho = tq.to_tensor(rho)
+    sigma = tq.to_tensor(sigma)
     assert tq.dm_fidelity(rho, sigma).shape == (b1, b2)

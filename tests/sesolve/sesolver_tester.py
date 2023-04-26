@@ -1,13 +1,13 @@
 import torch
 
 import torchqdynamics as tq
-from torchqdynamics.solver_options import SolverOption
+from torchqdynamics.options import Options
 
 from .closed_system import ClosedSystem
 
 
-class SESolverTest:
-    def _test_batching(self, solver: SolverOption, system: ClosedSystem):
+class SESolverTester:
+    def _test_batching(self, options: Options, system: ClosedSystem):
         """Test the batching of `H` and `psi0` in `sesolve`, and the returned object
         sizes."""
         n = system.n
@@ -21,7 +21,7 @@ class SESolverTest:
             psi0,
             system.t_save(num_t_save),
             exp_ops=system.exp_ops,
-            solver=solver,
+            options=options,
         )
 
         # no batching
@@ -49,7 +49,7 @@ class SESolverTest:
 
     def _test_psi_save(
         self,
-        solver: SolverOption,
+        options: Options,
         system: ClosedSystem,
         *,
         num_t_save: int,
@@ -62,7 +62,7 @@ class SESolverTest:
             system.psi0,
             t_save,
             exp_ops=system.exp_ops,
-            solver=solver,
+            options=options,
         )
 
         errs = torch.norm(psi_save - system.psis(t_save), dim=(-2, -1))

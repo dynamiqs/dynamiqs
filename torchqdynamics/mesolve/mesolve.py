@@ -1,31 +1,39 @@
-from typing import List, Literal, Optional, Tuple
+from __future__ import annotations
+
+from typing import Literal
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..odeint import odeint
-from ..solver_options import AdaptiveStep, Euler, SolverOption
-from ..types import OperatorLike, TDOperatorLike, TensorLike, to_tensor
-from ..utils import is_ket, ket_to_dm
+from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
+from ..utils.tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    TensorLike,
+    dtype_complex_to_float,
+    to_tensor,
+)
+from ..utils.utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
+from .options import Rouchon1, Rouchon1_5, Rouchon2
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
-from .solver_options import Rouchon1, Rouchon1_5, Rouchon2
 
 
 def mesolve(
     H: TDOperatorLike,
-    jump_ops: List[OperatorLike],
+    jump_ops: OperatorLike | list[OperatorLike],
     rho0: OperatorLike,
     t_save: TensorLike,
     *,
-    save_states: bool = True,
-    exp_ops: Optional[List[OperatorLike]] = None,
-    solver: Optional[SolverOption] = None,
-    gradient_alg: Optional[Literal['autograd', 'adjoint']] = None,
-    parameters: Optional[Tuple[nn.Parameter, ...]] = None,
-) -> Tuple[Tensor, Tensor]:
+    exp_ops: OperatorLike | list[OperatorLike] | None = None,
+    options: Options | None = None,
+    gradient_alg: Literal['autograd', 'adjoint'] | None = None,
+    parameters: tuple[nn.Parameter, ...] | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> tuple[Tensor, Tensor | None]:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
@@ -43,32 +51,34 @@ def mesolve(
     passed as... TODO Complete with full Hamiltonian format
 
     Available solvers:
-      - `Rouchon1` (alias of `Rouchon`)
-      - `Rouchon1_5`
-      - `Rouchon2`
+      - `Dopri45`: Dormand-Prince of order 5. Default solver.
+      - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`.
+      - `Rouchon1_5`: Rouchon method of order 1 with Kraus map trace renormalization.
+      - `Rouchon2`: Rouchon method of order 2.
+      - `Euler`: Euler method.
 
     Args:
         H (Tensor or Callable): Hamiltonian.
-            Can be a tensor of shape (n, n) or (b_H, n, n) if batched, or a callable
+            Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
             `H(t: float) -> Tensor` that returns a tensor of either possible shapes
             at every time between `t=0` and `t=t_save[-1]`.
-        jump_ops (list of Tensor): List of jump operators.
-            Each jump operator should be a tensor of shape (n, n).
+        jump_ops (Tensor, or list of Tensors): List of jump operators.
+            Each jump operator should be a tensor of shape `(n, n)`.
         rho0 (Tensor): Initial density matrix.
-            Tensor of shape (n, n) or (b_rho, n, n) if batched.
+            Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save (Tensor, np.ndarray or list): Times for which results are saved.
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
-        save_states (bool, optional): If `True`, the density matrix is saved at every
-            time value in `t_save`. If `False`, only the final density matrix is
-            stored and returned. Defaults to `True`.
-        exp_ops (list of Tensor, optional): List of operators for which the expectation
-            value is computed at every time value in `t_save`.
-        solver (SolverOption, optional): Solver used to compute the master equation
-            solutions. See the list of available solvers.
+        exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
+            expectation value is computed at every time value in `t_save`.
+        options (Options, optional): Solver options. See the list of available solvers.
         gradient_alg (str, optional): Algorithm used for computing gradients in the
             backward pass. Defaults to `None`.
         parameters (tuple of nn.Parameter): Parameters with respect to which gradients
             are computed during the adjoint state backward pass.
+        dtype (torch.dtype, optional): Complex data type to which all complex-valued
+            tensors are converted. `t_save` is also converted to a real data type of
+            the corresponding precision.
+        device (torch.device, optional): Device on which the tensors are stored.
 
     Returns:
         A tuple `(rho_save, exp_save)` where
@@ -78,12 +88,13 @@ def mesolve(
                 matrix is returned with the same shape as the initial input.
             `exp_save` is a tensor with the computed expectation values at `t_save`
                 times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
-                len(exp_ops), len(t_save))` if batched.
+                len(exp_ops), len(t_save))` if batched. `None` if no `exp_ops` are
+                passed.
     """
 
     if isinstance(H, OperatorLike.__args__):
         # convert H to a tensor and batch by default
-        H = to_tensor(H)
+        H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
         H_batched = H[None, ...] if H.ndim == 2 else H
     elif callable(H) or (isinstance(H, list) and (len(H) == 0 or callable(H[0]))):
         # H is callable or list of callables
@@ -95,56 +106,64 @@ def mesolve(
 
     # convert jump_ops to a tensor
     if len(jump_ops) == 0:
-        raise ValueError('Argument `jump_ops` must be a non-empty list of tensors.')
-    jump_ops = to_tensor(jump_ops)
+        raise ValueError(
+            'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
+            ' consider using `sesolve`.'
+        )
+    jump_ops = to_tensor(jump_ops, dtype=dtype, device=device, is_complex=True)
+    jump_ops = jump_ops[None, ...] if jump_ops.ndim == 2 else jump_ops
 
     # convert rho0 to a tensor and density matrix and batch by default
-    rho0 = to_tensor(rho0)
+    rho0 = to_tensor(rho0, dtype=dtype, device=device, is_complex=True)
     if is_ket(rho0):
         rho0 = ket_to_dm(rho0)
     b_H = H_batched.size(0) if isinstance(H, TensorLike.__args__) else len(H)
-    rho0_batched = rho0[None, ...] if rho0.dim() == 2 else rho0
+    rho0_batched = rho0[None, ...] if rho0.ndim == 2 else rho0
     rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
 
-    t_save = torch.as_tensor(t_save)
+    # convert t_save to a tensor
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
 
-    exp_ops = to_tensor(exp_ops)
+    # convert exp_ops to a tensor
+    exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
+    exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
 
-    if solver is None:
-        # TODO Replace by adaptive time step solver when implemented.
-        solver = Rouchon1(dt=1e-2)
+    # default options
+    if options is None:
+        options = Dopri45()
 
-    # define the QSolver
-    args = (H_batched, jump_ops, solver)
-    if isinstance(solver, Rouchon1):
-        qsolver = MERouchon1(*args)
-    elif isinstance(solver, Rouchon1_5):
-        qsolver = MERouchon1_5(*args)
-    elif isinstance(solver, Rouchon2):
-        qsolver = MERouchon2(*args)
-    elif isinstance(solver, AdaptiveStep):
-        qsolver = MEAdaptive(*args)
-    elif isinstance(solver, Euler):
-        qsolver = MEEuler(*args)
-    else:
-        raise NotImplementedError(f'Solver {type(solver)} is not implemented.')
-
-    # compute the result
-    rho_save, exp_save = odeint(
-        qsolver,
+    # define the solver
+    args = (
+        H_batched,
         rho0_batched,
         t_save,
-        save_states=save_states,
-        exp_ops=exp_ops,
-        gradient_alg=gradient_alg,
-        parameters=parameters,
+        exp_ops,
+        options,
+        gradient_alg,
+        parameters,
     )
+    if isinstance(options, Rouchon1):
+        solver = MERouchon1(*args, jump_ops=jump_ops)
+    elif isinstance(options, Rouchon1_5):
+        solver = MERouchon1_5(*args, jump_ops=jump_ops)
+    elif isinstance(options, Rouchon2):
+        solver = MERouchon2(*args, jump_ops=jump_ops)
+    elif isinstance(options, ODEAdaptiveStep):
+        solver = MEAdaptive(*args, jump_ops=jump_ops)
+    elif isinstance(options, Euler):
+        solver = MEEuler(*args, jump_ops=jump_ops)
+    else:
+        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
-    # restore correct batching
-    if rho0.dim() == 2:
+    # compute the result
+    solver.run()
+
+    # get saved tensors and restore correct batching
+    rho_save, exp_save = solver.y_save, solver.exp_save
+    if rho0.ndim == 2:
         rho_save = rho_save.squeeze(1)
         exp_save = exp_save.squeeze(1)
-    if H.dim() == 2:
+    if H.ndim == 2:
         rho_save = rho_save.squeeze(0)
         exp_save = exp_save.squeeze(0)
 

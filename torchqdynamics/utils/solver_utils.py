@@ -1,4 +1,6 @@
-from typing import Tuple, Union
+from __future__ import annotations
+
+from math import sqrt
 
 import torch
 from torch import Tensor
@@ -18,6 +20,7 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     Args:
         rho: Density matrix of shape `(a, ..., n, n)`.
         operators: Kraus operators of shape `(a, b, n, n)`.
+
     Returns:
         Density matrix of shape `(a, ..., n, n)` with the Kraus map applied.
     """
@@ -47,7 +50,7 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     Note:
         The returned tensor is complex-valued.
 
-    TODO Adapt to both density matrices, kets and bras.
+    TODO Adapt to bras.
 
     Args:
         O: Tensor of size `(b, n, n)`.
@@ -73,8 +76,8 @@ def lindbladian(rho: Tensor, H: Tensor, L: Tensor) -> Tensor:
 
 
 def none_to_zeros_like(
-    in_tuple: Tuple[Union[Tensor, None], ...], shaping_tuple: Tuple[Tensor, ...]
-) -> Tuple[Tensor, ...]:
+    in_tuple: tuple[Tensor | None, ...], shaping_tuple: tuple[Tensor, ...]
+) -> tuple[Tensor, ...]:
     """Convert `None` values of `in_tuple` to zero-valued tensors with the same shape
     as `shaping_tuple`."""
     return tuple(
@@ -82,7 +85,7 @@ def none_to_zeros_like(
     )
 
 
-def add_tuples(a: Tuple, b: Tuple) -> Tuple:
+def add_tuples(a: tuple, b: tuple) -> tuple:
     """Element-wise sum of two tuples of the same shape."""
     return tuple(x + y for x, y in zip(a, b))
 
@@ -99,4 +102,4 @@ def hairer_norm(x: Tensor) -> Tensor:
     Returns:
         Tensor of size `(...)` holding the norm of each matrix in the batch.
     """
-    return torch.linalg.matrix_norm(x) / torch.sqrt(x.size(-1) * x.size(-2))
+    return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))
