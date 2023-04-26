@@ -101,10 +101,6 @@ class ForwardSolver(Solver):
         Solving Ordinary Differential Equations I (1993), Springer Series in
         Computational Mathematics`.
         """
-        # save initial solution
-        if self.options.save_states and self.next_tsave() == 0.0:
-            self.save(self.y0)
-
         # initialize the adaptive integrator
         args = (
             self.forward,
@@ -124,13 +120,17 @@ class ForwardSolver(Solver):
 
         # initialize the progress bar
         pbar = tqdm(total=self.t_save[-1].item(), disable=not self.options.verbose)
-        warnings.simplefilter('ignore', TqdmWarning)  # ignore tqdm precision overflow
 
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter, max_steps = 0, self.options.max_steps
-        save_flag = False
+        save_flag = self.next_tsave() == 0.0
         while t < self.t_save[-1] and step_counter < max_steps:
+            # save results if flag is raised
+            if save_flag:
+                self.save(y)
+                save_flag = False
+
             # if a time in `t_save` is reached, raise a flag and rescale dt accordingly
             if t + dt >= self.next_tsave():
                 save_flag = True
@@ -148,24 +148,18 @@ class ForwardSolver(Solver):
                 t, y, ft = t + dt, y_new, ft_new
 
                 # update the progress bar
-                pbar.update(dt.item())
-
-                # save results if flag is raised
-                if save_flag:
-                    self.save(y)
-
-            # return to the original dt, lower the flag and get next save time
-            if save_flag:
-                dt = dt_old
-                save_flag = False
+                with warnings.catch_warnings():  # ignore tqdm precision overflow
+                    warnings.simplefilter('ignore', TqdmWarning)
+                    pbar.update(dt.item())
 
             # compute the next dt
+            if save_flag:  # return to the original dt
+                dt = dt_old
             dt = integrator.update_tstep(dt, error)
             step_counter += 1
 
         # close progress bar
         pbar.close()
 
-        # save last state if not already done
-        if self.next_tsave() is not None:
-            self.save(y)
+        # save last state
+        self.save(y)
