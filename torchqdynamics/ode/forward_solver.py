@@ -143,7 +143,7 @@ class ForwardSolver(Solver):
             # compute estimated error of this step
             error = integrator.get_error(y_err, y, y_new)
 
-            # update results if step is accepted
+            # update if step is accepted
             if error <= 1:
                 t, y, ft = t + dt, y_new, ft_new
 
