@@ -93,10 +93,7 @@ class Solver(ABC):
         pass
 
     def next_tsave(self) -> float:
-        if self.save_counter < len(self.t_save):
-            return self.t_save[self.save_counter]
-        else:
-            return None
+        return self.t_save[self.save_counter]
 
     def save(self, y: Tensor):
         self._save_y(y)
@@ -107,7 +104,7 @@ class Solver(ABC):
         if self.options.save_states:
             self.y_save[..., self.save_counter, :, :] = y
         # otherwise only save the state if it is the final state
-        elif self.next_tsave() is None:
+        elif self.save_counter == len(self.t_save) - 1:
             self.y_save = y
 
     def _save_exp_ops(self, y: Tensor):
