@@ -6,15 +6,14 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+from ..batching import BatchingHandler
 from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
     TensorLike,
     dtype_complex_to_float,
-    to_tensor,
 )
-from ..utils.utils import is_ket, ket_to_dm
 from .adaptive import MEAdaptive
 from .euler import MEEuler
 from .options import Rouchon1, Rouchon1_5, Rouchon2
@@ -93,37 +92,22 @@ def mesolve(
     """
     # TODO H is assumed to be time-independent from here (temporary)
 
-    # convert H to a tensor and batch by default
-    H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
-    H_batched = H[None, ...] if H.ndim == 2 else H
-
-    # convert jump_ops to a tensor
     if len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
             ' consider using `sesolve`.'
         )
-    jump_ops = to_tensor(jump_ops, dtype=dtype, device=device, is_complex=True)
-    jump_ops = jump_ops[None, ...] if jump_ops.ndim == 2 else jump_ops
 
-    # convert rho0 to a tensor and density matrix and batch by default
-    rho0 = to_tensor(rho0, dtype=dtype, device=device, is_complex=True)
-    if is_ket(rho0):
-        rho0 = ket_to_dm(rho0)
-    b_H = H_batched.size(0)
-    rho0_batched = rho0[None, ...] if rho0.ndim == 2 else rho0
-    rho0_batched = rho0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_rho0, n, n)
+    formatter = BatchingHandler(dtype, device)
+    H_batched, rho0_batched = formatter.batch_H_and_state(H, rho0, state_to_dm=True)
+    exp_ops = formatter.batch(exp_ops)
+    jump_ops = formatter.batch(jump_ops)
 
     # convert t_save to a tensor
     t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
 
-    # convert exp_ops to a tensor
-    exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
-    exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
-
     # default options
-    if options is None:
-        options = Dopri45()
+    options = options or Dopri45()
 
     # define the solver
     args = (
@@ -153,11 +137,7 @@ def mesolve(
 
     # get saved tensors and restore correct batching
     rho_save, exp_save = solver.y_save, solver.exp_save
-    if rho0.ndim == 2:
-        rho_save = rho_save.squeeze(1)
-        exp_save = exp_save.squeeze(1)
-    if H.ndim == 2:
-        rho_save = rho_save.squeeze(0)
-        exp_save = exp_save.squeeze(0)
+    rho_save = formatter.unbatch(rho_save)
+    exp_save = formatter.unbatch(exp_save)
 
     return rho_save, exp_save
