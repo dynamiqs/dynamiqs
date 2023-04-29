@@ -99,7 +99,7 @@ def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
     a = [_destroy_single(dim, dtype=dtype, device=device) for dim in dims]
     I = [eye(dim, dtype=dtype, device=device) for dim in dims]
     return tuple(
-        tensprod(*[a[j] if i == j else I[i] for j in range(len(dims))])
+        tensprod(*[a[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
@@ -150,7 +150,7 @@ def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
     adag = [_create_single(dim, dtype=dtype, device=device) for dim in dims]
     I = [eye(dim, dtype=dtype, device=device) for dim in dims]
     return tuple(
-        tensprod(*[adag[j] if i == j else I[i] for j in range(len(dims))])
+        tensprod(*[adag[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
