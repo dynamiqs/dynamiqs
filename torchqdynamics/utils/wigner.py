@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from math import pi, sqrt
 
 import matplotlib as mpl
