@@ -92,7 +92,9 @@ def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
                 [0.003+0.j],
                 [0.000+0.j]], dtype=torch.complex128)
     """
-    return displace(dim, alpha, dtype=dtype, device=device) @ fock(dim, 0)
+    return displace(dim, alpha, dtype=dtype, device=device) @ fock(
+        dim, 0, dtype=dtype, device=device
+    )
 
 
 @complex_tensor
