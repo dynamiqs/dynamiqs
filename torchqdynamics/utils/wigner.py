@@ -7,6 +7,8 @@ from torch import Tensor
 
 from .utils import is_ket
 
+__all__ = ['plot_wigner', 'wigner']
+
 
 def plot_wigner(
     state: Tensor,
