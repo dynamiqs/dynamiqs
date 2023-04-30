@@ -99,11 +99,25 @@ def complex_tensor(func):
     return wrapper
 
 
+DTYPE_CONVERSION_TABLE = {
+    torch.float32: torch.complex64,
+    torch.float64: torch.complex128,
+    torch.complex64: torch.float32,
+    torch.complex128: torch.float64,
+}
+
+
 def dtype_complex_to_float(
     dtype: torch.complex64 | torch.complex128 | None = None,
 ) -> torch.float32 | torch.float64:
     dtype = cdtype(dtype)
-    return torch.float64 if dtype is torch.complex128 else torch.float32
+    return DTYPE_CONVERSION_TABLE[dtype]
+
+
+def dtype_float_to_complex(
+    dtype: torch.float32 | torch.float64 | None = None,
+) -> torch.complex64 | torch.complex128:
+    return DTYPE_CONVERSION_TABLE[dtype]
 
 
 @complex_tensor
