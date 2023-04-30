@@ -123,29 +123,28 @@ def _wigner_clenshaw(rho: Tensor, xvec: Tensor, pvec: Tensor):
     i = n - 1
     for i in range(n - 2, -1, -1):
         w *= a * (i + 1) ** (-0.5)
-        w += _wigner_laguerre_series(i, a2, torch.diag(rho, i))
+        w += _laguerre_series(i, a2, torch.diag(rho, i))
 
-    return w.real * torch.exp(-0.5 * a2) / pi
+    return w.T.real * torch.exp(-0.5 * a2) / pi
 
 
-def _wigner_laguerre_series(i, x, c):
+def _laguerre_series(i, x, c):
     r"""Evaluate a polynomial series of the form `$\sum_n c_n L_n^i$` where `$L_n$` is
     such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`."""
     n = len(c)
+
     if n == 1:
-        y0 = c[0]
-        y1 = 0
+        return c[0]
     elif n == 2:
-        y0 = c[0]
-        y1 = c[1]
-    else:
-        y0 = c[-2]
-        y1 = c[-1]
-        for k in range(n - 2, 0, -1):
-            y0, y1 = (
-                c[k - 1] - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
-                y0 - y1 * (i + 2 * k - x + 1) * ((i + k + 1) * (k + 1)) ** -0.5,
-            )
+        return c[0] - c[1] * (i + 1 - x) * (i + 1) ** (-0.5)
+
+    y0 = c[-2]
+    y1 = c[-1]
+    for k in range(n - 2, 0, -1):
+        y0, y1 = (
+            c[k - 1] - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
+            y0 - y1 * (i + 2 * k - x + 1) * ((i + k + 1) * (k + 1)) ** -0.5,
+        )
 
     return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
