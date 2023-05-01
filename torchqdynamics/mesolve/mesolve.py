@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..batching import BatchingHandler
 from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
+from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -98,7 +98,7 @@ def mesolve(
             ' consider using `sesolve`.'
         )
 
-    formatter = BatchingHandler(dtype, device)
+    formatter = TensorFormatter(dtype, device)
     H_batched, rho0_batched = formatter.batch_H_and_state(H, rho0, state_to_dm=True)
     exp_ops = formatter.batch(exp_ops)
     jump_ops = formatter.batch(jump_ops)

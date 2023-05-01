@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 from torch import Tensor
 
@@ -6,7 +6,7 @@ from .utils.tensor_types import OperatorLike, TDOperatorLike, to_tensor
 from .utils.utils import is_ket, ket_to_dm
 
 
-class BatchingHandler:
+class TensorFormatter:
     def __init__(self, dtype, device):
         self.dtype = dtype
         self.device = device
@@ -17,7 +17,7 @@ class BatchingHandler:
     def batch_H_and_state(
         self, H: TDOperatorLike, state: OperatorLike, state_to_dm: bool = False
     ) -> Tuple[Tensor, Tensor]:
-        """Batches H and the state (psi or rho)"""
+        """Batches H and the state (psi or rho)."""
 
         # convert H to a tensor and batch by default
         H = to_tensor(H, dtype=self.dtype, device=self.device, is_complex=True)
@@ -49,7 +49,10 @@ class BatchingHandler:
         )
         return operator[None, ...] if operator.ndim == 2 else operator
 
-    def unbatch(self, save: Tensor):
+    def unbatch(self, save: Optional[Tensor]):
+        if save is None:
+            return None
+
         if not self.state_is_batched:
             save = save.squeeze(1)
         if not self.H_is_batched:

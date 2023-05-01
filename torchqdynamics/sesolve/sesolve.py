@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..batching import BatchingHandler
 from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
+from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -46,7 +46,7 @@ def sesolve(
 
     # convert H to a tensor and batch by default
     # TODO add test to check that psi0 has the correct shape
-    formatter = BatchingHandler(dtype, device)
+    formatter = TensorFormatter(dtype, device)
     H_batched, psi0_batched = formatter.batch_H_and_state(H, psi0)
     exp_ops = formatter.batch(exp_ops)
 
