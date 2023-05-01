@@ -74,22 +74,20 @@ class ForwardSolver(Solver):
                 ' multiple of the time step `dt`.'
             )
 
-        # define time values
-        num_times = torch.round(self.t_save[-1] / dt).int() + 1
-        times = torch.linspace(0.0, self.t_save[-1], num_times)
-
         # run the ode routine
-        y = self.y0
-        for t in tqdm(times[:-1], disable=not self.options.verbose):
-            # save solution
-            if t >= self.next_tsave():
-                self.save(y)
+        t0, y = 0.0, self.y0
+        for i, ti in enumerate(self.t_save):
+            # define time values
+            num_times = torch.round((ti - t0) / dt).int() + 1
+            times = torch.linspace(t0, ti, num_times)
 
-            # iterate solution
-            y = self.forward(t, y)
+            # iterate to ti
+            for t in times[:-1]:
+                y = self.forward(t, y)
 
-        # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
-        self.save(y)
+            # save
+            t0 = ti
+            self.save(i, y)
 
     def _adaptive_odeint(self):
         """Integrate a quantum ODE with an adaptive time step ODE integrator.
@@ -126,13 +124,13 @@ class ForwardSolver(Solver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for t1 in self.t_save:
-            while t < t1:
+        for i, ti in enumerate(self.t_save):
+            while t < ti:
                 # update time step
                 dt = integrator.update_tstep(dt, error)
-                if t + dt >= t1:
+                if t + dt >= ti:
                     dt_old = dt
-                    dt = t1 - t
+                    dt = ti - t
 
                 # perform a single ODE integrator step of size dt
                 ft_new, y_new, y_err = integrator.step(ft, y, t, dt)
@@ -159,7 +157,7 @@ class ForwardSolver(Solver):
                     )
             # save
             dt = dt_old
-            self.save(y)
+            self.save(i, y)
 
         # close progress bar
         pbar.close()

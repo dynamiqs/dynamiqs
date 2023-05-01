@@ -60,8 +60,6 @@ class Solver(ABC):
         self.gradient_alg = gradient_alg
         self.parameters = parameters
 
-        self.save_counter = 0
-
         # initialize save tensors
         batch_sizes, (m, n) = self.y0.shape[:-2], self.y0.shape[-2:]
 
@@ -92,21 +90,17 @@ class Solver(ABC):
     def run(self):
         pass
 
-    def next_tsave(self) -> float:
-        return self.t_save[self.save_counter]
+    def save(self, i: int, y: Tensor):
+        self._save_y(i, y)
+        self._save_exp_ops(i, y)
 
-    def save(self, y: Tensor):
-        self._save_y(y)
-        self._save_exp_ops(y)
-        self.save_counter += 1
-
-    def _save_y(self, y: Tensor):
+    def _save_y(self, i: int, y: Tensor):
         if self.options.save_states:
-            self.y_save[..., self.save_counter, :, :] = y
+            self.y_save[..., i, :, :] = y
         # otherwise only save the state if it is the final state
-        elif self.save_counter == len(self.t_save) - 1:
+        elif i == len(self.t_save) - 1:
             self.y_save = y
 
-    def _save_exp_ops(self, y: Tensor):
+    def _save_exp_ops(self, i: int, y: Tensor):
         if len(self.exp_ops) > 0:
-            self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
+            self.exp_save[..., i] = bexpect(self.exp_ops, y)
