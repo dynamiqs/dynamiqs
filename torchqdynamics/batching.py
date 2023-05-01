@@ -15,7 +15,7 @@ class BatchingHandler:
         self.state_is_batched = False
 
     def batch_H_and_state(
-        self, H: TDOperatorLike, state: OperatorLike, state_to_dm=False
+        self, H: TDOperatorLike, state: OperatorLike, state_to_dm: bool = False
     ) -> Tuple[Tensor, Tensor]:
         """Batches H and the state (psi or rho)"""
 
