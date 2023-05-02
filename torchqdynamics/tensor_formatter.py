@@ -1,5 +1,6 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
+import torch
 from torch import Tensor
 
 from .utils.tensor_types import OperatorLike, TDOperatorLike, to_tensor
@@ -7,7 +8,11 @@ from .utils.utils import is_ket, ket_to_dm
 
 
 class TensorFormatter:
-    def __init__(self, dtype, device):
+    def __init__(
+        self,
+        dtype: torch.complex64 | torch.complex128 | None,
+        device: torch.device | None,
+    ):
         self.dtype = dtype
         self.device = device
 
@@ -49,7 +54,7 @@ class TensorFormatter:
         )
         return operator[None, ...] if operator.ndim == 2 else operator
 
-    def unbatch(self, save: Optional[Tensor]):
+    def unbatch(self, save: Tensor | None):
         if save is None:
             return None
 
