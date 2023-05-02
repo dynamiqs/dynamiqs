@@ -12,7 +12,7 @@ from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
     TensorLike,
-    dtype_complex_to_float,
+    dtype_complex_to_real,
 )
 from .adaptive import MEAdaptive
 from .euler import MEEuler
@@ -104,7 +104,7 @@ def mesolve(
     jump_ops = formatter.batch(jump_ops)
 
     # convert t_save to a tensor
-    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
 
     # default options
     options = options or Dopri45()
