@@ -86,6 +86,19 @@ def cdtype(
     return dtype
 
 
+def rdtype(
+    dtype: torch.float32 | torch.float64 | None = None,
+) -> torch.float32 | torch.float64:
+    if dtype is None:
+        return torch.get_default_dtype()
+    elif dtype not in (torch.float32, torch.float64):
+        raise TypeError(
+            f'Argument `dtype` ({dtype}) must be `torch.float32`,'
+            ' `torch.float64` or `None` for a real-valued tensor.'
+        )
+    return dtype
+
+
 def complex_tensor(func):
     @functools.wraps(func)
     def wrapper(
@@ -99,25 +112,32 @@ def complex_tensor(func):
     return wrapper
 
 
-DTYPE_CONVERSION_TABLE = {
-    torch.float32: torch.complex64,
-    torch.float64: torch.complex128,
+DTYPE_TO_REAL = {
     torch.complex64: torch.float32,
     torch.complex128: torch.float64,
+    torch.float32: torch.float32,
+    torch.float64: torch.float64,
+}
+DTYPE_TO_CPLX = {
+    torch.float32: torch.complex64,
+    torch.float64: torch.complex128,
+    torch.complex64: torch.complex64,
+    torch.complex128: torch.complex128,
 }
 
 
-def dtype_complex_to_float(
+def dtype_complex_to_real(
     dtype: torch.complex64 | torch.complex128 | None = None,
 ) -> torch.float32 | torch.float64:
     dtype = cdtype(dtype)
-    return DTYPE_CONVERSION_TABLE[dtype]
+    return DTYPE_TO_REAL[dtype]
 
 
-def dtype_float_to_complex(
+def dtype_real_to_complex(
     dtype: torch.float32 | torch.float64 | None = None,
 ) -> torch.complex64 | torch.complex128:
-    return DTYPE_CONVERSION_TABLE[dtype]
+    dtype = rdtype(dtype)
+    return DTYPE_TO_CPLX[dtype]
 
 
 @complex_tensor

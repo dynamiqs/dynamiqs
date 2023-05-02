@@ -3,66 +3,13 @@ from __future__ import annotations
 from math import pi, sqrt
 from typing import Literal
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import torch
 from torch import Tensor
 
 from .tensor_types import dtype_float_to_complex
 from .utils import is_ket, ket_to_dm
 
-__all__ = ['plot_wigner', 'wigner']
-
-
-def plot_wigner(
-    state: Tensor,
-    *,
-    x_max: float = 6.2832,
-    p_max: float = 6.2832,
-    n_pixels: int = 200,
-    x_lim: float = 6.0,
-    p_lim: float = 6.0,
-    method: Literal['clenshaw', 'fft'] = 'clenshaw',
-) -> mpl.figure.Figure:
-    """Plot the wigner distribution of a state vector of density matrix.
-
-    Args:
-        state: State vector or density matrix.
-        x_max: Maximum value of x for which to compute the wigner distribution.
-        p_max: Maximum value of p for which to compute the wigner distribution.
-            If the wigner distribution is computed using the `fft` method, `p_max` is
-            ignored, and given by `2 * pi / x_max` instead.
-        n_pixels: Number of pixels in each direction.
-        x_lim: Limit of x for the displayed plot.
-        p_lim: Limit of p for the displayed plot.
-        method: Method used to compute the wigner distribution.
-
-    Returns:
-        The figure object corresponding to the displayed plot.
-    """
-    # compute wigner function
-    xvec, pvec, W = wigner(
-        state, x_max=x_max, p_max=p_max, n_pixels=n_pixels, method=method
-    )
-    xvec, pvec, W = xvec.detach().numpy(), pvec.detach().numpy(), W.detach().numpy()
-
-    # make figure
-    fig = plt.figure()
-    ax = plt.axes(xlim=(-x_lim, x_lim), ylim=(-p_lim, p_lim))
-    ax.set_aspect('equal', adjustable='box')
-
-    # plot
-    cmap = mpl.colormaps['RdBu']
-    norm = mpl.colors.Normalize(-abs(W).max(), abs(W).max())
-    ax.contourf(xvec, pvec, W, 100, norm=norm, cmap=cmap)
-    ax.set_xlabel('x')
-    ax.set_ylabel('p')
-
-    # display
-    plt.tight_layout()
-    plt.show()
-
-    return fig
+__all__ = ['wigner']
 
 
 def wigner(
