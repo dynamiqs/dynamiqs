@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Tuple
 
 import torch
@@ -54,7 +56,7 @@ class TensorFormatter:
         )
         return operator[None, ...] if operator.ndim == 2 else operator
 
-    def unbatch(self, save: Tensor | None):
+    def unbatch(self, save: Tensor | None) -> Tensor | None:
         if save is None:
             return None
 
