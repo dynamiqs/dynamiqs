@@ -112,18 +112,8 @@ def complex_tensor(func):
     return wrapper
 
 
-DTYPE_TO_REAL = {
-    torch.complex64: torch.float32,
-    torch.complex128: torch.float64,
-    torch.float32: torch.float32,
-    torch.float64: torch.float64,
-}
-DTYPE_TO_CPLX = {
-    torch.float32: torch.complex64,
-    torch.float64: torch.complex128,
-    torch.complex64: torch.complex64,
-    torch.complex128: torch.complex128,
-}
+DTYPE_TO_REAL = {torch.complex64: torch.float32, torch.complex128: torch.float64}
+DTYPE_TO_COMPLEX = {torch.float32: torch.complex64, torch.float64: torch.complex128}
 
 
 def dtype_complex_to_real(
@@ -137,7 +127,7 @@ def dtype_real_to_complex(
     dtype: torch.float32 | torch.float64 | None = None,
 ) -> torch.complex64 | torch.complex128:
     dtype = rdtype(dtype)
-    return DTYPE_TO_CPLX[dtype]
+    return DTYPE_TO_COMPLEX[dtype]
 
 
 @complex_tensor

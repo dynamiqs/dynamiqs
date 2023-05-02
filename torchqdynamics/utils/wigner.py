@@ -6,7 +6,7 @@ from typing import Literal
 import torch
 from torch import Tensor
 
-from .tensor_types import dtype_float_to_complex
+from .tensor_types import dtype_real_to_complex
 from .utils import is_ket, ket_to_dm
 
 __all__ = ['wigner']
@@ -131,7 +131,7 @@ def _fock_to_position(n: int, positions: Tensor) -> Tensor:
     oscillator of dimension n, as evaluated at the specific position values provided.
     """
     n_positions = positions.shape[0]
-    U = torch.zeros(n, n_positions, dtype=dtype_float_to_complex(positions.dtype))
+    U = torch.zeros(n, n_positions, dtype=dtype_real_to_complex(positions.dtype))
     U[0, :] = pi ** (-0.25) * torch.exp(-0.5 * positions**2)
 
     if n == 1:
