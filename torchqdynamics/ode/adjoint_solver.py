@@ -135,7 +135,7 @@ class ODEIntAdjoint(torch.autograd.Function):
         ctx.t_save = solver.t_save if solver.options.save_states else solver.t_save[-1]
 
         # integrate the ODE forward without storing the graph of operations
-        solver._odeint_inplace()
+        solver.odeint_inplace()
 
         # save results and model parameters
         ctx.save_for_backward(solver.y_save)

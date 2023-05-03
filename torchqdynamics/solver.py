@@ -86,8 +86,27 @@ class Solver(ABC):
         else:
             self.exp_save = None
 
-    @abstractmethod
     def run(self):
+        if self.gradient_alg is None:
+            self.odeint_inplace()
+        elif self.gradient_alg == 'autograd':
+            self.odeint()
+
+    def odeint_inplace(self):
+        """Integrate a quantum ODE with an in-place solver.
+
+        Simple solution for now so torch does not store gradients.
+        TODO Implement a genuine in-place integrator.
+        """
+        with torch.no_grad():
+            self.odeint()
+
+    @abstractmethod
+    def odeint(self):
+        """Integrate a quantum ODE starting from an initial state.
+
+        The ODE is solved from time `t=0.0` to `t=t_save[-1]`.
+        """
         pass
 
     def save(self, i: int, y: Tensor):

@@ -27,27 +27,7 @@ class ForwardSolver(Solver):
         """
         pass
 
-    def run(self):
-        """Integrate a quantum ODE starting from an initial state.
-
-        The ODE is solved from time `t=0.0` to `t=t_save[-1]`.
-        """
-        # dispatch to appropriate odeint subroutine
-        if self.gradient_alg is None:
-            self._odeint_inplace()
-        elif self.gradient_alg == 'autograd':
-            self._odeint_main()
-
-    def _odeint_inplace(self):
-        """Integrate a quantum ODE with an in-place ODE integrator.
-
-        Simple solution for now so torch does not store gradients.
-        TODO Implement a genuine in-place integrator.
-        """
-        with torch.no_grad():
-            self._odeint_main()
-
-    def _odeint_main(self):
+    def odeint(self):
         """Dispatch the ODE integration to fixed or adaptive time step subroutines."""
         if isinstance(self.options, ODEFixedStep):
             self._fixed_odeint()
@@ -118,8 +98,8 @@ class ForwardSolver(Solver):
         t0 = 0.0
         f0 = integrator.f(t0, self.y0)
         dt = integrator.init_tstep(f0, self.y0, t0)
-        dt_old = dt
         error = 1.0
+        cache = (dt, error)
 
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
@@ -129,7 +109,7 @@ class ForwardSolver(Solver):
                 # update time step
                 dt = integrator.update_tstep(dt, error)
                 if t + dt >= ti:
-                    dt_old = dt
+                    cache = (dt, error)
                     dt = ti - t
 
                 # perform a single ODE integrator step of size dt
@@ -156,7 +136,7 @@ class ForwardSolver(Solver):
                         ' number of time steps with the `options` argument.'
                     )
             # save
-            dt = dt_old
+            dt, error = cache
             self.save(i, y)
 
         # close progress bar
