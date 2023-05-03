@@ -56,7 +56,7 @@ class ForwardSolver(Solver):
 
         # initialize the progress bar
         tot_num_times = torch.round(self.t_save[-1] / dt).int() + 1
-        pbar = tqdm(total=tot_num_times, disable=not self.options.verbose)
+        pbar = tqdm(total=tot_num_times.item(), disable=not self.options.verbose)
 
         # run the ode routine
         t0, y = 0.0, self.y0
