@@ -60,18 +60,18 @@ class ForwardSolver(Solver):
 
         # run the ode routine
         t0, y = 0.0, self.y0
-        for i, ti in enumerate(self.t_save):
+        for i, t1 in enumerate(self.t_save):
             # define time values
-            num_times = torch.round((ti - t0) / dt).int() + 1
-            times = torch.linspace(t0, ti, num_times)
+            num_times = torch.round((t1 - t0) / dt).int() + 1
+            times = torch.linspace(t0, t1, num_times)
 
-            # iterate to ti
+            # iterate to t1
             for t in times[:-1]:
                 y = self.forward(t, y)
                 pbar.update(1)
 
             # save
-            t0 = ti
+            t0 = t1
             self.save(i, y)
 
     def _adaptive_odeint(self):
@@ -109,13 +109,13 @@ class ForwardSolver(Solver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for i, ti in enumerate(self.t_save):
-            while t < ti:
+        for i, t1 in enumerate(self.t_save):
+            while t < t1:
                 # update time step
                 dt = integrator.update_tstep(dt, error)
-                if t + dt >= ti:
+                if t + dt >= t1:
                     cache = (dt, error)
-                    dt = ti - t
+                    dt = t1 - t
 
                 # perform a single ODE integrator step of size dt
                 ft_new, y_new, y_err = integrator.step(ft, y, t, dt)

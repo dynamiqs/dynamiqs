@@ -12,7 +12,7 @@ class SEPropagator(Solver):
 
     def odeint(self):
         y, t0 = self.y0, 0.0
-        for i, ti in enumerate(tqdm(self.t_save, disable=not self.options.verbose)):
-            y = torch.matrix_exp(-1j * self.H * (ti - t0)) @ y
-            t0 = ti
+        for i, t1 in enumerate(tqdm(self.t_save, disable=not self.options.verbose)):
+            y = torch.matrix_exp(-1j * self.H * (t1 - t0)) @ y
+            t0 = t1
             self.save(i, y)
