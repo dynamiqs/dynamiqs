@@ -54,6 +54,10 @@ class ForwardSolver(Solver):
                 ' multiple of the time step `dt`.'
             )
 
+        # initialize the progress bar
+        tot_num_times = torch.round(self.t_save[-1] / dt).int() + 1
+        pbar = tqdm(total=tot_num_times, disable=not self.options.verbose)
+
         # run the ode routine
         t0, y = 0.0, self.y0
         for i, ti in enumerate(self.t_save):
@@ -64,6 +68,7 @@ class ForwardSolver(Solver):
             # iterate to ti
             for t in times[:-1]:
                 y = self.forward(t, y)
+                pbar.update(1)
 
             # save
             t0 = ti
