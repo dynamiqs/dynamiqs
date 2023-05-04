@@ -1,9 +1,9 @@
 from torch import Tensor
 
-from ..ode.forward_solver import ForwardSolver
+from .solvers.euler import Euler
 
 
-class SEEuler(ForwardSolver):
+class SEEuler(Euler):
     def __init__(self, *args):
         super().__init__(*args)
 
