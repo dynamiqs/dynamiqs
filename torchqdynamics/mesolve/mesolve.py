@@ -43,16 +43,17 @@ def mesolve(
     library (`gradient_alg="autograd"`), or a custom adjoint state differentiation
     (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward
     pass should be used (e.g. Rouchon solver). By default (if no gradient is required),
-    the graph of operations is not stored for improved performance of the solver.
+    the graph of operations is not stored to improve performance.
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
     signature `H(t: float) -> Tensor`. Piecewise constant Hamiltonians can also be
     passed as... TODO Complete with full Hamiltonian format
 
     Available solvers:
-      - `Dopri45`: Dormand-Prince of order 5. Default solver.
+      - `Dopri5`: Dormand-Prince of order 5. Default solver.
       - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`.
-      - `Rouchon1_5`: Rouchon method of order 1 with Kraus map trace renormalization.
+      - `Rouchon1_5`: Rouchon method of order 1 with built-in Kraus map trace
+      renormalization. Ideal for time-independent problems.
       - `Rouchon2`: Rouchon method of order 2.
       - `Euler`: Euler method.
 
@@ -66,7 +67,9 @@ def mesolve(
         rho0 (Tensor): Initial density matrix.
             Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save (Tensor, np.ndarray or list): Times for which results are saved.
-            The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
+            The master equation is solved from time `t=0.0` to `t=t_save[-1]`. Note:
+            For fixed time step solvers, `t_save` does not define the time step.
+            However, all `t_save` values should be aligned with the time step.
         exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
             expectation value is computed at every time value in `t_save`.
         options (Options, optional): Solver options. See the list of available solvers.
@@ -90,14 +93,13 @@ def mesolve(
                 len(exp_ops), len(t_save))` if batched. `None` if no `exp_ops` are
                 passed.
     """
-    # TODO H is assumed to be time-independent from here (temporary)
-
     if len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
             ' consider using `sesolve`.'
         )
 
+    # format all tensors for batching
     formatter = TensorFormatter(dtype, device)
     H_batched, rho0_batched = formatter.batch_H_and_state(H, rho0, state_to_dm=True)
     exp_ops = formatter.batch(exp_ops)

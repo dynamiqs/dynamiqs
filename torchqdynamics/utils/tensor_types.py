@@ -24,7 +24,7 @@ TensorLike = Union[list, np.ndarray, Tensor]
 OperatorLike = Union[TensorLike, Qobj]
 
 # type for objects convertible to a `TDOperator` using `time_dependent_to_tensor`
-TDOperatorLike = Union[OperatorLike, Callable[[float], OperatorLike]]
+TDOperatorLike = Union[OperatorLike, Callable[[float], Tensor]]
 
 
 def to_tensor(

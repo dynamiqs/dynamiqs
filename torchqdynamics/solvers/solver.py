@@ -24,9 +24,12 @@ def depends_on_H(func):
     @functools.wraps(func)
     def wrapper(instance, t, *args, **kwargs):
         if func.__name__ not in instance._cache or (
-            t != instance._cache[func.__name__][0] and instance._H_changed(t)
+            (t, args, kwargs) != instance._cache[func.__name__][0]
+            and instance._H_changed(t)
         ):
-            instance._cache[func.__name__] = t, func(instance, t, *args, **kwargs)
+            instance._cache[func.__name__] = (t, args, kwargs), func(
+                instance, t, *args, **kwargs
+            )
         return instance._cache[func.__name__][1]
 
     return wrapper
