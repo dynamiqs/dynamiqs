@@ -6,6 +6,7 @@ import torch
 from torch import Tensor
 
 from ..ode.adjoint_solver import AdjointSolver
+from ..solver import depends_on_H
 from ..utils.solver_utils import inv_sqrtm, kraus_map
 from ..utils.utils import trace
 
@@ -19,15 +20,36 @@ class MERouchon(AdjointSolver):
         """
         super().__init__(*args)
 
-        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
+        self.n = self.H(0.0).shape[-1]
+        self.I = torch.eye(self.n).to(self.H(0.0))  # (n, n)
+        self.dt = self.options.dt
+
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
-        self.n = self.H.shape[-1]
-        self.I = torch.eye(self.n).to(self.H)  # (n, n)
-        self.dt = self.options.dt
+
+        self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        self.M1s_adj = sqrt(self.dt) * self.jump_ops.adjoint()
 
 
 class MERouchon1(MERouchon):
+    @depends_on_H
+    def H_nh(self, t: float) -> Tensor:
+        # non-hermitian Hamiltonian at time t
+        return self.H(t) - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
+
+    @depends_on_H
+    def Hdag_nh(self, t: float) -> Tensor:
+        return self.H_nh(t).adjoint()
+
+    @depends_on_H
+    def M0(self, t: float) -> Tensor:
+        # build time-dependent Kraus operators
+        return self.I - 1j * self.dt * self.H_nh(t)  # (b_H, 1, n, n)
+
+    @depends_on_H
+    def M0_adj(self, t: float) -> Tensor:
+        return self.I + 1j * self.dt * self.Hdag_nh(t)
+
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
 
@@ -38,15 +60,8 @@ class MERouchon1(MERouchon):
         Returns:
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
-        # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
-
-        # build time-dependent Kraus operators
-        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
-        M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
-
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, M1s)
+        rho = kraus_map(rho, self.M0(t)) + kraus_map(rho, self.M1s)
 
         # normalize by the trace
         rho = rho / trace(rho)[..., None, None].real
@@ -56,19 +71,21 @@ class MERouchon1(MERouchon):
     def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump
-        Hdag_nh = H_nh.adjoint()
 
         # compute rho(t-dt)
-        M0 = self.I + 1j * self.dt * H_nh
-        M1s = sqrt(self.dt) * self.jump_ops
-        rho = kraus_map(rho, M0) - kraus_map(rho, M1s)
+        rho = kraus_map(rho, self.M0(t)) - kraus_map(rho, self.M1s)
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
+        H_nh = self.H(t) - 0.5j * self.sum_nojump
+        Hdag_nh = H_nh.adjoint()
         M0_adj = self.I + 1j * self.dt * Hdag_nh
-        M1s_adj = sqrt(self.dt) * self.jump_ops.adjoint()
-        phi = kraus_map(phi, M0_adj) + kraus_map(phi, M1s_adj)
+
+        # TODO: using the cached version of M0_adj breaks the tests
+        # if H_nh is marked as `@depends_on_H`
+        # M0_adj = self.M0_adj(t)
+
+        phi = kraus_map(phi, M0_adj) + kraus_map(phi, self.M1s_adj)
 
         return rho, phi
 
@@ -128,7 +145,7 @@ class MERouchon2(MERouchon):
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
+        H_nh = self.H(t) - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
         # M0: (b_H, 1, n, n)
@@ -149,7 +166,7 @@ class MERouchon2(MERouchon):
     def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump
+        H_nh = self.H(t) - 0.5j * self.sum_nojump
         Hdag_nh = H_nh.adjoint()
 
         # compute rho(t-dt)
