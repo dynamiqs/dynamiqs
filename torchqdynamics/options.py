@@ -42,7 +42,7 @@ class Euler(ODEFixedStep):
     pass
 
 
-class Dopri45(ODEAdaptiveStep):
+class Dopri5(ODEAdaptiveStep):
     pass
 
 
