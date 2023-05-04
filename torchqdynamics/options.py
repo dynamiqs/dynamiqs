@@ -1,3 +1,14 @@
+__all__ = [
+    'Propagator',
+    'Dopri5',
+    'Euler',
+    'Rouchon',
+    'Rouchon1',
+    'Rouchon1_5',
+    'Rouchon2',
+]
+
+
 class Options:
     def __init__(self, *, verbose: bool = True, save_states: bool = True):
         """...
@@ -38,7 +49,7 @@ class ODEAdaptiveStep(Options):
         self.max_factor = max_factor
 
 
-class Euler(ODEFixedStep):
+class Propagator(Options):
     pass
 
 
@@ -46,6 +57,21 @@ class Dopri5(ODEAdaptiveStep):
     pass
 
 
-# gather all solver options under the same namespace `options`
-from .mesolve.options import *  # noqa: F401, E402
-from .sesolve.options import *  # noqa: F401, E402
+class Euler(ODEFixedStep):
+    pass
+
+
+class Rouchon1(ODEFixedStep):
+    pass
+
+
+# make alias for Rouchon1
+Rouchon = Rouchon1
+
+
+class Rouchon1_5(ODEFixedStep):
+    pass
+
+
+class Rouchon2(ODEFixedStep):
+    pass

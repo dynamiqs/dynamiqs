@@ -6,7 +6,15 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..options import Dopri5, Euler, ODEAdaptiveStep, Options
+from ..options import (
+    Dopri5,
+    Euler,
+    ODEAdaptiveStep,
+    Options,
+    Rouchon1,
+    Rouchon1_5,
+    Rouchon2,
+)
 from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
@@ -16,7 +24,6 @@ from ..utils.tensor_types import (
 )
 from .adaptive import MEAdaptive
 from .euler import MEEuler
-from .options import Rouchon1, Rouchon1_5, Rouchon2
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
 
 

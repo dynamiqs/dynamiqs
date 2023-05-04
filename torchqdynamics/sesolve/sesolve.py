@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..options import Dopri5, Euler, ODEAdaptiveStep, Options
+from ..options import Dopri5, Euler, ODEAdaptiveStep, Options, Propagator
 from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
@@ -16,7 +16,6 @@ from ..utils.tensor_types import (
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
-from .options import Propagator
 from .propagator import SEPropagator
 
 
