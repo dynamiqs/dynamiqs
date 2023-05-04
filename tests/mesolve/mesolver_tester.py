@@ -108,16 +108,9 @@ class MEAdjointSolverTester(MESolverTester):
         rho_save, _ = run_mesolve('adjoint', system.parameters)
         loss = system.loss(rho_save[-1])
         grad_adjoint = torch.autograd.grad(loss, system.parameters)
-        print(system.parameters)
 
         # check gradients are equal
         for g1, g2 in zip(grad_autograd, grad_adjoint):
-            print(
-                'bb',
-                torch.linalg.norm(g1 - g2),
-                torch.linalg.norm(g1),
-                torch.linalg.norm(g2),
-            )
             assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
 
     def test_adjoint(self):
