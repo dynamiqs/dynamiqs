@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from ..solvers.adaptive_solver import AdaptiveSolver
+from ..solvers.ode.adaptive_solver import AdaptiveSolver
 
 
 class SEAdaptive(AdaptiveSolver):

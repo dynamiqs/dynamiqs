@@ -5,13 +5,13 @@ from math import sqrt
 import torch
 from torch import Tensor
 
-from ..solvers.rouchon import Rouchon
+from ..solvers.ode.forward_solver import AdjointForwardSolver
 from ..solvers.solver import depends_on_H
 from ..utils.solver_utils import inv_sqrtm, kraus_map
 from ..utils.utils import trace
 
 
-class MERouchon(Rouchon):
+class MERouchon(AdjointForwardSolver):
     def __init__(self, *args, jump_ops: Tensor):
         """
         Args:
