@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import abstractmethod
 
 import torch
@@ -7,55 +5,24 @@ import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
 
-from ..options import ODEAdaptiveStep, ODEFixedStep
 from ..utils.progress_bar import tqdm
 from ..utils.solver_utils import add_tuples, none_to_zeros_like
 from .forward_solver import ForwardSolver
 
 
-class AdjointSolver(ForwardSolver):
+class Rouchon(ForwardSolver):
     GRADIENT_ALG = ['autograd', 'adjoint']
 
-    def run(self):
-        if self.gradient_alg in [None, 'autograd']:
-            super().run()
-        elif self.gradient_alg == 'adjoint':
-            self._odeint_adjoint()
-
-    @abstractmethod
-    def backward_augmented(
-        self, t: float, y: Tensor, a: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        """Iterate the augmented quantum state backward.
-
-        Args:
-            t: Time.
-            y: Quantum state, of shape `(..., m, n)`.
-            a: Adjoint quantum state, of shape `(..., m, n)`.
-            parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
-
-        Returns:
-            Tuple of two tensors of shape `(..., m, n)`.
-        """
-        pass
-
-    def _odeint_adjoint(self):
+    def integrate_adjoint(self):
         # check parameters were passed
         if self.parameters is None:
             raise TypeError(
                 'For adjoint state gradient computation, parameters must be passed to'
                 ' the solver.'
             )
-        ODEIntAdjoint.apply(self, self.y0, *self.parameters)
+        AdjointRouchon.apply(self, self.y0, *self.parameters)
 
-    def _odeint_augmented_main(self):
-        """Integrate the augmented ODE backward."""
-        if isinstance(self.options, ODEFixedStep):
-            self._fixed_odeint_augmented()
-        elif isinstance(self.options, ODEAdaptiveStep):
-            self._adaptive_odeint_augmented()
-
-    def _fixed_odeint_augmented(self):
+    def integrate_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
         # get time step from solver
         dt = self.options.dt
@@ -87,7 +54,7 @@ class AdjointSolver(ForwardSolver):
 
             with torch.enable_grad():
                 # compute y(t-dt) and a(t-dt) with the solver
-                y, a = self.backward_augmented(t, y, a)
+                y, a = self.backward_augmented(t, dt, y, a)
 
                 # compute g(t-dt)
                 dg = torch.autograd.grad(
@@ -104,18 +71,18 @@ class AdjointSolver(ForwardSolver):
         self.a_bwd = a
         self.g_bwd = g
 
-    def _adaptive_odeint_augmented(self, *_args, **_kwargs):
-        """Integrate the augmented ODE backward with an adaptive step integrator."""
-        raise NotImplementedError
+    @abstractmethod
+    def backward_augmented(self, t, dt, y, a):
+        pass
 
 
-class ODEIntAdjoint(torch.autograd.Function):
+class AdjointRouchon(torch.autograd.Function):
     """Class for ODE integration with a custom adjoint method backward pass."""
 
     @staticmethod
     def forward(
         ctx: FunctionCtx,
-        solver: AdjointSolver,
+        solver: Rouchon,
         y0: Tensor,
         *parameters: tuple[nn.Parameter, ...],
     ) -> Tensor:
@@ -125,7 +92,7 @@ class ODEIntAdjoint(torch.autograd.Function):
         ctx.t_save = solver.t_save if solver.options.save_states else solver.t_save[-1]
 
         # integrate the ODE forward without storing the graph of operations
-        solver._odeint_inplace()
+        solver.integrate_nograd()
 
         # save results and model parameters
         ctx.save_for_backward(solver.y_save)
@@ -173,7 +140,7 @@ class ODEIntAdjoint(torch.autograd.Function):
                 solver.t_save_bwd = t_save[i - 1 : i + 1]
 
                 # run odeint on augmented state
-                solver._odeint_augmented_main()
+                solver.integrate_augmented()
 
                 # replace y with its checkpointed version
                 solver.y_bwd = y_save[..., i - 1, :, :]

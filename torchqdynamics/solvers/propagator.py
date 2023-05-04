@@ -2,8 +2,8 @@ from abc import abstractmethod
 
 import torch
 
+from ..utils.progress_bar import tqdm
 from .solver import Solver
-from .utils.progress_bar import tqdm
 
 
 class Propagator(Solver):
@@ -16,7 +16,7 @@ class Propagator(Solver):
     def integrate_autograd(self):
         y, t1 = self.y0, 0.0
         for t2 in tqdm(self.t_save, disable=not self.options.verbose):
-            y = self.forward(y, t1, t2 - t1)
+            y = self.forward(t1, t2 - t1, y)
             t1 = t2
             self.save(y)
 
@@ -26,5 +26,5 @@ class Propagator(Solver):
         )
 
     @abstractmethod
-    def forward(self, t, y, dt):
+    def forward(self, t, dt, y):
         pass

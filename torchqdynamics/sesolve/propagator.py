@@ -9,5 +9,5 @@ class SEPropagator(Propagator):
 
         self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
 
-    def forward(self, y, t, dt):
-        return torch.matrix_exp(-1j * self.H * dt) @ y
+    def forward(self, t, dt, psi):
+        return torch.matrix_exp(-1j * self.H * dt) @ psi

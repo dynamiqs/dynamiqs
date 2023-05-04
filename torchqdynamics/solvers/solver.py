@@ -5,9 +5,9 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 
-from .options import Options
-from .utils.solver_utils import bexpect
-from .utils.tensor_types import TDOperator
+from ..options import Options
+from ..utils.solver_utils import bexpect
+from ..utils.tensor_types import TDOperator
 
 
 class Solver(ABC):
@@ -106,6 +106,7 @@ class Solver(ABC):
 
     @abstractmethod
     def integrate_adjoint(self):
+        """Integrate an ODE using the adjoint method in the backward pass."""
         pass
 
     def next_tsave(self) -> float:
