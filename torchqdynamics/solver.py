@@ -88,8 +88,24 @@ class Solver(ABC):
         else:
             self.exp_save = None
 
+    def integrate(self):
+        if self.gradient_alg is None:
+            self.integrate_nograd()
+        elif self.gradient_alg == 'autograd':
+            self.integrate_autograd()
+        elif self.gradient_alg == 'adjoint':
+            self.integrate_adjoint()
+
     @abstractmethod
-    def run(self):
+    def integrate_nograd(self):
+        pass
+
+    @abstractmethod
+    def integrate_autograd(self):
+        pass
+
+    @abstractmethod
+    def integrate_adjoint(self):
         pass
 
     def next_tsave(self) -> float:
