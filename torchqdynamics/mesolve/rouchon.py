@@ -81,7 +81,7 @@ class MERouchon1(MERouchon):
         Hdag_nh = H_nh.adjoint()
         M0_adj = self.I + 1j * self.dt * Hdag_nh
 
-        # To be fixed: using the cached version of M0_adj breaks the tests
+        # TODO: using the cached version of M0_adj breaks the tests
         # if H_nh is marked as `@depends_on_H`
         # M0_adj = self.M0_adj(t)
 
