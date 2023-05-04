@@ -1,6 +1,6 @@
 import torch
 
-from ..propagator import Propagator
+from ..solvers.propagator import Propagator
 
 
 class SEPropagator(Propagator):

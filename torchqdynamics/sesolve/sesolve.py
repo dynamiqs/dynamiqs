@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
+from ..options import Dopri5, Euler, ODEAdaptiveStep, Options
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
@@ -64,7 +64,7 @@ def sesolve(
 
     # default options
     if options is None:
-        options = Dopri45()
+        options = Dopri5()
 
     # define the solver
     args = (
@@ -86,7 +86,7 @@ def sesolve(
         raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
-    solver.run()
+    solver.integrate()
 
     # get saved tensors and restore correct batching
     psi_save, exp_save = solver.y_save, solver.exp_save
