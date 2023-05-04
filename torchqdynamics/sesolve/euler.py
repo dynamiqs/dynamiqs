@@ -4,11 +4,6 @@ from ..solvers.euler import Euler
 
 
 class SEEuler(Euler):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        self.H = self.H[:, None, ...]  # (b_H, 1, n, n)
-
     def forward(self, t: float, dt: float, psi: Tensor) -> Tensor:
         # Args:
         #     psi: (b_H, b_psi, n, 1)
@@ -16,4 +11,4 @@ class SEEuler(Euler):
         # Returns:
         #     (b_H, b_psi, n, 1)
 
-        return psi - dt * 1j * self.H @ psi
+        return psi - dt * 1j * self.H(t) @ psi

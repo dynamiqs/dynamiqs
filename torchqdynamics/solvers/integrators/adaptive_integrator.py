@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from ...utils.solver_utils import hairer_norm
-from ...utils.tensor_types import dtype_complex_to_float
+from ...utils.tensor_types import dtype_complex_to_real
 
 
 class AdaptiveIntegrator(ABC):
@@ -142,7 +142,7 @@ class DormandPrince5(AdaptiveIntegrator):
 
         # extract target information
         dtype = target.dtype
-        float_dtype = dtype_complex_to_float(dtype)
+        float_dtype = dtype_complex_to_real(dtype)
         device = target.device
 
         # initialize tensors

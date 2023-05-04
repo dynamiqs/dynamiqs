@@ -7,12 +7,12 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..options import Dopri5, Euler, ODEAdaptiveStep, Options
+from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
     TensorLike,
-    dtype_complex_to_float,
-    to_tensor,
+    dtype_complex_to_real,
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
@@ -45,26 +45,16 @@ def sesolve(
     # TODO H is assumed to be time-independent from here (temporary)
 
     # convert H to a tensor and batch by default
-    H = to_tensor(H, dtype=dtype, device=device, is_complex=True)
-    H_batched = H[None, ...] if H.ndim == 2 else H
-
-    # convert psi0 to a tensor and batch by default
     # TODO add test to check that psi0 has the correct shape
-    b_H = H_batched.size(0)
-    psi0 = to_tensor(psi0, dtype=dtype, device=device, is_complex=True)
-    psi0_batched = psi0[None, ...] if psi0.ndim == 2 else psi0
-    psi0_batched = psi0_batched[None, ...].repeat(b_H, 1, 1, 1)  # (b_H, b_psi0, n, 1)
+    formatter = TensorFormatter(dtype, device)
+    H_batched, psi0_batched = formatter.batch_H_and_state(H, psi0)
+    exp_ops = formatter.batch(exp_ops)
 
     # convert t_save to tensor
-    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_float(dtype), device=device)
-
-    # convert exp_ops to tensor
-    exp_ops = to_tensor(exp_ops, dtype=dtype, device=device, is_complex=True)
-    exp_ops = exp_ops[None, ...] if exp_ops.ndim == 2 else exp_ops
+    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
 
     # default options
-    if options is None:
-        options = Dopri5()
+    options = options or Dopri5()
 
     # define the solver
     args = (
@@ -90,11 +80,7 @@ def sesolve(
 
     # get saved tensors and restore correct batching
     psi_save, exp_save = solver.y_save, solver.exp_save
-    if psi0.ndim == 2:
-        psi_save = psi_save.squeeze(1)
-        exp_save = exp_save.squeeze(1)
-    if H.ndim == 2:
-        psi_save = psi_save.squeeze(0)
-        exp_save = exp_save.squeeze(0)
+    psi_save = formatter.unbatch(psi_save)
+    exp_save = formatter.unbatch(exp_save)
 
     return psi_save, exp_save

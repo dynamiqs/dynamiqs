@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 from abc import ABC, abstractmethod
 
 import torch
@@ -8,6 +9,27 @@ from torch import Tensor
 from ..options import Options
 from ..utils.solver_utils import bexpect
 from ..utils.tensor_types import TDOperator
+
+
+def depends_on_H(func):
+    """Handles caching for functions that only depend on the Hamiltonian.
+    The functions must take as single argument the time and be decorated
+    by `@H_cached`.
+    Examples:
+        @H_cached
+        def H_squared(self, t):
+            return self.H(t) @ self.H(t)
+    """
+
+    @functools.wraps(func)
+    def wrapper(instance, t, *args, **kwargs):
+        if func.__name__ not in instance._cache or (
+            t != instance._cache[func.__name__][0] and instance._H_changed(t)
+        ):
+            instance._cache[func.__name__] = t, func(instance, t, *args, **kwargs)
+        return instance._cache[func.__name__][1]
+
+    return wrapper
 
 
 class Solver(ABC):
@@ -52,13 +74,14 @@ class Solver(ABC):
                 f' supported by this solver ({type(self)}).'
             )
 
-        self.H = H
+        self._H = H
         self.y0 = y0
         self.t_save = t_save
         self.exp_ops = exp_ops
         self.options = options
         self.gradient_alg = gradient_alg
         self.parameters = parameters
+        self._cache = {}
 
         self.save_counter = 0
 
@@ -127,3 +150,20 @@ class Solver(ABC):
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
             self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
+
+    @depends_on_H
+    def H(self, t: float) -> Tensor:
+        if isinstance(self._H, Tensor):
+            return self._H
+        elif callable(self._H):
+            return self._H(t)
+        else:
+            raise TypeError('Piecewise constant Hamiltonian not supported yet.')
+
+    def _H_changed(self, _t: float) -> bool:
+        if isinstance(self._H, Tensor):
+            return False
+        elif callable(self._H):
+            return True
+        else:
+            raise TypeError('Piecewise constant Hamiltonian not supported yet.')
