@@ -36,17 +36,6 @@ class Options:
 
         self._gradient_algs = []
 
-    def _check_gradient_alg(self):
-        """Check that the gradient algorithm is supported."""
-        if (
-            self.gradient_alg is not None
-            and self.gradient_alg not in self._gradient_algs
-        ):
-            raise ValueError(
-                f'Gradient algorithm {self.gradient_alg} is not defined or not yet'
-                f' supported by solver {type(self)}.'
-            )
-
 
 class Autograd(Options):
     def __init__(self, **kwargs):
@@ -89,27 +78,19 @@ class ODEAdaptiveStep(Autograd):
 
 
 class Propagator(Autograd):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._check_gradient_alg()
+    pass
 
 
 class Dopri5(ODEAdaptiveStep):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._check_gradient_alg()
+    pass
 
 
 class Euler(ODEFixedStep):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._check_gradient_alg()
+    pass
 
 
 class Rouchon1(ODEFixedStep, Adjoint):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._check_gradient_alg()
+    pass
 
 
 # make alias for Rouchon1
@@ -117,12 +98,8 @@ Rouchon = Rouchon1
 
 
 class Rouchon1_5(ODEFixedStep, Adjoint):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._check_gradient_alg()
+    pass
 
 
 class Rouchon2(ODEFixedStep, Adjoint):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._check_gradient_alg()
+    pass

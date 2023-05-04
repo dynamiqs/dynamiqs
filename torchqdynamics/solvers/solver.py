@@ -71,10 +71,13 @@ class Solver(ABC):
             raise ValueError('Argument `t_save` must contain positive values only.')
 
         # check that the gradient algorithm is supported
-        if gradient_alg is not None and gradient_alg not in self.GRADIENT_ALG:
+        if (
+            options.gradient_alg is not None
+            and options.gradient_alg not in options._gradient_algs
+        ):
             raise ValueError(
-                f'Gradient algorithm {gradient_alg} is not defined or not yet'
-                f' supported by this solver ({type(self)}).'
+                f'Gradient algorithm {options.gradient_alg} is not defined or not yet'
+                f' supported by solver {type(options)}.'
             )
 
         self._H = H
