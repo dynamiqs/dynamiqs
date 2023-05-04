@@ -1,10 +1,10 @@
 from torch import Tensor
 
-from ..solvers.euler import Euler
+from ..solvers.ode.forward_solver import ForwardSolver
 from ..utils.solver_utils import lindbladian
 
 
-class MEEuler(Euler):
+class MEEuler(ForwardSolver):
     def __init__(self, *args, jump_ops: Tensor):
         super().__init__(*args)
 

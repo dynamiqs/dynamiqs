@@ -1,23 +1,17 @@
 import warnings
 from abc import abstractmethod
 
-import torch
+from torch import Tensor
 from tqdm.std import TqdmWarning
 
-from ..options import Dopri5
-from ..utils.progress_bar import tqdm
-from .integrators.adaptive_integrator import DormandPrince5
-from .solver import Solver
+from ...options import Dopri5
+from ...utils.progress_bar import tqdm
+from ..solver import Solver
+from .adaptive_integrator import DormandPrince5
 
 
 class AdaptiveSolver(Solver):
-    GRADIENT_ALG = ['autograd']
-
-    def integrate_nograd(self):
-        with torch.no_grad():
-            self.integrate_autograd()
-
-    def integrate_autograd(self):
+    def run_autograd(self):
         """Integrate a quantum ODE with an adaptive time step ODE integrator.
 
         This function integrates an ODE of the form `dy / dt = f(t, y)` with
@@ -93,11 +87,6 @@ class AdaptiveSolver(Solver):
         # close progress bar
         pbar.close()
 
-    def integrate_adjoint(self):
-        return NotImplementedError(
-            'This solver does not support adjoint-based gradient computation.'
-        )
-
     @abstractmethod
-    def odefun(self, t, y):
+    def odefun(self, t: float, y: Tensor):
         pass

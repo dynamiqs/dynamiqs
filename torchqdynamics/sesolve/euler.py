@@ -1,9 +1,9 @@
 from torch import Tensor
 
-from ..solvers.euler import Euler
+from ..solvers.ode.forward_solver import ForwardSolver
 
 
-class SEEuler(Euler):
+class SEEuler(ForwardSolver):
     def forward(self, t: float, dt: float, psi: Tensor) -> Tensor:
         # Args:
         #     psi: (b_H, b_psi, n, 1)

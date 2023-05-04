@@ -111,25 +111,18 @@ class Solver(ABC):
         else:
             self.exp_save = None
 
-    def integrate(self):
+    def run(self):
         if self.gradient_alg is None:
-            self.integrate_nograd()
+            self.run_nograd()
         elif self.gradient_alg == 'autograd':
-            self.integrate_autograd()
-        elif self.gradient_alg == 'adjoint':
-            self.integrate_adjoint()
+            self.run_autograd()
+
+    def run_nograd(self):
+        with torch.no_grad():
+            self.run_autograd()
 
     @abstractmethod
-    def integrate_nograd(self):
-        pass
-
-    @abstractmethod
-    def integrate_autograd(self):
-        pass
-
-    @abstractmethod
-    def integrate_adjoint(self):
-        """Integrate an ODE using the adjoint method in the backward pass."""
+    def run_autograd(self):
         pass
 
     def next_tsave(self) -> float:
@@ -167,3 +160,17 @@ class Solver(ABC):
             return True
         else:
             raise TypeError('Piecewise constant Hamiltonian not supported yet.')
+
+
+class AdjointSolver(Solver):
+    GRADIENT_ALG = ['autograd', 'adjoint']
+
+    def run(self):
+        super().run()
+        if self.gradient_alg == 'adjoint':
+            self.run_adjoint()
+
+    @abstractmethod
+    def run_adjoint(self):
+        """Integrate an ODE using the adjoint method in the backward pass."""
+        pass

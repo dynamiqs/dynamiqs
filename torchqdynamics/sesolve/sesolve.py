@@ -76,7 +76,7 @@ def sesolve(
         raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
 
     # compute the result
-    solver.integrate()
+    solver.run()
 
     # get saved tensors and restore correct batching
     psi_save, exp_save = solver.y_save, solver.exp_save

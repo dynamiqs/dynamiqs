@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import abstractmethod
 
 import torch
@@ -7,24 +5,65 @@ import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
 
-from ..utils.progress_bar import tqdm
-from ..utils.solver_utils import add_tuples, none_to_zeros_like
-from .forward_solver import ForwardSolver
+from ...utils.progress_bar import tqdm
+from ...utils.solver_utils import add_tuples, none_to_zeros_like
+from ..solver import AdjointSolver, Solver
 
 
-class Rouchon(ForwardSolver):
-    GRADIENT_ALG = ['autograd', 'adjoint']
+class ForwardSolver(Solver):
+    def run_autograd(self):
+        """Integrate a quantum ODE with a fixed time step custom integrator.
 
-    def integrate_adjoint(self):
+        Note:
+            The solver times are defined using `torch.linspace` which ensures that the
+            overall solution is evolved from the user-defined time (up to an error of
+            `rtol=1e-5`). However, this may induce a small mismatch between the time
+            step inside `solver` and the time step inside the iteration loop. A small
+            error can thus buildup throughout the ODE integration. TODO Fix this.
+        """
+        # get time step
+        dt = self.options.dt
+
+        # assert that `t_save` values are multiples of `dt`
+        if not torch.allclose(torch.round(self.t_save / dt), self.t_save / dt):
+            raise ValueError(
+                'For fixed time step solvers, every value of `t_save` must be a'
+                ' multiple of the time step `dt`.'
+            )
+
+        # define time values
+        num_times = torch.round(self.t_save[-1] / dt).int() + 1
+        times = torch.linspace(0.0, self.t_save[-1], num_times)
+
+        # run the ode routine
+        y = self.y0
+        for t in tqdm(times[:-1], disable=not self.options.verbose):
+            # save solution
+            if t >= self.next_tsave():
+                self.save(y)
+
+            # iterate solution
+            y = self.forward(t, dt, y)
+
+        # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
+        self.save(y)
+
+    @abstractmethod
+    def forward(self, t: float, dt: float, y: Tensor):
+        pass
+
+
+class AdjointForwardSolver(ForwardSolver, AdjointSolver):
+    def run_adjoint(self):
         # check parameters were passed
         if self.parameters is None:
             raise TypeError(
                 'For adjoint state gradient computation, parameters must be passed to'
                 ' the solver.'
             )
-        AdjointRouchon.apply(self, self.y0, *self.parameters)
+        AdjointForwardAutograd.apply(self, self.y0, *self.parameters)
 
-    def integrate_augmented(self):
+    def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
         # get time step from solver
         dt = self.options.dt
@@ -74,17 +113,17 @@ class Rouchon(ForwardSolver):
         self.g_bwd = g
 
     @abstractmethod
-    def backward_augmented(self, t, dt, y, a):
+    def backward_augmented(self, t: float, dt: float, y: Tensor, a: Tensor):
         pass
 
 
-class AdjointRouchon(torch.autograd.Function):
+class AdjointForwardAutograd(torch.autograd.Function):
     """Class for ODE integration with a custom adjoint method backward pass."""
 
     @staticmethod
     def forward(
         ctx: FunctionCtx,
-        solver: Rouchon,
+        solver: AdjointForwardSolver,
         y0: Tensor,
         *parameters: tuple[nn.Parameter, ...],
     ) -> Tensor:
@@ -94,7 +133,7 @@ class AdjointRouchon(torch.autograd.Function):
         ctx.t_save = solver.t_save if solver.options.save_states else solver.t_save[-1]
 
         # integrate the ODE forward without storing the graph of operations
-        solver.integrate_nograd()
+        solver.run_nograd()
 
         # save results and model parameters
         ctx.save_for_backward(solver.y_save)
@@ -142,7 +181,7 @@ class AdjointRouchon(torch.autograd.Function):
                 solver.t_save_bwd = t_save[i - 1 : i + 1]
 
                 # run odeint on augmented state
-                solver.integrate_augmented()
+                solver.run_augmented()
 
                 # replace y with its checkpointed version
                 solver.y_bwd = y_save[..., i - 1, :, :]

@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from torchqdynamics.options import ODEFixedStep
-from torchqdynamics.solvers.forward_solver import ForwardSolver
+from torchqdynamics.solvers.ode.forward_solver import ForwardSolver
 from torchqdynamics.solvers.solver import depends_on_H
 
 
