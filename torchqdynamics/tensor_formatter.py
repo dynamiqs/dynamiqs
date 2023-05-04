@@ -33,6 +33,7 @@ class TensorFormatter:
         else:
             H_batched = H
             self.H_is_batched = True
+        H_batched = H_batched[:, None, ...]  # (b_H, 1, n, n)
 
         # convert state to a tensor and density matrix and batch by default
         state = to_tensor(state, dtype=self.dtype, device=self.device, is_complex=True)
