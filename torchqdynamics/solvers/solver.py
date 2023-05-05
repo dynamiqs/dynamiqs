@@ -99,15 +99,9 @@ class Solver(ABC):
     def run(self):
         if self.options.gradient_alg is None:
             self.run_nograd()
-        elif self.options.gradient_alg == 'autograd':
-            self.run_autograd()
-
-    def run_nograd(self):
-        with torch.no_grad():
-            self.run_autograd()
 
     @abstractmethod
-    def run_autograd(self):
+    def run_nograd(self):
         pass
 
     def next_tsave(self) -> float:
@@ -147,7 +141,22 @@ class Solver(ABC):
             raise TypeError('Piecewise constant Hamiltonian not supported yet.')
 
 
-class AdjointSolver(Solver):
+class AutogradSolver(Solver):
+    def run(self):
+        super().run()
+        if self.options.gradient_alg == 'autograd':
+            self.run_autograd()
+
+    def run_nograd(self):
+        with torch.no_grad():
+            self.run_autograd()
+
+    @abstractmethod
+    def run_autograd(self):
+        pass
+
+
+class AdjointSolver(AutogradSolver):
     def run(self):
         super().run()
         if self.options.gradient_alg == 'adjoint':

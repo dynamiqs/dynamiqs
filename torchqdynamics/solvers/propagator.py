@@ -3,10 +3,10 @@ from abc import abstractmethod
 from torch import Tensor
 
 from ..utils.progress_bar import tqdm
-from .solver import Solver
+from .solver import AutogradSolver
 
 
-class Propagator(Solver):
+class Propagator(AutogradSolver):
     def run_autograd(self):
         y, t1 = self.y0, 0.0
         for t2 in tqdm(self.t_save, disable=not self.options.verbose):
