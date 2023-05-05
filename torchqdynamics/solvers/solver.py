@@ -38,8 +38,6 @@ def depends_on_H(func):
 
 
 class Solver(ABC):
-    GRADIENT_ALG = ['autograd']
-
     def __init__(
         self,
         H: TDTensor,
@@ -47,8 +45,6 @@ class Solver(ABC):
         t_save: Tensor,
         exp_ops: Tensor,
         options: Options,
-        gradient_alg: str | None,
-        parameters: tuple[torch.nn.Parameter, ...] | None,
     ):
         """
 
@@ -58,8 +54,6 @@ class Solver(ABC):
             t_save: Times for which results are saved.
             exp_ops:
             options:
-            gradient_alg:
-            parameters (tuple of nn.Parameter): Parameters w.r.t. compute the gradients.
         """
         # check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
         # strictly ascending order and containing only positive values)
@@ -72,20 +66,11 @@ class Solver(ABC):
         if not torch.all(t_save >= 0):
             raise ValueError('Argument `t_save` must contain positive values only.')
 
-        # check that the gradient algorithm is supported
-        if gradient_alg is not None and gradient_alg not in self.GRADIENT_ALG:
-            raise ValueError(
-                f'Gradient algorithm {gradient_alg} is not defined or not yet'
-                f' supported by this solver ({type(self)}).'
-            )
-
         self._H = H
         self.y0 = y0
         self.t_save = t_save
         self.exp_ops = exp_ops
         self.options = options
-        self.gradient_alg = gradient_alg
-        self.parameters = parameters
         self._cache = {}
 
         self.save_counter = 0
@@ -117,17 +102,11 @@ class Solver(ABC):
             self.exp_save = None
 
     def run(self):
-        if self.gradient_alg is None:
+        if self.options.gradient_alg is None:
             self.run_nograd()
-        elif self.gradient_alg == 'autograd':
-            self.run_autograd()
-
-    def run_nograd(self):
-        with torch.no_grad():
-            self.run_autograd()
 
     @abstractmethod
-    def run_autograd(self):
+    def run_nograd(self):
         pass
 
     def next_tsave(self) -> float:
@@ -167,12 +146,25 @@ class Solver(ABC):
             raise TypeError('Piecewise constant Hamiltonian not supported yet.')
 
 
-class AdjointSolver(Solver):
-    GRADIENT_ALG = ['autograd', 'adjoint']
-
+class AutogradSolver(Solver):
     def run(self):
         super().run()
-        if self.gradient_alg == 'adjoint':
+        if self.options.gradient_alg == 'autograd':
+            self.run_autograd()
+
+    def run_nograd(self):
+        with torch.no_grad():
+            self.run_autograd()
+
+    @abstractmethod
+    def run_autograd(self):
+        pass
+
+
+class AdjointSolver(AutogradSolver):
+    def run(self):
+        super().run()
+        if self.options.gradient_alg == 'adjoint':
             self.run_adjoint()
 
     @abstractmethod

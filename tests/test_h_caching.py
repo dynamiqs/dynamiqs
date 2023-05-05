@@ -15,9 +15,7 @@ class FakeSolver(ForwardSolver):
         exp_ops = torch.zeros((3, 3))
         options = ODEFixedStep(dt=1e-3)
 
-        super().__init__(
-            H, y, t_save, exp_ops, options, gradient_alg=None, parameters=None
-        )
+        super().__init__(H, y, t_save, exp_ops, options)
         self.called_1 = 0
         self.called_2 = 0
 

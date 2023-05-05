@@ -6,11 +6,11 @@ from tqdm.std import TqdmWarning
 
 from ...options import Dopri5
 from ...utils.progress_bar import tqdm
-from ..solver import Solver
+from ..solver import AutogradSolver
 from .adaptive_integrator import DormandPrince5
 
 
-class AdaptiveSolver(Solver):
+class AdaptiveSolver(AutogradSolver):
     def run_autograd(self):
         """Integrate a quantum ODE with an adaptive time step ODE integrator.
 
@@ -46,15 +46,15 @@ class AdaptiveSolver(Solver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for i, t1 in enumerate(self.t_save):
-            while t < t1:
+        for ts in self.t_save:
+            while t < ts:
                 # update time step
                 dt = integrator.update_tstep(dt, error)
 
                 # check for time overflow
-                if t + dt >= t1:
+                if t + dt >= ts:
                     cache = (dt, error)
-                    dt = t1 - t
+                    dt = ts - t
 
                 # perform a single ODE integrator step of size dt
                 ft_new, y_new, y_err = integrator.step(ft, y, t, dt)
@@ -67,25 +67,27 @@ class AdaptiveSolver(Solver):
                     t, y, ft = t + dt, y_new, ft_new
 
                     # update the progress bar
-                    with warnings.catch_warnings():  # ignore tqdm precision overflow
-                        warnings.simplefilter('ignore', TqdmWarning)
-                        pbar.update(dt.item())
+                    pbar.update(dt.item())
 
                 # raise error if max_steps reached
                 step_counter += 1
                 if step_counter == self.options.max_steps:
                     raise RuntimeError(
                         'Maximum number of time steps reached. Consider using lower'
-                        ' order integration methods, or raising the number maximum'
-                        ' number of time steps with the `options` argument.'
+                        ' order integration methods, or raising the maximum number of'
+                        ' time steps with the `options` argument.'
                     )
 
-            # save
-            dt, error = cache
+            # save solution
             self.save(y)
 
+            # use cache to retrieve time step and error
+            dt, error = cache
+
         # close progress bar
-        pbar.close()
+        with warnings.catch_warnings():  # ignore tqdm precision overflow
+            warnings.simplefilter('ignore', TqdmWarning)
+            pbar.close()
 
     @abstractmethod
     def odefun(self, t: float, y: Tensor):
