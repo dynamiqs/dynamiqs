@@ -123,7 +123,7 @@ def tdtensor_get_ndim(x: TDTensor) -> int:
 
 
 def tdtensor_get_shape(x: TDTensor) -> torch.Size:
-    """Get the number of dimensions of a `TDTensor`."""
+    """Get the shape of a `TDTensor`."""
     if isinstance(x, Tensor):
         return x.shape
     elif isinstance(x, callable):
@@ -131,7 +131,7 @@ def tdtensor_get_shape(x: TDTensor) -> torch.Size:
 
 
 def tdtensor_get_size(x: TDTensor, dim: int) -> int:
-    """Get the number of dimensions of a `TDTensor`."""
+    """Get the size of a given dimension of a `TDTensor`."""
     if isinstance(x, Tensor):
         return x.size(dim)
     elif isinstance(x, callable):
