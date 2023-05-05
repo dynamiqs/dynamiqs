@@ -5,7 +5,7 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from .utils.tensor_types import OperatorLike, TDOperatorLike, to_tensor
+from .utils.tensor_types import OperatorLike, TDOperatorLike, to_tdtensor, to_tensor
 from .utils.utils import is_ket, ket_to_dm
 
 
@@ -25,9 +25,11 @@ class TensorFormatter:
         self, H: TDOperatorLike, state: OperatorLike, state_to_dm: bool = False
     ) -> tuple[Tensor, Tensor]:
         """Batch Hamiltonian and state (state vector or density matrix)."""
+        # convert Hamiltonian to `TDTensor`
+        H = to_tdtensor(H, dtype=self.dtype, device=self.device, is_complex=True)
+
         # handle H batching
         if isinstance(H, get_args(OperatorLike)):
-            H = to_tensor(H, dtype=self.dtype, device=self.device, is_complex=True)
             if H.ndim == 2:
                 H_batched = H[None, None, ...]  # (1, 1, n, n)
                 b_H = 1
@@ -37,30 +39,6 @@ class TensorFormatter:
                 self.H_is_batched = True
         elif isinstance(H, callable):
             H0 = H(0.0)
-
-            # check type, dtype and device match
-            error_message = (
-                'For time-dependent problems, the Hamiltonian provided should be a'
-                ' `torch.Tensor` of appropriate dtype and device. This avoids type'
-                ' conversion or device transfer at every time step that would slow'
-                ' down the solver. '
-            )
-            if not isinstance(H0, Tensor):
-                raise TypeError(
-                    error_message
-                    + f'`H` is currently of type {type(H0)} instead of `torch.Tensor`.'
-                )
-            elif H0.dtype != self.dtype:
-                raise TypeError(
-                    error_message
-                    + f'`H` is currently of dtype {H0.dtype} instead of {self.dtype}.'
-                )
-            elif H0.device != self.device:
-                raise TypeError(
-                    error_message
-                    + f'`H` is currently on device {H0.device} instead of'
-                    f' {self.device}.'
-                )
 
             # apply batching dynamically
             if H0.ndim == 2:

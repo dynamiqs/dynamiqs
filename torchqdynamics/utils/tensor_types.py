@@ -14,16 +14,15 @@ __all__ = [
     'to_qutip',
 ]
 
-# TODO add typing for Hamiltonian with piecewise-constant factor
-TDOperator = Union[Tensor, Callable[[float], Tensor]]
-
-# type for objects convertible to a torch tensor using `torch.as_tensor`
+# type for objects convertible to a torch.Tensor using `torch.as_tensor`
 TensorLike = Union[list, np.ndarray, Tensor]
 
-# type for objects convertible to a torch tensor using `to_tensor`
+# type for objects convertible to a torch.Tensor using `to_tensor`
 OperatorLike = Union[TensorLike, Qobj]
 
-# type for objects convertible to a `TDOperator` using `time_dependent_to_tensor`
+# TODO add typing for Hamiltonian with piecewise-constant factor
+# type for time-dependent objects
+TDTensor = Union[Tensor, Callable[[float], Tensor]]
 TDOperatorLike = Union[OperatorLike, Callable[[float], Tensor]]
 
 
@@ -65,6 +64,57 @@ def to_tensor(
             'supports QuTiP quantum object, NumPy array, Python list or PyTorch tensor '
             'or list of these types.'
         )
+
+
+def to_tdtensor(
+    x: TDOperatorLike,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
+    is_complex: bool = False,
+):
+    """Convert a `TDOperatorLike` object to a `TDTensor` object."""
+    if is_complex:
+        dtype = cdtype(dtype)
+
+    if isinstance(x, get_args(OperatorLike)):
+        x = to_tensor(x, dtype=dtype, device=device, is_complex=True)
+    elif isinstance(x, callable):
+        # check number of arguments and compute at initial time
+        try:
+            x0 = x(0.0)
+        except TypeError:
+            raise TypeError(
+                'Time-dependent operators in the `callable` format should only accept a'
+                ' single argument for time `t`.'
+            )
+
+        # check type, dtype and device match
+        if not isinstance(x0, Tensor):
+            raise TypeError(
+                'Time-dependent operators in the `callable` format should always'
+                ' return a `torch.Tensor` with the same dtype and device as provided'
+                ' to the solver. This avoids type conversion or device transfer at'
+                ' every time step that would slow down the solver. The provided'
+                f' operator is currently of type {type(x0)} instead of {Tensor}.'
+            )
+        elif x0.dtype != dtype:
+            raise TypeError(
+                'Time-dependent operators in the `callable` format should always'
+                ' return a `torch.Tensor` with the same dtype and device as provided'
+                ' to the solver. This avoids type conversion or device transfer at'
+                ' every time step that would slow down the solver. The provided'
+                f' operator is currently of dtype {x0.dtype} instead of {dtype}.'
+            )
+        elif x0.device != device:
+            raise TypeError(
+                'Time-dependent operators in the `callable` format should always'
+                ' return a `torch.Tensor` with the same dtype and device as provided'
+                ' to the solver. This avoids type conversion or device transfer at'
+                ' every time step that would slow down the solver. The provided'
+                f' operator is currently on device {x0.device} instead of {device}.'
+            )
+
+    return x
 
 
 def cdtype(

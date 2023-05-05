@@ -40,12 +40,10 @@ def sesolve(
     #     (y_save, exp_save) with
     #     - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
     #     - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
-
     # TODO support density matrices too
-    # TODO H is assumed to be time-independent from here (temporary)
-
-    # convert H to a tensor and batch by default
     # TODO add test to check that psi0 has the correct shape
+
+    # format all tensors for batching
     formatter = TensorFormatter(dtype, device)
     H_batched, psi0_batched = formatter.batch_H_and_state(H, psi0)
     exp_ops = formatter.batch(exp_ops)

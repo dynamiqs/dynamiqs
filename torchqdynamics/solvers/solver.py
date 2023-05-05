@@ -8,28 +8,30 @@ from torch import Tensor
 
 from ..options import Options
 from ..utils.solver_utils import bexpect
-from ..utils.tensor_types import TDOperator
+from ..utils.tensor_types import TDTensor
 
 
 def depends_on_H(func):
-    """Handles caching for functions that only depend on the Hamiltonian.
-    The functions must take as single argument the time and be decorated
-    by `@H_cached`.
-    Examples:
-        @H_cached
-        def H_squared(self, t):
-            return self.H(t) @ self.H(t)
+    """Handles caching for functions that only depend on the Hamiltonian. The functions
+    must take as single argument the time and be decorated by `@depends_on_H`.
+
+    Example:
+        >>> @depends_on_H
+        >>> def H_squared(self, t):
+        >>>     return self.H(t) @ self.H(t)
+
+    Warning:
+        Caching is only checked through the time variable `t`. If different arguments
+        are passed to the function for the same time stamp, the cached object will be
+        returned instead of a newly computed one.
     """
 
     @functools.wraps(func)
     def wrapper(instance, t, *args, **kwargs):
         if func.__name__ not in instance._cache or (
-            (t, args, kwargs) != instance._cache[func.__name__][0]
-            and instance._H_changed(t)
+            t != instance._cache[func.__name__][0] and instance._H_changed(t)
         ):
-            instance._cache[func.__name__] = (t, args, kwargs), func(
-                instance, t, *args, **kwargs
-            )
+            instance._cache[func.__name__] = t, func(instance, t, *args, **kwargs)
         return instance._cache[func.__name__][1]
 
     return wrapper
@@ -40,7 +42,7 @@ class Solver(ABC):
 
     def __init__(
         self,
-        H: TDOperator,
+        H: TDTensor,
         y0: Tensor,
         t_save: Tensor,
         exp_ops: Tensor,
