@@ -1,0 +1,45 @@
+site_name: torchqdynamics
+site_url: ""
+use_directory_urls: false
+repo_url: https://github.com/pierreguilmin/torchqdynamics
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+  icon:
+    repo: fontawesome/brands/github
+plugins:
+  - search
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting_started/index.md
+      - Installation: getting_started/installation.md
+      - First steps: getting_started/first_steps.md
+  - Tutorials:
+      - tutorials/index.md
+      - Optimal control: tutorials/optimal_control.md
+      - SNAP: tutorials/snap.md
+      - ECD: tutorials/ecd.md
+  - Reference:
+      - reference/index.md
+      - Foo: reference/foo.md

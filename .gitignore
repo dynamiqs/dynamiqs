@@ -25,3 +25,6 @@ dist/
 
 # pytest cache
 .pytest_cache/
+
+# mkdocs build files
+site/
