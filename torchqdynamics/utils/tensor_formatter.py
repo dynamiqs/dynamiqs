@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from .utils.tensor_types import (
+from .tensor_types import (
     OperatorLike,
     TDOperatorLike,
     tdtensor_get_ndim,
@@ -12,7 +12,7 @@ from .utils.tensor_types import (
     to_tdtensor,
     to_tensor,
 )
-from .utils.utils import is_ket, ket_to_dm
+from .utils import is_ket, ket_to_dm
 
 
 class TensorFormatter:

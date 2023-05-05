@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ..options import Dopri5, Euler, ODEAdaptiveStep, Options, Propagator
-from ..tensor_formatter import TensorFormatter
+from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
