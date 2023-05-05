@@ -67,9 +67,7 @@ class AdaptiveSolver(Solver):
                     t, y, ft = t + dt, y_new, ft_new
 
                     # update the progress bar
-                    with warnings.catch_warnings():  # ignore tqdm precision overflow
-                        warnings.simplefilter('ignore', TqdmWarning)
-                        pbar.update(dt.item())
+                    pbar.update(dt.item())
 
                 # raise error if max_steps reached
                 step_counter += 1
@@ -85,7 +83,9 @@ class AdaptiveSolver(Solver):
             self.save(y)
 
         # close progress bar
-        pbar.close()
+        with warnings.catch_warnings():  # ignore tqdm precision overflow
+            warnings.simplefilter('ignore', TqdmWarning)
+            pbar.close()
 
     @abstractmethod
     def odefun(self, t: float, y: Tensor):
