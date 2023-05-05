@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-from typing import get_args
-
 import torch
 from torch import Tensor
 
-from .utils.tensor_types import OperatorLike, TDOperatorLike, to_tdtensor, to_tensor
+from .utils.tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    tdtensor_get_ndim,
+    tdtensor_get_size,
+    tdtensor_unsqueeze,
+    to_tdtensor,
+    to_tensor,
+)
 from .utils.utils import is_ket, ket_to_dm
 
 
@@ -28,26 +34,14 @@ class TensorFormatter:
         # convert Hamiltonian to `TDTensor`
         H = to_tdtensor(H, dtype=self.dtype, device=self.device, is_complex=True)
 
-        # handle H batching
-        if isinstance(H, get_args(OperatorLike)):
-            if H.ndim == 2:
-                H_batched = H[None, None, ...]  # (1, 1, n, n)
-                b_H = 1
-            else:
-                H_batched = H[:, None, ...]  # (b_H, 1, n, n)
-                b_H = H.size(0)
-                self.H_is_batched = True
-        elif isinstance(H, callable):
-            H0 = H(0.0)
-
-            # apply batching dynamically
-            if H0.ndim == 2:
-                H_batched = lambda t: H(t)[None, None, ...]  # (1, 1, n, n)
-                b_H = 1
-            else:
-                H_batched = lambda t: H(t)[:, None, ...]  # (b_H, 1, n, n)
-                b_H = H0.size(0)
-                self.H_is_batched = True
+        # handle Hamiltonian batching
+        if tdtensor_get_ndim(H) == 2:
+            H_batched = tdtensor_unsqueeze(H, (0, 0))  # (1, 1, n, n)
+            b_H = 1
+        else:
+            H_batched = tdtensor_unsqueeze(H, (1,))
+            b_H = tdtensor_get_size(H, 0)  # (b_H, 1, n, n)
+            self.H_is_batched = True
 
         # convert state to tensor and density matrix if needed
         state = to_tensor(state, dtype=self.dtype, device=self.device, is_complex=True)

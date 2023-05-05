@@ -71,7 +71,7 @@ def to_tdtensor(
     dtype: torch.dtype | None = None,
     device: torch.device | None = None,
     is_complex: bool = False,
-):
+) -> TDTensor:
     """Convert a `TDOperatorLike` object to a `TDTensor` object."""
     if is_complex:
         dtype = cdtype(dtype)
@@ -82,39 +82,82 @@ def to_tdtensor(
         # check number of arguments and compute at initial time
         try:
             x0 = x(0.0)
-        except TypeError:
+        except TypeError as e:
             raise TypeError(
                 'Time-dependent operators in the `callable` format should only accept a'
                 ' single argument for time `t`.'
-            )
+            ) from e
 
         # check type, dtype and device match
+        prefix = (
+            'Time-dependent operators in the `callable` format should always'
+            ' return a `torch.Tensor` with the same dtype and device as provided'
+            ' to the solver. This avoids type conversion or device transfer at'
+            ' every time step that would slow down the solver.'
+        )
         if not isinstance(x0, Tensor):
             raise TypeError(
-                'Time-dependent operators in the `callable` format should always'
-                ' return a `torch.Tensor` with the same dtype and device as provided'
-                ' to the solver. This avoids type conversion or device transfer at'
-                ' every time step that would slow down the solver. The provided'
-                f' operator is currently of type {type(x0)} instead of {Tensor}.'
+                f'{prefix} The provided operator is currently of type'
+                f' {type(x0)} instead of {Tensor}.'
             )
         elif x0.dtype != dtype:
             raise TypeError(
-                'Time-dependent operators in the `callable` format should always'
-                ' return a `torch.Tensor` with the same dtype and device as provided'
-                ' to the solver. This avoids type conversion or device transfer at'
-                ' every time step that would slow down the solver. The provided'
-                f' operator is currently of dtype {x0.dtype} instead of {dtype}.'
+                f'{prefix} The provided operator is currently of dtype'
+                f' {x0.dtype} instead of {dtype}.'
             )
         elif x0.device != device:
             raise TypeError(
-                'Time-dependent operators in the `callable` format should always'
-                ' return a `torch.Tensor` with the same dtype and device as provided'
-                ' to the solver. This avoids type conversion or device transfer at'
-                ' every time step that would slow down the solver. The provided'
-                f' operator is currently on device {x0.device} instead of {device}.'
+                f'{prefix} The provided operator is currently on device'
+                f' {x0.device} instead of {device}.'
             )
 
     return x
+
+
+def tdtensor_get_ndim(x: TDTensor) -> int:
+    """Get the number of dimensions of a `TDTensor`."""
+    if isinstance(x, Tensor):
+        return x.ndim
+    elif isinstance(x, callable):
+        return x(0.0).ndim
+
+
+def tdtensor_get_shape(x: TDTensor) -> torch.Size:
+    """Get the number of dimensions of a `TDTensor`."""
+    if isinstance(x, Tensor):
+        return x.shape
+    elif isinstance(x, callable):
+        return x(0.0).shape
+
+
+def tdtensor_get_size(x: TDTensor, dim: int) -> int:
+    """Get the number of dimensions of a `TDTensor`."""
+    if isinstance(x, Tensor):
+        return x.size(dim)
+    elif isinstance(x, callable):
+        return x(0.0).size(dim)
+
+
+def tdtensor_unsqueeze(x: TDTensor, dims: tuple[int]) -> TDTensor:
+    """Unsqueeze a `TDTensor` at each position provided by `dims`."""
+    # compute output shape
+    shape = torch.ones(len(dims), dtype=torch.int)
+    x_shape = torch.as_tensor(tdtensor_get_shape(x))
+    out_shape = torch.cat([shape, x_shape])
+
+    # compute output dims
+    x_dims = torch.arange(0, len(x_shape))
+    dims = torch.as_tensor(dims)
+    out_dims = torch.cat([dims - 0.5, x_dims])
+
+    # compute sorted output shape
+    sorted_indices = torch.argsort(out_dims)
+    out_shape = torch.Size(out_shape[sorted_indices].tolist())
+
+    if isinstance(x, Tensor):
+        return x.view(out_shape)
+    elif isinstance(x, callable):
+        return lambda t: x(t).view(out_shape)
 
 
 def cdtype(
