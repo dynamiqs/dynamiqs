@@ -91,6 +91,10 @@ def mesolve(
                 len(exp_ops), len(t_save))` if batched. `None` if no `exp_ops` are
                 passed.
     """
+    # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save) with
+    #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
+    #    - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
+
     if len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
@@ -100,8 +104,10 @@ def mesolve(
     # format and batch all tensors
     formatter = TensorFormatter(dtype, device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
-    exp_ops = formatter.format(exp_ops)
-    jump_ops = formatter.format(jump_ops)
+    # H_batched: (b_H, 1, n, n)
+    # rho0_batched: (1, b_rho0, n, n)
+    exp_ops = formatter.format(exp_ops)  # (len(exp_ops), n, n)
+    jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
 
     # convert t_save to a tensor
     t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
@@ -110,13 +116,7 @@ def mesolve(
     options = options or Dopri5()
 
     # define the solver
-    args = (
-        H_batched,
-        rho0_batched,
-        t_save,
-        exp_ops,
-        options,
-    )
+    args = (H_batched, rho0_batched, t_save, exp_ops, options)
     if isinstance(options, Rouchon1):
         solver = MERouchon1(*args, jump_ops=jump_ops)
     elif isinstance(options, Rouchon1_5):
