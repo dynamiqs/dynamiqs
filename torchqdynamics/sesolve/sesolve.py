@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import torch
-import torch.nn as nn
 from torch import Tensor
 
-from ..options import Dopri5, Euler, ODEAdaptiveStep, Options
+from ..options import Dopri5, Euler, ODEAdaptiveStep, Options, Propagator
 from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
@@ -16,7 +13,6 @@ from ..utils.tensor_types import (
 )
 from .adaptive import SEAdaptive
 from .euler import SEEuler
-from .options import Propagator
 from .propagator import SEPropagator
 
 
@@ -27,8 +23,6 @@ def sesolve(
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-    gradient_alg: Literal['autograd', 'adjoint'] | None = None,
-    parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor | None]:
@@ -63,8 +57,6 @@ def sesolve(
         t_save,
         exp_ops,
         options,
-        gradient_alg,
-        parameters,
     )
     if isinstance(options, Euler):
         solver = SEEuler(*args)
