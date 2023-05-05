@@ -8,7 +8,7 @@ from torch import Tensor
 
 from ..options import Options
 from ..utils.solver_utils import bexpect
-from ..utils.tensor_types import TDTensor
+from ..utils.td_tensor import TDTensor
 
 
 def depends_on_H(func):
@@ -29,7 +29,7 @@ def depends_on_H(func):
     @functools.wraps(func)
     def wrapper(instance, t, *args, **kwargs):
         if func.__name__ not in instance._cache or (
-            t != instance._cache[func.__name__][0] and instance._H_changed(t)
+            t != instance._cache[func.__name__][0] and instance.H.has_changed(t)
         ):
             instance._cache[func.__name__] = t, func(instance, t, *args, **kwargs)
         return instance._cache[func.__name__][1]
@@ -66,7 +66,7 @@ class Solver(ABC):
         if not torch.all(t_save >= 0):
             raise ValueError('Argument `t_save` must contain positive values only.')
 
-        self._H = H
+        self.H = H
         self.y0 = y0
         self.t_save = t_save
         self.exp_ops = exp_ops
@@ -127,23 +127,6 @@ class Solver(ABC):
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
             self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
-
-    @depends_on_H
-    def H(self, t: float) -> Tensor:
-        if isinstance(self._H, Tensor):
-            return self._H
-        elif callable(self._H):
-            return self._H(t)
-        else:
-            raise TypeError('Piecewise constant Hamiltonian not supported yet.')
-
-    def _H_changed(self, _t: float) -> bool:
-        if isinstance(self._H, Tensor):
-            return False
-        elif callable(self._H):
-            return True
-        else:
-            raise TypeError('Piecewise constant Hamiltonian not supported yet.')
 
 
 class AutogradSolver(Solver):
