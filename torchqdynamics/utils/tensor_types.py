@@ -146,8 +146,8 @@ def tdtensor_unsqueeze(x: TDTensor, dims: tuple[int]) -> TDTensor:
     out_shape = torch.cat([shape, x_shape])
 
     # compute output dims
-    x_dims = torch.arange(0, len(x_shape))
     dims = torch.as_tensor(dims)
+    x_dims = torch.arange(0, len(x_shape))
     out_dims = torch.cat([dims - 0.5, x_dims])
 
     # compute sorted output shape
