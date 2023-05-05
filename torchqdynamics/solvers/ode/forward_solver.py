@@ -9,10 +9,10 @@ from torch.autograd.function import FunctionCtx
 
 from ...utils.progress_bar import tqdm
 from ...utils.solver_utils import add_tuples, none_to_zeros_like
-from ..solver import AdjointSolver, Solver
+from ..solver import AdjointSolver, AutogradSolver
 
 
-class ForwardSolver(Solver):
+class ForwardSolver(AutogradSolver):
     def run_autograd(self):
         """Integrate a quantum ODE with a fixed time step custom integrator.
 

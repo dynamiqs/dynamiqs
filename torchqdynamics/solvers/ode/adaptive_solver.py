@@ -6,11 +6,11 @@ from tqdm.std import TqdmWarning
 
 from ...options import Dopri5
 from ...utils.progress_bar import tqdm
-from ..solver import Solver
+from ..solver import AutogradSolver
 from .adaptive_integrator import DormandPrince5
 
 
-class AdaptiveSolver(Solver):
+class AdaptiveSolver(AutogradSolver):
     def run_autograd(self):
         """Integrate a quantum ODE with an adaptive time step ODE integrator.
 
