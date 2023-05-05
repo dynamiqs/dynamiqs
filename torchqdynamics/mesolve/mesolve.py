@@ -12,7 +12,7 @@ from ..options import (
     Rouchon1_5,
     Rouchon2,
 )
-from ..tensor_formatter import TensorFormatter
+from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
