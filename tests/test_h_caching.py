@@ -3,9 +3,9 @@ import functools
 import torch
 from torch import Tensor
 
-from torchqdynamics.ode.forward_solver import ForwardSolver
 from torchqdynamics.options import ODEFixedStep
-from torchqdynamics.solver import depends_on_H
+from torchqdynamics.solvers.ode.forward_solver import ForwardSolver
+from torchqdynamics.solvers.solver import depends_on_H
 
 
 class FakeSolver(ForwardSolver):

@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 
-from .options import Options
-from .utils.solver_utils import bexpect
-from .utils.tensor_types import TDOperator
+from ..options import Options
+from ..utils.solver_utils import bexpect
+from ..utils.tensor_types import TDOperator
 
 
 def depends_on_H(func):
@@ -22,11 +22,11 @@ def depends_on_H(func):
     """
 
     @functools.wraps(func)
-    def wrapper(instance, t):
+    def wrapper(instance, t, *args, **kwargs):
         if func.__name__ not in instance._cache or (
             t != instance._cache[func.__name__][0] and instance._H_changed(t)
         ):
-            instance._cache[func.__name__] = t, func(instance, t)
+            instance._cache[func.__name__] = t, func(instance, t, *args, **kwargs)
         return instance._cache[func.__name__][1]
 
     return wrapper
@@ -111,8 +111,18 @@ class Solver(ABC):
         else:
             self.exp_save = None
 
-    @abstractmethod
     def run(self):
+        if self.gradient_alg is None:
+            self.run_nograd()
+        elif self.gradient_alg == 'autograd':
+            self.run_autograd()
+
+    def run_nograd(self):
+        with torch.no_grad():
+            self.run_autograd()
+
+    @abstractmethod
+    def run_autograd(self):
         pass
 
     def next_tsave(self) -> float:
@@ -150,3 +160,17 @@ class Solver(ABC):
             return True
         else:
             raise TypeError('Piecewise constant Hamiltonian not supported yet.')
+
+
+class AdjointSolver(Solver):
+    GRADIENT_ALG = ['autograd', 'adjoint']
+
+    def run(self):
+        super().run()
+        if self.gradient_alg == 'adjoint':
+            self.run_adjoint()
+
+    @abstractmethod
+    def run_adjoint(self):
+        """Integrate an ODE using the adjoint method in the backward pass."""
+        pass

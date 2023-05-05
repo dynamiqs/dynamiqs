@@ -6,11 +6,11 @@ from typing import Callable
 import torch
 from torch import Tensor
 
-from ..utils.solver_utils import hairer_norm
-from ..utils.tensor_types import dtype_complex_to_real
+from ...utils.solver_utils import hairer_norm
+from ...utils.tensor_types import dtype_complex_to_real
 
 
-class AdaptiveODEIntegrator(ABC):
+class AdaptiveIntegrator(ABC):
     """A parent class for all adaptive time step ODE integrators.
 
     This performs all the necessary steps for the integration of an ODE of the form
@@ -104,7 +104,7 @@ class AdaptiveODEIntegrator(ABC):
             return dt * min(0.9, max(self.min_factor, self.factor * dt_opt))
 
 
-class DormandPrince45(AdaptiveODEIntegrator):
+class DormandPrince5(AdaptiveIntegrator):
     """Dormand-Prince method for adaptive time step ODE integration.
 
     This is a fifth order solver that uses a fourth order solution to estimate the

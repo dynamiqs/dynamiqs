@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..options import Dopri45, Euler, ODEAdaptiveStep, Options
+from ..options import Dopri5, Euler, ODEAdaptiveStep, Options
 from ..tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
@@ -54,7 +54,7 @@ def sesolve(
     t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
 
     # default options
-    options = options or Dopri45()
+    options = options or Dopri5()
 
     # define the solver
     args = (

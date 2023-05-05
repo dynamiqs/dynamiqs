@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from ..ode.forward_solver import ForwardSolver
+from ..solvers.ode.forward_solver import ForwardSolver
 from ..utils.solver_utils import lindbladian
 
 
@@ -10,11 +10,11 @@ class MEEuler(ForwardSolver):
 
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
 
-    def forward(self, t: float, rho: Tensor) -> Tensor:
+    def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
         # Args:
         #     rho: (b_H, b_rho, n, n)
         #
         # Returns:
         #     (b_H, b_rho, n, n)
 
-        return rho + self.options.dt * lindbladian(rho, self.H(t), self.jump_ops)
+        return rho + dt * lindbladian(rho, self.H(t), self.jump_ops)
