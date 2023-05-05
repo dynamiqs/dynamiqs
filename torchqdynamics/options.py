@@ -14,7 +14,7 @@ __all__ = [
 
 
 class Options:
-    GRADIENT_ALG = ['autograd']
+    GRADIENT_ALG = []
 
     def __init__(
         self,
@@ -44,7 +44,11 @@ class Options:
             )
 
 
-class AdjointOptions(Options):
+class AutogradOptions(Options):
+    GRADIENT_ALG = ['autograd']
+
+
+class AdjointOptions(AutogradOptions):
     GRADIENT_ALG = ['autograd', 'adjoint']
 
     def __init__(
