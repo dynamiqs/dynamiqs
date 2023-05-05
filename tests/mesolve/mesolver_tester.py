@@ -85,7 +85,7 @@ class MEAdjointSolverTester(MESolverTester):
         atol: float = 1e-3,
     ):
         # function to run mesolve with a specific gradient algorithm
-        def run_mesolve(gradient_alg, parameters):
+        def run_mesolve():
             return tq.mesolve(
                 system.H,
                 system.jump_ops,
@@ -93,19 +93,20 @@ class MEAdjointSolverTester(MESolverTester):
                 system.t_save(num_t_save),
                 exp_ops=system.exp_ops,
                 options=options,
-                gradient_alg=gradient_alg,
-                parameters=parameters,
             )
 
         # compute autograd gradients
         system.init_operators()  # required to not backward through the same graph twice
-        rho_save, _ = run_mesolve('autograd', None)
+        options.gradient_alg = 'autograd'
+        rho_save, _ = run_mesolve()
         loss = system.loss(rho_save[-1])
         grad_autograd = torch.autograd.grad(loss, system.parameters)
 
         # compute adjoint gradients
         system.init_operators()  # required to not backward through the same graph twice
-        rho_save, _ = run_mesolve('adjoint', system.parameters)
+        options.gradient_alg = 'adjoint'
+        options.parameters = system.parameters
+        rho_save, _ = run_mesolve()
         loss = system.loss(rho_save[-1])
         grad_adjoint = torch.autograd.grad(loss, system.parameters)
 

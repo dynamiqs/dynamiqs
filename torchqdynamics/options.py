@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import torch.nn as nn
+
 __all__ = [
     'Propagator',
     'Dopri5',
@@ -10,16 +14,64 @@ __all__ = [
 
 
 class Options:
-    def __init__(self, *, verbose: bool = True, save_states: bool = True):
+    GRADIENT_ALG = ['autograd']
+
+    def __init__(
+        self,
+        *,
+        gradient_alg: str | None = None,
+        save_states: bool = True,
+        verbose: bool = True,
+    ):
         """...
 
         Args:
+            gradient_alg (str, optional): Algorithm used for computing gradients.
+                Defaults to `None`.
             save_states (bool, optional): If `True`, the state is saved at every
                 time value. If `False`, only the final state is stored and returned.
                 Defaults to `True`.
         """
-        self.verbose = verbose
+        self.gradient_alg = gradient_alg
         self.save_states = save_states
+        self.verbose = verbose
+
+        # check that the gradient algorithm is supported
+        if self.gradient_alg is not None and self.gradient_alg not in self.GRADIENT_ALG:
+            raise ValueError(
+                f'Gradient algorithm {self.gradient_alg} is not defined or not yet'
+                f' supported by solver {type(self)}.'
+            )
+
+
+class AdjointOptions(Options):
+    GRADIENT_ALG = ['autograd', 'adjoint']
+
+    def __init__(
+        self,
+        *,
+        gradient_alg: str | None = None,
+        save_states: bool = True,
+        verbose: bool = True,
+        parameters: tuple[nn.Parameter, ...] | None = None,
+    ):
+        """
+
+        Args:
+            parameters (tuple of nn.Parameter): Parameters with respect to which
+                gradients are computed during the adjoint state backward pass.
+        """
+        super().__init__(
+            gradient_alg=gradient_alg, save_states=save_states, verbose=verbose
+        )
+        self.parameters = parameters
+
+        # check parameters were passed if gradient by the adjoint
+        if self.gradient_alg == 'adjoint' and self.parameters is None:
+            raise ValueError(
+                'For adjoint state gradient computation, parameters must be passed to'
+                ' the solver.'
+            )
 
 
 class ODEFixedStep(Options):
@@ -61,7 +113,7 @@ class Euler(ODEFixedStep):
     pass
 
 
-class Rouchon1(ODEFixedStep):
+class Rouchon1(ODEFixedStep, AdjointOptions):
     pass
 
 
@@ -69,9 +121,9 @@ class Rouchon1(ODEFixedStep):
 Rouchon = Rouchon1
 
 
-class Rouchon1_5(ODEFixedStep):
+class Rouchon1_5(ODEFixedStep, AdjointOptions):
     pass
 
 
-class Rouchon2(ODEFixedStep):
+class Rouchon2(ODEFixedStep, AdjointOptions):
     pass

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import torch
-import torch.nn as nn
 from torch import Tensor
 
 from ..options import (
@@ -35,8 +32,6 @@ def mesolve(
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-    gradient_alg: Literal['autograd', 'adjoint'] | None = None,
-    parameters: tuple[nn.Parameter, ...] | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor | None]:
@@ -77,10 +72,6 @@ def mesolve(
         exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
             expectation value is computed at every time value in `t_save`.
         options (Options, optional): Solver options. See the list of available solvers.
-        gradient_alg (str, optional): Algorithm used for computing gradients in the
-            backward pass. Defaults to `None`.
-        parameters (tuple of nn.Parameter): Parameters with respect to which gradients
-            are computed during the adjoint state backward pass.
         dtype (torch.dtype, optional): Complex data type to which all complex-valued
             tensors are converted. `t_save` is also converted to a real data type of
             the corresponding precision.
@@ -123,8 +114,6 @@ def mesolve(
         t_save,
         exp_ops,
         options,
-        gradient_alg,
-        parameters,
     )
     if isinstance(options, Rouchon1):
         solver = MERouchon1(*args, jump_ops=jump_ops)

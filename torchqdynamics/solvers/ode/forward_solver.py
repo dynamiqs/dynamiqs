@@ -57,13 +57,7 @@ class ForwardSolver(Solver):
 
 class AdjointForwardSolver(ForwardSolver, AdjointSolver):
     def run_adjoint(self):
-        # check parameters were passed
-        if self.parameters is None:
-            raise TypeError(
-                'For adjoint state gradient computation, parameters must be passed to'
-                ' the solver.'
-            )
-        AdjointForwardAutograd.apply(self, self.y0, *self.parameters)
+        AdjointForwardAutograd.apply(self, self.y0, *self.options.parameters)
 
     def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
@@ -101,9 +95,9 @@ class AdjointForwardSolver(ForwardSolver, AdjointSolver):
 
                 # compute g(t-dt)
                 dg = torch.autograd.grad(
-                    a, self.parameters, y, allow_unused=True, retain_graph=True
+                    a, self.options.parameters, y, allow_unused=True, retain_graph=True
                 )
-                dg = none_to_zeros_like(dg, self.parameters)
+                dg = none_to_zeros_like(dg, self.options.parameters)
                 g = add_tuples(g, dg)
 
             # free the graph of y and a
@@ -172,7 +166,8 @@ class AdjointForwardAutograd(torch.autograd.Function):
             solver.y_bwd = y_save[..., -1, :, :]
             solver.a_bwd = grad_y[0][..., -1, :, :]
             solver.g_bwd = tuple(
-                torch.zeros_like(_p).to(solver.y_bwd) for _p in solver.parameters
+                torch.zeros_like(_p).to(solver.y_bwd)
+                for _p in solver.options.parameters
             )
 
             # solve the augmented equation backward between every checkpoint
@@ -194,7 +189,7 @@ class AdjointForwardAutograd(torch.autograd.Function):
         # convert gradients of real-valued parameters to real-valued gradients
         solver.g_bwd = tuple(
             _g.real if _p.is_floating_point() else _g
-            for (_g, _p) in zip(solver.g_bwd, solver.parameters)
+            for (_g, _p) in zip(solver.g_bwd, solver.options.parameters)
         )
 
         # return the computed gradients w.r.t. each argument in `forward`
