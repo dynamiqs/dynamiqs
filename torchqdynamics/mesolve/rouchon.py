@@ -109,7 +109,7 @@ class MERouchon1_5(MERouchon):
         H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
-        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
+        M0 = self.I - 1j * dt * H_nh  # (b_H, 1, n, n)
         Ms = sqrt(dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # build normalization matrix
