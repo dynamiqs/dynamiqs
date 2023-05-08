@@ -32,7 +32,7 @@ def to_td_tensor(
             device = get_default_device()
 
         # check callable
-        x0 = check_callable(x, expected_dtype=dtype, expected_device=device)
+        x0 = check_callable(x, dtype, device)
 
         return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
 
@@ -44,9 +44,8 @@ def get_default_device() -> torch.device:
 
 def check_callable(
     f: callable,
-    *,
-    expected_dtype: torch.dtype = None,
-    expected_device: torch.device = None,
+    expected_dtype: torch.dtype,
+    expected_device: torch.device,
 ) -> Tensor:
     # check number of arguments and compute at initial time
     try:
@@ -136,10 +135,9 @@ class CallableTDTensor(TDTensor):
     def __init__(
         self,
         f: callable,
-        *,
-        shape: torch.Size | None = None,
-        dtype: torch.dtype | None = None,
-        device: torch.device | None = None,
+        shape: torch.Size,
+        dtype: torch.dtype,
+        device: torch.device,
     ):
         self._callable = f
         self.dtype = dtype
@@ -165,7 +163,7 @@ class CallableTDTensor(TDTensor):
         new_shape.insert(dim, 1)
         new_shape = torch.Size(new_shape)
         return CallableTDTensor(
-            self._callable, shape=new_shape, dtype=self.dtype, device=self.device
+            f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
         )
 
     def requires_updates(self, t: float) -> bool:
