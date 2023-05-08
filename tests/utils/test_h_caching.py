@@ -6,7 +6,7 @@ from torch import Tensor
 from torchqdynamics.options import ODEFixedStep
 from torchqdynamics.solvers.ode.forward_solver import ForwardSolver
 from torchqdynamics.solvers.solver import depends_on_H
-from torchqdynamics.utils.td_tensor import to_tdtensor
+from torchqdynamics.utils.td_tensor import to_td_tensor
 
 
 class FakeSolver(ForwardSolver):
@@ -23,7 +23,8 @@ class FakeSolver(ForwardSolver):
     def forward(self, t: float, y: Tensor) -> Tensor:
         v1 = self.variable_1(t)
         v2 = self.variable_2(t)
-        return torch.ones_like(y) * v1 * v2
+        v1_new = self.variable_1(t) / v1
+        return torch.ones_like(y) * v1_new * v2
 
     @depends_on_H
     def variable_1(self, t):
@@ -51,7 +52,7 @@ def test_H_caching():
         return t * H
 
     compute_H = functools.partial(compute_H, H_called)
-    compute_H = to_tdtensor(compute_H)
+    compute_H = to_td_tensor(compute_H)
     H_called[0] -= 1
 
     solver = FakeSolver(compute_H)

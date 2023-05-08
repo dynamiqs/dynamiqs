@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from .td_tensor import TDTensor, to_tdtensor
+from .td_tensor import TDTensor, to_td_tensor
 from .tensor_types import OperatorLike, TDOperatorLike, to_tensor
 from .utils import is_ket, ket_to_dm
 
@@ -25,7 +25,7 @@ class TensorFormatter:
     ) -> tuple[TDTensor, Tensor]:
         """Batch Hamiltonian and state (state vector or density matrix)."""
         # convert Hamiltonian to `TDTensor`
-        H = to_tdtensor(H, dtype=self.dtype, device=self.device, is_complex=True)
+        H = to_td_tensor(H, dtype=self.dtype, device=self.device, is_complex=True)
 
         # handle Hamiltonian batching
         if H.dim() == 2:  # (n, n)
