@@ -20,10 +20,10 @@ class TensorFormatter:
         self.H_is_batched = False
         self.state_is_batched = False
 
-    def batch_H_and_state(
+    def format_H_and_state(
         self, H: TDOperatorLike, state: OperatorLike, state_to_dm: bool = False
     ) -> tuple[TDTensor, Tensor]:
-        """Batch Hamiltonian and state (state vector or density matrix)."""
+        """Convert and batch Hamiltonian and state (state vector or density matrix)."""
         # convert Hamiltonian to `TDTensor`
         H = to_td_tensor(H, dtype=self.dtype, device=self.device, is_complex=True)
 
@@ -50,8 +50,8 @@ class TensorFormatter:
 
         return H, state
 
-    def batch(self, operator: OperatorLike) -> Tensor:
-        """Batch a given operator according to the Hamiltonian and state."""
+    def format(self, operator: OperatorLike) -> Tensor:
+        """Convert and batch a given operator according to the Hamiltonian and state."""
         operator = to_tensor(
             operator, dtype=self.dtype, device=self.device, is_complex=True
         )

@@ -97,11 +97,11 @@ def mesolve(
             ' consider using `sesolve`.'
         )
 
-    # format all tensors for batching
+    # format and batch all tensors
     formatter = TensorFormatter(dtype, device)
-    H_batched, rho0_batched = formatter.batch_H_and_state(H, rho0, state_to_dm=True)
-    exp_ops = formatter.batch(exp_ops)
-    jump_ops = formatter.batch(jump_ops)
+    H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
+    exp_ops = formatter.format(exp_ops)
+    jump_ops = formatter.format(jump_ops)
 
     # convert t_save to a tensor
     t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
