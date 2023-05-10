@@ -9,6 +9,11 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  # cancel previous runs of this workflow (only for the same pull request, not for main)
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
