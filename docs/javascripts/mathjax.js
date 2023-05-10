@@ -1,17 +1,25 @@
 // code copied from https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#arithmatex
 window.MathJax = {
-tex: {
-    inlineMath: [["\\(", "\\)"]],
-    displayMath: [["\\[", "\\]"]],
-    processEscapes: true,
-    processEnvironments: true
-},
-options: {
-    ignoreHtmlClass: ".*|",
-    processHtmlClass: "arithmatex"
-}
+    loader: { load: ['[tex]/braket'] },  // <-- added
+    tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]],
+        processEscapes: true,
+        processEnvironments: true,
+        packages: { '[+]': ['braket'] },  // <-- added
+        macros: {  // <-- added
+            dag: '\\dagger',
+            dd: '\\mathrm{d}',
+            dt: '\\mathrm{d}t',
+            tr: ["\\mathrm{Tr}\\left[#1\\right]", 1]
+        },
+    },
+    options: {
+        ignoreHtmlClass: ".*|",
+        processHtmlClass: "arithmatex"
+    }
 };
 
 document$.subscribe(() => {
-MathJax.typesetPromise()
+    MathJax.typesetPromise()
 })
