@@ -1,4 +1,4 @@
-name: main
+name: ci
 
 on:
   push:
@@ -8,6 +8,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+
+concurrency:
+  # cancel previous runs of this workflow (only for the same pull request, not for main)
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -27,8 +32,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Install dependencies
         run: |
