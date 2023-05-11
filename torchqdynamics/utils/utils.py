@@ -341,7 +341,10 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
 
     Warning:
-        The returned tensor is complex-valued.
+        The returned tensor is complex-valued. If the operator $O$ corresponds to a
+        physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
+        is real. One can then keep only the real values of the returned tensor using
+        `tq.expect(O, x).real`.
 
     Warning:
         This function does not yet support bra.
