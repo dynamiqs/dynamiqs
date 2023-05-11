@@ -47,7 +47,8 @@
         <b>{{ parameter.name }}</b>
         {% if parameter.annotation %}
           {% with expression = parameter.annotation %}
-            (<code>{% include "expression.html" with context %}</code>)
+            <!-- (<code>{% include "expression.html" with context %}</code>) -->
+            <i>({% include "expression.html" with context %})</i>
           {% endwith %}
         {% endif %}
         – {{ parameter.description|convert_markdown(heading_level, html_id) }}
