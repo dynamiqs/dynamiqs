@@ -23,13 +23,19 @@ __all__ = [
 
 
 def is_ket(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a state vector, i.e. if its last
-    dimension is 1."""
+    """Returns True if a tensor is in the format of a state vector.
+
+    Args:
+        x (...): Tensor.
+
+    Returns:
+        True if the last dimension of `x` is 1, False otherwise.
+    """
     return x.size(-1) == 1
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
-    r"""Bra $\bra\psi$ associated to a state vector $\ket\psi$.
+    r"""Returns the bra $\bra\psi$ associated to a state vector $\ket\psi$.
 
     Args:
         x (..., n, 1): State vector.
@@ -41,7 +47,8 @@ def ket_to_bra(x: Tensor) -> Tensor:
 
 
 def ket_to_dm(x: Tensor) -> Tensor:
-    r"""Density matrix $\ket\psi\bra\psi$ associated to a state vector $\ket\psi$.
+    r"""Returns the density matrix $\ket\psi\bra\psi$ associated to a state vector
+    $\ket\psi$.
 
     Args:
         x (..., n, 1): State vector.
@@ -53,8 +60,8 @@ def ket_to_dm(x: Tensor) -> Tensor:
 
 
 def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
-    r"""Overlap (inner product) $\braket{\varphi,\psi}$ between two state vectors
-    $\ket\varphi$ and $\ket\psi$.
+    r"""Returns the overlap (inner product) $\braket{\varphi,\psi}$ between two state
+    vectors $\ket\varphi$ and $\ket\psi$.
 
     Args:
         x (..., n, 1): First state vector.
@@ -67,7 +74,7 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
 
 
 def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Fidelity of two state vectors.
+    r"""Returns the fidelity of two state vectors.
 
     The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
     squared overlap:
@@ -91,7 +98,7 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
 
 def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Fidelity of two density matrices.
+    r"""Returns the fidelity of two density matrices.
 
     The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
 
@@ -127,7 +134,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
 
 def sqrtm(x: Tensor) -> Tensor:
-    """Square root of a symmetric or Hermitian positive definite matrix.
+    """Returns the square root of a symmetric or Hermitian positive definite matrix.
 
     Args:
         x (..., n, n): Symmetric or Hermitian positive definite matrix.
@@ -145,7 +152,7 @@ def sqrtm(x: Tensor) -> Tensor:
 
 
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
-    r"""Apply the Lindblad dissipation superoperator to a density matrix.
+    r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
 
@@ -169,7 +176,7 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
 
 
 def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
-    r"""Apply the Lindbladian superoperator to a density matrix.
+    r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
 
@@ -182,7 +189,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     (see [dissipator()][torchqdynamics.dissipator]).
 
     Note:
-        This superoperator is also sometimes called the *Liouvillian*.
+        This superoperator is also sometimes called *Liouvillian*.
 
     Args:
         H (..., n, n): Hamiltonian.
@@ -196,7 +203,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Tensor product of a sequence of state vectors, density matrices or
+    r"""Returns the tensor product of a sequence of state vectors, density matrices or
     operators.
 
     Examples:
@@ -224,7 +231,7 @@ def tensprod(*args: Tensor) -> Tensor:
       operators vectors with shape $(n_k, n_k)$.
 
     Warning:
-        This function does not yet support bra.
+        This function does not yet support tensors in the bra format.
 
     Warning:
         This function does not yet support arbitrarily batched tensors (see
@@ -245,7 +252,7 @@ def tensprod(*args: Tensor) -> Tensor:
 
 
 def trace(x: Tensor) -> Tensor:
-    """Trace of a tensor along its last two dimensions.
+    """Returns the trace of a tensor along its last two dimensions.
 
     Args:
         x (..., n, n): Tensor.
@@ -257,7 +264,7 @@ def trace(x: Tensor) -> Tensor:
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Partial trace of a state vector or density matrix.
+    """Returns the partial trace of a state vector or density matrix.
 
     Examples:
         >>> rhoABC = tq.tensprod(
@@ -275,7 +282,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         torch.Size([10, 10])
 
     Warning:
-        This function does not yet support bra.
+        This function does not yet support tensors in the bra format.
 
     Args:
         x (..., n, 1) or (..., n, n): State vector or density matrix of a composite
@@ -333,7 +340,8 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Expectation value of an operator on a state vector or a density matrix.
+    r"""Returns the expectation value of an operator on a state vector or a density
+    matrix.
 
     The expectation value $\braket{O}$ of an operator $O$ is computed
 
@@ -347,7 +355,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         `tq.expect(O, x).real`.
 
     Warning:
-        This function does not yet support bra.
+        This function does not yet support tensors in the bra format.
 
     Args:
         O (n, n): Arbitrary operator.
