@@ -3,15 +3,8 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from .tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    tdtensor_get_ndim,
-    tdtensor_get_size,
-    tdtensor_unsqueeze,
-    to_tdtensor,
-    to_tensor,
-)
+from .td_tensor import TDTensor, to_td_tensor
+from .tensor_types import OperatorLike, TDOperatorLike, to_tensor
 from .utils import is_ket, ket_to_dm
 
 
@@ -27,21 +20,20 @@ class TensorFormatter:
         self.H_is_batched = False
         self.state_is_batched = False
 
-    def batch_H_and_state(
+    def format_H_and_state(
         self, H: TDOperatorLike, state: OperatorLike, state_to_dm: bool = False
-    ) -> tuple[Tensor, Tensor]:
-        """Batch Hamiltonian and state (state vector or density matrix)."""
+    ) -> tuple[TDTensor, Tensor]:
+        """Convert and batch Hamiltonian and state (state vector or density matrix)."""
         # convert Hamiltonian to `TDTensor`
-        H = to_tdtensor(H, dtype=self.dtype, device=self.device, is_complex=True)
+        H = to_td_tensor(H, dtype=self.dtype, device=self.device, is_complex=True)
 
         # handle Hamiltonian batching
-        if tdtensor_get_ndim(H) == 2:
-            H_batched = tdtensor_unsqueeze(H, (0, 0))  # (1, 1, n, n)
-            b_H = 1
-        else:
-            H_batched = tdtensor_unsqueeze(H, (1,))
-            b_H = tdtensor_get_size(H, 0)  # (b_H, 1, n, n)
+        if H.dim() == 2:  # (n, n)
+            H = H.unsqueeze(0)  # (1, n, n)
+        else:  # (b_H, n, n)
             self.H_is_batched = True
+        H = H.unsqueeze(1)  # (b_H, 1, n, n)
+        b_H = H.size(0)
 
         # convert state to tensor and density matrix if needed
         state = to_tensor(state, dtype=self.dtype, device=self.device, is_complex=True)
@@ -49,17 +41,17 @@ class TensorFormatter:
             state = ket_to_dm(state)
 
         # handle state batching
-        if state.ndim == 2:
-            state_batched = state[None, None, ...]  # (1, 1, n, n)
-        else:
-            state_batched = state[None, :, ...]  # (1, b_state, n, n)
+        if state.ndim == 2:  # (n, n)
+            state = state.unsqueeze(0)  # (1, n, n)
+        else:  # (b_state, n, n)
             self.state_is_batched = True
-        state_batched = state_batched.repeat(b_H, 1, 1, 1)  # (b_H, b_state, n, n)
+        state = state.unsqueeze(0)  # (1, b_state, n, n)
+        state = state.repeat(b_H, 1, 1, 1)  # (b_H, b_state, n, n)
 
-        return H_batched, state_batched
+        return H, state
 
-    def batch(self, operator: OperatorLike) -> Tensor:
-        """Batch a given operator according to the Hamiltonian and state."""
+    def format(self, operator: OperatorLike) -> Tensor:
+        """Convert and batch a given operator according to the Hamiltonian and state."""
         operator = to_tensor(
             operator, dtype=self.dtype, device=self.device, is_complex=True
         )

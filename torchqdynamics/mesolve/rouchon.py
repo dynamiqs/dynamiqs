@@ -20,8 +20,8 @@ class MERouchon(AdjointForwardSolver):
         """
         super().__init__(*args)
 
-        self.n = self.H(0.0).shape[-1]
-        self.I = torch.eye(self.n).to(self.H(0.0))  # (n, n)
+        self.n = self.H.size(-1)
+        self.I = torch.eye(self.n, device=self.H.device, dtype=self.H.dtype)  # (n, n)
         self.dt = self.options.dt
 
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
