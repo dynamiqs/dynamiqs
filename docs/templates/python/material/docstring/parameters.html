@@ -39,7 +39,8 @@
   {% endblock table_style %}
 {% elif config.docstring_section_style == "list" %}
   {% block list_style %}
-  <p>{{ section.title or "Parameters:" }}</p>
+  <!-- <p>{{ section.title or "Parameters:" }}</p> -->
+  <p><strong>{{ section.title or "Parameters" }}</strong></p>
   <ul>
     {% for parameter in section.value %}
       <li class="field-body">

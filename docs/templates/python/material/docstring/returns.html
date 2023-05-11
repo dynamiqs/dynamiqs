@@ -30,7 +30,8 @@
   {% endblock table_style %}
 {% elif config.docstring_section_style == "list" %}
   {% block list_style %}
-  <p>{{ section.title or "Returns:" }}</p>
+  <!-- <p>{{ section.title or "Returns:" }}</p> -->
+  <p><strong>{{ section.title or "Returns" }}</strong></p>
   <ul>
     {% for returns in section.value %}
       <li class="field-body">
