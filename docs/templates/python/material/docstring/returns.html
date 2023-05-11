@@ -48,14 +48,16 @@
     {% endfor %}
   </ul> -->
   {% with returns = section.value[0] %}
-    {% if returns.annotation %}
-      {% with expression = returns.annotation %}
-        <span class="field-body">
+    <span class="field-body">
+      <!-- skip type annotation if it comes directly from the function signature -->
+      {% if returns.annotation and returns.annotation.full is not defined %}
+        {% with expression = returns.annotation %}
             <i>({% include "expression.html" with context %})</i>
-            – {{ returns.description|convert_markdown(heading_level, html_id) }}
-        </span>
-      {% endwith %}
-    {% endif %}
+            –
+        {% endwith %}
+      {% endif %}
+    {{ returns.description|convert_markdown(heading_level, html_id) }}
+  </span>
   {% endwith %}
   {% endblock list_style %}
 {% elif config.docstring_section_style == "spacy" %}

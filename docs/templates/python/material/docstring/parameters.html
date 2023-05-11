@@ -45,7 +45,8 @@
     {% for parameter in section.value %}
       <li class="field-body">
         <b>{{ parameter.name }}</b>
-        {% if parameter.annotation %}
+        <!-- skip type annotation if it comes directly from the function signature -->
+        {% if parameter.annotation and parameter.annotation.full is not defined %}
           {% with expression = parameter.annotation %}
             <!-- (<code>{% include "expression.html" with context %}</code>) -->
             <i>({% include "expression.html" with context %})</i>
