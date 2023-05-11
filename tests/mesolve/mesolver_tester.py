@@ -1,7 +1,7 @@
 import torch
 
-import torchqdynamics as tq
-from torchqdynamics.options import Options
+import dynamiqs as dq
+from dynamiqs.options import Options
 
 from .open_system import OpenSystem
 
@@ -16,7 +16,7 @@ class MESolverTester:
         b_rho0 = len(system.rho0_batched)
         num_t_save = 11
 
-        run_mesolve = lambda H, rho0: tq.mesolve(
+        run_mesolve = lambda H, rho0: dq.mesolve(
             H,
             system.jump_ops,
             rho0,
@@ -58,7 +58,7 @@ class MESolverTester:
     ):
         t_save = system.t_save(num_t_save)
 
-        rho_save, _ = tq.mesolve(
+        rho_save, _ = dq.mesolve(
             system.H,
             system.jump_ops,
             system.rho0,
@@ -86,7 +86,7 @@ class MEAdjointSolverTester(MESolverTester):
     ):
         # function to run mesolve with a specific gradient algorithm
         def run_mesolve():
-            return tq.mesolve(
+            return dq.mesolve(
                 system.H,
                 system.jump_ops,
                 system.rho0,

@@ -185,7 +185,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
-    (see [dissipator()][torchqdynamics.dissipator]).
+    (see [dissipator()][dynamiqs.dissipator]).
 
     Note:
         This superoperator is also sometimes called *Liouvillian*.
@@ -205,18 +205,18 @@ def tensprod(*args: Tensor) -> Tensor:
     r"""Returns the tensor product of a sequence of kets, density matrices or operators.
 
     Examples:
-        >>> psi = tq.tensprod(
-        ...     tq.coherent(20, 2.0),
-        ...     tq.fock(2, 0),
-        ...     tq.fock(5, 1)
+        >>> psi = dq.tensprod(
+        ...     dq.coherent(20, 2.0),
+        ...     dq.fock(2, 0),
+        ...     dq.fock(5, 1)
         ... )
         >>> psi.shape
         torch.Size([200, 1])
 
-        >>> rho = tq.tensprod(
-        ...     tq.coherent_dm(20, 2.0),
-        ...     tq.fock_dm(2, 0),
-        ...     tq.fock_dm(5, 1)
+        >>> rho = dq.tensprod(
+        ...     dq.coherent_dm(20, 2.0),
+        ...     dq.fock_dm(2, 0),
+        ...     dq.fock_dm(5, 1)
         ... )
         >>> rho.shape
         torch.Size([200, 200])
@@ -232,7 +232,7 @@ def tensprod(*args: Tensor) -> Tensor:
 
     Warning:
         This function does not yet support arbitrarily batched tensors (see
-        [issue #69](https://github.com/pierreguilmin/torchqdynamics/issues/69)).
+        [issue #69](https://github.com/pierreguilmin/dynamiqs/issues/69)).
 
     Note:
         This function is the equivalent of `qutip.tensor()`.
@@ -263,17 +263,17 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     """Returns the partial trace of a ket or density matrix.
 
     Examples:
-        >>> rhoABC = tq.tensprod(
-        ...     tq.coherent_dm(20, 2.0),
-        ...     tq.fock_dm(2, 0),
-        ...     tq.fock_dm(5, 1)
+        >>> rhoABC = dq.tensprod(
+        ...     dq.coherent_dm(20, 2.0),
+        ...     dq.fock_dm(2, 0),
+        ...     dq.fock_dm(5, 1)
         ... )
         >>> rhoABC.shape
         torch.Size([200, 200])
-        >>> rhoA = tq.ptrace(rho, 0, (20, 2, 5))
+        >>> rhoA = dq.ptrace(rho, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
-        >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 5))
+        >>> rhoBC = dq.ptrace(rho, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
         torch.Size([10, 10])
 
@@ -292,7 +292,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     # TODO: adapt to bras
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
-    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]tq.
+    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
     ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
@@ -346,7 +346,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         The returned tensor is complex-valued. If the operator $O$ corresponds to a
         physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
         is real. One can then keep only the real values of the returned tensor using
-        `tq.expect(O, x).real`.
+        `dq.expect(O, x).real`.
 
     Warning:
         This function does not yet support tensors in the bra format.

@@ -23,11 +23,11 @@ def fock(
     """State vector of a Fock state, or of a tensor product of Fock states.
 
     Example:
-        >>> tq.fock(3, 1)
+        >>> dq.fock(3, 1)
         tensor([[0.+0.j],
                 [1.+0.j],
                 [0.+0.j]], dtype=torch.complex128)
-        >>> tq.fock((3, 2), (1, 0))
+        >>> dq.fock((3, 2), (1, 0))
         tensor([[0.+0.j],
                 [0.+0.j],
                 [1.+0.j],
@@ -64,11 +64,11 @@ def fock_dm(
     """Density matrix of a Fock state, or of a tensor product of Fock states.
 
     Example:
-        >>> tq.fock_dm(3, 1)
+        >>> dq.fock_dm(3, 1)
         tensor([[0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j]], dtype=torch.complex128)
-        >>> tq.fock_dm((3, 2), (1, 0))
+        >>> dq.fock_dm((3, 2), (1, 0))
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -85,7 +85,7 @@ def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
     """State vector of a coherent state.
 
     Example:
-        >>> tq.coherent(5, 0.2)
+        >>> dq.coherent(5, 0.2)
         tensor([[0.980+0.j],
                 [0.196+0.j],
                 [0.028+0.j],
@@ -104,7 +104,7 @@ def coherent_dm(
     """Density matrix of a coherent state.
 
     Example:
-        >>> tq.coherent(5, 0.2)
+        >>> dq.coherent(5, 0.2)
         tensor([[0.961+0.j, 0.192+0.j, 0.027+0.j, 0.003+0.j, 0.000+0.j],
                 [0.192+0.j, 0.038+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j],
                 [0.027+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j],

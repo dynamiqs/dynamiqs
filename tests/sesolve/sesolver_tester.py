@@ -1,7 +1,7 @@
 import torch
 
-import torchqdynamics as tq
-from torchqdynamics.options import Options
+import dynamiqs as dq
+from dynamiqs.options import Options
 
 from .closed_system import ClosedSystem
 
@@ -16,7 +16,7 @@ class SESolverTester:
         b_psi0 = len(system.psi0_batched)
         num_t_save = 11
 
-        run_sesolve = lambda H, psi0: tq.sesolve(
+        run_sesolve = lambda H, psi0: dq.sesolve(
             H,
             psi0,
             system.t_save(num_t_save),
@@ -57,7 +57,7 @@ class SESolverTester:
     ):
         t_save = system.t_save(num_t_save)
 
-        psi_save, _ = tq.sesolve(
+        psi_save, _ = dq.sesolve(
             system.H,
             system.psi0,
             t_save,

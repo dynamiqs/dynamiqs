@@ -1,5 +1,5 @@
 [project]
-name = "torchqdynamics"
+name = "dynamiqs"
 version = "0.1.0"
 description = "Quantum systems simulation with PyTorch."
 dependencies = [
@@ -25,7 +25,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["torchqdynamics"]
+packages = ["dynamiqs"]
 
 [tool.isort]
 profile = "black"
@@ -45,8 +45,8 @@ ignore-words-list = "ket, braket"
 [tool.taskipy.tasks]
 isort = { cmd = "echo '\n>>> isort' && isort .", help = "sort the imports (isort)" }
 black = { cmd = "echo '\n>>> black' && black .", help = "auto-format the code (black)" }
-codespell = { cmd = "echo '\n>>> codespell' && codespell tests torchqdynamics", help = "check for misspellings (codespell)" }
-flake8 = { cmd = "echo '\n>>> flake8' && flake8 tests torchqdynamics", help = "check code style (flake8)" }
+codespell = { cmd = "echo '\n>>> codespell' && codespell tests dynamiqs", help = "check for misspellings (codespell)" }
+flake8 = { cmd = "echo '\n>>> flake8' && flake8 tests dynamiqs", help = "check code style (flake8)" }
 lint = { cmd = "task isort && task black && task codespell && task flake8", help = "lint the code and check style (isort + black + codespell + flake8)" }
 test = { cmd = "echo '\n>>> pytest -v -m \"not long\"' && pytest -v -m \"not long\"", help = "run the unit tests suite excluding long tests (pytest)" }
 test-long = { cmd = "echo '\n>>> pytest -v -m \"long\"' && pytest -v -m \"long\"", help = "run the unit tests suite including only long tests (pytest)" }
