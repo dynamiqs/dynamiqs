@@ -58,7 +58,7 @@ class AdaptiveIntegrator(ABC):
         scale = self.atol + self.rtol * torch.max(y0.abs(), y1.abs())
         return hairer_norm(y_err / scale).max()
 
-    def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
+    def init_tstep(self, f0: Tensor, y0: Tensor, t0: Tensor) -> Tensor:
         """Initialize the time step of an adaptive step size integrator.
 
         See Equation (4.14) of `Hairer et al., Solving Ordinary Differential Equations I
@@ -84,7 +84,7 @@ class AdaptiveIntegrator(ABC):
         return min(100 * h0, h1)
 
     @torch.no_grad()
-    def update_tstep(self, dt, error):
+    def update_tstep(self, dt: Tensor, error: Tensor) -> Tensor:
         """Update the time step of an adaptive step size integrator.
 
         See Equation (4.12) and (4.13) of `Hairer et al., Solving Ordinary Differential
@@ -154,7 +154,7 @@ class DormandPrince5(AdaptiveIntegrator):
         return alpha, beta, csol5, csol5 - csol4
 
     def step(
-        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+        self, f0: Tensor, y0: Tensor, t0: Tensor, dt: Tensor
     ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         # create butcher tableau if not already done
