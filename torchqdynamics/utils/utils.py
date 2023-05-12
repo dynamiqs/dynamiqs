@@ -23,7 +23,7 @@ __all__ = [
 
 
 def is_ket(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a state vector.
+    """Returns True if a tensor is in the format of a ket.
 
     Args:
         x (...): Tensor.
@@ -35,10 +35,10 @@ def is_ket(x: Tensor) -> bool:
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
-    r"""Returns the bra $\bra\psi$ associated to a state vector $\ket\psi$.
+    r"""Returns the bra $\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
-        x (..., n, 1): State vector.
+        x (..., n, 1): Ket.
 
     Returns:
         (..., 1, n): Bra.
@@ -47,11 +47,10 @@ def ket_to_bra(x: Tensor) -> Tensor:
 
 
 def ket_to_dm(x: Tensor) -> Tensor:
-    r"""Returns the density matrix $\ket\psi\bra\psi$ associated to a state vector
-    $\ket\psi$.
+    r"""Returns the density matrix $\ket\psi\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
-        x (..., n, 1): State vector.
+        x (..., n, 1): Ket.
 
     Returns:
         (..., n, n): Density matrix.
@@ -60,12 +59,12 @@ def ket_to_dm(x: Tensor) -> Tensor:
 
 
 def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the overlap (inner product) $\braket{\varphi,\psi}$ between two state
-    vectors $\ket\varphi$ and $\ket\psi$.
+    r"""Returns the overlap (inner product) $\braket{\varphi,\psi}$ between two kets
+    $\ket\varphi$ and $\ket\psi$.
 
     Args:
-        x (..., n, 1): First state vector.
-        y (..., n, 1): Second state vector.
+        x (..., n, 1): First ket.
+        y (..., n, 1): Second ket.
 
     Returns:
         (...): Complex-valued overlap.
@@ -74,7 +73,7 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
 
 
 def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two state vectors.
+    r"""Returns the fidelity of two kets.
 
     The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
     squared overlap:
@@ -88,8 +87,8 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x (..., n, 1): First state vector.
-        y (..., n, 1): Second state vector.
+        x (..., n, 1): First ket.
+        y (..., n, 1): Second ket.
 
     Returns:
         (...): Real-valued fidelity.
@@ -203,8 +202,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of a sequence of state vectors, density matrices or
-    operators.
+    r"""Returns the tensor product of a sequence of kets, density matrices or operators.
 
     Examples:
         >>> psi = tq.tensprod(
@@ -225,8 +223,7 @@ def tensprod(*args: Tensor) -> Tensor:
 
     The returned tensor shape is:
 
-    - $(n, 1)$ with $n=\prod_k n_k$ if all input tensors are state vectors with shape
-      $(n_k, 1)$,
+    - $(n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape $(n_k, 1)$,
     - $(n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
       operators vectors with shape $(n_k, n_k)$.
 
@@ -241,8 +238,7 @@ def tensprod(*args: Tensor) -> Tensor:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args (n_k, 1) or (n_k, n_k): Sequence of state vectors, density matrices or
-            operators.
+        *args (n_k, 1) or (n_k, n_k): Sequence of kets, density matrices or operators.
 
     Returns:
         (n, 1) or (n, n): Tensor product of the input tensors.
@@ -264,7 +260,7 @@ def trace(x: Tensor) -> Tensor:
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Returns the partial trace of a state vector or density matrix.
+    """Returns the partial trace of a ket or density matrix.
 
     Examples:
         >>> rhoABC = tq.tensprod(
@@ -285,8 +281,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         This function does not yet support tensors in the bra format.
 
     Args:
-        x (..., n, 1) or (..., n, n): State vector or density matrix of a composite
-            system.
+        x (..., n, 1) or (..., n, n): Ket or density matrix of a composite system.
         keep (int or tuple of ints): Dimensions to keep after partial trace.
         dims (tuple of ints): Dimensions of each subsystem in the composite system
             Hilbert space tensor product.
@@ -340,12 +335,11 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Returns the expectation value of an operator on a state vector or a density
-    matrix.
+    r"""Returns the expectation value of an operator on a ket or a density matrix.
 
     The expectation value $\braket{O}$ of an operator $O$ is computed
 
-    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\ket\psi$,
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$,
     - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
 
     Warning:
@@ -359,7 +353,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
     Args:
         O (n, n): Arbitrary operator.
-        x (..., n, 1) or (..., n, n): State vector or density matrix.
+        x (..., n, 1) or (..., n, n): Ket or density matrix.
 
     Returns:
         (...): Complex-valued expectation value.
