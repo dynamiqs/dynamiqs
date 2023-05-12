@@ -37,10 +37,10 @@ def sesolve(
     # TODO support density matrices too
     # TODO add test to check that psi0 has the correct shape
 
-    # format all tensors for batching
+    # format and batch all tensors
     formatter = TensorFormatter(dtype, device)
-    H_batched, psi0_batched = formatter.batch_H_and_state(H, psi0)
-    exp_ops = formatter.batch(exp_ops)
+    H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
+    exp_ops = formatter.format(exp_ops)
 
     # convert t_save to tensor
     t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
