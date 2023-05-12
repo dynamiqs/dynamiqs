@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 from abc import ABC, abstractmethod
 from typing import get_args
 
@@ -43,27 +42,12 @@ def get_default_device() -> torch.device:
     return torch.ones(1).device
 
 
-def count_arguments(f: callable, no_kwargs: bool = True):
-    """Count the number of positional arguments of a function."""
-    if no_kwargs:
-        argspec = inspect.getfullargspec(f)
-        return len(argspec.args) - len(argspec.defaults or ()) - len(argspec.kwonlyargs)
-    else:
-        return len(inspect.signature(f).parameters)
-
-
 def check_callable(
     f: callable,
     expected_dtype: torch.dtype,
     expected_device: torch.device,
 ) -> Tensor:
-    # check number of arguments and compute at initial time
-    if count_arguments(f) != 1:
-        raise TypeError(
-            'Time-dependent operators in the `callable` format should only accept a'
-            ' single argument for time `t`.'
-        )
-
+    # compute initial value of the callable
     tensor = f(torch.tensor(0.0))
 
     # check type, dtype and device match
