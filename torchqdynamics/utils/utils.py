@@ -22,95 +22,99 @@ __all__ = [
 ]
 
 
-def is_ket(x: Tensor) -> Tensor:
-    """Check if a tensor is in state vector format."""
+def is_ket(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a ket.
+
+    Args:
+        x (...): Tensor.
+
+    Returns:
+        True if the last dimension of `x` is 1, False otherwise.
+    """
     return x.size(-1) == 1
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
-    """Linear map (bra) representation of a state vector (ket).
+    r"""Returns the bra $\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
-        x: Tensor of dimension `(..., d, 1)`.
+        x (..., n, 1): Ket.
 
     Returns:
-        Tensor of dimension `(..., 1, d)`.
+        (..., 1, n): Bra.
     """
     return x.adjoint()
 
 
 def ket_to_dm(x: Tensor) -> Tensor:
-    """Density matrix formed by the outer product of a state vector (ket).
+    r"""Returns the density matrix $\ket\psi\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
-        x: Tensor of dimension `(..., d, 1)`.
+        x (..., n, 1): Ket.
 
     Returns:
-        Tensor of dimension `(..., d, d)`.
+        (..., n, n): Density matrix.
     """
     return x @ ket_to_bra(x)
 
 
-def ket_overlap(x: Tensor, y: Tensor) -> torch.complex:
-    """Return the overlap (inner product) between two state vectors (kets).
+def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the overlap (inner product) $\braket{\varphi,\psi}$ between two kets
+    $\ket\varphi$ and $\ket\psi$.
 
     Args:
-        x: Tensor of dimension `(..., d, 1)`.
-        y: Tensor of dimension `(..., d, 1)`.
+        x (..., n, 1): First ket.
+        y (..., n, 1): Second ket.
 
     Returns:
-        Complex-valued overlap (`torch.complex64` or `torch.complex128`).
+        (...): Complex-valued overlap.
     """
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
 
 def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Return the fidelity between two state vectors.
+    r"""Returns the fidelity of two kets.
 
-    The fidelity between two pure states $\varphi$ and $\psi$ is defined by their
-    squared overlap
+    The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
+    squared overlap:
+
     $$
-        F(\varphi, \psi) = |\braket{\varphi, \psi}|^2.
+        F(\ket\varphi, \ket\psi) = \left|\braket{\varphi, \psi}\right|^2.
     $$
 
     Warning:
-        This definition is different from QuTiP `fidelity()` function which
-        uses the square root fidelity $F' = \sqrt{F}`.
-
-    Note:
-        This fidelity is also sometimes called the *Uhlmann state fidelity*.
+        This definition is different from `qutip.fidelity()` which uses the square root
+        fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x: Tensor of size `(..., n, 1)`.
-        y: Tensor of size `(..., n, 1)`.
+        x (..., n, 1): First ket.
+        y (..., n, 1): Second ket.
 
     Returns:
-        Tensor of size `(...)` holding the real-valued fidelity.
+        (...): Real-valued fidelity.
     """
     return ket_overlap(x, y).abs().pow(2).real
 
 
 def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Return the fidelity between two density matrices.
+    r"""Returns the fidelity of two density matrices.
 
-    The fidelity between two density matrices $\rho$ and $\sigma$ is defined by
+    The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
+
     $$
-        F(\rho, \sigma) = \mathrm{Tr}\left[\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}\right]^2
+        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2
     $$
 
     Warning:
-        This definition is different from QuTiP `fidelity()` function which
-        uses the square root fidelity $F' = \sqrt{F}`.
-
-    Note:
-        This fidelity is also sometimes called the *Uhlmann state fidelity*.
+        This definition is different from `qutip.fidelity()` which uses the square root
+        fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x: Tensor of size `(..., n, n)`.
-        y: Tensor of size `(..., n, n)`.
+        x (..., n, n): First density matrix.
+        y (..., n, n): Second density matrix.
 
     Returns:
-        Tensor of size `(...)` holding the real-valued fidelity.
+        (...): Real-valued fidelity.
     """
     sqrtm_x = sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
@@ -129,13 +133,13 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
 
 def sqrtm(x: Tensor) -> Tensor:
-    """Compute the square root of a symmetric or Hermitian positive definite matrix.
+    """Returns the square root of a symmetric or Hermitian positive definite matrix.
 
     Args:
-        x: Tensor of dimension `(..., n, n)`.
+        x (..., n, n): Symmetric or Hermitian positive definite matrix.
 
     Returns:
-        Tensor of dimension `(..., n, n)` holding the square root of `x`.
+        (..., n, n): Square root of `x`.
     """
     # code copied from
     # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
@@ -147,21 +151,21 @@ def sqrtm(x: Tensor) -> Tensor:
 
 
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
-    r"""Apply the dissipation superoperator to a density matrix.
+    r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
-    The dissipation superoperator $\mathcal{D}[L](\cdot)$ is defined by
+    The dissipation superoperator $\mathcal{D}[L]$ is defined by:
+
     $$
-        \mathcal{D}[L](\rho) = L\rho L^dag - \frac{1}{2}L^\dag L \rho
-                               - \frac{1}{2}\rho L^\dag L.
+        \mathcal{D}[L](\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
+        - \frac{1}{2}\rho L^\dag L.
     $$
 
     Args:
-        L: Jump operator of dimension `(..., d, d)`.
-        rho: Density matrix of dimension `(..., d, d)`.
+        L (..., n, n): Jump operator (an arbitrary operator).
+        rho (..., n, n): Density matrix.
 
     Returns:
-        Tensor of dimension `(..., d, d)` resulting from the application of the
-        dissipation superoperator.
+        (..., n, n): Density matrix.
     """
     return (
         L @ rho @ L.adjoint()
@@ -171,72 +175,124 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
 
 
 def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
-    r"""Apply the Lindbladian superoperator to a density matrix.
+    r"""Applies the Lindbladian superoperator to a density matrix.
 
-    The system Lindbladian $\mathcal{L}(\cdot)$ is the superoperator
-    generating the evolution of the system. It is defined by
+    The Lindbladian superoperator $\mathcal{L}$ is defined by:
+
     $$
-        \frac{\mathrm{d}\rho}{\mathrm{d}t} = \mathcal{L}(\rho) = -i[H,\rho]
-                                             + \sum_{i=1}^n \mathcal{D}[L_i](\rho).
+        \mathcal{L}(\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k](\rho),
     $$
+
+    where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
+    (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
+    (see [dissipator()][torchqdynamics.dissipator]).
+
+    Note:
+        This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H: Hamiltonian of dimension `(..., d, d)`.
-        Ls: Jump operators tensor of dimension `(..., n, d, d)`.
-        rho: Density matrix of dimension `(..., d, d)`.
+        H (..., n, n): Hamiltonian.
+        Ls (..., N, n, n): Sequence of jump operators (arbitrary operators).
+        rho (..., n, n): Density matrix.
 
     Returns:
-        Tensor of dimension `(..., d, d)` resulting from the application of the
-        Lindbladian.
+        (..., n, n): Resulting operator (it is not a density matrix).
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
 
-def tensprod(*x: Tensor) -> Tensor:
-    """Compute the tensor product of a sequence of state vectors, density matrices or
-    operators.
+def tensprod(*args: Tensor) -> Tensor:
+    r"""Returns the tensor product of a sequence of kets, density matrices or operators.
+
+    Examples:
+        >>> psi = tq.tensprod(
+        ...     tq.coherent(20, 2.0),
+        ...     tq.fock(2, 0),
+        ...     tq.fock(5, 1)
+        ... )
+        >>> psi.shape
+        torch.Size([200, 1])
+
+        >>> rho = tq.tensprod(
+        ...     tq.coherent_dm(20, 2.0),
+        ...     tq.fock_dm(2, 0),
+        ...     tq.fock_dm(5, 1)
+        ... )
+        >>> rho.shape
+        torch.Size([200, 200])
+
+    The returned tensor shape is:
+
+    - $(n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape $(n_k, 1)$,
+    - $(n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
+      operators vectors with shape $(n_k, n_k)$.
+
+    Warning:
+        This function does not yet support tensors in the bra format.
+
+    Warning:
+        This function does not yet support arbitrarily batched tensors (see
+        [issue #69](https://github.com/pierreguilmin/torchqdynamics/issues/69)).
 
     Note:
-        This function is the equivalent of `qutip.tensor`.
+        This function is the equivalent of `qutip.tensor()`.
+
+    Args:
+        *args (n_k, 1) or (n_k, n_k): Sequence of kets, density matrices or operators.
+
+    Returns:
+        (n, 1) or (n, n): Tensor product of the input tensors.
     """
-    return reduce(torch.kron, x)
+    # TODO: adapt to bras
+    return reduce(torch.kron, args)
 
 
-def trace(rho: Tensor) -> Tensor:
-    """Compute the batched trace of a tensor over its last two dimensions."""
-    return torch.einsum('...ii', rho)
+def trace(x: Tensor) -> Tensor:
+    """Returns the trace of a tensor along its last two dimensions.
+
+    Args:
+        x (..., n, n): Tensor.
+
+    Returns:
+        (...): Trace of `x`.
+    """
+    return torch.einsum('...ii', x)
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Compute the partial trace of a state vector or density matrix.
+    """Returns the partial trace of a ket or density matrix.
 
-    Args:
-        x: Tensor of size `(..., n, 1)` or `(..., n, n)`
-        keep: Int or tuple of ints containing the dimensions to keep for the
-            partial trace.
-        dims: Tuple of ints specifying the dimensions of each subsystem in the
-            Hilbert space tensor product.
-
-    Returns:
-        Tensor of size `(..., m, m)` with `m <= n` containing the partially traced out
-            state vector or density matrix.
-
-    Example:
-        >>> rho = tq.tensprod(
-                tq.coherent_dm(20, 2.0),
-                tq.fock_dm(2, 0),
-                tq.fock_dm(5, 1)
-            )
+    Examples:
+        >>> rhoABC = tq.tensprod(
+        ...     tq.coherent_dm(20, 2.0),
+        ...     tq.fock_dm(2, 0),
+        ...     tq.fock_dm(5, 1)
+        ... )
+        >>> rhoABC.shape
+        torch.Size([200, 200])
         >>> rhoA = tq.ptrace(rho, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
         >>> rhoBC = tq.ptrace(rho, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
         torch.Size([10, 10])
+
+    Warning:
+        This function does not yet support tensors in the bra format.
+
+    Args:
+        x (..., n, 1) or (..., n, n): Ket or density matrix of a composite system.
+        keep (int or tuple of ints): Dimensions to keep after partial trace.
+        dims (tuple of ints): Dimensions of each subsystem in the composite system
+            Hilbert space tensor product.
+
+    Returns:
+        (..., m, m): Density matrix (with `m <= n`).
     """
+    # TODO: adapt to bras
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
-    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
+    dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]tq.
     ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
@@ -279,25 +335,30 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Compute the expectation value of an operator on a state vector or a density
-    matrix.
+    r"""Returns the expectation value of an operator on a ket or a density matrix.
 
     The expectation value $\braket{O}$ of an operator $O$ is computed
-    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
-    - as $\braket{O}=\tr(O\rho)$ if `x` is a density matrix $\rho$.
 
-    Note:
-        The returned tensor is complex-valued.
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$,
+    - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
 
-    TODO Adapt to bras.
+    Warning:
+        The returned tensor is complex-valued. If the operator $O$ corresponds to a
+        physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
+        is real. One can then keep only the real values of the returned tensor using
+        `tq.expect(O, x).real`.
+
+    Warning:
+        This function does not yet support tensors in the bra format.
 
     Args:
-        O: Tensor of size `(n, n)`
-        x: Tensor of size `(..., n, 1)` or `(..., n, n)`
+        O (n, n): Arbitrary operator.
+        x (..., n, 1) or (..., n, n): Ket or density matrix.
 
     Returns:
-        Tensor of size `(...)` holding the operator expectation values.
+        (...): Complex-valued expectation value.
     """
+    # TODO: adapt to bras
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
     return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)

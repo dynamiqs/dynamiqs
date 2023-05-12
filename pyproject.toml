@@ -21,6 +21,7 @@ dev = [
     "pytest",
     "pytest-sugar",
     "mkdocs-material",
+    "mkdocstrings[python]",
 ]
 
 [tool.setuptools]

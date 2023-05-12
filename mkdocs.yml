@@ -15,6 +15,21 @@ theme:
     repo: fontawesome/brands/github
 plugins:
   - search
+  - mkdocstrings:
+      default_handler: python
+      custom_templates: docs/templates
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: false
+            show_root_toc_entry: false
+            show_root_full_path: false
+            heading_level: 2
+            members_order: source
+            docstring_section_style: list
+            show_signature_annotations: true
+            separate_signature: true
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
@@ -29,6 +44,8 @@ extra_javascript:
   - javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+watch:
+  - torchqdynamics
 nav:
   - Home: index.md
   - Getting started:
@@ -42,4 +59,5 @@ nav:
       - ECD: tutorials/ecd.md
   - Reference:
       - reference/index.md
-      - Foo: reference/foo.md
+      - torchqdynamics.utils:
+          - utils: reference/utils/utils.md
