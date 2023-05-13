@@ -44,12 +44,12 @@ class AdaptiveIntegrator(ABC):
 
     @abstractmethod
     def step(
-        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+        self, f0: Tensor, y0: Tensor, t0: Tensor, dt: Tensor
     ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         pass
 
-    def get_error(self, y_err: Tensor, y0: Tensor, y1: Tensor) -> float:
+    def get_error(self, y_err: Tensor, y0: Tensor, y1: Tensor) -> Tensor:
         """Compute the error of a given solution.
 
         See Equation (4.11) of `Hairer et al., Solving Ordinary Differential Equations I
