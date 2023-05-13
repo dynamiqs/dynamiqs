@@ -1,4 +1,6 @@
-![dynamiqs logo](./media/dynamiqs_logo.png | width=600)
+<h1 align="center">
+<img src="https://github.com/pierreguilmin/dynamiqs/blob/8c1b19158f482b42c5c5b10fba54df29d2c045c1/media/dynamiqs_logo.png" width="600">
+</h1><br>
 
 Quantum systems simulation with PyTorch.
 
