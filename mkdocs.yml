@@ -1,7 +1,7 @@
-site_name: torchqdynamics
+site_name: dynamiqs
 site_url: ""
 use_directory_urls: false
-repo_url: https://github.com/pierreguilmin/torchqdynamics
+repo_url: https://github.com/pierreguilmin/dynamiqs
 theme:
   name: material
   features:
@@ -58,7 +58,7 @@ extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 watch:
-  - torchqdynamics
+  - dynamiqs
 nav:
   - Home: index.md
   - Getting started:
@@ -72,5 +72,5 @@ nav:
       - ECD: tutorials/ecd.md
   - Reference:
       - reference/index.md
-      - torchqdynamics.utils:
+      - dynamiqs.utils:
           - utils: reference/utils/utils.md

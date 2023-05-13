@@ -69,13 +69,13 @@ def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
     space given by the product of all dimensions.
 
     Example:
-        >>> tq.destroy(4)
+        >>> dq.destroy(4)
         tensor([[0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 1.732+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
-        >>> a, b = tq.destroy(2, 3)
+        >>> a, b = dq.destroy(2, 3)
         >>> a
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
@@ -120,13 +120,13 @@ def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
     given by the product of all dimensions.
 
     Example:
-        >>> tq.create(4)
+        >>> dq.create(4)
         tensor([[0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [1.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 1.414+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 1.732+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
-        >>> a, b = tq.create(2, 3)
+        >>> a, b = dq.create(2, 3)
         >>> a
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],

@@ -4,7 +4,7 @@ from math import pi, sqrt
 import torch
 from torch import Tensor
 
-import torchqdynamics as tq
+import dynamiqs as dq
 
 
 class OpenSystem(ABC):
@@ -31,7 +31,7 @@ class OpenSystem(ABC):
 
     def loss(self, rho: Tensor) -> Tensor:
         """Compute an example loss function from a given density matrix."""
-        return tq.expect(self.loss_op, rho).real
+        return dq.expect(self.loss_op, rho).real
 
 
 class LeakyCavity(OpenSystem):
@@ -63,7 +63,7 @@ class LeakyCavity(OpenSystem):
 
     def init_operators(self):
         # bosonic operators
-        a = tq.destroy(self.n)
+        a = dq.destroy(self.n)
         adag = a.adjoint()
 
         # loss operator
@@ -72,16 +72,16 @@ class LeakyCavity(OpenSystem):
         # prepare quantum operators
         self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.jump_ops = [torch.sqrt(self.kappa) * a, tq.eye(self.n)]
+        self.jump_ops = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
         self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
         # prepare initial states
-        self.rho0 = tq.coherent_dm(self.n, self.alpha0)
+        self.rho0 = dq.coherent_dm(self.n, self.alpha0)
         self.rho0_batched = [
-            tq.coherent_dm(self.n, self.alpha0),
-            tq.coherent_dm(self.n, 1j * self.alpha0),
-            tq.coherent_dm(self.n, -self.alpha0),
-            tq.coherent_dm(self.n, -1j * self.alpha0),
+            dq.coherent_dm(self.n, self.alpha0),
+            dq.coherent_dm(self.n, 1j * self.alpha0),
+            dq.coherent_dm(self.n, -self.alpha0),
+            dq.coherent_dm(self.n, -1j * self.alpha0),
         ]
 
     def t_save(self, num_t_save: int) -> Tensor:
@@ -94,4 +94,4 @@ class LeakyCavity(OpenSystem):
             * torch.exp(-1j * self.delta * t)
             * torch.exp(-0.5 * self.kappa * t)
         )
-        return tq.coherent_dm(self.n, alpha_t)
+        return dq.coherent_dm(self.n, alpha_t)

@@ -1,4 +1,4 @@
-# Contributing to torchqdynamics
+# Contributing to dynamiqs
 
 ## Requirements
 
@@ -9,8 +9,8 @@ The project was written using Python 3.8+, you must have a compatible version of
 Clone the repository and dive in:
 
 ```shell
-git clone git@github.com:PierreGuilmin/torchqdynamics.git
-cd torchqdynamics
+git clone git@github.com:PierreGuilmin/dynamiqs.git
+cd dynamiqs
 ```
 
 We strongly recommend that you create a virtual environment to install the project dependencies. You can then install the library (in editable mode) with all its dependencies:

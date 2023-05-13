@@ -4,7 +4,7 @@ from math import pi, sqrt
 import torch
 from torch import Tensor
 
-import torchqdynamics as tq
+import dynamiqs as dq
 
 
 class ClosedSystem(ABC):
@@ -43,7 +43,7 @@ class Cavity(ClosedSystem):
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
         # bosonic operators
-        a = tq.destroy(self.n)
+        a = dq.destroy(self.n)
         adag = a.adjoint()
 
         # prepare quantum operators
@@ -52,12 +52,12 @@ class Cavity(ClosedSystem):
         self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
         # prepare initial states
-        self.psi0 = tq.coherent(self.n, self.alpha0)
+        self.psi0 = dq.coherent(self.n, self.alpha0)
         self.psi0_batched = [
-            tq.coherent(self.n, self.alpha0),
-            tq.coherent(self.n, 1j * self.alpha0),
-            tq.coherent(self.n, -self.alpha0),
-            tq.coherent(self.n, -1j * self.alpha0),
+            dq.coherent(self.n, self.alpha0),
+            dq.coherent(self.n, 1j * self.alpha0),
+            dq.coherent(self.n, -self.alpha0),
+            dq.coherent(self.n, -1j * self.alpha0),
         ]
 
     def t_save(self, num_t_save: int) -> Tensor:
@@ -66,4 +66,4 @@ class Cavity(ClosedSystem):
 
     def psi(self, t: float) -> Tensor:
         alpha_t = self.alpha0 * torch.exp(-1j * self.delta * t)
-        return tq.coherent(self.n, alpha_t)
+        return dq.coherent(self.n, alpha_t)
