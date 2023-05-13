@@ -30,7 +30,6 @@ repos:
         entry: task
         args: ["black"]
         language: system
-        exclude: ^media/
       - id: codespell
         name: codespell
         entry: task
@@ -41,4 +40,3 @@ repos:
         entry: task
         args: ["flake8"]
         language: system
-        exclude: ^media/
