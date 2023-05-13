@@ -48,7 +48,7 @@ def check_callable(
     expected_device: torch.device,
 ) -> Tensor:
     # compute initial value of the callable
-    tensor = f(torch.tensor(0.0))
+    tensor = f(0.0)
 
     # check type, dtype and device match
     prefix = (

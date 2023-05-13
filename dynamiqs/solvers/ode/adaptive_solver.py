@@ -1,7 +1,6 @@
 import warnings
 from abc import abstractmethod
 
-import torch
 from torch import Tensor
 from tqdm.std import TqdmWarning
 
@@ -38,10 +37,10 @@ class AdaptiveSolver(AutogradSolver):
         pbar = tqdm(total=self.t_save[-1].item(), disable=not self.options.verbose)
 
         # initialize the ODE routine
-        t0 = torch.tensor(0.0)
+        t0 = 0.0
         f0 = integrator.f(t0, self.y0)
         dt = integrator.init_tstep(f0, self.y0, t0)
-        error = torch.tensor(1.0)
+        error = 1.0
         cache = (dt, error)
 
         # run the ODE routine
@@ -55,7 +54,7 @@ class AdaptiveSolver(AutogradSolver):
                 # check for time overflow
                 if t + dt >= ts:
                     cache = (dt, error)
-                    dt = ts - t
+                    dt = ts.item() - t
 
                 # perform a single ODE integrator step of size dt
                 ft_new, y_new, y_err = integrator.step(ft, y, t, dt)
@@ -68,7 +67,7 @@ class AdaptiveSolver(AutogradSolver):
                     t, y, ft = t + dt, y_new, ft_new
 
                     # update the progress bar
-                    pbar.update(dt.item())
+                    pbar.update(dt)
 
                 # raise error if max_steps reached
                 step_counter += 1
