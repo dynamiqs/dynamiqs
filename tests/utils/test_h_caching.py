@@ -3,10 +3,10 @@ import functools
 import torch
 from torch import Tensor
 
-from torchqdynamics.options import ODEFixedStep
-from torchqdynamics.solvers.ode.forward_solver import ForwardSolver
-from torchqdynamics.solvers.solver import depends_on_H
-from torchqdynamics.utils.td_tensor import to_td_tensor
+from dynamiqs.options import ODEFixedStep
+from dynamiqs.solvers.ode.forward_solver import ForwardSolver
+from dynamiqs.solvers.solver import depends_on_H
+from dynamiqs.utils.td_tensor import to_td_tensor
 
 
 class FakeSolver(ForwardSolver):

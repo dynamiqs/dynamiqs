@@ -1,3 +1,3 @@
-# `torchqdynamics.utils.utils`
+# `dynamiqs.utils.utils`
 
-::: torchqdynamics.utils.utils
+::: dynamiqs.utils.utils
