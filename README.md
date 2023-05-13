@@ -1,4 +1,4 @@
-![dynamiqs logo](./media/dynamiqs_logo.png)
+![dynamiqs logo](./media/dynamiqs_logo.png | width=600)
 
 Quantum systems simulation with PyTorch.
 
