@@ -1,4 +1,6 @@
-![dynamiqs logo](./media/dynamiqs_logo.png)
+<h1 align="center">
+    <img src="./media/dynamiqs_logo.png" width="520" alt="dynamiqs library logo">
+</h1>
 
 Quantum systems simulation with PyTorch.
 

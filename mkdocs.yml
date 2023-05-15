@@ -13,19 +13,27 @@ theme:
     - search.suggest
   icon:
     repo: fontawesome/brands/github
+  logo: media/logo_white.png
+  favicon: media/favicon.ico
   palette:
     # palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     # palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+extra_css:
+  - stylesheets/extra.css
 plugins:
   - search
   - mkdocstrings:
