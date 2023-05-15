@@ -1,10 +1,10 @@
 from torch import Tensor
 
-from ..solvers.ode.forward_solver import ForwardSolver
+from ..solvers.ode.fixed_solver import FixedSolver
 from ..utils.solver_utils import lindbladian
 
 
-class MEEuler(ForwardSolver):
+class MEEuler(FixedSolver):
     def __init__(self, *args, jump_ops: Tensor):
         super().__init__(*args)
         self.jump_ops = jump_ops  # (len(jump_ops), n, n)
