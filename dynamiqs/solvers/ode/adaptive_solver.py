@@ -46,7 +46,7 @@ class AdaptiveSolver(AutogradSolver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for ts in self.t_save:
+        for ts in self.t_save.tolist():
             while t < ts:
                 # update time step
                 dt = integrator.update_tstep(dt, error)
@@ -54,7 +54,7 @@ class AdaptiveSolver(AutogradSolver):
                 # check for time overflow
                 if t + dt >= ts:
                     cache = (dt, error)
-                    dt = ts.item() - t
+                    dt = ts - t
 
                 # perform a single ODE integrator step of size dt
                 ft_new, y_new, y_err = integrator.step(ft, y, t, dt)

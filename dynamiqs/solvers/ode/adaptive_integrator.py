@@ -156,7 +156,7 @@ class DormandPrince5(AdaptiveIntegrator):
         return alpha, beta, csol5, csol5 - csol4
 
     def step(
-        self, f0: Tensor, y0: Tensor, t0: Tensor, dt: float
+        self, f0: Tensor, y0: Tensor, t0: float, dt: float
     ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         # create butcher tableau if not already done

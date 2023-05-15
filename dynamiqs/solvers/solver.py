@@ -110,7 +110,7 @@ class Solver(ABC):
         pass
 
     def next_tsave(self) -> float:
-        return self.t_save[self.save_counter]
+        return self.t_save[self.save_counter].item()
 
     def save(self, y: Tensor):
         self._save_y(y)
