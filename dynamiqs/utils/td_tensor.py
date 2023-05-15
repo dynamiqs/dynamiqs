@@ -31,8 +31,11 @@ def to_td_tensor(
         if device is None:
             device = get_default_device()
 
+        # compute initial value of the callable
+        x0 = x(0.0)
+
         # check callable
-        x0 = check_callable(x, dtype, device)
+        check_callable(x0, dtype, device)
 
         return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
 
@@ -43,19 +46,10 @@ def get_default_device() -> torch.device:
 
 
 def check_callable(
-    f: callable,
+    x0: Tensor,
     expected_dtype: torch.dtype,
     expected_device: torch.device,
-) -> Tensor:
-    # check number of arguments and compute at initial time
-    try:
-        tensor = f(0.0)
-    except TypeError as e:
-        raise TypeError(
-            'Time-dependent operators in the `callable` format should only accept a'
-            ' single argument for time `t`.'
-        ) from e
-
+):
     # check type, dtype and device match
     prefix = (
         'Time-dependent operators in the `callable` format should always'
@@ -63,23 +57,21 @@ def check_callable(
         ' to the solver. This avoids type conversion or device transfer at'
         ' every time step that would slow down the solver.'
     )
-    if not isinstance(tensor, Tensor):
+    if not isinstance(x0, Tensor):
         raise TypeError(
             f'{prefix} The provided operator is currently of type'
-            f' {type(tensor)} instead of {Tensor}.'
+            f' {type(x0)} instead of {Tensor}.'
         )
-    elif tensor.dtype != expected_dtype:
+    elif x0.dtype != expected_dtype:
         raise TypeError(
             f'{prefix} The provided operator is currently of dtype'
-            f' {tensor.dtype} instead of {expected_dtype}.'
+            f' {x0.dtype} instead of {expected_dtype}.'
         )
-    elif tensor.device != expected_device:
+    elif x0.device != expected_device:
         raise TypeError(
             f'{prefix} The provided operator is currently on device'
-            f' {tensor.device} instead of {expected_device}.'
+            f' {x0.device} instead of {expected_device}.'
         )
-
-    return tensor
 
 
 class TDTensor(ABC):

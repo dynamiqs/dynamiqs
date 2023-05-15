@@ -46,7 +46,7 @@ class AdaptiveSolver(AutogradSolver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for ts in self.t_save:
+        for ts in self.t_save.numpy():
             while t < ts:
                 # update time step
                 dt = integrator.update_tstep(dt, error)
@@ -67,7 +67,7 @@ class AdaptiveSolver(AutogradSolver):
                     t, y, ft = t + dt, y_new, ft_new
 
                     # update the progress bar
-                    pbar.update(dt.item())
+                    pbar.update(dt)
 
                 # raise error if max_steps reached
                 step_counter += 1

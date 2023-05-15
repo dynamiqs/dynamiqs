@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -35,7 +36,7 @@ class ForwardSolver(AutogradSolver):
 
         # define time values
         num_times = torch.round(self.t_save[-1] / dt).int() + 1
-        times = torch.linspace(0.0, self.t_save[-1], num_times)
+        times = np.linspace(0.0, self.t_save[-1], num_times)
 
         # run the ode routine
         y = self.y0
@@ -82,7 +83,7 @@ class AdjointForwardSolver(ForwardSolver, AdjointSolver):
 
         # define time values
         num_times = torch.round(T / dt).int() + 1
-        times = torch.linspace(self.t_save_bwd[1], self.t_save_bwd[0], num_times)
+        times = np.linspace(self.t_save_bwd[1], self.t_save_bwd[0], num_times)
 
         # run the ode routine
         y, a, g = self.y_bwd, self.a_bwd, self.g_bwd

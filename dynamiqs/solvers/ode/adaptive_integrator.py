@@ -49,6 +49,7 @@ class AdaptiveIntegrator(ABC):
         """Compute a single step of the ODE integration."""
         pass
 
+    @torch.no_grad()
     def get_error(self, y_err: Tensor, y0: Tensor, y1: Tensor) -> float:
         """Compute the error of a given solution.
 
@@ -56,8 +57,9 @@ class AdaptiveIntegrator(ABC):
         (1993), Springer Series in Computational Mathematics`.
         """
         scale = self.atol + self.rtol * torch.max(y0.abs(), y1.abs())
-        return hairer_norm(y_err / scale).max()
+        return hairer_norm(y_err / scale).max().item()
 
+    @torch.no_grad()
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
         """Initialize the time step of an adaptive step size integrator.
 
@@ -66,7 +68,7 @@ class AdaptiveIntegrator(ABC):
         For this function, we keep the same notations as in the book.
         """
         sc = self.atol + torch.abs(y0) * self.rtol
-        d0, d1 = hairer_norm(y0 / sc).max(), hairer_norm(f0 / sc).max()
+        d0, d1 = hairer_norm(y0 / sc).max().item(), hairer_norm(f0 / sc).max().item()
 
         if d0 < 1e-5 or d1 < 1e-5:
             h0 = 1e-6
@@ -75,7 +77,7 @@ class AdaptiveIntegrator(ABC):
 
         y1 = y0 + h0 * f0
         f1 = self.f(t0 + h0, y1)
-        d2 = hairer_norm((f1 - f0) / sc).max() / h0
+        d2 = hairer_norm((f1 - f0) / sc).max().item() / h0
         if d1 <= 1e-15 and d2 <= 1e-15:
             h1 = max(1e-6, h0 * 1e-3)
         else:
@@ -84,7 +86,7 @@ class AdaptiveIntegrator(ABC):
         return min(100 * h0, h1)
 
     @torch.no_grad()
-    def update_tstep(self, dt, error):
+    def update_tstep(self, dt: float, error: float) -> float:
         """Update the time step of an adaptive step size integrator.
 
         See Equation (4.12) and (4.13) of `Hairer et al., Solving Ordinary Differential
