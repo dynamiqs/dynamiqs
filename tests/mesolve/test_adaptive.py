@@ -2,7 +2,7 @@ from math import pi
 
 import dynamiqs as dq
 
-from .mesolver_tester import MESolverTester
+from .me_solver_tester import MESolverTester
 from .open_system import LeakyCavity
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
