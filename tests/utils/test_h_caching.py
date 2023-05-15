@@ -4,12 +4,12 @@ import torch
 from torch import Tensor
 
 from dynamiqs.options import ODEFixedStep
-from dynamiqs.solvers.ode.forward_solver import ForwardSolver
+from dynamiqs.solvers.ode.fixed_solver import FixedSolver
 from dynamiqs.solvers.solver import depends_on_H
 from dynamiqs.utils.td_tensor import to_td_tensor
 
 
-class FakeSolver(ForwardSolver):
+class FakeSolver(FixedSolver):
     def __init__(self, H):
         y = torch.zeros((3, 3))
         t_save = torch.linspace(0, 10, 100)
