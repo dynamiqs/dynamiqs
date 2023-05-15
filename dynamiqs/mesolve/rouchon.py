@@ -75,15 +75,7 @@ class MERouchon1(MERouchon):
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
-        Hdag_nh = H_nh.adjoint()
-        M0_adj = self.I + 1j * self.dt * Hdag_nh
-
-        # TODO: using the cached version of M0_adj breaks the tests
-        # if H_nh is marked as `@depends_on_H`
-        # M0_adj = self.M0_adj(t)
-
-        phi = kraus_map(phi, M0_adj) + kraus_map(phi, self.M1s_adj)
+        phi = kraus_map(phi, self.M0_adj(t, dt)) + kraus_map(phi, self.M1s_adj)
 
         return rho, phi
 
