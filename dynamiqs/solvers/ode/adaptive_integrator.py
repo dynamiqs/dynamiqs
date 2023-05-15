@@ -59,6 +59,7 @@ class AdaptiveIntegrator(ABC):
         scale = self.atol + self.rtol * torch.max(y0.abs(), y1.abs())
         return hairer_norm(y_err / scale).max().item()
 
+    @torch.no_grad()
     def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
         """Initialize the time step of an adaptive step size integrator.
 
