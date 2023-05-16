@@ -3,15 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from ..options import (
-    Dopri5,
-    Euler,
-    ODEAdaptiveStep,
-    Options,
-    Rouchon1,
-    Rouchon1_5,
-    Rouchon2,
-)
+from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
 from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
@@ -19,7 +11,7 @@ from ..utils.tensor_types import (
     TensorLike,
     dtype_complex_to_real,
 )
-from .adaptive import MEAdaptive
+from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
 
@@ -123,8 +115,8 @@ def mesolve(
         solver = MERouchon1_5(*args, jump_ops=jump_ops)
     elif isinstance(options, Rouchon2):
         solver = MERouchon2(*args, jump_ops=jump_ops)
-    elif isinstance(options, ODEAdaptiveStep):
-        solver = MEAdaptive(*args, jump_ops=jump_ops)
+    elif isinstance(options, Dopri5):
+        solver = MEDormandPrince5(*args, jump_ops=jump_ops)
     elif isinstance(options, Euler):
         solver = MEEuler(*args, jump_ops=jump_ops)
     else:

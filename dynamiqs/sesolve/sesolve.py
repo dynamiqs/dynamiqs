@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from ..options import Dopri5, Euler, ODEAdaptiveStep, Options, Propagator
+from ..options import Dopri5, Euler, Options, Propagator
 from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import (
     OperatorLike,
@@ -11,7 +11,7 @@ from ..utils.tensor_types import (
     TensorLike,
     dtype_complex_to_real,
 )
-from .adaptive import SEAdaptive
+from .adaptive import SEDormandPrince5
 from .euler import SEEuler
 from .propagator import SEPropagator
 
@@ -50,8 +50,8 @@ def sesolve(
     args = (H_batched, psi0_batched, t_save, exp_ops, options)
     if isinstance(options, Euler):
         solver = SEEuler(*args)
-    elif isinstance(options, ODEAdaptiveStep):
-        solver = SEAdaptive(*args)
+    elif isinstance(options, Dopri5):
+        solver = SEDormandPrince5(*args)
     elif isinstance(options, Propagator):
         solver = SEPropagator(*args)
     else:
