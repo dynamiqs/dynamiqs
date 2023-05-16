@@ -196,10 +196,10 @@ class DormandPrince5(AdaptiveSolver):
             1 / 60,
         ]
 
-        # extract target information
-        dtype = self.target.dtype
+        # extract dtype and device from
+        dtype = self.y0.dtype
         float_dtype = dtype_complex_to_real(dtype)
-        device = self.target.device
+        device = self.y0.device
 
         # initialize tensors
         alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
@@ -213,7 +213,6 @@ class DormandPrince5(AdaptiveSolver):
         self, f0: Tensor, y0: Tensor, t0: float, dt: float
     ) -> tuple[Tensor, Tensor, Tensor]:
         # import butcher tableau
-        self.target = f0
         alpha, beta, csol, cerr = self.tableau
 
         # compute iterated Runge-Kutta values
