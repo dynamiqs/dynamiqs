@@ -15,5 +15,5 @@ class Propagator(AutogradSolver):
             self.save(y)
 
     @abstractmethod
-    def forward(self, t: float, dt: float, y: Tensor):
+    def forward(self, t: float, delta_t: float, y: Tensor):
         pass
