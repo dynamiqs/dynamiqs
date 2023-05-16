@@ -97,7 +97,7 @@
 .md-typeset .doc-function {
   border-bottom: 1px solid #9da0a7;
   padding-bottom: 2.5em;
-  margin-bottom: 1em;
+  margin-bottom: 2.0em;
 }
 .md-typeset .doc-contents p {
   margin-top: 1em;
@@ -113,7 +113,7 @@
 /* Function name */
 .md-typeset .doc-function-name {
   color: #ed7764;
-  padding: 3px 8px;
+  padding: 3px 0;
   font-weight: 600;
   width: 100%;
 }
