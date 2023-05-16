@@ -9,30 +9,22 @@ from ..solvers.ode.fixed_solver import AdjointFixedSolver
 from ..solvers.solver import depends_on_H
 from ..utils.solver_utils import inv_sqrtm, kraus_map
 from ..utils.utils import trace
+from .me_solver import MESolver
 
 
-class MERouchon(AdjointFixedSolver):
-    def __init__(self, *args, jump_ops: Tensor):
-        super().__init__(*args)
+class MERouchon(MESolver, AdjointFixedSolver):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.n = self.H.size(-1)
         self.I = torch.eye(self.n, device=self.H.device, dtype=self.H.dtype)  # (n, n)
         self.dt = self.options.dt
-
-        self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
-        self.sum_nojump = (jump_ops.adjoint() @ jump_ops).sum(dim=0)  # (n, n)
 
         self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
         self.M1s_adj = self.M1s.adjoint()  # (1, len(jump_ops), n, n)
 
 
 class MERouchon1(MERouchon):
-    @depends_on_H
-    def H_nh(self, t: float) -> Tensor:
-        # non-hermitian Hamiltonian at time t
-        # -> (b_H, 1, n, n)
-        return self.H(t) - 0.5j * self.sum_nojump
-
     @depends_on_H
     def Hdag_nh(self, t: float) -> Tensor:
         # -> (b_H, 1, n, n)
@@ -75,15 +67,7 @@ class MERouchon1(MERouchon):
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
-        Hdag_nh = H_nh.adjoint()
-        M0_adj = self.I + 1j * self.dt * Hdag_nh
-
-        # TODO: using the cached version of M0_adj breaks the tests
-        # if H_nh is marked as `@depends_on_H`
-        # M0_adj = self.M0_adj(t)
-
-        phi = kraus_map(phi, M0_adj) + kraus_map(phi, self.M1s_adj)
+        phi = kraus_map(phi, self.M0_adj(t, dt)) + kraus_map(phi, self.M1s_adj)
 
         return rho, phi
 
@@ -106,14 +90,14 @@ class MERouchon1_5(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
+        H_nh = self.H - 0.5j * self.sum_no_jump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh  # (b_H, 1, n, n)
         Ms = sqrt(dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # build normalization matrix
-        S = M0.adjoint() @ M0 + dt * self.sum_nojump  # (b_H, 1, n, n)
+        S = M0.adjoint() @ M0 + dt * self.sum_no_jump  # (b_H, 1, n, n)
         # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
         S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
 
@@ -147,7 +131,7 @@ class MERouchon2(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump  # (b_H, 1, n, n)
+        H_nh = self.H(t) - 0.5j * self.sum_no_jump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
@@ -167,7 +151,7 @@ class MERouchon2(MERouchon):
     def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H(t) - 0.5j * self.sum_nojump
+        H_nh = self.H(t) - 0.5j * self.sum_no_jump
         Hdag_nh = H_nh.adjoint()
 
         # compute rho(t-dt)

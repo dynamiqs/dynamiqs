@@ -3,7 +3,7 @@ from math import pi
 import dynamiqs as dq
 
 from .closed_system import Cavity
-from .sesolver_tester import SESolverTester
+from .se_solver_tester import SESolverTester
 
 cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
 
