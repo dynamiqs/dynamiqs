@@ -1,7 +1,6 @@
 import functools
 import warnings
 from abc import abstractmethod
-from typing import Any
 
 import torch
 from torch import Tensor
@@ -85,7 +84,7 @@ class AdaptiveSolver(AutogradSolver):
 
     @property
     @abstractmethod
-    def tableau(self) -> Any:
+    def tableau(self) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         pass
 
     @abstractmethod
@@ -175,7 +174,7 @@ class DormandPrince5(AdaptiveSolver):
         return 5
 
     @functools.cached_property
-    def tableau(self) -> Any:
+    def tableau(self) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         """Build the Butcher tableau of the integrator."""
         alpha = [1 / 5, 3 / 10, 4 / 5, 8 / 9, 1.0, 1.0, 0.0]
         beta = [
