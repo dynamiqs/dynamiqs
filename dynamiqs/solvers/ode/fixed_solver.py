@@ -122,7 +122,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         solver: AdjointFixedSolver,
         y0: Tensor,
         *parameters: tuple[nn.Parameter, ...],
-    ) -> Tensor:
+    ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.solver = solver
