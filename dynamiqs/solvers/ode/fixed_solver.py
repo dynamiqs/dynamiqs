@@ -126,7 +126,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.solver = solver
-        ctx.t_save = solver.t_save if solver.options.save_states else solver.t_save[-1]
+        ctx.t_save = solver.t_save
 
         # integrate the ODE forward without storing the graph of operations
         solver.run_nograd()
@@ -163,10 +163,16 @@ class AdjointFixedAutograd(torch.autograd.Function):
         # locally disable gradient computation
         with torch.no_grad():
             # initialize state, adjoint and gradients
-            solver.y_bwd = y_save[..., -1, :, :]
-            solver.a_bwd = (
-                grad_y[0][..., -1, :, :] + grad_y[1][..., :, -1] * solver.exp_ops.mT
+            if solver.options.save_states:
+                solver.y_bwd = y_save[..., -1, :, :]
+                solver.a_bwd = grad_y[0][..., -1, :, :]
+            else:
+                solver.y_bwd = y_save[..., :, :]
+                solver.a_bwd = grad_y[0][..., :, :]
+            solver.a_bwd += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mT).sum(
+                dim=-3
             )
+
             solver.g_bwd = tuple(
                 torch.zeros_like(_p).to(solver.y_bwd)
                 for _p in solver.options.parameters
@@ -182,14 +188,16 @@ class AdjointFixedAutograd(torch.autograd.Function):
                 # run odeint on augmented state
                 solver.run_augmented()
 
-                # replace y with its checkpointed version
-                solver.y_bwd = y_save[..., i - 1, :, :]
+                if solver.options.save_states:
+                    # replace y with its checkpointed version
+                    solver.y_bwd = y_save[..., i - 1, :, :]
+                    # update adjoint wrt this time point by adding dL / dy(t)
+                    solver.a_bwd += grad_y[0][..., i - 1, :, :]
 
-                # update adjoint wrt this time point by adding dL / dy(t)
+                # update adjoint wrt this time point by adding dL / de(t)
                 solver.a_bwd += (
-                    grad_y[0][..., i - 1, :, :]
-                    + grad_y[1][..., :, i - 1] * solver.exp_ops.mT
-                )
+                    grad_y[1][..., :, i - 1, None, None] * solver.exp_ops.mT
+                ).sum(dim=-3)
 
         # convert gradients of real-valued parameters to real-valued gradients
         solver.g_bwd = tuple(
