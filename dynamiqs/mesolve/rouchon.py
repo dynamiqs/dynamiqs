@@ -63,7 +63,7 @@ class MERouchon1(MERouchon):
     def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
         # compute rho(t-dt)
-        rho = kraus_map(rho, self.M0(t, dt)) - kraus_map(rho, self.M1s)
+        rho = kraus_map(rho, self.M0(t, -dt)) - kraus_map(rho, self.M1s)
         rho = rho / trace(rho)[..., None, None].real
 
         # compute phi(t-dt)
