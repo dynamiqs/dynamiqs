@@ -101,6 +101,11 @@ class Solver(ABC):
         if len(self.exp_ops) > 0:
             self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
 
+    def clear_cache(self):
+        for attr in dir(self):
+            if isinstance(attr, TDTensor):
+                attr.clear_cache()
+
 
 class AutogradSolver(Solver):
     def run(self):

@@ -105,6 +105,11 @@ class TDTensor(ABC):
         """Subtract two `TDTensor` objects."""
         pass
 
+    @abstractmethod
+    def clear_cache(self):
+        """Clear the cache of the `TDTensor` object."""
+        pass
+
 
 class ConstantTDTensor(TDTensor):
     def __init__(self, tensor: Tensor):
@@ -153,6 +158,9 @@ class ConstantTDTensor(TDTensor):
             raise TypeError(
                 f'Substraction of a TDTensor with {type(other)} is not supported.'
             )
+
+    def clear_cache(self):
+        pass
 
 
 class CallableTDTensor(TDTensor):
@@ -245,3 +253,8 @@ class CallableTDTensor(TDTensor):
             raise TypeError(
                 f'Substraction of a TDTensor with {type(other)} is not supported.'
             )
+
+    def clear_cache(self):
+        self._cached_tensor = None
+        self._cached_t = None
+        self._cached_args = None

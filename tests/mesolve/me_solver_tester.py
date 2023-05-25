@@ -82,7 +82,7 @@ class MEAdjointSolverTester(MESolverTester):
         *,
         num_t_save: int,
         rtol: float = 1e-5,
-        atol: float = 1e-2,
+        atol: float = 3e-4,
     ):
         # function to run mesolve with a specific gradient algorithm
         def run_mesolve():

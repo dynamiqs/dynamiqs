@@ -134,6 +134,9 @@ class AdjointFixedAutograd(torch.autograd.Function):
         # save results and model parameters
         ctx.save_for_backward(solver.y_save)
 
+        # clear cache for backward pass
+        solver.clear_cache()
+
         # returning `y_save` is required for custom backward functions
         return solver.y_save, solver.exp_save
 
