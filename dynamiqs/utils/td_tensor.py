@@ -96,18 +96,24 @@ class TDTensor(ABC):
         pass
 
     @abstractmethod
-    def requires_updates(self, t: float) -> bool:
-        """Whether the cache needs to be updated for new time values."""
+    def __add__(self, other: TDTensor | Tensor) -> TDTensor:
+        """Add two `TDTensor` objects."""
+        pass
+
+    @abstractmethod
+    def __sub__(self, other: TDTensor | Tensor) -> TDTensor:
+        """Subtract two `TDTensor` objects."""
         pass
 
 
 class ConstantTDTensor(TDTensor):
     def __init__(self, tensor: Tensor):
         self._tensor = tensor
+        self.shape = tensor.shape
         self.dtype = tensor.dtype
         self.device = tensor.device
 
-    def __call__(self, t: float) -> Tensor:
+    def __call__(self, t: float, *args) -> Tensor:
         return self._tensor
 
     def size(self, dim: int) -> int:
@@ -119,8 +125,34 @@ class ConstantTDTensor(TDTensor):
     def unsqueeze(self, dim: int) -> ConstantTDTensor:
         return ConstantTDTensor(self._tensor.unsqueeze(dim))
 
-    def requires_updates(self, t: float) -> bool:
-        return False
+    def __add__(self, other: TDTensor | Tensor) -> TDTensor:
+        if isinstance(other, Tensor):
+            return ConstantTDTensor(self._tensor + other)
+        elif isinstance(other, ConstantTDTensor):
+            return ConstantTDTensor(self._tensor + other._tensor)
+        elif isinstance(other, CallableTDTensor):
+            return other.__add__(self)
+        else:
+            raise TypeError(
+                f'Addition of a TDTensor with {type(other)} is not supported.'
+            )
+
+    def __sub__(self, other: TDTensor | Tensor) -> TDTensor:
+        if isinstance(other, Tensor):
+            return ConstantTDTensor(self._tensor - other)
+        elif isinstance(other, ConstantTDTensor):
+            return ConstantTDTensor(self._tensor - other._tensor)
+        elif isinstance(other, CallableTDTensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self._tensor - other(t, *args),
+                shape=other.shape,
+                dtype=other.dtype,
+                device=other.device,
+            )
+        else:
+            raise TypeError(
+                f'Substraction of a TDTensor with {type(other)} is not supported.'
+            )
 
 
 class CallableTDTensor(TDTensor):
@@ -134,29 +166,82 @@ class CallableTDTensor(TDTensor):
         self._callable = f
         self.dtype = dtype
         self.device = device
-        self._shape = shape
+        self.shape = shape
         self._cached_tensor = None
         self._cached_t = None
+        self._cached_args = None
 
-    def __call__(self, t: float) -> Tensor:
-        if t != self._cached_t:
-            self._cached_tensor = self._callable(t).view(self._shape)
+    def __call__(self, t: float, *args) -> Tensor:
+        if t != self._cached_t or args != self._cached_args:
+            self._cached_tensor = self._callable(t, *args).view(self.shape)
             self._cached_t = t
+            self._cached_args = args
         return self._cached_tensor
 
     def size(self, dim: int) -> int:
-        return self._shape[dim]
+        return self.shape[dim]
 
     def dim(self) -> int:
-        return len(self._shape)
+        return len(self.shape)
 
     def unsqueeze(self, dim: int) -> CallableTDTensor:
-        new_shape = list(self._shape)
+        new_shape = list(self.shape)
         new_shape.insert(dim, 1)
         new_shape = torch.Size(new_shape)
         return CallableTDTensor(
             f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
         )
 
-    def requires_updates(self, t: float) -> bool:
-        return True
+    def __add__(self, other: TDTensor | Tensor) -> TDTensor:
+        if isinstance(other, Tensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self(t, *args) + other,
+                shape=self.shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        elif isinstance(other, ConstantTDTensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self(t, *args) + other._tensor,
+                shape=self.shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        elif isinstance(other, CallableTDTensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self(t, *args) + other(t, *args),
+                shape=self.shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        else:
+            raise TypeError(
+                f'Addition of a TDTensor with {type(other)} is not supported.'
+            )
+
+    def __sub__(self, other: TDTensor | Tensor) -> TDTensor:
+        if isinstance(other, Tensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self(t, *args) - other,
+                shape=self.shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        elif isinstance(other, ConstantTDTensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self(t, *args) - other._tensor,
+                shape=self.shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        elif isinstance(other, CallableTDTensor):
+            return CallableTDTensor(
+                f=lambda t, *args: self(t, *args) - other(t, *args),
+                shape=self.shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        else:
+            raise TypeError(
+                f'Substraction of a TDTensor with {type(other)} is not supported.'
+            )

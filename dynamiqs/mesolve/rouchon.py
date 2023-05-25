@@ -6,8 +6,8 @@ import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..solvers.solver import depends_on_H
 from ..utils.solver_utils import inv_sqrtm, kraus_map
+from ..utils.td_tensor import CallableTDTensor
 from ..utils.utils import trace
 from .me_solver import MESolver
 
@@ -20,27 +20,23 @@ class MERouchon(MESolver, AdjointFixedSolver):
         self.I = torch.eye(self.n, device=self.H.device, dtype=self.H.dtype)  # (n, n)
         self.dt = self.options.dt
 
+        self.M0 = CallableTDTensor(
+            f=lambda t, dt: self.I - 1j * dt * self.H_nh(t),
+            shape=self.H_nh.shape,
+            dtype=self.H_nh.dtype,
+            device=self.H_nh.device,
+        )
+        self.M0_adj = CallableTDTensor(
+            f=lambda t, dt: self.I + 1j * dt * self.H_nh(t).adjoint(),
+            shape=self.H_nh.shape,
+            dtype=self.H_nh.dtype,
+            device=self.H_nh.device,
+        )
         self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
         self.M1s_adj = self.M1s.adjoint()  # (1, len(jump_ops), n, n)
 
 
 class MERouchon1(MERouchon):
-    @depends_on_H
-    def Hdag_nh(self, t: float) -> Tensor:
-        # -> (b_H, 1, n, n)
-        return self.H_nh(t).adjoint()
-
-    @depends_on_H
-    def M0(self, t: float, dt: float) -> Tensor:
-        # build time-dependent Kraus operators
-        # -> (b_H, 1, n, n)
-        return self.I - 1j * dt * self.H_nh(t)
-
-    @depends_on_H
-    def M0_adj(self, t: float, dt: float) -> Tensor:
-        # -> (b_H, 1, n, n)
-        return self.I + 1j * dt * self.Hdag_nh(t)
-
     def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
 
