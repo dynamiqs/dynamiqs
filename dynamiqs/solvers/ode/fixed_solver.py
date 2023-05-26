@@ -169,7 +169,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
             else:
                 solver.y_bwd = y_save[..., :, :]
                 solver.a_bwd = grad_y[0][..., :, :]
-            solver.a_bwd += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mT).sum(
+            solver.a_bwd += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH).sum(
                 dim=-3
             )
 
@@ -196,7 +196,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
 
                 # update adjoint wrt this time point by adding dL / de(t)
                 solver.a_bwd += (
-                    grad_y[1][..., :, i - 1, None, None] * solver.exp_ops.mT
+                    grad_y[1][..., :, i - 1, None, None] * solver.exp_ops.mH
                 ).sum(dim=-3)
 
         # convert gradients of real-valued parameters to real-valued gradients
