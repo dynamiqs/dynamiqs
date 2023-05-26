@@ -19,7 +19,7 @@ class TestMERouchon1(MEAdjointSolverTester):
         self._test_batching(options, leaky_cavity_8)
 
     def test_rho_save(self):
-        options = dq.options.Rouchon1(dt=1e-4)
+        options = dq.options.Rouchon1(dt=1e-3)
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
 
     def test_adjoint(self):
@@ -39,7 +39,7 @@ class TestMERouchon1_5(MEAdjointSolverTester):
 
     @pytest.mark.skip(reason='failing - to fix')
     def test_rho_save(self):
-        options = dq.options.Rouchon1_5(dt=1e-4)
+        options = dq.options.Rouchon1_5(dt=1e-3)
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
 
 
