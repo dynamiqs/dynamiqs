@@ -73,9 +73,11 @@ class MERouchon(MESolver, AdjointFixedSolver):
 
 class MERouchon1(MERouchon):
     def M0(self, t: float, dt: float) -> Tensor:
+        # -> (b_H, 1, n, n)
         return self.I - 1j * dt * self.H_nh(t)
 
     def M1s(self, t: float, dt: float) -> Tensor:
+        # -> (b_H, 1, n, n)
         return sqrt(dt) * self.jump_ops
 
     def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
@@ -88,6 +90,8 @@ class MERouchon1(MERouchon):
         Returns:
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
+        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+
         # compute rho(t+dt)
         rho = kraus_map(rho, self.M0(t, dt)) + kraus_map(rho, self.M1s(t, dt))
         # rho: (b_H, b_rho, n, n)
@@ -96,7 +100,21 @@ class MERouchon1(MERouchon):
         return rho / trace(rho)[..., None, None].real
 
     def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
-        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1."""
+        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1.
+
+        Args:
+            t: Time.
+            dt: Time step.
+            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
+            phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
+
+        Returns:
+            Density matrix and adjoint state matrix at previous time step, as tensors
+            of shape `(b_H, b_rho, n, n)`.
+        """
+        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+
         # compute rho(t-dt)
         rho = kraus_map(rho, self.M0(t, -dt)) - kraus_map(rho, self.M1s(t, dt))
         rho = rho / trace(rho)[..., None, None].real
@@ -109,9 +127,11 @@ class MERouchon1(MERouchon):
 
 class MERouchon1_5(MERouchon):
     def M0(self, t: float, dt: float) -> Tensor:
+        # -> (b_H, 1, n, n)
         return self.I - 1j * dt * self.H_nh(t)
 
     def M1s(self, t: float, dt: float) -> Tensor:
+        # -> (b_H, 1, n, n)
         return sqrt(dt) * self.jump_ops
 
     def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
@@ -128,6 +148,8 @@ class MERouchon1_5(MERouchon):
         Returns:
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
+        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+
         # build normalization matrix
         S = (
             self.M0_adj(t, dt) @ self.M0(t, dt) + dt * self.sum_no_jump
@@ -150,10 +172,12 @@ class MERouchon1_5(MERouchon):
 
 class MERouchon2(MERouchon):
     def M0(self, t: float, dt: float) -> Tensor:
+        # -> (b_H, 1, n, n)
         H_nh = self.H_nh(t)
         return self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
 
     def M1s(self, t: float, dt: float) -> Tensor:
+        # -> (b_H, 1, n, n)
         M0 = self.M0(t, dt)
         return 0.5 * sqrt(dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
 
@@ -173,6 +197,8 @@ class MERouchon2(MERouchon):
         Returns:
             Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
         """
+        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+
         # compute rho(t+dt)
         tmp = kraus_map(rho, self.M1s(t, dt))  # (b_H, b_rho, n, n)
         rho = (
@@ -185,7 +211,27 @@ class MERouchon2(MERouchon):
         return rho
 
     def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
-        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2."""
+        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2.
+
+        Note:
+            For fast time-varying Hamiltonians, this method is not order 2 because the
+            second-order time derivative term is neglected. This term could be added in
+            the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
+            \dot{H}`.
+
+        Args:
+            t: Time.
+            dt: Time step.
+            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
+            phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
+
+        Returns:
+            Density matrix and adjoint state matrix at previous time step, as tensors
+            of shape `(b_H, b_rho, n, n)`.
+        """
+        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+
         # compute rho(t-dt)
         tmp = kraus_map(rho, self.M1s(t, dt))
         rho = (
