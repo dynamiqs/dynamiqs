@@ -96,19 +96,73 @@ class TDTensor(ABC):
         pass
 
     @abstractmethod
+    def adjoint(self) -> TDTensor:
+        """Compute the adjoint."""
+        pass
+
+    @abstractmethod
     def __add__(self, other: TDTensor | Tensor) -> TDTensor:
-        """Add two `TDTensor` objects."""
+        """Add another `Tensor` or `TDTensor`."""
         pass
 
     @abstractmethod
     def __sub__(self, other: TDTensor | Tensor) -> TDTensor:
-        """Subtract two `TDTensor` objects."""
+        """Subtract another `Tensor` or `TDTensor`."""
+        pass
+
+    def __pos__(self) -> TDTensor:
+        """Positive."""
+        return self
+
+    @abstractmethod
+    def __neg__(self) -> TDTensor:
+        """Negative."""
+        pass
+
+    @abstractmethod
+    def __mul__(self, other: float | complex) -> TDTensor:
+        """Multiply by a scalar."""
         pass
 
     @abstractmethod
     def clear_cache(self):
-        """Clear the cache of the `TDTensor` object."""
+        """Clear the cache of the instance."""
         pass
+
+    def _check_operation_types(self, other: TDTensor | Tensor) -> TDTensor:
+        """Checks the input types for a tensor operation."""
+        # check types
+        if not isinstance(other, (TDTensor, Tensor)):
+            raise TypeError(
+                f'Operations between a TDTensor and a {type(other)} are not supported.'
+            )
+
+        # check dtype
+        if other.dtype != self.dtype:
+            raise ValueError(
+                f'The dtype of a TDTensor ({self.dtype}) must match the dtype of'
+                f' {type(other)} ({other.dtype}).'
+            )
+
+        # check device
+        if other.device != self.device:
+            raise ValueError(
+                f'The device of a TDTensor ({self.device}) must match the device of'
+                f' {type(other)} ({other.device}).'
+            )
+
+    def _check_shape(self, other: TDTensor | Tensor) -> torch.Size:
+        """Checks the input shapes for a tensor operation and return the new shape
+        after broadcasting."""
+        try:
+            shape = torch.broadcast_shapes(self.shape, other.shape)
+        except RuntimeError:
+            raise ValueError(
+                f'The shapes of a TDTensor ({self.shape}) and {type(other)}'
+                f' ({other.shape}) are not compatible.'
+            )
+
+        return shape
 
 
 class ConstantTDTensor(TDTensor):
@@ -118,7 +172,7 @@ class ConstantTDTensor(TDTensor):
         self.dtype = tensor.dtype
         self.device = tensor.device
 
-    def __call__(self, t: float, *args) -> Tensor:
+    def __call__(self, t: float) -> Tensor:
         return self._tensor
 
     def size(self, dim: int) -> int:
@@ -130,33 +184,54 @@ class ConstantTDTensor(TDTensor):
     def unsqueeze(self, dim: int) -> ConstantTDTensor:
         return ConstantTDTensor(self._tensor.unsqueeze(dim))
 
+    def adjoint(self) -> ConstantTDTensor:
+        return ConstantTDTensor(self._tensor.adjoint())
+
     def __add__(self, other: TDTensor | Tensor) -> TDTensor:
+        # check types and shapes
+        self._check_operation_types(other)
+        shape = self._check_shape(other)
+
+        # return a new tensor
         if isinstance(other, Tensor):
             return ConstantTDTensor(self._tensor + other)
         elif isinstance(other, ConstantTDTensor):
             return ConstantTDTensor(self._tensor + other._tensor)
         elif isinstance(other, CallableTDTensor):
-            return other.__add__(self)
-        else:
-            raise TypeError(
-                f'Addition of a TDTensor with {type(other)} is not supported.'
+            return CallableTDTensor(
+                f=lambda t: self._tensor + other(t),
+                shape=shape,
+                dtype=self.dtype,
+                device=self.device,
             )
 
     def __sub__(self, other: TDTensor | Tensor) -> TDTensor:
+        # check types and shapes
+        self._check_operation_types(other)
+        shape = self._check_shape(other)
+
+        # return a new tensor
         if isinstance(other, Tensor):
             return ConstantTDTensor(self._tensor - other)
         elif isinstance(other, ConstantTDTensor):
             return ConstantTDTensor(self._tensor - other._tensor)
         elif isinstance(other, CallableTDTensor):
             return CallableTDTensor(
-                f=lambda t, *args: self._tensor - other(t, *args),
-                shape=other.shape,
-                dtype=other.dtype,
-                device=other.device,
+                f=lambda t: self._tensor - other(t),
+                shape=shape,
+                dtype=self.dtype,
+                device=self.device,
             )
+
+    def __neg__(self) -> ConstantTDTensor:
+        return ConstantTDTensor(-self._tensor)
+
+    def __mul__(self, other: float | complex) -> ConstantTDTensor:
+        if isinstance(other, (float, complex)):
+            return ConstantTDTensor(other * self._tensor)
         else:
             raise TypeError(
-                f'Substraction of a TDTensor with {type(other)} is not supported.'
+                f'Operations between a TDTensor and a {type(other)} are not supported.'
             )
 
     def clear_cache(self):
@@ -172,18 +247,16 @@ class CallableTDTensor(TDTensor):
         device: torch.device,
     ):
         self._callable = f
+        self.shape = shape
         self.dtype = dtype
         self.device = device
-        self.shape = shape
         self._cached_tensor = None
         self._cached_t = None
-        self._cached_args = None
 
-    def __call__(self, t: float, *args) -> Tensor:
-        if t != self._cached_t or args != self._cached_args:
-            self._cached_tensor = self._callable(t, *args).view(self.shape)
+    def __call__(self, t: float) -> Tensor:
+        if t != self._cached_t:
+            self._cached_tensor = self._callable(t).view(self.shape)
             self._cached_t = t
-            self._cached_args = args
         return self._cached_tensor
 
     def size(self, dim: int) -> int:
@@ -200,61 +273,91 @@ class CallableTDTensor(TDTensor):
             f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
         )
 
+    def adjoint(self) -> CallableTDTensor:
+        return CallableTDTensor(
+            f=lambda t: self(t).adjoint(),
+            shape=self.shape,
+            dtype=self.dtype,
+            device=self.device,
+        )
+
     def __add__(self, other: TDTensor | Tensor) -> TDTensor:
+        # check types and shapes
+        self._check_operation_types(other)
+        shape = self._check_shape(other)
+
+        # return a new tensor
         if isinstance(other, Tensor):
             return CallableTDTensor(
-                f=lambda t, *args: self(t, *args) + other,
-                shape=self.shape,
+                f=lambda t: self(t) + other,
+                shape=shape,
                 dtype=self.dtype,
                 device=self.device,
             )
         elif isinstance(other, ConstantTDTensor):
             return CallableTDTensor(
-                f=lambda t, *args: self(t, *args) + other._tensor,
-                shape=self.shape,
+                f=lambda t: self(t) + other._tensor,
+                shape=shape,
                 dtype=self.dtype,
                 device=self.device,
             )
         elif isinstance(other, CallableTDTensor):
             return CallableTDTensor(
-                f=lambda t, *args: self(t, *args) + other(t, *args),
-                shape=self.shape,
+                f=lambda t: self(t) + other(t),
+                shape=shape,
                 dtype=self.dtype,
                 device=self.device,
-            )
-        else:
-            raise TypeError(
-                f'Addition of a TDTensor with {type(other)} is not supported.'
             )
 
     def __sub__(self, other: TDTensor | Tensor) -> TDTensor:
+        # check types
+        self._check_operation_types(other)
+        shape = self._check_shape(other)
+
+        # return a new tensor
         if isinstance(other, Tensor):
             return CallableTDTensor(
-                f=lambda t, *args: self(t, *args) - other,
-                shape=self.shape,
+                f=lambda t: self(t) - other,
+                shape=shape,
                 dtype=self.dtype,
                 device=self.device,
             )
         elif isinstance(other, ConstantTDTensor):
             return CallableTDTensor(
-                f=lambda t, *args: self(t, *args) - other._tensor,
-                shape=self.shape,
+                f=lambda t: self(t) - other._tensor,
+                shape=shape,
                 dtype=self.dtype,
                 device=self.device,
             )
         elif isinstance(other, CallableTDTensor):
             return CallableTDTensor(
-                f=lambda t, *args: self(t, *args) - other(t, *args),
+                f=lambda t: self(t) - other(t),
+                shape=shape,
+                dtype=self.dtype,
+                device=self.device,
+            )
+
+    def __neg__(self) -> CallableTDTensor:
+        return CallableTDTensor(
+            f=lambda t: -self(t),
+            shape=self.shape,
+            dtype=self.dtype,
+            device=self.device,
+        )
+
+    def __mul__(self, other: float | complex) -> CallableTDTensor:
+        if isinstance(other, (float, complex)):
+            return CallableTDTensor(
+                f=lambda t: other * self(t),
                 shape=self.shape,
                 dtype=self.dtype,
                 device=self.device,
             )
         else:
             raise TypeError(
-                f'Substraction of a TDTensor with {type(other)} is not supported.'
+                f'Operations between a TDTensor and a {type(other)} are not supported.'
             )
 
     def clear_cache(self):
         self._cached_tensor = None
         self._cached_t = None
-        self._cached_args = None

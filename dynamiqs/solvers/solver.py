@@ -102,6 +102,7 @@ class Solver(ABC):
             self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
 
     def clear_cache(self):
+        """Clear the cache of all `TDTensor` attributes."""
         for attr in dir(self):
             if isinstance(attr, TDTensor):
                 attr.clear_cache()
@@ -116,6 +117,9 @@ class AutogradSolver(Solver):
     def run_nograd(self):
         with torch.no_grad():
             self.run_autograd()
+
+        # clear cache for backward pass
+        self.clear_cache()
 
     @abstractmethod
     def run_autograd(self):
