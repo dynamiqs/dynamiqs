@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from functools import lru_cache
 from math import sqrt
 
 import torch
@@ -33,6 +34,7 @@ class MERouchon(MESolver, AdjointFixedSolver):
         """
         pass
 
+    @lru_cache(maxsize=1)
     def M0_adj(self, t: float, dt: float) -> Tensor:
         r"""Compute the adjoint of the zero-th order Kraus operator at time $t$.
 
@@ -58,6 +60,7 @@ class MERouchon(MESolver, AdjointFixedSolver):
         """
         pass
 
+    @lru_cache(maxsize=1)
     def M1s_adj(self, t: float, dt: float) -> Tensor:
         r"""Compute the adjoint of the first order Kraus operator at time $t$.
 
@@ -72,10 +75,12 @@ class MERouchon(MESolver, AdjointFixedSolver):
 
 
 class MERouchon1(MERouchon):
+    @lru_cache(maxsize=1)
     def M0(self, t: float, dt: float) -> Tensor:
         # -> (b_H, 1, n, n)
         return self.I - 1j * dt * self.H_nh(t)
 
+    @lru_cache(maxsize=1)
     def M1s(self, t: float, dt: float) -> Tensor:
         # -> (b_H, 1, n, n)
         return sqrt(dt) * self.jump_ops
@@ -126,10 +131,12 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon1_5(MERouchon):
+    @lru_cache(maxsize=1)
     def M0(self, t: float, dt: float) -> Tensor:
         # -> (b_H, 1, n, n)
         return self.I - 1j * dt * self.H_nh(t)
 
+    @lru_cache(maxsize=1)
     def M1s(self, t: float, dt: float) -> Tensor:
         # -> (b_H, 1, n, n)
         return sqrt(dt) * self.jump_ops
@@ -171,11 +178,13 @@ class MERouchon1_5(MERouchon):
 
 
 class MERouchon2(MERouchon):
+    @lru_cache(maxsize=1)
     def M0(self, t: float, dt: float) -> Tensor:
         # -> (b_H, 1, n, n)
         H_nh = self.H_nh(t)
         return self.I - 1j * dt * H_nh - 0.5 * dt**2 * H_nh @ H_nh
 
+    @lru_cache(maxsize=1)
     def M1s(self, t: float, dt: float) -> Tensor:
         # -> (b_H, 1, n, n)
         M0 = self.M0(t, dt)

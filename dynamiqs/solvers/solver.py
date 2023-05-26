@@ -103,9 +103,13 @@ class Solver(ABC):
 
     def clear_cache(self):
         """Clear the cache of all `TDTensor` attributes."""
-        for attr in dir(self):
+        for attr_str in dir(self):
+            attr = getattr(self, attr_str)
             if isinstance(attr, TDTensor):
                 attr.clear_cache()
+
+            if hasattr(attr, 'cache_clear'):
+                attr.cache_clear()
 
 
 class AutogradSolver(Solver):
