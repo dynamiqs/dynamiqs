@@ -9,7 +9,7 @@ The project was written using Python 3.8+, you must have a compatible version of
 Clone the repository and dive in:
 
 ```shell
-git clone git@github.com:PierreGuilmin/dynamiqs.git
+git clone git@github.com:dynamiqs/dynamiqs.git
 cd dynamiqs
 ```
 

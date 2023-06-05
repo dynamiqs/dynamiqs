@@ -232,7 +232,7 @@ def tensprod(*args: Tensor) -> Tensor:
 
     Warning:
         This function does not yet support arbitrarily batched tensors (see
-        [issue #69](https://github.com/pierreguilmin/dynamiqs/issues/69)).
+        [issue #69](https://github.com/dynamiqs/dynamiqs/issues/69)).
 
     Note:
         This function is the equivalent of `qutip.tensor()`.

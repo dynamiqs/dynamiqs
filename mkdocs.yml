@@ -1,7 +1,7 @@
 site_name: dynamiqs
 site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
-repo_url: https://github.com/pierreguilmin/dynamiqs
+repo_url: https://github.com/dynamiqs/dynamiqs
 theme:
   name: material
   features:
