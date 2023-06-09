@@ -110,14 +110,14 @@ class MERouchon1_5(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_no_jump()  # (b_H, 1, n, n)
+        H_nh = self.H - 0.5j * self.sum_no_jump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
         M0 = self.I - 1j * dt * H_nh  # (b_H, 1, n, n)
         Ms = sqrt(dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # build normalization matrix
-        S = M0.adjoint() @ M0 + dt * self.sum_no_jump()  # (b_H, 1, n, n)
+        S = M0.adjoint() @ M0 + dt * self.sum_no_jump  # (b_H, 1, n, n)
         # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
         S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
 
@@ -136,7 +136,6 @@ class MERouchon2(MERouchon):
         super().__init__(*args, **kwargs)
 
         # define cached operators
-        # (b_H, 1, n, n)
         self.M0 = cache(
             lambda H_nh: self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
         )  # (b_H, 1, n, n)

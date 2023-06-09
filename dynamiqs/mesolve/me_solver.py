@@ -10,7 +10,7 @@ class MESolver(Solver):
         self.jump_ops = jump_ops[None, ...]  # (1, len(jump_ops), n, n)
         self.sum_no_jump = (
             (self.jump_ops.adjoint() @ self.jump_ops).squeeze(0).sum(dim=0)
-        )
+        )  # (n, n)
 
         # define cached operator
         # non-hermitian Hamiltonian
