@@ -24,10 +24,7 @@ def to_td_tensor(
     elif callable(x):
         # get default dtype and device
         if dtype is None:
-            if is_complex:
-                dtype = cdtype(dtype)
-            else:
-                dtype = rdtype(dtype)
+            dtype = cdtype(dtype) if is_complex else rdtype(dtype)
         if device is None:
             device = get_default_device()
 
@@ -126,7 +123,7 @@ class ConstantTDTensor(TDTensor):
 class CallableTDTensor(TDTensor):
     def __init__(
         self,
-        f: callable,
+        f: callable[[float], Tensor],
         shape: torch.Size,
         dtype: torch.dtype,
         device: torch.device,
