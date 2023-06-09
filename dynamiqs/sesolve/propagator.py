@@ -1,6 +1,5 @@
-from functools import lru_cache
-
 import torch
+from methodtools import lru_cache
 from torch import Tensor
 
 from ..solvers.propagator import Propagator

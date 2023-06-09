@@ -9,6 +9,7 @@ dependencies = [
     "tqdm",
     "torch",
     "torchdiffeq",
+    "methodtools",
 ]
 
 [project.optional-dependencies]

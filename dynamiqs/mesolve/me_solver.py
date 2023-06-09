@@ -1,5 +1,4 @@
-from functools import lru_cache
-
+from methodtools import lru_cache
 from torch import Tensor
 
 from ..solvers.solver import Solver

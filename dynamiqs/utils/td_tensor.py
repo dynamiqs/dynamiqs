@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from functools import lru_cache
 from typing import get_args
 
 import torch
+from methodtools import lru_cache
 from torch import Tensor
 
 from .tensor_types import OperatorLike, TDOperatorLike, cdtype, rdtype, to_tensor

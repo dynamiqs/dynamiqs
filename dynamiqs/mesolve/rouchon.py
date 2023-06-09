@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from functools import lru_cache
 from math import sqrt
 
 import torch
+from methodtools import lru_cache
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
