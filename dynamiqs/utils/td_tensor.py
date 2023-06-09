@@ -4,9 +4,9 @@ from abc import ABC, abstractmethod
 from typing import get_args
 
 import torch
-from methodtools import lru_cache
 from torch import Tensor
 
+from .solver_utils import cache
 from .tensor_types import OperatorLike, TDOperatorLike, cdtype, rdtype, to_tensor
 
 
@@ -126,7 +126,7 @@ class CallableTDTensor(TDTensor):
         self.dtype = dtype
         self.device = device
 
-    @lru_cache(maxsize=1)
+    @cache
     def __call__(self, t: float) -> Tensor:
         return self._callable(t).view(self._shape)
 
