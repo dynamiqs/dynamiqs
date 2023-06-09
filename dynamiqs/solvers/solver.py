@@ -101,6 +101,12 @@ class Solver(ABC):
         if len(self.exp_ops) > 0:
             self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
 
+    def clear_all_caches(self):
+        for attr_name in dir(self):
+            attr = getattr(self, attr_name)
+            if hasattr(attr, 'cache_clear'):
+                attr.cache_clear()
+
 
 class AutogradSolver(Solver):
     def run(self):
@@ -111,6 +117,13 @@ class AutogradSolver(Solver):
     def run_nograd(self):
         with torch.no_grad():
             self.run_autograd()
+
+        # The use of torch.no_grad() makes all newly computed tensors `require_grad`
+        # attribute to be set to `False` (the graph of operation to build these
+        # tensors is not saved). As a consequence, it's important to clear all
+        # cached tensors, otherwise later code outside the `torch.no_grad` block may
+        # use these cached tensors without being able to compute gradients.
+        self.clear_all_caches()
 
     @abstractmethod
     def run_autograd(self):
