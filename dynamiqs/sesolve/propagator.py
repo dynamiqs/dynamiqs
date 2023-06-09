@@ -1,12 +1,12 @@
 import torch
-from methodtools import lru_cache
 from torch import Tensor
 
 from ..solvers.propagator import Propagator
+from ..utils.solver_utils import cache
 
 
 class SEPropagator(Propagator):
-    @lru_cache(maxsize=1)
+    @cache
     def propagator(self, H: Tensor, delta_t: float) -> Tensor:
         # -> (b_H, 1, n, n)
         return torch.matrix_exp(-1j * H * delta_t)

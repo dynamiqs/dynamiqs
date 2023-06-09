@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import sqrt
 
 import torch
+from methodtools import lru_cache
 from torch import Tensor
 
 from .utils import is_ket
@@ -92,3 +93,6 @@ def hairer_norm(x: Tensor) -> Tensor:
         Tensor of size `(...)` holding the norm of each matrix in the batch.
     """
     return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))
+
+
+cache = lru_cache(maxsize=1)
