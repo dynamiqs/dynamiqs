@@ -121,7 +121,7 @@ class AutogradSolver(Solver):
 
         # Using `torch.no_grad()` detaches all newly computed tensors from the graph. If
         # some of the computed tensors are cached, these caches must be cleared,
-        # otherwise subsequent code after the `torch.no_grad` block will use the cached
+        # otherwise subsequent code after the `torch.no_grad` block may use cached
         # tensors that are detached from the graph.
         self.clear_all_caches()
 
