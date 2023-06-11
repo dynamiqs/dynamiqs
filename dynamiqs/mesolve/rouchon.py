@@ -17,7 +17,6 @@ class MERouchon(MESolver, AdjointFixedSolver):
 
         self.n = self.H.size(-1)
         self.I = torch.eye(self.n, device=self.H.device, dtype=self.H.dtype)  # (n, n)
-        self.dt = self.options.dt
 
 
 class MERouchon1(MERouchon):
@@ -32,7 +31,7 @@ class MERouchon1(MERouchon):
         self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
         self.M1sdag = self.M1s.adjoint()  # (1, len(jump_ops), n, n)
 
-    def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
 
         Args:
@@ -57,7 +56,7 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
+    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1.
 
         Args:
@@ -93,7 +92,7 @@ class MERouchon1(MERouchon):
 
 class MERouchon1_5(MERouchon):
     # TODO implement caching
-    def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
 
         Note:
@@ -113,11 +112,11 @@ class MERouchon1_5(MERouchon):
         H_nh = self.H - 0.5j * self.sum_no_jump  # (b_H, 1, n, n)
 
         # build time-dependent Kraus operators
-        M0 = self.I - 1j * dt * H_nh  # (b_H, 1, n, n)
-        Ms = sqrt(dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
+        Ms = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # build normalization matrix
-        S = M0.adjoint() @ M0 + dt * self.sum_no_jump  # (b_H, 1, n, n)
+        S = M0.adjoint() @ M0 + self.dt * self.sum_no_jump  # (b_H, 1, n, n)
         # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
         S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
 
@@ -127,7 +126,7 @@ class MERouchon1_5(MERouchon):
 
         return rho
 
-    def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
+    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         raise NotImplementedError
 
 
@@ -148,7 +147,7 @@ class MERouchon2(MERouchon):
         )  # (b_H, len(jump_ops), n, n)
         self.M1sdag = cache(lambda M1s: M1s.adjoint())  # (b_H, len(jump_ops), n, n)
 
-    def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
         Note:
@@ -181,7 +180,7 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def backward_augmented(self, t: float, dt: float, rho: Tensor, phi: Tensor):
+    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2.
 
         Note:

@@ -5,6 +5,6 @@ from .me_solver import MESolver
 
 
 class MEEuler(MESolver, FixedSolver):
-    def forward(self, t: float, dt: float, rho: Tensor) -> Tensor:
+    def forward(self, t: float, rho: Tensor) -> Tensor:
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        return rho + dt * self.lindbladian(t, rho)
+        return rho + self.dt * self.lindbladian(t, rho)

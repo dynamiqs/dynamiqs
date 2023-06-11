@@ -13,6 +13,10 @@ from ..solver import AdjointSolver, AutogradSolver
 
 
 class FixedSolver(AutogradSolver):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.dt = self.options.dt
+
     def run_autograd(self):
         """Integrate a quantum ODE with a fixed time step custom integrator.
 
@@ -23,18 +27,17 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # get time step
-        dt = self.options.dt
-
         # assert that `t_save` values are multiples of `dt`
-        if not torch.allclose(torch.round(self.t_save / dt), self.t_save / dt):
+        if not torch.allclose(
+            torch.round(self.t_save / self.dt), self.t_save / self.dt
+        ):
             raise ValueError(
                 'For fixed time step solvers, every value of `t_save` must be a'
                 ' multiple of the time step `dt`.'
             )
 
         # define time values
-        num_times = torch.round(self.t_save[-1] / dt).int() + 1
+        num_times = torch.round(self.t_save[-1] / self.dt).int() + 1
         times = torch.linspace(0.0, self.t_save[-1], num_times)
 
         # run the ode routine
@@ -45,13 +48,13 @@ class FixedSolver(AutogradSolver):
                 self.save(y)
 
             # iterate solution
-            y = self.forward(t, dt, y)
+            y = self.forward(t, y)
 
         # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
         self.save(y)
 
     @abstractmethod
-    def forward(self, t: float, dt: float, y: Tensor):
+    def forward(self, t: float, y: Tensor):
         pass
 
 
@@ -61,9 +64,6 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
     def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
-        # get time step from solver
-        dt = self.options.dt
-
         # check t_save_bwd
         if not (self.t_save_bwd.ndim == 1 and len(self.t_save_bwd) == 2):
             raise ValueError(
@@ -74,14 +74,14 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
             raise ValueError('`t_save_bwd` should be sorted in ascending order.')
 
         T = self.t_save_bwd[1] - self.t_save_bwd[0]
-        if not torch.allclose(torch.round(T / dt), T / dt):
+        if not torch.allclose(torch.round(T / self.dt), T / self.dt):
             raise ValueError(
                 'For fixed time step adjoint solvers, every value of `t_save_bwd` '
                 'must be a multiple of the time step `dt`.'
             )
 
         # define time values
-        num_times = torch.round(T / dt).int() + 1
+        num_times = torch.round(T / self.dt).int() + 1
         times = torch.linspace(self.t_save_bwd[1], self.t_save_bwd[0], num_times)
 
         # run the ode routine
@@ -91,7 +91,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
             with torch.enable_grad():
                 # compute y(t-dt) and a(t-dt) with the solver
-                y, a = self.backward_augmented(t, dt, y, a)
+                y, a = self.backward_augmented(t, y, a)
 
                 # compute g(t-dt)
                 dg = torch.autograd.grad(
@@ -109,7 +109,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         self.g_bwd = g
 
     @abstractmethod
-    def backward_augmented(self, t: float, dt: float, y: Tensor, a: Tensor):
+    def backward_augmented(self, t: float, y: Tensor, a: Tensor):
         pass
 
 
