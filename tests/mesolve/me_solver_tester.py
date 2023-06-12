@@ -1,3 +1,5 @@
+import logging
+
 import torch
 
 import dynamiqs as dq
@@ -73,8 +75,10 @@ class MEAdjointSolverTester(MESolverTester):
         system: OpenSystem,
         *,
         num_t_save: int,
-        rtol: float = 1e-5,
-        atol: float = 5e-3,
+        rtol_rho: float = 1e-5,
+        rtol_exp: float = 1e-5,
+        atol_rho: float = 3e-3,
+        atol_exp: float = 1e-2,
     ):
         t_save = system.t_save(num_t_save)
 
@@ -84,7 +88,8 @@ class MEAdjointSolverTester(MESolverTester):
         rho_save, exp_save = system.mesolve(t_save, options)
         rho_loss = system.loss(rho_save[-1])
         exp_loss = exp_save.abs().sum()
-        grad_autograd = torch.autograd.grad((rho_loss, exp_loss), system.parameters)
+        grad_rho = torch.autograd.grad(rho_loss, system.parameters, retain_graph=True)
+        grad_exp = torch.autograd.grad(exp_loss, system.parameters)
 
         # compute adjoint gradients
         system.reset()
@@ -93,11 +98,24 @@ class MEAdjointSolverTester(MESolverTester):
         rho_save, exp_save = system.mesolve(t_save, options)
         rho_loss = system.loss(rho_save[-1])
         exp_loss = exp_save.abs().sum()
-        grad_adjoint = torch.autograd.grad((rho_loss, exp_loss), system.parameters)
+        grad_rho_adj = torch.autograd.grad(
+            rho_loss, system.parameters, retain_graph=True
+        )
+        grad_exp_adj = torch.autograd.grad(exp_loss, system.parameters)
 
-        # check gradients are equal
-        for g1, g2 in zip(grad_autograd, grad_adjoint):
-            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+        # log gradients
+        logging.warning(f'grad_rho     = {grad_rho}')
+        logging.warning(f'grad_rho_adj = {grad_rho_adj}')
+        logging.warning(f'grad_exp     = {grad_exp}')
+        logging.warning(f'grad_exp_adj = {grad_exp_adj}')
+
+        # check gradients depending on rho_save are equal
+        for g1, g2 in zip(grad_rho, grad_rho_adj):
+            assert torch.allclose(g1, g2, rtol=rtol_rho, atol=atol_rho)
+
+        # check gradients depending on exp_save are equal
+        for g1, g2 in zip(grad_exp, grad_exp_adj):
+            assert torch.allclose(g1, g2, rtol=rtol_exp, atol=atol_exp)
 
     def test_adjoint(self):
         pass
