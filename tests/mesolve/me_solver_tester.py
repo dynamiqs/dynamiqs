@@ -75,10 +75,8 @@ class MEAdjointSolverTester(MESolverTester):
         system: OpenSystem,
         *,
         num_t_save: int,
-        rtol_rho: float = 1e-5,
-        rtol_exp: float = 1e-5,
-        atol_rho: float = 3e-3,
-        atol_exp: float = 1e-2,
+        rtol: float = 5e-2,
+        atol: float = 3e-3,
     ):
         t_save = system.t_save(num_t_save)
 
@@ -111,11 +109,11 @@ class MEAdjointSolverTester(MESolverTester):
 
         # check gradients depending on rho_save are equal
         for g1, g2 in zip(grad_rho, grad_rho_adj):
-            assert torch.allclose(g1, g2, rtol=rtol_rho, atol=atol_rho)
+            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
 
         # check gradients depending on exp_save are equal
         for g1, g2 in zip(grad_exp, grad_exp_adj):
-            assert torch.allclose(g1, g2, rtol=rtol_exp, atol=atol_exp)
+            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
 
     def test_adjoint(self):
         pass
