@@ -26,10 +26,6 @@ class TestMERouchon1(MEAdjointSolverTester):
         options = dq.options.Rouchon1(dt=1e-3)
         self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
 
-    def test_adjoint_expops(self):
-        options = dq.options.Rouchon1(dt=1e-3)
-        self._test_adjoint_expops(options, grad_leaky_cavity_8, num_t_save=11)
-
 
 class TestMERouchon1_5(MEAdjointSolverTester):
     @pytest.mark.skip(reason='failing - to fix')
@@ -55,7 +51,3 @@ class TestMERouchon2(MEAdjointSolverTester):
     def test_adjoint(self):
         options = dq.options.Rouchon2(dt=1e-3)
         self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
-
-    def test_adjoint_expops(self):
-        options = dq.options.Rouchon2(dt=1e-3)
-        self._test_adjoint_expops(options, grad_leaky_cavity_8, num_t_save=11)

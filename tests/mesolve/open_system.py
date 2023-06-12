@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from math import pi, sqrt
 
@@ -5,6 +7,8 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs.options import Options
+from dynamiqs.utils.tensor_types import TensorLike
 
 
 class OpenSystem(ABC):
@@ -16,6 +20,10 @@ class OpenSystem(ABC):
         self.rho0 = None
         self.rho0_batched = None
         self.exp_ops = None
+
+    def reset(self):
+        """Reset all attributes."""
+        self.__init__()
 
     @abstractmethod
     def t_save(self, n: int) -> Tensor:
@@ -32,6 +40,18 @@ class OpenSystem(ABC):
     def loss(self, rho: Tensor) -> Tensor:
         """Compute an example loss function from a given density matrix."""
         return dq.expect(self.loss_op, rho).real
+
+    def mesolve(
+        self, t_save: TensorLike, options: Options
+    ) -> tuple[Tensor, Tensor | None]:
+        return dq.mesolve(
+            self.H,
+            self.jump_ops,
+            self.rho0,
+            t_save=t_save,
+            exp_ops=self.exp_ops,
+            options=options,
+        )
 
 
 class LeakyCavity(OpenSystem):
@@ -54,14 +74,11 @@ class LeakyCavity(OpenSystem):
         self.kappa = torch.as_tensor(kappa).requires_grad_(requires_grad)
         self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
+        self.requires_grad = requires_grad
 
         # define gradient parameters
         self.parameters = tuple([self.delta, self.kappa, self.alpha0])
 
-        # initialize operators
-        self.init_operators()
-
-    def init_operators(self):
         # bosonic operators
         a = dq.destroy(self.n)
         adag = a.mH
@@ -84,6 +101,15 @@ class LeakyCavity(OpenSystem):
             dq.coherent_dm(self.n, -self.alpha0),
             dq.coherent_dm(self.n, -1j * self.alpha0),
         ]
+
+    def reset(self):
+        self.__init__(
+            n=self.n,
+            kappa=self.kappa,
+            delta=self.delta,
+            alpha0=self.alpha0,
+            requires_grad=self.requires_grad,
+        )
 
     def t_save(self, num_t_save: int) -> Tensor:
         t_end = 2 * pi / self.delta  # a full rotation
