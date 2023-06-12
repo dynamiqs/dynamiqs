@@ -87,7 +87,7 @@ def mesolve(
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
 
-    if len(jump_ops) == 0:
+    if isinstance(jump_ops, list) and len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
             ' consider using `sesolve`.'
@@ -97,7 +97,7 @@ def mesolve(
     formatter = TensorFormatter(dtype, device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     # H_batched: (b_H, 1, n, n)
-    # rho0_batched: (1, b_rho0, n, n)
+    # rho0_batched: (b_H, b_rho0, n, n)
     exp_ops = formatter.format(exp_ops)  # (len(exp_ops), n, n)
     jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
 
