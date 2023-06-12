@@ -27,7 +27,7 @@ class MERouchon1(MERouchon):
         # define cached operators
         self.M0 = cache(lambda H_nh: self.I - 1j * self.dt * H_nh)  # (b_H, 1, n, n)
         self.M0dag = cache(lambda M0: M0.adjoint())  # (b_H, 1, n, n)
-        self.M0inv = cache(lambda H_nh: self.I + 1j * self.dt * H_nh)  # (b_H, 1, n, n)
+        self.M0rev = cache(lambda H_nh: self.I + 1j * self.dt * H_nh)  # (b_H, 1, n, n)
 
         self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
         self.M1sdag = self.M1s.adjoint()  # (1, len(jump_ops), n, n)
@@ -78,10 +78,10 @@ class MERouchon1(MERouchon):
         H_nh = self.H_nh(H)  # (b_H, 1, n, n)
         M0 = self.M0(H_nh)  # (b_H, 1, n, n)
         M0dag = self.M0dag(M0)  # (b_H, 1, n, n)
-        M0inv = self.M0inv(H_nh)  # (b_H, 1, n, n)
+        M0rev = self.M0rev(H_nh)  # (b_H, 1, n, n)
 
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0inv) - kraus_map(rho, self.M1s)
+        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
         # normalize by the trace
         rho = rho / trace(rho)[..., None, None].real
 
@@ -140,7 +140,7 @@ class MERouchon2(MERouchon):
             lambda H_nh: self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
         )  # (b_H, 1, n, n)
         self.M0dag = cache(lambda M0: M0.adjoint())  # (b_H, 1, n, n)
-        self.M0inv = cache(
+        self.M0rev = cache(
             lambda H_nh: self.I + 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
         )  # (b_H, 1, n, n)
         self.M1s = cache(
@@ -208,13 +208,13 @@ class MERouchon2(MERouchon):
         H_nh = self.H_nh(H)
         M0 = self.M0(H_nh)
         M0dag = self.M0dag(M0)
-        M0inv = self.M0inv(H_nh)
+        M0rev = self.M0rev(H_nh)
         M1s = self.M1s(M0)
         M1sdag = self.M1sdag(M1s)
 
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1s)
-        rho = kraus_map(rho, M0inv) - tmp + 0.5 * kraus_map(tmp, M1s)
+        rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1s)
         # normalize by the trace
         rho = rho / trace(rho)[..., None, None].real
 
