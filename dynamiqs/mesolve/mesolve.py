@@ -87,7 +87,7 @@ def mesolve(
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
 
-    if len(jump_ops) == 0:
+    if isinstance(jump_ops, list) and len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
             ' consider using `sesolve`.'
