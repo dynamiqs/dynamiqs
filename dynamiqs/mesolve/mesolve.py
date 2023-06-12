@@ -97,7 +97,7 @@ def mesolve(
     formatter = TensorFormatter(dtype, device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     # H_batched: (b_H, 1, n, n)
-    # rho0_batched: (1, b_rho0, n, n)
+    # rho0_batched: (b_H, b_rho0, n, n)
     exp_ops = formatter.format(exp_ops)  # (len(exp_ops), n, n)
     jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
 
