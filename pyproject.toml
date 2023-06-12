@@ -8,7 +8,6 @@ dependencies = [
     "matplotlib",
     "tqdm",
     "torch",
-    "torchdiffeq",
     "methodtools",
 ]
 
