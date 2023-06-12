@@ -24,7 +24,7 @@ class TestMERouchon1(MEAdjointSolverTester):
 
     def test_adjoint(self):
         options = dq.options.Rouchon1(dt=1e-3)
-        self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11, atol=5e-1)
+        self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11, atol=2e-1)
 
 
 class TestMERouchon1_5(MEAdjointSolverTester):
