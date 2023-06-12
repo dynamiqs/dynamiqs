@@ -44,7 +44,7 @@ class Cavity(ClosedSystem):
 
         # bosonic operators
         a = dq.destroy(self.n)
-        adag = a.adjoint()
+        adag = a.mH
 
         # prepare quantum operators
         self.H = self.delta * adag @ a

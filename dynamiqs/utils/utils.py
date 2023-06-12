@@ -43,7 +43,7 @@ def ket_to_bra(x: Tensor) -> Tensor:
     Returns:
         (..., 1, n): Bra.
     """
-    return x.adjoint()
+    return x.mH
 
 
 def ket_to_dm(x: Tensor) -> Tensor:
@@ -167,11 +167,7 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     Returns:
         (..., n, n): Density matrix.
     """
-    return (
-        L @ rho @ L.adjoint()
-        - 0.5 * L.adjoint() @ L @ rho
-        - 0.5 * rho @ L.adjoint() @ L
-    )
+    return L @ rho @ L.mH - 0.5 * L.mH @ L @ rho - 0.5 * rho @ L.mH @ L
 
 
 def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
@@ -360,5 +356,5 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     """
     # TODO: adapt to bras
     if is_ket(x):
-        return torch.einsum('...ij,jk,...kl->...', x.adjoint(), O, x)  # <x|O|x>
+        return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
     return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)

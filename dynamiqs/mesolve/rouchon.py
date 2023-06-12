@@ -25,11 +25,11 @@ class MERouchon1(MERouchon):
 
         # define cached operators
         self.M0 = cache(lambda H_nh: self.I - 1j * self.dt * H_nh)  # (b_H, 1, n, n)
-        self.M0dag = cache(lambda M0: M0.adjoint())  # (b_H, 1, n, n)
+        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
         self.M0rev = cache(lambda H_nh: self.I + 1j * self.dt * H_nh)  # (b_H, 1, n, n)
 
         self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
-        self.M1sdag = self.M1s.adjoint()  # (1, len(jump_ops), n, n)
+        self.M1sdag = self.M1s.mH  # (1, len(jump_ops), n, n)
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
@@ -116,7 +116,7 @@ class MERouchon1_5(MERouchon):
         Ms = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
 
         # build normalization matrix
-        S = M0.adjoint() @ M0 + self.dt * self.sum_no_jump  # (b_H, 1, n, n)
+        S = M0.mH @ M0 + self.dt * self.sum_no_jump  # (b_H, 1, n, n)
         # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
         S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
 
@@ -138,14 +138,14 @@ class MERouchon2(MERouchon):
         self.M0 = cache(
             lambda H_nh: self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
         )  # (b_H, 1, n, n)
-        self.M0dag = cache(lambda M0: M0.adjoint())  # (b_H, 1, n, n)
+        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
         self.M0rev = cache(
             lambda H_nh: self.I + 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
         )  # (b_H, 1, n, n)
         self.M1s = cache(
             lambda M0: 0.5 * sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
         )  # (b_H, len(jump_ops), n, n)
-        self.M1sdag = cache(lambda M1s: M1s.adjoint())  # (b_H, len(jump_ops), n, n)
+        self.M1sdag = cache(lambda M1s: M1s.mH)  # (b_H, len(jump_ops), n, n)
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.

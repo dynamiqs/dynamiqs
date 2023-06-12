@@ -166,7 +166,7 @@ def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
     """Displacement operator."""
     a = destroy(dim, dtype=dtype, device=device)
     alpha = torch.as_tensor(alpha)
-    return torch.matrix_exp(alpha * a.adjoint() - alpha.conj() * a)
+    return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
 
 
 @complex_tensor
@@ -175,4 +175,4 @@ def squeeze(dim: int, z: complex | Tensor, *, dtype=None, device=None) -> Tensor
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
     z = torch.as_tensor(z)
-    return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.adjoint()))
+    return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))

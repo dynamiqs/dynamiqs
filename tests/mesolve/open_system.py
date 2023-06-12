@@ -64,7 +64,7 @@ class LeakyCavity(OpenSystem):
     def init_operators(self):
         # bosonic operators
         a = dq.destroy(self.n)
-        adag = a.adjoint()
+        adag = a.mH
 
         # loss operator
         # self.loss_op = adag @ a
