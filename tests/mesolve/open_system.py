@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from math import pi, sqrt
 
@@ -5,6 +7,8 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs.options import Options
+from dynamiqs.utils.tensor_types import TensorLike
 
 
 class OpenSystem(ABC):
@@ -32,6 +36,18 @@ class OpenSystem(ABC):
     def loss(self, rho: Tensor) -> Tensor:
         """Compute an example loss function from a given density matrix."""
         return dq.expect(self.loss_op, rho).real
+
+    def mesolve(
+        self, t_save: TensorLike, options: Options
+    ) -> tuple[Tensor, Tensor | None]:
+        return dq.mesolve(
+            self.H,
+            self.jump_ops,
+            self.rho0,
+            t_save=t_save,
+            exp_ops=self.exp_ops,
+            options=options,
+        )
 
 
 class LeakyCavity(OpenSystem):
