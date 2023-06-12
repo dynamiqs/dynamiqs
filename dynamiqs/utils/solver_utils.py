@@ -13,9 +13,9 @@ from .utils import is_ket
 def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     """Compute the application of a Kraus map on an input density matrix.
 
-    This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.adjoint(),
-    dim=0)`. The use of einsum yields better performances on large matrices, but may
-    cause a small overhead on smaller matrices (N <~ 50).
+    This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.mH, dim=0)`.
+    The use of einsum yields better performances on large matrices, but may cause a
+    small overhead on smaller matrices (N <~ 50).
 
     TODO Fix documentation
 
@@ -26,7 +26,7 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     Returns:
         Density matrix of shape `(a, ..., n, n)` with the Kraus map applied.
     """
-    return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.adjoint())
+    return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.mH)
 
 
 def inv_sqrtm(mat: Tensor) -> Tensor:
@@ -62,7 +62,7 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
         Tensor of size `(..., b)` holding the operators expectation values.
     """
     if is_ket(x):
-        return torch.einsum('...ij,bjk,...kl->...b', x.adjoint(), O, x)  # <x|O|x>
+        return torch.einsum('...ij,bjk,...kl->...b', x.mH, O, x)  # <x|O|x>
     return torch.einsum('bij,...ji->...b', O, x)  # tr(Ox)
 
 
