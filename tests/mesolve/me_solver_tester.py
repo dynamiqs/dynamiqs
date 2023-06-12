@@ -2,6 +2,7 @@ import torch
 
 import dynamiqs as dq
 from dynamiqs.options import Options
+from dynamiqs.utils.solver_utils import bexpect
 
 from .open_system import OpenSystem
 
@@ -115,4 +116,46 @@ class MEAdjointSolverTester(MESolverTester):
             assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
 
     def test_adjoint(self):
+        pass
+
+    def _test_adjoint_expops(
+        self,
+        options: Options,
+        system: OpenSystem,
+        *,
+        num_t_save: int,
+        rtol: float = 1e-5,
+        atol: float = 1e-4,
+    ):
+        # define options
+        options.gradient_alg = 'adjoint'
+        options.parameters = system.parameters
+
+        # function to run mesolve with a specific gradient algorithm
+        def run_mesolve():
+            return dq.mesolve(
+                system.H,
+                system.jump_ops,
+                system.rho0,
+                system.t_save(num_t_save),
+                exp_ops=system.exp_ops,
+                options=options,
+            )
+
+        # compute autograd gradients
+        system.init_operators()  # required to not backward through the same graph twice
+        rho_save, _ = run_mesolve()
+        exp_save = bexpect(torch.stack(system.exp_ops), rho_save).mT
+        grad_rho = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
+
+        # compute adjoint gradients
+        system.init_operators()  # required to not backward through the same graph twice
+        rho_save, exp_save = run_mesolve()
+        grad_exp = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
+
+        # check gradients are equal
+        for g1, g2 in zip(grad_rho, grad_exp):
+            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+
+    def test_adjoint_expops(self):
         pass
