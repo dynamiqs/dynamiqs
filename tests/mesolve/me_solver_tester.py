@@ -80,14 +80,14 @@ class MEAdjointSolverTester(MESolverTester):
         t_save = system.t_save(num_t_save)
 
         # compute autograd gradients
-        system.init_operators()  # required to not backward through the same graph twice
+        system.reset()  # required to not backward through the same graph twice
         options.gradient_alg = 'autograd'
         rho_save, _ = system.mesolve(t_save, options)
         loss = system.loss(rho_save[-1])
         grad_autograd = torch.autograd.grad(loss, system.parameters)
 
         # compute adjoint gradients
-        system.init_operators()  # required to not backward through the same graph twice
+        system.reset()  # required to not backward through the same graph twice
         options.gradient_alg = 'adjoint'
         options.parameters = system.parameters
         rho_save, _ = system.mesolve(t_save, options)
@@ -117,13 +117,13 @@ class MEAdjointSolverTester(MESolverTester):
         options.parameters = system.parameters
 
         # compute autograd gradients
-        system.init_operators()  # required to not backward through the same graph twice
+        system.reset()  # required to not backward through the same graph twice
         rho_save, _ = system.mesolve(t_save, options)
         exp_save = bexpect(torch.stack(system.exp_ops), rho_save).mT
         grad_rho = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
 
         # compute adjoint gradients
-        system.init_operators()  # required to not backward through the same graph twice
+        system.reset()  # required to not backward through the same graph twice
         rho_save, exp_save = system.mesolve(t_save, options)
         grad_exp = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
 

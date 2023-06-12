@@ -21,6 +21,10 @@ class OpenSystem(ABC):
         self.rho0_batched = None
         self.exp_ops = None
 
+    def reset(self):
+        """Reset all attributes."""
+        self.__init__()
+
     @abstractmethod
     def t_save(self, n: int) -> Tensor:
         """Compute the save time tensor."""
@@ -70,14 +74,11 @@ class LeakyCavity(OpenSystem):
         self.kappa = torch.as_tensor(kappa).requires_grad_(requires_grad)
         self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
+        self.requires_grad = requires_grad
 
         # define gradient parameters
         self.parameters = tuple([self.delta, self.kappa, self.alpha0])
 
-        # initialize operators
-        self.init_operators()
-
-    def init_operators(self):
         # bosonic operators
         a = dq.destroy(self.n)
         adag = a.mH
@@ -100,6 +101,15 @@ class LeakyCavity(OpenSystem):
             dq.coherent_dm(self.n, -self.alpha0),
             dq.coherent_dm(self.n, -1j * self.alpha0),
         ]
+
+    def reset(self):
+        self.__init__(
+            n=self.n,
+            kappa=self.kappa,
+            delta=self.delta,
+            alpha0=self.alpha0,
+            requires_grad=self.requires_grad,
+        )
 
     def t_save(self, num_t_save: int) -> Tensor:
         t_end = 2 * pi / self.delta  # a full rotation
