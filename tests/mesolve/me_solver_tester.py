@@ -119,7 +119,7 @@ class MEAdjointSolverTester(MESolverTester):
         # compute autograd gradients
         system.reset()  # required to not backward through the same graph twice
         rho_save, _ = system.mesolve(t_save, options)
-        exp_save = bexpect(torch.stack(system.exp_ops), rho_save).mT
+        exp_save = bexpect(torch.stack(system.exp_ops), rho_save)
         grad_rho = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
 
         # compute adjoint gradients
