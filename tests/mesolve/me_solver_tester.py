@@ -2,7 +2,6 @@ import torch
 
 import dynamiqs as dq
 from dynamiqs.options import Options
-from dynamiqs.utils.solver_utils import bexpect
 
 from .open_system import OpenSystem
 
@@ -80,56 +79,35 @@ class MEAdjointSolverTester(MESolverTester):
         t_save = system.t_save(num_t_save)
 
         # compute autograd gradients
-        system.reset()  # required to not backward through the same graph twice
+        system.reset()
         options.gradient_alg = 'autograd'
-        rho_save, _ = system.mesolve(t_save, options)
-        loss = system.loss(rho_save[-1])
-        grad_autograd = torch.autograd.grad(loss, system.parameters)
+        rho_save, exp_save = system.mesolve(t_save, options)
+        rho_loss = system.loss(rho_save[-1])
+        exp_loss = exp_save.abs().sum()
+        grad_rho_autograd = torch.autograd.grad(
+            rho_loss, system.parameters, retain_graph=True
+        )
+        grad_exp_autograd = torch.autograd.grad(exp_loss, system.parameters)
 
         # compute adjoint gradients
-        system.reset()  # required to not backward through the same graph twice
+        system.reset()
         options.gradient_alg = 'adjoint'
         options.parameters = system.parameters
-        rho_save, _ = system.mesolve(t_save, options)
-        loss = system.loss(rho_save[-1])
-        grad_adjoint = torch.autograd.grad(loss, system.parameters)
+        rho_save, exp_save = system.mesolve(t_save, options)
+        rho_loss = system.loss(rho_save[-1])
+        exp_loss = exp_save.abs().sum()
+        grad_rho_adjoint = torch.autograd.grad(
+            rho_loss, system.parameters, retain_graph=True
+        )
+        grad_exp_adjoint = torch.autograd.grad(exp_loss, system.parameters)
 
-        # check gradients are equal
-        for g1, g2 in zip(grad_autograd, grad_adjoint):
+        # check rho_save-dependent gradients are equal
+        for g1, g2 in zip(grad_rho_autograd, grad_rho_adjoint):
+            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+
+        # check exp_save-dependent gradients are equal
+        for g1, g2 in zip(grad_exp_autograd, grad_exp_adjoint):
             assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
 
     def test_adjoint(self):
-        pass
-
-    def _test_adjoint_expops(
-        self,
-        options: Options,
-        system: OpenSystem,
-        *,
-        num_t_save: int,
-        rtol: float = 1e-5,
-        atol: float = 1e-4,
-    ):
-        t_save = system.t_save(num_t_save)
-
-        # define options
-        options.gradient_alg = 'adjoint'
-        options.parameters = system.parameters
-
-        # compute autograd gradients
-        system.reset()  # required to not backward through the same graph twice
-        rho_save, _ = system.mesolve(t_save, options)
-        exp_save = bexpect(torch.stack(system.exp_ops), rho_save)
-        grad_rho = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
-
-        # compute adjoint gradients
-        system.reset()  # required to not backward through the same graph twice
-        rho_save, exp_save = system.mesolve(t_save, options)
-        grad_exp = torch.autograd.grad(exp_save.abs().sum(), system.parameters)
-
-        # check gradients are equal
-        for g1, g2 in zip(grad_rho, grad_exp):
-            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
-
-    def test_adjoint_expops(self):
         pass
