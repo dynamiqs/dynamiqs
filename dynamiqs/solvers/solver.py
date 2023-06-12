@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 from abc import ABC, abstractmethod
 
 import torch
@@ -9,32 +8,6 @@ from torch import Tensor
 from ..options import Options
 from ..utils.solver_utils import bexpect
 from ..utils.td_tensor import TDTensor
-
-
-def depends_on_H(func):
-    """Handles caching for functions that only depend on the Hamiltonian. The functions
-    must take as single argument the time and be decorated by `@depends_on_H`.
-
-    Example:
-        >>> @depends_on_H
-        >>> def H_squared(self, t):
-        >>>     return self.H(t) @ self.H(t)
-
-    Warning:
-        Caching is only checked through the time variable `t`. If different arguments
-        are passed to the function for the same time stamp, the cached object will be
-        returned instead of a newly computed one.
-    """
-
-    @functools.wraps(func)
-    def wrapper(instance, t, *args, **kwargs):
-        if func.__name__ not in instance._cache or (
-            t != instance._cache[func.__name__][0] and instance.H.requires_updates(t)
-        ):
-            instance._cache[func.__name__] = t, func(instance, t, *args, **kwargs)
-        return instance._cache[func.__name__][1]
-
-    return wrapper
 
 
 class Solver(ABC):

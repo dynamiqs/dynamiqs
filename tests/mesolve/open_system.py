@@ -67,7 +67,8 @@ class LeakyCavity(OpenSystem):
         adag = a.adjoint()
 
         # loss operator
-        self.loss_op = adag @ a
+        # self.loss_op = adag @ a
+        self.loss_op = (a + adag) / sqrt(2) - 1j * (adag - a) / sqrt(2)
 
         # prepare quantum operators
         self.H = self.delta * adag @ a

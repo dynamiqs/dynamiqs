@@ -6,6 +6,7 @@ from typing import get_args
 import torch
 from torch import Tensor
 
+from .solver_utils import cache
 from .tensor_types import OperatorLike, TDOperatorLike, cdtype, rdtype, to_tensor
 
 
@@ -24,10 +25,7 @@ def to_td_tensor(
     elif callable(x):
         # get default dtype and device
         if dtype is None:
-            if is_complex:
-                dtype = cdtype(dtype)
-            else:
-                dtype = rdtype(dtype)
+            dtype = cdtype(dtype) if is_complex else rdtype(dtype)
         if device is None:
             device = get_default_device()
 
@@ -95,11 +93,6 @@ class TDTensor(ABC):
         """Unsqueeze at position `dim`."""
         pass
 
-    @abstractmethod
-    def requires_updates(self, t: float) -> bool:
-        """Whether the cache needs to be updated for new time values."""
-        pass
-
 
 class ConstantTDTensor(TDTensor):
     def __init__(self, tensor: Tensor):
@@ -119,30 +112,23 @@ class ConstantTDTensor(TDTensor):
     def unsqueeze(self, dim: int) -> ConstantTDTensor:
         return ConstantTDTensor(self._tensor.unsqueeze(dim))
 
-    def requires_updates(self, t: float) -> bool:
-        return False
-
 
 class CallableTDTensor(TDTensor):
     def __init__(
         self,
-        f: callable,
+        f: callable[[float], Tensor],
         shape: torch.Size,
         dtype: torch.dtype,
         device: torch.device,
     ):
         self._callable = f
+        self._shape = shape
         self.dtype = dtype
         self.device = device
-        self._shape = shape
-        self._cached_tensor = None
-        self._cached_t = None
 
+    @cache
     def __call__(self, t: float) -> Tensor:
-        if t != self._cached_t:
-            self._cached_tensor = self._callable(t).view(self._shape)
-            self._cached_t = t
-        return self._cached_tensor
+        return self._callable(t).view(self._shape)
 
     def size(self, dim: int) -> int:
         return self._shape[dim]
@@ -157,6 +143,3 @@ class CallableTDTensor(TDTensor):
         return CallableTDTensor(
             f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
         )
-
-    def requires_updates(self, t: float) -> bool:
-        return True
