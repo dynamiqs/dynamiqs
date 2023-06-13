@@ -44,14 +44,15 @@ class FixedSolver(AutogradSolver):
         y = self.y0
         for t in tqdm(times[:-1], disable=not self.options.verbose):
             # save solution
-            if t >= self.next_tsave():
-                self.save(y)
+            next_tsave = self.next_tsave()
+            if t >= next_tsave:
+                self.save(next_tsave, y)
 
             # iterate solution
             y = self.forward(t, y)
 
         # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
-        self.save(y)
+        self.save(self.t_save[-1], y)
 
     @abstractmethod
     def forward(self, t: float, y: Tensor):

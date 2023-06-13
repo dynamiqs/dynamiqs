@@ -69,7 +69,7 @@ class AdaptiveSolver(AutogradSolver):
                     )
 
             # save solution
-            self.save(y)
+            self.save(ts, y)
 
             # use cache to retrieve time step and error
             dt, error = cache

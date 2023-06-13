@@ -21,8 +21,8 @@ class Propagator(AutogradSolver):
         y, t1 = self.y0, 0.0
         for t2 in tqdm(self.t_save.cpu().numpy(), disable=not self.options.verbose):
             y = self.forward(t1, t2 - t1, y)
+            self.save(t2, y)
             t1 = t2
-            self.save(y)
 
     @abstractmethod
     def forward(self, t: float, delta_t: float, y: Tensor):

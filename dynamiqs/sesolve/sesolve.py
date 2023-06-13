@@ -40,7 +40,7 @@ def sesolve(
     options = options or Dopri5()
 
     # define the solver
-    args = (H_batched, psi0_batched, t_save, exp_ops, options)
+    args = (H_batched, psi0_batched, t_save, t_save, exp_ops, options)
     if isinstance(options, Euler):
         solver = SEEuler(*args)
     elif isinstance(options, Dopri5):
