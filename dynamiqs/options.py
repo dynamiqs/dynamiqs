@@ -68,23 +68,14 @@ class AutogradOptions(Options):
 class AdjointOptions(AutogradOptions):
     GRADIENT_ALG = ['autograd', 'adjoint']
 
-    def __init__(
-        self,
-        *,
-        gradient_alg: str | None = None,
-        save_states: bool = True,
-        verbose: bool = True,
-        parameters: tuple[nn.Parameter, ...] | None = None,
-    ):
+    def __init__(self, *, parameters: tuple[nn.Parameter, ...] | None = None, **kwargs):
         """
 
         Args:
             parameters (tuple of nn.Parameter): Parameters with respect to which
                 gradients are computed during the adjoint state backward pass.
         """
-        super().__init__(
-            gradient_alg=gradient_alg, save_states=save_states, verbose=verbose
-        )
+        super().__init__(**kwargs)
         self.parameters = parameters
 
         # check parameters were passed if gradient by the adjoint
