@@ -48,7 +48,6 @@ class Solver(ABC):
         self.t_save_y = t_save_y
         self.exp_ops = exp_ops
         self.options = options
-        self._cache = {}
 
         self.save_counter = 0
         self.save_y_counter = 0
