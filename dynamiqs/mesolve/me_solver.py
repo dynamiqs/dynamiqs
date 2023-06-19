@@ -18,6 +18,5 @@ class MESolver(Solver):
 
     def lindbladian(self, t: float, rho: Tensor) -> Tensor:
         H = self.H(t)
-        H_nh_rho = self.H_nh(H) @ rho  # (b_H, b_rho, n, n)
-        L_rho_Ldag = kraus_map(rho, self.jump_ops)  # (b_H, b_rho, n, n)
-        return -1j * (H_nh_rho - H_nh_rho.mH) + L_rho_Ldag
+        out = -1j * self.H_nh(H) @ rho + 0.5 * kraus_map(rho, self.jump_ops)
+        return out + out.mH  # (b_H, b_rho, n, n)
