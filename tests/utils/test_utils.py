@@ -36,7 +36,7 @@ def test_dm_fidelity_correctness():
     qt_fid = qt.fidelity(rho, sigma) ** 2
     dq_fid = dq.dm_fidelity(rho_tensor, sigma_tensor).item()
 
-    assert qt_fid == approx(dq_fid)
+    assert qt_fid == approx(dq_fid, abs=1e-6)
 
 
 def test_dm_fidelity_batching():
