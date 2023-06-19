@@ -36,7 +36,7 @@ class AdaptiveSolver(AutogradSolver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for ts in self.t_save.numpy():
+        for ts in self.t_save.cpu().numpy():
             while t < ts:
                 # update time step
                 dt = self.update_tstep(dt, error)
