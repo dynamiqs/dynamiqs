@@ -152,12 +152,12 @@ class AdaptiveSolver(AutogradSolver):
 
         if error <= 1:  # time step accepted -> take next time step at least as large
             return dt * min(
-                self.options.max_factor, max(1.0, self.options.factor * fac_opt)
+                self.options.max_factor, max(1.0, self.options.safety_factor * fac_opt)
             )
 
         if error > 1:  # time step rejected -> reduce next time step
             return dt * min(
-                0.9, max(self.options.min_factor, self.options.factor * fac_opt)
+                0.9, max(self.options.min_factor, self.options.safety_factor * fac_opt)
             )
 
 
