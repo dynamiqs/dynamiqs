@@ -148,16 +148,16 @@ class AdaptiveSolver(AutogradSolver):
             return dt * self.options.max_factor
 
         # optimal time step
-        dt_opt = dt * error ** (-1.0 / self.order)
+        fac_opt = error ** (-1.0 / self.order)
 
         if error <= 1:  # time step accepted -> take next time step at least as large
             return dt * min(
-                self.options.max_factor, max(1.0, self.options.factor * dt_opt)
+                self.options.max_factor, max(1.0, self.options.factor * fac_opt)
             )
 
         if error > 1:  # time step rejected -> reduce next time step
             return dt * min(
-                0.9, max(self.options.min_factor, self.options.factor * dt_opt)
+                0.9, max(self.options.min_factor, self.options.factor * fac_opt)
             )
 
 
@@ -189,13 +189,13 @@ class DormandPrince5(AdaptiveSolver):
         ]
         csol5 = [35 / 384, 0, 500 / 1113, 125 / 192, -2187 / 6784, 11 / 84, 0]
         csol4 = [
-            1951 / 21600,
+            5179 / 57600,
             0,
-            22642 / 50085,
-            451 / 720,
-            -12231 / 42400,
-            649 / 6300,
-            1 / 60,
+            7571 / 16695,
+            393 / 640,
+            -92097 / 339200,
+            187 / 2100,
+            1 / 40,
         ]
 
         # extract dtype and device from
