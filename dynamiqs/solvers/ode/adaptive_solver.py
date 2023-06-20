@@ -224,11 +224,11 @@ class DormandPrince5(AdaptiveSolver):
         k[0] = f0
         for i in range(1, 7):
             ti = t0 + dt * alpha[i - 1]
-            yi = y0 + dt * torch.einsum('b,b...', beta[i - 1, :i], k[:i])
+            yi = y0 + torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
             k[i] = self.odefun(ti, yi)
 
         # compute results
-        y1 = y0 + dt * torch.einsum('b,b...', csol[:6], k[:6])
-        y1_err = dt * torch.einsum('b,b...', cerr, k)
+        y1 = y0 + torch.tensordot(dt * csol[:6], k[:6], dims=([0], [0]))
+        y1_err = torch.tensordot(dt * cerr, k, dims=([0], [0]))
         f1 = k[-1]
         return f1, y1, y1_err
