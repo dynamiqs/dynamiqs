@@ -5,12 +5,7 @@ from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Propagator
 from ..utils.tensor_formatter import TensorFormatter
-from ..utils.tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    TensorLike,
-    dtype_complex_to_real,
-)
+from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
 from .propagator import SEPropagator
@@ -23,8 +18,6 @@ def sesolve(
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor | None]:
     # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
@@ -34,14 +27,14 @@ def sesolve(
     # TODO add test to check that psi0 has the correct shape
 
     # format and batch all tensors
-    formatter = TensorFormatter(dtype, device)
+    formatter = TensorFormatter(options.dtype, options.device)
     H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
     # H_batched: (b_H, 1, n, n)
     # psi0_batched: (b_H, b_psi0, n, 1)
     exp_ops = formatter.format(exp_ops)  # (len(exp_ops), n, n)
 
     # convert t_save to tensor
-    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
+    t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
 
     # default options
     options = options or Dopri5()

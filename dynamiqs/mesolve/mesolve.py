@@ -5,12 +5,7 @@ from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
 from ..utils.tensor_formatter import TensorFormatter
-from ..utils.tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    TensorLike,
-    dtype_complex_to_real,
-)
+from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
@@ -24,8 +19,6 @@ def mesolve(
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor | None]:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
@@ -67,10 +60,6 @@ def mesolve(
         exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
             expectation value is computed at every time value in `t_save`.
         options (Options, optional): Solver options. See the list of available solvers.
-        dtype (torch.dtype, optional): Complex data type to which all complex-valued
-            tensors are converted. `t_save` is also converted to a real data type of
-            the corresponding precision.
-        device (torch.device, optional): Device on which the tensors are stored.
 
     Returns:
         A tuple `(rho_save, exp_save)` where
@@ -94,7 +83,7 @@ def mesolve(
         )
 
     # format and batch all tensors
-    formatter = TensorFormatter(dtype, device)
+    formatter = TensorFormatter(options.dtype, options.device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     # H_batched: (b_H, 1, n, n)
     # rho0_batched: (b_H, b_rho0, n, n)
@@ -102,7 +91,7 @@ def mesolve(
     jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
 
     # convert t_save to a tensor
-    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
+    t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
 
     # default options
     options = options or Dopri5()
