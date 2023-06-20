@@ -17,6 +17,12 @@ class MESolver(Solver):
         self.H_nh = cache(lambda H: H - 0.5j * self.sum_no_jump)  # (b_H, 1, n, n)
 
     def lindbladian(self, t: float, rho: Tensor) -> Tensor:
+        """Compute the action of the Lindbladian on the density matrix.
+
+        Note:
+            Hermiticity of the output is enforced to avoid numerical instability
+            with Runge-Kutta solvers.
+        """
         H = self.H(t)
         out = -1j * self.H_nh(H) @ rho + 0.5 * kraus_map(rho, self.jump_ops)
         return out + out.mH  # (b_H, b_rho, n, n)
