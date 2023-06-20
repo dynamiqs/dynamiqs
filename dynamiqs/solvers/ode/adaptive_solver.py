@@ -220,7 +220,7 @@ class DormandPrince5(AdaptiveSolver):
         alpha, beta, csol, cerr = self.tableau
 
         # compute iterated Runge-Kutta values
-        k = torch.zeros(7, *f0.shape, dtype=f0.dtype, device=f0.device)
+        k = torch.empty(7, *f0.shape, dtype=f0.dtype, device=f0.device)
         k[0] = f0
         for i in range(1, 7):
             ti = t0 + dt * alpha[i - 1]
