@@ -7,6 +7,8 @@ from torch import Tensor
 
 __all__ = [
     'is_ket',
+    'is_bra',
+    'is_dm',
     'ket_to_bra',
     'ket_to_dm',
     'ket_overlap',
@@ -32,6 +34,42 @@ def is_ket(x: Tensor) -> bool:
         True if the last dimension of `x` is 1, False otherwise.
     """
     return x.size(-1) == 1
+
+
+def is_bra(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a bra.
+
+    Args:
+        x (...): Tensor.
+
+    Returns:
+        True if the second to last dimension of `x` is 1, False otherwise.
+    """
+    return x.size(-2) == 1
+
+
+def is_dm(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a density matrix.
+
+    Args:
+        x (...): Tensor.
+
+    Returns:
+        True if the last two dimensions of `x` are equal, False otherwise.
+    """
+    return x.size(-1) == x.size(-2)
+
+
+def _quantum_type(x: Tensor) -> str:
+    """Get the quantum type of a tensor."""
+    if is_ket(x):
+        return 'ket'
+    elif is_bra(x):
+        return 'bra'
+    elif is_dm(x):
+        return 'dm'
+    else:
+        raise ValueError('Tensor is not a ket, bra or density matrix.')
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
@@ -198,7 +236,8 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of a sequence of kets, density matrices or operators.
+    r"""Returns the tensor product of a sequence of kets, bras, density matrices or
+    operators.
 
     Examples:
         >>> psi = dq.tensprod(
@@ -220,15 +259,9 @@ def tensprod(*args: Tensor) -> Tensor:
     The returned tensor shape is:
 
     - $(n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape $(n_k, 1)$,
+    - $(1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape $(1, n_k)$,
     - $(n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
       operators vectors with shape $(n_k, n_k)$.
-
-    Warning:
-        This function does not yet support tensors in the bra format.
-
-    Warning:
-        This function does not yet support arbitrarily batched tensors (see
-        [issue #69](https://github.com/dynamiqs/dynamiqs/issues/69)).
 
     Note:
         This function is the equivalent of `qutip.tensor()`.
@@ -237,10 +270,25 @@ def tensprod(*args: Tensor) -> Tensor:
         *args (n_k, 1) or (n_k, n_k): Sequence of kets, density matrices or operators.
 
     Returns:
-        (n, 1) or (n, n): Tensor product of the input tensors.
+        (n, 1) or (1, n) or (n, n): Tensor product of the input tensors.
     """
-    # TODO: adapt to bras
-    return reduce(torch.kron, args)
+    return reduce(_bkron, args)
+
+
+def _bkron(x: Tensor, y: Tensor) -> Tensor:
+    """Compute the batched Kronecker product of two matrices."""
+    x_type = _quantum_type(x)
+    y_type = _quantum_type(y)
+    if x_type != y_type:
+        raise TypeError(
+            'Cannot take the tensor product of different input objects. `x` is a'
+            f' {x_type} and `y` is a {y_type}.'
+        )
+
+    kron_dims = torch.Size(torch.tensor(x.shape[-2:]) * torch.tensor(y.shape[-2:]))
+    out = x.unsqueeze(-1).unsqueeze(-3) * y.unsqueeze(-2).unsqueeze(-4)
+    batch_dims = out.shape[:-4]
+    return out.reshape(batch_dims + kron_dims)
 
 
 def trace(x: Tensor) -> Tensor:
