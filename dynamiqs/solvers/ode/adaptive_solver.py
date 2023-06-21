@@ -147,17 +147,19 @@ class AdaptiveSolver(AutogradSolver):
         if error == 0:  # no error -> maximally increase the time step
             return dt * self.options.max_factor
 
-        # optimal time step
-        fac_opt = error ** (-1.0 / self.order)
-
         if error <= 1:  # time step accepted -> take next time step at least as large
-            return dt * min(
-                self.options.max_factor, max(1.0, self.options.factor * fac_opt)
+            return dt * max(
+                1.0,
+                min(
+                    self.options.max_factor,
+                    self.options.safety_factor * error ** (-1.0 / self.order),
+                ),
             )
 
         if error > 1:  # time step rejected -> reduce next time step
-            return dt * min(
-                0.9, max(self.options.min_factor, self.options.factor * fac_opt)
+            return dt * max(
+                self.options.min_factor,
+                self.options.safety_factor * error ** (-1.0 / self.order),
             )
 
 
@@ -212,21 +214,21 @@ class DormandPrince5(AdaptiveSolver):
         return alpha, beta, csol5, csol5 - csol4
 
     def step(
-        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+        self, f: Tensor, y: Tensor, t: float, dt: float
     ) -> tuple[Tensor, Tensor, Tensor]:
         # import butcher tableau
         alpha, beta, csol, cerr = self.tableau
 
         # compute iterated Runge-Kutta values
-        k = torch.zeros(7, *f0.shape, dtype=f0.dtype, device=f0.device)
-        k[0] = f0
+        k = torch.empty(7, *f.shape, dtype=f.dtype, device=f.device)
+        k[0] = f
         for i in range(1, 7):
-            ti = t0 + dt * alpha[i - 1]
-            yi = y0 + dt * torch.einsum('b,b...', beta[i - 1, :i], k[:i])
-            k[i] = self.odefun(ti, yi)
+            dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
+            k[i] = self.odefun(t + dt * alpha[i - 1], y + dy)
 
         # compute results
-        y1 = y0 + dt * torch.einsum('b,b...', csol[:6], k[:6])
-        y1_err = dt * torch.einsum('b,b...', cerr, k)
-        f1 = k[-1]
-        return f1, y1, y1_err
+        f_new = k[-1]
+        y_new = y + torch.tensordot(dt * csol[:6], k[:6], dims=([0], [0]))
+        y_err = torch.tensordot(dt * cerr, k, dims=([0], [0]))
+
+        return f_new, y_new, y_err
