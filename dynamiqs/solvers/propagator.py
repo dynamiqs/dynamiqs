@@ -13,7 +13,9 @@ class Propagator(AutogradSolver):
 
         # check that Hamiltonian is time-independent
         if not isinstance(self.H, ConstantTDTensor):
-            raise TypeError('Propagator solvers require a time-independent Hamiltonian.')
+            raise TypeError(
+                'Propagator solvers require a time-independent Hamiltonian.'
+            )
 
     def run_autograd(self):
         y, t1 = self.y0, 0.0
