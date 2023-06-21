@@ -10,10 +10,11 @@ theme:
     - navigation.sections
     - navigation.indexes
     - navigation.top
+    - navigation.path
     - search.suggest
   icon:
     repo: fontawesome/brands/github
-  logo: media/logo_white.png
+  logo: media/logo.png
   favicon: media/favicon.ico
   palette:
     # palette toggle for light mode

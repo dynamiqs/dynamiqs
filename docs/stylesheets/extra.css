@@ -15,6 +15,9 @@
   /* Highlight */
   --md-code-hl-constant-color: #ed7764;
 
+  /* Border */
+  --md-border-color: #e2e2e2;
+
   /* Warning color shades */
   --md-warning-fg-color: #e899a6;
   --md-warning-bg-color: #ffe6ea;
@@ -37,6 +40,9 @@
   /* Highlight */
   --md-code-hl-constant-color: #ed7764;
 
+  /* Border */
+  --md-border-color: #4d4d4d;
+
   /* Warning color shades */
   --md-warning-fg-color: #e899a6;
   --md-warning-bg-color: #443639;
@@ -48,6 +54,20 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+}
+
+/* Header color */
+.md-header {
+    background-color: var(--md-default-bg-color);
+    color: var(--md-typeset-color);
+}
+.md-tabs {
+    background-color: var(--md-default-bg-color);
+    color: var(--md-typeset-color);
+    border-bottom: 1px solid var(--md-border-color);
+}
+.md-search__form:hover {
+    background-color: #0000001f;
 }
 
 /* Warning color shades */
