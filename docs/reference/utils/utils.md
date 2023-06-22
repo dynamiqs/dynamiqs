@@ -1,3 +1,3 @@
-# dynamiqs.utils.utils
+# Operating on states
 
 ::: dynamiqs.utils.utils

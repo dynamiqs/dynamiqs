@@ -81,7 +81,10 @@ nav:
       - Optimal control: tutorials/optimal_control.md
       - SNAP: tutorials/snap.md
       - ECD: tutorials/ecd.md
-  - Reference:
+  - Python API:
       - reference/index.md
-      - dynamiqs.utils:
-          - utils: reference/utils/utils.md
+      - Utility functions:
+          - Initializing states: reference/utils/states.md
+          - Initializing operators: reference/utils/operators.md
+          - Operating on states: reference/utils/utils.md
+          - Converting tensors: reference/utils/tensor_types.md
