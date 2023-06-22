@@ -70,9 +70,16 @@
     background-color: #0000001f;
 }
 
-/* Logo opacity upon hovering */
+/* Site title and logo styling */
 .md-header__button:hover {
     opacity: 1.0;
+}
+.md-header__topic:first-child {
+    font-weight:400;
+}
+[dir="ltr"] .md-header__title {
+    margin-left: 0.0;
+    font-size:.95rem;
 }
 
 
