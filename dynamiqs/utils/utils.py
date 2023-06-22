@@ -296,9 +296,6 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         >>> rhoBC.shape
         torch.Size([10, 10])
 
-    Warning:
-        This function does not yet support tensors in the bra format.
-
     Args:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix of a
             composite system.
