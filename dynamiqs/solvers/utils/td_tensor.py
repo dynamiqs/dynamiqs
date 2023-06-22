@@ -6,8 +6,14 @@ from typing import get_args
 import torch
 from torch import Tensor
 
+from ...utils.tensor_types import (
+    OperatorLike,
+    TDOperatorLike,
+    cdtype,
+    rdtype,
+    to_tensor,
+)
 from .solver_utils import cache
-from .tensor_types import OperatorLike, TDOperatorLike, cdtype, rdtype, to_tensor
 
 
 def to_td_tensor(

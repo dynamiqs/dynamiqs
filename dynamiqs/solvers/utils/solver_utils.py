@@ -7,7 +7,7 @@ import torch
 from methodtools import lru_cache
 from torch import Tensor
 
-from .utils import is_ket
+from ...utils.utils import is_ket
 
 
 def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
