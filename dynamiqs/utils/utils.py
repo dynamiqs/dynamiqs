@@ -300,7 +300,8 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         This function does not yet support tensors in the bra format.
 
     Args:
-        x (..., n, 1) or (..., n, n): Ket or density matrix of a composite system.
+        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix of a
+            composite system.
         keep (int or tuple of ints): Dimensions to keep after partial trace.
         dims (tuple of ints): Dimensions of each subsystem in the composite system
             Hilbert space tensor product.
@@ -308,17 +309,17 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     Returns:
         (..., m, m): Density matrix (with `m <= n`).
     """
-    # TODO: adapt to bras
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
     dims = torch.as_tensor(dims)  # e.g. [20, 2, 5]
     ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
-    if not torch.prod(dims) == x.size(-2):
+    hilbert_size = x.size(-2) if is_ket(x) else x.size(-1)
+    if not torch.prod(dims) == hilbert_size:
         raise ValueError(
             f'Input `dims` {dims.tolist()} does not match the input '
-            f'tensor size of {x.size(-2)}.'
+            f'tensor size of {hilbert_size}.'
         )
     if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
         raise ValueError(
@@ -339,14 +340,16 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     # trace out x over unkept dimensions
     batch_dims = x.shape[:-2]
-    if is_ket(x):
+    if is_ket(x) or is_bra(x):
         x = x.view(-1, *dims)  # e.g. (..., 20, 2, 5)
         eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
         x = torch.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
-    else:
+    elif is_dm(x):
         x = x.view(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
         eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
         x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
+    else:
+        raise TypeError('Input tensor is not a ket, bra or density matrix.')
 
     # reshape to final dimension
     nkeep = torch.prod(dims[keep])  # e.g. 10
@@ -409,7 +412,7 @@ def unit(x: Tensor) -> Tensor:
 
     Returns:
         (..., n, 1) or (..., 1, n) or (..., n, n): Normalized ket, bra or density
-        matrix.
+            matrix.
     """
     if is_ket(x) or is_bra(x):
         return x / norm(x)[..., None, None]
