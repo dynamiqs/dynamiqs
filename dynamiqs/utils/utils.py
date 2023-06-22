@@ -12,7 +12,6 @@ __all__ = [
     'ket_overlap',
     'ket_fidelity',
     'dm_fidelity',
-    'sqrtm',
     'dissipator',
     'lindbladian',
     'tensprod',
@@ -116,7 +115,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     Returns:
         (...): Real-valued fidelity.
     """
-    sqrtm_x = sqrtm(x)
+    sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
 
     # we don't need the whole matrix `sqrtm(tmp)`, just its trace, which can be computed
@@ -132,7 +131,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     return trace_sqrtm_tmp.pow(2).real
 
 
-def sqrtm(x: Tensor) -> Tensor:
+def _sqrtm(x: Tensor) -> Tensor:
     """Returns the square root of a symmetric or Hermitian positive definite matrix.
 
     Args:
