@@ -7,6 +7,8 @@ from torch import Tensor
 
 __all__ = [
     'is_ket',
+    'is_bra',
+    'is_dm',
     'ket_to_bra',
     'ket_to_dm',
     'ket_overlap',
@@ -18,6 +20,8 @@ __all__ = [
     'trace',
     'ptrace',
     'expect',
+    'norm',
+    'unit',
 ]
 
 
@@ -31,6 +35,26 @@ def is_ket(x: Tensor) -> bool:
         True if the last dimension of `x` is 1, False otherwise.
     """
     return x.size(-1) == 1
+
+
+def is_bra(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a bra.
+    Args:
+        x (...): Tensor.
+    Returns:
+        True if the second to last dimension of `x` is 1, False otherwise.
+    """
+    return x.size(-2) == 1
+
+
+def is_dm(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a density matrix.
+    Args:
+        x (...): Tensor.
+    Returns:
+        True if the last two dimensions of `x` are equal, False otherwise.
+    """
+    return x.size(-1) == x.size(-2)
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
@@ -330,11 +354,11 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Returns the expectation value of an operator on a ket or a density matrix.
+    r"""Returns the expectation value of an operator on a ket, bra or density matrix.
 
     The expectation value $\braket{O}$ of an operator $O$ is computed
 
-    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$,
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$ or bra $\bra\psi$,
     - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
 
     Warning:
@@ -343,17 +367,53 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         is real. One can then keep only the real values of the returned tensor using
         `dq.expect(O, x).real`.
 
-    Warning:
-        This function does not yet support tensors in the bra format.
-
     Args:
         O (n, n): Arbitrary operator.
-        x (..., n, 1) or (..., n, n): Ket or density matrix.
+        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
 
     Returns:
         (...): Complex-valued expectation value.
     """
-    # TODO: adapt to bras
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
-    return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
+    elif is_bra(x):
+        return torch.einsum('...ij,jk,...kl->...', x, O, x.mH)
+    elif is_dm(x):
+        return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
+    else:
+        raise TypeError('Input tensor is not a ket, bra or density matrix.')
+
+
+def norm(x: Tensor) -> Tensor:
+    """Returns the norm of a ket, bra or a density matrix.
+
+    Args:
+        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
+
+    Returns:
+        (...): Real-valued norm of `x`.
+    """
+    if is_ket(x) or is_bra(x):
+        return torch.norm(x, dim=(-2, -1)).real
+    elif is_dm(x):
+        return trace(x).real
+    else:
+        raise TypeError('Input tensor is not a ket, bra or density matrix.')
+
+
+def unit(x: Tensor) -> Tensor:
+    """Normalize a ket, bra or density matrix to unit norm.
+
+    Args:
+        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
+
+    Returns:
+        (..., n, 1) or (..., 1, n) or (..., n, n): Normalized ket, bra or density
+        matrix.
+    """
+    if is_ket(x) or is_bra(x):
+        return x / norm(x)[..., None, None]
+    elif is_dm(x):
+        return x / trace(x)[..., None, None]
+    else:
+        raise TypeError('Input tensor is not a ket, bra or density matrix.')
