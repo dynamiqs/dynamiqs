@@ -70,6 +70,12 @@
     background-color: #0000001f;
 }
 
+/* Logo opacity upon hovering */
+.md-header__button:hover {
+    opacity: 1.0;
+}
+
+
 /* Warning color shades */
 .md-typeset .warning > .admonition-title,
 .md-typeset .warning > summary {
