@@ -20,7 +20,7 @@ def fock(
     dtype=None,
     device=None,
 ) -> Tensor:
-    """State vector of a Fock state, or of a tensor product of Fock states.
+    """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
     Example:
         >>> dq.fock(3, 1)
@@ -34,6 +34,17 @@ def fock(
                 [0.+0.j],
                 [0.+0.j],
                 [0.+0.j]], dtype=torch.complex128)
+
+    Args:
+        dims (int or tuple[int]): Dimension of the Hilbert space of each mode.
+        states (int or tuple[int]): Fock state of each mode.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor (n, 1): Ket of the Fock state or tensor product of Fock states.
     """
     # convert integer inputs to tuples by default, and check dimensions match
     dims = (dims,) if isinstance(dims, int) else dims
@@ -61,7 +72,8 @@ def fock_dm(
     dtype=None,
     device=None,
 ) -> Tensor:
-    """Density matrix of a Fock state, or of a tensor product of Fock states.
+    """Returns the density matrix of a Fock state or the density matrix of a tensor
+    product of Fock states.
 
     Example:
         >>> dq.fock_dm(3, 1)
@@ -76,13 +88,25 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
                 dtype=torch.complex128)
+
+    Args:
+        dims (int or tuple[int]): Dimension of the Hilbert space of each mode.
+        states (int or tuple[int]): Fock state of each mode.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor (n, n): Density matrix of the Fock state or tensor product of Fock
+            states.
     """
     return ket_to_dm(fock(dims, states, dtype=dtype, device=device))
 
 
 @complex_tensor
 def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
-    """State vector of a coherent state.
+    """Returns the ket of a coherent state.
 
     Example:
         >>> dq.coherent(5, 0.2)
@@ -91,6 +115,17 @@ def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
                 [0.028+0.j],
                 [0.003+0.j],
                 [0.000+0.j]], dtype=torch.complex128)
+
+    Args:
+        dim (int): Dimension of the Hilbert space.
+        alpha (complex or torch.Tensor): Coherent state amplitude.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor (n, 1): Ket of the coherent state.
     """
     return displace(dim, alpha, dtype=dtype, device=device) @ fock(
         dim, 0, dtype=dtype, device=device
@@ -111,5 +146,16 @@ def coherent_dm(
                 [0.003+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
+
+    Args:
+        dim (int): Dimension of the Hilbert space.
+        alpha (complex or torch.Tensor): Coherent state amplitude.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor (n, n): Density matrix of the coherent state.
     """
     return ket_to_dm(coherent(dim, alpha, dtype=dtype, device=device))

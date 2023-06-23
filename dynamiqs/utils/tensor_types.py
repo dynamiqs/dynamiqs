@@ -32,17 +32,17 @@ def to_tensor(
     device: torch.device | None = None,
     is_complex: bool = False,
 ) -> Tensor:
-    """Convert a `OperatorLike` object or a list of `OperatorLike` object to a PyTorch
-    tensor.
+    """Convert an array-like object (or a list of array-like objects) to a tensor.
 
     Args:
-        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
-           of these types. If `None` or empty list, returns an empty tensor of size (0).
-        dtype: Data type of the returned tensor.
-        device: Device on which the returned tensor is stored.
+        x (list, numpy.ndarray, qutip.Qobj or torch.Tensor): Input object or list of
+            input objects. If `None` or empty list, an empty tensor of size (0) is
+            returned.
+        dtype (torch.dtype): Data type of the returned tensor.
+        device (torch.device): Device on which the returned tensor is stored.
 
     Returns:
-        PyTorch tensor.
+        torch.Tensor: Output tensor.
     """
     if is_complex:
         dtype = cdtype(dtype)
@@ -133,10 +133,10 @@ def from_qutip(x: Qobj, *, dtype=None, device=None) -> Tensor:
     """Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
-        x: QuTiP quantum object.
+        x (qutip.Qobj): Input quantum object.
 
     Returns:
-        PyTorch tensor.
+        torch.Tensor: Output tensor.
     """
     return torch.from_numpy(x.full()).to(dtype=dtype, device=device)
 
@@ -145,8 +145,8 @@ def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
     """Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:
-        x: PyTorch tensor.
-        dims: QuTiP object dimensions.
+        x (torch.Tensor): PyTorch tensor.
+        dims (list of list of ints): QuTiP object dimensions.
 
     Returns:
         QuTiP quantum object.

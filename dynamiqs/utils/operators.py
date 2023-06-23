@@ -24,44 +24,87 @@ __all__ = [
 
 @complex_tensor
 def sigmax(*, dtype=None, device=None) -> Tensor:
-    """Pauli $X$ operator."""
+    """Returns the Pauli $X$ operator.
+
+    Args:
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+    """
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
 @complex_tensor
 def sigmay(*, dtype=None, device=None) -> Tensor:
-    """Pauli $Y$ operator."""
+    """Returns the Pauli $Y$ operator.
+
+    Args:
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+    """
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
 
 @complex_tensor
 def sigmaz(*, dtype=None, device=None) -> Tensor:
-    """Pauli $Z$ operator."""
+    """Returns the Pauli $Z$ operator.
+
+    Args:
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+    """
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
 
 @complex_tensor
 def sigmap(*, dtype=None, device=None) -> Tensor:
-    r"""Pauli raising operator $\sigma_+$."""
+    r"""Returns the Pauli raising operator $\sigma_+$.
+
+    Args:
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+    """
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
 
 @complex_tensor
 def sigmam(*, dtype=None, device=None) -> Tensor:
-    r"""Pauli lowering operator $\sigma_-$."""
+    r"""Returns the Pauli lowering operator $\sigma_-$.
+
+    Args:
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+    """
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
 @complex_tensor
 def eye(*dims: int, dtype=None, device=None) -> Tensor:
-    """Identity operator."""
+    """Returns the identity operator.
+
+    Args:
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+    """
     dim = prod(dims)
     return torch.eye(dim, dtype=dtype, device=device)
 
 
 @complex_tensor
 def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
-    """Bosonic annihilation operator.
+    """Returns a bosonic annihilation operator, or a tuple of annihilation operators in
+    a multi-mode system.
 
     If only a single dimension is provided, `destroy` returns the annihilation operator
     of corresponding dimension. If instead multiples dimensions are provided, `destroy`
@@ -92,6 +135,17 @@ def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
+
+    Args:
+        dims (int): Dimension of the Hilbert space.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor or tuple[torch.Tensor]: Annihilation operator of given dimension,
+            or tuple of annihilation operators in a multi-mode system.
     """
     if len(dims) == 1:
         return _destroy_single(dims[0], dtype=dtype, device=device)
@@ -112,7 +166,8 @@ def _destroy_single(dim: int, *, dtype=None, device=None) -> Tensor:
 
 @complex_tensor
 def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
-    """Bosonic creation operator.
+    """Returns a bosonic creation operator, or a tuple of creation operators in a
+    multi-mode system.
 
     If only a single dimension is provided, `create` returns the creation operator of
     corresponding dimension. If instead multiples dimensions are provided, `create`
@@ -143,6 +198,17 @@ def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
+
+    Args:
+        dims (int): Dimension of the Hilbert space.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor or tuple[torch.Tensor]: Creation operator of given dimension,
+            or tuple of creation operators in a multi-mode system.
     """
     if len(dims) == 1:
         return _create_single(dims[0], dtype=dtype, device=device)
@@ -163,7 +229,19 @@ def _create_single(dim: int, *, dtype=None, device=None) -> Tensor:
 
 @complex_tensor
 def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
-    """Displacement operator."""
+    """Returns the displacement operator of amplitude $\alpha$.
+
+    Args:
+        dim (int): Dimension of the Hilbert space.
+        alpha (complex or torch.Tensor): Displacement amplitude.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor: Displacement operator.
+    """
     a = destroy(dim, dtype=dtype, device=device)
     alpha = torch.as_tensor(alpha)
     return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
@@ -171,7 +249,19 @@ def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
 
 @complex_tensor
 def squeeze(dim: int, z: complex | Tensor, *, dtype=None, device=None) -> Tensor:
-    """Squeezing operator."""
+    """Returns the squeezing operator of squeezing amplitude $z$.
+
+    Args:
+        dim (int): Dimension of the Hilbert space.
+        z (complex or torch.Tensor): Squeezing amplitude.
+        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
+            data type specified by `torch.get_default_dtype()`.
+        device (torch.device): Device of the returned tensor. Defaults to the globally
+            defined default device.
+
+    Returns:
+        torch.Tensor: Squeezing operator.
+    """
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
     z = torch.as_tensor(z)

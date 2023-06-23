@@ -39,8 +39,10 @@ def is_ket(x: Tensor) -> bool:
 
 def is_bra(x: Tensor) -> bool:
     """Returns True if a tensor is in the format of a bra.
+
     Args:
         x (...): Tensor.
+
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
     """
@@ -49,8 +51,10 @@ def is_bra(x: Tensor) -> bool:
 
 def is_dm(x: Tensor) -> bool:
     """Returns True if a tensor is in the format of a density matrix.
+
     Args:
         x (...): Tensor.
+
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
     """
@@ -354,7 +358,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Returns the expectation value of an operator on a ket, bra or density matrix.
+    r"""Returns the expectation value of an operator on a quantum state.
 
     The expectation value $\braket{O}$ of an operator $O$ is computed
 
@@ -385,7 +389,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
 
 def norm(x: Tensor) -> Tensor:
-    """Returns the norm of a ket, bra or a density matrix.
+    """Returns the norm of a quantum state.
 
     Args:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
@@ -402,7 +406,7 @@ def norm(x: Tensor) -> Tensor:
 
 
 def unit(x: Tensor) -> Tensor:
-    """Normalize a ket, bra or density matrix to unit norm.
+    """Normalize a quantum state.
 
     Args:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.

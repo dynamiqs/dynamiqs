@@ -19,16 +19,18 @@ def wigner(
     n_pixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
 ) -> tuple[Tensor, Tensor, Tensor]:
-    """Compute the wigner distribution of a state vector or density matrix.
+    """Compute the wigner distribution of a ket or density matrix.
 
     Args:
-        state: State vector or density matrix.
-        x_max: Maximum value of x for which to compute the wigner distribution.
-        p_max: Maximum value of p for which to compute the wigner distribution.
+        state (..., n, 1) or (..., n, n): State vector or density matrix.
+        x_max (float): Maximum value of x for which to compute the wigner distribution.
+            Defaults to `2 * pi`.
+        p_max (float): Maximum value of p for which to compute the wigner distribution.
             If the wigner distribution is computed using the `fft` method, `p_max` is
-            ignored, and given by `2 * pi / x_max` instead.
-        n_pixels: Number of pixels in each direction.
-        method: Method used to compute the wigner distribution.
+            ignored, and given by `2 * pi / x_max` instead. Defaults to `2 * pi`.
+        n_pixels (int): Number of pixels in each direction. Defaults to 200.
+        method (str): Method used to compute the wigner distribution. Available
+            methods: `clenshaw` or `fft`. Defaults to `clenshaw`.
 
     Returns:
         A tuple `(xvec, pvec, w)` where
