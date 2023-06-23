@@ -91,7 +91,13 @@ def sigmam(*, dtype=None, device=None) -> Tensor:
 def eye(*dims: int, dtype=None, device=None) -> Tensor:
     """Returns the identity operator.
 
+    If only a single dimension is provided, `eye` returns the identity operator
+    of corresponding dimension. If instead multiples dimensions are provided, `eye`
+    returns the identity operator of the composite Hilbert space given by the product
+    of all dimensions.
+
     Args:
+        dims (int): Dimension of the Hilbert space.
         dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
             data type specified by `torch.get_default_dtype()`.
         device (torch.device): Device of the returned tensor. Defaults to the globally
