@@ -155,3 +155,13 @@
 .md-typeset .highlight:not(.doc-contents > .highlight) {
   border-left: 3px solid #ed7764;
 }
+
+/* API table */
+.md-typeset table:not([class]) td.fixed_height {
+    height: 4.7em;
+    vertical-align: middle;
+}
+
+.md-typeset table:not([class]) td.fixed_height code {
+    font-weight:600;
+}
