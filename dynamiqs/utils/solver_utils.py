@@ -38,7 +38,8 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
          https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176.
     """
     vals, vecs = torch.linalg.eigh(mat)
-    return vecs @ torch.linalg.solve(vecs, torch.diag(vals ** (-0.5)), left=False)
+    inv_sqrt_vals = torch.diag(vals ** (-0.5)).to(vecs)
+    return vecs @ torch.linalg.solve(vecs, inv_sqrt_vals, left=False)
 
 
 def bexpect(O: Tensor, x: Tensor) -> Tensor:

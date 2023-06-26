@@ -1,7 +1,5 @@
 from math import pi
 
-import pytest
-
 import dynamiqs as dq
 
 from .me_solver_tester import MEAdjointSolverTester
@@ -28,12 +26,10 @@ class TestMERouchon1(MEAdjointSolverTester):
 
 
 class TestMERouchon1_5(MEAdjointSolverTester):
-    @pytest.mark.skip(reason='failing - to fix')
     def test_batching(self):
         options = dq.options.Rouchon1_5(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
 
-    @pytest.mark.skip(reason='failing - to fix')
     def test_rho_save(self):
         options = dq.options.Rouchon1_5(dt=1e-3)
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)

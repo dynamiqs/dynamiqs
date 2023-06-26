@@ -7,6 +7,7 @@ from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
 from ..utils.solver_utils import cache, inv_sqrtm, kraus_map
+from ..utils.td_tensor import CallableTDTensor, ConstantTDTensor
 from ..utils.utils import trace
 from .me_solver import MESolver
 
@@ -61,7 +62,6 @@ class MERouchon1(MERouchon):
 
         Args:
             t: Time.
-            dt: Time step.
             rho: Density matrix of shape `(b_H, b_rho, n, n)`.
             phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
 
@@ -91,13 +91,27 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon1_5(MERouchon):
-    # TODO implement caching
-    def forward(self, t: float, rho: Tensor) -> Tensor:
-        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        Note:
-            No need for trace renormalization since the scheme is trace-preserving
-            by construction.
+        # compute the inverse square root renormalization matrix
+        # (for time-dependent Hamiltonians, exclude the Hamiltonian from normalization)
+        if isinstance(self.H, ConstantTDTensor):
+            H_nh = self.H_nh(0.0)  # (b_H, 1, n, n)
+        elif isinstance(self.H, CallableTDTensor):
+            H_nh = -0.5j * self.sum_no_jump  # (b_H, 1, n, n)
+
+        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
+        self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_no_jump)  # (b_H, 1, n, n)
+
+        # define cached operators
+        # self.M0: (b_H, 1, n, n)
+        self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * self.S @ H_nh)
+        self.M1s = sqrt(self.dt) * self.S @ self.jump_ops  # (1, len(jump_ops), n, n)
+
+    def forward(self, t: float, rho: Tensor) -> Tensor:
+        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1 with Kraus map
+        renormalization.
 
         Args:
             t: Time.
@@ -108,21 +122,16 @@ class MERouchon1_5(MERouchon):
         """
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_no_jump  # (b_H, 1, n, n)
-
-        # build time-dependent Kraus operators
-        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
-        Ms = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
-
-        # build normalization matrix
-        S = M0.mH @ M0 + self.dt * self.sum_no_jump  # (b_H, 1, n, n)
-        # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
-        S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
+        # compute cached operators
+        H = self.H(t)  # (b_H, 1, n, n)
+        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
+        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, S_inv_sqrtm)  # (b_H, b_rho, n, n)
-        rho = kraus_map(rho, M0) + kraus_map(rho, Ms)  # (b_H, b_rho, n, n)
+        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
+
+        # normalize by the trace
+        rho = rho / trace(rho)[..., None, None].real
 
         return rho
 
@@ -191,7 +200,6 @@ class MERouchon2(MERouchon):
 
         Args:
             t: Time.
-            dt: Time step.
             rho: Density matrix of shape `(b_H, b_rho, n, n)`.
             phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
 
