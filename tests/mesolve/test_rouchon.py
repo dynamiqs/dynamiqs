@@ -34,6 +34,10 @@ class TestMERouchon1_5(MEAdjointSolverTester):
         options = dq.options.Rouchon1_5(dt=1e-3)
         self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
 
+    def test_adjoint(self):
+        options = dq.options.Rouchon1_5(dt=1e-3)
+        self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
+
 
 class TestMERouchon2(MEAdjointSolverTester):
     def test_batching(self):
