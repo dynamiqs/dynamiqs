@@ -5,12 +5,7 @@ from torch import Tensor
 
 from ..options import Euler, Options
 from ..utils.tensor_formatter import TensorFormatter
-from ..utils.tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    TensorLike,
-    dtype_complex_to_real,
-)
+from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .euler import SMEEuler
 
 
@@ -26,8 +21,6 @@ def smesolve(
     seed: int | None = None,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
 ) -> tuple[Tensor, Tensor | None, Tensor | None]:
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save, meas_save) with
     #    - y_save: (b_H?, b_rho0?, ntrajs, len(t_save), n, n)
@@ -42,7 +35,7 @@ def smesolve(
         )
 
     # format and batch all tensors
-    formatter = TensorFormatter(dtype, device)
+    formatter = TensorFormatter(options.dtype, options.device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     H_batched = H_batched.unsqueeze(2)
     rho0_batched = rho0_batched.unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)
@@ -52,10 +45,10 @@ def smesolve(
     jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
 
     # convert t_save to a tensor
-    t_save = torch.as_tensor(t_save, dtype=dtype_complex_to_real(dtype), device=device)
+    t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
 
     # convert etas to a tensor and check
-    etas = torch.as_tensor(etas, dtype=dtype_complex_to_real(dtype), device=device)
+    etas = torch.as_tensor(etas, dtype=options.rdtype, device=options.device)
     if len(etas) != len(jump_ops):
         raise ValueError('Argument `etas` must have the same length as `jump_ops`.')
     if torch.all(etas == 0.0):
@@ -70,13 +63,11 @@ def smesolve(
 
     # convert t_meas to a tensor
     t_meas = torch.as_tensor(
-        [] if t_meas is None else t_meas,
-        dtype=dtype_complex_to_real(dtype),
-        device=device,
+        [] if t_meas is None else t_meas, dtype=options.rdtype, device=options.device
     )
 
     # define random number generator from seed
-    generator = torch.Generator(device=device)
+    generator = torch.Generator(device=options.device)
     generator.seed() if seed is None else generator.manual_seed(seed)
 
     # default options
