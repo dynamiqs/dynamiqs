@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import torch
-from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
 from ..solvers.utils.tensor_formatter import TensorFormatter
+from ..solvers.result import Result
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
@@ -19,7 +19,7 @@ def mesolve(
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-) -> tuple[Tensor, Tensor | None]:
+) -> Result:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
@@ -62,15 +62,7 @@ def mesolve(
         options (Options, optional): Solver options. See the list of available solvers.
 
     Returns:
-        A tuple `(rho_save, exp_save)` where
-            `rho_save` is a tensor with the computed density matrices at `t_save`
-                times, and of shape `(len(t_save), n, n)` or `(b_H, b_rho, len(t_save),
-                n, n)` if batched. If `save_states` is `False`, only the final density
-                matrix is returned with the same shape as the initial input.
-            `exp_save` is a tensor with the computed expectation values at `t_save`
-                times, and of shape `(len(exp_ops), len(t_save))` or `(b_H, b_rho,
-                len(exp_ops), len(t_save))` if batched. `None` if no `exp_ops` are
-                passed.
+        Simulation result.
     """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
@@ -115,8 +107,8 @@ def mesolve(
     solver.run()
 
     # get saved tensors and restore correct batching
-    rho_save, exp_save = solver.y_save, solver.exp_save
-    rho_save = formatter.unbatch(rho_save)
-    exp_save = formatter.unbatch(exp_save)
+    result = solver.result
+    result.y_save = formatter.unbatch(result.y_save)
+    result.exp_save = formatter.unbatch(result.exp_save)
 
-    return rho_save, exp_save
+    return result

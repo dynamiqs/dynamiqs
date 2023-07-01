@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import torch
-from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Propagator
 from ..solvers.utils.tensor_formatter import TensorFormatter
+from ..solvers.result import Result
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -18,7 +18,7 @@ def sesolve(
     *,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-) -> tuple[Tensor, Tensor | None]:
+) -> Result:
     # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
     #    - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
@@ -54,8 +54,8 @@ def sesolve(
     solver.run()
 
     # get saved tensors and restore correct batching
-    psi_save, exp_save = solver.y_save, solver.exp_save
-    psi_save = formatter.unbatch(psi_save)
-    exp_save = formatter.unbatch(exp_save)
+    result = solver.result
+    result.y_save = formatter.unbatch(result.y_save)
+    result.exp_save = formatter.unbatch(result.exp_save)
 
-    return psi_save, exp_save
+    return result
