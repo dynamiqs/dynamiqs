@@ -6,8 +6,8 @@ import torch
 from torch import Tensor
 
 from ..options import Options
-from ..utils.solver_utils import bexpect
-from ..utils.td_tensor import TDTensor
+from .utils.td_tensor import TDTensor
+from .utils.utils import bexpect
 
 
 class Solver(ABC):
