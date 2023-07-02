@@ -3,8 +3,8 @@ from abc import abstractmethod
 from torch import Tensor
 
 from .solver import AutogradSolver
-from .utils.progress_bar import tqdm
 from .utils.td_tensor import ConstantTDTensor
+from .utils.utils import tqdm
 
 
 class Propagator(AutogradSolver):

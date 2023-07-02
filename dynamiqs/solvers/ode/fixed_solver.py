@@ -8,8 +8,7 @@ from torch import Tensor
 from torch.autograd.function import FunctionCtx
 
 from ..solver import AdjointSolver, AutogradSolver
-from ..utils.progress_bar import tqdm
-from ..utils.solver_utils import add_tuples, none_to_zeros_like
+from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
 
 
 class FixedSolver(AutogradSolver):
