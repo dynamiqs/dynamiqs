@@ -276,7 +276,7 @@ def tensprod(*args: Tensor) -> Tensor:
 
 
 def _bkron(x: Tensor, y: Tensor) -> Tensor:
-    """Compute the batched Kronecker product of two matrices."""
+    """Returns the batched Kronecker product of two matrices."""
     x_type = _quantum_type(x)
     y_type = _quantum_type(y)
     if x_type != y_type:
