@@ -284,10 +284,22 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
             f'Arguments have incompatible quantum types for tensor product (`x` is a {x_type} with shape {x.size()} and `y` is a {y_type} with shape {y.size()}).'
         )
 
-    kron_dims = torch.Size(torch.tensor(x.shape[-2:]) * torch.tensor(y.shape[-2:]))
-    out = x.unsqueeze(-1).unsqueeze(-3) * y.unsqueeze(-2).unsqueeze(-4)
-    batch_dims = out.shape[:-4]
-    return out.reshape(batch_dims + kron_dims)
+    # x: (..., x1, x2)
+    # y: (..., y1, y2)
+    
+    batch_dims = x.shape[:-2]
+    x1, x2 = x.shape[-2:]
+    y1, y2 = y.shape[-2:]
+    kron_dims = torch.Size((x1 * y1, x2 * y2))
+
+    # perform element-wise multiplication of appropriately unsqueezed tensors to
+    # simulate the Kronecker product 
+    x_tmp = x.unsqueeze(-1).unsqueeze(-3)  # (..., x1, 1, x2, 1)
+    y_tmp = y.unsqueeze(-2).unsqueeze(-4)  # (..., 1, y1, 1, y2)
+    out = x_tmp * y_tmp  # (..., x1, y1, x2, y2)
+
+    # reshape the output
+    return out.reshape(batch_dims + kron_dims) # (..., x1 * y1, x2 * y2)
 
 
 def trace(x: Tensor) -> Tensor:
