@@ -61,7 +61,7 @@ def is_dm(x: Tensor) -> bool:
 
 
 def _quantum_type(x: Tensor) -> str:
-    """Get the quantum type of a tensor."""
+    """Returns the quantum type of a tensor."""
     if is_ket(x):
         return 'ket'
     elif is_bra(x):
