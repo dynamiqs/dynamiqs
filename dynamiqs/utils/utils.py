@@ -7,6 +7,8 @@ from torch import Tensor
 
 __all__ = [
     'is_ket',
+    'is_bra',
+    'is_dm',
     'ket_to_bra',
     'ket_to_dm',
     'ket_overlap',
@@ -32,6 +34,42 @@ def is_ket(x: Tensor) -> bool:
         True if the last dimension of `x` is 1, False otherwise.
     """
     return x.size(-1) == 1
+
+
+def is_bra(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a bra.
+
+    Args:
+        x (...): Tensor.
+
+    Returns:
+        True if the second to last dimension of `x` is 1, False otherwise.
+    """
+    return x.size(-2) == 1
+
+
+def is_dm(x: Tensor) -> bool:
+    """Returns True if a tensor is in the format of a density matrix.
+
+    Args:
+        x (...): Tensor.
+
+    Returns:
+        True if the last two dimensions of `x` are equal, False otherwise.
+    """
+    return x.size(-1) == x.size(-2)
+
+
+def _quantum_type(x: Tensor) -> str:
+    """Returns the quantum type of a tensor."""
+    if is_ket(x):
+        return 'ket'
+    elif is_bra(x):
+        return 'bra'
+    elif is_dm(x):
+        return 'dm'
+    else:
+        raise ValueError('Tensor is not a ket, bra or density matrix.')
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
@@ -198,7 +236,8 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of a sequence of kets, density matrices or operators.
+    r"""Returns the tensor product of a sequence of kets, bras, density matrices or
+    operators.
 
     Examples:
         >>> psi = dq.tensprod(
@@ -219,28 +258,53 @@ def tensprod(*args: Tensor) -> Tensor:
 
     The returned tensor shape is:
 
-    - $(n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape $(n_k, 1)$,
-    - $(n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
-      operators vectors with shape $(n_k, n_k)$.
-
-    Warning:
-        This function does not yet support tensors in the bra format.
-
-    Warning:
-        This function does not yet support arbitrarily batched tensors (see
-        [issue #69](https://github.com/dynamiqs/dynamiqs/issues/69)).
+    - $(..., n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape
+      $(..., n_k, 1)$,
+    - $(..., 1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape
+      $(..., 1, n_k)$,
+    - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
+      operators vectors with shape $(..., n_k, n_k)$.
 
     Note:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args (n_k, 1) or (n_k, n_k): Sequence of kets, density matrices or operators.
+        *args (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k): Sequence of kets,
+            density matrices or operators.
 
     Returns:
-        (n, 1) or (n, n): Tensor product of the input tensors.
+        (..., n, 1) or (..., 1, n) or (..., n, n): Tensor product of the input tensors.
     """
-    # TODO: adapt to bras
-    return reduce(torch.kron, args)
+    return reduce(_bkron, args)
+
+
+def _bkron(x: Tensor, y: Tensor) -> Tensor:
+    """Returns the batched Kronecker product of two matrices."""
+    x_type = _quantum_type(x)
+    y_type = _quantum_type(y)
+    if x_type != y_type:
+        raise TypeError(
+            'Arguments have incompatible quantum types for tensor product (`x` is a'
+            f' {x_type} with shape {x.size()} and `y` is a {y_type} with shape'
+            f' {y.size()}).'
+        )
+
+    # x: (..., x1, x2)
+    # y: (..., y1, y2)
+
+    batch_dims = x.shape[:-2]
+    x1, x2 = x.shape[-2:]
+    y1, y2 = y.shape[-2:]
+    kron_dims = torch.Size((x1 * y1, x2 * y2))
+
+    # perform element-wise multiplication of appropriately unsqueezed tensors to
+    # simulate the Kronecker product
+    x_tmp = x.unsqueeze(-1).unsqueeze(-3)  # (..., x1, 1, x2, 1)
+    y_tmp = y.unsqueeze(-2).unsqueeze(-4)  # (..., 1, y1, 1, y2)
+    out = x_tmp * y_tmp  # (..., x1, y1, x2, y2)
+
+    # reshape the output
+    return out.reshape(batch_dims + kron_dims)  # (..., x1 * y1, x2 * y2)
 
 
 def trace(x: Tensor) -> Tensor:
@@ -284,6 +348,10 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     Returns:
         (..., m, m): Density matrix (with `m <= n`).
+
+    Raises:
+        ValueError: If `dims` does not match the input tensor shape, or if `keep` is
+        incompatible with `dims`.
     """
     # TODO: adapt to bras
     # convert keep and dims to tensors
