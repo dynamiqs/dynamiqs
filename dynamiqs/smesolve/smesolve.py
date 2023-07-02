@@ -31,7 +31,7 @@ def smesolve(
     if isinstance(jump_ops, list) and len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
-            ' consider using `sesolve`.'
+            ' consider using `ssesolve`.'
         )
 
     # format and batch all tensors
@@ -56,6 +56,8 @@ def smesolve(
             'Argument `etas` must contain at least one non-zero value. Otherwise, '
             'consider using `mesolve`.'
         )
+    if torch.any(etas < 0.0) or torch.any(etas > 1.0):
+        raise ValueError('Argument `etas` must contain values between 0 and 1.')
 
     # split jump operators between purely dissipative (eta = 0) and monitored (eta != 0)
     mask = etas == 0.0
@@ -72,7 +74,9 @@ def smesolve(
 
     # default options
     if options is None:
-        raise ValueError()
+        raise ValueError(
+            'No default solver yet, please specify one using the options argument.'
+        )
 
     # define the solver
     args = (H_batched, rho0_batched, exp_ops, options)

@@ -85,7 +85,11 @@ class SMESolver(MESolver):
         L_rho = torch.einsum('bij,...jk->...bik', self.meas_ops, rho)
         return L_rho + L_rho.mH
 
-    def diff_backaction(self, rho: Tensor, dw: Tensor) -> Tensor:
+    @cache
+    def exp_val(self, Lp_rho: Tensor) -> Tensor:
+        return trace(Lp_rho).real
+
+    def diff_backaction(self, dw: Tensor, rho: Tensor) -> Tensor:
         # Compute the measurement backaction term of the diffusive SME.
         # $$ \sum_k \sqrt{\eta_k} \mathcal{M}[L_k](\rho) dW_k $$
         # where
@@ -96,15 +100,16 @@ class SMESolver(MESolver):
 
         # L @ rho + rho @ Ldag
         Lp_rho = self.Lp(rho)  # (..., b, n, n)
+        exp_val = self.exp_val(Lp_rho)  # (..., b)
 
         # L @ rho + rho @ Ldag - Tr(L @ rho + rho @  Ldag) rho
-        tmp = Lp_rho - torch.einsum('...bii,...jk->...bjk', Lp_rho, rho)
-        # tmp: (..., b, n, n)
+        tmp = Lp_rho - exp_val[..., None, None] * rho[..., None, :, :]  # (..., b, n, n)
 
         # sum sqrt(eta) * dw * [L @ rho + rho @ Ldag - Tr(L @ rho + rho @ Ldag) rho]
-        fact = (self.etas.sqrt() * dw).to(self.dtype)
-        return torch.einsum('...b,...bij->...ij', fact, tmp)
+        prefactor = self.etas.sqrt() * dw
+        return (prefactor[..., None, None] * tmp).sum(-3)
 
-    def update_meas(self, rho: Tensor, dw: Tensor):
-        tr = trace(self.Lp(rho)).real
-        self.bin_meas += self.etas.sqrt() * tr * self.dt + dw
+    def update_meas(self, dw: Tensor, rho: Tensor):
+        Lp_rho = self.Lp(rho)  # (..., b, n, n)
+        exp_val = self.exp_val(Lp_rho)  # (..., b)
+        self.bin_meas += self.etas.sqrt() * exp_val * self.dt + dw

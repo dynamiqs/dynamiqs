@@ -12,9 +12,9 @@ class SMEEuler(SMESolver, FixedSolver):
         dw = self.sample_wiener(self.dt)
 
         # update state
-        drho = self.dt * self.lindbladian(t, rho) + self.diff_backaction(rho, dw)
+        drho = self.dt * self.lindbladian(t, rho) + self.diff_backaction(dw, rho)
 
         # update measured signal
-        self.update_meas(rho, dw)
+        self.update_meas(dw, rho)
 
         return rho + drho
