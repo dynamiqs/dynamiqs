@@ -267,7 +267,7 @@ def tensprod(*args: Tensor) -> Tensor:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args (n_k, 1) or (n_k, n_k): Sequence of kets, density matrices or operators.
+        *args (n_k, 1) or (1, n_k) or (n_k, n_k): Sequence of kets, density matrices or operators.
 
     Returns:
         (n, 1) or (1, n) or (n, n): Tensor product of the input tensors.
