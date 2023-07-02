@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Propagator
-from ..utils.tensor_formatter import TensorFormatter
+from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
