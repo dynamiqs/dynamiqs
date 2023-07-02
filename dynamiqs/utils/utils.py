@@ -259,11 +259,11 @@ def tensprod(*args: Tensor) -> Tensor:
     The returned tensor shape is:
 
     - $(..., n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape
-      $(n_k, 1)$,
+      $(..., n_k, 1)$,
     - $(..., 1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape
-      $(1, n_k)$,
+      $(..., 1, n_k)$,
     - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
-      operators vectors with shape $(n_k, n_k)$.
+      operators vectors with shape $(..., n_k, n_k)$.
 
     Note:
         This function is the equivalent of `qutip.tensor()`.
