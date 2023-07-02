@@ -350,7 +350,8 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         (..., m, m): Density matrix (with `m <= n`).
 
     Raises:
-        ValueError: If `dims` does not match the input tensor shape, or if `keep` is incompatible with `dims`.
+        ValueError: If `dims` does not match the input tensor shape, or if `keep` is
+        incompatible with `dims`.
     """
     # TODO: adapt to bras
     # convert keep and dims to tensors
