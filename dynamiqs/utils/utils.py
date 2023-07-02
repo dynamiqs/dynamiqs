@@ -281,8 +281,7 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
     y_type = _quantum_type(y)
     if x_type != y_type:
         raise TypeError(
-            'Cannot take the tensor product of different input objects. `x` is a'
-            f' {x_type} and `y` is a {y_type}.'
+            f'Arguments have incompatible quantum types for tensor product (`x` is a {x_type} with shape {x.size()} and `y` is a {y_type} with shape {y.size()}).'
         )
 
     kron_dims = torch.Size(torch.tensor(x.shape[-2:]) * torch.tensor(y.shape[-2:]))
