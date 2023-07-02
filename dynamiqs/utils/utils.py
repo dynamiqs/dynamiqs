@@ -258,19 +258,22 @@ def tensprod(*args: Tensor) -> Tensor:
 
     The returned tensor shape is:
 
-    - $(n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape $(n_k, 1)$,
-    - $(1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape $(1, n_k)$,
-    - $(n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
+    - $(..., n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape
+      $(n_k, 1)$,
+    - $(..., 1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape
+      $(1, n_k)$,
+    - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
       operators vectors with shape $(n_k, n_k)$.
 
     Note:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args (n_k, 1) or (1, n_k) or (n_k, n_k): Sequence of kets, density matrices or operators.
+        *args (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k): Sequence of kets,
+            density matrices or operators.
 
     Returns:
-        (n, 1) or (1, n) or (n, n): Tensor product of the input tensors.
+        (..., n, 1) or (..., 1, n) or (..., n, n): Tensor product of the input tensors.
     """
     return reduce(_bkron, args)
 
@@ -281,25 +284,27 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
     y_type = _quantum_type(y)
     if x_type != y_type:
         raise TypeError(
-            f'Arguments have incompatible quantum types for tensor product (`x` is a {x_type} with shape {x.size()} and `y` is a {y_type} with shape {y.size()}).'
+            'Arguments have incompatible quantum types for tensor product (`x` is a'
+            f' {x_type} with shape {x.size()} and `y` is a {y_type} with shape'
+            f' {y.size()}).'
         )
 
     # x: (..., x1, x2)
     # y: (..., y1, y2)
-    
+
     batch_dims = x.shape[:-2]
     x1, x2 = x.shape[-2:]
     y1, y2 = y.shape[-2:]
     kron_dims = torch.Size((x1 * y1, x2 * y2))
 
     # perform element-wise multiplication of appropriately unsqueezed tensors to
-    # simulate the Kronecker product 
+    # simulate the Kronecker product
     x_tmp = x.unsqueeze(-1).unsqueeze(-3)  # (..., x1, 1, x2, 1)
     y_tmp = y.unsqueeze(-2).unsqueeze(-4)  # (..., 1, y1, 1, y2)
     out = x_tmp * y_tmp  # (..., x1, y1, x2, y2)
 
     # reshape the output
-    return out.reshape(batch_dims + kron_dims) # (..., x1 * y1, x2 * y2)
+    return out.reshape(batch_dims + kron_dims)  # (..., x1 * y1, x2 * y2)
 
 
 def trace(x: Tensor) -> Tensor:
