@@ -64,7 +64,7 @@ class SMESolver(MESolver):
             self._save_meas(y)
             self.t_meas_counter += 1
 
-    def _save_meas(self):
+    def _save_meas(self, y: Tensor):
         if self.t_meas_counter != 0:
             t_bin = (
                 self.t_meas[self.t_meas_counter] - self.t_meas[self.t_meas_counter - 1]
