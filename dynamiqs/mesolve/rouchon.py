@@ -8,7 +8,7 @@ from torch import Tensor
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
 from ..utils.solver_utils import cache, inv_sqrtm, kraus_map
 from ..utils.td_tensor import CallableTDTensor, ConstantTDTensor
-from ..utils.utils import trace
+from ..utils.utils import unit
 from .me_solver import MESolver
 
 
@@ -51,7 +51,9 @@ class MERouchon1(MERouchon):
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-        rho = rho / trace(rho)[..., None, None].real
+
+        # normalize by the trace
+        rho = unit(rho)
 
         return rho
 
@@ -79,7 +81,8 @@ class MERouchon1(MERouchon):
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
-        rho = rho / trace(rho)[..., None, None].real
+        # normalize by the trace
+        rho = unit(rho)
 
         # compute phi(t-dt)
         phi = kraus_map(phi, M0dag) + kraus_map(phi, self.M1sdag)
@@ -134,7 +137,7 @@ class MERouchon1_5(MERouchon):
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-        rho = rho / trace(rho)[..., None, None].real
+        rho = unit(rho)
 
         return rho
 
@@ -163,7 +166,7 @@ class MERouchon1_5(MERouchon):
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
-        rho = rho / trace(rho)[..., None, None].real
+        rho = unit(rho)
 
         # compute phi(t-dt)
         phi = kraus_map(phi, M0dag) + kraus_map(phi, self.M1sdag)
@@ -215,7 +218,9 @@ class MERouchon2(MERouchon):
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
         rho = kraus_map(rho, M0) + tmp + 0.5 * kraus_map(tmp, M1s)  # (b_H, b_rho, n, n)
-        rho = rho / trace(rho)[..., None, None].real  # (b_H, b_rho, n, n)
+
+        # normalize by the trace
+        rho = unit(rho)  # (b_H, b_rho, n, n)
 
         return rho
 
@@ -252,7 +257,8 @@ class MERouchon2(MERouchon):
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1s)
         rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1s)
-        rho = rho / trace(rho)[..., None, None].real
+        # normalize by the trace
+        rho = unit(rho)
 
         # compute phi(t-dt)
         tmp = kraus_map(phi, M1sdag)
