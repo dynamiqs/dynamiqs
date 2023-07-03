@@ -27,10 +27,8 @@ def sigmax(*, dtype=None, device=None) -> Tensor:
     """Returns the Pauli $X$ operator.
 
     Args:
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -40,10 +38,8 @@ def sigmay(*, dtype=None, device=None) -> Tensor:
     """Returns the Pauli $Y$ operator.
 
     Args:
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
@@ -53,10 +49,8 @@ def sigmaz(*, dtype=None, device=None) -> Tensor:
     """Returns the Pauli $Z$ operator.
 
     Args:
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
     """
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
@@ -66,10 +60,8 @@ def sigmap(*, dtype=None, device=None) -> Tensor:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     Args:
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
@@ -79,10 +71,8 @@ def sigmam(*, dtype=None, device=None) -> Tensor:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     Args:
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -97,11 +87,9 @@ def eye(*dims: int, dtype=None, device=None) -> Tensor:
     of all dimensions.
 
     Args:
-        dims (int): Dimension of the Hilbert space.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dims: Dimension of the Hilbert space.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
     """
     dim = prod(dims)
     return torch.eye(dim, dtype=dtype, device=device)
@@ -143,15 +131,13 @@ def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
                 dtype=torch.complex128)
 
     Args:
-        dims (int): Dimension of the Hilbert space.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dims: Dimension of the Hilbert space.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor or tuple[torch.Tensor]: Annihilation operator of given dimension,
-            or tuple of annihilation operators in a multi-mode system.
+        Annihilation operator of given dimension, or tuple of annihilation operators in
+        a multi-mode system.
     """
     if len(dims) == 1:
         return _destroy_single(dims[0], dtype=dtype, device=device)
@@ -206,15 +192,13 @@ def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
                 dtype=torch.complex128)
 
     Args:
-        dims (int): Dimension of the Hilbert space.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dims: Dimension of the Hilbert space.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor or tuple[torch.Tensor]: Creation operator of given dimension,
-            or tuple of creation operators in a multi-mode system.
+        Creation operator of given dimension, or tuple of creation operators in a
+        multi-mode system.
     """
     if len(dims) == 1:
         return _create_single(dims[0], dtype=dtype, device=device)
@@ -238,15 +222,13 @@ def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
     """Returns the displacement operator of amplitude $\alpha$.
 
     Args:
-        dim (int): Dimension of the Hilbert space.
-        alpha (complex or torch.Tensor): Displacement amplitude.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dim: Dimension of the Hilbert space.
+        alpha: Displacement amplitude.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor: Displacement operator.
+        Displacement operator.
     """
     a = destroy(dim, dtype=dtype, device=device)
     alpha = torch.as_tensor(alpha)
@@ -258,15 +240,13 @@ def squeeze(dim: int, z: complex | Tensor, *, dtype=None, device=None) -> Tensor
     """Returns the squeezing operator of squeezing amplitude $z$.
 
     Args:
-        dim (int): Dimension of the Hilbert space.
-        z (complex or torch.Tensor): Squeezing amplitude.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dim: Dimension of the Hilbert space.
+        z: Squeezing amplitude.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor: Squeezing operator.
+        Squeezing operator.
     """
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a

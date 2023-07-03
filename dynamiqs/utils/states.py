@@ -22,7 +22,7 @@ def fock(
 ) -> Tensor:
     """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
-    Example:
+    Examples:
         >>> dq.fock(3, 1)
         tensor([[0.+0.j],
                 [1.+0.j],
@@ -36,12 +36,10 @@ def fock(
                 [0.+0.j]], dtype=torch.complex128)
 
     Args:
-        dims (int or tuple[int]): Dimension of the Hilbert space of each mode.
-        states (int or tuple[int]): Fock state of each mode.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dims: Dimension of the Hilbert space of each mode.
+        states: Fock state of each mode.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
         torch.Tensor (n, 1): Ket of the Fock state or tensor product of Fock states.
@@ -75,7 +73,7 @@ def fock_dm(
     """Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
 
-    Example:
+    Examples:
         >>> dq.fock_dm(3, 1)
         tensor([[0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j],
@@ -90,12 +88,10 @@ def fock_dm(
                 dtype=torch.complex128)
 
     Args:
-        dims (int or tuple[int]): Dimension of the Hilbert space of each mode.
-        states (int or tuple[int]): Fock state of each mode.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dims: Dimension of the Hilbert space of each mode.
+        states: Fock state of each mode.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
         torch.Tensor (n, n): Density matrix of the Fock state or tensor product of Fock
@@ -108,7 +104,7 @@ def fock_dm(
 def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
     """Returns the ket of a coherent state.
 
-    Example:
+    Examples:
         >>> dq.coherent(5, 0.2)
         tensor([[0.980+0.j],
                 [0.196+0.j],
@@ -117,12 +113,10 @@ def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
                 [0.000+0.j]], dtype=torch.complex128)
 
     Args:
-        dim (int): Dimension of the Hilbert space.
-        alpha (complex or torch.Tensor): Coherent state amplitude.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dim: Dimension of the Hilbert space.
+        alpha: Coherent state amplitude.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
         torch.Tensor (n, 1): Ket of the coherent state.
@@ -138,8 +132,8 @@ def coherent_dm(
 ) -> Tensor:
     """Density matrix of a coherent state.
 
-    Example:
-        >>> dq.coherent(5, 0.2)
+    Examples:
+        >>> dq.coherent_dm(5, 0.2)
         tensor([[0.961+0.j, 0.192+0.j, 0.027+0.j, 0.003+0.j, 0.000+0.j],
                 [0.192+0.j, 0.038+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j],
                 [0.027+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j],
@@ -148,12 +142,10 @@ def coherent_dm(
                 dtype=torch.complex128)
 
     Args:
-        dim (int): Dimension of the Hilbert space.
-        alpha (complex or torch.Tensor): Coherent state amplitude.
-        dtype (torch.dtype): Data type of the returned tensor. Defaults to the complex
-            data type specified by `torch.get_default_dtype()`.
-        device (torch.device): Device of the returned tensor. Defaults to the globally
-            defined default device.
+        dim: Dimension of the Hilbert space.
+        alpha: Coherent state amplitude.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
 
     Returns:
         torch.Tensor (n, n): Density matrix of the coherent state.

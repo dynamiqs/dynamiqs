@@ -35,11 +35,11 @@ def to_tensor(
     """Convert an array-like object (or a list of array-like objects) to a tensor.
 
     Args:
-        x (list, numpy.ndarray, qutip.Qobj or torch.Tensor): Input object or list of
+        x: Input object or list of
             input objects. If `None` or empty list, an empty tensor of size (0) is
             returned.
-        dtype (torch.dtype): Data type of the returned tensor.
-        device (torch.device): Device on which the returned tensor is stored.
+        dtype: Data type of the returned tensor.
+        device: Device on which the returned tensor is stored.
 
     Returns:
         torch.Tensor: Output tensor.
@@ -133,7 +133,7 @@ def from_qutip(x: Qobj, *, dtype=None, device=None) -> Tensor:
     """Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
-        x (qutip.Qobj): Input quantum object.
+        x: Input quantum object.
 
     Returns:
         torch.Tensor: Output tensor.
@@ -145,8 +145,8 @@ def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
     """Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:
-        x (torch.Tensor): PyTorch tensor.
-        dims (list of list of ints): QuTiP object dimensions.
+        x: PyTorch tensor.
+        dims: QuTiP object dimensions, with format `[[n1, n2, ...], [m1, m2, ...]]`.
 
     Returns:
         QuTiP quantum object.

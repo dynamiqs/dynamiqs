@@ -16,33 +16,32 @@ def wigner(
     state: Tensor,
     x_max: float = 6.2832,
     p_max: float = 6.2832,
-    n_pixels: int = 200,
+    num_pixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Compute the wigner distribution of a ket or density matrix.
 
     Args:
-        state (..., n, 1) or (..., n, n): State vector or density matrix.
-        x_max (float): Maximum value of x for which to compute the wigner distribution.
-            Defaults to `2 * pi`.
-        p_max (float): Maximum value of p for which to compute the wigner distribution.
-            If the wigner distribution is computed using the `fft` method, `p_max` is
-            ignored, and given by `2 * pi / x_max` instead. Defaults to `2 * pi`.
-        n_pixels (int): Number of pixels in each direction. Defaults to 200.
-        method (str): Method used to compute the wigner distribution. Available
-            methods: `clenshaw` or `fft`. Defaults to `clenshaw`.
+        state (..., n, 1) or (..., n, n): Ket or density matrix.
+        x_max: Maximum value of x.
+        p_max: Maximum value of p. Not used if the wigner distribution is
+            computer with the `fft` method, in which case `p_max` is given by
+            `2 * pi / x_max`.
+        num_pixels: Number of pixels in each direction.
+        method: Method used to compute the wigner distribution. Available
+            methods: `clenshaw` or `fft`.
 
     Returns:
         A tuple `(xvec, pvec, w)` where
-            xvec: 1D Tensor of x values
-            pvec: 1D Tensor of p values
-            w: 2D Tensor with the wigner distribution
+            - xvec: 1D Tensor of x values
+            - pvec: 1D Tensor of p values
+            - w: 2D Tensor with the wigner distribution
     """
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
-    xvec = torch.linspace(-x_max, x_max, n_pixels)
-    pvec = torch.linspace(-p_max, p_max, n_pixels)
+    xvec = torch.linspace(-x_max, x_max, num_pixels)
+    pvec = torch.linspace(-p_max, p_max, num_pixels)
 
     if method == 'clenshaw':
         state = ket_to_dm(state) if is_ket(state) else state
