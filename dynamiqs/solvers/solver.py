@@ -12,13 +12,30 @@ from ..utils.td_tensor import TDTensor
 from ..utils.tensor_types import dtype_complex_to_real
 
 
-class Solver(ABC):
+class BaseSolver(ABC):
+    def __init__(self, t_save_all: Tensor):
+        self.t_save_all = t_save_all
+        self.t_save_all_counter = 0
+
+    def next_t_save_all(self) -> float:
+        return self.t_save_all[self.t_save_all_counter].item()
+
+    def save(self, y: Tensor):
+        self._save(y)
+        self.t_save_all_counter += 1
+
+    @abstractmethod
+    def _save(self, y: Tensor):
+        pass
+
+
+class Solver(BaseSolver):
     def __init__(
         self,
         H: TDTensor,
         y0: Tensor,
+        t_save_all: Tensor,
         t_save: Tensor,
-        t_save_y: Tensor,
         exp_ops: Tensor,
         options: Options,
     ):
@@ -31,35 +48,24 @@ class Solver(ABC):
             exp_ops:
             options:
         """
-        # check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
-        # strictly ascending order and containing only positive values)
-        if t_save.ndim != 1 or len(t_save) == 0:
-            raise ValueError('Argument `t_save` must be a non-empty 1D tensor.')
-        if not torch.all(torch.diff(t_save) > 0):
-            raise ValueError(
-                'Argument `t_save` must be sorted in strictly ascending order.'
-            )
-        if not torch.all(t_save >= 0):
-            raise ValueError('Argument `t_save` must contain positive values only.')
-
+        super().__init__(t_save_all)
         self.H = H
         self.y0 = y0
-        self.t_save = t_save
-        self.t_save_y = t_save_y
         self.exp_ops = exp_ops
         self.options = options
 
-        self.save_counter = 0
-        self.save_y_counter = 0
+        # save logic for states and exp_ops
+        self.t_save_mask = torch.isin(self.t_save_all, t_save)
+        self.t_save_counter = 0
 
         # initialize save tensors
         batch_sizes, (m, n) = self.y0.shape[:-2], self.y0.shape[-2:]
 
         if self.options.save_states:
-            # y_save: (..., len(t_save_y), m, n)
+            # y_save: (..., len(t_save), m, n)
             self.y_save = torch.zeros(
                 *batch_sizes,
-                len(self.t_save_y),
+                len(t_save),
                 m,
                 n,
                 dtype=self.dtype,
@@ -67,11 +73,11 @@ class Solver(ABC):
             )
 
         if len(self.exp_ops) > 0:
-            # exp_save: (..., len(exp_ops), len(t_save_y))
+            # exp_save: (..., len(exp_ops), len(t_save))
             self.exp_save = torch.zeros(
                 *batch_sizes,
                 len(self.exp_ops),
-                len(self.t_save_y),
+                len(t_save),
                 dtype=self.dtype,
                 device=self.device,
             )
@@ -98,28 +104,22 @@ class Solver(ABC):
     def run_nograd(self):
         pass
 
-    def next_tsave(self) -> float:
-        return self.t_save[self.save_counter].item()
-
-    def save(self, t: float, y: Tensor):
-        self._save(t, y)
-        self.save_counter += 1
-
-    def _save(self, t: float, y: Tensor):
-        self._save_y(y)
-        self._save_exp_ops(y)
-        self.save_y_counter += 1
+    def _save(self, y: Tensor):
+        if self.t_save_mask[self.t_save_all_counter]:
+            self._save_y(y)
+            self._save_exp_ops(y)
+            self.t_save_counter += 1
 
     def _save_y(self, y: Tensor):
         if self.options.save_states:
-            self.y_save[..., self.save_y_counter, :, :] = y
+            self.y_save[..., self.t_save_counter, :, :] = y
         # otherwise only save the state if it is the final state
-        elif self.save_y_counter == len(self.t_save_y) - 1:
+        elif self.t_save_counter == len(self.t_save) - 1:
             self.y_save = y
 
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
-            self.exp_save[..., self.save_y_counter] = bexpect(self.exp_ops, y)
+            self.exp_save[..., self.t_save_counter] = bexpect(self.exp_ops, y)
 
 
 class AutogradSolver(Solver):

@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Propagator
+from ..utils.solver_utils import check_time_array
 from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import SEDormandPrince5
@@ -35,12 +36,14 @@ def sesolve(
 
     # convert t_save to tensor
     t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
+    check_time_array(t_save, 't_save')
 
     # default options
     options = options or Dopri5()
 
     # define the solver
-    args = (H_batched, psi0_batched, t_save, t_save, exp_ops, options)
+    t_save_all = t_save
+    args = (H_batched, psi0_batched, t_save_all, t_save, exp_ops, options)
     if isinstance(options, Euler):
         solver = SEEuler(*args)
     elif isinstance(options, Dopri5):

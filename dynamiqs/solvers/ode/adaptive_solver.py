@@ -24,7 +24,7 @@ class AdaptiveSolver(AutogradSolver):
         Series in Computational Mathematics`.
         """
         # initialize the progress bar
-        pbar = tqdm(total=self.t_save[-1].item(), disable=not self.options.verbose)
+        pbar = tqdm(total=self.t_save_all[-1].item(), disable=not self.options.verbose)
 
         # initialize the ODE routine
         t0 = 0.0
@@ -36,7 +36,7 @@ class AdaptiveSolver(AutogradSolver):
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
         step_counter = 0
-        for ts in self.t_save.cpu().numpy():
+        for ts in self.t_save_all.cpu().numpy():
             while t < ts:
                 # update time step
                 dt = self.update_tstep(dt, error)
@@ -69,7 +69,7 @@ class AdaptiveSolver(AutogradSolver):
                     )
 
             # save solution
-            self.save(ts, y)
+            self.save(y)
 
             # use cache to retrieve time step and error
             dt, error = cache

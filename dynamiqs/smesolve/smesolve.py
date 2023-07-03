@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 
 from ..options import Euler, Options
+from ..utils.solver_utils import check_time_array
 from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .euler import SMEEuler
@@ -46,6 +47,7 @@ def smesolve(
 
     # convert t_save to a tensor
     t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
+    check_time_array(t_save, 't_save')
 
     # convert etas to a tensor and check
     etas = torch.as_tensor(etas, dtype=options.rdtype, device=options.device)
@@ -67,6 +69,7 @@ def smesolve(
     t_meas = torch.as_tensor(
         [] if t_meas is None else t_meas, dtype=options.rdtype, device=options.device
     )
+    check_time_array(t_meas, 't_meas', allow_empty=True)
 
     # define random number generator from seed
     generator = torch.Generator(device=options.device)
@@ -85,8 +88,8 @@ def smesolve(
         meas_ops=meas_ops,
         etas=etas,
         generator=generator,
-        t_save_y=t_save,
-        t_save_meas=t_meas,
+        t_save=t_save,
+        t_meas=t_meas,
     )
     if isinstance(options, Euler):
         solver = SMEEuler(*args, **kwargs)
