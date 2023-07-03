@@ -35,9 +35,8 @@ def to_tensor(
     """Convert an array-like object (or a list of array-like objects) to a tensor.
 
     Args:
-        x: Input object or list of
-            input objects. If `None` or empty list, an empty tensor of size (0) is
-            returned.
+        x: Input object or list of input objects. If `None` or empty list, an empty
+            tensor of size (0) is returned.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
 
