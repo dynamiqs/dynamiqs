@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
-from ..utils.solver_utils import check_time_array
+from ..utils.solver_utils import check_time_tensor
 from ..utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import MEDormandPrince5
@@ -93,7 +93,7 @@ def mesolve(
 
     # convert t_save to a tensor
     t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
-    check_time_array(t_save, 't_save')
+    check_time_tensor(t_save, arg_name='t_save')
 
     # default options
     options = options or Dopri5()

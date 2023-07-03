@@ -147,8 +147,8 @@ def cache(func):
     return wrapper
 
 
-def check_time_array(x: Tensor, name: str, allow_empty=False):
-    # check that a time array is valid (it must be a 1D tensor sorted in strictly
+def check_time_tensor(x: Tensor, name: str, allow_empty=False):
+    # check that a time tensor is valid (it must be a 1D tensor sorted in strictly
     # ascending order and containing only positive values)
     if x.ndim != 1:
         raise ValueError(f'Argument `{name}` must be a 1D tensor.')

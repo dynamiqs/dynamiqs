@@ -32,8 +32,8 @@ class FixedSolver(AutogradSolver):
             torch.round(self.t_stop / self.dt), self.t_stop / self.dt
         ):
             raise ValueError(
-                'For fixed time step solvers, every value of `t_stop` must be a'
-                ' multiple of the time step `dt`.'
+                'For fixed time step solvers, every value of `t_save` (and also '
+                '`t_meas` for SME solvers) must be a multiple of the time step `dt`.'
             )
 
         # define time values
