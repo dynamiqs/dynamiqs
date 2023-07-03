@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cached_property
+from time import time
 
 import torch
 from torch import Tensor
 
 from ..options import Options
-from ..utils.solver_utils import bexpect
-from ..utils.td_tensor import TDTensor
 from ..utils.tensor_types import dtype_complex_to_real
+from .result import Result
+from .utils.td_tensor import TDTensor
+from .utils.utils import bexpect
 
 
 class Solver(ABC):
@@ -40,30 +42,27 @@ class Solver(ABC):
         self._init_time_logic()
 
         # initialize save tensors
-        batch_sizes, (m, n) = self.y0.shape[:-2], self.y0.shape[-2:]
+        batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
 
         if self.options.save_states:
             # y_save: (..., len(t_save), m, n)
-            self.y_save = torch.zeros(
-                *batch_sizes,
-                len(t_save),
-                m,
-                n,
-                dtype=self.dtype,
-                device=self.device,
+            y_save = torch.zeros(
+                *batch_sizes, len(t_save), m, n, dtype=self.dtype, device=self.device
             )
 
         if len(self.exp_ops) > 0:
             # exp_save: (..., len(exp_ops), len(t_save))
-            self.exp_save = torch.zeros(
+            exp_save = torch.zeros(
                 *batch_sizes,
-                len(self.exp_ops),
+                len(exp_ops),
                 len(t_save),
                 dtype=self.dtype,
                 device=self.device,
             )
         else:
-            self.exp_save = None
+            exp_save = None
+
+        self.result = Result(options, y_save, exp_save)
 
     def _init_time_logic(self):
         self.t_stop = self.t_save
@@ -85,6 +84,11 @@ class Solver(ABC):
         return dtype_complex_to_real(self.y0.dtype)
 
     def run(self):
+        self.result.start_time = time()
+        self._run()
+        self.result.end_time = time()
+
+    def _run(self):
         if self.options.gradient_alg is None:
             self.run_nograd()
 
@@ -107,19 +111,19 @@ class Solver(ABC):
 
     def _save_y(self, y: Tensor):
         if self.options.save_states:
-            self.y_save[..., self.t_save_counter, :, :] = y
+            self.result.y_save[..., self.t_save_counter, :, :] = y
         # otherwise only save the state if it is the final state
         elif self.t_save_counter == len(self.t_save) - 1:
-            self.y_save = y
+            self.result.y_save = y
 
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
-            self.exp_save[..., self.t_save_counter] = bexpect(self.exp_ops, y)
+            self.result.exp_save[..., self.t_save_counter] = bexpect(self.exp_ops, y)
 
 
 class AutogradSolver(Solver):
-    def run(self):
-        super().run()
+    def _run(self):
+        super()._run()
         if self.options.gradient_alg == 'autograd':
             self.run_autograd()
 
@@ -133,8 +137,8 @@ class AutogradSolver(Solver):
 
 
 class AdjointSolver(AutogradSolver):
-    def run(self):
-        super().run()
+    def _run(self):
+        super()._run()
         if self.options.gradient_alg == 'adjoint':
             self.run_adjoint()
 

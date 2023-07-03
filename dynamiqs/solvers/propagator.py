@@ -2,9 +2,9 @@ from abc import abstractmethod
 
 from torch import Tensor
 
-from ..utils.progress_bar import tqdm
-from ..utils.td_tensor import ConstantTDTensor
 from .solver import AutogradSolver
+from .utils.td_tensor import ConstantTDTensor
+from .utils.utils import tqdm
 
 
 class Propagator(AutogradSolver):
