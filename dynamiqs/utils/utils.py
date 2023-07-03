@@ -284,7 +284,7 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
     x_type = _quantum_type(x)
     y_type = _quantum_type(y)
     if x_type != y_type:
-        raise TypeError(
+        raise ValueError(
             'Arguments have incompatible quantum types for tensor product (`x` is a'
             f' {x_type} with shape {x.size()} and `y` is a {y_type} with shape'
             f' {y.size()}).'
@@ -351,7 +351,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
         ValueError: If `dims` does not match the input tensor shape, or if `keep` is
-        incompatible with `dims`.
+            incompatible with `dims`.
     """
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
@@ -422,7 +422,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         (...): Complex-valued expectation value.
 
     Raises:
-        TypeError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If the input tensor is not a ket, bra or density matrix.
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
@@ -431,14 +431,14 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     elif is_dm(x):
         return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
     else:
-        raise TypeError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError('Input tensor is not a ket, bra or density matrix.')
 
 
 def norm(x: Tensor) -> Tensor:
     r"""Returns the norm of a ket, bra or a density matrix.
 
     For kets and bras, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For density
-    matrices, it is $\mathrm{Tr} (\rho)$.
+    matrices, it is $\tr{\rho}$.
 
     Args:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
@@ -447,14 +447,14 @@ def norm(x: Tensor) -> Tensor:
         (...): Real-valued norm of `x`.
 
     Raises:
-        TypeError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If the input tensor is not a ket, bra or density matrix.
     """
     if is_ket(x) or is_bra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
     elif is_dm(x):
         return trace(x).real
     else:
-        raise TypeError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError('Input tensor is not a ket, bra or density matrix.')
 
 
 def unit(x: Tensor) -> Tensor:
@@ -468,6 +468,6 @@ def unit(x: Tensor) -> Tensor:
             matrix.
 
     Raises:
-        TypeError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If the input tensor is not a ket, bra or density matrix.
     """
     return x / norm(x)[..., None, None]
