@@ -82,13 +82,12 @@ def smesolve(
         )
 
     # define the solver
-    args = (H_batched, rho0_batched, exp_ops, options)
+    args = (H_batched, rho0_batched, t_save, exp_ops, options)
     kwargs = dict(
         jump_ops=jump_ops,
         meas_ops=meas_ops,
         etas=etas,
         generator=generator,
-        t_save=t_save,
         t_meas=t_meas,
     )
     if isinstance(options, Euler):

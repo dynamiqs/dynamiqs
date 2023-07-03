@@ -19,7 +19,7 @@ class Propagator(AutogradSolver):
 
     def run_autograd(self):
         y, t1 = self.y0, 0.0
-        for t2 in tqdm(self.t_save_all.cpu().numpy(), disable=not self.options.verbose):
+        for t2 in tqdm(self.t_stop.cpu().numpy(), disable=not self.options.verbose):
             y = self.forward(t1, t2 - t1, y)
             self.save(y)
             t1 = t2
