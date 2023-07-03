@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-from functools import wraps
+from functools import partial, wraps
 from math import sqrt
 
 import torch
 from methodtools import lru_cache
 from torch import Tensor
+from tqdm import tqdm as std_tqdm
 
 from ...utils.utils import is_ket
+
+# define a default progress bar format
+PBAR_FORMAT = '|{bar}| {percentage:4.1f}% - time {elapsed}/{remaining}'
+
+# redefine tqdm with some default arguments
+tqdm = partial(std_tqdm, bar_format=PBAR_FORMAT)
 
 
 def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
