@@ -41,7 +41,7 @@ def to_tensor(
         device: Device on which the returned tensor is stored.
 
     Returns:
-        torch.Tensor: Output tensor.
+        Output tensor.
     """
     if is_complex:
         dtype = cdtype(dtype)
