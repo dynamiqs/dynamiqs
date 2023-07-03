@@ -51,8 +51,6 @@ class MERouchon1(MERouchon):
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-
-        # normalize by the trace
         rho = unit(rho)
 
         return rho
@@ -81,7 +79,6 @@ class MERouchon1(MERouchon):
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
-        # normalize by the trace
         rho = unit(rho)
 
         # compute phi(t-dt)
@@ -110,9 +107,9 @@ class MERouchon1_5(MERouchon):
         # define cached operators
         # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
         # self.M1s, self.M1sdag, self.M1srev: (1, len(jump_ops), n, n)
-        self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * self.S @ H_nh)
+        self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * H_nh @ self.S)
         self.M0dag = cache(lambda M0: M0.mH)
-        self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * self.Srev @ H_nh)
+        self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
         self.M1s = sqrt(self.dt) * self.S @ self.jump_ops
         self.M1sdag = self.M1s.mH
         self.M1srev = sqrt(self.dt) * self.Srev @ self.jump_ops
@@ -218,8 +215,6 @@ class MERouchon2(MERouchon):
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
         rho = kraus_map(rho, M0) + tmp + 0.5 * kraus_map(tmp, M1s)  # (b_H, b_rho, n, n)
-
-        # normalize by the trace
         rho = unit(rho)  # (b_H, b_rho, n, n)
 
         return rho
@@ -257,7 +252,6 @@ class MERouchon2(MERouchon):
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1s)
         rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1s)
-        # normalize by the trace
         rho = unit(rho)
 
         # compute phi(t-dt)
