@@ -35,12 +35,12 @@ def smesolve(
         )
 
     # format and batch all tensors
+    # H_batched: (b_H, 1, 1, n, n)
+    # rho0_batched: (b_H, b_rho0, ntrajs, n, n)
     formatter = TensorFormatter(options.dtype, options.device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     H_batched = H_batched.unsqueeze(2)
     rho0_batched = rho0_batched.unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)
-    # H_batched: (b_H, 1, 1, n, n)
-    # rho0_batched: (b_H, b_rho0, ntrajs, n, n)
     exp_ops = formatter.format(exp_ops)  # (len(exp_ops), n, n)
     jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
 
