@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import torch
-from torch import Tensor
 
 from ..options import Euler, Options
-from ..utils.solver_utils import check_time_tensor
-from ..utils.tensor_formatter import TensorFormatter
+from ..solvers.result import Result
+from ..solvers.utils.tensor_formatter import TensorFormatter
+from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .euler import SMEEuler
 
@@ -22,7 +22,7 @@ def smesolve(
     seed: int | None = None,
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
-) -> tuple[Tensor, Tensor | None, Tensor | None]:
+) -> Result:
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save, meas_save) with
     #    - y_save: (b_H?, b_rho0?, ntrajs, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(t_save))
@@ -99,9 +99,9 @@ def smesolve(
     solver.run()
 
     # get saved tensors and restore correct batching
-    rho_save, exp_save, meas_save = solver.y_save, solver.exp_save, solver.meas_save
-    rho_save = formatter.unbatch(rho_save)
-    exp_save = formatter.unbatch(exp_save)
-    meas_save = formatter.unbatch(meas_save)
+    result = solver.result
+    result.y_save = formatter.unbatch(result.y_save)
+    result.exp_save = formatter.unbatch(result.exp_save)
+    result.meas_save = formatter.unbatch(result.meas_save)
 
-    return rho_save, exp_save, meas_save
+    return result

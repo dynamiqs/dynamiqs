@@ -26,10 +26,17 @@ def tensor_str(x: Tensor) -> str:
 
 
 class Result:
-    def __init__(self, options: Options, y_save: Tensor, exp_save: Tensor):
+    def __init__(
+        self,
+        options: Options,
+        y_save: Tensor,
+        exp_save: Tensor,
+        meas_save: Tensor | None = None,
+    ):
         self.options = options
         self.y_save = y_save
         self.exp_save = exp_save
+        self.meas_save = meas_save
         self.start_time: float | None = None
         self.end_time: float | None = None
 
@@ -39,9 +46,14 @@ class Result:
         return self.y_save
 
     @property
-    def expvals(self) -> Tensor:
+    def expvals(self) -> Tensor | None:
         # alias for exp_save
         return self.exp_save
+
+    @property
+    def measvals(self) -> Tensor | None:
+        # alias for meas_save
+        return self.meas_save
 
     @property
     def solver_str(self) -> str:
@@ -72,10 +84,12 @@ class Result:
             f'Start      : {self.start_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
             f'End        : {self.end_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
             f'Total time : {self.total_time.total_seconds():.2f} s\n'
-            f'y_save     : {tensor_str(self.y_save)}'
+            f'states     : {tensor_str(self.states)}'
         )
-        if self.exp_save is not None:
-            tmp += f'\nexp_save   : {tensor_str(self.exp_save)}'
+        if self.expvals is not None:
+            tmp += f'\nexpvals    : {tensor_str(self.expvals)}'
+        if self.measvals is not None:
+            tmp += f'\nmeasvals   : {tensor_str(self.measvals)}'
         return tmp
 
     def to_qutip(self) -> Result:

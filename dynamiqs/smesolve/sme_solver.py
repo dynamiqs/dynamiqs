@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from ..mesolve.me_solver import MESolver
-from ..utils.solver_utils import cache
+from ..solvers.utils.utils import cache
 from ..utils.utils import trace
 
 
@@ -34,14 +34,16 @@ class SMESolver(MESolver):
 
         # meas_save: (..., len(meas_ops), len(t_meas))
         if len(t_meas) > 0:
-            self.meas_save = torch.zeros(
+            meas_save = torch.zeros(
                 *self.meas_shape,
                 len(t_meas) - 1,
                 dtype=self.dtype_real,
                 device=self.device,
             )
         else:
-            self.meas_save = None
+            meas_save = None
+
+        self.result.meas_save = meas_save
 
         # tensor to hold the sum of measurement results on a time bin
         self.bin_meas = torch.zeros(self.meas_shape)  # (..., len(etas))
@@ -67,7 +69,7 @@ class SMESolver(MESolver):
             t_bin = (
                 self.t_meas[self.t_meas_counter] - self.t_meas[self.t_meas_counter - 1]
             )
-            self.meas_save[..., self.t_meas_counter - 1] = self.bin_meas / t_bin
+            self.result.meas_save[..., self.t_meas_counter - 1] = self.bin_meas / t_bin
             self.bin_meas = torch.zeros_like(self.bin_meas)
 
     def sample_wiener(self, dt: float) -> Tensor:

@@ -154,16 +154,16 @@ def cache(func):
     return wrapper
 
 
-def check_time_tensor(x: Tensor, name: str, allow_empty=False):
+def check_time_tensor(x: Tensor, arg_name: str, allow_empty=False):
     # check that a time tensor is valid (it must be a 1D tensor sorted in strictly
     # ascending order and containing only positive values)
     if x.ndim != 1:
-        raise ValueError(f'Argument `{name}` must be a 1D tensor.')
+        raise ValueError(f'Argument `{arg_name}` must be a 1D tensor.')
     if not allow_empty and len(x) == 0:
-        raise ValueError(f'Argument `{name}` must contain at least one element.')
+        raise ValueError(f'Argument `{arg_name}` must contain at least one element.')
     if not torch.all(torch.diff(x) > 0):
         raise ValueError(
-            f'Argument `{name}` must be sorted in strictly ascending order.'
+            f'Argument `{arg_name}` must be sorted in strictly ascending order.'
         )
     if not torch.all(x >= 0):
-        raise ValueError(f'Argument `{name}` must contain positive values only.')
+        raise ValueError(f'Argument `{arg_name}` must contain positive values only.')
