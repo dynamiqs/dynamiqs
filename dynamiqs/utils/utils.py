@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Literal
 
 import torch
 from torch import Tensor
-
-from ._wigner import _wigner_clenshaw, _wigner_fft_dm, _wigner_fft_psi
 
 __all__ = [
     'is_ket',
@@ -24,7 +21,6 @@ __all__ = [
     'trace',
     'ptrace',
     'expect',
-    'wigner',
 ]
 
 
@@ -355,7 +351,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     Raises:
         ValueError: If `dims` does not match the input tensor shape, or if `keep` is
-        incompatible with `dims`.
+            incompatible with `dims`.
     """
     # TODO: adapt to bras
     # convert keep and dims to tensors
@@ -430,47 +426,3 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
     return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
-
-
-def wigner(
-    state: Tensor,
-    x_max: float = 6.2832,
-    p_max: float = 6.2832,
-    n_pixels: int = 200,
-    method: Literal['clenshaw', 'fft'] = 'clenshaw',
-) -> tuple[Tensor, Tensor, Tensor]:
-    """Compute the wigner distribution of a state vector or density matrix.
-
-    Args:
-        state: State vector or density matrix.
-        x_max: Maximum value of x for which to compute the wigner distribution.
-        p_max: Maximum value of p for which to compute the wigner distribution.
-            If the wigner distribution is computed using the `fft` method, `p_max` is
-            ignored, and given by `2 * pi / x_max` instead.
-        n_pixels: Number of pixels in each direction.
-        method: Method used to compute the wigner distribution.
-
-    Returns:
-        A tuple `(xvec, pvec, w)` where
-            xvec: 1D Tensor of x values
-            pvec: 1D Tensor of p values
-            w: 2D Tensor with the wigner distribution
-    """
-    if state.ndim > 2:
-        raise NotImplementedError('Batching is not yet implemented for `wigner`.')
-
-    xvec = torch.linspace(-x_max, x_max, n_pixels)
-    pvec = torch.linspace(-p_max, p_max, n_pixels)
-
-    if method == 'clenshaw':
-        state = ket_to_dm(state) if is_ket(state) else state
-        w = _wigner_clenshaw(state, xvec, pvec)
-    elif method == 'fft':
-        if is_ket(state):
-            w, pvec = _wigner_fft_psi(state, xvec)
-        else:
-            w, pvec = _wigner_fft_dm(state, xvec)
-    else:
-        raise ValueError(f'Method {method} does not exist.')
-
-    return xvec, pvec, w
