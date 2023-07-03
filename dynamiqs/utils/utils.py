@@ -279,20 +279,20 @@ def trace(x: Tensor) -> Tensor:
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Returns the partial trace of a ket or density matrix.
+    """Returns the partial trace of a ket, bra or density matrix.
 
     Examples:
         >>> rhoABC = dq.tensprod(
-        ...     dq.coherent_dm(20, 2.0),
-        ...     dq.fock_dm(2, 0),
-        ...     dq.fock_dm(5, 1)
+        ...     dq.coherent(20, 2.0),
+        ...     dq.fock(2, 0),
+        ...     dq.fock(5, 1)
         ... )
         >>> rhoABC.shape
-        torch.Size([200, 200])
-        >>> rhoA = dq.ptrace(rho, 0, (20, 2, 5))
+        torch.Size([200, 1])
+        >>> rhoA = dq.ptrace(rhoABC, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
-        >>> rhoBC = dq.ptrace(rho, (1, 2), (20, 2, 5))
+        >>> rhoBC = dq.ptrace(rhoABC, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
         torch.Size([10, 10])
 
@@ -305,6 +305,10 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     Returns:
         (..., m, m): Density matrix (with `m <= n`).
+
+    Raises:
+        ValueError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If input `dims` or `keep` do not match the input tensor shape.
     """
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
@@ -346,7 +350,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
         x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
     else:
-        raise TypeError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError('Input tensor is not a ket, bra or density matrix.')
 
     # reshape to final dimension
     nkeep = torch.prod(dims[keep])  # e.g. 10
@@ -373,6 +377,9 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
     Returns:
         (...): Complex-valued expectation value.
+
+    Raises:
+        TypeError: If the input tensor is not a ket, bra or density matrix.
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
@@ -385,16 +392,22 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
 
 def norm(x: Tensor) -> Tensor:
-    """Returns the norm of a ket, bra or a density matrix.
+    r"""Returns the norm of a ket, bra or a density matrix.
+
+    For kets and bras, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For density
+    matrices, it is $\mathrm{Tr} (\rho)$.
 
     Args:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
 
     Returns:
         (...): Real-valued norm of `x`.
+
+    Raises:
+        TypeError: If the input tensor is not a ket, bra or density matrix.
     """
     if is_ket(x) or is_bra(x):
-        return torch.norm(x, dim=(-2, -1)).real
+        return torch.linalg.norm(x, dim=(-2, -1)).real
     elif is_dm(x):
         return trace(x).real
     else:
@@ -410,10 +423,8 @@ def unit(x: Tensor) -> Tensor:
     Returns:
         (..., n, 1) or (..., 1, n) or (..., n, n): Normalized ket, bra or density
             matrix.
+
+    Raises:
+        TypeError: If the input tensor is not a ket, bra or density matrix.
     """
-    if is_ket(x) or is_bra(x):
-        return x / norm(x)[..., None, None]
-    elif is_dm(x):
-        return x / trace(x)[..., None, None]
-    else:
-        raise TypeError('Input tensor is not a ket, bra or density matrix.')
+    return x / norm(x)[..., None, None]
