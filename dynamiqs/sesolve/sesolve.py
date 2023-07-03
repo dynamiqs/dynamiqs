@@ -3,8 +3,8 @@ from __future__ import annotations
 import torch
 
 from ..options import Dopri5, Euler, Options, Propagator
-from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.result import Result
+from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler

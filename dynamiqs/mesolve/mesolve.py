@@ -3,8 +3,8 @@ from __future__ import annotations
 import torch
 
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
-from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.result import Result
+from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
@@ -62,7 +62,7 @@ def mesolve(
         options (Options, optional): Solver options. See the list of available solvers.
 
     Returns:
-        Simulation result.
+        Result of the master equation integration.
     """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)

@@ -17,12 +17,12 @@ def memory_str(x: Tensor) -> str:
         return f'{mem / 1024:.2f} Kb'
     elif mem < 1024**3:
         return f'{mem / 1024**2:.2f} Mb'
-
-    return f'{mem / 1024**3:.2f} Gb'
+    else:
+        return f'{mem / 1024**3:.2f} Gb'
 
 
 def tensor_str(x: Tensor) -> str:
-    return f'tensor {tuple(x.size())} [{memory_str(x)}]'
+    return f'Tensor {tuple(x.size())} | {memory_str(x)}'
 
 
 class Result:
@@ -32,6 +32,16 @@ class Result:
         self.exp_save = exp_save
         self.start_time: float | None = None
         self.end_time: float | None = None
+
+    @property
+    def states(self) -> Tensor:
+        # alias for y_save
+        return self.y_save
+
+    @property
+    def expvals(self) -> Tensor:
+        # alias for exp_save
+        return self.exp_save
 
     @property
     def solver_str(self) -> str:
@@ -57,7 +67,7 @@ class Result:
 
     def __str__(self):
         tmp = (
-            '==== Result ===\n'
+            '==== Result ====\n'
             f'Options    : {self.solver_str}\n'
             f'Start      : {self.start_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
             f'End        : {self.end_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
