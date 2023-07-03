@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..utils.solver_utils import cache, inv_sqrtm, kraus_map
+from ..solvers.utils.utils import cache, inv_sqrtm, kraus_map
 from ..utils.utils import trace
 from .me_solver import MESolver
 
