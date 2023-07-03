@@ -135,7 +135,7 @@ def from_qutip(x: Qobj, *, dtype=None, device=None) -> Tensor:
         x: Input quantum object.
 
     Returns:
-        torch.Tensor: Output tensor.
+        Output tensor.
     """
     return torch.from_numpy(x.full()).to(dtype=dtype, device=device)
 
