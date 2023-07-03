@@ -10,8 +10,7 @@ from tqdm.std import TqdmWarning
 
 from ...utils.tensor_types import dtype_complex_to_real
 from ..solver import AutogradSolver
-from ..utils.progress_bar import tqdm
-from ..utils.solver_utils import hairer_norm
+from ..utils.utils import hairer_norm, tqdm
 
 
 class AdaptiveSolver(AutogradSolver):

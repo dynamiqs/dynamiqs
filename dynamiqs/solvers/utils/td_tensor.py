@@ -13,7 +13,7 @@ from ...utils.tensor_types import (
     rdtype,
     to_tensor,
 )
-from .solver_utils import cache
+from .utils import cache
 
 
 def to_td_tensor(
