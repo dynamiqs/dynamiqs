@@ -1,7 +1,5 @@
 from math import pi
 
-import pytest
-
 import dynamiqs as dq
 
 from .me_solver_tester import MEAdjointSolverTester
@@ -18,9 +16,9 @@ class TestMERouchon1(MEAdjointSolverTester):
         options = dq.options.Rouchon1(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
 
-    def test_rho_save(self):
+    def test_y_save(self):
         options = dq.options.Rouchon1(dt=1e-3)
-        self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
+        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
 
     def test_adjoint(self):
         options = dq.options.Rouchon1(dt=1e-3)
@@ -28,15 +26,17 @@ class TestMERouchon1(MEAdjointSolverTester):
 
 
 class TestMERouchon1_5(MEAdjointSolverTester):
-    @pytest.mark.skip(reason='failing - to fix')
     def test_batching(self):
         options = dq.options.Rouchon1_5(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
 
-    @pytest.mark.skip(reason='failing - to fix')
-    def test_rho_save(self):
+    def test_y_save(self):
         options = dq.options.Rouchon1_5(dt=1e-3)
-        self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
+        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
+
+    def test_adjoint(self):
+        options = dq.options.Rouchon1_5(dt=1e-3)
+        self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
 
 
 class TestMERouchon2(MEAdjointSolverTester):
@@ -44,9 +44,9 @@ class TestMERouchon2(MEAdjointSolverTester):
         options = dq.options.Rouchon2(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
 
-    def test_rho_save(self):
+    def test_y_save(self):
         options = dq.options.Rouchon2(dt=1e-3)
-        self._test_rho_save(options, leaky_cavity_8, num_t_save=11)
+        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
 
     def test_adjoint(self):
         options = dq.options.Rouchon2(dt=1e-3)

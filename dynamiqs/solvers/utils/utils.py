@@ -37,7 +37,8 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
 
 
 def inv_sqrtm(mat: Tensor) -> Tensor:
-    """Compute the inverse square root of a matrix using its eigendecomposition.
+    """Compute the inverse square root of a complex Hermitian or real symmetric matrix
+    using its eigendecomposition.
 
     TODO Replace with Schur decomposition once released by PyTorch.
          See the feature request at https://github.com/pytorch/pytorch/issues/78809.
@@ -45,7 +46,8 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
          https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176.
     """
     vals, vecs = torch.linalg.eigh(mat)
-    return vecs @ torch.linalg.solve(vecs, torch.diag(vals ** (-0.5)), left=False)
+    inv_sqrt_vals = torch.diag(vals ** (-0.5)).to(vecs)
+    return vecs @ torch.linalg.solve(vecs, inv_sqrt_vals, left=False)
 
 
 def bexpect(O: Tensor, x: Tensor) -> Tensor:
@@ -152,3 +154,18 @@ def cache(func):
         return grad_cached_func(*args, grad_enabled=torch.is_grad_enabled(), **kwargs)
 
     return wrapper
+
+
+def check_time_tensor(x: Tensor, arg_name: str, allow_empty=False):
+    # check that a time tensor is valid (it must be a 1D tensor sorted in strictly
+    # ascending order and containing only positive values)
+    if x.ndim != 1:
+        raise ValueError(f'Argument `{arg_name}` must be a 1D tensor.')
+    if not allow_empty and len(x) == 0:
+        raise ValueError(f'Argument `{arg_name}` must contain at least one element.')
+    if not torch.all(torch.diff(x) > 0):
+        raise ValueError(
+            f'Argument `{arg_name}` must be sorted in strictly ascending order.'
+        )
+    if not torch.all(x >= 0):
+        raise ValueError(f'Argument `{arg_name}` must contain positive values only.')

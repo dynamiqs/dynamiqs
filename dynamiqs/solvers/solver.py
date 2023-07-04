@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from functools import cached_property
+from time import time
 
 import torch
 from torch import Tensor
 
 from ..options import Options
+from ..utils.tensor_types import dtype_complex_to_real
+from .result import Result
 from .utils.td_tensor import TDTensor
 from .utils.utils import bexpect
 
@@ -28,53 +32,63 @@ class Solver(ABC):
             exp_ops:
             options:
         """
-        # check that `t_save` is valid (it must be a non-empty 1D tensor sorted in
-        # strictly ascending order and containing only positive values)
-        if t_save.ndim != 1 or len(t_save) == 0:
-            raise ValueError('Argument `t_save` must be a non-empty 1D tensor.')
-        if not torch.all(torch.diff(t_save) > 0):
-            raise ValueError(
-                'Argument `t_save` must be sorted in strictly ascending order.'
-            )
-        if not torch.all(t_save >= 0):
-            raise ValueError('Argument `t_save` must contain positive values only.')
-
         self.H = H
         self.y0 = y0
         self.t_save = t_save
         self.exp_ops = exp_ops
         self.options = options
-        self._cache = {}
 
-        self.save_counter = 0
+        # initialize saving logic
+        self._init_time_logic()
 
         # initialize save tensors
-        batch_sizes, (m, n) = self.y0.shape[:-2], self.y0.shape[-2:]
+        batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
 
         if self.options.save_states:
             # y_save: (..., len(t_save), m, n)
-            self.y_save = torch.zeros(
-                *batch_sizes,
-                len(self.t_save),
-                m,
-                n,
-                dtype=self.y0.dtype,
-                device=self.y0.device,
+            y_save = torch.zeros(
+                *batch_sizes, len(t_save), m, n, dtype=self.dtype, device=self.device
             )
 
         if len(self.exp_ops) > 0:
             # exp_save: (..., len(exp_ops), len(t_save))
-            self.exp_save = torch.zeros(
+            exp_save = torch.zeros(
                 *batch_sizes,
-                len(self.exp_ops),
-                len(self.t_save),
-                dtype=self.y0.dtype,
-                device=self.y0.device,
+                len(exp_ops),
+                len(t_save),
+                dtype=self.dtype,
+                device=self.device,
             )
         else:
-            self.exp_save = None
+            exp_save = None
+
+        self.result = Result(options, y_save, exp_save)
+
+    def _init_time_logic(self):
+        self.t_stop = self.t_save
+        self.t_stop_counter = 0
+
+        self.t_save_mask = torch.isin(self.t_stop, self.t_save)
+        self.t_save_counter = 0
+
+    @cached_property
+    def dtype(self) -> torch.complex64 | torch.complex128:
+        return self.y0.dtype
+
+    @cached_property
+    def device(self) -> torch.device:
+        return self.y0.device
+
+    @cached_property
+    def dtype_real(self) -> torch.float32 | torch.float64:
+        return dtype_complex_to_real(self.y0.dtype)
 
     def run(self):
+        self.result.start_time = time()
+        self._run()
+        self.result.end_time = time()
+
+    def _run(self):
         if self.options.gradient_alg is None:
             self.run_nograd()
 
@@ -82,34 +96,39 @@ class Solver(ABC):
     def run_nograd(self):
         pass
 
-    def next_tsave(self) -> float:
-        return self.t_save[self.save_counter].item()
+    def next_t_stop(self) -> float:
+        return self.t_stop[self.t_stop_counter].item()
 
     def save(self, y: Tensor):
-        self._save_y(y)
-        self._save_exp_ops(y)
-        self.save_counter += 1
+        self._save(y)
+        self.t_stop_counter += 1
+
+    def _save(self, y: Tensor):
+        if self.t_save_mask[self.t_stop_counter]:
+            self._save_y(y)
+            self._save_exp_ops(y)
+            self.t_save_counter += 1
 
     def _save_y(self, y: Tensor):
         if self.options.save_states:
-            self.y_save[..., self.save_counter, :, :] = y
+            self.result.y_save[..., self.t_save_counter, :, :] = y
         # otherwise only save the state if it is the final state
-        elif self.save_counter == len(self.t_save) - 1:
-            self.y_save = y
+        elif self.t_save_counter == len(self.t_save) - 1:
+            self.result.y_save = y
 
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
-            self.exp_save[..., self.save_counter] = bexpect(self.exp_ops, y)
+            self.result.exp_save[..., self.t_save_counter] = bexpect(self.exp_ops, y)
 
 
 class AutogradSolver(Solver):
-    def run(self):
-        super().run()
+    def _run(self):
+        super()._run()
         if self.options.gradient_alg == 'autograd':
             self.run_autograd()
 
     def run_nograd(self):
-        with torch.no_grad():
+        with torch.inference_mode():
             self.run_autograd()
 
     @abstractmethod
@@ -118,8 +137,8 @@ class AutogradSolver(Solver):
 
 
 class AdjointSolver(AutogradSolver):
-    def run(self):
-        super().run()
+    def _run(self):
+        super()._run()
         if self.options.gradient_alg == 'adjoint':
             self.run_adjoint()
 

@@ -26,30 +26,30 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # assert that `t_save` values are multiples of `dt`
+        # assert that `t_stop` values are multiples of `dt`
         if not torch.allclose(
-            torch.round(self.t_save / self.dt), self.t_save / self.dt
+            torch.round(self.t_stop / self.dt), self.t_stop / self.dt
         ):
             raise ValueError(
-                'For fixed time step solvers, every value of `t_save` must be a'
-                ' multiple of the time step `dt`.'
+                'For fixed time step solvers, every value of `t_save` (and also '
+                '`t_meas` for SME solvers) must be a multiple of the time step `dt`.'
             )
 
         # define time values
-        num_times = torch.round(self.t_save[-1] / self.dt).int() + 1
-        times = torch.linspace(0.0, self.t_save[-1], num_times)
+        num_times = torch.round(self.t_stop[-1] / self.dt).int() + 1
+        times = torch.linspace(0.0, self.t_stop[-1], num_times)
 
         # run the ode routine
         y = self.y0
         for t in tqdm(times[:-1], disable=not self.options.verbose):
             # save solution
-            if t >= self.next_tsave():
+            if t >= self.next_t_stop():
                 self.save(y)
 
             # iterate solution
             y = self.forward(t, y)
 
-        # save final time step (`t` goes `0.0` to `t_save[-1]` excluded)
+        # save final time step (`t` goes `0.0` to `t_stop[-1]` excluded)
         self.save(y)
 
     @abstractmethod
@@ -63,25 +63,25 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
     def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
-        # check t_save_bwd
-        if not (self.t_save_bwd.ndim == 1 and len(self.t_save_bwd) == 2):
+        # check t_stop_bwd
+        if not (self.t_stop_bwd.ndim == 1 and len(self.t_stop_bwd) == 2):
             raise ValueError(
-                '`t_save_bwd` should be a tensor of size (2,), but has size'
-                f' {self.t_save_bwd.shape}.'
+                '`t_stop_bwd` should be a tensor of size (2,), but has size'
+                f' {self.t_stop_bwd.shape}.'
             )
-        if self.t_save_bwd[1] <= self.t_save_bwd[0]:
-            raise ValueError('`t_save_bwd` should be sorted in ascending order.')
+        if self.t_stop_bwd[1] <= self.t_stop_bwd[0]:
+            raise ValueError('`t_stop_bwd` should be sorted in ascending order.')
 
-        T = self.t_save_bwd[1] - self.t_save_bwd[0]
+        T = self.t_stop_bwd[1] - self.t_stop_bwd[0]
         if not torch.allclose(torch.round(T / self.dt), T / self.dt):
             raise ValueError(
-                'For fixed time step adjoint solvers, every value of `t_save_bwd` '
+                'For fixed time step adjoint solvers, every value of `t_stop_bwd` '
                 'must be a multiple of the time step `dt`.'
             )
 
         # define time values
         num_times = torch.round(T / self.dt).int() + 1
-        times = torch.linspace(self.t_save_bwd[1], self.t_save_bwd[0], num_times)
+        times = torch.linspace(self.t_stop_bwd[1], self.t_stop_bwd[0], num_times)
 
         # run the ode routine
         y, a, g = self.y_bwd, self.a_bwd, self.g_bwd
@@ -125,16 +125,16 @@ class AdjointFixedAutograd(torch.autograd.Function):
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.solver = solver
-        ctx.t_save = solver.t_save
+        ctx.t_stop = solver.t_stop
 
         # integrate the ODE forward without storing the graph of operations
         solver.run_nograd()
 
         # save results and model parameters
-        ctx.save_for_backward(solver.y_save)
+        ctx.save_for_backward(solver.result.y_save)
 
         # returning `y_save` is required for custom backward functions
-        return solver.y_save, solver.exp_save
+        return solver.result.y_save, solver.result.exp_save
 
     @staticmethod
     def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:
@@ -142,7 +142,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
 
         An augmented ODE is integrated backwards starting from the final state computed
         during the forward pass. Integration is done in multiple sequential runs
-        between every checkpoint of the forward pass, as defined by `t_save`. This
+        between every checkpoint of the forward pass, as defined by `t_stop`. This
         helps with the stability of the backward integration.
 
         Throughout this function, `y` is the state, `a = dL/dy` is the adjoint state,
@@ -151,13 +151,13 @@ class AdjointFixedAutograd(torch.autograd.Function):
         """
         # unpack context
         solver = ctx.solver
-        t_save = ctx.t_save
+        t_stop = ctx.t_stop
         y_save = ctx.saved_tensors[0]
 
         # initialize time list
-        t_save = t_save
-        if t_save[0] != 0.0:
-            t_save = torch.cat((torch.zeros(1), t_save))
+        t_stop = t_stop
+        if t_stop[0] != 0.0:
+            t_stop = torch.cat((torch.zeros(1), t_stop))
 
         # locally disable gradient computation
         with torch.no_grad():
@@ -180,10 +180,10 @@ class AdjointFixedAutograd(torch.autograd.Function):
 
             # solve the augmented equation backward between every checkpoint
             for i in tqdm(
-                range(len(t_save) - 1, 0, -1), disable=not solver.options.verbose
+                range(len(t_stop) - 1, 0, -1), disable=not solver.options.verbose
             ):
                 # initialize time between both checkpoints
-                solver.t_save_bwd = t_save[i - 1 : i + 1]
+                solver.t_stop_bwd = t_stop[i - 1 : i + 1]
 
                 # run odeint on augmented state
                 solver.run_augmented()

@@ -28,29 +28,29 @@ class MESolverTester:
         )
 
         # no batching
-        rho_save, exp_save = run_mesolve(system.H, system.rho0)
-        assert rho_save.shape == (num_t_save, n, n)
-        assert exp_save.shape == (n_exp_ops, num_t_save)
+        result = run_mesolve(system.H, system.rho0)
+        assert result.y_save.shape == (num_t_save, n, n)
+        assert result.exp_save.shape == (n_exp_ops, num_t_save)
 
         # batched H
-        rho_save, exp_save = run_mesolve(system.H_batched, system.rho0)
-        assert rho_save.shape == (b_H, num_t_save, n, n)
-        assert exp_save.shape == (b_H, n_exp_ops, num_t_save)
+        result = run_mesolve(system.H_batched, system.rho0)
+        assert result.y_save.shape == (b_H, num_t_save, n, n)
+        assert result.exp_save.shape == (b_H, n_exp_ops, num_t_save)
 
         # batched rho0
-        rho_save, exp_save = run_mesolve(system.H, system.rho0_batched)
-        assert rho_save.shape == (b_rho0, num_t_save, n, n)
-        assert exp_save.shape == (b_rho0, n_exp_ops, num_t_save)
+        result = run_mesolve(system.H, system.rho0_batched)
+        assert result.y_save.shape == (b_rho0, num_t_save, n, n)
+        assert result.exp_save.shape == (b_rho0, n_exp_ops, num_t_save)
 
         # batched H and rho0
-        rho_save, exp_save = run_mesolve(system.H_batched, system.rho0_batched)
-        assert rho_save.shape == (b_H, b_rho0, num_t_save, n, n)
-        assert exp_save.shape == (b_H, b_rho0, n_exp_ops, num_t_save)
+        result = run_mesolve(system.H_batched, system.rho0_batched)
+        assert result.y_save.shape == (b_H, b_rho0, num_t_save, n, n)
+        assert result.exp_save.shape == (b_H, b_rho0, n_exp_ops, num_t_save)
 
     def test_batching(self):
         pass
 
-    def _test_rho_save(
+    def _test_y_save(
         self,
         options: Options,
         system: OpenSystem,
@@ -59,12 +59,12 @@ class MESolverTester:
         norm_atol: float = 1e-2,
     ):
         t_save = system.t_save(num_t_save)
-        rho_save, _ = system.mesolve(t_save, options)
+        y_save = system.mesolve(t_save, options).y_save
 
-        errs = torch.norm(rho_save - system.rhos(t_save), dim=(-2, -1))
+        errs = torch.norm(y_save - system.rhos(t_save), dim=(-2, -1))
         assert torch.all(errs <= norm_atol)
 
-    def test_rho_save(self):
+    def test_y_save(self):
         pass
 
 
@@ -83,9 +83,9 @@ class MEAdjointSolverTester(MESolverTester):
         # compute autograd gradients
         system.reset()
         options.gradient_alg = 'autograd'
-        rho_save, exp_save = system.mesolve(t_save, options)
-        rho_loss = system.loss(rho_save[-1])
-        exp_loss = exp_save.abs().sum()
+        result = system.mesolve(t_save, options)
+        rho_loss = system.loss(result.y_save[-1])
+        exp_loss = result.exp_save.abs().sum()
         grad_rho = torch.autograd.grad(rho_loss, system.parameters, retain_graph=True)
         grad_exp = torch.autograd.grad(exp_loss, system.parameters)
 
@@ -93,9 +93,9 @@ class MEAdjointSolverTester(MESolverTester):
         system.reset()
         options.gradient_alg = 'adjoint'
         options.parameters = system.parameters
-        rho_save, exp_save = system.mesolve(t_save, options)
-        rho_loss = system.loss(rho_save[-1])
-        exp_loss = exp_save.abs().sum()
+        result = system.mesolve(t_save, options)
+        rho_loss = system.loss(result.y_save[-1])
+        exp_loss = result.exp_save.abs().sum()
         grad_rho_adj = torch.autograd.grad(
             rho_loss, system.parameters, retain_graph=True
         )
@@ -107,7 +107,7 @@ class MEAdjointSolverTester(MESolverTester):
         logging.warning(f'grad_exp     = {grad_exp}')
         logging.warning(f'grad_exp_adj = {grad_exp_adj}')
 
-        # check gradients depending on rho_save are equal
+        # check gradients depending on y_save are equal
         for g1, g2 in zip(grad_rho, grad_rho_adj):
             assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
 
