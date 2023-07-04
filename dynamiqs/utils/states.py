@@ -17,8 +17,8 @@ def fock(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
-    dtype=None,
-    device=None,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
@@ -67,8 +67,8 @@ def fock_dm(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
-    dtype=None,
-    device=None,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
@@ -101,7 +101,13 @@ def fock_dm(
 
 
 @complex_tensor
-def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
+def coherent(
+    dim: int,
+    alpha: complex | Tensor,
+    *,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
     """Returns the ket of a coherent state.
 
     Examples:
@@ -128,7 +134,11 @@ def coherent(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
 
 @complex_tensor
 def coherent_dm(
-    dim: int, alpha: complex | Tensor, *, dtype=None, device=None
+    dim: int,
+    alpha: complex | Tensor,
+    *,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Density matrix of a coherent state.
 

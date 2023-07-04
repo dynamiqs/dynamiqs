@@ -23,7 +23,9 @@ __all__ = [
 
 
 @complex_tensor
-def sigmax(*, dtype=None, device=None) -> Tensor:
+def sigmax(
+    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Returns the Pauli $X$ operator.
 
     Args:
@@ -34,7 +36,9 @@ def sigmax(*, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def sigmay(*, dtype=None, device=None) -> Tensor:
+def sigmay(
+    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Returns the Pauli $Y$ operator.
 
     Args:
@@ -45,7 +49,9 @@ def sigmay(*, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def sigmaz(*, dtype=None, device=None) -> Tensor:
+def sigmaz(
+    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Returns the Pauli $Z$ operator.
 
     Args:
@@ -56,7 +62,9 @@ def sigmaz(*, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def sigmap(*, dtype=None, device=None) -> Tensor:
+def sigmap(
+    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     Args:
@@ -67,7 +75,9 @@ def sigmap(*, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def sigmam(*, dtype=None, device=None) -> Tensor:
+def sigmam(
+    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     Args:
@@ -78,7 +88,9 @@ def sigmam(*, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def eye(*dims: int, dtype=None, device=None) -> Tensor:
+def eye(
+    *dims: int, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Returns the identity operator.
 
     If only a single dimension is provided, `eye` returns the identity operator
@@ -96,7 +108,9 @@ def eye(*dims: int, dtype=None, device=None) -> Tensor:
 
 
 @complex_tensor
-def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
+def destroy(
+    *dims: int, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor | tuple[Tensor, ...]:
     """Returns a bosonic annihilation operator, or a tuple of annihilation operators in
     a multi-mode system.
 
@@ -151,13 +165,17 @@ def destroy(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
 
 
 @complex_tensor
-def _destroy_single(dim: int, *, dtype=None, device=None) -> Tensor:
+def _destroy_single(
+    dim: int, *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Bosonic annihilation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(1).to(dtype)
 
 
 @complex_tensor
-def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
+def create(
+    *dims: int, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor | tuple[Tensor, ...]:
     """Returns a bosonic creation operator, or a tuple of creation operators in a
     multi-mode system.
 
@@ -212,13 +230,21 @@ def create(*dims: int, dtype=None, device=None) -> Tensor | tuple[Tensor, ...]:
 
 
 @complex_tensor
-def _create_single(dim: int, *, dtype=None, device=None) -> Tensor:
+def _create_single(
+    dim: int, *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Bosonic creation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(-1).to(dtype)
 
 
 @complex_tensor
-def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> Tensor:
+def displace(
+    dim: int,
+    alpha: complex | Tensor,
+    *,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
     """Returns the displacement operator of amplitude $\alpha$.
 
     Args:
@@ -236,7 +262,13 @@ def displace(dim: int, alpha: complex | Tensor, *, dtype=None, device=None) -> T
 
 
 @complex_tensor
-def squeeze(dim: int, z: complex | Tensor, *, dtype=None, device=None) -> Tensor:
+def squeeze(
+    dim: int,
+    z: complex | Tensor,
+    *,
+    dtype: torch.dtype | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
     """Returns the squeezing operator of squeezing amplitude $z$.
 
     Args:

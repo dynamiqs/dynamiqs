@@ -129,7 +129,9 @@ def dtype_real_to_complex(
 
 
 @complex_tensor
-def from_qutip(x: Qobj, *, dtype=None, device=None) -> Tensor:
+def from_qutip(
+    x: Qobj, *, dtype: torch.dtype | None = None, device: torch.device | None = None
+) -> Tensor:
     """Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
