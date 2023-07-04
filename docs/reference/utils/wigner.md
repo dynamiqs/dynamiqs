@@ -1,3 +1,3 @@
-# Wigner distributions
+# dynamiqs.utils.wigner
 
 ::: dynamiqs.utils.wigner

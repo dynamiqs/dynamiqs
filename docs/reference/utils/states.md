@@ -1,3 +1,3 @@
-# Initializing states
+# dynamiqs.utils.states
 
 ::: dynamiqs.utils.states

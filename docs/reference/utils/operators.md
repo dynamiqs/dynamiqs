@@ -1,3 +1,3 @@
-# Initializing operators
+# dynamiqs.utils.operators
 
 ::: dynamiqs.utils.operators
