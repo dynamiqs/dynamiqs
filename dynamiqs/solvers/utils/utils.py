@@ -37,7 +37,8 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
 
 
 def inv_sqrtm(mat: Tensor) -> Tensor:
-    """Compute the inverse square root of a matrix using its eigendecomposition.
+    """Compute the inverse square root of a complex Hermitian or real symmetric matrix
+    using its eigendecomposition.
 
     TODO Replace with Schur decomposition once released by PyTorch.
          See the feature request at https://github.com/pytorch/pytorch/issues/78809.
@@ -45,7 +46,8 @@ def inv_sqrtm(mat: Tensor) -> Tensor:
          https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176.
     """
     vals, vecs = torch.linalg.eigh(mat)
-    return vecs @ torch.linalg.solve(vecs, torch.diag(vals ** (-0.5)), left=False)
+    inv_sqrt_vals = torch.diag(vals ** (-0.5)).to(vecs)
+    return vecs @ torch.linalg.solve(vecs, inv_sqrt_vals, left=False)
 
 
 def bexpect(O: Tensor, x: Tensor) -> Tensor:

@@ -80,7 +80,11 @@ nav:
       - Optimal control: tutorials/optimal_control.md
       - SNAP: tutorials/snap.md
       - ECD: tutorials/ecd.md
-  - Reference:
+  - Python API:
       - reference/index.md
       - dynamiqs.utils:
+          - states: reference/utils/states.md
+          - operators: reference/utils/operators.md
           - utils: reference/utils/utils.md
+          - tensor_types: reference/utils/tensor_types.md
+          - wigner: reference/utils/wigner.md
