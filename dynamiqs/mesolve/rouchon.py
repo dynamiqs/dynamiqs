@@ -95,12 +95,12 @@ class MERouchon1_5(MERouchon):
         # (for time-dependent Hamiltonians, exclude the Hamiltonian from normalization)
         # H_nh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
         if isinstance(self.H, ConstantTDTensor):
-            H_nh = self.H_nh(0.0)
+            H_nh_const = self.H_nh(0.0)
         elif isinstance(self.H, CallableTDTensor):
-            H_nh = -0.5j * self.sum_no_jump
+            H_nh_const = -0.5j * self.sum_no_jump
 
-        M0 = self.I - 1j * self.dt * H_nh
-        M0rev = self.I + 1j * self.dt * H_nh
+        M0 = self.I - 1j * self.dt * H_nh_const
+        M0rev = self.I + 1j * self.dt * H_nh_const
         self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_no_jump)
         self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_no_jump)
 
