@@ -5,6 +5,7 @@ import torch
 from ..options import Dopri5, Euler, Options, Propagator
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
+from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -35,6 +36,7 @@ def sesolve(
 
     # convert t_save to tensor
     t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
+    check_time_tensor(t_save, arg_name='t_save')
 
     # default options
     options = options or Dopri5()

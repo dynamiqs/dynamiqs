@@ -26,10 +26,17 @@ def tensor_str(x: Tensor) -> str:
 
 
 class Result:
-    def __init__(self, options: Options, y_save: Tensor, exp_save: Tensor):
+    def __init__(
+        self,
+        options: Options,
+        y_save: Tensor,
+        exp_save: Tensor,
+        meas_save: Tensor | None = None,
+    ):
         self.options = options
         self.y_save = y_save
         self.exp_save = exp_save
+        self.meas_save = meas_save
         self.start_time: float | None = None
         self.end_time: float | None = None
 
@@ -39,9 +46,14 @@ class Result:
         return self.y_save
 
     @property
-    def expvals(self) -> Tensor:
+    def expects(self) -> Tensor | None:
         # alias for exp_save
         return self.exp_save
+
+    @property
+    def measurements(self) -> Tensor | None:
+        # alias for meas_save
+        return self.meas_save
 
     @property
     def solver_str(self) -> str:
@@ -68,14 +80,16 @@ class Result:
     def __str__(self):
         tmp = (
             '==== Result ====\n'
-            f'Options    : {self.solver_str}\n'
-            f'Start      : {self.start_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
-            f'End        : {self.end_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
-            f'Total time : {self.total_time.total_seconds():.2f} s\n'
-            f'y_save     : {tensor_str(self.y_save)}'
+            f'Method       : {self.solver_str}\n'
+            f'Start        : {self.start_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
+            f'End          : {self.end_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
+            f'Total time   : {self.total_time.total_seconds():.2f} s\n'
+            f'states       : {tensor_str(self.states)}'
         )
-        if self.exp_save is not None:
-            tmp += f'\nexp_save   : {tensor_str(self.exp_save)}'
+        if self.expects is not None:
+            tmp += f'\nexpects      : {tensor_str(self.expects)}'
+        if self.measurements is not None:
+            tmp += f'\nmeasurements : {tensor_str(self.measurements)}'
         return tmp
 
     def to_qutip(self) -> Result:
