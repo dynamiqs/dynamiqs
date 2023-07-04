@@ -6,6 +6,7 @@ import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
+from ..solvers.utils.td_tensor import CallableTDTensor, ConstantTDTensor
 from ..solvers.utils.utils import cache, inv_sqrtm, kraus_map
 from ..utils.utils import unit
 from .me_solver import MESolver
@@ -50,8 +51,6 @@ class MERouchon1(MERouchon):
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-
-        # normalize by the trace
         rho = unit(rho)
 
         return rho
@@ -61,7 +60,6 @@ class MERouchon1(MERouchon):
 
         Args:
             t: Time.
-            dt: Time step.
             rho: Density matrix of shape `(b_H, b_rho, n, n)`.
             phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
 
@@ -81,7 +79,6 @@ class MERouchon1(MERouchon):
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
-        # normalize by the trace
         rho = unit(rho)
 
         # compute phi(t-dt)
@@ -91,13 +88,35 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon1_5(MERouchon):
-    # TODO implement caching
-    def forward(self, t: float, rho: Tensor) -> Tensor:
-        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.5.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        Note:
-            No need for trace renormalization since the scheme is trace-preserving
-            by construction.
+        # compute the inverse square root renormalization matrix
+        # (for time-dependent Hamiltonians, exclude the Hamiltonian from normalization)
+        # H_nh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
+        if isinstance(self.H, ConstantTDTensor):
+            H_nh_const = self.H_nh(0.0)
+        elif isinstance(self.H, CallableTDTensor):
+            H_nh_const = -0.5j * self.sum_no_jump
+
+        M0 = self.I - 1j * self.dt * H_nh_const
+        M0rev = self.I + 1j * self.dt * H_nh_const
+        self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_no_jump)
+        self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_no_jump)
+
+        # define cached operators
+        # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
+        # self.M1s, self.M1sdag, self.M1srev: (1, len(jump_ops), n, n)
+        self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * H_nh @ self.S)
+        self.M0dag = cache(lambda M0: M0.mH)
+        self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
+        self.M1s = sqrt(self.dt) * self.S @ self.jump_ops
+        self.M1sdag = self.M1s.mH
+        self.M1srev = sqrt(self.dt) * self.Srev @ self.jump_ops
+
+    def forward(self, t: float, rho: Tensor) -> Tensor:
+        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1 with Kraus map
+        renormalization.
 
         Args:
             t: Time.
@@ -108,26 +127,48 @@ class MERouchon1_5(MERouchon):
         """
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        # non-hermitian Hamiltonian at time t
-        H_nh = self.H - 0.5j * self.sum_no_jump  # (b_H, 1, n, n)
-
-        # build time-dependent Kraus operators
-        M0 = self.I - 1j * self.dt * H_nh  # (b_H, 1, n, n)
-        Ms = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
-
-        # build normalization matrix
-        S = M0.mH @ M0 + self.dt * self.sum_no_jump  # (b_H, 1, n, n)
-        # TODO Fix `inv_sqrtm` (size not compatible and linalg.solve RuntimeError)
-        S_inv_sqrtm = inv_sqrtm(S)  # (b_H, 1, n, n)
+        # compute cached operators
+        H = self.H(t)  # (b_H, 1, n, n)
+        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
+        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, S_inv_sqrtm)  # (b_H, b_rho, n, n)
-        rho = kraus_map(rho, M0) + kraus_map(rho, Ms)  # (b_H, b_rho, n, n)
+        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
+        rho = unit(rho)
 
         return rho
 
     def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
-        raise NotImplementedError
+        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1
+        with Kraus map renormalization.
+
+        Args:
+            t: Time.
+            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
+            phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
+
+        Returns:
+            Density matrix and adjoint state matrix at previous time step, as tensors of
+            shape `(b_H, b_rho, n, n)`.
+        """
+        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+
+        # compute cached operators
+        H = self.H(t)  # (b_H, 1, n, n)
+        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
+        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
+        M0dag = self.M0dag(M0)  # (b_H, 1, n, n)
+        M0rev = self.M0rev(H_nh)  # (b_H, 1, n, n)
+
+        # compute rho(t-dt)
+        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
+        rho = unit(rho)
+
+        # compute phi(t-dt)
+        phi = kraus_map(phi, M0dag) + kraus_map(phi, self.M1sdag)
+
+        return rho, phi
 
 
 class MERouchon2(MERouchon):
@@ -174,8 +215,6 @@ class MERouchon2(MERouchon):
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
         rho = kraus_map(rho, M0) + tmp + 0.5 * kraus_map(tmp, M1s)  # (b_H, b_rho, n, n)
-
-        # normalize by the trace
         rho = unit(rho)  # (b_H, b_rho, n, n)
 
         return rho
@@ -191,7 +230,6 @@ class MERouchon2(MERouchon):
 
         Args:
             t: Time.
-            dt: Time step.
             rho: Density matrix of shape `(b_H, b_rho, n, n)`.
             phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
 
@@ -214,7 +252,6 @@ class MERouchon2(MERouchon):
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1s)
         rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1s)
-        # normalize by the trace
         rho = unit(rho)
 
         # compute phi(t-dt)
