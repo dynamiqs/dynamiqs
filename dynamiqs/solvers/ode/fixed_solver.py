@@ -131,10 +131,10 @@ class AdjointFixedAutograd(torch.autograd.Function):
         solver.run_nograd()
 
         # save results and model parameters
-        ctx.save_for_backward(solver.y_save)
+        ctx.save_for_backward(solver.result.y_save)
 
         # returning `y_save` is required for custom backward functions
-        return solver.y_save, solver.exp_save
+        return solver.result.y_save, solver.result.exp_save
 
     @staticmethod
     def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:
