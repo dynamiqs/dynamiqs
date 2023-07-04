@@ -113,7 +113,7 @@ class AutogradSolver(Solver):
             self.run_autograd()
 
     def run_nograd(self):
-        with torch.no_grad():
+        with torch.inference_mode():
             self.run_autograd()
 
     @abstractmethod
