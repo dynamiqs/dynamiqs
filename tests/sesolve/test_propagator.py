@@ -13,6 +13,6 @@ class TestPropagator(SESolverTester):
         options = dq.options.Propagator()
         self._test_batching(options, cavity_8)
 
-    def test_psi_save(self):
+    def test_y_save(self):
         options = dq.options.Propagator()
-        self._test_psi_save(options, cavity_8, num_t_save=11)
+        self._test_y_save(options, cavity_8, num_t_save=11)
