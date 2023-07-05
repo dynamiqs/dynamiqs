@@ -240,23 +240,6 @@ def tensprod(*args: Tensor) -> Tensor:
     r"""Returns the tensor product of a sequence of kets, bras, density matrices or
     operators.
 
-    Examples:
-        >>> psi = dq.tensprod(
-        ...     dq.coherent(20, 2.0),
-        ...     dq.fock(2, 0),
-        ...     dq.fock(5, 1)
-        ... )
-        >>> psi.shape
-        torch.Size([200, 1])
-
-        >>> rho = dq.tensprod(
-        ...     dq.coherent_dm(20, 2.0),
-        ...     dq.fock_dm(2, 0),
-        ...     dq.fock_dm(5, 1)
-        ... )
-        >>> rho.shape
-        torch.Size([200, 200])
-
     The returned tensor shape is:
 
     - $(..., n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape
@@ -275,6 +258,23 @@ def tensprod(*args: Tensor) -> Tensor:
 
     Returns:
         (..., n, 1) or (..., 1, n) or (..., n, n): Tensor product of the input tensors.
+
+    Examples:
+        >>> psi = dq.tensprod(
+        ...     dq.coherent(20, 2.0),
+        ...     dq.fock(2, 0),
+        ...     dq.fock(5, 1)
+        ... )
+        >>> psi.shape
+        torch.Size([200, 1])
+
+        >>> rho = dq.tensprod(
+        ...     dq.coherent_dm(20, 2.0),
+        ...     dq.fock_dm(2, 0),
+        ...     dq.fock_dm(5, 1)
+        ... )
+        >>> rho.shape
+        torch.Size([200, 200])
     """
     return reduce(_bkron, args)
 
@@ -323,21 +323,6 @@ def trace(x: Tensor) -> Tensor:
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
     """Returns the partial trace of a ket, bra or density matrix.
 
-    Examples:
-        >>> rhoABC = dq.tensprod(
-        ...     dq.coherent(20, 2.0),
-        ...     dq.fock(2, 0),
-        ...     dq.fock(5, 1)
-        ... )
-        >>> rhoABC.shape
-        torch.Size([200, 1])
-        >>> rhoA = dq.ptrace(rhoABC, 0, (20, 2, 5))
-        >>> rhoA.shape
-        torch.Size([20, 20])
-        >>> rhoBC = dq.ptrace(rhoABC, (1, 2), (20, 2, 5))
-        >>> rhoBC.shape
-        torch.Size([10, 10])
-
     Args:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix of a
             composite system.
@@ -352,6 +337,21 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         ValueError: If the input tensor is not a ket, bra or density matrix.
         ValueError: If `dims` does not match the input tensor shape, or if `keep` is
             incompatible with `dims`.
+
+    Examples:
+        >>> rhoABC = dq.tensprod(
+        ...     dq.coherent(20, 2.0),
+        ...     dq.fock(2, 0),
+        ...     dq.fock(5, 1)
+        ... )
+        >>> rhoABC.shape
+        torch.Size([200, 1])
+        >>> rhoA = dq.ptrace(rhoABC, 0, (20, 2, 5))
+        >>> rhoA.shape
+        torch.Size([20, 20])
+        >>> rhoBC = dq.ptrace(rhoABC, (1, 2), (20, 2, 5))
+        >>> rhoBC.shape
+        torch.Size([10, 10])
     """
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]

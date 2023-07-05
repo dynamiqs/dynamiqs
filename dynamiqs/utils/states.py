@@ -22,6 +22,15 @@ def fock(
 ) -> Tensor:
     """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
+    Args:
+        dims: Dimension of the Hilbert space of each mode.
+        states: Fock state of each mode.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        torch.Tensor (n, 1): Ket of the Fock state or tensor product of Fock states.
+
     Examples:
         >>> dq.fock(3, 1)
         tensor([[0.+0.j],
@@ -34,15 +43,6 @@ def fock(
                 [0.+0.j],
                 [0.+0.j],
                 [0.+0.j]], dtype=torch.complex128)
-
-    Args:
-        dims: Dimension of the Hilbert space of each mode.
-        states: Fock state of each mode.
-        dtype: Data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        torch.Tensor (n, 1): Ket of the Fock state or tensor product of Fock states.
     """
     # convert integer inputs to tuples by default, and check dimensions match
     dims = (dims,) if isinstance(dims, int) else dims
@@ -73,6 +73,16 @@ def fock_dm(
     """Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
 
+    Args:
+        dims: Dimension of the Hilbert space of each mode.
+        states: Fock state of each mode.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        torch.Tensor (n, n): Density matrix of the Fock state or tensor product of Fock
+            states.
+
     Examples:
         >>> dq.fock_dm(3, 1)
         tensor([[0.+0.j, 0.+0.j, 0.+0.j],
@@ -86,16 +96,6 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
                 dtype=torch.complex128)
-
-    Args:
-        dims: Dimension of the Hilbert space of each mode.
-        states: Fock state of each mode.
-        dtype: Data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        torch.Tensor (n, n): Density matrix of the Fock state or tensor product of Fock
-            states.
     """
     return ket_to_dm(fock(dims, states, dtype=dtype, device=device))
 
@@ -110,14 +110,6 @@ def coherent(
 ) -> Tensor:
     """Returns the ket of a coherent state.
 
-    Examples:
-        >>> dq.coherent(5, 0.2)
-        tensor([[0.980+0.j],
-                [0.196+0.j],
-                [0.028+0.j],
-                [0.003+0.j],
-                [0.000+0.j]], dtype=torch.complex128)
-
     Args:
         dim: Dimension of the Hilbert space.
         alpha: Coherent state amplitude.
@@ -126,6 +118,14 @@ def coherent(
 
     Returns:
         torch.Tensor (n, 1): Ket of the coherent state.
+
+    Examples:
+        >>> dq.coherent(5, 0.2)
+        tensor([[0.980+0.j],
+                [0.196+0.j],
+                [0.028+0.j],
+                [0.003+0.j],
+                [0.000+0.j]], dtype=torch.complex128)
     """
     return displace(dim, alpha, dtype=dtype, device=device) @ fock(
         dim, 0, dtype=dtype, device=device
@@ -142,15 +142,6 @@ def coherent_dm(
 ) -> Tensor:
     """Density matrix of a coherent state.
 
-    Examples:
-        >>> dq.coherent_dm(5, 0.2)
-        tensor([[0.961+0.j, 0.192+0.j, 0.027+0.j, 0.003+0.j, 0.000+0.j],
-                [0.192+0.j, 0.038+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j],
-                [0.027+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j],
-                [0.003+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
-                dtype=torch.complex128)
-
     Args:
         dim: Dimension of the Hilbert space.
         alpha: Coherent state amplitude.
@@ -159,5 +150,14 @@ def coherent_dm(
 
     Returns:
         torch.Tensor (n, n): Density matrix of the coherent state.
+
+    Examples:
+        >>> dq.coherent_dm(5, 0.2)
+        tensor([[0.961+0.j, 0.192+0.j, 0.027+0.j, 0.003+0.j, 0.000+0.j],
+                [0.192+0.j, 0.038+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j],
+                [0.027+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j],
+                [0.003+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
+                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
+                dtype=torch.complex128)
     """
     return ket_to_dm(coherent(dim, alpha, dtype=dtype, device=device))
