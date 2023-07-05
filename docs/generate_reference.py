@@ -5,7 +5,8 @@ from pathlib import Path
 import mkdocs_gen_files
 
 
-def find_all_functions(file_path):
+def parse_dunder_all(file_path):
+    """Parse a file to find all elements of the __all__ attribute."""
     all_functions = []
     in_all_block = False
 
@@ -41,20 +42,22 @@ def find_all_functions(file_path):
 nav = mkdocs_gen_files.Nav()
 
 for path in sorted(Path("dynamiqs/utils").rglob("*.py")):  #
+    # find various paths
     module_path = path.relative_to("").with_suffix("")  #
     doc_path = path.relative_to("").with_suffix(".md")  #
     full_doc_path = Path("reference", doc_path)  #
 
+    # find the module identifier
     parts = list(module_path.parts)
-
-    if parts[-1] == "__init__":  #
-        parts = parts[:-1]
-    elif parts[-1] == "__main__":
-        continue
-
-    nav[parts] = doc_path.as_posix()  #
     identifier = ".".join(parts)  #
 
+    if parts[-1] == "__init__" or parts[-1] == "__main__":  #
+        continue
+
+    # add main module page to navigation
+    nav[parts] = doc_path.as_posix()  #
+
+    # create the main module page
     with mkdocs_gen_files.open(full_doc_path, "w") as fd:  #
         print(f"::: {identifier}", file=fd)  #
         print("    options:", file=fd)
@@ -62,12 +65,15 @@ for path in sorted(Path("dynamiqs/utils").rglob("*.py")):  #
 
     mkdocs_gen_files.set_edit_path(full_doc_path, Path("../") / path)  #
 
-    for function in find_all_functions(path.with_suffix(".py")):
+    # loop over all functions in file
+    for function in parse_dunder_all(path.with_suffix(".py")):
         doc_path = Path(path.relative_to(""), function).with_suffix(".md")  #
         full_doc_path = Path("reference", doc_path)
 
+        # add function page to navigation
         nav[parts + [function]] = doc_path.as_posix()  #
 
+        # create the function page
         with mkdocs_gen_files.open(full_doc_path, "w") as fd:  #
             print(f"::: {identifier}.{function}", file=fd)  #
             print("    options:", file=fd)
@@ -76,5 +82,6 @@ for path in sorted(Path("dynamiqs/utils").rglob("*.py")):  #
 
         mkdocs_gen_files.set_edit_path(full_doc_path, Path("../") / path)  #
 
+# make the navigation file
 with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:  #
     nav_file.writelines(nav.build_literate_nav())  #
