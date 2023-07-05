@@ -56,7 +56,9 @@ for path in sorted(Path("dynamiqs/utils").rglob("*.py")):  #
     identifier = ".".join(parts)  #
 
     with mkdocs_gen_files.open(full_doc_path, "w") as fd:  #
-        pass
+        print(f"::: {identifier}", file=fd)  #
+        print("    options:", file=fd)
+        print("        table: true", file=fd)
 
     mkdocs_gen_files.set_edit_path(full_doc_path, Path("../") / path)  #
 
