@@ -126,7 +126,7 @@ def destroy(
 
     Returns:
         Annihilation operator of given dimension, or tuple of annihilation operators in
-        a multi-mode system.
+            a multi-mode system.
 
     Examples:
         >>> dq.destroy(4)
@@ -191,7 +191,7 @@ def create(
 
     Returns:
         Creation operator of given dimension, or tuple of creation operators in a
-        multi-mode system.
+            multi-mode system.
 
     Examples:
         >>> dq.create(4)
@@ -245,7 +245,7 @@ def displace(
     dtype: torch.dtype | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the displacement operator of amplitude $\alpha$.
+    r"""Returns the displacement operator of amplitude $\alpha$.
 
     Args:
         dim: Dimension of the Hilbert space.

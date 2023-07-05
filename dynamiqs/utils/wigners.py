@@ -33,9 +33,11 @@ def wigner(
 
     Returns:
         A tuple `(xvec, pvec, w)` where
-            - xvec: 1D Tensor of x values
-            - pvec: 1D Tensor of p values
-            - w: 2D Tensor with the wigner distribution
+
+            - xvec: Tensor of size _(num_pixels)_ containing x values
+            - pvec: Tensor of size _(num_pixels)_ containing p values
+            - w: Tensor of size _(num_pixels, num_pixels)_ containing the wigner
+                distribution at all (x, p) points.
     """
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')

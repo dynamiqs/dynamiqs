@@ -80,7 +80,7 @@ def ket_to_bra(x: Tensor) -> Tensor:
         x (..., n, 1): Ket.
 
     Returns:
-        (..., 1, n): Bra.
+        Tensor of size _(..., 1, n)_ : Bra.
     """
     return x.mH
 
@@ -92,7 +92,7 @@ def ket_to_dm(x: Tensor) -> Tensor:
         x (..., n, 1): Ket.
 
     Returns:
-        (..., n, n): Density matrix.
+        Tensor of size _(..., n, n)_ : Density matrix.
     """
     return x @ ket_to_bra(x)
 
@@ -106,7 +106,7 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
         y (..., n, 1): Second ket.
 
     Returns:
-        (...): Complex-valued overlap.
+        Tensor of size _(...)_ : Complex-valued overlap.
     """
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
@@ -130,7 +130,7 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
         y (..., n, 1): Second ket.
 
     Returns:
-        (...): Real-valued fidelity.
+        Tensor of size _(...)_: Real-valued fidelity.
     """
     return ket_overlap(x, y).abs().pow(2).real
 
@@ -153,7 +153,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
         y (..., n, n): Second density matrix.
 
     Returns:
-        (...): Real-valued fidelity.
+        Tensor of size _(...)_ : Real-valued fidelity.
     """
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
@@ -178,7 +178,7 @@ def _sqrtm(x: Tensor) -> Tensor:
         x (..., n, n): Symmetric or Hermitian positive definite matrix.
 
     Returns:
-        (..., n, n): Square root of `x`.
+        Tensor of size _(..., n, n)_ : Square root of `x`.
     """
     # code copied from
     # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
@@ -204,7 +204,7 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
         rho (..., n, n): Density matrix.
 
     Returns:
-        (..., n, n): Density matrix.
+        Tensor of size _(..., n, n)_ : Density matrix.
     """
     return L @ rho @ L.mH - 0.5 * L.mH @ L @ rho - 0.5 * rho @ L.mH @ L
 
@@ -231,7 +231,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
         rho (..., n, n): Density matrix.
 
     Returns:
-        (..., n, n): Resulting operator (it is not a density matrix).
+        Tensor of size _(..., n, n)_ : Resulting operator (it is not a density matrix).
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
@@ -257,7 +257,8 @@ def tensprod(*args: Tensor) -> Tensor:
             density matrices or operators.
 
     Returns:
-        (..., n, 1) or (..., 1, n) or (..., n, n): Tensor product of the input tensors.
+        Tensor of size _(..., n, 1)_, _(..., 1, n)_ or _(..., n, n)_ : Tensor product
+            of the input tensors.
 
     Examples:
         >>> psi = dq.tensprod(
@@ -315,7 +316,7 @@ def trace(x: Tensor) -> Tensor:
         x (..., n, n): Tensor.
 
     Returns:
-        (...): Trace of `x`.
+        Tensor of size _(...)_ : Trace of `x`.
     """
     return torch.einsum('...ii', x)
 
@@ -331,7 +332,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
             Hilbert space tensor product.
 
     Returns:
-        (..., m, m): Density matrix (with `m <= n`).
+        Tensor of size _(..., m, m)_ : Density matrix (with `m <= n`).
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
@@ -419,7 +420,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
 
     Returns:
-        (...): Complex-valued expectation value.
+        Tensor of size _(...)_ : Complex-valued expectation value.
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
@@ -444,7 +445,7 @@ def norm(x: Tensor) -> Tensor:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
 
     Returns:
-        (...): Real-valued norm of `x`.
+        Tensor of size _(...)_ : Real-valued norm of `x`.
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
@@ -464,8 +465,8 @@ def unit(x: Tensor) -> Tensor:
         x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
 
     Returns:
-        (..., n, 1) or (..., 1, n) or (..., n, n): Normalized ket, bra or density
-            matrix.
+        Tensor of size _(..., n, 1)_, _(..., 1, n)_ or _(..., n, n)_ : Normalized ket,
+            bra or density matrix.
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.

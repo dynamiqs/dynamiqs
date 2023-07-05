@@ -29,7 +29,8 @@ def fock(
         device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor (n, 1): Ket of the Fock state or tensor product of Fock states.
+        Tensor of size _(n, 1)_ : Ket of the Fock state or tensor product of Fock
+            states.
 
     Examples:
         >>> dq.fock(3, 1)
@@ -80,8 +81,8 @@ def fock_dm(
         device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor (n, n): Density matrix of the Fock state or tensor product of Fock
-            states.
+        Tensor of size _(n, n)_ : Density matrix of the Fock state or tensor product of
+            Fock states.
 
     Examples:
         >>> dq.fock_dm(3, 1)
@@ -117,7 +118,7 @@ def coherent(
         device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor (n, 1): Ket of the coherent state.
+        Tensor of size _(n, 1)_ : Ket of the coherent state.
 
     Examples:
         >>> dq.coherent(5, 0.2)
@@ -149,7 +150,7 @@ def coherent_dm(
         device: Device of the returned tensor.
 
     Returns:
-        torch.Tensor (n, n): Density matrix of the coherent state.
+        Tensor of size _(n, n)_ : Density matrix of the coherent state.
 
     Examples:
         >>> dq.coherent_dm(5, 0.2)

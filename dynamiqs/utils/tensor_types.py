@@ -148,7 +148,8 @@ def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
 
     Args:
         x: PyTorch tensor.
-        dims: QuTiP object dimensions, with format `[[n1, n2, ...], [m1, m2, ...]]`.
+        dims: QuTiP object dimensions, with size _(2, n)_ where _n_ is the number of
+            modes in the tensor product.
 
     Returns:
         QuTiP quantum object.
