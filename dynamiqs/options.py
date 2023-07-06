@@ -86,13 +86,13 @@ class AdjointOptions(AutogradOptions):
             )
 
 
-class ODEFixedStep(Options):
+class ODEFixedStep(AutogradOptions):
     def __init__(self, *, dt: float, **kwargs):
         super().__init__(**kwargs)
         self.dt = dt
 
 
-class ODEAdaptiveStep(Options):
+class ODEAdaptiveStep(AutogradOptions):
     def __init__(
         self,
         *,
@@ -113,7 +113,7 @@ class ODEAdaptiveStep(Options):
         self.max_factor = max_factor
 
 
-class Propagator(Options):
+class Propagator(AutogradOptions):
     pass
 
 
