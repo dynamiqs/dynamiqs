@@ -29,7 +29,7 @@ We hope that this library will prove beneficial to the community for simulations
 
 ## Installation
 
-We will soon make a first release of the library available on PyPi. In the meantime, you can clone the repository locally and install directly from source:
+We will soon make a first release of the library on PyPi. In the meantime, you can clone the repository locally and install directly from source:
 
 ```shell
 git clone https://github.com/dynamiqs/dynamiqs.git
@@ -83,7 +83,7 @@ states       : Tensor (101, 128, 128) | 12.62 Mb
 
 ### Compute the gradient with respect to some parameters
 
-Suppose that in the above example, we want to compute the gradient of the final state photon number expectation value $\text{loss}=\braket{a^\dag a}=\mathrm{Tr}[a^\dagger a \rho]$ with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$. For this computation, we will define the objects with dynamiqs:
+Suppose that in the above example, we want to compute the gradient of the final state photon number expectation value $\text{loss}=\braket{a^\dagger a}=\mathrm{Tr}[a^\dagger a \rho]$ with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$. For this computation, we will define the objects with dynamiqs:
 
 ```python
 import dynamiqs as dq
