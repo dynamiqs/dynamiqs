@@ -37,7 +37,7 @@ pip install -e dynamiqs
 
 ### Simulate a lossy quantum harmonic oscillator
 
-This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single junp operator $L=\sqrt{\kappa} a$ using QuTiP-defined objects:
+This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$ using QuTiP-defined objects:
 
 ```python
 import dynamiqs as dq
