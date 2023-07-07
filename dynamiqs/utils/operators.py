@@ -119,7 +119,7 @@ def destroy(
     returns a tuple of each annihilation operator of given dimension, in the Hilbert
     space given by the product of all dimensions.
 
-    Example:
+    Examples:
         >>> dq.destroy(4)
         tensor([[0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j],
@@ -184,7 +184,7 @@ def create(
     returns a tuple of each creation operator of given dimension, in the Hilbert space
     given by the product of all dimensions.
 
-    Example:
+    Examples:
         >>> dq.create(4)
         tensor([[0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [1.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],

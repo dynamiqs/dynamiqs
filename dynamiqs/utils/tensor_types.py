@@ -136,6 +136,8 @@ def from_qutip(
 
     Args:
         x: Input quantum object.
+        dtype: Data type of the returned tensor.
+        device: Device on which the returned tensor is stored.
 
     Returns:
         Output tensor.
