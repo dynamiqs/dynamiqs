@@ -80,7 +80,7 @@ states       : Tensor (101, 128, 128) | 12.62 Mb
 
 ### Compute gradients with respect to some parameters
 
-Suppose that in the above example, we want to compute gradients of the final state photon number expectation value $\text{loss}=\braket{a^\dagger a}=\mathrm{Tr}[a^\dagger a \rho]$ with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$. For this computation, we will define the objects with dynamiqs:
+Suppose that in the above example, we want to compute the gradient of the number of photons in the final state, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(t_f)]$, with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$. For this computation, we will define the objects with dynamiqs:
 
 ```python
 import dynamiqs as dq
@@ -111,16 +111,16 @@ result = dq.mesolve(H, jump_ops, rho0, t_save, options=options)
 loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
 grads = torch.autograd.grad(loss, (kappa, alpha0))
 print(
-    f'gradient w.r.t to kappa : {grads[0]}\n'
-    f'gradient w.r.t to alpha0: {grads[1]}'
+    f'gradient wrt to kappa  : {grads[0]}\n'
+    f'gradient wrt to alpha0 : {grads[1]}'
 )
 ```
 
 Output:
 
 ```shell
-gradient w.r.t to kappa : tensor([-0.9048])
-gradient w.r.t to alpha0: tensor([1.8097])
+gradient wrt to kappa  : tensor([-0.9048])
+gradient wrt to alpha0 : tensor([1.8097])
 ```
 
 ## Let's discuss
