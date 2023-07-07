@@ -51,9 +51,11 @@ class Options:
 
         # check that the gradient algorithm is supported
         if self.gradient_alg is not None and self.gradient_alg not in self.GRADIENT_ALG:
+            available_gradient_alg_str = ', '.join(f'"{x}"' for x in self.GRADIENT_ALG)
             raise ValueError(
-                f'Gradient algorithm {self.gradient_alg} is not defined or not yet'
-                f' supported by solver {type(self)}.'
+                f'Gradient algorithm "{self.gradient_alg}" is not defined or not yet'
+                f' supported by solver {type(self).__name__} (supported:'
+                f' {available_gradient_alg_str}).'
             )
 
     @cached_property
@@ -86,13 +88,13 @@ class AdjointOptions(AutogradOptions):
             )
 
 
-class ODEFixedStep(Options):
+class ODEFixedStep(AutogradOptions):
     def __init__(self, *, dt: float, **kwargs):
         super().__init__(**kwargs)
         self.dt = dt
 
 
-class ODEAdaptiveStep(Options):
+class ODEAdaptiveStep(AutogradOptions):
     def __init__(
         self,
         *,
@@ -113,7 +115,7 @@ class ODEAdaptiveStep(Options):
         self.max_factor = max_factor
 
 
-class Propagator(Options):
+class Propagator(AutogradOptions):
     pass
 
 
