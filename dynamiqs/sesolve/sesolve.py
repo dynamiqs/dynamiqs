@@ -27,6 +27,9 @@ def sesolve(
     # TODO support density matrices too
     # TODO add test to check that psi0 has the correct shape
 
+    # default options
+    options = options or Dopri5()
+
     # format and batch all tensors
     formatter = TensorFormatter(options.dtype, options.device)
     H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
@@ -37,9 +40,6 @@ def sesolve(
     # convert t_save to tensor
     t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
     check_time_tensor(t_save, arg_name='t_save')
-
-    # default options
-    options = options or Dopri5()
 
     # define the solver
     args = (H_batched, psi0_batched, t_save, exp_ops, options)
