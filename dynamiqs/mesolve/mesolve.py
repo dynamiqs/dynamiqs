@@ -69,6 +69,9 @@ def mesolve(
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
 
+    # default options
+    options = options or Dopri5()
+
     if isinstance(jump_ops, list) and len(jump_ops) == 0:
         raise ValueError(
             'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
@@ -86,9 +89,6 @@ def mesolve(
     # convert t_save to a tensor
     t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
     check_time_tensor(t_save, arg_name='t_save')
-
-    # default options
-    options = options or Dopri5()
 
     # define the solver
     args = (H_batched, rho0_batched, t_save, exp_ops, options)
