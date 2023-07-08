@@ -16,31 +16,31 @@ def wigner(
     state: Tensor,
     x_max: float = 6.2832,
     p_max: float = 6.2832,
-    n_pixels: int = 200,
+    num_pixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
 ) -> tuple[Tensor, Tensor, Tensor]:
-    """Compute the wigner distribution of a state vector or density matrix.
+    """Compute the Wigner distribution of a ket or density matrix.
 
     Args:
-        state: State vector or density matrix.
-        x_max: Maximum value of x for which to compute the wigner distribution.
-        p_max: Maximum value of p for which to compute the wigner distribution.
-            If the wigner distribution is computed using the `fft` method, `p_max` is
-            ignored, and given by `2 * pi / x_max` instead.
-        n_pixels: Number of pixels in each direction.
-        method: Method used to compute the wigner distribution.
+        state (..., n, 1) or (..., n, n): Ket or density matrix.
+        x_max: Maximum value of x.
+        p_max: Maximum value of p. Ignored if the Wigner distribution is computed
+            with the `fft` method, in which case `p_max` is given by `2 * pi / x_max`.
+        num_pixels: Number of pixels in each direction.
+        method: Method used to compute the Wigner distribution. Available
+            methods: `clenshaw` or `fft`.
 
     Returns:
         A tuple `(xvec, pvec, w)` where
-            xvec: 1D Tensor of x values
-            pvec: 1D Tensor of p values
-            w: 2D Tensor with the wigner distribution
+            - xvec: 1D Tensor of x values
+            - pvec: 1D Tensor of p values
+            - w: 2D Tensor with the Wigner distribution
     """
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
-    xvec = torch.linspace(-x_max, x_max, n_pixels)
-    pvec = torch.linspace(-p_max, p_max, n_pixels)
+    xvec = torch.linspace(-x_max, x_max, num_pixels)
+    pvec = torch.linspace(-p_max, p_max, num_pixels)
 
     if method == 'clenshaw':
         state = ket_to_dm(state) if is_ket(state) else state
@@ -97,7 +97,7 @@ def _laguerre_series(i, x, c):
 
 
 def _wigner_fft_psi(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
-    """Compute the wigner distribution of a state vector with the FFT."""
+    """Compute the wigner distribution of a ket with the FFT."""
     n = psi.size(0)
 
     # compute psi in position basis
@@ -145,10 +145,10 @@ def _fock_to_position(n: int, positions: Tensor) -> Tensor:
 
 
 def _wigner_fft(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
-    """Wigner distribution of a given state vector using the fast Fourier transform.
+    """Wigner distribution of a given ket using the fast Fourier transform.
 
     Args:
-        psi: state vector of size (N)
+        psi: ket of size (N)
         xvec: position vector of size (N)
     Returns:
         A tuple `(w, p)` where `w` is the wigner function at all sample points, and `p`
