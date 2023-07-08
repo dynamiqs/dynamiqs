@@ -19,16 +19,15 @@ def wigner(
     num_pixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
 ) -> tuple[Tensor, Tensor, Tensor]:
-    """Compute the wigner distribution of a ket or density matrix.
+    """Compute the Wigner distribution of a ket or density matrix.
 
     Args:
         state (..., n, 1) or (..., n, n): Ket or density matrix.
         x_max: Maximum value of x.
-        p_max: Maximum value of p. Not used if the wigner distribution is
-            computer with the `fft` method, in which case `p_max` is given by
-            `2 * pi / x_max`.
+        p_max: Maximum value of p. Ignored if the Wigner distribution is computed
+            with the `fft` method, in which case `p_max` is given by `2 * pi / x_max`.
         num_pixels: Number of pixels in each direction.
-        method: Method used to compute the wigner distribution. Available
+        method: Method used to compute the Wigner distribution. Available
             methods: `clenshaw` or `fft`.
 
     Returns:
@@ -100,7 +99,7 @@ def _laguerre_series(i, x, c):
 
 
 def _wigner_fft_psi(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
-    """Compute the wigner distribution of a state vector with the FFT."""
+    """Compute the wigner distribution of a ket with the FFT."""
     n = psi.size(0)
 
     # compute psi in position basis
@@ -148,10 +147,10 @@ def _fock_to_position(n: int, positions: Tensor) -> Tensor:
 
 
 def _wigner_fft(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
-    """Wigner distribution of a given state vector using the fast Fourier transform.
+    """Wigner distribution of a given ket using the fast Fourier transform.
 
     Args:
-        psi: state vector of size (N)
+        psi: ket of size (N)
         xvec: position vector of size (N)
     Returns:
         A tuple `(w, p)` where `w` is the wigner function at all sample points, and `p`

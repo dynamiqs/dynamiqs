@@ -28,6 +28,12 @@ def smesolve(
     #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(t_save))
     #    - meas_save: (b_H?, b_rho0?, ntrajs, len(meas_ops), len(t_meas) - 1)
 
+    # default options
+    if options is None:
+        raise ValueError(
+            'No default solver yet, please specify one using the options argument.'
+        )
+
     # check jump_ops
     if isinstance(jump_ops, list) and len(jump_ops) == 0:
         raise ValueError(
@@ -74,12 +80,6 @@ def smesolve(
     # define random number generator from seed
     generator = torch.Generator(device=options.device)
     generator.seed() if seed is None else generator.manual_seed(seed)
-
-    # default options
-    if options is None:
-        raise ValueError(
-            'No default solver yet, please specify one using the options argument.'
-        )
 
     # define the solver
     args = (H_batched, rho0_batched, t_save, exp_ops, options)
