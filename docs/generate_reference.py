@@ -12,6 +12,7 @@ PATHS_TO_PARSE = [
     "utils/wigners",
 ]
 
+
 def parse_dunder_all(file_path):
     """Parse a file to find all elements of the __all__ attribute."""
     all_functions = []
