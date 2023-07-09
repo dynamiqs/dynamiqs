@@ -14,7 +14,7 @@
         * [dynamiqs.sigmaz](utils/operators/sigmaz.md)
         * [dynamiqs.sigmap](utils/operators/sigmap.md)
         * [dynamiqs.sigmam](utils/operators/sigmam.md)
-    * Quantum states
+    * States
         * [dynamiqs.fock](utils/states/fock.md)
         * [dynamiqs.fock_dm](utils/states/fock_dm.md)
         * [dynamiqs.coherent](utils/states/coherent.md)
