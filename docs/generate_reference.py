@@ -4,22 +4,13 @@ from pathlib import Path
 
 import mkdocs_gen_files
 
-# get navigation dictionary
-nav = mkdocs_gen_files.Nav()
-
-# static page
-nav[["Utilities"]] = "utils.md"
-
-# files to parse
-FILES_TO_PARSE = [
-    # (Path in navigation, path to source)
-    (["Utilities", "Operators"], "utils/operators"),
-    (["Utilities", "Quantum states"], "utils/states"),
-    (["Utilities", "Quantum utilities"], "utils/utils"),
-    (["Utilities", "Converting tensors"], "utils/tensor_types"),
-    (["Utilities", "Wigner representation"], "utils/wigners"),
+PATHS_TO_PARSE = [
+    "utils/operators",
+    "utils/states",
+    "utils/utils",
+    "utils/tensor_types",
+    "utils/wigners",
 ]
-
 
 def parse_dunder_all(file_path):
     """Parse a file to find all elements of the __all__ attribute."""
@@ -55,7 +46,7 @@ def parse_dunder_all(file_path):
     return all_functions
 
 
-for nav_path, path in FILES_TO_PARSE:
+for path in PATHS_TO_PARSE:
     # convert various paths
     path = Path(path)
     src_path = Path("dynamiqs", path.with_suffix(".py"))
@@ -69,9 +60,6 @@ for nav_path, path in FILES_TO_PARSE:
         path_fn = Path(path, function)
         ref_path_fn = Path("reference", path_fn.with_suffix(".md"))
 
-        # add function page to navigation
-        nav[nav_path + [function]] = path_fn.with_suffix(".md").as_posix()
-
         # create the function page
         with mkdocs_gen_files.open(ref_path_fn, "w") as fd:
             print(f"::: {identifier}.{function}", file=fd)
@@ -80,7 +68,3 @@ for nav_path, path in FILES_TO_PARSE:
             print("        heading_level: 1", file=fd)
 
         mkdocs_gen_files.set_edit_path(ref_path_fn, Path("../") / src_path)
-
-# write to the navigation file
-with mkdocs_gen_files.open("reference/navigation.md", "a") as nav_file:
-    nav_file.writelines(nav.build_literate_nav())
