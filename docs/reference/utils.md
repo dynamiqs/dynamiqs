@@ -6,7 +6,7 @@
     options:
         table: true
 
-## Quantum states
+## States
 
 ::: dynamiqs.utils.states
     options:
@@ -18,7 +18,7 @@
     options:
         table: true
 
-## Converting tensors
+## Tensor conversion
 
 ::: dynamiqs.utils.tensor_types
     options:
