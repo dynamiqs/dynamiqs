@@ -7,27 +7,17 @@ import mkdocs_gen_files
 # get navigation dictionary
 nav = mkdocs_gen_files.Nav()
 
-nav[["Solvers"]] = "solvers.md"
-nav[["Solvers", "Schrödinger equation"]] = "solvers/sesolve.md"
-nav[["Solvers", "Master equation"]] = "solvers/mesolve.md"
-nav[["Solvers", "Stochastic master equation"]] = "solvers/smesolve.md"
+# static page
 nav[["Utilities"]] = "utils.md"
 
+# files to parse
 FILES_TO_PARSE = [
-    # Path in navigation, path to reference, path to source
-    (["Utilities", "Operators"], "utils/operators", "dynamiqs/utils/operators.py"),
-    (["Utilities", "Quantum states"], "utils/states", "dynamiqs/utils/states.py"),
-    (["Utilities", "Quantum utilities"], "utils/utils", "dynamiqs/utils/utils.py"),
-    (
-        ["Utilities", "Converting tensors"],
-        "utils/tensor_types",
-        "dynamiqs/utils/tensor_types.py",
-    ),
-    (
-        ["Utilities", "Wigner representation"],
-        "utils/wigners",
-        "dynamiqs/utils/wigners.py",
-    ),
+    # (Path in navigation, path to source)
+    (["Utilities", "Operators"], "utils/operators"),
+    (["Utilities", "Quantum states"], "utils/states"),
+    (["Utilities", "Quantum utilities"], "utils/utils"),
+    (["Utilities", "Converting tensors"], "utils/tensor_types"),
+    (["Utilities", "Wigner representation"], "utils/wigners"),
 ]
 
 
@@ -65,32 +55,32 @@ def parse_dunder_all(file_path):
     return all_functions
 
 
-for doc_path, ref_path, src_path in FILES_TO_PARSE:
+for nav_path, path in FILES_TO_PARSE:
     # convert various paths
-    ref_path = Path(ref_path)
-    src_path = Path(src_path)
-    full_ref_path = Path("reference", ref_path.with_suffix(".md"))
+    path = Path(path)
+    src_path = Path("dynamiqs", path.with_suffix(".py"))
+    ref_path = Path("reference", path.with_suffix(".md"))
 
     # get global src identifier
     identifier = ".".join(list(src_path.with_suffix("").parts))
 
     # loop over all functions in file
     for function in parse_dunder_all(src_path):
-        ref_path_fn = Path(ref_path, function)
-        full_ref_path_fn = Path("reference", ref_path_fn.with_suffix(".md"))
+        path_fn = Path(path, function)
+        ref_path_fn = Path("reference", path_fn.with_suffix(".md"))
 
         # add function page to navigation
-        nav[doc_path + [function]] = ref_path_fn.with_suffix(".md").as_posix()
+        nav[nav_path + [function]] = path_fn.with_suffix(".md").as_posix()
 
         # create the function page
-        with mkdocs_gen_files.open(full_ref_path_fn, "w") as fd:
+        with mkdocs_gen_files.open(ref_path_fn, "w") as fd:
             print(f"::: {identifier}.{function}", file=fd)
             print("    options:", file=fd)
             print("        show_root_heading: true", file=fd)
             print("        heading_level: 1", file=fd)
 
-        mkdocs_gen_files.set_edit_path(full_ref_path_fn, Path("../") / src_path)
+        mkdocs_gen_files.set_edit_path(ref_path_fn, Path("../") / src_path)
 
-# make the navigation file
-with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:
+# write to the navigation file
+with mkdocs_gen_files.open("reference/navigation.md", "a") as nav_file:
     nav_file.writelines(nav.build_literate_nav())

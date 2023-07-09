@@ -42,7 +42,7 @@ plugins:
       scripts:
         - docs/generate_reference.py
   - literate-nav:
-      nav_file: SUMMARY.md
+      nav_file: navigation.md
   - section-index
   - mkdocstrings:
       default_handler: python
