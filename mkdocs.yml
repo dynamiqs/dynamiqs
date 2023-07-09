@@ -38,6 +38,12 @@ extra_css:
   - stylesheets/extra.css
 plugins:
   - search
+  - gen-files:
+      scripts:
+        - docs/generate_reference.py
+  - literate-nav:
+      nav_file: navigation.md
+  - section-index
   - mkdocstrings:
       default_handler: python
       custom_templates: docs/templates
@@ -80,11 +86,4 @@ nav:
       - Optimal control: tutorials/optimal_control.md
       - SNAP: tutorials/snap.md
       - ECD: tutorials/ecd.md
-  - Python API:
-      - reference/index.md
-      - dynamiqs.utils:
-          - states: reference/utils/states.md
-          - operators: reference/utils/operators.md
-          - utils: reference/utils/utils.md
-          - tensor_types: reference/utils/tensor_types.md
-          - wigner: reference/utils/wigner.md
+  - Python API: reference/

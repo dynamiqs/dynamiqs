@@ -151,9 +151,11 @@
 }
 
 .md-typeset .doc-function {
-  border-bottom: 1px solid #9da0a7;
   padding-bottom: 2.5em;
-  margin-bottom: 2.0em;
+}
+
+.md-typeset .doc-function .doc-contents {
+  padding-left: 3em;
 }
 
 .md-typeset .doc-contents p {

@@ -119,6 +119,15 @@ def destroy(
     returns a tuple of each annihilation operator of given dimension, in the Hilbert
     space given by the product of all dimensions.
 
+    Args:
+        dims: Dimension of the Hilbert space.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        Annihilation operator of given dimension, or tuple of annihilation operators in
+            a multi-mode system.
+
     Examples:
         >>> dq.destroy(4)
         tensor([[0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
@@ -143,15 +152,6 @@ def destroy(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
-
-    Args:
-        dims: Dimension of the Hilbert space.
-        dtype: Data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        Annihilation operator of given dimension, or tuple of annihilation operators in
-        a multi-mode system.
     """
     if len(dims) == 1:
         return _destroy_single(dims[0], dtype=dtype, device=device)
@@ -184,6 +184,15 @@ def create(
     returns a tuple of each creation operator of given dimension, in the Hilbert space
     given by the product of all dimensions.
 
+    Args:
+        dims: Dimension of the Hilbert space.
+        dtype: Data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        Creation operator of given dimension, or tuple of creation operators in a
+            multi-mode system.
+
     Examples:
         >>> dq.create(4)
         tensor([[0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
@@ -208,15 +217,6 @@ def create(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
-
-    Args:
-        dims: Dimension of the Hilbert space.
-        dtype: Data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        Creation operator of given dimension, or tuple of creation operators in a
-        multi-mode system.
     """
     if len(dims) == 1:
         return _create_single(dims[0], dtype=dtype, device=device)
@@ -245,7 +245,7 @@ def displace(
     dtype: torch.dtype | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the displacement operator of amplitude $\alpha$.
+    r"""Returns the displacement operator of amplitude $\alpha$.
 
     Args:
         dim: Dimension of the Hilbert space.
