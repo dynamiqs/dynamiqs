@@ -4,6 +4,32 @@ from pathlib import Path
 
 import mkdocs_gen_files
 
+# get navigation dictionary
+nav = mkdocs_gen_files.Nav()
+
+nav[["Solvers"]] = "solvers.md"
+nav[["Solvers", "Schrödinger equation"]] = "solvers/sesolve.md"
+nav[["Solvers", "Master equation"]] = "solvers/mesolve.md"
+nav[["Solvers", "Stochastic master equation"]] = "solvers/smesolve.md"
+nav[["Utilities"]] = "utils.md"
+
+FILES_TO_PARSE = [
+    # Path in navigation, path to reference, path to source
+    (["Utilities", "Operators"], "utils/operators", "dynamiqs/utils/operators.py"),
+    (["Utilities", "Quantum states"], "utils/states", "dynamiqs/utils/states.py"),
+    (["Utilities", "Quantum utilities"], "utils/utils", "dynamiqs/utils/utils.py"),
+    (
+        ["Utilities", "Converting tensors"],
+        "utils/tensor_types",
+        "dynamiqs/utils/tensor_types.py",
+    ),
+    (
+        ["Utilities", "Wigner representation"],
+        "utils/wigners",
+        "dynamiqs/utils/wigners.py",
+    ),
+]
+
 
 def parse_dunder_all(file_path):
     """Parse a file to find all elements of the __all__ attribute."""
@@ -39,49 +65,36 @@ def parse_dunder_all(file_path):
     return all_functions
 
 
-nav = mkdocs_gen_files.Nav()
+for doc_path, ref_path, src_path in FILES_TO_PARSE:
+    # convert various paths
+    doc_path = Path(doc_path)
+    ref_path = Path(ref_path)
+    src_path = Path(src_path)
+    full_ref_path = Path("reference", ref_path.with_suffix(".md"))
 
-for path in sorted(Path("dynamiqs/utils").rglob("*.py")):  #
-    # find various paths
-    module_path = path.relative_to("").with_suffix("")  #
-    doc_path = path.relative_to("").with_suffix(".md")  #
-    full_doc_path = Path("reference", doc_path)  #
+    # get global navigation path
+    parts = list(doc_path.parts)
 
-    # find the module identifier
-    parts = list(module_path.parts)
-    identifier = ".".join(parts)  #
-
-    if parts[-1] == "__init__" or parts[-1] == "__main__":  #
-        continue
-
-    # add main module page to navigation
-    nav[parts] = doc_path.as_posix()  #
-
-    # create the main module page
-    with mkdocs_gen_files.open(full_doc_path, "w") as fd:  #
-        print(f"::: {identifier}", file=fd)  #
-        print("    options:", file=fd)
-        print("        table: true", file=fd)
-
-    mkdocs_gen_files.set_edit_path(full_doc_path, Path("../") / path)  #
+    # get global src identifier
+    identifier = ".".join(list(src_path.with_suffix("").parts))
 
     # loop over all functions in file
-    for function in parse_dunder_all(path.with_suffix(".py")):
-        doc_path = Path(path.relative_to(""), function).with_suffix(".md")  #
-        full_doc_path = Path("reference", doc_path)
+    for function in parse_dunder_all(src_path):
+        ref_path_fn = Path(ref_path, function)
+        full_ref_path_fn = Path("reference", ref_path_fn.with_suffix(".md"))
 
         # add function page to navigation
-        nav[parts + [function]] = doc_path.as_posix()  #
+        nav[parts + [function]] = ref_path_fn.with_suffix(".md").as_posix()
 
         # create the function page
-        with mkdocs_gen_files.open(full_doc_path, "w") as fd:  #
-            print(f"::: {identifier}.{function}", file=fd)  #
+        with mkdocs_gen_files.open(full_ref_path_fn, "w") as fd:
+            print(f"::: {identifier}.{function}", file=fd)
             print("    options:", file=fd)
             print("        show_root_heading: true", file=fd)
             print("        heading_level: 1", file=fd)
 
-        mkdocs_gen_files.set_edit_path(full_doc_path, Path("../") / path)  #
+        mkdocs_gen_files.set_edit_path(full_ref_path_fn, Path("../") / src_path)
 
 # make the navigation file
-with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:  #
-    nav_file.writelines(nav.build_literate_nav())  #
+with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:
+    nav_file.writelines(nav.build_literate_nav())
