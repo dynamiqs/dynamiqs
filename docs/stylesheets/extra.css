@@ -192,3 +192,8 @@
 .md-typeset table:not([class]) td.fixed_height code {
     font-weight:600;
 }
+
+/* Fix for two-line parameters when deploying doc */
+.field-body p {
+    display: inline;
+}
