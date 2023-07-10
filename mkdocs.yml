@@ -59,6 +59,7 @@ plugins:
             docstring_section_style: list
             show_signature_annotations: true
             separate_signature: true
+            line_length: 88
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
