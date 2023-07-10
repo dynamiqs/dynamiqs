@@ -4,7 +4,7 @@
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
 
-[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml)  ![python version](https://img.shields.io/badge/python-3.8%2B-blue) [![license: GPLv3](https://img.shields.io/badge/license-GPLv3-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml)  ![python version](https://img.shields.io/badge/python-3.8%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: GPLv3](https://img.shields.io/badge/license-GPLv3-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 High-performance quantum systems simulation with PyTorch.
 
@@ -125,7 +125,7 @@ gradient wrt to alpha0 : tensor([1.8097])
 
 ## Let's discuss
 
-If you're curious, have questions or suggestions, wish to contribute or simply want to say hello, please don't hesitate to engage with us, we're always happy to chat! For now, you can open an issue on GitHub, or contact the lead developer via email at <pierreguilmin@gmail.com>.
+If you're curious, have questions or suggestions, wish to contribute or simply want to say hello, please don't hesitate to engage with us, we're always happy to chat! You can join the community on Slack via [this invite link](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA), open an issue on GitHub, or contact the lead developer via email at <pierreguilmin@gmail.com>.
 
 ## Contributing
 
