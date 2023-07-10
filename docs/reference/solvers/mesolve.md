@@ -1,3 +1,3 @@
-# Master equation
+# Lindblad Master Equation
 
 ::: dynamiqs.mesolve.mesolve

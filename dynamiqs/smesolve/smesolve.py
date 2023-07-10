@@ -23,7 +23,7 @@ def smesolve(
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
-    """Solve the Stochastic master equation."""
+    """Solve the Stochastic Master Equation."""
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save, meas_save) with
     #    - y_save: (b_H?, b_rho0?, ntrajs, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(t_save))

@@ -21,7 +21,7 @@ def mesolve(
     exp_ops: OperatorLike | list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
-    """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
+    """Solve the Lindblad Master Equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
     solve multiple master equations in a single run. The jump operators `jump_ops` and
