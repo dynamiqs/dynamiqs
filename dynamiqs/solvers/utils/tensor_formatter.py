@@ -52,10 +52,9 @@ class TensorFormatter:
 
     def format(self, operator: OperatorLike) -> Tensor:
         """Convert and batch a given operator according to the Hamiltonian and state."""
-        operator = to_tensor(
+        return to_tensor(
             operator, dtype=self.dtype, device=self.device, is_complex=True
         )
-        return operator[None, ...] if operator.ndim == 2 else operator
 
     def unbatch(self, save: Tensor | None) -> Tensor | None:
         """Unbatch saved tensors."""

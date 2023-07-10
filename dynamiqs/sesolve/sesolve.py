@@ -17,7 +17,7 @@ def sesolve(
     psi0: OperatorLike,
     t_save: TensorLike,
     *,
-    exp_ops: OperatorLike | list[OperatorLike] | None = None,
+    exp_ops: list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
     """Solve the Schrödinger Equation."""

@@ -14,11 +14,11 @@ from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
 
 def mesolve(
     H: TDOperatorLike,
-    jump_ops: OperatorLike | list[OperatorLike],
+    jump_ops: list[OperatorLike],
     rho0: OperatorLike,
     t_save: TensorLike,
     *,
-    exp_ops: OperatorLike | list[OperatorLike] | None = None,
+    exp_ops: list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
     """Solve the Lindblad Master Equation for a Hamiltonian and set of jump operators.
