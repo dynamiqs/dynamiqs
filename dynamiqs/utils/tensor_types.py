@@ -37,7 +37,7 @@ def to_tensor(
     Args:
         x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or
             list of these types. If `None` or empty list, returns an empty tensor of
-            size (0).
+            shape _(0)_.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
 

@@ -45,11 +45,11 @@
     {% for parameter in section.value %}
       <li class="field-body">
         <b>{{ parameter.name }}</b>
-        <!-- skip type annotation if it comes directly from the function signature -->
-        {% if parameter.annotation and parameter.annotation|attr(config.annotations_path) is not defined %}
-          {% with expression = parameter.annotation %}
-            <!-- (<code>{% include "expression.html" with context %}</code>) -->
-            <i>({% include "expression.html" with context %})</i>
+        <!-- include type annotation only if enclosed by `_` in the docstring -->
+        {% if parameter.annotation is iterable and parameter.annotation[0] == "_" %}
+        {% set annotation = parameter.annotation|join("") %}
+          {% with expression = annotation[1:-1] %}
+            <i>{% include "expression.html" with context %}</i>
           {% endwith %}
         {% endif %}
         – {{ parameter.description|convert_markdown(heading_level, html_id) }}

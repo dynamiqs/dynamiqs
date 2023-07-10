@@ -29,7 +29,7 @@ def is_ket(x: Tensor) -> bool:
     """Returns True if a tensor is in the format of a ket.
 
     Args:
-        x (...): Tensor.
+        x _(...)_: Tensor.
 
     Returns:
         True if the last dimension of `x` is 1, False otherwise.
@@ -41,7 +41,7 @@ def is_bra(x: Tensor) -> bool:
     """Returns True if a tensor is in the format of a bra.
 
     Args:
-        x (...): Tensor.
+        x _(...)_: Tensor.
 
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
@@ -53,7 +53,7 @@ def is_dm(x: Tensor) -> bool:
     """Returns True if a tensor is in the format of a density matrix.
 
     Args:
-        x (...): Tensor.
+        x _(...)_: Tensor.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -73,14 +73,14 @@ def _quantum_type(x: Tensor) -> str:
         raise ValueError('Tensor is not a ket, bra or density matrix.')
 
 
-def ket_to_bra(x: Tensor) -> Tensor:
+def ket_to_bra(x: Tensor):
     r"""Returns the bra $\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
-        x (..., n, 1): Ket.
+        x _(..., n, 1)_: Ket.
 
     Returns:
-        Tensor of size _(..., 1, n)_ : Bra.
+        _(..., 1, n)_ Bra.
     """
     return x.mH
 
@@ -89,10 +89,10 @@ def ket_to_dm(x: Tensor) -> Tensor:
     r"""Returns the density matrix $\ket\psi\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
-        x (..., n, 1): Ket.
+        x _(..., n, 1)_: Ket.
 
     Returns:
-        Tensor of size _(..., n, n)_ : Density matrix.
+        _(..., n, n)_ Density matrix.
     """
     return x @ ket_to_bra(x)
 
@@ -102,11 +102,11 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
     $\ket\varphi$ and $\ket\psi$.
 
     Args:
-        x (..., n, 1): First ket.
-        y (..., n, 1): Second ket.
+        x _(..., n, 1)_: First ket.
+        y _(..., n, 1)_: Second ket.
 
     Returns:
-        Tensor of size _(...)_ : Complex-valued overlap.
+        _(...)_ Complex-valued overlap.
     """
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
@@ -126,11 +126,11 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x (..., n, 1): First ket.
-        y (..., n, 1): Second ket.
+        x _(..., n, 1)_: First ket.
+        y _(..., n, 1)_: Second ket.
 
     Returns:
-        Tensor of size _(...)_: Real-valued fidelity.
+        _(...)_ Real-valued fidelity.
     """
     return ket_overlap(x, y).abs().pow(2).real
 
@@ -149,11 +149,11 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x (..., n, n): First density matrix.
-        y (..., n, n): Second density matrix.
+        x _(..., n, n)_: First density matrix.
+        y _(..., n, n)_: Second density matrix.
 
     Returns:
-        Tensor of size _(...)_ : Real-valued fidelity.
+        _(...)_ Real-valued fidelity.
     """
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
@@ -175,10 +175,10 @@ def _sqrtm(x: Tensor) -> Tensor:
     """Returns the square root of a symmetric or Hermitian positive definite matrix.
 
     Args:
-        x (..., n, n): Symmetric or Hermitian positive definite matrix.
+        x _(..., n, n)_: Symmetric or Hermitian positive definite matrix.
 
     Returns:
-        Tensor of size _(..., n, n)_ : Square root of `x`.
+        _(..., n, n)_ Square root of `x`.
     """
     # code copied from
     # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
@@ -200,11 +200,11 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     $$
 
     Args:
-        L (..., n, n): Jump operator (an arbitrary operator).
-        rho (..., n, n): Density matrix.
+        L _(..., n, n)_: Jump operator (an arbitrary operator).
+        rho _(..., n, n)_: Density matrix.
 
     Returns:
-        Tensor of size _(..., n, n)_ : Density matrix.
+        _(..., n, n)_ Density matrix.
     """
     return L @ rho @ L.mH - 0.5 * L.mH @ L @ rho - 0.5 * rho @ L.mH @ L
 
@@ -226,12 +226,12 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H (..., n, n): Hamiltonian.
-        Ls (..., N, n, n): Sequence of jump operators (arbitrary operators).
-        rho (..., n, n): Density matrix.
+        H _(..., n, n)_: Hamiltonian.
+        Ls _(..., N, n, n)_: Sequence of jump operators (arbitrary operators).
+        rho _(..., n, n)_: Density matrix.
 
     Returns:
-        Tensor of size _(..., n, n)_ : Resulting operator (it is not a density matrix).
+        _(..., n, n)_ Resulting operator (it is not a density matrix).
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
@@ -253,12 +253,11 @@ def tensprod(*args: Tensor) -> Tensor:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k): Sequence of kets,
+        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Sequence of kets,
             density matrices or operators.
 
     Returns:
-        Tensor of size _(..., n, 1)_, _(..., 1, n)_ or _(..., n, n)_ : Tensor product
-            of the input tensors.
+        _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
 
     Examples:
         >>> psi = dq.tensprod(
@@ -313,10 +312,10 @@ def trace(x: Tensor) -> Tensor:
     """Returns the trace of a tensor along its last two dimensions.
 
     Args:
-        x (..., n, n): Tensor.
+        x _(..., n, n)_: Tensor.
 
     Returns:
-        Tensor of size _(...)_ : Trace of `x`.
+        _(...)_ Trace of `x`.
     """
     return torch.einsum('...ii', x)
 
@@ -325,14 +324,14 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     """Returns the partial trace of a ket, bra or density matrix.
 
     Args:
-        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix of a
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix of a
             composite system.
-        keep (int or tuple of ints): Dimensions to keep after partial trace.
-        dims (tuple of ints): Dimensions of each subsystem in the composite system
+        keep _(int or tuple of ints)_: Dimensions to keep after partial trace.
+        dims _(tuple of ints)_: Dimensions of each subsystem in the composite system
             Hilbert space tensor product.
 
     Returns:
-        Tensor of size _(..., m, m)_ : Density matrix (with `m <= n`).
+        _(..., m, m)_ Density matrix (with `m <= n`).
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
@@ -416,11 +415,11 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         `dq.expect(O, x).real`.
 
     Args:
-        O (n, n): Arbitrary operator.
-        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
+        O _(n, n)_: Arbitrary operator.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
 
     Returns:
-        Tensor of size _(...)_ : Complex-valued expectation value.
+        _(...)_ Complex-valued expectation value.
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
@@ -442,10 +441,10 @@ def norm(x: Tensor) -> Tensor:
     matrices, it is $\tr{\rho}$.
 
     Args:
-        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
 
     Returns:
-        Tensor of size _(...)_ : Real-valued norm of `x`.
+        _(...)_ Real-valued norm of `x`.
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
@@ -462,11 +461,11 @@ def unit(x: Tensor) -> Tensor:
     """Normalize a ket, bra or density matrix to unit norm.
 
     Args:
-        x (..., n, 1) or (..., 1, n) or (..., n, n): Ket, bra or density matrix.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
 
     Returns:
-        Tensor of size _(..., n, 1)_, _(..., 1, n)_ or _(..., n, n)_ : Normalized ket,
-            bra or density matrix.
+        _(..., n, 1) or (..., 1, n) or (..., n, n)_ Normalized ket, bra or density
+            matrix.
 
     Raises:
         ValueError: If the input tensor is not a ket, bra or density matrix.
