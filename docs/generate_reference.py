@@ -5,11 +5,11 @@ from pathlib import Path
 import mkdocs_gen_files
 
 PATHS_TO_PARSE = [
-    "utils/operators",
-    "utils/states",
-    "utils/utils",
-    "utils/tensor_types",
-    "utils/wigners",
+    'utils/operators',
+    'utils/states',
+    'utils/utils',
+    'utils/tensor_types',
+    'utils/wigners',
 ]
 
 
@@ -50,22 +50,22 @@ def parse_dunder_all(file_path):
 for path in PATHS_TO_PARSE:
     # convert various paths
     path = Path(path)
-    src_path = Path("dynamiqs", path.with_suffix(".py"))
-    ref_path = Path("reference", path.with_suffix(".md"))
+    src_path = Path('dynamiqs', path.with_suffix('.py'))
+    ref_path = Path('reference', path.with_suffix('.md'))
 
     # get global src identifier
-    identifier = ".".join(list(src_path.with_suffix("").parts))
+    identifier = '.'.join(list(src_path.with_suffix('').parts))
 
     # loop over all functions in file
     for function in parse_dunder_all(src_path):
         path_fn = Path(path, function)
-        ref_path_fn = Path("reference", path_fn.with_suffix(".md"))
+        ref_path_fn = Path('reference', path_fn.with_suffix('.md'))
 
         # create the function page
-        with mkdocs_gen_files.open(ref_path_fn, "w") as fd:
-            print(f"::: {identifier}.{function}", file=fd)
-            print("    options:", file=fd)
-            print("        show_root_heading: true", file=fd)
-            print("        heading_level: 1", file=fd)
+        with mkdocs_gen_files.open(ref_path_fn, 'w') as fd:
+            print(f'::: {identifier}.{function}', file=fd)
+            print('    options:', file=fd)
+            print('        show_root_heading: true', file=fd)
+            print('        heading_level: 1', file=fd)
 
-        mkdocs_gen_files.set_edit_path(ref_path_fn, Path("../") / src_path)
+        mkdocs_gen_files.set_edit_path(ref_path_fn, Path('../') / src_path)
