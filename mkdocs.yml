@@ -40,7 +40,7 @@ plugins:
   - search
   - gen-files:
       scripts:
-        - docs/generate_reference.py
+        - docs/generate_python_api.py
   - literate-nav:
       nav_file: navigation.md
   - section-index
@@ -86,4 +86,4 @@ nav:
       - Optimal control: tutorials/optimal_control.md
       - SNAP: tutorials/snap.md
       - ECD: tutorials/ecd.md
-  - Python API: reference/
+  - Python API: python_api/

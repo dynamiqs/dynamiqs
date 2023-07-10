@@ -1,4 +1,4 @@
-"""Generate the code reference pages."""
+"""Generate the code Python API pages."""
 
 from pathlib import Path
 
@@ -51,7 +51,7 @@ for path in PATHS_TO_PARSE:
     # convert various paths
     path = Path(path)
     src_path = Path('dynamiqs', path.with_suffix('.py'))
-    ref_path = Path('reference', path.with_suffix('.md'))
+    ref_path = Path('python-api', path.with_suffix('.md'))
 
     # get global src identifier
     identifier = '.'.join(list(src_path.with_suffix('').parts))
@@ -59,7 +59,7 @@ for path in PATHS_TO_PARSE:
     # loop over all functions in file
     for function in parse_dunder_all(src_path):
         path_fn = Path(path, function)
-        ref_path_fn = Path('reference', path_fn.with_suffix('.md'))
+        ref_path_fn = Path('python_api', path_fn.with_suffix('.md'))
 
         # create the function page
         with mkdocs_gen_files.open(ref_path_fn, 'w') as fd:
