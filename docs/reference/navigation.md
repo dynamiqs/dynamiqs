@@ -40,5 +40,5 @@
         * [dynamiqs.to_tensor](utils/tensor_types/to_tensor.md)
         * [dynamiqs.to_qutip](utils/tensor_types/to_qutip.md)
         * [dynamiqs.from_qutip](utils/tensor_types/from_qutip.md)
-    * Wigner representation
+    * Wigner distribution
         * [dynamiqs.wigner](utils/wigners/wigner.md)

@@ -24,7 +24,7 @@
     options:
         table: true
 
-## Wigner representation
+## Wigner distribution
 
 ::: dynamiqs.utils.wigners
     options:
