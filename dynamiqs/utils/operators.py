@@ -24,12 +24,14 @@ __all__ = [
 
 @complex_tensor
 def sigmax(
-    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Returns the Pauli $X$ operator.
 
     Args:
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
@@ -37,12 +39,14 @@ def sigmax(
 
 @complex_tensor
 def sigmay(
-    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Returns the Pauli $Y$ operator.
 
     Args:
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
@@ -50,12 +54,14 @@ def sigmay(
 
 @complex_tensor
 def sigmaz(
-    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Returns the Pauli $Z$ operator.
 
     Args:
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
@@ -63,12 +69,14 @@ def sigmaz(
 
 @complex_tensor
 def sigmap(
-    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     Args:
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
@@ -76,12 +84,14 @@ def sigmap(
 
 @complex_tensor
 def sigmam(
-    *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     Args:
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
@@ -89,7 +99,9 @@ def sigmam(
 
 @complex_tensor
 def eye(
-    *dims: int, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *dims: int,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Returns the identity operator.
 
@@ -100,7 +112,7 @@ def eye(
 
     Args:
         dims: Dimension of the Hilbert space.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
     dim = prod(dims)
@@ -109,7 +121,9 @@ def eye(
 
 @complex_tensor
 def destroy(
-    *dims: int, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *dims: int,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor | tuple[Tensor, ...]:
     """Returns a bosonic annihilation operator, or a tuple of annihilation operators in
     a multi-mode system.
@@ -121,7 +135,7 @@ def destroy(
 
     Args:
         dims: Dimension of the Hilbert space.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
@@ -166,7 +180,10 @@ def destroy(
 
 @complex_tensor
 def _destroy_single(
-    dim: int, *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    dim: int,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Bosonic annihilation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(1).to(dtype)
@@ -174,7 +191,9 @@ def _destroy_single(
 
 @complex_tensor
 def create(
-    *dims: int, dtype: torch.dtype | None = None, device: torch.device | None = None
+    *dims: int,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor | tuple[Tensor, ...]:
     """Returns a bosonic creation operator, or a tuple of creation operators in a
     multi-mode system.
@@ -186,7 +205,7 @@ def create(
 
     Args:
         dims: Dimension of the Hilbert space.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
@@ -231,7 +250,10 @@ def create(
 
 @complex_tensor
 def _create_single(
-    dim: int, *, dtype: torch.dtype | None = None, device: torch.device | None = None
+    dim: int,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
 ) -> Tensor:
     """Bosonic creation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(-1).to(dtype)
@@ -242,7 +264,7 @@ def displace(
     dim: int,
     alpha: complex | Tensor,
     *,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
     r"""Returns the displacement operator of amplitude $\alpha$.
@@ -250,7 +272,7 @@ def displace(
     Args:
         dim: Dimension of the Hilbert space.
         alpha: Displacement amplitude.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
@@ -266,7 +288,7 @@ def squeeze(
     dim: int,
     z: complex | Tensor,
     *,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
     """Returns the squeezing operator of squeezing amplitude $z$.
@@ -274,7 +296,7 @@ def squeeze(
     Args:
         dim: Dimension of the Hilbert space.
         z: Squeezing amplitude.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:

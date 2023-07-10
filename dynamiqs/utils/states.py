@@ -17,7 +17,7 @@ def fock(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
     """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
@@ -25,7 +25,7 @@ def fock(
     Args:
         dims: Dimension of the Hilbert space of each mode.
         states: Fock state of each mode.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
@@ -67,7 +67,7 @@ def fock_dm(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
     """Returns the density matrix of a Fock state or the density matrix of a tensor
@@ -76,7 +76,7 @@ def fock_dm(
     Args:
         dims: Dimension of the Hilbert space of each mode.
         states: Fock state of each mode.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
@@ -104,7 +104,7 @@ def coherent(
     dim: int,
     alpha: complex | Tensor,
     *,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
     """Returns the ket of a coherent state.
@@ -112,7 +112,7 @@ def coherent(
     Args:
         dim: Dimension of the Hilbert space.
         alpha: Coherent state amplitude.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
@@ -136,7 +136,7 @@ def coherent_dm(
     dim: int,
     alpha: complex | Tensor,
     *,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
     """Density matrix of a coherent state.
@@ -144,7 +144,7 @@ def coherent_dm(
     Args:
         dim: Dimension of the Hilbert space.
         alpha: Coherent state amplitude.
-        dtype: Data type of the returned tensor.
+        dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
