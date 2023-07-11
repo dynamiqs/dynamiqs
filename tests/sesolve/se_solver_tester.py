@@ -65,7 +65,7 @@ class SESolverTester:
             options=options,
         ).y_save
 
-        errs = torch.norm(y_save - system.psis(t_save), dim=(-2, -1))
+        errs = torch.linalg.norm(y_save - system.psis(t_save), dim=(-2, -1))
         assert torch.all(errs <= norm_atol)
 
     def test_y_save(self):

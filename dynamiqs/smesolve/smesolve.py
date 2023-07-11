@@ -12,7 +12,7 @@ from .euler import SMEEuler
 
 def smesolve(
     H: TDOperatorLike,
-    jump_ops: OperatorLike | list[OperatorLike],
+    jump_ops: list[OperatorLike],
     rho0: OperatorLike,
     t_save: TensorLike,
     etas: TensorLike,
@@ -20,7 +20,7 @@ def smesolve(
     *,
     t_meas: TensorLike | None = None,
     seed: int | None = None,
-    exp_ops: OperatorLike | list[OperatorLike] | None = None,
+    exp_ops: list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
     """Solve the Stochastic master equation."""

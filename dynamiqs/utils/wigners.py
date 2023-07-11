@@ -22,7 +22,7 @@ def wigner(
     """Compute the Wigner distribution of a ket or density matrix.
 
     Args:
-        state (..., n, 1) or (..., n, n): Ket or density matrix.
+        state _(..., n, 1) or (..., n, n)_: Ket or density matrix.
         x_max: Maximum value of x.
         p_max: Maximum value of p. Ignored if the Wigner distribution is computed
             with the `fft` method, in which case `p_max` is given by `2 * pi / x_max`.
@@ -33,9 +33,9 @@ def wigner(
     Returns:
         A tuple `(xvec, pvec, w)` where
 
-            - xvec: Tensor of size _(num_pixels)_ containing x values
-            - pvec: Tensor of size _(num_pixels)_ containing p values
-            - w: Tensor of size _(num_pixels, num_pixels)_ containing the wigner
+            - xvec: Tensor of shape _(num_pixels)_ containing x values
+            - pvec: Tensor of shape _(num_pixels)_ containing p values
+            - w: Tensor of shape _(num_pixels, num_pixels)_ containing the wigner
                 distribution at all (x, p) points.
     """
     if state.ndim > 2:

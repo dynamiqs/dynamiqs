@@ -49,13 +49,6 @@
   </ul> -->
   {% with returns = section.value[0] %}
     <span class="field-body">
-      <!-- skip type annotation if it comes directly from the function signature -->
-      {% if returns.annotation and returns.annotation|attr(config.annotations_path) is not defined %}
-        {% with expression = returns.annotation %}
-            <i>({% include "expression.html" with context %})</i>
-            –
-        {% endwith %}
-      {% endif %}
     {{ returns.description|convert_markdown(heading_level, html_id) }}
   </span>
   {% endwith %}

@@ -8,7 +8,7 @@
 
 High-performance quantum systems simulation with PyTorch.
 
-The **dynamiqs** library enables GPU simulation of large quantum systems, and computation of gradients based on the evolved quantum state. Differentiable solvers are available for the Schrödinger Equation, the Lindblad Master Equation, and the Stochastic Master Equation. The library is fully built on PyTorch and can efficiently run on CPUs and GPUs.
+The **dynamiqs** library enables GPU simulation of large quantum systems, and computation of gradients based on the evolved quantum state. Differentiable solvers are available for the Schrödinger equation, the Lindblad master equation, and the Stochastic master equation. The library is fully built on PyTorch and can efficiently run on CPUs and GPUs.
 
 :hammer_and_wrench: This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
 

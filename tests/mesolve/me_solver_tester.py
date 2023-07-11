@@ -61,7 +61,7 @@ class MESolverTester:
         t_save = system.t_save(num_t_save)
         y_save = system.mesolve(t_save, options).y_save
 
-        errs = torch.norm(y_save - system.rhos(t_save), dim=(-2, -1))
+        errs = torch.linalg.norm(y_save - system.rhos(t_save), dim=(-2, -1))
         assert torch.all(errs <= norm_atol)
 
     def test_y_save(self):
