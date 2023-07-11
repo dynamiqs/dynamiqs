@@ -21,7 +21,7 @@ def mesolve(
     exp_ops: list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
-    """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
+    """Solve the Lindblad Master Equation for a Hamiltonian and set of jump operators.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
     solve multiple master equations in a single run. The jump operators `jump_ops` and
@@ -46,21 +46,22 @@ def mesolve(
       - `Euler`: Euler method.
 
     Args:
-        H (Tensor or Callable): Hamiltonian.
+        H _(Tensor or Callable)_: Hamiltonian.
             Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
             `H(t: float) -> Tensor` that returns a tensor of either possible shapes
             at every time between `t=0` and `t=t_save[-1]`.
-        jump_ops (Tensor, or list of Tensors): List of jump operators.
+        jump_ops _(Tensor, or list of Tensors)_: List of jump operators.
             Each jump operator should be a tensor of shape `(n, n)`.
-        rho0 (Tensor): Initial density matrix.
+        rho0 _(Tensor)_: Initial density matrix.
             Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
-        t_save (Tensor, np.ndarray or list): Times for which results are saved.
+        t_save _(Tensor, np.ndarray or list)_: Times for which results are saved.
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`. Note:
             For fixed time step solvers, `t_save` does not define the time step.
             However, all `t_save` values should be aligned with the time step.
-        exp_ops (Tensor, or list of Tensors, optional): List of operators for which the
-            expectation value is computed at every time value in `t_save`.
-        options (Options, optional): Solver options. See the list of available solvers.
+        exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
+            the expectation value is computed at every time value in `t_save`.
+        options _(Options, optional)_: Solver options. See the list of available
+            solvers.
 
     Returns:
         Result of the master equation integration.
