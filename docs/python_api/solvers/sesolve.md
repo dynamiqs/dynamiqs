@@ -1,3 +1,3 @@
 # Schrödinger equation
 
-::: dynamiqs.sesolve.sesolve
+<!-- ::: dynamiqs.sesolve.sesolve -->

@@ -1,3 +1,3 @@
 # Stochastic master equation
 
-::: dynamiqs.smesolve.smesolve
+<!-- ::: dynamiqs.smesolve.smesolve -->
