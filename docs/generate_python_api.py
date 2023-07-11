@@ -1,71 +1,56 @@
-"""Generate the code Python API pages."""
+"""Automatically generate the Python API documentation pages by parsing the public
+functions from `__all__`."""
 
+import re
 from pathlib import Path
 
 import mkdocs_gen_files
 
 PATHS_TO_PARSE = [
-    'utils/operators',
-    'utils/states',
-    'utils/utils',
-    'utils/tensor_types',
-    'utils/wigners',
+    'dynamiqs/utils/operators.py',
+    'dynamiqs/utils/states.py',
+    'dynamiqs/utils/utils.py',
+    'dynamiqs/utils/tensor_types.py',
+    'dynamiqs/utils/wigners.py',
 ]
 
 
-def parse_dunder_all(file_path):
-    """Parse a file to find all elements of the __all__ attribute."""
-    all_functions = []
-    in_all_block = False
+def get_elements_from_all(file_path):
+    """Parse a file to find all elements of the `__all__` attribute."""
+    with open(file_path, 'r') as f:
+        contents = f.read()
 
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-        for line in lines:
-            if '__all__' in line:
-                in_all_block = True
-                start_index = line.index('__all__')
-                line = line[start_index:]
-
-            if in_all_block:
-                if '[' in line:
-                    start_index = line.index('[')
-                if ']' in line:
-                    end_index = line.index(']')
-                    in_all_block = False
-
-                    all_list = line[start_index + 1 : end_index].split(',')
-                elif '__all__' in line:
-                    all_list = line[start_index + 1 :].split(',')
-                else:
-                    all_list = line.split(',')
-
-                all_list = [function.strip().strip("'") for function in all_list]
-                all_list = [function for function in all_list if function != '']
-                all_functions.extend([function for function in all_list])
-
-    return all_functions
+        # capture list assigned to __all__ with a regular expression (the `[^\]]+` part
+        # of the regex matches one or more characters that are not the closing bracket)
+        all_regex = r'__all__ = \[([^\]]+)\]'
+        match = re.search(all_regex, contents, re.DOTALL)  # re.DOTALL matches newlines
+        if match:
+            # extract first group from the match (the part inside the brackets)
+            all_str = match.group(1)
+            # remove all whitespaces, newlines and single or double quotes
+            all_str = all_str.translate({ord(c): None for c in ' \'"\n'})
+            # strip the trailing comma (for multiline __all__ definitions) and split
+            return all_str.strip(',').split(',')
+        else:
+            return []
 
 
+# generate a documentation file for each function of each file
 for path in PATHS_TO_PARSE:
-    # convert various paths
-    path = Path(path)
-    src_path = Path('dynamiqs', path.with_suffix('.py'))
-    ref_path = Path('python-api', path.with_suffix('.md'))
-
-    # get global src identifier
-    identifier = '.'.join(list(src_path.with_suffix('').parts))
+    # start with e.g. 'dynamiqs/utils/operators.py'
+    src_path = Path(path)
+    # convert to e.g 'python_api/utils/operators'
+    doc_path = Path('python_api', *src_path.parts[1:]).with_suffix('')
+    # convert to e.g 'dynamiqs.utils.operators'
+    identifier = src_path.with_suffix('').as_posix().replace('/', '.')
 
     # loop over all functions in file
-    for function in parse_dunder_all(src_path):
-        path_fn = Path(path, function)
-        ref_path_fn = Path('python_api', path_fn.with_suffix('.md'))
+    for function in get_elements_from_all(src_path):
+        # convert to e.g 'python_api/utils/operators/eye.md'
+        doc_path_function = Path(doc_path, function).with_suffix('.md')
 
         # create the function page
-        with mkdocs_gen_files.open(ref_path_fn, 'w') as fd:
-            print(f'::: {identifier}.{function}', file=fd)
-            print('    options:', file=fd)
-            print('        show_root_heading: true', file=fd)
-            print('        heading_level: 1', file=fd)
+        with mkdocs_gen_files.open(doc_path_function, 'w') as f:
+            print(f'::: {identifier}.{function}', file=f)
 
-        mkdocs_gen_files.set_edit_path(ref_path_fn, Path('../') / src_path)
+        mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)
