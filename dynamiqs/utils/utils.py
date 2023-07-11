@@ -73,7 +73,7 @@ def _quantum_type(x: Tensor) -> str:
         raise ValueError('Tensor is not a ket, bra or density matrix.')
 
 
-def ket_to_bra(x: Tensor):
+def ket_to_bra(x: Tensor) -> Tensor:
     r"""Returns the bra $\bra\psi$ associated to a ket $\ket\psi$.
 
     Args:
