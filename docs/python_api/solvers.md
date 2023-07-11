@@ -1,7 +1,7 @@
 # Solvers
 
-## Schrödinger Equation
+## Schrödinger equation
 
-## Lindblad Master Equation
+## Lindblad master equation
 
-## Stochastic Master Equation
+## Stochastic master equation

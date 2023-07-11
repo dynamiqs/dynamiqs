@@ -1,7 +1,7 @@
 - [Solvers](solvers.md)
-    - [Schrödinger Equation](solvers/sesolve.md)
-    - [Lindblad Master Equation](solvers/mesolve.md)
-    - [Stochastic Master Equation](solvers/smesolve.md)
+    - [Schrödinger equation](solvers/sesolve.md)
+    - [Lindblad master equation](solvers/mesolve.md)
+    - [Stochastic master equation](solvers/smesolve.md)
 - [Utilities](utils.md)
     - Operators
         - [eye](utils/operators/eye.md)

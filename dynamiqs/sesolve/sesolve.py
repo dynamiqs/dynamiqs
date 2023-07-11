@@ -20,7 +20,7 @@ def sesolve(
     exp_ops: list[OperatorLike] | None = None,
     options: Options | None = None,
 ) -> Result:
-    """Solve the Schrödinger Equation."""
+    """Solve the Schrödinger equation."""
     # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
     #    - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
