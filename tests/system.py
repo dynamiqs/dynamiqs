@@ -47,7 +47,10 @@ class System(ABC):
 
     def grads_loss_state(self, t: float) -> Tensor:
         """Compute the exact gradients of the example state loss function with respect
-        to the system parameters."""
+        to the system parameters.
+
+        The returned tensor has shape _(num_params)_.
+        """
         raise NotImplementedError
 
     def losses_expect(self, expect: Tensor) -> Tensor:
@@ -56,7 +59,10 @@ class System(ABC):
 
     def grads_losses_expect(self, t: float) -> Tensor:
         """Compute the exact gradients of the example expectation values loss functions
-        with respect to the system parameters."""
+        with respect to the system parameters.
+
+        The returned tensor has shape _(num_exp_ops, num_params)_.
+        """
         raise NotImplementedError
 
     @abstractmethod

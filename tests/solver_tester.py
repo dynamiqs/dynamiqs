@@ -57,11 +57,11 @@ class SolverTester(ABC):
         t_save = system.t_save(num_t_save)
         result = system.run(t_save, options)
 
-        # test y_save
+        # === test y_save
         errs = torch.linalg.norm(result.y_save - system.states(t_save), dim=(-2, -1))
         assert torch.all(errs <= y_save_norm_atol)
 
-        # test exp_save
+        # === test exp_save
         assert torch.allclose(
             result.exp_save,
             system.expects(t_save),
@@ -84,7 +84,7 @@ class SolverTester(ABC):
         t_save = system.t_save(num_t_save)
         result = system.run(t_save, options)
 
-        # === test gradients depending on y_save
+        # === test gradients depending on final y_save
         loss_state = system.loss_state(result.y_save[-1])
         grads_loss_state = torch.autograd.grad(
             loss_state, system.parameters, retain_graph=True
@@ -99,7 +99,7 @@ class SolverTester(ABC):
             grads_loss_state, true_grads_loss_state, rtol=rtol, atol=atol
         )
 
-        # === test gradient depending on exp_save
+        # === test gradient depending on final exp_save
         losses_expect = system.losses_expect(result.exp_save[:, -1])
         grads_losses_expect = [
             torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
