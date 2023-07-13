@@ -8,6 +8,7 @@ from torch import Tensor
 
 import dynamiqs as dq
 from dynamiqs.options import Options
+from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import TensorLike
 
 
@@ -48,9 +49,7 @@ class OpenSystem(ABC):
         """Compute an example loss function from a given density matrix."""
         return dq.expect(self.loss_op, rho).real
 
-    def mesolve(
-        self, t_save: TensorLike, options: Options
-    ) -> tuple[Tensor, Tensor | None]:
+    def mesolve(self, t_save: TensorLike, options: Options) -> Result:
         return dq.mesolve(
             self.H,
             self.jump_ops,

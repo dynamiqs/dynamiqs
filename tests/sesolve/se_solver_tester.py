@@ -58,18 +58,13 @@ class SESolverTester:
         exp_save_atol: float = 1e-2,
     ):
         t_save = system.t_save(num_t_save)
+        result = system.sesolve(t_save, options)
 
-        result = dq.sesolve(
-            system.H,
-            system.psi0,
-            t_save,
-            exp_ops=system.exp_ops,
-            options=options,
-        )
-
+        # test y_save
         errs = torch.linalg.norm(result.y_save - system.psis(t_save), dim=(-2, -1))
         assert torch.all(errs <= y_save_norm_atol)
 
+        # test exp_save
         assert torch.allclose(
             result.exp_save,
             system.expects(t_save),
