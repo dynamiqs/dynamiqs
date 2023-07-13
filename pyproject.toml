@@ -54,12 +54,16 @@ lint = { cmd = "task isort && task black && task codespell && task flake8", help
 test = { cmd = "echo '\n>>> pytest -v -m \"not long\"' && pytest -v -m \"not long\"", help = "run the unit tests suite excluding long tests (pytest)" }
 test-long = { cmd = "echo '\n>>> pytest -v -m \"long\"' && pytest -v -m \"long\"", help = "run the unit tests suite including only long tests (pytest)" }
 test-all = { cmd = "echo '\n>>> pytest' && pytest", help = "run the complete unit tests suite (pytest)" }
-docbuild = {cmd = "mkdocs build", help = "build the documentation website"}
-docserve = {cmd = "mkdocs serve", help = "preview documentation website with hot-reloading"}
-all = { cmd = "task lint && task test", help = "run all tasks before a commit (isort + black + codespell + flake8 + pytest)" }
+doctest-code = { cmd = "echo '\n>>> doctest dynamiqs/' && pytest --doctest-modules dynamiqs", help = "check code docstrings examples (doctest)" }
+doctest-docs = { cmd = "echo '\n>>> doctest docs/' && pytest --doctest-modules docs --doctest-glob '*.md' --ignore-glob 'python_api'", help = "check documentation examples (doctest)" }
+doctest = { cmd = "task doctest-code && task doctest-docs", help = "check all examples (doctest)" }
+docbuild = { cmd = "mkdocs build", help = "build the documentation website" }
+docserve = { cmd = "mkdocs serve", help = "preview documentation website with hot-reloading" }
+all = { cmd = "task lint && task test && task doctest", help = "run all tasks before a commit (isort + black + codespell + flake8 + pytest + doctest)" }
 ci = { cmd = """echo '\n>>> isort' && isort --check . &&
                 echo '\n>>> black' && black --check . &&
                 task codespell &&
                 task flake8 &&
                 task test &&
+                task doctest &&
                 task docbuild""", help = "run all the CI checks" }
