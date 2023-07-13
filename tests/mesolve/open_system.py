@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from math import pi, sqrt
+from math import cos, exp, pi, sin, sqrt
 
 import torch
 from torch import Tensor
@@ -22,10 +22,6 @@ class OpenSystem(ABC):
         self.rho0_batched = None
         self.exp_ops = None
 
-    def reset(self):
-        """Reset all attributes."""
-        self.__init__()
-
     @abstractmethod
     def t_save(self, n: int) -> Tensor:
         """Compute the save time tensor."""
@@ -45,9 +41,23 @@ class OpenSystem(ABC):
     def expects(self, t: Tensor) -> Tensor:
         return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
 
-    def loss(self, rho: Tensor) -> Tensor:
+    def loss_rho(self, rho: Tensor) -> Tensor:
         """Compute an example loss function from a given density matrix."""
         return dq.expect(self.loss_op, rho).real
+
+    def grads_loss_rho(self, t: float) -> Tensor:
+        """Compute the exact gradients of the example density matrix loss function with
+        respect to the system parameters."""
+        raise NotImplementedError
+
+    def losses_expect(self, expect: Tensor) -> Tensor:
+        """Compute example loss functions for each expectation values."""
+        return torch.stack(tuple(x.real for x in expect))
+
+    def grads_losses_expect(self, t: float) -> Tensor:
+        """Compute the exact gradients of the example expectation values loss functions
+        with respect to the system parameters."""
+        raise NotImplementedError
 
     def mesolve(self, t_save: ArrayLike, options: Options) -> Result:
         return dq.mesolve(
@@ -72,7 +82,7 @@ class LeakyCavity(OpenSystem):
         n: int,
         kappa: float,
         delta: float,
-        alpha0: complex,
+        alpha0: float,
         requires_grad: bool = False,
     ):
         # store parameters
@@ -80,18 +90,16 @@ class LeakyCavity(OpenSystem):
         self.kappa = torch.as_tensor(kappa).requires_grad_(requires_grad)
         self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
-        self.requires_grad = requires_grad
 
         # define gradient parameters
-        self.parameters = tuple([self.delta, self.kappa, self.alpha0])
+        self.parameters = (self.delta, self.alpha0, self.kappa)
 
         # bosonic operators
         a = dq.destroy(self.n)
         adag = a.mH
 
         # loss operator
-        # self.loss_op = adag @ a
-        self.loss_op = (a + adag) / sqrt(2) - 1j * (adag - a) / sqrt(2)
+        self.loss_op = adag @ a
 
         # prepare quantum operators
         self.H = self.delta * adag @ a
@@ -107,15 +115,6 @@ class LeakyCavity(OpenSystem):
             dq.coherent_dm(self.n, -self.alpha0),
             dq.coherent_dm(self.n, -1j * self.alpha0),
         ]
-
-    def reset(self):
-        self.__init__(
-            n=self.n,
-            kappa=self.kappa,
-            delta=self.delta,
-            alpha0=self.alpha0,
-            requires_grad=self.requires_grad,
-        )
 
     def t_save(self, num_t_save: int) -> Tensor:
         t_end = 2 * pi / self.delta  # a full rotation
@@ -136,3 +135,27 @@ class LeakyCavity(OpenSystem):
         exp_x = sqrt(2) * alpha_t.real
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
+
+    def grads_loss_rho(self, t: float) -> Tensor:
+        grad_delta = 0.0
+        grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
+        grad_kappa = self.alpha0**2 * -t * exp(-self.kappa * t)
+        return torch.tensor([grad_delta, grad_alpha0, grad_kappa]).detach()
+
+    # flake8: noqa: E501 line too long
+    def grads_losses_expect(self, t: float) -> Tensor:
+        # fmt: off
+        grad_x_delta = sqrt(2) * self.alpha0 * -t * sin(-self.delta * t) * exp(-0.5 * self.kappa * t)
+        grad_p_delta = sqrt(2) * self.alpha0 * -t * cos(-self.delta * t) * exp(-0.5 * self.kappa * t)
+        grad_x_alpha0 = sqrt(2) * cos(-self.delta * t) * exp(-0.5 * self.kappa * t)
+        grad_p_alpha0 = sqrt(2) * sin(-self.delta * t) * exp(-0.5 * self.kappa * t)
+        grad_x_kappa = sqrt(2) * self.alpha0 * cos(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
+        grad_p_kappa = sqrt(2) * self.alpha0 * sin(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
+        # fmt: on
+
+        return torch.tensor(
+            [
+                [grad_x_delta, grad_x_alpha0, grad_x_kappa],
+                [grad_p_delta, grad_p_alpha0, grad_p_kappa],
+            ]
+        ).detach()

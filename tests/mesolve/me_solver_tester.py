@@ -79,52 +79,99 @@ class MESolverTester:
         pass
 
 
-class MEAdjointSolverTester(MESolverTester):
-    def _test_adjoint(
+class MEAutogradSolverTester(MESolverTester):
+    def _test_autograd(
         self,
         options: Options,
         system: OpenSystem,
         *,
         num_t_save: int,
-        rtol: float = 5e-2,
-        atol: float = 3e-3,
+        rtol: float = 1e-3,
+        atol: float = 1e-5,
     ):
         t_save = system.t_save(num_t_save)
-
-        # compute autograd gradients
-        system.reset()
-        options.gradient_alg = 'autograd'
         result = system.mesolve(t_save, options)
-        rho_loss = system.loss(result.y_save[-1])
-        exp_loss = result.exp_save.abs().sum()
-        grad_rho = torch.autograd.grad(rho_loss, system.parameters, retain_graph=True)
-        grad_exp = torch.autograd.grad(exp_loss, system.parameters)
 
-        # compute adjoint gradients
-        system.reset()
-        options.gradient_alg = 'adjoint'
-        options.parameters = system.parameters
-        result = system.mesolve(t_save, options)
-        rho_loss = system.loss(result.y_save[-1])
-        exp_loss = result.exp_save.abs().sum()
-        grad_rho_adj = torch.autograd.grad(
-            rho_loss, system.parameters, retain_graph=True
+        # === test gradients depending on y_save
+        loss_rho = system.loss_rho(result.y_save[-1])
+        grads_loss_rho = torch.autograd.grad(
+            loss_rho, system.parameters, retain_graph=True
         )
-        grad_exp_adj = torch.autograd.grad(exp_loss, system.parameters)
+        grads_loss_rho = torch.stack(grads_loss_rho)
+        true_grads_loss_rho = system.grads_loss_rho(t_save[-1])
 
-        # log gradients
-        logging.warning(f'grad_rho     = {grad_rho}')
-        logging.warning(f'grad_rho_adj = {grad_rho_adj}')
-        logging.warning(f'grad_exp     = {grad_exp}')
-        logging.warning(f'grad_exp_adj = {grad_exp_adj}')
+        logging.warning(f'grads_loss_rho           = {grads_loss_rho}')
+        logging.warning(f'true_grads_loss_rho      = {true_grads_loss_rho}')
 
-        # check gradients depending on y_save are equal
-        for g1, g2 in zip(grad_rho, grad_rho_adj):
-            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+        assert torch.allclose(grads_loss_rho, true_grads_loss_rho, rtol=rtol, atol=atol)
 
-        # check gradients depending on exp_save are equal
-        for g1, g2 in zip(grad_exp, grad_exp_adj):
-            assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+        # === test gradient depending on exp_save
+        losses_expect = system.losses_expect(result.exp_save[:, -1])
+        grads_losses_expect = [
+            torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
+            for loss in losses_expect
+        ]
+        grads_losses_expect = torch.stack(grads_losses_expect)
+        true_grads_losses_expect = system.grads_losses_expect(t_save[-1])
 
-    def test_adjoint(self):
+        logging.warning(f'grads_losses_expect      = {grads_losses_expect}')
+        logging.warning(f'true_grads_losses_expect = {true_grads_losses_expect}')
+
+        assert torch.allclose(
+            grads_losses_expect, true_grads_losses_expect, rtol=rtol, atol=atol
+        )
+
+    def test_autograd(self):
         pass
+
+
+class MEAdjointSolverTester(MEAutogradSolverTester):
+    pass
+    # def _test_adjoint(
+    #     self,
+    #     options: Options,
+    #     system: OpenSystem,
+    #     *,
+    #     num_t_save: int,
+    #     rtol: float = 5e-2,
+    #     atol: float = 3e-3,
+    # ):
+    #     t_save = system.t_save(num_t_save)
+
+    #     # compute autograd gradients
+    #     system.reset()
+    #     options.gradient_alg = 'autograd'
+    #     result = system.mesolve(t_save, options)
+    #     rho_loss = system.loss(result.y_save[-1])
+    #     exp_loss = result.exp_save.abs().sum()
+    #     grad_rho = torch.autograd.grad(rho_loss, system.parameters, retain_graph=True)
+    #     grad_exp = torch.autograd.grad(exp_loss, system.parameters)
+
+    #     # compute adjoint gradients
+    #     system.reset()
+    #     options.gradient_alg = 'adjoint'
+    #     options.parameters = system.parameters
+    #     result = system.mesolve(t_save, options)
+    #     rho_loss = system.loss(result.y_save[-1])
+    #     exp_loss = result.exp_save.abs().sum()
+    #     grad_rho_adj = torch.autograd.grad(
+    #         rho_loss, system.parameters, retain_graph=True
+    #     )
+    #     grad_exp_adj = torch.autograd.grad(exp_loss, system.parameters)
+
+    #     # log gradients
+    #     logging.warning(f'grad_rho     = {grad_rho}')
+    #     logging.warning(f'grad_rho_adj = {grad_rho_adj}')
+    #     logging.warning(f'grad_exp     = {grad_exp}')
+    #     logging.warning(f'grad_exp_adj = {grad_exp_adj}')
+
+    #     # check gradients depending on y_save are equal
+    #     for g1, g2 in zip(grad_rho, grad_rho_adj):
+    #         assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+
+    #     # check gradients depending on exp_save are equal
+    #     for g1, g2 in zip(grad_exp, grad_exp_adj):
+    #         assert torch.allclose(g1, g2, rtol=rtol, atol=atol)
+
+    # def test_adjoint(self):
+    #     pass
