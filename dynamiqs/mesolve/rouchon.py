@@ -24,12 +24,42 @@ class MERouchon1(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # define cached operators
-        self.M0 = cache(lambda H_nh: self.I - 1j * self.dt * H_nh)  # (b_H, 1, n, n)
-        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
-        self.M0rev = cache(lambda H_nh: self.I + 1j * self.dt * H_nh)  # (b_H, 1, n, n)
+        if not self.options.trace_normalization:
+            # define cached operators
+            # self.M0, self.M0rev: (b_H, 1, n, n)
+            # self.M1s: (1, len(jump_ops), n, n)
+            self.M0 = cache(lambda H_nh: self.I - 1j * self.dt * H_nh)
+            self.M0rev = cache(lambda H_nh: self.I + 1j * self.dt * H_nh)
 
-        self.M1s = sqrt(self.dt) * self.jump_ops  # (1, len(jump_ops), n, n)
+            # define M1s and M1srev
+            self.M1s = sqrt(self.dt) * self.jump_ops
+            self.M1srev = self.M1s
+        else:
+            # compute the inverse square root renormalization matrix
+            # (for time-dependent Hamiltonians, exclude the Hamiltonian from
+            # normalization)
+            # H_nh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
+            if isinstance(self.H, ConstantTDTensor):
+                H_nh_const = self.H_nh(0.0)
+            elif isinstance(self.H, CallableTDTensor):
+                H_nh_const = -0.5j * self.sum_no_jump
+
+            M0 = self.I - 1j * self.dt * H_nh_const
+            M0rev = self.I + 1j * self.dt * H_nh_const
+            self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_no_jump)
+            self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_no_jump)
+
+            # define cached operators
+            # self.M0, self.M0rev: (b_H, 1, n, n)
+            # self.M1s, self.M1srev: (1, len(jump_ops), n, n)
+            self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * H_nh @ self.S)
+            self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
+
+            # define M1s and M1srev
+            self.M1s = sqrt(self.dt) * self.S @ self.jump_ops
+            self.M1srev = sqrt(self.dt) * self.Srev @ self.jump_ops
+
+        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
         self.M1sdag = self.M1s.mH  # (1, len(jump_ops), n, n)
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
@@ -57,90 +87,6 @@ class MERouchon1(MERouchon):
 
     def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1.
-
-        Args:
-            t: Time.
-            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
-            phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
-
-        Returns:
-            Density matrix and adjoint state matrix at previous time step, as tensors of
-            shape `(b_H, b_rho, n, n)`.
-        """
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-
-        # compute cached operators
-        H = self.H(t)  # (b_H, 1, n, n)
-        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
-        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
-        M0dag = self.M0dag(M0)  # (b_H, 1, n, n)
-        M0rev = self.M0rev(H_nh)  # (b_H, 1, n, n)
-
-        # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
-        rho = unit(rho)
-
-        # compute phi(t-dt)
-        phi = kraus_map(phi, M0dag) + kraus_map(phi, self.M1sdag)
-
-        return rho, phi
-
-
-class MERouchon1_5(MERouchon):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # compute the inverse square root renormalization matrix
-        # (for time-dependent Hamiltonians, exclude the Hamiltonian from normalization)
-        # H_nh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
-        if isinstance(self.H, ConstantTDTensor):
-            H_nh_const = self.H_nh(0.0)
-        elif isinstance(self.H, CallableTDTensor):
-            H_nh_const = -0.5j * self.sum_no_jump
-
-        M0 = self.I - 1j * self.dt * H_nh_const
-        M0rev = self.I + 1j * self.dt * H_nh_const
-        self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_no_jump)
-        self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_no_jump)
-
-        # define cached operators
-        # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
-        # self.M1s, self.M1sdag, self.M1srev: (1, len(jump_ops), n, n)
-        self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * H_nh @ self.S)
-        self.M0dag = cache(lambda M0: M0.mH)
-        self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
-        self.M1s = sqrt(self.dt) * self.S @ self.jump_ops
-        self.M1sdag = self.M1s.mH
-        self.M1srev = sqrt(self.dt) * self.Srev @ self.jump_ops
-
-    def forward(self, t: float, rho: Tensor) -> Tensor:
-        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1 with Kraus map
-        renormalization.
-
-        Args:
-            t: Time.
-            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
-
-        Returns:
-            Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
-        """
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-
-        # compute cached operators
-        H = self.H(t)  # (b_H, 1, n, n)
-        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
-        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
-
-        # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-        rho = unit(rho)
-
-        return rho
-
-    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
-        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1
-        with Kraus map renormalization.
 
         Args:
             t: Time.
