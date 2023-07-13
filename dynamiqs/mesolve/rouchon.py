@@ -75,9 +75,10 @@ class MERouchon1(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        H = self.H(t)  # (b_H, 1, n, n)
-        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
-        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
+        # H, H_nh, M0: (b_H, 1, n, n)
+        H = self.H(t)
+        H_nh = self.H_nh(H)
+        M0 = self.M0(H_nh)
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
@@ -101,11 +102,12 @@ class MERouchon1(MERouchon):
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        H = self.H(t)  # (b_H, 1, n, n)
-        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
-        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
-        M0dag = self.M0dag(M0)  # (b_H, 1, n, n)
-        M0rev = self.M0rev(H_nh)  # (b_H, 1, n, n)
+        # H, H_nh, M0, M0dag, M0rev: (b_H, 1, n, n)
+        H = self.H(t)
+        H_nh = self.H_nh(H)
+        M0 = self.M0(H_nh)
+        M0dag = self.M0dag(M0)
+        M0rev = self.M0rev(H_nh)
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
@@ -122,17 +124,19 @@ class MERouchon2(MERouchon):
         super().__init__(*args, **kwargs)
 
         # define cached operators
+        # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
+        # self.M1s, self.M1sdag: (b_H, len(jump_ops), n, n)
         self.M0 = cache(
             lambda H_nh: self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
-        )  # (b_H, 1, n, n)
-        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
+        )
+        self.M0dag = cache(lambda M0: M0.mH)
         self.M0rev = cache(
             lambda H_nh: self.I + 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
-        )  # (b_H, 1, n, n)
+        )
         self.M1s = cache(
             lambda M0: 0.5 * sqrt(self.dt) * (self.jump_ops @ M0 + M0 @ self.jump_ops)
-        )  # (b_H, len(jump_ops), n, n)
-        self.M1sdag = cache(lambda M1s: M1s.mH)  # (b_H, len(jump_ops), n, n)
+        )
+        self.M1sdag = cache(lambda M1s: M1s.mH)
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
@@ -153,9 +157,10 @@ class MERouchon2(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        H = self.H(t)  # (b_H, 1, n, n)
-        H_nh = self.H_nh(H)  # (b_H, 1, n, n)
-        M0 = self.M0(H_nh)  # (b_H, 1, n, n)
+        # H, H_nh, M0: (b_H, 1, n, n)
+        H = self.H(t)
+        H_nh = self.H_nh(H)
+        M0 = self.M0(H_nh)
         M1s = self.M1s(M0)  # (b_H, len(jump_ops), n, n)
 
         # compute rho(t+dt)
@@ -187,6 +192,8 @@ class MERouchon2(MERouchon):
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
+        # H, H_nh, M0, M0dag, M0rev: (b_H, 1, n, n)
+        # M1s, M1sdag: (b_H, len(jump_ops), n, n)
         H = self.H(t)
         H_nh = self.H_nh(H)
         M0 = self.M0(H_nh)
