@@ -1,17 +1,10 @@
-from math import pi
-
 import dynamiqs as dq
 
-from .me_solver_tester import MEGradientSolverTester
-from .open_system import LeakyCavity
-
-leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
-grad_leaky_cavity_8 = LeakyCavity(
-    n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, requires_grad=True
-)
+from ..solver_tester import SolverTester
+from .open_system import grad_leaky_cavity_8, leaky_cavity_8
 
 
-class TestAdaptive(MEGradientSolverTester):
+class TestAdaptive(SolverTester):
     def test_batching(self):
         options = dq.options.Dopri5()
         self._test_batching(options, leaky_cavity_8)

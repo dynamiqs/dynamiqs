@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from math import cos, exp, pi, sin, sqrt
 
 import torch
@@ -11,69 +10,30 @@ from dynamiqs.options import Options
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
+from ..system import System
 
-class OpenSystem(ABC):
+
+class OpenSystem(System):
     def __init__(self):
-        self.n = None
-        self.H = None
-        self.H_batched = None
+        super().__init__()
         self.jump_ops = None
-        self.rho0 = None
-        self.rho0_batched = None
-        self.exp_ops = None
 
-    @abstractmethod
-    def t_save(self, n: int) -> Tensor:
-        """Compute the save time tensor."""
-        pass
+    @property
+    def _state_shape(self) -> tuple[int, int]:
+        return self.n, self.n
 
-    def rho(self, t: float) -> Tensor:
-        """Compute the exact density matrix at a given time."""
-        raise NotImplementedError
-
-    def rhos(self, t: Tensor) -> Tensor:
-        return torch.stack([self.rho(t_.item()) for t_ in t])
-
-    def expect(self, t: float) -> Tensor:
-        """Compute the exact (complex) expectation values at a given time."""
-        raise NotImplementedError
-
-    def expects(self, t: Tensor) -> Tensor:
-        return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
-
-    def loss_rho(self, rho: Tensor) -> Tensor:
-        """Compute an example loss function from a given density matrix."""
-        return dq.expect(self.loss_op, rho).real
-
-    def grads_rho(self, t: float) -> Tensor:
-        """Compute the exact gradients of the example density matrix loss function with
-        respect to the system parameters."""
-        raise NotImplementedError
-
-    def losses_expect(self, expect: Tensor) -> Tensor:
-        """Compute example loss functions for each expectation values."""
-        return torch.stack(tuple(x.real for x in expect))
-
-    def grads_expect(self, t: float) -> Tensor:
-        """Compute the exact gradients of the example expectation values loss functions
-        with respect to the system parameters."""
-        raise NotImplementedError
-
-    def mesolve(self, t_save: ArrayLike, options: Options) -> Result:
+    def _run(
+        self, H: Tensor, y0: Tensor, t_save: ArrayLike, options: Options
+    ) -> Result:
         return dq.mesolve(
-            self.H,
-            self.jump_ops,
-            self.rho0,
-            t_save=t_save,
-            exp_ops=self.exp_ops,
-            options=options,
+            H, self.jump_ops, y0, t_save, exp_ops=self.exp_ops, options=options
         )
 
 
 class LeakyCavity(OpenSystem):
     # `H_batched: (3, n, n)
     # `jump_ops`: (2, n, n)
-    # `rho0_batched`: (4, n, n)
+    # `y0_batched`: (4, n, n)
     # `exp_ops`: (2, n, n)
 
     def __init__(
@@ -108,8 +68,8 @@ class LeakyCavity(OpenSystem):
         self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
         # prepare initial states
-        self.rho0 = dq.coherent_dm(self.n, self.alpha0)
-        self.rho0_batched = [
+        self.y0 = dq.coherent_dm(self.n, self.alpha0)
+        self.y0_batched = [
             dq.coherent_dm(self.n, self.alpha0),
             dq.coherent_dm(self.n, 1j * self.alpha0),
             dq.coherent_dm(self.n, -self.alpha0),
@@ -127,7 +87,7 @@ class LeakyCavity(OpenSystem):
             * torch.exp(-0.5 * self.kappa * t)
         )
 
-    def rho(self, t: float) -> Tensor:
+    def state(self, t: float) -> Tensor:
         return dq.coherent_dm(self.n, self._alpha(t))
 
     def expect(self, t: float) -> Tensor:
@@ -136,7 +96,7 @@ class LeakyCavity(OpenSystem):
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_rho(self, t: float) -> Tensor:
+    def grads_loss_state(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
         grad_kappa = self.alpha0**2 * -t * exp(-self.kappa * t)
@@ -159,3 +119,9 @@ class LeakyCavity(OpenSystem):
                 [grad_p_delta, grad_p_alpha0, grad_p_kappa],
             ]
         ).detach()
+
+
+leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)
+grad_leaky_cavity_8 = LeakyCavity(
+    n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, requires_grad=True
+)

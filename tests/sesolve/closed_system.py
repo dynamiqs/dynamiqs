@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from math import cos, pi, sin, sqrt
 
 import torch
@@ -9,20 +8,13 @@ from dynamiqs.options import Options
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
+from ..system import System
 
-class ClosedSystem(ABC):
-    def __init__(self):
-        self.n = None
-        self.H = None
-        self.H_batched = None
-        self.psi0 = None
-        self.psi0_batched = None
-        self.exp_ops = None
 
-    @abstractmethod
-    def t_save(self, n: int) -> Tensor:
-        """Compute the save time tensor."""
-        pass
+class ClosedSystem(System):
+    @property
+    def _state_shape(self) -> tuple[int, int]:
+        return self.n, 1
 
     def psi(self, t: float) -> Tensor:
         """Compute the exact ket at a given time."""
@@ -56,10 +48,12 @@ class ClosedSystem(ABC):
         with respect to the system parameters."""
         raise NotImplementedError
 
-    def sesolve(self, t_save: ArrayLike, options: Options) -> Result:
+    def _run(
+        self, H: Tensor, y0: Tensor, t_save: ArrayLike, options: Options
+    ) -> Result:
         return dq.sesolve(
-            self.H,
-            self.psi0,
+            H,
+            y0,
             t_save,
             exp_ops=self.exp_ops,
             options=options,
@@ -68,7 +62,7 @@ class ClosedSystem(ABC):
 
 class Cavity(ClosedSystem):
     # `H_batched: (3, n, n)
-    # `psi0_batched`: (4, n, n)
+    # `y0_batched`: (4, n, n)
     # `exp_ops`: (2, n, n)
 
     def __init__(
@@ -95,8 +89,8 @@ class Cavity(ClosedSystem):
         self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
         # prepare initial states
-        self.psi0 = dq.coherent(self.n, self.alpha0)
-        self.psi0_batched = [
+        self.y0 = dq.coherent(self.n, self.alpha0)
+        self.y0_batched = [
             dq.coherent(self.n, self.alpha0),
             dq.coherent(self.n, 1j * self.alpha0),
             dq.coherent(self.n, -self.alpha0),
@@ -110,7 +104,7 @@ class Cavity(ClosedSystem):
     def _alpha(self, t: float) -> Tensor:
         return self.alpha0 * torch.exp(-1j * self.delta * t)
 
-    def psi(self, t: float) -> Tensor:
+    def state(self, t: float) -> Tensor:
         return dq.coherent(self.n, self._alpha(t))
 
     def expect(self, t: float) -> Tensor:
@@ -119,7 +113,7 @@ class Cavity(ClosedSystem):
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_psi(self, t: float) -> Tensor:
+    def grads_loss_state(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0
         return torch.tensor([grad_delta, grad_alpha0]).detach()
@@ -136,3 +130,7 @@ class Cavity(ClosedSystem):
                 [grad_p_delta, grad_p_alpha0],
             ]
         ).detach()
+
+
+cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
+grad_cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, requires_grad=True)
