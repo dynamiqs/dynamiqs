@@ -78,8 +78,8 @@ class SESolverTester:
         pass
 
 
-class SEAutogradSolverTester(SESolverTester):
-    def _test_autograd(
+class SEGradientSolverTester(SESolverTester):
+    def _test_gradient(
         self,
         options: Options,
         system: ClosedSystem,
@@ -119,6 +119,3 @@ class SEAutogradSolverTester(SESolverTester):
         assert torch.allclose(
             grads_losses_expect, true_grads_losses_expect, rtol=rtol, atol=atol
         )
-
-    def test_autograd(self):
-        pass
