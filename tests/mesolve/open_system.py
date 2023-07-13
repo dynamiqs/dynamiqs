@@ -37,6 +37,13 @@ class OpenSystem(ABC):
     def rhos(self, t: Tensor) -> Tensor:
         return torch.stack([self.rho(t_.item()) for t_ in t])
 
+    def expect(self, t: float) -> Tensor:
+        """Compute the exact (complex) expectation values at a given time."""
+        raise NotImplementedError
+
+    def expects(self, t: Tensor) -> Tensor:
+        return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
+
     def loss(self, rho: Tensor) -> Tensor:
         """Compute an example loss function from a given density matrix."""
         return dq.expect(self.loss_op, rho).real
@@ -115,10 +122,18 @@ class LeakyCavity(OpenSystem):
         t_end = 2 * pi / self.delta  # a full rotation
         return torch.linspace(0.0, t_end.item(), num_t_save)
 
-    def rho(self, t: float) -> Tensor:
-        alpha_t = (
+    def _alpha(self, t: float) -> Tensor:
+        return (
             self.alpha0
             * torch.exp(-1j * self.delta * t)
             * torch.exp(-0.5 * self.kappa * t)
         )
-        return dq.coherent_dm(self.n, alpha_t)
+
+    def rho(self, t: float) -> Tensor:
+        return dq.coherent_dm(self.n, self._alpha(t))
+
+    def expect(self, t: float) -> Tensor:
+        alpha_t = self._alpha(t)
+        exp_x = sqrt(2) * alpha_t.real
+        exp_p = sqrt(2) * alpha_t.imag
+        return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)

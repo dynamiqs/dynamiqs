@@ -28,6 +28,13 @@ class ClosedSystem(ABC):
     def psis(self, t: Tensor) -> Tensor:
         return torch.stack([self.psi(t_.item()) for t_ in t])
 
+    def expect(self, t: float) -> Tensor:
+        """Compute the exact (complex) expectation values at a given time."""
+        raise NotImplementedError
+
+    def expects(self, t: Tensor) -> Tensor:
+        return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
+
 
 class Cavity(ClosedSystem):
     # `H_batched: (3, n, n)
@@ -64,6 +71,14 @@ class Cavity(ClosedSystem):
         t_end = 2 * pi / self.delta  # a full rotation
         return torch.linspace(0.0, t_end, num_t_save)
 
+    def _alpha(self, t: float) -> Tensor:
+        return self.alpha0 * torch.exp(-1j * self.delta * t)
+
     def psi(self, t: float) -> Tensor:
-        alpha_t = self.alpha0 * torch.exp(-1j * self.delta * t)
-        return dq.coherent(self.n, alpha_t)
+        return dq.coherent(self.n, self._alpha(t))
+
+    def expect(self, t: float) -> Tensor:
+        alpha_t = self._alpha(t)
+        exp_x = sqrt(2) * alpha_t.real
+        exp_p = sqrt(2) * alpha_t.imag
+        return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)

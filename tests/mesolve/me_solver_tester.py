@@ -50,21 +50,30 @@ class MESolverTester:
     def test_batching(self):
         pass
 
-    def _test_y_save(
+    def _test_correctness(
         self,
         options: Options,
         system: OpenSystem,
         *,
         num_t_save: int,
-        norm_atol: float = 1e-2,
+        y_save_norm_atol: float = 1e-2,
+        exp_save_rtol: float = 1e-2,
+        exp_save_atol: float = 1e-2,
     ):
         t_save = system.t_save(num_t_save)
-        y_save = system.mesolve(t_save, options).y_save
+        result = system.mesolve(t_save, options)
 
-        errs = torch.linalg.norm(y_save - system.rhos(t_save), dim=(-2, -1))
-        assert torch.all(errs <= norm_atol)
+        errs = torch.linalg.norm(result.y_save - system.rhos(t_save), dim=(-2, -1))
+        assert torch.all(errs <= y_save_norm_atol)
 
-    def test_y_save(self):
+        assert torch.allclose(
+            result.exp_save,
+            system.expects(t_save),
+            rtol=exp_save_rtol,
+            atol=exp_save_atol,
+        )
+
+    def test_correctness(self):
         pass
 
 

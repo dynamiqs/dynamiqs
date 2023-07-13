@@ -13,6 +13,6 @@ class TestMEEuler(MESolverTester):
         options = dq.options.Euler(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
 
-    def test_y_save(self):
+    def test_correctness(self):
         options = dq.options.Euler(dt=1e-4)
-        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
+        self._test_correctness(options, leaky_cavity_8, num_t_save=11)

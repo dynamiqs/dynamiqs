@@ -13,6 +13,6 @@ class TestAdaptive(MESolverTester):
         options = dq.options.Dopri5()
         self._test_batching(options, leaky_cavity_8)
 
-    def test_y_save(self):
+    def test_correctness(self):
         options = dq.options.Dopri5()
-        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
+        self._test_correctness(options, leaky_cavity_8, num_t_save=11)
