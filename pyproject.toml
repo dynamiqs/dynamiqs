@@ -84,7 +84,7 @@ cmd = "echo '\n>>> doctest dynamiqs/' && pytest --doctest-modules dynamiqs"
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = "echo '\n>>> doctest docs/' && pytest --doctest-modules docs --doctest-glob '*.md' --ignore-glob 'python_api'"
+cmd = "echo '\n>>> doctest docs/' && pytest --doctest-modules docs --doctest-glob '*.md' --ignore-glob '*generate_python_api.py'"
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
