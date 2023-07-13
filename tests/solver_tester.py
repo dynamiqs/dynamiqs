@@ -11,7 +11,6 @@ from .system import System
 class SolverTester(ABC):
     def _test_batching(self, options: Options, system: System):
         """Test the batching of `H` and `y0`, and the returned object sizes."""
-        print(system._state_shape)
         m, n = system._state_shape
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)
