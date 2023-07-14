@@ -19,7 +19,7 @@ def wigner(
     num_pixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
 ) -> tuple[Tensor, Tensor, Tensor]:
-    """Compute the Wigner distribution of a ket or density matrix.
+    r"""Compute the Wigner distribution of a ket or density matrix.
 
     Args:
         state _(..., n, 1) or (..., n, n)_: Ket or density matrix.

@@ -26,7 +26,7 @@ __all__ = [
 
 
 def is_ket(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a ket.
+    r"""Returns True if a tensor is in the format of a ket.
 
     Args:
         x _(...)_: Tensor.
@@ -38,7 +38,7 @@ def is_ket(x: Tensor) -> bool:
 
 
 def is_bra(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a bra.
+    r"""Returns True if a tensor is in the format of a bra.
 
     Args:
         x _(...)_: Tensor.
@@ -50,7 +50,7 @@ def is_bra(x: Tensor) -> bool:
 
 
 def is_dm(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a density matrix.
+    r"""Returns True if a tensor is in the format of a density matrix.
 
     Args:
         x _(...)_: Tensor.
@@ -309,7 +309,7 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
 
 
 def trace(x: Tensor) -> Tensor:
-    """Returns the trace of a tensor along its last two dimensions.
+    r"""Returns the trace of a tensor along its last two dimensions.
 
     Args:
         x _(..., n, n)_: Tensor.
@@ -321,7 +321,7 @@ def trace(x: Tensor) -> Tensor:
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Returns the partial trace of a ket, bra or density matrix.
+    r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix of a
@@ -458,7 +458,7 @@ def norm(x: Tensor) -> Tensor:
 
 
 def unit(x: Tensor) -> Tensor:
-    """Normalize a ket, bra or density matrix to unit norm.
+    r"""Normalize a ket, bra or density matrix to unit norm.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.

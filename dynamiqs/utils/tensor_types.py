@@ -32,7 +32,7 @@ def to_tensor(
     device: torch.device | None = None,
     is_complex: bool = False,
 ) -> Tensor:
-    """Convert an array-like object (or a list of array-like objects) to a tensor.
+    r"""Convert an array-like object (or a list of array-like objects) to a tensor.
 
     Args:
         x _(array-like or list of array-like)_: QuTiP quantum object or NumPy array or
@@ -136,7 +136,7 @@ def from_qutip(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Convert a QuTiP quantum object to a PyTorch tensor.
+    r"""Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
         x _(QuTiP quantum object)_: Input quantum object.
@@ -150,7 +150,7 @@ def from_qutip(
 
 
 def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
-    """Convert a PyTorch tensor to a QuTiP quantum object.
+    r"""Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:
         x: PyTorch tensor.

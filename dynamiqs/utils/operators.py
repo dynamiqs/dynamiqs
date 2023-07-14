@@ -28,7 +28,7 @@ def sigmax(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the Pauli $X$ operator.
+    r"""Returns the Pauli $X$ operator.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -46,7 +46,7 @@ def sigmay(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the Pauli $Y$ operator.
+    r"""Returns the Pauli $Y$ operator.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -64,7 +64,7 @@ def sigmaz(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the Pauli $Z$ operator.
+    r"""Returns the Pauli $Z$ operator.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -118,7 +118,7 @@ def eye(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the identity operator.
+    r"""Returns the identity operator.
 
     If only a single dimension is provided, `eye` returns the identity operator
     of corresponding dimension. If instead multiples dimensions are provided, `eye`
@@ -143,7 +143,7 @@ def destroy(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor | tuple[Tensor, ...]:
-    """Returns a bosonic annihilation operator, or a tuple of annihilation operators in
+    r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators in
     a multi-mode system.
 
     If only a single dimension is provided, `destroy` returns the annihilation operator
@@ -210,7 +210,7 @@ def create(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor | tuple[Tensor, ...]:
-    """Returns a bosonic creation operator, or a tuple of creation operators in a
+    r"""Returns a bosonic creation operator, or a tuple of creation operators in a
     multi-mode system.
 
     If only a single dimension is provided, `create` returns the creation operator of
@@ -303,7 +303,7 @@ def squeeze(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    """Returns the squeezing operator of squeezing amplitude $z$.
+    r"""Returns the squeezing operator of squeezing amplitude $z$.
 
     Args:
         dim: Dimension of the Hilbert space.
