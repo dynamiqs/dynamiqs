@@ -33,6 +33,9 @@ def sigmax(
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $X$ operator.
     """
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -48,6 +51,9 @@ def sigmay(
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $Y$ operator.
     """
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
@@ -63,6 +69,9 @@ def sigmaz(
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $Z$ operator.
     """
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
@@ -78,6 +87,9 @@ def sigmap(
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_+$ operator.
     """
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
@@ -93,6 +105,9 @@ def sigmam(
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_-$ operator.
     """
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -114,6 +129,9 @@ def eye(
         *dims: Variable length argument list of the Hilbert space dimensions.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
+
+    Returns:
+        _(n, n)_ Identity operator (with _n_ the product of dimensions in `dims`).
     """
     dim = prod(dims)
     return torch.eye(dim, dtype=dtype, device=device)
