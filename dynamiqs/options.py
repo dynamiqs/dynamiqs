@@ -156,6 +156,10 @@ class Dopri5(ODEAdaptiveStep):
     pass
 
 
+# make alias for Dopri5
+Default = Dopri5
+
+
 class Euler(ODEFixedStep):
     pass
 
