@@ -35,11 +35,12 @@ def to_tensor(
     """Convert an array-like object (or a list of array-like objects) to a tensor.
 
     Args:
-        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or
-            list of these types. If `None` or empty list, returns an empty tensor of
-            shape _(0)_.
+        x _(array-like or list of array-like)_: QuTiP quantum object or NumPy array or
+            Python list or PyTorch tensor or list of these types. If `None` or empty
+            list, returns an empty tensor of shape _(0)_.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
+        is_complex: Whether the returned tensor is complex-valued.
 
     Returns:
         Output tensor.
@@ -138,7 +139,7 @@ def from_qutip(
     """Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
-        x: Input quantum object.
+        x _(QuTiP quantum object)_: Input quantum object.
         dtype: Complex data type of the returned tensor.
         device: Device on which the returned tensor is stored.
 
@@ -148,13 +149,13 @@ def from_qutip(
     return torch.from_numpy(x.full()).to(dtype=dtype, device=device)
 
 
-def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
+def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
     """Convert a PyTorch tensor to a QuTiP quantum object.
 
     Args:
         x: PyTorch tensor.
-        dims: QuTiP object dimensions, with size _(2, n)_ where _n_ is the number of
-            modes in the tensor product.
+        dims _(list of list of int or None)_: QuTiP object dimensions, with shape
+            _(2, n)_ where _n_ is the number of modes in the tensor product.
 
     Returns:
         QuTiP quantum object.

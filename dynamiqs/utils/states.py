@@ -23,8 +23,8 @@ def fock(
     """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
     Args:
-        dims: Dimension of the Hilbert space of each mode.
-        states: Fock state of each mode.
+        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        states _(int or tuple of ints)_: Fock state of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -74,8 +74,8 @@ def fock_dm(
     product of Fock states.
 
     Args:
-        dims: Dimension of the Hilbert space of each mode.
-        states: Fock state of each mode.
+        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        states _(int or tuple of ints)_: Fock state of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 

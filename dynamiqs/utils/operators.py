@@ -111,7 +111,7 @@ def eye(
     of all dimensions.
 
     Args:
-        dims: Dimension of the Hilbert space.
+        *dims: Variable length argument list of the Hilbert space dimensions.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
@@ -134,13 +134,13 @@ def destroy(
     space given by the product of all dimensions.
 
     Args:
-        dims: Dimension of the Hilbert space.
+        *dims: Variable length argument list of the Hilbert space dimensions.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
-        Annihilation operator of given dimension, or tuple of annihilation operators in
-            a multi-mode system.
+        _(tensor or tuple of tensors)_ Annihilation operator of given dimension, or
+            tuple of annihilation operators in a multi-mode system.
 
     Examples:
         >>> dq.destroy(4)
@@ -201,13 +201,13 @@ def create(
     given by the product of all dimensions.
 
     Args:
-        dims: Dimension of the Hilbert space.
+        *dims: Variable length argument list of the Hilbert space dimensions.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
-        Creation operator of given dimension, or tuple of creation operators in a
-            multi-mode system.
+        _(tensor or tuple of tensors)_ Creation operator of given dimension, or tuple
+            of creation operators in a multi-mode system.
 
     Examples:
         >>> dq.create(4)
@@ -270,7 +270,7 @@ def displace(
         device: Device of the returned tensor.
 
     Returns:
-        Displacement operator.
+        _(dim, dim)_ Displacement operator.
     """
     a = destroy(dim, dtype=dtype, device=device)
     alpha = torch.as_tensor(alpha)
@@ -294,7 +294,7 @@ def squeeze(
         device: Device of the returned tensor.
 
     Returns:
-        Squeezing operator.
+        _(dim, dim)_ Squeezing operator.
     """
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a

@@ -237,7 +237,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of a sequence of kets, bras, density matrices or
+    r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
     The returned tensor shape is:
@@ -253,8 +253,8 @@ def tensprod(*args: Tensor) -> Tensor:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Sequence of kets,
-            density matrices or operators.
+        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Variable length
+            argument list of kets, density matrices or operators.
 
     Returns:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.

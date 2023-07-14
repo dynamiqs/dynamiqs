@@ -27,7 +27,7 @@ def wigner(
         p_max: Maximum value of p. Ignored if the Wigner distribution is computed
             with the `fft` method, in which case `p_max` is given by `2 * pi / x_max`.
         num_pixels: Number of pixels in each direction.
-        method: Method used to compute the Wigner distribution. Available
+        method _(string)_: Method used to compute the Wigner distribution. Available
             methods: `clenshaw` or `fft`.
 
     Returns:
