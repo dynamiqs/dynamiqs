@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import cached_property
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -62,6 +63,22 @@ class Options:
     def rdtype(self) -> torch.float32 | torch.float64:
         return dtype_complex_to_real(self.dtype)
 
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            'gradient_alg': self.gradient_alg,
+            'save_states': self.save_states,
+            'verbose': self.verbose,
+            'dtype': self.dtype,
+            'device': self.device,
+        }
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def __str__(self) -> str:
+        attributes_str = ', '.join(f'{k}={v}' for k, v in self.as_dict().items())
+        return f'{type(self).__name__}({attributes_str})'
+
 
 class AutogradOptions(Options):
     GRADIENT_ALG = ['autograd']
@@ -87,11 +104,17 @@ class AdjointOptions(AutogradOptions):
                 ' the solver.'
             )
 
+    def as_dict(self) -> dict[str, Any]:
+        return super().as_dict() | {'parameters': self.parameters}
+
 
 class ODEFixedStep(AutogradOptions):
     def __init__(self, *, dt: float, **kwargs):
         super().__init__(**kwargs)
         self.dt = dt
+
+    def as_dict(self) -> dict[str, Any]:
+        return super().as_dict() | {'dt': self.dt}
 
 
 class ODEAdaptiveStep(AutogradOptions):
@@ -113,6 +136,16 @@ class ODEAdaptiveStep(AutogradOptions):
         self.safety_factor = safety_factor
         self.min_factor = min_factor
         self.max_factor = max_factor
+
+    def as_dict(self) -> dict[str, Any]:
+        return super().as_dict() | {
+            'atol': self.atol,
+            'rtol': self.rtol,
+            'max_steps': self.max_steps,
+            'safety_factor': self.safety_factor,
+            'min_factor': self.min_factor,
+            'max_factor': self.max_factor,
+        }
 
 
 class Propagator(AutogradOptions):
