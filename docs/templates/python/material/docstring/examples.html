@@ -1,0 +1,11 @@
+{{ log.debug("Rendering examples section") }}
+
+<!-- <p><strong>{{ section.title or "Examples:" }}</strong></p> -->
+<p><strong>{{ section.title or "Examples" }}</strong></p>
+{% for section_type, sub_section in section.value %}
+  {% if section_type.value == "text" %}
+    {{ sub_section|convert_markdown(heading_level, html_id) }}
+  {% elif section_type.value == "examples" %}
+    {{ sub_section|highlight(language="pycon", linenums=False) }}
+  {% endif %}
+{% endfor %}
