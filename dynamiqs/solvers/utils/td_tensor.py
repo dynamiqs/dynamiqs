@@ -9,8 +9,8 @@ from torch import Tensor
 from ...utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
-    cdtype,
-    rdtype,
+    to_device,
+    to_rdtype,
     to_tensor,
 )
 from .utils import cache
@@ -19,21 +19,17 @@ from .utils import cache
 def to_td_tensor(
     x: TDOperatorLike,
     dtype: torch.dtype | None = None,
-    device: torch.device | None = None,
-    is_complex: bool = False,
+    device: str | torch.device | None = None,
 ) -> TDTensor:
     """Convert a `TDOperatorLike` object to a `TDTensor` object."""
+    device = to_device(device)
+
     if isinstance(x, get_args(OperatorLike)):
         # convert to tensor
-        x = to_tensor(x, dtype=dtype, device=device, is_complex=is_complex)
-
+        x = to_tensor(x, dtype=dtype, device=device)
         return ConstantTDTensor(x)
     elif callable(x):
-        # get default dtype and device
-        if dtype is None:
-            dtype = cdtype(dtype) if is_complex else rdtype(dtype)
-        if device is None:
-            device = get_default_device()
+        dtype = to_rdtype(dtype) if dtype is None else dtype  # assume real by default
 
         # compute initial value of the callable
         x0 = x(0.0)
@@ -42,11 +38,6 @@ def to_td_tensor(
         check_callable(x0, dtype, device)
 
         return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
-
-
-def get_default_device() -> torch.device:
-    """Get the default device."""
-    return torch.ones(1).device
 
 
 def check_callable(

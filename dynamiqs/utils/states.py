@@ -6,19 +6,18 @@ import torch
 from torch import Tensor
 
 from .operators import displace
-from .tensor_types import complex_tensor
+from .tensor_types import to_cdtype
 from .utils import ket_to_dm
 
 __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
 
 
-@complex_tensor
 def fock(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
+    device: str | torch.device | None = None,
 ) -> Tensor:
     """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
@@ -57,18 +56,17 @@ def fock(
     n = 0
     for dim, state in zip(dims, states):
         n = dim * n + state
-    ket = torch.zeros(prod(dims), 1, dtype=dtype, device=device)
+    ket = torch.zeros(prod(dims), 1, dtype=to_cdtype(dtype), device=device)
     ket[n] = 1.0
     return ket
 
 
-@complex_tensor
 def fock_dm(
     dims: int | tuple[int, ...],
     states: int | tuple[int, ...],
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
+    device: str | torch.device | None = None,
 ) -> Tensor:
     """Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
@@ -96,16 +94,15 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
                 dtype=torch.complex128)
     """
-    return ket_to_dm(fock(dims, states, dtype=dtype, device=device))
+    return ket_to_dm(fock(dims, states, dtype=to_cdtype(dtype), device=device))
 
 
-@complex_tensor
 def coherent(
     dim: int,
     alpha: complex | Tensor,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
+    device: str | torch.device | None = None,
 ) -> Tensor:
     """Returns the ket of a coherent state.
 
@@ -126,18 +123,18 @@ def coherent(
                 [0.003+0.j],
                 [0.000+0.j]], dtype=torch.complex128)
     """
-    return displace(dim, alpha, dtype=dtype, device=device) @ fock(
-        dim, 0, dtype=dtype, device=device
+    cdtype = to_cdtype(dtype)
+    return displace(dim, alpha, dtype=cdtype, device=device) @ fock(
+        dim, 0, dtype=cdtype, device=device
     )
 
 
-@complex_tensor
 def coherent_dm(
     dim: int,
     alpha: complex | Tensor,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
+    device: str | torch.device | None = None,
 ) -> Tensor:
     """Density matrix of a coherent state.
 
@@ -159,4 +156,4 @@ def coherent_dm(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
     """
-    return ket_to_dm(coherent(dim, alpha, dtype=dtype, device=device))
+    return ket_to_dm(coherent(dim, alpha, dtype=to_cdtype(dtype), device=device))

@@ -32,7 +32,7 @@ def sesolve(
     options = options or Dopri5()
 
     # format and batch all tensors
-    formatter = TensorFormatter(options.dtype, options.device)
+    formatter = TensorFormatter(options.cdtype, options.device)
     H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
     # H_batched: (b_H, 1, n, n)
     # psi0_batched: (b_H, b_psi0, n, 1)

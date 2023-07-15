@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from functools import cached_property
-
 import torch
 import torch.nn as nn
 
-from .utils.tensor_types import dtype_complex_to_real
+from .utils.tensor_types import dtype_complex_to_real, to_cdtype, to_device
 
 __all__ = [
     'Propagator',
@@ -28,7 +26,7 @@ class Options:
         save_states: bool = True,
         verbose: bool = True,
         dtype: torch.complex64 | torch.complex128 | None = None,
-        device: torch.device | None = None,
+        device: str | torch.device | None = None,
     ):
         """...
 
@@ -41,13 +39,15 @@ class Options:
             dtype (torch.dtype, optional): Complex data type to which all complex-valued
                 tensors are converted. `t_save` is also converted to a real data type of
                 the corresponding precision.
-            device (torch.device, optional): Device on which the tensors are stored.
+            device (string or torch.device, optional): Device on which the tensors are
+                stored.
         """
         self.gradient_alg = gradient_alg
         self.save_states = save_states
         self.verbose = verbose
-        self.dtype = dtype
-        self.device = device
+        self.cdtype = to_cdtype(dtype)
+        self.rdtype = dtype_complex_to_real(self.cdtype)
+        self.device = to_device(device)
 
         # check that the gradient algorithm is supported
         if self.gradient_alg is not None and self.gradient_alg not in self.GRADIENT_ALG:
@@ -57,10 +57,6 @@ class Options:
                 f' supported by solver {type(self).__name__} (supported:'
                 f' {available_gradient_alg_str}).'
             )
-
-    @cached_property
-    def rdtype(self) -> torch.float32 | torch.float64:
-        return dtype_complex_to_real(self.dtype)
 
 
 class AutogradOptions(Options):

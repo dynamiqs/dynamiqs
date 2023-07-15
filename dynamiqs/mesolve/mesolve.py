@@ -80,7 +80,7 @@ def mesolve(
         )
 
     # format and batch all tensors
-    formatter = TensorFormatter(options.dtype, options.device)
+    formatter = TensorFormatter(options.cdtype, options.device)
     H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     # H_batched: (b_H, 1, n, n)
     # rho0_batched: (b_H, b_rho0, n, n)

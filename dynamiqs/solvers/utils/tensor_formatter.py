@@ -11,10 +11,10 @@ from .td_tensor import TDTensor, to_td_tensor
 class TensorFormatter:
     def __init__(
         self,
-        dtype: torch.complex64 | torch.complex128 | None,
-        device: torch.device | None,
+        cdtype: torch.complex64 | torch.complex128,
+        device: torch.device,
     ):
-        self.dtype = dtype
+        self.cdtype = cdtype
         self.device = device
 
         self.H_is_batched = False
@@ -25,7 +25,7 @@ class TensorFormatter:
     ) -> tuple[TDTensor, Tensor]:
         """Convert and batch Hamiltonian and state (state vector or density matrix)."""
         # convert Hamiltonian to `TDTensor`
-        H = to_td_tensor(H, dtype=self.dtype, device=self.device, is_complex=True)
+        H = to_td_tensor(H, dtype=self.cdtype, device=self.device)
 
         # handle Hamiltonian batching
         if H.dim() == 2:  # (n, n)
@@ -36,7 +36,7 @@ class TensorFormatter:
         b_H = H.size(0)
 
         # convert state to tensor and density matrix if needed
-        state = to_tensor(state, dtype=self.dtype, device=self.device, is_complex=True)
+        state = to_tensor(state, dtype=self.cdtype, device=self.device)
         if is_ket(state) and state_to_dm:
             state = ket_to_dm(state)
 
@@ -52,9 +52,7 @@ class TensorFormatter:
 
     def format(self, operator: OperatorLike) -> Tensor:
         """Convert and batch a given operator according to the Hamiltonian and state."""
-        return to_tensor(
-            operator, dtype=self.dtype, device=self.device, is_complex=True
-        )
+        return to_tensor(operator, dtype=self.cdtype, device=self.device)
 
     def unbatch(self, save: Tensor | None) -> Tensor | None:
         """Unbatch saved tensors."""
