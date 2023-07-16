@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Union, get_args
+from typing import Callable, Union
 
 import numpy as np
 import torch
@@ -15,29 +15,25 @@ __all__ = [
     'to_qutip',
 ]
 
-# type for objects convertible to a torch.Tensor using `torch.as_tensor`
-TensorLike = Union[list, np.ndarray, Tensor]
-
 # type for objects convertible to a torch.Tensor using `to_tensor`
-OperatorLike = Union[TensorLike, Qobj]
+ArrayLike = Union[list, np.ndarray, Tensor, Qobj]
 
 # TODO add typing for Hamiltonian with piecewise-constant factor
 # type for time-dependent objects
-TDOperatorLike = Union[OperatorLike, Callable[[float], Tensor]]
+TDArrayLike = Union[ArrayLike, Callable[[float], Tensor]]
 
 
 def to_tensor(
-    x: OperatorLike | list[OperatorLike] | None,
+    x: ArrayLike | list[ArrayLike] | None,
     *,
     dtype: torch.dtype | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    """Convert an array-like object (or a list of array-like objects) to a tensor.
+    """Convert an array-like object or a list of array-like objects to a tensor.
 
     Args:
-        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or
-            list of these types. If `None` or empty list, returns an empty tensor of
-            shape _(0)_.
+        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
+            of these types. If `None` returns an empty tensor of shape _(0)_.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
 
@@ -49,15 +45,15 @@ def to_tensor(
     if isinstance(x, list):
         if len(x) == 0:
             return torch.tensor([], dtype=dtype, device=device)
-        return torch.stack([to_tensor(y, dtype=dtype, device=device) for y in x])
-    if isinstance(x, Qobj):
+        return torch.stack([to_tensor(el, dtype=dtype, device=device) for el in x])
+    elif isinstance(x, Qobj):
         return from_qutip(x, dtype=get_cdtype(dtype), device=device)
-    elif isinstance(x, get_args(TensorLike)):
+    elif isinstance(x, (np.ndarray, Tensor)):
         return torch.as_tensor(x, dtype=dtype, device=device)
     else:
         raise TypeError(
-            'Argument `x` must be an array-like object, but has type'
-            f' {obj_type_str(x)}.'
+            'Argument `x` must be an array-like object or a list of array-like objects,'
+            f' but has type {obj_type_str(x)}.'
         )
 
 
