@@ -141,7 +141,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
 
     $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2
+        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
     $$
 
     Warning:
@@ -435,10 +435,10 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
 
 def norm(x: Tensor) -> Tensor:
-    r"""Returns the norm of a ket, bra or a density matrix.
+    r"""Returns the norm of a ket, bra or density matrix.
 
-    For kets and bras, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For density
-    matrices, it is $\tr{\rho}$.
+    For ket and bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
+    matrix, it is $\tr{\rho}$.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
@@ -459,6 +459,8 @@ def norm(x: Tensor) -> Tensor:
 
 def unit(x: Tensor) -> Tensor:
     r"""Normalize a ket, bra or density matrix to unit norm.
+
+    The returned object is divided by its norm (see [norm()][dynamiqs.norm]).
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
