@@ -13,6 +13,7 @@ from ...utils.tensor_types import (
     to_rdtype,
     to_tensor,
 )
+from ...utils.utils import obj_type_str, type_str
 from .utils import cache
 
 
@@ -55,17 +56,17 @@ def check_callable(
     if not isinstance(x0, Tensor):
         raise TypeError(
             f'{prefix} The provided operator is currently of type'
-            f' {type(x0)} instead of {Tensor}.'
+            f' {obj_type_str(x0)} instead of {type_str(Tensor)}.'
         )
     elif x0.dtype != expected_dtype:
         raise TypeError(
             f'{prefix} The provided operator is currently of dtype'
-            f' {x0.dtype} instead of {expected_dtype}.'
+            f' `{x0.dtype}` instead of `{expected_dtype}`.'
         )
     elif x0.device != expected_device:
         raise TypeError(
             f'{prefix} The provided operator is currently on device'
-            f' {x0.device} instead of {expected_device}.'
+            f' `{x0.device}` instead of `{expected_device}`.'
         )
 
 

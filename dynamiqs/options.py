@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from .utils.tensor_types import dtype_complex_to_real, to_cdtype, to_device
+from .utils.utils import obj_type_str
 
 __all__ = [
     'Propagator',
@@ -54,7 +55,7 @@ class Options:
             available_gradient_alg_str = ', '.join(f'"{x}"' for x in self.GRADIENT_ALG)
             raise ValueError(
                 f'Gradient algorithm "{self.gradient_alg}" is not defined or not yet'
-                f' supported by solver {type(self).__name__} (supported:'
+                f' supported by solver {obj_type_str(self)} (supported:'
                 f' {available_gradient_alg_str}).'
             )
 

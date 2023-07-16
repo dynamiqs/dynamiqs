@@ -7,6 +7,7 @@ from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
+from ..utils.utils import obj_type_str
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
 from .propagator import SEPropagator
@@ -51,7 +52,9 @@ def sesolve(
     elif isinstance(options, Propagator):
         solver = SEPropagator(*args)
     else:
-        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
+        raise NotImplementedError(
+            f'Solver options {obj_type_str(options)} is not implemented.'
+        )
 
     # compute the result
     solver.run()
