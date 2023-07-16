@@ -3,9 +3,11 @@ from __future__ import annotations
 from .._utils import obj_type_str
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon2
 from ..solvers.result import Result
-from ..solvers.utils.tensor_formatter import TensorFormatter
+from ..solvers.utils.batching import batch_H, batch_y0
+from ..solvers.utils.td_tensor import to_td_tensor
 from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
+from ..utils.utils import is_ket, ket_to_dm
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon2
@@ -91,12 +93,16 @@ def mesolve(
         )
 
     # format and batch all tensors
-    # H_batched: (b_H, 1, n, n)
-    # rho0_batched: (b_H, b_rho0, n, n)
+    # H: (b_H, 1, n, n)
+    # rho0: (b_H, b_rho0, n, n)
     # exp_ops: (len(exp_ops), n, n)
     # jump_ops: (len(jump_ops), n, n)
-    formatter = TensorFormatter(options.cdtype, options.device)
-    H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
+    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
+    rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
+    H = batch_H(H)
+    rho0 = batch_y0(rho0, H)
+    if is_ket(rho0):
+        rho0 = ket_to_dm(rho0)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
     jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
@@ -105,7 +111,7 @@ def mesolve(
     check_time_tensor(t_save, arg_name='t_save')
 
     # define the solver
-    args = (H_batched, rho0_batched, t_save, exp_ops, options)
+    args = (H, rho0, t_save, exp_ops, options)
     if isinstance(options, Rouchon1):
         solver = MERouchon1(*args, jump_ops=jump_ops)
     elif isinstance(options, Rouchon2):
@@ -122,7 +128,7 @@ def mesolve(
 
     # get saved tensors and restore correct batching
     result = solver.result
-    result.y_save = formatter.unbatch(result.y_save)
-    result.exp_save = formatter.unbatch(result.exp_save)
+    result.y_save = result.y_save.squeeze(0, 1)
+    result.exp_save = result.exp_save.squeeze(0, 1)
 
     return result
