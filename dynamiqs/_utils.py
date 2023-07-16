@@ -6,7 +6,10 @@ import torch
 
 
 def type_str(type: Any) -> str:
-    return f'`{type.__module__}.{type.__name__}`'
+    if type.__module__ in ('builtins', '__main__'):
+        return f'`{type.__name__}`'
+    else:
+        return f'`{type.__module__}.{type.__name__}`'
 
 
 def obj_type_str(x: Any) -> str:
