@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from ..mesolve.me_solver import MESolver
-from ..solvers.utils.utils import cache
+from ..solvers.utils import cache
 from ..utils.utils import trace
 
 

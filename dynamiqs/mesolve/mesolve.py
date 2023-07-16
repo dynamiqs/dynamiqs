@@ -3,9 +3,7 @@ from __future__ import annotations
 from .._utils import obj_type_str
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon2
 from ..solvers.result import Result
-from ..solvers.utils.batching import batch_H, batch_y0
-from ..solvers.utils.td_tensor import to_td_tensor
-from ..solvers.utils.utils import check_time_tensor
+from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import is_ket, ket_to_dm
 from .adaptive import MEDormandPrince5
