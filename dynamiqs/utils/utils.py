@@ -339,18 +339,18 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
             incompatible with `dims`.
 
     Examples:
-        >>> rhoABC = dq.tensprod(
+        >>> psiABC = dq.tensprod(
         ...     dq.coherent(20, 2.0),
         ...     dq.fock(2, 0),
         ...     dq.fock(5, 1)
         ... )
-        >>> rhoABC.shape
+        >>> psiABC.shape
         torch.Size([200, 1])
-        >>> rhoA = dq.ptrace(rhoABC, 0, (20, 2, 5))
-        >>> rhoA.shape
+        >>> psiA = dq.ptrace(psiABC, 0, (20, 2, 5))
+        >>> psiA.shape
         torch.Size([20, 20])
-        >>> rhoBC = dq.ptrace(rhoABC, (1, 2), (20, 2, 5))
-        >>> rhoBC.shape
+        >>> psiBC = dq.ptrace(psiABC, (1, 2), (20, 2, 5))
+        >>> psiBC.shape
         torch.Size([10, 10])
     """
     # convert keep and dims to tensors
