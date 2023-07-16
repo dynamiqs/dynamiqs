@@ -43,8 +43,6 @@ def sesolve(
     # exp_ops: (len(exp_ops), n, n)
     formatter = TensorFormatter(options.cdtype, options.device)
     H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
-    # H_batched: (b_H, 1, n, n)
-    # psi0_batched: (b_H, b_psi0, n, 1)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
 
     # convert t_save to tensor
