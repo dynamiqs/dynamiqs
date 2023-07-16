@@ -6,14 +6,8 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from ...utils.tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    to_device,
-    to_rdtype,
-    to_tensor,
-)
-from ...utils.utils import obj_type_str, type_str
+from ..._utils import obj_type_str, to_device, type_str
+from ...utils.tensor_types import OperatorLike, TDOperatorLike, to_rdtype, to_tensor
 from .utils import cache
 
 

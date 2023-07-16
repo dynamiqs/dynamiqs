@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Any
 
 import torch
 from torch import Tensor
@@ -483,11 +482,3 @@ def unit(x: Tensor) -> Tensor:
             matrix.
     """
     return x / norm(x)[..., None, None]
-
-
-def type_str(type: Any) -> str:
-    return f'`{type.__module__}.{type.__name__}`'
-
-
-def obj_type_str(x: Any) -> str:
-    return type_str(type(x))

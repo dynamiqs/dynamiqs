@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import torch
 
+from .._utils import obj_type_str
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
-from ..utils.utils import obj_type_str
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon1_5, MERouchon2

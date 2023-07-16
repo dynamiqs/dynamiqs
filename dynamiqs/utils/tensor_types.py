@@ -7,7 +7,7 @@ import torch
 from qutip import Qobj
 from torch import Tensor
 
-from .utils import obj_type_str
+from .._utils import obj_type_str
 
 __all__ = [
     'to_tensor',
@@ -140,17 +140,3 @@ def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
         QuTiP quantum object.
     """
     return Qobj(x.numpy(force=True), dims=dims)
-
-
-def to_device(device: str | torch.device | None) -> torch.device:
-    if device is None:
-        return torch.ones(1).device  # default device
-    elif isinstance(device, str):
-        return torch.device(device)
-    elif isinstance(device, torch.device):
-        return device
-    else:
-        raise TypeError(
-            f'Argument `device` ({device}) must be a string, a `torch.device` object or'
-            ' `None`.'
-        )

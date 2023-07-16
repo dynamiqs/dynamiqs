@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import torch
 
+from .._utils import obj_type_str
 from ..options import Euler, Options
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
-from ..utils.utils import obj_type_str
 from .euler import SMEEuler
 
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from .utils.tensor_types import dtype_complex_to_real, to_cdtype, to_device
-from .utils.utils import obj_type_str
+from ._utils import to_device
+from .utils.tensor_types import dtype_complex_to_real, to_cdtype
 
 __all__ = [
     'Propagator',
