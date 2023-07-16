@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Union
+from typing import Callable, Union, get_args
 
 import numpy as np
 import torch
@@ -45,8 +45,11 @@ def to_tensor(
     if isinstance(x, list):
         if len(x) == 0:
             return torch.tensor([], dtype=dtype, device=device)
-        return torch.stack([to_tensor(el, dtype=dtype, device=device) for el in x])
-    elif isinstance(x, Qobj):
+        if not isinstance(x[0], get_args(ArrayLike)):
+            return torch.as_tensor(x, dtype=dtype, device=device)
+        else:
+            return torch.stack([to_tensor(el, dtype=dtype, device=device) for el in x])
+    if isinstance(x, Qobj):
         return from_qutip(x, dtype=get_cdtype(dtype), device=device)
     elif isinstance(x, (np.ndarray, Tensor)):
         return torch.as_tensor(x, dtype=dtype, device=device)
