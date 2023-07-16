@@ -223,7 +223,7 @@ class DormandPrince5(AdaptiveSolver):
         k[0] = f
         for i in range(1, 7):
             dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
-            k[i] = self.odefun(t + dt * alpha[i - 1], y + dy)
+            k[i] = self.odefun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results
         f_new = k[-1]
