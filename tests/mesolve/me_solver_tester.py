@@ -11,7 +11,7 @@ from .open_system import OpenSystem
 class MESolverTester:
     def _test_batching(self, options: Options, system: OpenSystem):
         """Test the batching of `H` and `rho0` in `mesolve`, and the returned object
-        sizes."""
+        shapes."""
         n = system.n
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)

@@ -150,8 +150,8 @@ def _wigner_fft(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
     """Wigner distribution of a given ket using the fast Fourier transform.
 
     Args:
-        psi: ket of size (N)
-        xvec: position vector of size (N)
+        psi: ket of shape (N)
+        xvec: position vector of shape (N)
     Returns:
         A tuple `(w, p)` where `w` is the wigner function at all sample points, and `p`
         is the vector of momentum sample points.

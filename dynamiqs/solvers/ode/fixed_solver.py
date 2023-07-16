@@ -66,7 +66,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         # check t_stop_bwd
         if not (self.t_stop_bwd.ndim == 1 and len(self.t_stop_bwd) == 2):
             raise ValueError(
-                '`t_stop_bwd` should be a tensor of size (2,), but has size'
+                '`t_stop_bwd` should be a tensor of shape (2,), but has shape'
                 f' {self.t_stop_bwd.shape}.'
             )
         if self.t_stop_bwd[1] <= self.t_stop_bwd[0]:

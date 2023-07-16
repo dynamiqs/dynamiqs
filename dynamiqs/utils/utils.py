@@ -286,8 +286,8 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
     if x_type != y_type:
         raise ValueError(
             'Arguments have incompatible quantum types for tensor product (`x` is a'
-            f' {x_type} with shape {x.size()} and `y` is a {y_type} with shape'
-            f' {y.size()}).'
+            f' {x_type} with shape {x.shape} and `y` is a {y_type} with shape'
+            f' {y.shape}).'
         )
 
     # x: (..., x1, x2)
@@ -363,7 +363,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     if not torch.prod(dims) == hilbert_size:
         raise ValueError(
             f'Input `dims` {dims.tolist()} does not match the input '
-            f'tensor size of {hilbert_size}.'
+            f'tensor shape of {hilbert_size}.'
         )
     if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
         raise ValueError(

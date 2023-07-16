@@ -64,11 +64,11 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     TODO Adapt to bras.
 
     Args:
-        O: Tensor of size `(b, n, n)`.
-        x: Tensor of size `(..., n, 1)` or `(..., n, n)`.
+        O: Tensor of shape `(b, n, n)`.
+        x: Tensor of shape `(..., n, 1)` or `(..., n, n)`.
 
     Returns:
-        Tensor of size `(..., b)` holding the operators expectation values.
+        Tensor of shape `(..., b)` holding the operators expectation values.
     """
     if is_ket(x):
         return torch.einsum('...ij,bjk,...kl->...b', x.mH, O, x)  # <x|O|x>
@@ -97,10 +97,10 @@ def hairer_norm(x: Tensor) -> Tensor:
     (1993), Springer Series in Computational Mathematics`.
 
     Args:
-        x: Tensor of size `(..., n, n)`.
+        x: Tensor of shape `(..., n, n)`.
 
     Returns:
-        Tensor of size `(...)` holding the norm of each matrix in the batch.
+        Tensor of shape `(...)` holding the norm of each matrix in the batch.
     """
     return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))
 
