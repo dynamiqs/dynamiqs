@@ -61,9 +61,9 @@ class AdaptiveSolver(AutogradSolver):
                 step_counter += 1
                 if step_counter == self.options.max_steps:
                     raise RuntimeError(
-                        'Maximum number of time steps reached. Consider using lower'
-                        ' order integration methods, or raising the maximum number of'
-                        ' time steps with the `options` argument.'
+                        'Maximum number of time steps reached in adaptive time step ODE'
+                        f' solver at time t={t:.2g}'
+                        f' (`options.max_steps={self.options.max_steps}`).'
                     )
 
             # save solution

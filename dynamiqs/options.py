@@ -54,9 +54,8 @@ class Options:
         if self.gradient_alg is not None and self.gradient_alg not in self.GRADIENT_ALG:
             available_gradient_alg_str = ', '.join(f'"{x}"' for x in self.GRADIENT_ALG)
             raise ValueError(
-                f'Gradient algorithm "{self.gradient_alg}" is not defined or not yet'
-                f' supported by solver {obj_type_str(self)} (supported:'
-                f' {available_gradient_alg_str}).'
+                f'Gradient algorithm "{self.gradient_alg}" is not supported by solver'
+                f' `{type(self).__name__}` (supported: {available_gradient_alg_str}).'
             )
 
 
@@ -80,8 +79,7 @@ class AdjointOptions(AutogradOptions):
         # check parameters were passed if gradient by the adjoint
         if self.gradient_alg == 'adjoint' and self.parameters is None:
             raise ValueError(
-                'For adjoint state gradient computation, parameters must be passed to'
-                ' the solver.'
+                'Missing argument `parameters` for gradient algorithm "adjoint".'
             )
 
 

@@ -31,8 +31,8 @@ class FixedSolver(AutogradSolver):
             torch.round(self.t_stop / self.dt), self.t_stop / self.dt
         ):
             raise ValueError(
-                'For fixed time step solvers, every value of `t_save` (and also '
-                '`t_meas` for SME solvers) must be a multiple of the time step `dt`.'
+                'Every value of `t_save` (and `t_meas` for SME solvers) must be a'
+                ' multiple of the time step `dt` for fixed time step ODE solvers.'
             )
 
         # define time values
@@ -64,19 +64,26 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
     def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
         # check t_stop_bwd
-        if not (self.t_stop_bwd.ndim == 1 and len(self.t_stop_bwd) == 2):
+        if not self.t_stop_bwd.ndim == 1:
             raise ValueError(
-                '`t_stop_bwd` should be a tensor of size (2,), but has size'
-                f' {self.t_stop_bwd.shape}.'
+                'Attribute `t_stop_bwd` must be a must be a 1D tensor, but is a'
+                f' {self.t_stop_bwd.ndim}D tensor.'
+            )
+        if not len(self.t_stop_bwd) == 2:
+            raise ValueError(
+                'Attribute `t_stop_bwd` must have length 2, but has length'
+                f' {len(self.t_stop_bwd)}.'
             )
         if self.t_stop_bwd[1] <= self.t_stop_bwd[0]:
-            raise ValueError('`t_stop_bwd` should be sorted in ascending order.')
+            raise ValueError(
+                'Attribute `t_stop_bwd` must be sorted in strictly ascending order.'
+            )
 
         T = self.t_stop_bwd[1] - self.t_stop_bwd[0]
         if not torch.allclose(torch.round(T / self.dt), T / self.dt):
             raise ValueError(
-                'For fixed time step adjoint solvers, every value of `t_stop_bwd` '
-                'must be a multiple of the time step `dt`.'
+                'Every value of `t_stop_bwd` must be a multiple of the time step `dt`'
+                ' for fixed time step ODE solvers.'
             )
 
         # define time values

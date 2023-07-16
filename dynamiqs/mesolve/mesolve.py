@@ -74,10 +74,22 @@ def mesolve(
     # default options
     options = options or Dopri5()
 
-    if isinstance(jump_ops, list) and len(jump_ops) == 0:
+    # check jump_ops
+    if not isinstance(jump_ops, list):
+        raise TypeError(
+            'Argument `jump_ops` must be a list of array-like objects, but has type'
+            f' {obj_type_str(jump_ops)}.'
+        )
+    if len(jump_ops) == 0:
         raise ValueError(
-            'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
-            ' consider using `sesolve`.'
+            'Argument `jump_ops` must be a non-empty list, otherwise consider using'
+            ' `sesolve`.'
+        )
+    # check exp_ops
+    if exp_ops is not None and not isinstance(exp_ops, list):
+        raise TypeError(
+            'Argument `exp_ops` must be `None` or a list of array-like objects, but'
+            f' has type {obj_type_str(exp_ops)}.'
         )
 
     # format and batch all tensors
@@ -105,9 +117,7 @@ def mesolve(
     elif isinstance(options, Euler):
         solver = MEEuler(*args, jump_ops=jump_ops)
     else:
-        raise NotImplementedError(
-            f'Solver options {obj_type_str(options)} is not implemented.'
-        )
+        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
 
     # compute the result
     solver.run()

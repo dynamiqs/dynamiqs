@@ -47,26 +47,26 @@ def check_callable(
     expected_device: torch.device,
 ):
     # check type, dtype and device match
-    prefix = (
-        'Time-dependent operators in the `callable` format should always'
-        ' return a `torch.Tensor` with the same dtype and device as provided'
-        ' to the solver. This avoids type conversion or device transfer at'
-        ' every time step that would slow down the solver.'
-    )
+
     if not isinstance(x0, Tensor):
         raise TypeError(
-            f'{prefix} The provided operator is currently of type'
-            f' {obj_type_str(x0)} instead of {type_str(Tensor)}.'
+            f'Time-dependent operator must be a {type_str(Tensor)}, but has type'
+            f' {obj_type_str(x0)}. The function must return a tensor, to avoid costly'
+            ' type conversion at each time solver step.'
         )
     elif x0.dtype != expected_dtype:
         raise TypeError(
-            f'{prefix} The provided operator is currently of dtype'
-            f' `{x0.dtype}` instead of `{expected_dtype}`.'
+            f'Time-dependent operator must have dtype `{expected_dtype}`, but has'
+            f' dtype `{x0.dtype}`. The function must return a tensor with the same'
+            ' `dtype` as provided to the solver, to avoid costly dtype conversion at'
+            ' each solver time step.'
         )
     elif x0.device != expected_device:
         raise TypeError(
-            f'{prefix} The provided operator is currently on device'
-            f' `{x0.device}` instead of `{expected_device}`.'
+            f'Time-dependent operator must be on device `{expected_device}`, but is'
+            f' on device `{x0.device}`. The function must return a tensor on the same'
+            ' device as provided to the solver, to avoid costly device transfer at'
+            ' each solver time step.'
         )
 
 

@@ -48,8 +48,8 @@ def fock(
     states = (states,) if isinstance(states, int) else states
     if len(dims) != len(states):
         raise ValueError(
-            f'Arguments `dims` ({len(dims)}) and `states` ({len(states)}) do not have'
-            ' the same number of elements.'
+            'Arguments `states` must have the same length as `dims` of length'
+            f' {len(dims)}, but has length {len(states)}.'
         )
 
     # compute the required basis state
