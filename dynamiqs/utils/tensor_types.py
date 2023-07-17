@@ -44,6 +44,25 @@ def to_tensor(
 
     Returns:
         Output tensor.
+
+    Examples:
+        >>> import numpy as np
+        >>> import qutip as qt
+        >>> dq.to_tensor(qt.fock(3, 1))
+        tensor([[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]])
+        >>> dq.to_tensor(np.array([[1, 2, 3], [4, 5, 6]]))
+        tensor([[1, 2, 3],
+                [4, 5, 6]])
+        >>> dq.to_tensor([qt.fock(3, 1), qt.fock(3, 2)])
+        tensor([[[0.+0.j],
+                 [1.+0.j],
+                 [0.+0.j]],
+        <BLANKLINE>
+                [[0.+0.j],
+                 [0.+0.j],
+                 [1.+0.j]]])
     """
     if is_complex:
         dtype = cdtype(dtype)
@@ -145,6 +164,24 @@ def from_qutip(
 
     Returns:
         Output tensor.
+
+    Examples:
+        >>> import qutip as qt
+        >>> omega = 2.0
+        >>> a = qt.destroy(4)
+        >>> H = omega * a.dag() * a
+        >>> H
+        Quantum object: dims = [[4], [4]], shape = (4, 4), type = oper, isherm = True
+        Qobj data =
+        [[0. 0. 0. 0.]
+         [0. 2. 0. 0.]
+         [0. 0. 4. 0.]
+         [0. 0. 0. 6.]]
+        >>> dq.from_qutip(H)
+        tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 2.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 4.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 6.+0.j]])
     """
     return torch.from_numpy(x.full()).to(dtype=dtype, device=device)
 
@@ -159,5 +196,40 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
 
     Returns:
         QuTiP quantum object.
-    """
+
+    Examples:
+        >>> psi = dq.fock(3, 1)
+        >>> psi
+        tensor([[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]])
+        >>> dq.to_qutip(psi)
+        Quantum object: dims = [[3], [1]], shape = (3, 1), type = ket
+        Qobj data =
+        [[0.]
+         [1.]
+         [0.]]
+
+        Note that the tensor product structure is not inferred automatically, it must be
+        specified with the `dims` argument using QuTiP dimensions format:
+        >>> I = dq.eye(3, 2)
+        >>> dq.to_qutip(I)
+        Quantum object: dims = [[6], [6]], shape = (6, 6), type = oper, isherm = True
+        Qobj data =
+        [[1. 0. 0. 0. 0. 0.]
+         [0. 1. 0. 0. 0. 0.]
+         [0. 0. 1. 0. 0. 0.]
+         [0. 0. 0. 1. 0. 0.]
+         [0. 0. 0. 0. 1. 0.]
+         [0. 0. 0. 0. 0. 1.]]
+        >>> dq.to_qutip(I, [[3, 2], [3, 2]])
+        Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
+        Qobj data =
+        [[1. 0. 0. 0. 0. 0.]
+         [0. 1. 0. 0. 0. 0.]
+         [0. 0. 1. 0. 0. 0.]
+         [0. 0. 0. 1. 0. 0.]
+         [0. 0. 0. 0. 1. 0.]
+         [0. 0. 0. 0. 0. 1.]]
+    """  # noqa: E501
     return Qobj(x.numpy(force=True), dims=dims)
