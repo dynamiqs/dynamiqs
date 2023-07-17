@@ -28,7 +28,13 @@ def sigmax(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the Pauli $X$ operator.
+    r"""Returns the Pauli $\sigma_x$ operator.
+
+    It is defined by:
+
+    $$
+        \sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}.
+    $$
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -36,6 +42,11 @@ def sigmax(
 
     Returns:
         _(2, 2)_ Pauli $X$ operator.
+
+    Examples:
+        >>> dq.sigmax()
+        tensor([[0.+0.j, 1.+0.j],
+                [1.+0.j, 0.+0.j]])
     """
     return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -46,7 +57,13 @@ def sigmay(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the Pauli $Y$ operator.
+    r"""Returns the Pauli $\sigma_y$ operator.
+
+    It is defined by:
+
+    $$
+        \sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}.
+    $$
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -54,6 +71,11 @@ def sigmay(
 
     Returns:
         _(2, 2)_ Pauli $Y$ operator.
+
+    Examples:
+        >>> dq.sigmay()
+        tensor([[0.+0.j, -0.-1.j],
+                [0.+1.j, 0.+0.j]])
     """
     return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
 
@@ -64,7 +86,13 @@ def sigmaz(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the Pauli $Z$ operator.
+    r"""Returns the Pauli $\sigma_z$ operator.
+
+    It is defined by:
+
+    $$
+        \sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}.
+    $$
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -72,6 +100,11 @@ def sigmaz(
 
     Returns:
         _(2, 2)_ Pauli $Z$ operator.
+
+    Examples:
+        >>> dq.sigmaz()
+        tensor([[ 1.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j]])
     """
     return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
 
@@ -84,12 +117,23 @@ def sigmap(
 ) -> Tensor:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
+    It is defined by:
+
+    $$
+        \sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}.
+    $$
+
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
         _(2, 2)_ Pauli $\sigma_+$ operator.
+
+    Examples:
+        >>> dq.sigmap()
+        tensor([[0.+0.j, 1.+0.j],
+                [0.+0.j, 0.+0.j]])
     """
     return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
 
@@ -102,12 +146,23 @@ def sigmam(
 ) -> Tensor:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
+    It is defined by:
+
+    $$
+        \sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}.
+    $$
+
     Args:
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
         _(2, 2)_ Pauli $\sigma_-$ operator.
+
+    Examples:
+        >>> dq.sigmam()
+        tensor([[0.+0.j, 0.+0.j],
+                [1.+0.j, 0.+0.j]])
     """
     return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
@@ -132,6 +187,20 @@ def eye(
 
     Returns:
         _(n, n)_ Identity operator (with _n_ the product of dimensions in `dims`).
+
+    Examples:
+        >>> dq.eye(4)
+        tensor([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])
+        >>> dq.eye(2, 3)
+        tensor([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])
     """
     dim = prod(dims)
     return torch.eye(dim, dtype=dtype, device=device)
@@ -279,7 +348,15 @@ def displace(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the displacement operator of amplitude $\alpha$.
+    r"""Returns the displacement operator of complex amplitude $\alpha$.
+
+    It is defined by
+
+    $$
+        D(\alpha) = \exp(\alpha a^\dag - \alpha^* a),
+    $$
+
+    where $a$ and $a^\dag$ are the annihilation and creation operators, respectively.
 
     Args:
         dim: Dimension of the Hilbert space.
@@ -289,6 +366,13 @@ def displace(
 
     Returns:
         _(dim, dim)_ Displacement operator.
+
+    Examples:
+        >>> dq.displace(4, 0.5)
+        tensor([[ 0.882+0.j, -0.441+0.j,  0.156+0.j, -0.047+0.j],
+                [ 0.441+0.j,  0.662+0.j, -0.542+0.j,  0.270+0.j],
+                [ 0.156+0.j,  0.542+0.j,  0.442+0.j, -0.697+0.j],
+                [ 0.047+0.j,  0.270+0.j,  0.697+0.j,  0.662+0.j]])
     """
     a = destroy(dim, dtype=dtype, device=device)
     alpha = torch.as_tensor(alpha)
@@ -303,7 +387,15 @@ def squeeze(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the squeezing operator of squeezing amplitude $z$.
+    r"""Returns the squeezing operator of complex squeezing amplitude $z$.
+
+    It is defined by
+
+    $$
+        S(z) = \exp\left(\frac{1}{2}\left(z^* a^2 - z a^{\dag 2}\right)\right),
+    $$
+
+    where $a$ and $a^\dag$ are the annihilation and creation operators, respectively.
 
     Args:
         dim: Dimension of the Hilbert space.
@@ -313,6 +405,13 @@ def squeeze(
 
     Returns:
         _(dim, dim)_ Squeezing operator.
+
+    Examples:
+        >>> dq.squeeze(4, 0.5)
+        tensor([[ 0.938+0.j,  0.000+0.j,  0.346+0.j,  0.000+0.j],
+                [ 0.000+0.j,  0.818+0.j,  0.000+0.j,  0.575+0.j],
+                [-0.346+0.j,  0.000+0.j,  0.938+0.j,  0.000+0.j],
+                [ 0.000+0.j, -0.575+0.j,  0.000+0.j,  0.818+0.j]])
     """
     a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
