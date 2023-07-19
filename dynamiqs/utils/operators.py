@@ -9,92 +9,17 @@ from .tensor_types import complex_tensor
 from .utils import tensprod
 
 __all__ = [
-    'sigmax',
-    'sigmay',
-    'sigmaz',
-    'sigmap',
-    'sigmam',
     'eye',
     'destroy',
     'create',
     'displace',
     'squeeze',
+    'sigmax',
+    'sigmay',
+    'sigmaz',
+    'sigmap',
+    'sigmam',
 ]
-
-
-@complex_tensor
-def sigmax(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
-) -> Tensor:
-    """Returns the Pauli $X$ operator.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-    """
-    return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
-
-
-@complex_tensor
-def sigmay(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
-) -> Tensor:
-    """Returns the Pauli $Y$ operator.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-    """
-    return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
-
-
-@complex_tensor
-def sigmaz(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
-) -> Tensor:
-    """Returns the Pauli $Z$ operator.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-    """
-    return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
-
-
-@complex_tensor
-def sigmap(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli raising operator $\sigma_+$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-    """
-    return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
-
-
-@complex_tensor
-def sigmam(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli lowering operator $\sigma_-$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-    """
-    return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
 
 
 @complex_tensor
@@ -300,3 +225,78 @@ def squeeze(
     a2 = a @ a
     z = torch.as_tensor(z)
     return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))
+
+
+@complex_tensor
+def sigmax(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
+    """Returns the Pauli $X$ operator.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+    """
+    return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=dtype, device=device)
+
+
+@complex_tensor
+def sigmay(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
+    """Returns the Pauli $Y$ operator.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+    """
+    return torch.tensor([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype, device=device)
+
+
+@complex_tensor
+def sigmaz(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
+    """Returns the Pauli $Z$ operator.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+    """
+    return torch.tensor([[1.0, 0.0], [0.0, -1.0]], dtype=dtype, device=device)
+
+
+@complex_tensor
+def sigmap(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli raising operator $\sigma_+$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+    """
+    return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=dtype, device=device)
+
+
+@complex_tensor
+def sigmam(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli lowering operator $\sigma_-$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+    """
+    return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=dtype, device=device)
