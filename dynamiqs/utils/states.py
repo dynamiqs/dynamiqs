@@ -35,14 +35,14 @@ def fock(
         >>> dq.fock(3, 1)
         tensor([[0.+0.j],
                 [1.+0.j],
-                [0.+0.j]], dtype=torch.complex128)
+                [0.+0.j]])
         >>> dq.fock((3, 2), (1, 0))
         tensor([[0.+0.j],
                 [0.+0.j],
                 [1.+0.j],
                 [0.+0.j],
                 [0.+0.j],
-                [0.+0.j]], dtype=torch.complex128)
+                [0.+0.j]])
     """
     # convert integer inputs to tuples by default, and check dimensions match
     dims = (dims,) if isinstance(dims, int) else dims
@@ -86,15 +86,14 @@ def fock_dm(
         >>> dq.fock_dm(3, 1)
         tensor([[0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=torch.complex128)
+                [0.+0.j, 0.+0.j, 0.+0.j]])
         >>> dq.fock_dm((3, 2), (1, 0))
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
-                dtype=torch.complex128)
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
     """
     return ket_to_dm(fock(dims, states, dtype=dtype, device=device))
 
@@ -119,12 +118,11 @@ def coherent(
         _(n, 1)_ Ket of the coherent state.
 
     Examples:
-        >>> dq.coherent(5, 0.2)
-        tensor([[0.980+0.j],
-                [0.196+0.j],
-                [0.028+0.j],
-                [0.003+0.j],
-                [0.000+0.j]], dtype=torch.complex128)
+        >>> dq.coherent(4, 0.5)
+        tensor([[0.882+0.j],
+                [0.441+0.j],
+                [0.156+0.j],
+                [0.047+0.j]])
     """
     return displace(dim, alpha, dtype=dtype, device=device) @ fock(
         dim, 0, dtype=dtype, device=device
@@ -151,12 +149,10 @@ def coherent_dm(
         _(n, n)_ Density matrix of the coherent state.
 
     Examples:
-        >>> dq.coherent_dm(5, 0.2)
-        tensor([[0.961+0.j, 0.192+0.j, 0.027+0.j, 0.003+0.j, 0.000+0.j],
-                [0.192+0.j, 0.038+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j],
-                [0.027+0.j, 0.005+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j],
-                [0.003+0.j, 0.001+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
-                dtype=torch.complex128)
+        >>> dq.coherent_dm(4, 0.5)
+        tensor([[0.779+0.j, 0.389+0.j, 0.137+0.j, 0.042+0.j],
+                [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
+                [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
+                [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]])
     """
     return ket_to_dm(coherent(dim, alpha, dtype=dtype, device=device))
