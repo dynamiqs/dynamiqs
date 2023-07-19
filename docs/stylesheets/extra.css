@@ -201,3 +201,7 @@
 p {
   text-align: justify;
 }
+
+.doc-md-description {
+  display: inline;
+}
