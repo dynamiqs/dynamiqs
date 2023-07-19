@@ -118,7 +118,7 @@ def cache(func):
 
     Example:
         >>> @cache
-        ... def square(x: Tensor): Tensor
+        ... def square(x: Tensor) -> Tensor:
         ...     print('compute square')
         ...     return x**2
         ...

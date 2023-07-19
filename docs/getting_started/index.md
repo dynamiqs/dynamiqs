@@ -19,3 +19,11 @@ Bla bla bla $x=\pi/2$.
 ### Subsection
 
 Nice :sunglasses:.
+
+``` py
+>>> dq.fock(3, 2)
+tensor([[0.+0.j],
+        [0.+0.j],
+        [1.+0.j]])
+
+```
