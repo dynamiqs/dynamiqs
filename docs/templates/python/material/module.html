@@ -15,12 +15,6 @@
 
     {% if not root or config.show_root_heading %}
 
-      {% filter heading(heading_level,
-          role="module",
-          id=html_id,
-          class="doc doc-heading",
-          toc_label=module.name) %}
-
         {% with module_name = module.path if show_full_path else module.name %}
           {% if not config.table %}
             {% if config.separate_signature %}
@@ -30,14 +24,12 @@
             {% endif %}
           {% endif %}
         {% endwith %}
-
         {% with labels = module.labels %}
           {% include "labels.html" with context %}
         {% endwith %}
 
-      {% endfilter %}
-
     {% else %}
+
       {% if config.show_root_toc_entry %}
         {% filter heading(heading_level,
             role="module",
@@ -47,6 +39,7 @@
         {% endfilter %}
       {% endif %}
       {% set heading_level = heading_level - 1 %}
+
     {% endif %}
 
     <div class="doc doc-contents {% if root %}first{% endif %}">
