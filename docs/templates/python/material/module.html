@@ -22,10 +22,12 @@
           toc_label=module.name) %}
 
         {% with module_name = module.path if show_full_path else module.name %}
-          {% if config.separate_signature %}
-            <span class="doc doc-object-name doc-module-name">{{ module_name }}</span>
-          {% else %}
-            <code>{{ module_name }}</code>
+          {% if not config.table %}
+            {% if config.separate_signature %}
+              <span class="doc doc-object-name doc-module-name">{{ module_name }}</span>
+            {% else %}
+              <code>{{ module_name }}</code>
+            {% endif %}
           {% endif %}
         {% endwith %}
 
