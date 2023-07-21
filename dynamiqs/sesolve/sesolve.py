@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import torch
 
+from .._utils import obj_type_str
 from ..options import Dopri5, Euler, Options, Propagator
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
@@ -31,6 +32,13 @@ def sesolve(
     # default options
     options = options or Dopri5()
 
+    # check exp_ops
+    if exp_ops is not None and not isinstance(exp_ops, list):
+        raise TypeError(
+            'Argument `exp_ops` must be `None` or a list of array-like objects, but has'
+            f' type {obj_type_str(exp_ops)}.'
+        )
+
     # format and batch all tensors
     formatter = TensorFormatter(options.cdtype, options.device)
     H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
@@ -51,7 +59,7 @@ def sesolve(
     elif isinstance(options, Propagator):
         solver = SEPropagator(*args)
     else:
-        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
+        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
 
     # compute the result
     solver.run()

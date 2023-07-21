@@ -6,13 +6,8 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from ...utils.tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    get_rdtype,
-    to_device,
-    to_tensor,
-)
+from ..._utils import obj_type_str, to_device, type_str
+from ...utils.tensor_types import OperatorLike, TDOperatorLike, get_rdtype, to_tensor
 from .utils import cache
 
 
@@ -46,26 +41,26 @@ def check_callable(
     expected_device: torch.device,
 ):
     # check type, dtype and device match
-    prefix = (
-        'Time-dependent operators in the `callable` format should always'
-        ' return a `torch.Tensor` with the same dtype and device as provided'
-        ' to the solver. This avoids type conversion or device transfer at'
-        ' every time step that would slow down the solver.'
-    )
+
     if not isinstance(x0, Tensor):
         raise TypeError(
-            f'{prefix} The provided operator is currently of type'
-            f' {type(x0)} instead of {Tensor}.'
+            f'The time-dependent operator must be a {type_str(Tensor)}, but has type'
+            f' {obj_type_str(x0)}. The provided callable must return a tensor, to avoid'
+            ' costly type conversion at each time solver step.'
         )
     elif x0.dtype != expected_dtype:
         raise TypeError(
-            f'{prefix} The provided operator is currently of dtype'
-            f' {x0.dtype} instead of {expected_dtype}.'
+            f'The time-dependent operator must have dtype `{expected_dtype}`, but has'
+            f' dtype `{x0.dtype}`. The provided callable must return a tensor with the'
+            ' same `dtype` as provided to the solver, to avoid costly dtype conversion'
+            ' at each solver time step.'
         )
     elif x0.device != expected_device:
         raise TypeError(
-            f'{prefix} The provided operator is currently on device'
-            f' {x0.device} instead of {expected_device}.'
+            f'The time-dependent operator must be on device `{expected_device}`, but is'
+            f' on device `{x0.device}`. The provided callable must return a tensor on'
+            ' the same device as provided to the solver, to avoid costly device'
+            ' transfer at each solver time step.'
         )
 
 

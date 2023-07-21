@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import torch
 
+from .._utils import obj_type_str
 from ..options import Euler, Options
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
@@ -32,14 +33,26 @@ def smesolve(
     # default options
     if options is None:
         raise ValueError(
-            'No default solver yet, please specify one using the options argument.'
+            'No default solver yet, please specify one using the `options` argument.'
         )
 
     # check jump_ops
-    if isinstance(jump_ops, list) and len(jump_ops) == 0:
+    if not isinstance(jump_ops, list):
+        raise TypeError(
+            'Argument `jump_ops` must be a list of array-like objects, but has type'
+            f' {obj_type_str(jump_ops)}.'
+        )
+    if len(jump_ops) == 0:
         raise ValueError(
-            'Argument `jump_ops` must be a non-empty list of tensors. Otherwise,'
-            ' consider using `ssesolve`.'
+            'Argument `jump_ops` must be a non-empty list, otherwise consider using'
+            ' `ssesolve`.'
+        )
+
+    # check exp_ops
+    if exp_ops is not None and not isinstance(exp_ops, list):
+        raise TypeError(
+            'Argument `exp_ops` must be `None` or a list of array-like objects, but'
+            f' has type {obj_type_str(exp_ops)}.'
         )
 
     # format and batch all tensors
@@ -59,10 +72,13 @@ def smesolve(
     # convert etas to a tensor and check
     etas = torch.as_tensor(etas, dtype=options.rdtype, device=options.device)
     if len(etas) != len(jump_ops):
-        raise ValueError('Argument `etas` must have the same length as `jump_ops`.')
+        raise ValueError(
+            'Argument `etas` must have the same length as `jump_ops` of length'
+            f' {len(jump_ops)}, but has length {len(etas)}.'
+        )
     if torch.all(etas == 0.0):
         raise ValueError(
-            'Argument `etas` must contain at least one non-zero value. Otherwise, '
+            'Argument `etas` must contain at least one non-zero value, otherwise '
             'consider using `mesolve`.'
         )
     if torch.any(etas < 0.0) or torch.any(etas > 1.0):
@@ -94,7 +110,7 @@ def smesolve(
     if isinstance(options, Euler):
         solver = SMEEuler(*args, **kwargs)
     else:
-        raise NotImplementedError(f'Solver options {type(options)} is not implemented.')
+        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
 
     # compute the result
     solver.run()

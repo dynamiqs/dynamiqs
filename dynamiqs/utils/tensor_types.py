@@ -7,6 +7,8 @@ import torch
 from qutip import Qobj
 from torch import Tensor
 
+from .._utils import obj_type_str
+
 __all__ = [
     'to_tensor',
     'from_qutip',
@@ -54,9 +56,8 @@ def to_tensor(
         return torch.as_tensor(x, dtype=dtype, device=device)
     else:
         raise TypeError(
-            f'Input of type {type(x)} is not supported. `to_tensor` only '
-            'supports QuTiP quantum object, NumPy array, Python list or PyTorch tensor '
-            'or list of these types.'
+            'Argument `x` must be an array-like object, but has type'
+            f' {obj_type_str(x)}.'
         )
 
 
@@ -73,8 +74,8 @@ def get_cdtype(
             return torch.complex64
     elif dtype not in (torch.complex64, torch.complex128):
         raise TypeError(
-            f'Argument `dtype` ({dtype}) must be `torch.complex64`,'
-            ' `torch.complex128` or `None` for a complex tensor.'
+            'Argument `dtype` must be `torch.complex64`, `torch.complex128` or `None`'
+            f' for a complex tensor, but is `{dtype}`.'
         )
     return dtype
 
@@ -86,8 +87,8 @@ def get_rdtype(
         return torch.get_default_dtype()
     elif dtype not in (torch.float32, torch.float64):
         raise TypeError(
-            f'Argument `dtype` ({dtype}) must be `torch.float32`,'
-            ' `torch.float64` or `None` for a real-valued tensor.'
+            'Argument `dtype` must be `torch.float32`, `torch.float64` or `None` for'
+            f' a real-valued tensor, but is `{dtype}`.'
         )
     return dtype
 
