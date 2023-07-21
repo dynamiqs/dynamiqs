@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from .operators import displace
-from .tensor_types import to_cdtype
+from .tensor_types import get_cdtype
 from .utils import ket_to_dm
 
 __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
@@ -56,7 +56,7 @@ def fock(
     n = 0
     for dim, state in zip(dims, states):
         n = dim * n + state
-    ket = torch.zeros(prod(dims), 1, dtype=to_cdtype(dtype), device=device)
+    ket = torch.zeros(prod(dims), 1, dtype=get_cdtype(dtype), device=device)
     ket[n] = 1.0
     return ket
 
@@ -94,7 +94,7 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
                 dtype=torch.complex128)
     """
-    return ket_to_dm(fock(dims, states, dtype=to_cdtype(dtype), device=device))
+    return ket_to_dm(fock(dims, states, dtype=get_cdtype(dtype), device=device))
 
 
 def coherent(
@@ -123,7 +123,7 @@ def coherent(
                 [0.003+0.j],
                 [0.000+0.j]], dtype=torch.complex128)
     """
-    cdtype = to_cdtype(dtype)
+    cdtype = get_cdtype(dtype)
     return displace(dim, alpha, dtype=cdtype, device=device) @ fock(
         dim, 0, dtype=cdtype, device=device
     )
@@ -156,4 +156,4 @@ def coherent_dm(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
                 dtype=torch.complex128)
     """
-    return ket_to_dm(coherent(dim, alpha, dtype=to_cdtype(dtype), device=device))
+    return ket_to_dm(coherent(dim, alpha, dtype=get_cdtype(dtype), device=device))

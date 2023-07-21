@@ -9,8 +9,8 @@ from torch import Tensor
 from ...utils.tensor_types import (
     OperatorLike,
     TDOperatorLike,
+    get_rdtype,
     to_device,
-    to_rdtype,
     to_tensor,
 )
 from .utils import cache
@@ -29,7 +29,7 @@ def to_td_tensor(
         x = to_tensor(x, dtype=dtype, device=device)
         return ConstantTDTensor(x)
     elif callable(x):
-        dtype = to_rdtype(dtype) if dtype is None else dtype  # assume real by default
+        dtype = get_rdtype(dtype) if dtype is None else dtype  # assume real by default
 
         # compute initial value of the callable
         x0 = x(0.0)

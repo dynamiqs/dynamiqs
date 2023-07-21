@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from .utils.tensor_types import dtype_complex_to_real, to_cdtype, to_device
+from .utils.tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
 __all__ = [
     'Propagator',
@@ -45,7 +45,7 @@ class Options:
         self.gradient_alg = gradient_alg
         self.save_states = save_states
         self.verbose = verbose
-        self.cdtype = to_cdtype(dtype)
+        self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)
         self.device = to_device(device)
 
