@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from functools import cached_property
 from time import time
 
 import torch
 from torch import Tensor
 
 from ..options import Options
-from ..utils.tensor_types import dtype_complex_to_real
 from .result import Result
 from .utils.td_tensor import TDTensor
 from .utils.utils import bexpect
@@ -38,6 +36,11 @@ class Solver(ABC):
         self.exp_ops = exp_ops
         self.options = options
 
+        # aliases
+        self.cdtype = self.options.cdtype
+        self.rdtype = self.options.rdtype
+        self.device = self.options.device
+
         # initialize saving logic
         self._init_time_logic()
 
@@ -47,7 +50,7 @@ class Solver(ABC):
         if self.options.save_states:
             # y_save: (..., len(t_save), m, n)
             y_save = torch.zeros(
-                *batch_sizes, len(t_save), m, n, dtype=self.dtype, device=self.device
+                *batch_sizes, len(t_save), m, n, dtype=self.cdtype, device=self.device
             )
 
         if len(self.exp_ops) > 0:
@@ -56,7 +59,7 @@ class Solver(ABC):
                 *batch_sizes,
                 len(exp_ops),
                 len(t_save),
-                dtype=self.dtype,
+                dtype=self.cdtype,
                 device=self.device,
             )
         else:
@@ -70,18 +73,6 @@ class Solver(ABC):
 
         self.t_save_mask = torch.isin(self.t_stop, self.t_save)
         self.t_save_counter = 0
-
-    @cached_property
-    def dtype(self) -> torch.complex64 | torch.complex128:
-        return self.y0.dtype
-
-    @cached_property
-    def device(self) -> torch.device:
-        return self.y0.device
-
-    @cached_property
-    def dtype_real(self) -> torch.float32 | torch.float64:
-        return dtype_complex_to_real(self.y0.dtype)
 
     def run(self):
         self.result.start_time = time()

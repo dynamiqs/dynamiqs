@@ -17,7 +17,7 @@ class MERouchon(MESolver, AdjointFixedSolver):
         super().__init__(*args, **kwargs)
 
         self.n = self.H.size(-1)
-        self.I = torch.eye(self.n, device=self.H.device, dtype=self.H.dtype)  # (n, n)
+        self.I = torch.eye(self.n, device=self.device, dtype=self.cdtype)  # (n, n)
 
 
 class MERouchon1(MERouchon):

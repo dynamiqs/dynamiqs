@@ -37,7 +37,7 @@ class SMESolver(MESolver):
             meas_save = torch.zeros(
                 *self.meas_shape,
                 len(t_meas) - 1,
-                dtype=self.dtype_real,
+                dtype=self.rdtype,
                 device=self.device,
             )
         else:
@@ -76,7 +76,7 @@ class SMESolver(MESolver):
         # -> (b_H, b_rho, ntrajs)
         return torch.normal(
             torch.zeros(*self.meas_shape), sqrt(dt), generator=self.generator
-        ).to(dtype=self.dtype_real)
+        ).to(dtype=self.rdtype)
 
     @cache
     def Lp(self, rho: Tensor) -> Tensor:
