@@ -448,7 +448,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 def norm(x: Tensor) -> Tensor:
     r"""Returns the norm of a ket, bra or density matrix.
 
-    For ket and bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
+    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
     matrix, it is $\tr{\rho}$.
 
     Args:
