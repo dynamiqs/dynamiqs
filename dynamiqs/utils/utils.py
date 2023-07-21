@@ -26,7 +26,7 @@ __all__ = [
 
 
 def trace(x: Tensor) -> Tensor:
-    """Returns the trace of a tensor along its last two dimensions.
+    r"""Returns the trace of a tensor along its last two dimensions.
 
     Args:
         x _(..., n, n)_: Tensor.
@@ -36,7 +36,8 @@ def trace(x: Tensor) -> Tensor:
     """
     return torch.einsum('...ii', x)
 
-
+  
+  
 def expect(O: Tensor, x: Tensor) -> Tensor:
     r"""Returns the expectation value of an operator on a ket, bra or density matrix.
 
@@ -59,7 +60,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         _(...)_ Complex-valued expectation value.
 
     Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If `x` is not a ket, bra or density matrix.
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
@@ -68,14 +69,17 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     elif is_dm(x):
         return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
     else:
-        raise ValueError('Input tensor is not a ket, bra or density matrix.')
-
-
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
+        
+        
 def norm(x: Tensor) -> Tensor:
-    r"""Returns the norm of a ket, bra or a density matrix.
+    r"""Returns the norm of a ket, bra or density matrix.
 
-    For kets and bras, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For density
-    matrices, it is $\tr{\rho}$.
+    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
+    matrix, it is $\tr{\rho}$.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
@@ -84,18 +88,23 @@ def norm(x: Tensor) -> Tensor:
         _(...)_ Real-valued norm of `x`.
 
     Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If `x`is not a ket, bra or density matrix.
     """
     if is_ket(x) or is_bra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
     elif is_dm(x):
         return trace(x).real
     else:
-        raise ValueError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def unit(x: Tensor) -> Tensor:
-    """Normalize a ket, bra or density matrix to unit norm.
+    r"""Normalize a ket, bra or density matrix to unit norm.
+
+    The returned object is divided by its norm (see [norm()][dynamiqs.norm]).
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
@@ -103,15 +112,12 @@ def unit(x: Tensor) -> Tensor:
     Returns:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Normalized ket, bra or density
             matrix.
-
-    Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
     """
     return x / norm(x)[..., None, None]
-
-
+  
+  
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of a sequence of kets, bras, density matrices or
+    r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
     The returned tensor shape is:
@@ -127,8 +133,8 @@ def tensprod(*args: Tensor) -> Tensor:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Sequence of kets,
-            density matrices or operators.
+        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Variable length
+            argument list of kets, density matrices or operators.
 
     Returns:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
@@ -159,9 +165,9 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
     y_type = _quantum_type(y)
     if x_type != y_type:
         raise ValueError(
-            'Arguments have incompatible quantum types for tensor product (`x` is a'
-            f' {x_type} with shape {x.size()} and `y` is a {y_type} with shape'
-            f' {y.size()}).'
+            'Arguments `x` and `y` have incompatible quantum types for tensor product:'
+            f' `x` is a {x_type} with shape {tuple(x.shape)}, but  `y` is a {y_type}'
+            f' with shape {tuple(y.shape)}.'
         )
 
     # x: (..., x1, x2)
@@ -183,7 +189,7 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Returns the partial trace of a ket, bra or density matrix.
+    r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix of a
@@ -196,22 +202,22 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         _(..., m, m)_ Density matrix (with `m <= n`).
 
     Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
-        ValueError: If `dims` does not match the input tensor shape, or if `keep` is
+        ValueError: If `x` is not a ket, bra or density matrix.
+        ValueError: If `dims` does not match the shape of `x`, or if `keep` is
             incompatible with `dims`.
 
     Examples:
-        >>> rhoABC = dq.tensprod(
+        >>> psiABC = dq.tensprod(
         ...     dq.coherent(20, 2.0),
         ...     dq.fock(2, 0),
         ...     dq.fock(5, 1)
         ... )
-        >>> rhoABC.shape
+        >>> psiABC.shape
         torch.Size([200, 1])
-        >>> rhoA = dq.ptrace(rhoABC, 0, (20, 2, 5))
+        >>> rhoA = dq.ptrace(psiABC, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
-        >>> rhoBC = dq.ptrace(rhoABC, (1, 2), (20, 2, 5))
+        >>> rhoBC = dq.ptrace(psiABC, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
         torch.Size([10, 10])
     """
@@ -222,15 +228,17 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     # check that input dimensions match
     hilbert_size = x.size(-2) if is_ket(x) else x.size(-1)
-    if not torch.prod(dims) == hilbert_size:
+    prod_dims = torch.prod(dims)
+    if not prod_dims == hilbert_size:
+        dims_prod_str = '*'.join(str(d.item()) for d in dims) + f'={prod_dims}'
         raise ValueError(
-            f'Input `dims` {dims.tolist()} does not match the input '
-            f'tensor size of {hilbert_size}.'
+            'Argument `dims` must match the Hilbert space dimension of `x` of'
+            f' {hilbert_size}, but the product of its values is {dims_prod_str}.'
         )
     if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
         raise ValueError(
-            f'Input `keep` {keep.tolist()} does not match the Hilbert '
-            f'space structure {dims.tolist()}.'
+            'Argument `keep` must match the Hilbert space structure specified by'
+            ' `dims`.'
         )
 
     # sort keep
@@ -255,13 +263,16 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
         x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
     else:
-        raise ValueError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
     # reshape to final dimension
     nkeep = torch.prod(dims[keep])  # e.g. 10
     return x.reshape(*batch_dims, nkeep, nkeep)  # e.g. (..., 10, 10)
 
-
+  
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
@@ -308,9 +319,9 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
-
+  
 def is_ket(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a ket.
+    r"""Returns True if a tensor is in the format of a ket.
 
     Args:
         x _(...)_: Tensor.
@@ -322,7 +333,7 @@ def is_ket(x: Tensor) -> bool:
 
 
 def is_bra(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a bra.
+    r"""Returns True if a tensor is in the format of a bra.
 
     Args:
         x _(...)_: Tensor.
@@ -334,7 +345,7 @@ def is_bra(x: Tensor) -> bool:
 
 
 def is_dm(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a density matrix.
+    r"""Returns True if a tensor is in the format of a density matrix.
 
     Args:
         x _(...)_: Tensor.
@@ -352,9 +363,12 @@ def _quantum_type(x: Tensor) -> str:
     elif is_bra(x):
         return 'bra'
     elif is_dm(x):
-        return 'dm'
+        return 'density matrix'
     else:
-        raise ValueError('Tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
@@ -425,7 +439,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
 
     $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2
+        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
     $$
 
     Warning:

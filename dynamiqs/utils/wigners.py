@@ -19,7 +19,7 @@ def wigner(
     num_pixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
 ) -> tuple[Tensor, Tensor, Tensor]:
-    """Compute the Wigner distribution of a ket or density matrix.
+    r"""Compute the Wigner distribution of a ket or density matrix.
 
     Args:
         state _(..., n, 1) or (..., n, n)_: Ket or density matrix.
@@ -27,8 +27,8 @@ def wigner(
         p_max: Maximum value of p. Ignored if the Wigner distribution is computed
             with the `fft` method, in which case `p_max` is given by `2 * pi / x_max`.
         num_pixels: Number of pixels in each direction.
-        method: Method used to compute the Wigner distribution. Available
-            methods: `clenshaw` or `fft`.
+        method _(string)_: Method used to compute the Wigner distribution. Available
+            methods: `'clenshaw'` or `'fft'`.
 
     Returns:
         A tuple `(xvec, pvec, w)` where
@@ -53,7 +53,9 @@ def wigner(
         else:
             w, pvec = _wigner_fft_dm(state, xvec)
     else:
-        raise ValueError(f'Method {method} does not exist.')
+        raise ValueError(
+            f'Method "{method}" is not supported (supported: "clenshaw", "fft").'
+        )
 
     return xvec, pvec, w
 
@@ -150,8 +152,8 @@ def _wigner_fft(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
     """Wigner distribution of a given ket using the fast Fourier transform.
 
     Args:
-        psi: ket of size (N)
-        xvec: position vector of size (N)
+        psi: ket of shape (N)
+        xvec: position vector of shape (N)
     Returns:
         A tuple `(w, p)` where `w` is the wigner function at all sample points, and `p`
         is the vector of momentum sample points.
