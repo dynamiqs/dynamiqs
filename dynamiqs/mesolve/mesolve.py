@@ -3,14 +3,14 @@ from __future__ import annotations
 import torch
 
 from .._utils import obj_type_str
-from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon1_5, Rouchon2
+from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon2
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.utils.utils import check_time_tensor
 from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
-from .rouchon import MERouchon1, MERouchon1_5, MERouchon2
+from .rouchon import MERouchon1, MERouchon2
 
 
 def mesolve(
@@ -40,9 +40,9 @@ def mesolve(
 
     Available solvers:
       - `Dopri5`: Dormand-Prince of order 5. Default solver.
-      - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`.
-      - `Rouchon1_5`: Rouchon method of order 1 with built-in Kraus map trace
-      renormalization. Ideal for time-independent problems.
+      - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`. Set the
+        `sqrt_normalization` option to `True` to enable built-in Kraus map trace
+        renormalization, ideal for time-independent and/or stiff problems.
       - `Rouchon2`: Rouchon method of order 2.
       - `Euler`: Euler method.
 
@@ -108,8 +108,6 @@ def mesolve(
     args = (H_batched, rho0_batched, t_save, exp_ops, options)
     if isinstance(options, Rouchon1):
         solver = MERouchon1(*args, jump_ops=jump_ops)
-    elif isinstance(options, Rouchon1_5):
-        solver = MERouchon1_5(*args, jump_ops=jump_ops)
     elif isinstance(options, Rouchon2):
         solver = MERouchon2(*args, jump_ops=jump_ops)
     elif isinstance(options, Dopri5):

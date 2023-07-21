@@ -16,26 +16,21 @@ class TestMERouchon1(MEAdjointSolverTester):
         options = dq.options.Rouchon1(dt=1e-2)
         self._test_batching(options, leaky_cavity_8)
 
+        options = dq.options.Rouchon1(dt=1e-2, sqrt_normalization=True)
+        self._test_batching(options, leaky_cavity_8)
+
     def test_y_save(self):
         options = dq.options.Rouchon1(dt=1e-3)
+        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
+
+        options = dq.options.Rouchon1(dt=1e-3, sqrt_normalization=True)
         self._test_y_save(options, leaky_cavity_8, num_t_save=11)
 
     def test_adjoint(self):
         options = dq.options.Rouchon1(dt=1e-3)
         self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
 
-
-class TestMERouchon1_5(MEAdjointSolverTester):
-    def test_batching(self):
-        options = dq.options.Rouchon1_5(dt=1e-2)
-        self._test_batching(options, leaky_cavity_8)
-
-    def test_y_save(self):
-        options = dq.options.Rouchon1_5(dt=1e-3)
-        self._test_y_save(options, leaky_cavity_8, num_t_save=11)
-
-    def test_adjoint(self):
-        options = dq.options.Rouchon1_5(dt=1e-3)
+        options = dq.options.Rouchon1(dt=1e-3, sqrt_normalization=True)
         self._test_adjoint(options, grad_leaky_cavity_8, num_t_save=11)
 
 

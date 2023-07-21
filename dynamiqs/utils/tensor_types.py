@@ -51,7 +51,7 @@ def to_tensor(
             return torch.tensor([], dtype=dtype, device=device)
         return torch.stack([to_tensor(y, dtype=dtype, device=device) for y in x])
     if isinstance(x, Qobj):
-        return from_qutip(x, dtype=to_cdtype(dtype), device=device)
+        return from_qutip(x, dtype=get_cdtype(dtype), device=device)
     elif isinstance(x, get_args(TensorLike)):
         return torch.as_tensor(x, dtype=dtype, device=device)
     else:
@@ -61,7 +61,7 @@ def to_tensor(
         )
 
 
-def to_cdtype(
+def get_cdtype(
     dtype: torch.complex64 | torch.complex128 | None = None,
 ) -> torch.complex64 | torch.complex128:
     if dtype is None:
@@ -80,7 +80,7 @@ def to_cdtype(
     return dtype
 
 
-def to_rdtype(
+def get_rdtype(
     dtype: torch.float32 | torch.float64 | None = None,
 ) -> torch.float32 | torch.float64:
     if dtype is None:
@@ -125,7 +125,7 @@ def from_qutip(
     Returns:
         Output tensor.
     """
-    return torch.from_numpy(x.full()).to(dtype=to_cdtype(dtype), device=device)
+    return torch.from_numpy(x.full()).to(dtype=get_cdtype(dtype), device=device)
 
 
 def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
@@ -140,3 +140,17 @@ def to_qutip(x: Tensor, dims: list | None = None) -> Qobj:
         QuTiP quantum object.
     """
     return Qobj(x.numpy(force=True), dims=dims)
+
+
+def to_device(device: str | torch.device | None) -> torch.device:
+    if device is None:
+        return torch.ones(1).device  # default device
+    elif isinstance(device, str):
+        return torch.device(device)
+    elif isinstance(device, torch.device):
+        return device
+    else:
+        raise TypeError(
+            f'Argument `device` ({device}) must be a string, a `torch.device` object or'
+            ' `None`.'
+        )

@@ -5,7 +5,7 @@ from math import prod
 import torch
 from torch import Tensor
 
-from .tensor_types import to_cdtype
+from .tensor_types import get_cdtype
 from .utils import tensprod
 
 __all__ = [
@@ -33,7 +33,9 @@ def sigmax(
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
-    return torch.tensor([[0.0, 1.0], [1.0, 0.0]], dtype=to_cdtype(dtype), device=device)
+    return torch.tensor(
+        [[0.0, 1.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
 
 
 def sigmay(
@@ -48,7 +50,7 @@ def sigmay(
         device: Device of the returned tensor.
     """
     return torch.tensor(
-        [[0.0, -1.0j], [1.0j, 0.0]], dtype=to_cdtype(dtype), device=device
+        [[0.0, -1.0j], [1.0j, 0.0]], dtype=get_cdtype(dtype), device=device
     )
 
 
@@ -64,7 +66,7 @@ def sigmaz(
         device: Device of the returned tensor.
     """
     return torch.tensor(
-        [[1.0, 0.0], [0.0, -1.0]], dtype=to_cdtype(dtype), device=device
+        [[1.0, 0.0], [0.0, -1.0]], dtype=get_cdtype(dtype), device=device
     )
 
 
@@ -79,7 +81,9 @@ def sigmap(
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
-    return torch.tensor([[0.0, 1.0], [0.0, 0.0]], dtype=to_cdtype(dtype), device=device)
+    return torch.tensor(
+        [[0.0, 1.0], [0.0, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
 
 
 def sigmam(
@@ -93,7 +97,9 @@ def sigmam(
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
     """
-    return torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=to_cdtype(dtype), device=device)
+    return torch.tensor(
+        [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
 
 
 def eye(
@@ -114,7 +120,7 @@ def eye(
         device: Device of the returned tensor.
     """
     dim = prod(dims)
-    return torch.eye(dim, dtype=to_cdtype(dtype), device=device)
+    return torch.eye(dim, dtype=get_cdtype(dtype), device=device)
 
 
 def destroy(
@@ -144,8 +150,7 @@ def destroy(
         tensor([[0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 1.732+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
-                dtype=torch.complex128)
+                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]])
         >>> a, b = dq.destroy(2, 3)
         >>> a
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
@@ -153,22 +158,20 @@ def destroy(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
-                dtype=torch.complex128)
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
         >>> b
         tensor([[0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]],
-                dtype=torch.complex128)
+                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]])
     """
     if len(dims) == 1:
-        return _destroy_single(dims[0], dtype=to_cdtype(dtype), device=device)
+        return _destroy_single(dims[0], dtype=get_cdtype(dtype), device=device)
 
-    a = [_destroy_single(dim, dtype=to_cdtype(dtype), device=device) for dim in dims]
-    I = [eye(dim, dtype=to_cdtype(dtype), device=device) for dim in dims]
+    a = [_destroy_single(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
+    I = [eye(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
     return tuple(
         tensprod(*[a[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
@@ -182,7 +185,7 @@ def _destroy_single(
     device: str | torch.device | None = None,
 ) -> Tensor:
     """Bosonic annihilation operator."""
-    return torch.arange(1, dim, device=device).sqrt().diag(1).to(to_cdtype(dtype))
+    return torch.arange(1, dim, device=device).sqrt().diag(1).to(get_cdtype(dtype))
 
 
 def create(
@@ -212,8 +215,7 @@ def create(
         tensor([[0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [1.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 1.414+0.j, 0.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 1.732+0.j, 0.000+0.j]],
-                dtype=torch.complex128)
+                [0.000+0.j, 0.000+0.j, 1.732+0.j, 0.000+0.j]])
         >>> a, b = dq.create(2, 3)
         >>> a
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -221,18 +223,16 @@ def create(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]],
-                dtype=torch.complex128)
+                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
         >>> b
         tensor([[0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [1.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 1.414+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 1.000+0.j, 0.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]],
-                dtype=torch.complex128)
+                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]])
     """
-    cdtype = to_cdtype(dtype)
+    cdtype = get_cdtype(dtype)
     if len(dims) == 1:
         return _create_single(dims[0], dtype=cdtype, device=device)
 
@@ -251,7 +251,7 @@ def _create_single(
     device: str | torch.device | None = None,
 ) -> Tensor:
     """Bosonic creation operator."""
-    return torch.arange(1, dim, device=device).sqrt().diag(-1).to(to_cdtype(dtype))
+    return torch.arange(1, dim, device=device).sqrt().diag(-1).to(get_cdtype(dtype))
 
 
 def displace(
@@ -272,7 +272,7 @@ def displace(
     Returns:
         Displacement operator.
     """
-    a = destroy(dim, dtype=to_cdtype(dtype), device=device)
+    a = destroy(dim, dtype=get_cdtype(dtype), device=device)
     alpha = torch.as_tensor(alpha)
     return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
 
@@ -295,7 +295,7 @@ def squeeze(
     Returns:
         Squeezing operator.
     """
-    a = destroy(dim, dtype=to_cdtype(dtype), device=device)
+    a = destroy(dim, dtype=get_cdtype(dtype), device=device)
     a2 = a @ a
     z = torch.as_tensor(z)
     return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))

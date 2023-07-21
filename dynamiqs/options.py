@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from typing import Any
+
 import torch
 import torch.nn as nn
 
 from ._utils import to_device
-from .utils.tensor_types import dtype_complex_to_real, to_cdtype
+from .utils.tensor_types import dtype_complex_to_real, get_cdtype
 
 __all__ = [
     'Propagator',
@@ -12,7 +14,6 @@ __all__ = [
     'Euler',
     'Rouchon',
     'Rouchon1',
-    'Rouchon1_5',
     'Rouchon2',
 ]
 
@@ -46,7 +47,7 @@ class Options:
         self.gradient_alg = gradient_alg
         self.save_states = save_states
         self.verbose = verbose
-        self.cdtype = to_cdtype(dtype)
+        self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)
         self.device = to_device(device)
 
@@ -57,6 +58,22 @@ class Options:
                 f'Gradient algorithm "{self.gradient_alg}" is not supported by solver'
                 f' `{type(self).__name__}` (supported: {available_gradient_alg_str}).'
             )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            'gradient_alg': self.gradient_alg,
+            'save_states': self.save_states,
+            'verbose': self.verbose,
+            'dtype': self.cdtype,
+            'device': self.device,
+        }
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def __str__(self) -> str:
+        attributes_str = ', '.join(f'{k}={v}' for k, v in self.as_dict().items())
+        return f'{type(self).__name__}({attributes_str})'
 
 
 class AutogradOptions(Options):
@@ -82,11 +99,17 @@ class AdjointOptions(AutogradOptions):
                 'Missing argument `parameters` for gradient algorithm "adjoint".'
             )
 
+    def as_dict(self) -> dict[str, Any]:
+        return super().as_dict() | {'parameters': self.parameters}
+
 
 class ODEFixedStep(AutogradOptions):
     def __init__(self, *, dt: float, **kwargs):
         super().__init__(**kwargs)
         self.dt = dt
+
+    def as_dict(self) -> dict[str, Any]:
+        return super().as_dict() | {'dt': self.dt}
 
 
 class ODEAdaptiveStep(AutogradOptions):
@@ -109,6 +132,16 @@ class ODEAdaptiveStep(AutogradOptions):
         self.min_factor = min_factor
         self.max_factor = max_factor
 
+    def as_dict(self) -> dict[str, Any]:
+        return super().as_dict() | {
+            'atol': self.atol,
+            'rtol': self.rtol,
+            'max_steps': self.max_steps,
+            'safety_factor': self.safety_factor,
+            'min_factor': self.min_factor,
+            'max_factor': self.max_factor,
+        }
+
 
 class Propagator(AutogradOptions):
     pass
@@ -118,20 +151,22 @@ class Dopri5(ODEAdaptiveStep):
     pass
 
 
+# make alias for Dopri5
+Default = Dopri5
+
+
 class Euler(ODEFixedStep):
     pass
 
 
 class Rouchon1(ODEFixedStep, AdjointOptions):
-    pass
+    def __init__(self, *, sqrt_normalization: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self.sqrt_normalization = sqrt_normalization
 
 
 # make alias for Rouchon1
 Rouchon = Rouchon1
-
-
-class Rouchon1_5(ODEFixedStep, AdjointOptions):
-    pass
 
 
 class Rouchon2(ODEFixedStep, AdjointOptions):
