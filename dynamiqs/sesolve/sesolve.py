@@ -3,8 +3,7 @@ from __future__ import annotations
 from .._utils import obj_type_str
 from ..options import Dopri5, Euler, Options, Propagator
 from ..solvers.result import Result
-from ..solvers.utils.tensor_formatter import TensorFormatter
-from ..solvers.utils.utils import check_time_tensor
+from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -38,11 +37,13 @@ def sesolve(
         )
 
     # format and batch all tensors
-    # H_batched: (b_H, 1, n, n)
-    # psi0_batched: (b_H, b_psi0, n, 1)
+    # H: (b_H, 1, n, n)
+    # psi0: (b_H, b_psi0, n, 1)
     # exp_ops: (len(exp_ops), n, n)
-    formatter = TensorFormatter(options.cdtype, options.device)
-    H_batched, psi0_batched = formatter.format_H_and_state(H, psi0)
+    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
+    psi0 = to_tensor(psi0, dtype=options.cdtype, device=options.device)
+    H = batch_H(H)
+    psi0 = batch_y0(psi0, H)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
 
     # convert t_save to tensor
@@ -50,7 +51,7 @@ def sesolve(
     check_time_tensor(t_save, arg_name='t_save')
 
     # define the solver
-    args = (H_batched, psi0_batched, t_save, exp_ops, options)
+    args = (H, psi0, t_save, exp_ops, options)
     if isinstance(options, Euler):
         solver = SEEuler(*args)
     elif isinstance(options, Dopri5):
@@ -65,7 +66,7 @@ def sesolve(
 
     # get saved tensors and restore correct batching
     result = solver.result
-    result.y_save = formatter.unbatch(result.y_save)
-    result.exp_save = formatter.unbatch(result.exp_save)
+    result.y_save = result.y_save.squeeze(0, 1)
+    result.exp_save = result.exp_save.squeeze(0, 1)
 
     return result

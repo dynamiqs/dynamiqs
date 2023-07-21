@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from ..solvers.propagator import Propagator
-from ..solvers.utils.utils import cache
+from ..solvers.utils import cache
 
 
 class SEPropagator(Propagator):
