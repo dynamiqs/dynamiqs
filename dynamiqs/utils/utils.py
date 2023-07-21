@@ -349,11 +349,11 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         ... )
         >>> psiABC.shape
         torch.Size([200, 1])
-        >>> psiA = dq.ptrace(psiABC, 0, (20, 2, 5))
-        >>> psiA.shape
+        >>> rhoA = dq.ptrace(psiABC, 0, (20, 2, 5))
+        >>> rhoA.shape
         torch.Size([20, 20])
-        >>> psiBC = dq.ptrace(psiABC, (1, 2), (20, 2, 5))
-        >>> psiBC.shape
+        >>> rhoBC = dq.ptrace(psiABC, (1, 2), (20, 2, 5))
+        >>> rhoBC.shape
         torch.Size([10, 10])
     """
     # convert keep and dims to tensors
