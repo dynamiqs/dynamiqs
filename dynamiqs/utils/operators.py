@@ -36,7 +36,7 @@ def sigmax(
         device: Device of the returned tensor.
 
     Returns:
-        _(2, 2)_ Pauli $X$ operator.
+        _(2, 2)_ Pauli $\sigma_x$ operator.
 
     Examples:
         >>> dq.sigmax()
@@ -62,7 +62,7 @@ def sigmay(
         device: Device of the returned tensor.
 
     Returns:
-        _(2, 2)_ Pauli $Y$ operator.
+        _(2, 2)_ Pauli $\sigma_y$ operator.
 
     Examples:
         >>> dq.sigmay()
@@ -88,7 +88,7 @@ def sigmaz(
         device: Device of the returned tensor.
 
     Returns:
-        _(2, 2)_ Pauli $Z$ operator.
+        _(2, 2)_ Pauli $\sigma_z$ operator.
 
     Examples:
         >>> dq.sigmaz()
