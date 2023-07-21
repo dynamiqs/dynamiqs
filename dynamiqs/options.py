@@ -65,7 +65,7 @@ class Options:
             'gradient_alg': self.gradient_alg,
             'save_states': self.save_states,
             'verbose': self.verbose,
-            'dtype': self.dtype,
+            'dtype': self.cdtype,
             'device': self.device,
         }
 
