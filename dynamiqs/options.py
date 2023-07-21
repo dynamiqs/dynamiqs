@@ -127,9 +127,9 @@ class Euler(ODEFixedStep):
 
 
 class Rouchon1(ODEFixedStep, AdjointOptions):
-    def __init__(self, *, trace_normalization: bool = False, **kwargs):
+    def __init__(self, *, sqrt_normalization: bool = False, **kwargs):
         super().__init__(**kwargs)
-        self.trace_normalization = trace_normalization
+        self.sqrt_normalization = sqrt_normalization
 
 
 # make alias for Rouchon1

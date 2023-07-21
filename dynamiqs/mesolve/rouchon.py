@@ -24,7 +24,7 @@ class MERouchon1(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not self.options.trace_normalization:
+        if not self.options.sqrt_normalization:
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
             # self.M1s: (1, len(jump_ops), n, n)
@@ -56,8 +56,8 @@ class MERouchon1(MERouchon):
             self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
 
             # define M1s and M1srev
-            self.M1s = sqrt(self.dt) * self.S @ self.jump_ops
-            self.M1srev = sqrt(self.dt) * self.Srev @ self.jump_ops
+            self.M1s = sqrt(self.dt) * self.jump_ops @ self.S
+            self.M1srev = sqrt(self.dt) * self.jump_ops @ self.Srev
 
         self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
         self.M1sdag = self.M1s.mH  # (1, len(jump_ops), n, n)

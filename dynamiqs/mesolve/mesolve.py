@@ -40,8 +40,8 @@ def mesolve(
     Available solvers:
       - `Dopri5`: Dormand-Prince of order 5. Default solver.
       - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`. Set the
-        `trace_normalization` option to `True` to enable built-in Kraus map trace
-        renormalization, ideal for time-independent problems.
+        `sqrt_normalization` option to `True` to enable built-in Kraus map trace
+        renormalization, ideal for time-independent and/or stiff problems.
       - `Rouchon2`: Rouchon method of order 2.
       - `Euler`: Euler method.
 
