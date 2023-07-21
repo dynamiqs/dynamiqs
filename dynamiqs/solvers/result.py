@@ -22,7 +22,7 @@ def memory_str(x: Tensor) -> str:
 
 
 def tensor_str(x: Tensor) -> str:
-    return f'Tensor {tuple(x.size())} | {memory_str(x)}'
+    return f'Tensor {tuple(x.shape)} | {memory_str(x)}'
 
 
 class Result:

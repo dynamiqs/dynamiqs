@@ -26,7 +26,7 @@ __all__ = [
 
 
 def is_ket(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a ket.
+    r"""Returns True if a tensor is in the format of a ket.
 
     Args:
         x _(...)_: Tensor.
@@ -38,7 +38,7 @@ def is_ket(x: Tensor) -> bool:
 
 
 def is_bra(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a bra.
+    r"""Returns True if a tensor is in the format of a bra.
 
     Args:
         x _(...)_: Tensor.
@@ -50,7 +50,7 @@ def is_bra(x: Tensor) -> bool:
 
 
 def is_dm(x: Tensor) -> bool:
-    """Returns True if a tensor is in the format of a density matrix.
+    r"""Returns True if a tensor is in the format of a density matrix.
 
     Args:
         x _(...)_: Tensor.
@@ -144,7 +144,7 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
 
     $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2
+        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
     $$
 
     Warning:
@@ -240,7 +240,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
 
 def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of a sequence of kets, bras, density matrices or
+    r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
     The returned tensor shape is:
@@ -256,8 +256,8 @@ def tensprod(*args: Tensor) -> Tensor:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
-        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Sequence of kets,
-            density matrices or operators.
+        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Variable length
+            argument list of kets, density matrices or operators.
 
     Returns:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
@@ -312,7 +312,7 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
 
 
 def trace(x: Tensor) -> Tensor:
-    """Returns the trace of a tensor along its last two dimensions.
+    r"""Returns the trace of a tensor along its last two dimensions.
 
     Args:
         x _(..., n, n)_: Tensor.
@@ -324,7 +324,7 @@ def trace(x: Tensor) -> Tensor:
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
-    """Returns the partial trace of a ket, bra or density matrix.
+    r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix of a
@@ -342,17 +342,17 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
             incompatible with `dims`.
 
     Examples:
-        >>> rhoABC = dq.tensprod(
+        >>> psiABC = dq.tensprod(
         ...     dq.coherent(20, 2.0),
         ...     dq.fock(2, 0),
         ...     dq.fock(5, 1)
         ... )
-        >>> rhoABC.shape
+        >>> psiABC.shape
         torch.Size([200, 1])
-        >>> rhoA = dq.ptrace(rhoABC, 0, (20, 2, 5))
+        >>> rhoA = dq.ptrace(psiABC, 0, (20, 2, 5))
         >>> rhoA.shape
         torch.Size([20, 20])
-        >>> rhoBC = dq.ptrace(rhoABC, (1, 2), (20, 2, 5))
+        >>> rhoBC = dq.ptrace(psiABC, (1, 2), (20, 2, 5))
         >>> rhoBC.shape
         torch.Size([10, 10])
     """
@@ -446,10 +446,10 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
 
 def norm(x: Tensor) -> Tensor:
-    r"""Returns the norm of a ket, bra or a density matrix.
+    r"""Returns the norm of a ket, bra or density matrix.
 
-    For kets and bras, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For density
-    matrices, it is $\tr{\rho}$.
+    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
+    matrix, it is $\tr{\rho}$.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
@@ -472,7 +472,9 @@ def norm(x: Tensor) -> Tensor:
 
 
 def unit(x: Tensor) -> Tensor:
-    """Normalize a ket, bra or density matrix to unit norm.
+    r"""Normalize a ket, bra or density matrix to unit norm.
+
+    The returned object is divided by its norm (see [norm()][dynamiqs.norm]).
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.

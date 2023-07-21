@@ -19,11 +19,11 @@ def fock(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    """Returns the ket of a Fock state or the ket of a tensor product of Fock states.
+    r"""Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
     Args:
-        dims: Dimension of the Hilbert space of each mode.
-        states: Fock state of each mode.
+        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        states _(int or tuple of ints)_: Fock state of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -68,12 +68,12 @@ def fock_dm(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    """Returns the density matrix of a Fock state or the density matrix of a tensor
+    r"""Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
 
     Args:
-        dims: Dimension of the Hilbert space of each mode.
-        states: Fock state of each mode.
+        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        states _(int or tuple of ints)_: Fock state of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -103,7 +103,7 @@ def coherent(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    """Returns the ket of a coherent state.
+    r"""Returns the ket of a coherent state.
 
     Args:
         dim: Dimension of the Hilbert space.
@@ -134,7 +134,7 @@ def coherent_dm(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    """Density matrix of a coherent state.
+    r"""Density matrix of a coherent state.
 
     Args:
         dim: Dimension of the Hilbert space.
