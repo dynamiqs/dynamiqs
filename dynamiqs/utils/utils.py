@@ -36,8 +36,7 @@ def trace(x: Tensor) -> Tensor:
     """
     return torch.einsum('...ii', x)
 
-  
-  
+
 def expect(O: Tensor, x: Tensor) -> Tensor:
     r"""Returns the expectation value of an operator on a ket, bra or density matrix.
 
@@ -73,8 +72,8 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
             'Argument `x` must be a ket, bra or density matrix, but has shape'
             f' {tuple(x.shape)}.'
         )
-        
-        
+
+
 def norm(x: Tensor) -> Tensor:
     r"""Returns the norm of a ket, bra or density matrix.
 
@@ -114,8 +113,8 @@ def unit(x: Tensor) -> Tensor:
             matrix.
     """
     return x / norm(x)[..., None, None]
-  
-  
+
+
 def tensprod(*args: Tensor) -> Tensor:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
@@ -272,7 +271,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     nkeep = torch.prod(dims[keep])  # e.g. 10
     return x.reshape(*batch_dims, nkeep, nkeep)  # e.g. (..., 10, 10)
 
-  
+
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
@@ -319,7 +318,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
-  
+
 def is_ket(x: Tensor) -> bool:
     r"""Returns True if a tensor is in the format of a ket.
 
