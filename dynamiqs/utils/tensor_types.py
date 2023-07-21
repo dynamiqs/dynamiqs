@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 from typing import Callable, Union, get_args
 
 import numpy as np
@@ -8,36 +7,33 @@ import torch
 from qutip import Qobj
 from torch import Tensor
 
+from .._utils import obj_type_str
+
 __all__ = [
     'to_tensor',
     'from_qutip',
     'to_qutip',
 ]
 
-# type for objects convertible to a torch.Tensor using `torch.as_tensor`
-TensorLike = Union[list, np.ndarray, Tensor]
-
 # type for objects convertible to a torch.Tensor using `to_tensor`
-OperatorLike = Union[TensorLike, Qobj]
+ArrayLike = Union[list, np.ndarray, Tensor, Qobj]
 
 # TODO add typing for Hamiltonian with piecewise-constant factor
 # type for time-dependent objects
-TDOperatorLike = Union[OperatorLike, Callable[[float], Tensor]]
+TDArrayLike = Union[ArrayLike, Callable[[float], Tensor]]
 
 
 def to_tensor(
-    x: OperatorLike | list[OperatorLike] | None,
+    x: ArrayLike | list[ArrayLike] | None,
     *,
     dtype: torch.dtype | None = None,
-    device: torch.device | None = None,
-    is_complex: bool = False,
+    device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Convert an array-like object (or a list of array-like objects) to a tensor.
+    """Convert an array-like object or a list of array-like objects to a tensor.
 
     Args:
-        x _(array-like or list of array-like)_: QuTiP quantum object or NumPy array or
-            Python list or PyTorch tensor or list of these types. If `None` or empty
-            list, returns an empty tensor of shape _(0)_.
+        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
+            of these types. If `None` returns an empty tensor of shape _(0)_.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
         is_complex: Whether the returned tensor is complex-valued.
@@ -64,28 +60,27 @@ def to_tensor(
                  [0.+0.j],
                  [1.+0.j]]])
     """
-    if is_complex:
-        dtype = cdtype(dtype)
-
     if x is None:
         return torch.tensor([], dtype=dtype, device=device)
     if isinstance(x, list):
         if len(x) == 0:
             return torch.tensor([], dtype=dtype, device=device)
-        return torch.stack([to_tensor(y, dtype=dtype, device=device) for y in x])
+        if not isinstance(x[0], get_args(ArrayLike)):
+            return torch.as_tensor(x, dtype=dtype, device=device)
+        else:
+            return torch.stack([to_tensor(el, dtype=dtype, device=device) for el in x])
     if isinstance(x, Qobj):
-        return from_qutip(x, dtype=dtype, device=device)
-    elif isinstance(x, get_args(TensorLike)):
+        return from_qutip(x, dtype=get_cdtype(dtype), device=device)
+    elif isinstance(x, (np.ndarray, Tensor)):
         return torch.as_tensor(x, dtype=dtype, device=device)
     else:
         raise TypeError(
-            f'Input of type {type(x)} is not supported. `to_tensor` only '
-            'supports QuTiP quantum object, NumPy array, Python list or PyTorch tensor '
-            'or list of these types.'
+            'Argument `x` must be an array-like object or a list of array-like objects,'
+            f' but has type {obj_type_str(x)}.'
         )
 
 
-def cdtype(
+def get_cdtype(
     dtype: torch.complex64 | torch.complex128 | None = None,
 ) -> torch.complex64 | torch.complex128:
     if dtype is None:
@@ -98,36 +93,23 @@ def cdtype(
             return torch.complex64
     elif dtype not in (torch.complex64, torch.complex128):
         raise TypeError(
-            f'Argument `dtype` ({dtype}) must be `torch.complex64`,'
-            ' `torch.complex128` or `None` for a complex tensor.'
+            'Argument `dtype` must be `torch.complex64`, `torch.complex128` or `None`'
+            f' for a complex tensor, but is `{dtype}`.'
         )
     return dtype
 
 
-def rdtype(
+def get_rdtype(
     dtype: torch.float32 | torch.float64 | None = None,
 ) -> torch.float32 | torch.float64:
     if dtype is None:
         return torch.get_default_dtype()
     elif dtype not in (torch.float32, torch.float64):
         raise TypeError(
-            f'Argument `dtype` ({dtype}) must be `torch.float32`,'
-            ' `torch.float64` or `None` for a real-valued tensor.'
+            'Argument `dtype` must be `torch.float32`, `torch.float64` or `None` for'
+            f' a real-valued tensor, but is `{dtype}`.'
         )
     return dtype
-
-
-def complex_tensor(func):
-    @functools.wraps(func)
-    def wrapper(
-        *args,
-        dtype: torch.complex64 | torch.complex128 | None = None,
-        device: torch.device | None = None,
-        **kwargs,
-    ):
-        return func(*args, dtype=cdtype(dtype), device=device, **kwargs)
-
-    return wrapper
 
 
 DTYPE_TO_REAL = {torch.complex64: torch.float32, torch.complex128: torch.float64}
@@ -135,25 +117,22 @@ DTYPE_TO_COMPLEX = {torch.float32: torch.complex64, torch.float64: torch.complex
 
 
 def dtype_complex_to_real(
-    dtype: torch.complex64 | torch.complex128 | None = None,
+    dtype: torch.complex64 | torch.complex128,
 ) -> torch.float32 | torch.float64:
-    dtype = cdtype(dtype)
     return DTYPE_TO_REAL[dtype]
 
 
 def dtype_real_to_complex(
-    dtype: torch.float32 | torch.float64 | None = None,
+    dtype: torch.float32 | torch.float64,
 ) -> torch.complex64 | torch.complex128:
-    dtype = rdtype(dtype)
     return DTYPE_TO_COMPLEX[dtype]
 
 
-@complex_tensor
 def from_qutip(
     x: Qobj,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
-    device: torch.device | None = None,
+    device: str | torch.device | None = None,
 ) -> Tensor:
     r"""Convert a QuTiP quantum object to a PyTorch tensor.
 
@@ -183,7 +162,7 @@ def from_qutip(
                 [0.+0.j, 0.+0.j, 4.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 6.+0.j]])
     """
-    return torch.from_numpy(x.full()).to(dtype=dtype, device=device)
+    return torch.from_numpy(x.full()).to(dtype=get_cdtype(dtype), device=device)
 
 
 def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
@@ -233,3 +212,17 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
     return Qobj(x.numpy(force=True), dims=dims)
+
+
+def to_device(device: str | torch.device | None) -> torch.device:
+    if device is None:
+        return torch.ones(1).device  # default device
+    elif isinstance(device, str):
+        return torch.device(device)
+    elif isinstance(device, torch.device):
+        return device
+    else:
+        raise TypeError(
+            f'Argument `device` ({device}) must be a string, a `torch.device` object or'
+            ' `None`.'
+        )

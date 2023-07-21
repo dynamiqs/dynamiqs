@@ -53,7 +53,9 @@ def wigner(
         else:
             w, pvec = _wigner_fft_dm(state, xvec)
     else:
-        raise ValueError(f'Method {method} does not exist.')
+        raise ValueError(
+            f'Method "{method}" is not supported (supported: "clenshaw", "fft").'
+        )
 
     return xvec, pvec, w
 

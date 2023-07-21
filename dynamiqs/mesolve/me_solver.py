@@ -1,7 +1,7 @@
 from torch import Tensor
 
 from ..solvers.solver import Solver
-from ..solvers.utils.utils import cache, kraus_map
+from ..solvers.utils import cache, kraus_map
 
 
 class MESolver(Solver):

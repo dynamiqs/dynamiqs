@@ -68,9 +68,12 @@ def _quantum_type(x: Tensor) -> str:
     elif is_bra(x):
         return 'bra'
     elif is_dm(x):
-        return 'dm'
+        return 'density matrix'
     else:
-        raise ValueError('Tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def ket_to_bra(x: Tensor) -> Tensor:
@@ -285,9 +288,9 @@ def _bkron(x: Tensor, y: Tensor) -> Tensor:
     y_type = _quantum_type(y)
     if x_type != y_type:
         raise ValueError(
-            'Arguments have incompatible quantum types for tensor product (`x` is a'
-            f' {x_type} with shape {x.shape} and `y` is a {y_type} with shape'
-            f' {y.shape}).'
+            'Arguments `x` and `y` have incompatible quantum types for tensor product:'
+            f' `x` is a {x_type} with shape {tuple(x.shape)}, but  `y` is a {y_type}'
+            f' with shape {tuple(y.shape)}.'
         )
 
     # x: (..., x1, x2)
@@ -334,8 +337,8 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         _(..., m, m)_ Density matrix (with `m <= n`).
 
     Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
-        ValueError: If `dims` does not match the input tensor shape, or if `keep` is
+        ValueError: If `x` is not a ket, bra or density matrix.
+        ValueError: If `dims` does not match the shape of `x`, or if `keep` is
             incompatible with `dims`.
 
     Examples:
@@ -360,15 +363,17 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     # check that input dimensions match
     hilbert_size = x.size(-2) if is_ket(x) else x.size(-1)
-    if not torch.prod(dims) == hilbert_size:
+    prod_dims = torch.prod(dims)
+    if not prod_dims == hilbert_size:
+        dims_prod_str = '*'.join(str(d.item()) for d in dims) + f'={prod_dims}'
         raise ValueError(
-            f'Input `dims` {dims.tolist()} does not match the input '
-            f'tensor shape of {hilbert_size}.'
+            'Argument `dims` must match the Hilbert space dimension of `x` of'
+            f' {hilbert_size}, but the product of its values is {dims_prod_str}.'
         )
     if torch.any(keep < 0) or torch.any(keep > len(dims) - 1):
         raise ValueError(
-            f'Input `keep` {keep.tolist()} does not match the Hilbert '
-            f'space structure {dims.tolist()}.'
+            'Argument `keep` must match the Hilbert space structure specified by'
+            ' `dims`.'
         )
 
     # sort keep
@@ -393,7 +398,10 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
         x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
     else:
-        raise ValueError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
     # reshape to final dimension
     nkeep = torch.prod(dims[keep])  # e.g. 10
@@ -422,7 +430,7 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         _(...)_ Complex-valued expectation value.
 
     Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If `x` is not a ket, bra or density matrix.
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
@@ -431,7 +439,10 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
     elif is_dm(x):
         return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
     else:
-        raise ValueError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def norm(x: Tensor) -> Tensor:
@@ -447,14 +458,17 @@ def norm(x: Tensor) -> Tensor:
         _(...)_ Real-valued norm of `x`.
 
     Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
+        ValueError: If `x`is not a ket, bra or density matrix.
     """
     if is_ket(x) or is_bra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
     elif is_dm(x):
         return trace(x).real
     else:
-        raise ValueError('Input tensor is not a ket, bra or density matrix.')
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def unit(x: Tensor) -> Tensor:
@@ -468,8 +482,5 @@ def unit(x: Tensor) -> Tensor:
     Returns:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Normalized ket, bra or density
             matrix.
-
-    Raises:
-        ValueError: If the input tensor is not a ket, bra or density matrix.
     """
     return x / norm(x)[..., None, None]

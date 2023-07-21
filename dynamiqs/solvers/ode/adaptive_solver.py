@@ -8,7 +8,6 @@ import torch
 from torch import Tensor
 from tqdm.std import TqdmWarning
 
-from ...utils.tensor_types import dtype_complex_to_real
 from ..solver import AutogradSolver
 from ..utils.utils import hairer_norm, tqdm
 
@@ -62,9 +61,9 @@ class AdaptiveSolver(AutogradSolver):
                 step_counter += 1
                 if step_counter == self.options.max_steps:
                     raise RuntimeError(
-                        'Maximum number of time steps reached. Consider using lower'
-                        ' order integration methods, or raising the maximum number of'
-                        ' time steps with the `options` argument.'
+                        'Maximum number of time steps reached in adaptive time step ODE'
+                        f' solver at time t={t:.2g}'
+                        f' (`options.max_steps={self.options.max_steps}`).'
                     )
 
             # save solution
@@ -89,7 +88,7 @@ class AdaptiveSolver(AutogradSolver):
         pass
 
     @abstractmethod
-    def odefun(self, t: float, y: Tensor):
+    def odefun(self, t: float, y: Tensor) -> Tensor:
         pass
 
     @abstractmethod
@@ -199,16 +198,11 @@ class DormandPrince5(AdaptiveSolver):
             1 / 40,
         ]
 
-        # extract dtype and device from
-        dtype = self.y0.dtype
-        float_dtype = dtype_complex_to_real(dtype)
-        device = self.y0.device
-
         # initialize tensors
-        alpha = torch.tensor(alpha, dtype=float_dtype, device=device)
-        beta = torch.tensor(beta, dtype=dtype, device=device)
-        csol5 = torch.tensor(csol5, dtype=dtype, device=device)
-        csol4 = torch.tensor(csol4, dtype=dtype, device=device)
+        alpha = torch.tensor(alpha, dtype=self.rdtype, device=self.device)
+        beta = torch.tensor(beta, dtype=self.cdtype, device=self.device)
+        csol5 = torch.tensor(csol5, dtype=self.cdtype, device=self.device)
+        csol4 = torch.tensor(csol4, dtype=self.cdtype, device=self.device)
 
         return alpha, beta, csol5, csol5 - csol4
 
@@ -219,11 +213,11 @@ class DormandPrince5(AdaptiveSolver):
         alpha, beta, csol, cerr = self.tableau
 
         # compute iterated Runge-Kutta values
-        k = torch.empty(7, *f.shape, dtype=f.dtype, device=f.device)
+        k = torch.empty(7, *f.shape, dtype=self.cdtype, device=self.device)
         k[0] = f
         for i in range(1, 7):
             dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
-            k[i] = self.odefun(t + dt * alpha[i - 1], y + dy)
+            k[i] = self.odefun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results
         f_new = k[-1]
