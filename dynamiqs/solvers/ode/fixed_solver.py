@@ -41,7 +41,7 @@ class FixedSolver(AutogradSolver):
 
         # run the ode routine
         y = self.y0
-        for t in tqdm(times[:-1], disable=not self.options.verbose):
+        for t in tqdm(times[:-1].cpu().numpy(), disable=not self.options.verbose):
             # save solution
             if t >= self.next_t_stop():
                 self.save(y)
