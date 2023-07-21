@@ -21,11 +21,11 @@
         - [coherent_dm](utils/states/coherent_dm.md)
     - Quantum utilities
         - [trace](utils/utils/trace.md)
-        - [ptrace](utils/utils/ptrace.md)
         - [expect](utils/utils/expect.md)
         - [norm](utils/utils/norm.md)
         - [unit](utils/utils/unit.md)
         - [tensprod](utils/utils/tensprod.md)
+        - [ptrace](utils/utils/ptrace.md)
         - [dissipator](utils/utils/dissipator.md)
         - [lindbladian](utils/utils/lindbladian.md)
         - [is_ket](utils/utils/is_ket.md)

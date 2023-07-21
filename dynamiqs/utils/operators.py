@@ -9,147 +9,17 @@ from .tensor_types import get_cdtype
 from .utils import tensprod
 
 __all__ = [
-    'sigmax',
-    'sigmay',
-    'sigmaz',
-    'sigmap',
-    'sigmam',
     'eye',
     'destroy',
     'create',
     'displace',
     'squeeze',
+    'sigmax',
+    'sigmay',
+    'sigmaz',
+    'sigmap',
+    'sigmam',
 ]
-
-
-def sigmax(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli $\sigma_x$ operator.
-
-    It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        _(2, 2)_ Pauli $\sigma_x$ operator.
-
-    Examples:
-        >>> dq.sigmax()
-        tensor([[0.+0.j, 1.+0.j],
-                [1.+0.j, 0.+0.j]])
-    """
-    return torch.tensor(
-        [[0.0, 1.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
-    )
-
-
-def sigmay(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli $\sigma_y$ operator.
-
-    It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        _(2, 2)_ Pauli $\sigma_y$ operator.
-
-    Examples:
-        >>> dq.sigmay()
-        tensor([[0.+0.j, -0.-1.j],
-                [0.+1.j, 0.+0.j]])
-    """
-    return torch.tensor(
-        [[0.0, -1.0j], [1.0j, 0.0]], dtype=get_cdtype(dtype), device=device
-    )
-
-
-def sigmaz(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli $\sigma_z$ operator.
-
-    It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        _(2, 2)_ Pauli $\sigma_z$ operator.
-
-    Examples:
-        >>> dq.sigmaz()
-        tensor([[ 1.+0.j,  0.+0.j],
-                [ 0.+0.j, -1.+0.j]])
-    """
-    return torch.tensor(
-        [[1.0, 0.0], [0.0, -1.0]], dtype=get_cdtype(dtype), device=device
-    )
-
-
-def sigmap(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli raising operator $\sigma_+$.
-
-    It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        _(2, 2)_ Pauli $\sigma_+$ operator.
-
-    Examples:
-        >>> dq.sigmap()
-        tensor([[0.+0.j, 1.+0.j],
-                [0.+0.j, 0.+0.j]])
-    """
-    return torch.tensor(
-        [[0.0, 1.0], [0.0, 0.0]], dtype=get_cdtype(dtype), device=device
-    )
-
-
-def sigmam(
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Returns the Pauli lowering operator $\sigma_-$.
-
-    It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
-
-    Args:
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        _(2, 2)_ Pauli $\sigma_-$ operator.
-
-    Examples:
-        >>> dq.sigmam()
-        tensor([[0.+0.j, 0.+0.j],
-                [1.+0.j, 0.+0.j]])
-    """
-    return torch.tensor(
-        [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
-    )
 
 
 def eye(
@@ -396,3 +266,133 @@ def squeeze(
     a2 = a @ a
     z = torch.as_tensor(z)
     return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))
+
+
+def sigmax(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli $\sigma_x$ operator.
+
+    It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_x$ operator.
+
+    Examples:
+        >>> dq.sigmax()
+        tensor([[0.+0.j, 1.+0.j],
+                [1.+0.j, 0.+0.j]])
+    """
+    return torch.tensor(
+        [[0.0, 1.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
+
+
+def sigmay(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli $\sigma_y$ operator.
+
+    It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_y$ operator.
+
+    Examples:
+        >>> dq.sigmay()
+        tensor([[0.+0.j, -0.-1.j],
+                [0.+1.j, 0.+0.j]])
+    """
+    return torch.tensor(
+        [[0.0, -1.0j], [1.0j, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
+
+
+def sigmaz(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli $\sigma_z$ operator.
+
+    It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_z$ operator.
+
+    Examples:
+        >>> dq.sigmaz()
+        tensor([[ 1.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j]])
+    """
+    return torch.tensor(
+        [[1.0, 0.0], [0.0, -1.0]], dtype=get_cdtype(dtype), device=device
+    )
+
+
+def sigmap(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli raising operator $\sigma_+$.
+
+    It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_+$ operator.
+
+    Examples:
+        >>> dq.sigmap()
+        tensor([[0.+0.j, 1.+0.j],
+                [0.+0.j, 0.+0.j]])
+    """
+    return torch.tensor(
+        [[0.0, 1.0], [0.0, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
+
+
+def sigmam(
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Pauli lowering operator $\sigma_-$.
+
+    It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2, 2)_ Pauli $\sigma_-$ operator.
+
+    Examples:
+        >>> dq.sigmam()
+        tensor([[0.+0.j, 0.+0.j],
+                [1.+0.j, 0.+0.j]])
+    """
+    return torch.tensor(
+        [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
+    )
