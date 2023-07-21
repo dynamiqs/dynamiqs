@@ -29,11 +29,7 @@ def sigmax(
 ) -> Tensor:
     r"""Returns the Pauli $\sigma_x$ operator.
 
-    It is defined by:
-
-    $$
-        \sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}.
-    $$
+    It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -59,11 +55,7 @@ def sigmay(
 ) -> Tensor:
     r"""Returns the Pauli $\sigma_y$ operator.
 
-    It is defined by:
-
-    $$
-        \sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}.
-    $$
+    It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -89,11 +81,7 @@ def sigmaz(
 ) -> Tensor:
     r"""Returns the Pauli $\sigma_z$ operator.
 
-    It is defined by:
-
-    $$
-        \sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}.
-    $$
+    It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -119,11 +107,7 @@ def sigmap(
 ) -> Tensor:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
-    It is defined by:
-
-    $$
-        \sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}.
-    $$
+    It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
 
     Args:
         dtype: Complex data type of the returned tensor.
@@ -149,11 +133,7 @@ def sigmam(
 ) -> Tensor:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
-    It is defined by:
-
-    $$
-        \sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}.
-    $$
+    It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
 
     Args:
         dtype: Complex data type of the returned tensor.
