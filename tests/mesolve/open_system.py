@@ -8,7 +8,7 @@ from torch import Tensor
 
 import dynamiqs as dq
 from dynamiqs.options import Options
-from dynamiqs.utils.tensor_types import TensorLike
+from dynamiqs.utils.tensor_types import ArrayLike
 
 
 class OpenSystem(ABC):
@@ -42,7 +42,7 @@ class OpenSystem(ABC):
         return dq.expect(self.loss_op, rho).real
 
     def mesolve(
-        self, t_save: TensorLike, options: Options
+        self, t_save: ArrayLike, options: Options
     ) -> tuple[Tensor, Tensor | None]:
         return dq.mesolve(
             self.H,

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any
 
 import torch
 import torch.nn as nn
 
-from .utils.tensor_types import dtype_complex_to_real
+from ._utils import to_device
+from .utils.tensor_types import dtype_complex_to_real, get_cdtype
 
 __all__ = [
     'Propagator',
@@ -14,7 +14,6 @@ __all__ = [
     'Euler',
     'Rouchon',
     'Rouchon1',
-    'Rouchon1_5',
     'Rouchon2',
 ]
 
@@ -29,7 +28,7 @@ class Options:
         save_states: bool = True,
         verbose: bool = True,
         dtype: torch.complex64 | torch.complex128 | None = None,
-        device: torch.device | None = None,
+        device: str | torch.device | None = None,
     ):
         """...
 
@@ -42,33 +41,30 @@ class Options:
             dtype (torch.dtype, optional): Complex data type to which all complex-valued
                 tensors are converted. `t_save` is also converted to a real data type of
                 the corresponding precision.
-            device (torch.device, optional): Device on which the tensors are stored.
+            device (string or torch.device, optional): Device on which the tensors are
+                stored.
         """
         self.gradient_alg = gradient_alg
         self.save_states = save_states
         self.verbose = verbose
-        self.dtype = dtype
-        self.device = device
+        self.cdtype = get_cdtype(dtype)
+        self.rdtype = dtype_complex_to_real(self.cdtype)
+        self.device = to_device(device)
 
         # check that the gradient algorithm is supported
         if self.gradient_alg is not None and self.gradient_alg not in self.GRADIENT_ALG:
             available_gradient_alg_str = ', '.join(f'"{x}"' for x in self.GRADIENT_ALG)
             raise ValueError(
-                f'Gradient algorithm "{self.gradient_alg}" is not defined or not yet'
-                f' supported by solver {type(self).__name__} (supported:'
-                f' {available_gradient_alg_str}).'
+                f'Gradient algorithm "{self.gradient_alg}" is not supported by solver'
+                f' `{type(self).__name__}` (supported: {available_gradient_alg_str}).'
             )
-
-    @cached_property
-    def rdtype(self) -> torch.float32 | torch.float64:
-        return dtype_complex_to_real(self.dtype)
 
     def as_dict(self) -> dict[str, Any]:
         return {
             'gradient_alg': self.gradient_alg,
             'save_states': self.save_states,
             'verbose': self.verbose,
-            'dtype': self.dtype,
+            'dtype': self.cdtype,
             'device': self.device,
         }
 
@@ -100,8 +96,7 @@ class AdjointOptions(AutogradOptions):
         # check parameters were passed if gradient by the adjoint
         if self.gradient_alg == 'adjoint' and self.parameters is None:
             raise ValueError(
-                'For adjoint state gradient computation, parameters must be passed to'
-                ' the solver.'
+                'Missing argument `parameters` for gradient algorithm "adjoint".'
             )
 
     def as_dict(self) -> dict[str, Any]:
@@ -165,15 +160,13 @@ class Euler(ODEFixedStep):
 
 
 class Rouchon1(ODEFixedStep, AdjointOptions):
-    pass
+    def __init__(self, *, sqrt_normalization: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self.sqrt_normalization = sqrt_normalization
 
 
 # make alias for Rouchon1
 Rouchon = Rouchon1
-
-
-class Rouchon1_5(ODEFixedStep, AdjointOptions):
-    pass
 
 
 class Rouchon2(ODEFixedStep, AdjointOptions):

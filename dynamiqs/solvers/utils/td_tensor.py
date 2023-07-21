@@ -6,34 +6,25 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from ...utils.tensor_types import (
-    OperatorLike,
-    TDOperatorLike,
-    cdtype,
-    rdtype,
-    to_tensor,
-)
+from ..._utils import obj_type_str, to_device, type_str
+from ...utils.tensor_types import ArrayLike, TDArrayLike, get_rdtype, to_tensor
 from .utils import cache
 
 
 def to_td_tensor(
-    x: TDOperatorLike,
+    x: TDArrayLike,
     dtype: torch.dtype | None = None,
-    device: torch.device | None = None,
-    is_complex: bool = False,
+    device: str | torch.device | None = None,
 ) -> TDTensor:
-    """Convert a `TDOperatorLike` object to a `TDTensor` object."""
-    if isinstance(x, get_args(OperatorLike)):
-        # convert to tensor
-        x = to_tensor(x, dtype=dtype, device=device, is_complex=is_complex)
+    """Convert a `TDArrayLike` object to a `TDTensor` object."""
+    device = to_device(device)
 
+    if isinstance(x, get_args(ArrayLike)):
+        # convert to tensor
+        x = to_tensor(x, dtype=dtype, device=device)
         return ConstantTDTensor(x)
     elif callable(x):
-        # get default dtype and device
-        if dtype is None:
-            dtype = cdtype(dtype) if is_complex else rdtype(dtype)
-        if device is None:
-            device = get_default_device()
+        dtype = get_rdtype(dtype) if dtype is None else dtype  # assume real by default
 
         # compute initial value of the callable
         x0 = x(0.0)
@@ -44,37 +35,32 @@ def to_td_tensor(
         return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
 
 
-def get_default_device() -> torch.device:
-    """Get the default device."""
-    return torch.ones(1).device
-
-
 def check_callable(
     x0: Tensor,
     expected_dtype: torch.dtype,
     expected_device: torch.device,
 ):
     # check type, dtype and device match
-    prefix = (
-        'Time-dependent operators in the `callable` format should always'
-        ' return a `torch.Tensor` with the same dtype and device as provided'
-        ' to the solver. This avoids type conversion or device transfer at'
-        ' every time step that would slow down the solver.'
-    )
+
     if not isinstance(x0, Tensor):
         raise TypeError(
-            f'{prefix} The provided operator is currently of type'
-            f' {type(x0)} instead of {Tensor}.'
+            f'The time-dependent operator must be a {type_str(Tensor)}, but has type'
+            f' {obj_type_str(x0)}. The provided callable must return a tensor, to avoid'
+            ' costly type conversion at each time solver step.'
         )
     elif x0.dtype != expected_dtype:
         raise TypeError(
-            f'{prefix} The provided operator is currently of dtype'
-            f' {x0.dtype} instead of {expected_dtype}.'
+            f'The time-dependent operator must have dtype `{expected_dtype}`, but has'
+            f' dtype `{x0.dtype}`. The provided callable must return a tensor with the'
+            ' same `dtype` as provided to the solver, to avoid costly dtype conversion'
+            ' at each solver time step.'
         )
     elif x0.device != expected_device:
         raise TypeError(
-            f'{prefix} The provided operator is currently on device'
-            f' {x0.device} instead of {expected_device}.'
+            f'The time-dependent operator must be on device `{expected_device}`, but is'
+            f' on device `{x0.device}`. The provided callable must return a tensor on'
+            ' the same device as provided to the solver, to avoid costly device'
+            ' transfer at each solver time step.'
         )
 
 

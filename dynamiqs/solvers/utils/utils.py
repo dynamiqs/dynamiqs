@@ -64,11 +64,11 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     TODO Adapt to bras.
 
     Args:
-        O: Tensor of size `(b, n, n)`.
-        x: Tensor of size `(..., n, 1)` or `(..., n, n)`.
+        O: Tensor of shape `(b, n, n)`.
+        x: Tensor of shape `(..., n, 1)` or `(..., n, n)`.
 
     Returns:
-        Tensor of size `(..., b)` holding the operators expectation values.
+        Tensor of shape `(..., b)` holding the operators expectation values.
     """
     if is_ket(x):
         return torch.einsum('...ij,bjk,...kl->...b', x.mH, O, x)  # <x|O|x>
@@ -97,10 +97,10 @@ def hairer_norm(x: Tensor) -> Tensor:
     (1993), Springer Series in Computational Mathematics`.
 
     Args:
-        x: Tensor of size `(..., n, n)`.
+        x: Tensor of shape `(..., n, n)`.
 
     Returns:
-        Tensor of size `(...)` holding the norm of each matrix in the batch.
+        Tensor of shape `(...)` holding the norm of each matrix in the batch.
     """
     return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))
 
@@ -160,7 +160,9 @@ def check_time_tensor(x: Tensor, arg_name: str, allow_empty=False):
     # check that a time tensor is valid (it must be a 1D tensor sorted in strictly
     # ascending order and containing only positive values)
     if x.ndim != 1:
-        raise ValueError(f'Argument `{arg_name}` must be a 1D tensor.')
+        raise ValueError(
+            f'Argument `{arg_name}` must be a 1D tensor, but is a {x.ndim}D tensor.'
+        )
     if not allow_empty and len(x) == 0:
         raise ValueError(f'Argument `{arg_name}` must contain at least one element.')
     if not torch.all(torch.diff(x) > 0):
