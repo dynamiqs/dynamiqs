@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="./docs/media/dynamiqs_logo.png" width="520" alt="dynamiqs library logo">
+    <img src="./docs/media/dynamiqs-logo.png" width="520" alt="dynamiqs library logo">
 </h1>
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
