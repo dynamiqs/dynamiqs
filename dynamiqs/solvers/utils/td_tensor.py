@@ -7,19 +7,19 @@ import torch
 from torch import Tensor
 
 from ..._utils import obj_type_str, to_device, type_str
-from ...utils.tensor_types import OperatorLike, TDOperatorLike, get_rdtype, to_tensor
+from ...utils.tensor_types import ArrayLike, TDArrayLike, get_rdtype, to_tensor
 from .utils import cache
 
 
 def to_td_tensor(
-    x: TDOperatorLike,
+    x: TDArrayLike,
     dtype: torch.dtype | None = None,
     device: str | torch.device | None = None,
 ) -> TDTensor:
-    """Convert a `TDOperatorLike` object to a `TDTensor` object."""
+    """Convert a `TDArrayLike` object to a `TDTensor` object."""
     device = to_device(device)
 
-    if isinstance(x, get_args(OperatorLike)):
+    if isinstance(x, get_args(ArrayLike)):
         # convert to tensor
         x = to_tensor(x, dtype=dtype, device=device)
         return ConstantTDTensor(x)

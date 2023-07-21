@@ -1,25 +1,23 @@
 from __future__ import annotations
 
-import torch
-
 from .._utils import obj_type_str
 from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon2
 from ..solvers.result import Result
 from ..solvers.utils.tensor_formatter import TensorFormatter
 from ..solvers.utils.utils import check_time_tensor
-from ..utils.tensor_types import OperatorLike, TDOperatorLike, TensorLike
+from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .rouchon import MERouchon1, MERouchon2
 
 
 def mesolve(
-    H: TDOperatorLike,
-    jump_ops: list[OperatorLike],
-    rho0: OperatorLike,
-    t_save: TensorLike,
+    H: TDArrayLike,
+    jump_ops: list[ArrayLike],
+    rho0: ArrayLike,
+    t_save: ArrayLike,
     *,
-    exp_ops: list[OperatorLike] | None = None,
+    exp_ops: list[ArrayLike] | None = None,
     options: Options | None = None,
 ) -> Result:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
@@ -93,15 +91,17 @@ def mesolve(
         )
 
     # format and batch all tensors
-    formatter = TensorFormatter(options.cdtype, options.device)
-    H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
     # H_batched: (b_H, 1, n, n)
     # rho0_batched: (b_H, b_rho0, n, n)
-    exp_ops = formatter.format(exp_ops)  # (len(exp_ops), n, n)
-    jump_ops = formatter.format(jump_ops)  # (len(jump_ops), n, n)
+    # exp_ops: (len(exp_ops), n, n)
+    # jump_ops: (len(jump_ops), n, n)
+    formatter = TensorFormatter(options.cdtype, options.device)
+    H_batched, rho0_batched = formatter.format_H_and_state(H, rho0, state_to_dm=True)
+    exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
+    jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
     # convert t_save to a tensor
-    t_save = torch.as_tensor(t_save, dtype=options.rdtype, device=options.device)
+    t_save = to_tensor(t_save, dtype=options.rdtype, device=options.device)
     check_time_tensor(t_save, arg_name='t_save')
 
     # define the solver

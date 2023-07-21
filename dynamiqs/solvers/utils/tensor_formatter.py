@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from ...utils.tensor_types import OperatorLike, TDOperatorLike, to_tensor
+from ...utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ...utils.utils import is_ket, ket_to_dm
 from .td_tensor import TDTensor, to_td_tensor
 
@@ -21,7 +21,7 @@ class TensorFormatter:
         self.state_is_batched = False
 
     def format_H_and_state(
-        self, H: TDOperatorLike, state: OperatorLike, state_to_dm: bool = False
+        self, H: TDArrayLike, state: ArrayLike, state_to_dm: bool = False
     ) -> tuple[TDTensor, Tensor]:
         """Convert and batch Hamiltonian and state (state vector or density matrix)."""
         # convert Hamiltonian to `TDTensor`
@@ -49,10 +49,6 @@ class TensorFormatter:
         state = state.repeat(b_H, 1, 1, 1)  # (b_H, b_state, n, n)
 
         return H, state
-
-    def format(self, operator: OperatorLike) -> Tensor:
-        """Convert and batch a given operator according to the Hamiltonian and state."""
-        return to_tensor(operator, dtype=self.cdtype, device=self.device)
 
     def unbatch(self, save: Tensor | None) -> Tensor | None:
         """Unbatch saved tensors."""
