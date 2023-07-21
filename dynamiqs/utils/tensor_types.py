@@ -36,7 +36,6 @@ def to_tensor(
             of these types. If `None` returns an empty tensor of shape _(0)_.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
-        is_complex: Whether the returned tensor is complex-valued.
 
     Returns:
         Output tensor.
