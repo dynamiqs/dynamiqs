@@ -14,7 +14,6 @@ __all__ = [
     'Euler',
     'Rouchon',
     'Rouchon1',
-    'Rouchon1_5',
     'Rouchon2',
 ]
 
@@ -165,15 +164,13 @@ class Euler(ODEFixedStep):
 
 
 class Rouchon1(ODEFixedStep, AdjointOptions):
-    pass
+    def __init__(self, *, sqrt_normalization: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self.sqrt_normalization = sqrt_normalization
 
 
 # make alias for Rouchon1
 Rouchon = Rouchon1
-
-
-class Rouchon1_5(ODEFixedStep, AdjointOptions):
-    pass
 
 
 class Rouchon2(ODEFixedStep, AdjointOptions):
