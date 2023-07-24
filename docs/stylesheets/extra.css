@@ -11,13 +11,10 @@
 [data-md-color-scheme="default"] {
   /* Background */
   --md-default-bg-color: #ffffff;
-  --md-default-bg-header-color: #f8f7f6;
+  --md-default-bg-header-color: #f5f5f5;
 
   /* Highlight */
   --md-code-hl-constant-color: #ed7764; /* #ed7764 */
-
-  /* Border */
-  --md-border-color: #e2e2e2;
 
   /* Search text color */
   --md-primary-bg-color--light: #7e7c7c;
@@ -44,9 +41,6 @@
 
   /* Highlight */
   --md-code-hl-constant-color: #ed7764;
-
-  /* Border */
-  --md-border-color: #4d4d4d;
 
   /* Warning color shades */
   --md-warning-fg-color: #e899a6;
