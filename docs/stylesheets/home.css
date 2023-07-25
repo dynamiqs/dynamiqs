@@ -8,21 +8,24 @@
     height: 100%;
 }
 
-.tx-container {
-    padding-top: .0rem;
+.home-background {
     background-color: #6964ed;
     background-image: linear-gradient(9deg, #6964ed 0%, #d6628c 50%, #ed7764 100%);
     transition: 0.5s;
     background-size: 200% auto;
+    z-index: -1;
+    position: absolute;
+    width: 100%;
+    height: 570px;
 }
 
-.tx-container:hover {
+.tx-container:hover + .home-background {
     background-position: right center;
     background-size: 100% auto;
 }
 
 .tx-hero {
-    margin: 32px 2.8rem;
+    margin: 32px 2.8rem 0 2.8rem;
     color: var(--md-primary-bg-color);
     justify-content: center;
 }
@@ -73,46 +76,30 @@
     border-color: #625fae;
 }
 
-.feature-item h2 svg {
-    height: 30px;
-    float: left;
-    margin-right: 10px;
-    transform: translateY(10%);
-}
-
-.top-hr {
-    margin-top: 42px;
-}
-
 .feature-item {
-    font-family: 'Lato', sans-serif;
-    font-weight: 300;
+    background: #F3F4F7;
     box-sizing: border-box;
-    padding: 0 15px;
-    word-break: break-word
+    padding: 20px 40px 30px 40px;
+    margin: 30px;
 }
 
-.feature-item h2 {
-    color: #333;
-    font-weight: 300;
-    font-size: 25px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: normal;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    font-family: inherit;
+.feature-item h3 {
+    font-size: 1rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    font-family: 'Lato', sans-serif;
+    font-weight: 500;
 }
 
 .feature-item p {
-    font-size: 16px;
-    line-height: 1.8em;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    color: #111;
-    margin: 0 0 10px;
+    font-size: 0.65rem;
+    line-height: 1.5em;
     display: block;
+}
+
+.feature-item p a {
+    color: var(--md-accent-fg-color);
 }
 
 @media screen and (max-width:30em) {
@@ -186,11 +173,6 @@
     .feature-item {
         flex: 1;
         min-width: 0;
-    }
-
-    .feature-item:hover {
-        background-color: #526cfe47;
-        border-radius: 3px;
     }
 }
 
