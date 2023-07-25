@@ -11,12 +11,10 @@
 [data-md-color-scheme="default"] {
   /* Background */
   --md-default-bg-color: #ffffff;
+  --md-default-bg-header-color: #f5f5f5;
 
   /* Highlight */
-  --md-code-hl-constant-color: #ed7764;
-
-  /* Border */
-  --md-border-color: #e2e2e2;
+  --md-code-hl-constant-color: #ed7764; /* #ed7764 */
 
   /* Search text color */
   --md-primary-bg-color--light: #7e7c7c;
@@ -39,12 +37,10 @@
   /* Background */
   --md-default-bg-color: #333539;
   --md-code-bg-color: #444950;
+  --md-default-bg-header-color: #444950;
 
   /* Highlight */
   --md-code-hl-constant-color: #ed7764;
-
-  /* Border */
-  --md-border-color: #4d4d4d;
 
   /* Warning color shades */
   --md-warning-fg-color: #e899a6;
@@ -61,18 +57,18 @@
 
 /* Header color */
 .md-header {
-  background-color: var(--md-default-bg-color);
+  background-color: var(--md-default-bg-header-color);
   color: var(--md-typeset-color);
 }
 
 .md-tabs {
-  background-color: var(--md-default-bg-color);
+  background-color: var(--md-default-bg-header-color);
   color: var(--md-typeset-color);
-  border-bottom: 1px solid var(--md-border-color);
+  box-shadow: 0 0 .2rem #0000001a, 0 .0rem .6rem #0001;
 }
 
 .md-search__form {
-  background-color: var(--md-code-bg-color);
+  background-color: var(--md-default-bg-color);
 }
 
 .md-search__input+.md-search__icon {
