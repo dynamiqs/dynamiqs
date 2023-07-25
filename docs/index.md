@@ -20,6 +20,6 @@ Some exciting features of dynamiqs include:
 - Computing gradients of any function of the evolved quantum state with respect to any parameter of the Hamiltonian, jump operators, or initial state.
 - Using the library as a drop-in replacement for [QuTiP](https://qutip.org/) by directly passing QuTiP-defined quantum objects to our solvers.
 - Implementing your own solvers with ease by subclassing our base solver class and focusing directly on the solver logic.
-- Enjoy reading our carefully crafted documentation on our website: <https://www.dynamiqs.org>.
+- Enjoy reading our carefully crafted documentation.
 
 We hope that this library will prove beneficial to the community for e.g. simulations of large quantum systems, gradient-based parameter estimation, or large-scale quantum optimal control.
