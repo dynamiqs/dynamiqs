@@ -30,6 +30,10 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(9deg, #6964ed 0%, #d6628c 50%, #ed7764 100%);
+  --homepage-button-color: #894da8;
 }
 
 /* Dark mode */
@@ -53,6 +57,10 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(9deg, #33335d 0%, #8c3b59 50%, #d56b5b 100%);
+  --homepage-button-color: #a25d87;
 }
 
 /* Header color */

@@ -6,8 +6,8 @@
 
 /* Background */
 .home-background {
-    background-color: #6964ed;
-    background-image: linear-gradient(9deg, #6964ed 0%, #d6628c 50%, #ed7764 100%);
+    background-color: var(--md-primary-fg-color);
+    background-image: var(--homepage-gradient);
     transition: 0.5s;
     background-size: 200% auto;
     z-index: -1;
@@ -120,20 +120,20 @@
 
 .tx-hero .md-button--primary {
     background-color: var(--md-primary-bg-color);
-    color: #894da8;
+    color: var(--homepage-button-color);
     border-color: var(--md-primary-bg-color)
 }
 
 .tx-hero .md-button:focus,
 .tx-hero .md-button:hover {
-    background-color: #625fae;
+    background-color: var(--homepage-button-color);
     color: var(--md-default-bg-color);
-    border-color: #625fae;
+    border-color: var(--homepage-button-color);
 }
 
 /* Feature boxes */
 .feature-item {
-    background: #F3F4F7;
+    background: var(--md-default-bg-header-color);
     box-sizing: border-box;
     padding: 20px 40px 30px 40px;
     margin: 30px;
