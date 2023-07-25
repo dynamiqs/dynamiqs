@@ -21,6 +21,12 @@
     background-size: 100% auto;
 }
 
+@media screen and (max-width:60em) {
+    .home-background {
+        height: 620px;
+    }
+}
+
 /* Hero text and image */
 .tx-hero {
     margin: 32px 2.8rem 0 2.8rem;
