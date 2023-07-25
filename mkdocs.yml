@@ -34,14 +34,13 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-copyright: Copyright &copy 2023 dynamiqs
+copyright: "&copy Copyright 2023, dynamiqs developers."
 extra:
-  generator: false
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/dynamiqs/dynamiqs
     - icon: fontawesome/brands/slack
-      link: https://dynamiqs-org.slack.com/
+      link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 extra_css:
   - stylesheets/extra.css
 plugins:
