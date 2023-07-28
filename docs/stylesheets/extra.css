@@ -205,3 +205,14 @@ p {
 .doc-md-description {
   display: inline;
 }
+
+
+/* Italic code comments */
+.highlight .c,
+.highlight .c1,
+.highlight .ch,
+.highlight .cm,
+.highlight .cs,
+.highlight .sd {
+  font-style: italic;
+}
