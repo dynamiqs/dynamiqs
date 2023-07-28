@@ -146,7 +146,7 @@ class MERouchon2(MERouchon):
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
-        Note:
+        Notes:
             For fast time-varying Hamiltonians, this method is not order 2 because the
             second-order time derivative term is neglected. This term could be added in
             the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
@@ -178,7 +178,7 @@ class MERouchon2(MERouchon):
     def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2.
 
-        Note:
+        Notes:
             For fast time-varying Hamiltonians, this method is not order 2 because the
             second-order time derivative term is neglected. This term could be added in
             the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *

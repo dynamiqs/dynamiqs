@@ -161,7 +161,7 @@ def tensprod(*args: Tensor) -> Tensor:
     - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
       operators vectors with shape $(..., n_k, n_k)$.
 
-    Note:
+    Notes:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
@@ -226,7 +226,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         ValueError: If `dims` does not match the shape of `x`, or if `keep` is
             incompatible with `dims`.
 
-    Note:
+    Notes:
         The returned object is always a density matrix, even if the input is a ket or a
         bra.
 
@@ -335,7 +335,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
     (see [dissipator()][dynamiqs.dissipator]).
 
-    Note:
+    Notes:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
