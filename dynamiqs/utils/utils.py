@@ -38,11 +38,6 @@ def trace(x: Tensor) -> Tensor:
         >>> x = torch.ones(3, 3)
         >>> dq.trace(x)
         tensor(3.)
-
-        If the argument is batched, the trace is computed for each batch element:
-        >>> x = torch.stack([torch.ones(3, 3), torch.zeros(3, 3)])  # shape: (2, 3, 3)
-        >>> dq.trace(x)                                             # shape: (2)
-        tensor([3., 0.])
     """
     return torch.einsum('...ii', x)
 
@@ -73,24 +68,9 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
     Examples:
         >>> a = dq.destroy(16)
-        >>> n = a.mH @ a
-
-        For a ket:
         >>> psi = dq.coherent(16, 2.0)
-        >>> dq.expect(n, psi)
+        >>> dq.expect(a.mH @ a, psi)
         tensor(4.000+0.j)
-
-        For a density matrix:
-        >>> rho = dq.coherent_dm(16, 1.0j)
-        >>> dq.expect(n, rho)
-        tensor(1.000+0.j)
-
-        If the argument is batched, the expectation value is computed for each batch
-        element:
-        >>> fock0, fock1, fock2 = dq.fock(16, 0), dq.fock(16, 1), dq.fock(16, 2)
-        >>> x = torch.stack([fock0, fock1, fock2])  # shape: (3, 16, 1)
-        >>> dq.expect(n, x).real                    # shape: (3)
-        tensor([0.000, 1.000, 2.000])
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
@@ -121,23 +101,18 @@ def norm(x: Tensor) -> Tensor:
         ValueError: If `x`is not a ket, bra or density matrix.
 
     Examples:
-        >>> import numpy as np
-
-        For a ket:
+        ```python
+        # for a ket
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
         >>> dq.norm(psi)
         tensor(1.414)
 
-        For a density matrix:
+        # for a density matrix
         >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
         >>> dq.norm(rho)
         tensor(3.)
 
-        If the argument is batched, the norm is computed for each batch element:
-        >>> fock0, fock1 = dq.fock(8, 0), dq.fock(8, 1)
-        >>> x = torch.stack([fock0, fock0 + fock1])  # shape: (2, 8, 1)
-        >>> dq.norm(x)                               # shape: (2)
-        tensor([1.000, 1.414])
+        ```
     """
     if is_ket(x) or is_bra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
@@ -163,50 +138,12 @@ def unit(x: Tensor) -> Tensor:
             matrix.
 
     Examples:
-        For a ket:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
-        >>> psi
-        tensor([[1.+0.j],
-                [1.+0.j],
-                [0.+0.j],
-                [0.+0.j]])
         >>> dq.norm(psi)
         tensor(1.414)
         >>> psi = dq.unit(psi)
-        >>> psi
-        tensor([[0.707+0.j],
-                [0.707+0.j],
-                [0.000+0.j],
-                [0.000+0.j]])
         >>> dq.norm(psi)
         tensor(1.000)
-
-        For a density matrix:
-        >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
-        >>> rho
-        tensor([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
-        >>> dq.norm(rho)
-        tensor(3.)
-        >>> rho = dq.unit(rho)
-        >>> rho
-        tensor([[0.333+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.333+0.j, 0.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 0.333+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]])
-        >>> dq.norm(rho)
-        tensor(1.)
-
-        If the argument is batched, each batch element is normalized separately:
-        >>> fock0, fock1 = dq.fock(8, 0), dq.fock(8, 1)
-        >>> x = torch.stack([fock0, fock0 + fock1])  # shape: (2, 8, 1)
-        >>> dq.norm(x)
-        tensor([1.000, 1.414])
-        >>> x = dq.unit(x)                           # shape: (2, 8, 1)
-        >>> dq.norm(x)
-        tensor([1.000, 1.000])
     """
     return x / norm(x)[..., None, None]
 
@@ -235,25 +172,9 @@ def tensprod(*args: Tensor) -> Tensor:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
 
     Examples:
-        For a ket:
         >>> psi = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi.shape
         torch.Size([60, 1])
-
-        For a density matrix:
-        >>> rho = dq.tensprod(dq.fock_dm(3, 0), dq.fock_dm(4, 2), dq.fock_dm(5, 1))
-        >>> rho.shape
-        torch.Size([60, 60])
-
-        If the arguments are batched, the tensor product is computed for each batch
-        element:
-        >>> x = torch.stack([dq.fock(3, 0), dq.fock(3, 1)])  # shape: (2, 3, 1)
-        >>> y = torch.stack([dq.fock(4, 0), dq.fock(4, 1)])  # shape: (2, 4, 1)
-        >>> xy = dq.tensprod(x, y)                           # shape: (2, 12, 1)
-        >>> all(xy[0] == dq.tensprod(x[0], y[0]))
-        True
-        >>> all(xy[1] == dq.tensprod(x[1], y[1]))
-        True
     """
     return reduce(_bkron, args)
 
@@ -310,7 +231,6 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         bra.
 
     Examples:
-        For a ket:
         >>> psi_abc = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi_abc.shape
         torch.Size([60, 1])
@@ -320,28 +240,6 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
         >>> rho_bc.shape
         torch.Size([20, 20])
-
-        For a density matrix:
-        >>> rho_abc = dq.tensprod(dq.fock_dm(3, 0), dq.fock_dm(4, 2), dq.fock_dm(5, 1))
-        >>> rho_abc.shape
-        torch.Size([60, 60])
-        >>> rho_a = dq.ptrace(rho_abc, 0, (3, 4, 5))
-        >>> rho_a.shape
-        torch.Size([3, 3])
-        >>> rho_bc = dq.ptrace(rho_abc, (1, 2), (3, 4, 5))
-        >>> rho_bc.shape
-        torch.Size([20, 20])
-
-        If the argument is batched, the partial trace is computed for each batch
-        element:
-        >>> psi1 = dq.tensprod(dq.fock(3, 0), dq.fock(4, 1), dq.fock(5, 1))
-        >>> psi2 = dq.tensprod(dq.fock(3, 1), dq.fock(4, 3), dq.fock(5, 2))
-        >>> x_abc = torch.stack([psi1, psi2])     # shape: (2, 60, 1)
-        >>> x_a = dq.ptrace(x_abc, 0, (3, 4, 5))  # shape: (2, 3, 3)
-        >>> torch.all(x_a[0] == dq.ptrace(x_abc[0], 0, (3, 4, 5)))
-        tensor(True)
-        >>> torch.all(x_a[1] == dq.ptrace(x_abc[1], 0, (3, 4, 5)))
-        tensor(True)
     """
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
@@ -420,21 +318,6 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
                 [ 0.000+0.j,  2.000+0.j,  0.000+0.j,  0.000+0.j],
                 [ 0.000+0.j,  0.000+0.j, -2.000+0.j,  0.000+0.j],
                 [ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j]])
-
-        If the arguments are batched, the dissipation superoperator is computed for
-        each batch element:
-        >>> L = torch.stack([dq.destroy(4), dq.create(4)])         # shape: (2, 4, 4)
-        >>> x = torch.stack([dq.fock_dm(4, 2), dq.fock_dm(4, 2)])  # shape: (2, 4, 4)
-        >>> dq.dissipator(L, x)                                    # shape: (2, 4, 4)
-        tensor([[[ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  2.000+0.j,  0.000+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  0.000+0.j, -2.000+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j]],
-        <BLANKLINE>
-                [[ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  0.000+0.j, -3.000+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  0.000+0.j,  0.000+0.j,  3.000+0.j]]])
     """
     return L @ rho @ L.mH - 0.5 * L.mH @ L @ rho - 0.5 * rho @ L.mH @ L
 
@@ -464,27 +347,15 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
         _(..., n, n)_ Resulting operator (it is not a density matrix).
 
     Examples:
-        For example for a lossy quantum harmonic oscillator with Hamiltonian
-        $H=\omega a^\dag a$ and two jump operators $L_1=\sqrt{\kappa_1} a$ and
-        $L_\varphi=\sqrt{2\kappa_\varphi} a^\dag a$:
-        >>> import numpy as np
         >>> a = dq.destroy(4)
-        >>> delta = 1.0
-        >>> kappa_1 = 0.1
-        >>> kappa_phi = 0.05
-        >>> H = delta * a.mH @ a
-        >>> L1 = np.sqrt(kappa_1) * a
-        >>> Lphi = np.sqrt(2 * kappa_phi) * a.mH @ a
-        >>> Ls = torch.stack([L1, Lphi])
-        >>> rho = dq.coherent_dm(4, 0.5)
+        >>> H = a.mH @ a
+        >>> Ls = torch.stack([a, a.mH @ a])
+        >>> rho = dq.fock_dm(4, 1)
         >>> dq.lindbladian(H, Ls, rho)
-        tensor([[ 0.019+0.000j, -0.029+0.389j, -0.038+0.275j, -0.025+0.125j],
-                [-0.029-0.389j, -0.015+0.000j, -0.012+0.069j, -0.008+0.042j],
-                [-0.038-0.275j, -0.012-0.069j, -0.004+0.000j, -0.002+0.007j],
-                [-0.025-0.125j, -0.008-0.042j, -0.002-0.007j, -0.001+0.000j]])
-
-        If the arguments are batched, the Lindbladian is computed for each batch
-        element (see [dissipator()][dynamiqs.dissipator] for an example with batching).
+        tensor([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]])
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
@@ -581,22 +452,6 @@ def ket_to_bra(x: Tensor) -> Tensor:
                 [0.+0.j]])
         >>> dq.ket_to_bra(psi)  # shape: (1, 3)
         tensor([[0.-0.j, 1.-0.j, 0.-0.j]])
-
-        If the argument is batched, the associated bra is computed for each batch
-        element:
-        >>> x = torch.stack([dq.fock(3, 0), dq.fock(3, 1)])  # shape: (2, 3, 1)
-        >>> x
-        tensor([[[1.+0.j],
-                 [0.+0.j],
-                 [0.+0.j]],
-        <BLANKLINE>
-                [[0.+0.j],
-                 [1.+0.j],
-                 [0.+0.j]]])
-        >>> dq.ket_to_bra(x)                                 # shape: (2, 1, 3)
-        tensor([[[1.-0.j, 0.-0.j, 0.-0.j]],
-        <BLANKLINE>
-                [[0.-0.j, 1.-0.j, 0.-0.j]]])
     """
     return x.mH
 
@@ -620,26 +475,6 @@ def ket_to_dm(x: Tensor) -> Tensor:
         tensor([[0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j]])
-
-        If the argument is batched, the associated density matrix is computed for each
-        batch element:
-        >>> x = torch.stack([dq.fock(3, 0), dq.fock(3, 1)])  # shape: (2, 3, 1)
-        >>> x
-        tensor([[[1.+0.j],
-                 [0.+0.j],
-                 [0.+0.j]],
-        <BLANKLINE>
-                [[0.+0.j],
-                 [1.+0.j],
-                 [0.+0.j]]])
-        >>> dq.ket_to_dm(x)                                  # shape: (2, 3, 3)
-        tensor([[[1.+0.j, 0.+0.j, 0.+0.j],
-                 [0.+0.j, 0.+0.j, 0.+0.j],
-                 [0.+0.j, 0.+0.j, 0.+0.j]],
-        <BLANKLINE>
-                [[0.+0.j, 0.+0.j, 0.+0.j],
-                 [0.+0.j, 1.+0.j, 0.+0.j],
-                 [0.+0.j, 0.+0.j, 0.+0.j]]])
     """
     return x @ ket_to_bra(x)
 
@@ -662,16 +497,10 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
         >>> fock1 = dq.fock(3, 1)
         >>> dq.ket_overlap(fock0, fock1)
         tensor(0.+0.j)
-        >>> coh0 = dq.coherent(8, 0.0)
-        >>> coh1 = dq.coherent(8, 1.0)
-        >>> dq.ket_overlap(coh0, coh1)
+        >>> alpha0 = dq.coherent(8, 0.0)
+        >>> alpha1 = dq.coherent(8, 1.0)
+        >>> dq.ket_overlap(alpha0, alpha1)
         tensor(0.607+0.j)
-
-        If the arguments are batched, the overlap is computed for each batch element:
-        >>> x = torch.stack([dq.fock(3, 0), dq.fock(3, 1)])  # shape: (2, 3, 1)
-        >>> y = torch.stack([dq.fock(3, 0), dq.fock(3, 2)])  # shape: (2, 3, 1)
-        >>> dq.ket_overlap(x, y)                             # shape: (2)
-        tensor([1.+0.j, 0.+0.j])
     """
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
@@ -704,16 +533,10 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> fock1 = dq.fock(3, 1)
         >>> dq.ket_fidelity(fock0, fock1)
         tensor(0.)
-        >>> coh0 = dq.coherent(8, 0.0)
-        >>> coh1 = dq.coherent(8, 1.0)
-        >>> dq.ket_fidelity(coh0, coh1)
+        >>> alpha0 = dq.coherent(8, 0.0)
+        >>> alpha1 = dq.coherent(8, 1.0)
+        >>> dq.ket_fidelity(alpha0, alpha1)
         tensor(0.368)
-
-        If the arguments are batched, the fidelity is computed for each batch element:
-        >>> x = torch.stack([dq.fock(3, 0), dq.fock(3, 1)])  # shape: (2, 3, 1)
-        >>> y = torch.stack([dq.fock(3, 0), dq.fock(3, 2)])  # shape: (2, 3, 1)
-        >>> dq.ket_fidelity(x, y)                            # shape: (2)
-        tensor([1., 0.])
     """
     return ket_overlap(x, y).abs().pow(2).real
 
@@ -745,16 +568,10 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> fock1 = dq.fock_dm(3, 1)
         >>> dq.dm_fidelity(fock0, fock1)
         tensor(0.)
-        >>> coh0 = dq.coherent_dm(8, 0.0)
-        >>> coh1 = dq.coherent_dm(8, 1.0)
-        >>> dq.dm_fidelity(coh0, coh1)
+        >>> alpha0 = dq.coherent_dm(8, 0.0)
+        >>> alpha1 = dq.coherent_dm(8, 1.0)
+        >>> dq.dm_fidelity(alpha0, alpha1)
         tensor(0.368)
-
-        If the arguments are batched, the fidelity is computed for each batch element:
-        >>> x = torch.stack([dq.fock_dm(3, 0), dq.fock_dm(3, 1)])  # shape: (2, 3, 3)
-        >>> y = torch.stack([dq.fock_dm(3, 0), dq.fock_dm(3, 2)])  # shape: (2, 3, 3)
-        >>> dq.dm_fidelity(x, y)                                   # shape: (2)
-        tensor([1., 0.])
     """
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
