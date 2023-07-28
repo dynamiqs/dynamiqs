@@ -98,7 +98,7 @@ def norm(x: Tensor) -> Tensor:
         _(...)_ Real-valued norm of `x`.
 
     Raises:
-        ValueError: If `x`is not a ket, bra or density matrix.
+        ValueError: If `x` is not a ket, bra or density matrix.
 
     Examples:
         ```python
