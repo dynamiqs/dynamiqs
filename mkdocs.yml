@@ -86,6 +86,8 @@ watch:
 nav:
   - Home: index.md
   - Getting started:
+      - getting_started/index.md
+      - What is dynamiqs?: getting_started/whatis.md
       - Installation: getting_started/installation.md
       - First examples: getting_started/examples.md
       - Contributing: getting_started/contributing.md

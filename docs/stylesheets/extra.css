@@ -14,7 +14,7 @@
   --md-default-bg-header-color: #f5f5f5;
 
   /* Highlight */
-  --md-code-hl-constant-color: #ed7764; /* #ed7764 */
+  --md-code-hl-constant-color: #ed7764;
 
   /* Search text color */
   --md-primary-bg-color--light: #7e7c7c;
@@ -30,6 +30,10 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(to right top, #da5039, #de5741, #e25f49, #e56651, #e96d59, #eb735f, #ed7966, #ef7f6c, #f08572, #f18a78, #f1907f, #f29585);
+  --homepage-button-color: #ed7764;
 }
 
 /* Dark mode */
@@ -53,6 +57,10 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(to right top, #ac3d2a, #af4330, #b24936, #b44e3c, #b75442, #b95947, #bc5d4d, #be6252, #c06758, #c26d5d, #c47263, #c67769);
+  --homepage-button-color: #b44e3c;
 }
 
 /* Header color */

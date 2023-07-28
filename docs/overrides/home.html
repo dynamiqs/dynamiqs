@@ -1,0 +1,83 @@
+<!-- Custom HTML site displayed as the Home chapter -->
+
+{% extends "main.html" %}
+{% block tabs %}
+{{ super() }}
+
+<!-- Link css stylesheet for homepage -->
+<link rel="stylesheet" type="text/css" href="../stylesheets/home.css" />
+
+<!-- Main site Entry button descriptions -->
+<section class="tx-container">
+    <div class="md-grid md-typeset">
+      <div class="tx-hero">
+        <div class="tx-hero__image">
+            <img src="media/logo-white.png" draggable="false">
+        </div>
+        <div class="tx-hero__content">
+          <h1> dynamiqs </h1>
+          <p>High-performance quantum systems simulation with PyTorch.</p>
+          <a href="{{ page.next_page.url | url }}" title="{{ page.next_page.title | striptags }}" class="md-button md-button--primary">
+            Get started
+          </a>
+          <a href="{{ config.repo_url }}" title="{{ lang.t('source.link.title') }}" class="md-button">
+            Go to GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+</section>
+<div class="home-background"></div>
+
+<!-- Main site box descriptions -->
+<div class="top-hr">
+    <div class="feature-item">
+        <h3>
+            Differentiable
+        </h3>
+        <p>
+            Our quantum solvers are fully differentiable for use in optimal control, parameter estimation, experiment fitting, etc.
+        </p>
+        <p>
+            <a href="../getting_started/index.html">
+                Computing gradients
+            </a>
+        </p>
+    </div>
+    <div class="feature-item">
+        <h3>
+            GPU Enabled
+        </h3>
+        <p>
+            Transition seamlessly between CPU and GPU simulations, and run batches of simulations in one go.
+        </p>
+        <p>
+            <a href="../getting_started/index.html">
+                GPU support
+            </a>
+        </p>
+    </div>
+    <div class="feature-item">
+        <h3>
+            Built on PyTorch
+        </h3>
+        <p>
+            Benefit from the PyTorch ecosystem, built for both researchers and industry players.
+        </p>
+        <p>
+            <a href="https://pytorch.org/docs/stable/index.html">
+                PyTorch Documentation
+            </a>
+        </p>
+    </div>
+</div>
+
+<div class="top-hr">
+    <div class="hr">
+    </div>
+</div>
+
+
+{% endblock %}
+{% block content %}{% endblock %}
+{% block footer %}{% endblock %}
