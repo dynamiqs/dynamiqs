@@ -444,6 +444,9 @@ def ket_to_bra(x: Tensor) -> Tensor:
     Returns:
         _(..., 1, n)_ Bra.
 
+    Notes:
+        This function is equivalent to `x.mH`.
+
     Examples:
         >>> psi = dq.fock(3, 1)  # shape: (3, 1)
         >>> psi
@@ -464,6 +467,9 @@ def ket_to_dm(x: Tensor) -> Tensor:
 
     Returns:
         _(..., n, n)_ Density matrix.
+
+    Notes:
+        This function is equivalent to `x @ x.mH`.
 
     Examples:
         >>> psi = dq.fock(3, 1)  # shape: (3, 1)
