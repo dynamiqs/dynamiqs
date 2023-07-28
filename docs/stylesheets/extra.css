@@ -32,12 +32,6 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
-
-  /* Code colors */
-  --md-code-hl-name-color: #000;
-  --md-code-hl-operator-color: #000;
-  --md-code-hl-punctuation-color: #000;
-  --md-code-hl-comment-color: #4a4a4ae3;
 }
 
 /* Dark mode */
@@ -63,12 +57,6 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
-
-  /* Code colors */
-  --md-code-hl-name-color: #fff;
-  --md-code-hl-operator-color: #fff;
-  --md-code-hl-punctuation-color: #fff;
-  --md-code-hl-comment-color: hsla(232, 85%, 95%, 0.804);
 }
 
 /* Header color */
@@ -216,9 +204,4 @@ p {
 
 .doc-md-description {
   display: inline;
-}
-
-/* Italic code comments */
-.highlight .c, .highlight .c1, .highlight .ch, .highlight .cm, .highlight .cs, .highlight .sd {
-    font-style: italic;
 }

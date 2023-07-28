@@ -38,7 +38,8 @@ def trace(x: Tensor) -> Tensor:
         >>> x = torch.ones(3, 3)
         >>> dq.trace(x)
         tensor(3.)
-        >>> # If the argument is batched, the trace is computed for each batch element
+
+        If the argument is batched, the trace is computed for each batch element:
         >>> x = torch.stack([torch.ones(3, 3), torch.zeros(3, 3)])  # shape: (2, 3, 3)
         >>> dq.trace(x)                                             # shape: (2)
         tensor([3., 0.])
