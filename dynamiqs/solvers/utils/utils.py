@@ -58,7 +58,7 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a state vector $\psi$,
     - as $\braket{O}=\tr(O\rho)$ if `x` is a density matrix $\rho$.
 
-    Note:
+    Notes:
         The returned tensor is complex-valued.
 
     TODO Adapt to bras.

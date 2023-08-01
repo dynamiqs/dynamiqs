@@ -33,6 +33,11 @@ def trace(x: Tensor) -> Tensor:
 
     Returns:
         _(...)_ Trace of `x`.
+
+    Examples:
+        >>> x = torch.ones(3, 3)
+        >>> dq.trace(x)
+        tensor(3.)
     """
     return torch.einsum('...ii', x)
 
@@ -60,6 +65,12 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
 
     Raises:
         ValueError: If `x` is not a ket, bra or density matrix.
+
+    Examples:
+        >>> a = dq.destroy(16)
+        >>> psi = dq.coherent(16, 2.0)
+        >>> dq.expect(a.mH @ a, psi)
+        tensor(4.000+0.j)
     """
     if is_ket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
@@ -87,7 +98,21 @@ def norm(x: Tensor) -> Tensor:
         _(...)_ Real-valued norm of `x`.
 
     Raises:
-        ValueError: If `x`is not a ket, bra or density matrix.
+        ValueError: If `x` is not a ket, bra or density matrix.
+
+    Examples:
+        ```python
+        # for a ket
+        >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
+        >>> dq.norm(psi)
+        tensor(1.414)
+
+        # for a density matrix
+        >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
+        >>> dq.norm(rho)
+        tensor(3.)
+
+        ```
     """
     if is_ket(x) or is_bra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
@@ -111,6 +136,14 @@ def unit(x: Tensor) -> Tensor:
     Returns:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Normalized ket, bra or density
             matrix.
+
+    Examples:
+        >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
+        >>> dq.norm(psi)
+        tensor(1.414)
+        >>> psi = dq.unit(psi)
+        >>> dq.norm(psi)
+        tensor(1.000)
     """
     return x / norm(x)[..., None, None]
 
@@ -128,7 +161,7 @@ def tensprod(*args: Tensor) -> Tensor:
     - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
       operators vectors with shape $(..., n_k, n_k)$.
 
-    Note:
+    Notes:
         This function is the equivalent of `qutip.tensor()`.
 
     Args:
@@ -139,21 +172,9 @@ def tensprod(*args: Tensor) -> Tensor:
         _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
 
     Examples:
-        >>> psi = dq.tensprod(
-        ...     dq.coherent(20, 2.0),
-        ...     dq.fock(2, 0),
-        ...     dq.fock(5, 1)
-        ... )
+        >>> psi = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi.shape
-        torch.Size([200, 1])
-
-        >>> rho = dq.tensprod(
-        ...     dq.coherent_dm(20, 2.0),
-        ...     dq.fock_dm(2, 0),
-        ...     dq.fock_dm(5, 1)
-        ... )
-        >>> rho.shape
-        torch.Size([200, 200])
+        torch.Size([60, 1])
     """
     return reduce(_bkron, args)
 
@@ -205,20 +226,20 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
         ValueError: If `dims` does not match the shape of `x`, or if `keep` is
             incompatible with `dims`.
 
+    Notes:
+        The returned object is always a density matrix, even if the input is a ket or a
+        bra.
+
     Examples:
-        >>> psiABC = dq.tensprod(
-        ...     dq.coherent(20, 2.0),
-        ...     dq.fock(2, 0),
-        ...     dq.fock(5, 1)
-        ... )
-        >>> psiABC.shape
-        torch.Size([200, 1])
-        >>> rhoA = dq.ptrace(psiABC, 0, (20, 2, 5))
-        >>> rhoA.shape
+        >>> psi_abc = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
+        >>> psi_abc.shape
+        torch.Size([60, 1])
+        >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
+        >>> rho_a.shape
+        torch.Size([3, 3])
+        >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
+        >>> rho_bc.shape
         torch.Size([20, 20])
-        >>> rhoBC = dq.ptrace(psiABC, (1, 2), (20, 2, 5))
-        >>> rhoBC.shape
-        torch.Size([10, 10])
     """
     # convert keep and dims to tensors
     keep = torch.as_tensor([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
@@ -288,6 +309,15 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
 
     Returns:
         _(..., n, n)_ Density matrix.
+
+    Examples:
+        >>> L = dq.destroy(4)
+        >>> rho = dq.fock_dm(4, 2)
+        >>> dq.dissipator(L, rho)
+        tensor([[ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j],
+                [ 0.000+0.j,  2.000+0.j,  0.000+0.j,  0.000+0.j],
+                [ 0.000+0.j,  0.000+0.j, -2.000+0.j,  0.000+0.j],
+                [ 0.000+0.j,  0.000+0.j,  0.000+0.j,  0.000+0.j]])
     """
     return L @ rho @ L.mH - 0.5 * L.mH @ L @ rho - 0.5 * rho @ L.mH @ L
 
@@ -305,7 +335,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
     (see [dissipator()][dynamiqs.dissipator]).
 
-    Note:
+    Notes:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
@@ -315,6 +345,17 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
     Returns:
         _(..., n, n)_ Resulting operator (it is not a density matrix).
+
+    Examples:
+        >>> a = dq.destroy(4)
+        >>> H = a.mH @ a
+        >>> Ls = torch.stack([a, a.mH @ a])
+        >>> rho = dq.fock_dm(4, 1)
+        >>> dq.lindbladian(H, Ls, rho)
+        tensor([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]])
     """
     return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
 
@@ -327,6 +368,14 @@ def is_ket(x: Tensor) -> bool:
 
     Returns:
         True if the last dimension of `x` is 1, False otherwise.
+
+    Examples:
+        >>> dq.is_ket(torch.ones(3, 1))
+        True
+        >>> dq.is_ket(torch.ones(5, 3, 1))
+        True
+        >>> dq.is_ket(torch.ones(3, 3))
+        False
     """
     return x.size(-1) == 1
 
@@ -339,6 +388,14 @@ def is_bra(x: Tensor) -> bool:
 
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
+
+    Examples:
+        >>> dq.is_bra(torch.ones(1, 3))
+        True
+        >>> dq.is_bra(torch.ones(5, 1, 3))
+        True
+        >>> dq.is_bra(torch.ones(3, 3))
+        False
     """
     return x.size(-2) == 1
 
@@ -351,6 +408,14 @@ def is_dm(x: Tensor) -> bool:
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
+
+    Examples:
+        >>> dq.is_dm(torch.ones(3, 3))
+        True
+        >>> dq.is_dm(torch.ones(5, 3, 3))
+        True
+        >>> dq.is_dm(torch.ones(3, 1))
+        False
     """
     return x.size(-1) == x.size(-2)
 
@@ -378,6 +443,18 @@ def ket_to_bra(x: Tensor) -> Tensor:
 
     Returns:
         _(..., 1, n)_ Bra.
+
+    Notes:
+        This function is equivalent to `x.mH`.
+
+    Examples:
+        >>> psi = dq.fock(3, 1)  # shape: (3, 1)
+        >>> psi
+        tensor([[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]])
+        >>> dq.ket_to_bra(psi)  # shape: (1, 3)
+        tensor([[0.-0.j, 1.-0.j, 0.-0.j]])
     """
     return x.mH
 
@@ -390,6 +467,20 @@ def ket_to_dm(x: Tensor) -> Tensor:
 
     Returns:
         _(..., n, n)_ Density matrix.
+
+    Notes:
+        This function is equivalent to `x @ x.mH`.
+
+    Examples:
+        >>> psi = dq.fock(3, 1)  # shape: (3, 1)
+        >>> psi
+        tensor([[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]])
+        >>> dq.ket_to_dm(psi)  # shape: (3, 3)
+        tensor([[0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j]])
     """
     return x @ ket_to_bra(x)
 
@@ -404,6 +495,18 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
 
     Returns:
         _(...)_ Complex-valued overlap.
+
+    Examples:
+        >>> fock0 = dq.fock(3, 0)
+        >>> dq.ket_overlap(fock0, fock0)
+        tensor(1.+0.j)
+        >>> fock1 = dq.fock(3, 1)
+        >>> dq.ket_overlap(fock0, fock1)
+        tensor(0.+0.j)
+        >>> alpha0 = dq.coherent(8, 0.0)
+        >>> alpha1 = dq.coherent(8, 1.0)
+        >>> dq.ket_overlap(alpha0, alpha1)
+        tensor(0.607+0.j)
     """
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
@@ -428,6 +531,18 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
     Returns:
         _(...)_ Real-valued fidelity.
+
+    Examples:
+        >>> fock0 = dq.fock(3, 0)
+        >>> dq.ket_fidelity(fock0, fock0)
+        tensor(1.)
+        >>> fock1 = dq.fock(3, 1)
+        >>> dq.ket_fidelity(fock0, fock1)
+        tensor(0.)
+        >>> alpha0 = dq.coherent(8, 0.0)
+        >>> alpha1 = dq.coherent(8, 1.0)
+        >>> dq.ket_fidelity(alpha0, alpha1)
+        tensor(0.368)
     """
     return ket_overlap(x, y).abs().pow(2).real
 
@@ -451,6 +566,18 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
     Returns:
         _(...)_ Real-valued fidelity.
+
+    Examples:
+        >>> fock0 = dq.fock_dm(3, 0)
+        >>> dq.dm_fidelity(fock0, fock0)
+        tensor(1.)
+        >>> fock1 = dq.fock_dm(3, 1)
+        >>> dq.dm_fidelity(fock0, fock1)
+        tensor(0.)
+        >>> alpha0 = dq.coherent_dm(8, 0.0)
+        >>> alpha1 = dq.coherent_dm(8, 1.0)
+        >>> dq.dm_fidelity(alpha0, alpha1)
+        tensor(0.368)
     """
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x

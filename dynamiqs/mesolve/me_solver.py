@@ -19,7 +19,7 @@ class MESolver(Solver):
     def lindbladian(self, t: float, rho: Tensor) -> Tensor:
         """Compute the action of the Lindbladian on the density matrix.
 
-        Note:
+        Notes:
             Hermiticity of the output is enforced to avoid numerical instability
             with Runge-Kutta solvers.
         """

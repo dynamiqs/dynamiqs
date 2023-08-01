@@ -19,7 +19,7 @@ class FixedSolver(AutogradSolver):
     def run_autograd(self):
         """Integrate a quantum ODE with a fixed time step custom integrator.
 
-        Note:
+        Notes:
             The solver times are defined using `torch.linspace` which ensures that the
             overall solution is evolved from the user-defined time (up to an error of
             `rtol=1e-5`). However, this may induce a small mismatch between the time
