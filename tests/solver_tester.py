@@ -85,31 +85,27 @@ class SolverTester(ABC):
 
         # === test gradients depending on final y_save
         loss_state = system.loss_state(result.y_save[-1])
-        grads_loss_state = torch.autograd.grad(
+        grads_state = torch.autograd.grad(
             loss_state, system.parameters, retain_graph=True
         )
-        grads_loss_state = torch.stack(grads_loss_state)
-        true_grads_loss_state = system.grads_loss_state(t_save[-1])
+        grads_state = torch.stack(grads_state)
+        true_grads_state = system.grads_state(t_save[-1])
 
-        logging.warning(f'grads_loss_state           = {grads_loss_state}')
-        logging.warning(f'true_grads_loss_state      = {true_grads_loss_state}')
+        logging.warning(f'grads_state       = {grads_state}')
+        logging.warning(f'true_grads_state  = {true_grads_state}')
 
-        assert torch.allclose(
-            grads_loss_state, true_grads_loss_state, rtol=rtol, atol=atol
-        )
+        assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
 
         # === test gradient depending on final exp_save
         losses_expect = system.losses_expect(result.exp_save[:, -1])
-        grads_losses_expect = [
+        grads_expect = [
             torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
             for loss in losses_expect
         ]
-        grads_losses_expect = torch.stack(grads_losses_expect)
-        true_grads_losses_expect = system.grads_losses_expect(t_save[-1])
+        grads_expect = torch.stack(grads_expect)
+        true_grads_expect = system.grads_expect(t_save[-1])
 
-        logging.warning(f'grads_losses_expect      = {grads_losses_expect}')
-        logging.warning(f'true_grads_losses_expect = {true_grads_losses_expect}')
+        logging.warning(f'grads_expect      = {grads_expect}')
+        logging.warning(f'true_grads_expect = {true_grads_expect}')
 
-        assert torch.allclose(
-            grads_losses_expect, true_grads_losses_expect, rtol=rtol, atol=atol
-        )
+        assert torch.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)

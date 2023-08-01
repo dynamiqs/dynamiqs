@@ -16,38 +16,6 @@ class ClosedSystem(System):
     def _state_shape(self) -> tuple[int, int]:
         return self.n, 1
 
-    def psi(self, t: float) -> Tensor:
-        """Compute the exact ket at a given time."""
-        raise NotImplementedError
-
-    def psis(self, t: Tensor) -> Tensor:
-        return torch.stack([self.psi(t_.item()) for t_ in t])
-
-    def expect(self, t: float) -> Tensor:
-        """Compute the exact (complex) expectation values at a given time."""
-        raise NotImplementedError
-
-    def expects(self, t: Tensor) -> Tensor:
-        return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
-
-    def loss_psi(self, psi: Tensor) -> Tensor:
-        """Compute an example loss function from a given ket."""
-        return dq.expect(self.loss_op, psi).real
-
-    def grads_psi(self, t: float) -> Tensor:
-        """Compute the exact gradients of the example ket loss function with respect to
-        the system parameters."""
-        raise NotImplementedError
-
-    def losses_expect(self, expect: Tensor) -> Tensor:
-        """Compute example loss functions for each expectation values."""
-        return torch.stack(tuple(x.real for x in expect))
-
-    def grads_expect(self, t: float) -> Tensor:
-        """Compute the exact gradients of the example expectation values loss functions
-        with respect to the system parameters."""
-        raise NotImplementedError
-
     def _run(
         self, H: Tensor, y0: Tensor, t_save: ArrayLike, options: Options
     ) -> Result:
@@ -113,7 +81,7 @@ class Cavity(ClosedSystem):
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_loss_state(self, t: float) -> Tensor:
+    def grads_state(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0
         return torch.tensor([grad_delta, grad_alpha0]).detach()

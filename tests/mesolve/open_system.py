@@ -96,7 +96,7 @@ class LeakyCavity(OpenSystem):
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_loss_state(self, t: float) -> Tensor:
+    def grads_state(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
         grad_kappa = self.alpha0**2 * -t * exp(-self.kappa * t)

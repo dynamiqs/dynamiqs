@@ -6,7 +6,7 @@ from torch import Tensor
 import dynamiqs as dq
 from dynamiqs.options import Options
 from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import TensorLike
+from dynamiqs.utils.tensor_types import ArrayLike
 
 
 class System(ABC):
@@ -45,7 +45,7 @@ class System(ABC):
         """Compute an example loss function from a given state."""
         return dq.expect(self.loss_op, state).real
 
-    def grads_loss_state(self, t: float) -> Tensor:
+    def grads_states(self, t: float) -> Tensor:
         """Compute the exact gradients of the example state loss function with respect
         to the system parameters.
 
@@ -57,7 +57,7 @@ class System(ABC):
         """Compute example loss functions for each expectation values."""
         return torch.stack(tuple(x.real for x in expect))
 
-    def grads_losses_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Tensor:
         """Compute the exact gradients of the example expectation values loss functions
         with respect to the system parameters.
 
@@ -67,9 +67,9 @@ class System(ABC):
 
     @abstractmethod
     def _run(
-        self, H: Tensor, y0: Tensor, t_save: TensorLike, options: Options
+        self, H: Tensor, y0: Tensor, t_save: ArrayLike, options: Options
     ) -> Result:
         pass
 
-    def run(self, t_save: TensorLike, options: Options) -> Result:
+    def run(self, t_save: ArrayLike, options: Options) -> Result:
         return self._run(self.H, self.y0, t_save, options)
