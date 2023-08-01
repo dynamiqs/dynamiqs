@@ -75,19 +75,19 @@ def mesolve(
     # check jump_ops
     if not isinstance(jump_ops, list):
         raise TypeError(
-            'Argument `jump_ops` must be a list of array-like objects, but has type'
-            f' {obj_type_str(jump_ops)}.'
+            "Argument `jump_ops` must be a list of array-like objects, but has type"
+            f" {obj_type_str(jump_ops)}."
         )
     if len(jump_ops) == 0:
         raise ValueError(
-            'Argument `jump_ops` must be a non-empty list, otherwise consider using'
-            ' `sesolve`.'
+            "Argument `jump_ops` must be a non-empty list, otherwise consider using"
+            " `sesolve`."
         )
     # check exp_ops
     if exp_ops is not None and not isinstance(exp_ops, list):
         raise TypeError(
-            'Argument `exp_ops` must be `None` or a list of array-like objects, but'
-            f' has type {obj_type_str(exp_ops)}.'
+            "Argument `exp_ops` must be `None` or a list of array-like objects, but"
+            f" has type {obj_type_str(exp_ops)}."
         )
 
     # format and batch all tensors
@@ -106,7 +106,7 @@ def mesolve(
 
     # convert t_save to a tensor
     t_save = to_tensor(t_save, dtype=options.rdtype, device=options.device)
-    check_time_tensor(t_save, arg_name='t_save')
+    check_time_tensor(t_save, arg_name="t_save")
 
     # define the solver
     args = (H, rho0, t_save, exp_ops, options)
@@ -119,15 +119,14 @@ def mesolve(
     elif isinstance(options, Euler):
         solver = MEEuler(*args, jump_ops=jump_ops)
     else:
-        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
+        raise ValueError(f"Solver options {obj_type_str(options)} is not supported.")
 
     # compute the result
     solver.run()
 
     # get saved tensors and restore correct batching
     result = solver.result
-    if result.y_save is not None:
-        result.y_save = result.y_save.squeeze(0, 1)
+    result.y_save = result.y_save.squeeze(0, 1)
     if result.exp_save is not None:
         result.exp_save = result.exp_save.squeeze(0, 1)
 
