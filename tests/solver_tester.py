@@ -97,10 +97,10 @@ class SolverTester(ABC):
         assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
 
         # === test gradient depending on final exp_save
-        losses_expect = system.losses_expect(result.exp_save[:, -1])
+        loss_expect = system.loss_expect(result.exp_save[:, -1])
         grads_expect = [
             torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
-            for loss in losses_expect
+            for loss in loss_expect
         ]
         grads_expect = torch.stack(grads_expect)
         true_grads_expect = system.grads_expect(t_save[-1])

@@ -53,7 +53,7 @@ class System(ABC):
         """
         raise NotImplementedError
 
-    def losses_expect(self, expect: Tensor) -> Tensor:
+    def loss_expect(self, expect: Tensor) -> Tensor:
         """Compute example loss functions for each expectation values."""
         return torch.stack(tuple(x.real for x in expect))
 
