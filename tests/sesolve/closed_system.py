@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from math import pi, sqrt
+from math import cos, pi, sin, sqrt
 
 import torch
 from torch import Tensor
@@ -25,7 +25,7 @@ class ClosedSystem(ABC):
         pass
 
     def psi(self, t: float) -> Tensor:
-        """Compute the exact state vector at a given time."""
+        """Compute the exact ket at a given time."""
         raise NotImplementedError
 
     def psis(self, t: Tensor) -> Tensor:
@@ -37,6 +37,24 @@ class ClosedSystem(ABC):
 
     def expects(self, t: Tensor) -> Tensor:
         return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
+
+    def loss_psi(self, psi: Tensor) -> Tensor:
+        """Compute an example loss function from a given ket."""
+        return dq.expect(self.loss_op, psi).real
+
+    def grads_psi(self, t: float) -> Tensor:
+        """Compute the exact gradients of the example ket loss function with respect to
+        the system parameters."""
+        raise NotImplementedError
+
+    def losses_expect(self, expect: Tensor) -> Tensor:
+        """Compute example loss functions for each expectation values."""
+        return torch.stack(tuple(x.real for x in expect))
+
+    def grads_expect(self, t: float) -> Tensor:
+        """Compute the exact gradients of the example expectation values loss functions
+        with respect to the system parameters."""
+        raise NotImplementedError
 
     def sesolve(self, t_save: ArrayLike, options: Options) -> Result:
         return dq.sesolve(
@@ -54,16 +72,22 @@ class Cavity(ClosedSystem):
     # `exp_ops`: (2, n, n)
 
     def __init__(
-        self, *, n: int, delta: float, alpha0: complex, requires_grad: bool = False
+        self, *, n: int, delta: float, alpha0: float, requires_grad: bool = False
     ):
         # store parameters
         self.n = n
         self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
+        # define gradient parameters
+        self.parameters = (self.delta, self.alpha0)
+
         # bosonic operators
         a = dq.destroy(self.n)
         adag = a.mH
+
+        # loss operator
+        self.loss_op = adag @ a
 
         # prepare quantum operators
         self.H = self.delta * adag @ a
@@ -81,7 +105,7 @@ class Cavity(ClosedSystem):
 
     def t_save(self, num_t_save: int) -> Tensor:
         t_end = 2 * pi / self.delta  # a full rotation
-        return torch.linspace(0.0, t_end, num_t_save)
+        return torch.linspace(0.0, t_end.item(), num_t_save)
 
     def _alpha(self, t: float) -> Tensor:
         return self.alpha0 * torch.exp(-1j * self.delta * t)
@@ -94,3 +118,21 @@ class Cavity(ClosedSystem):
         exp_x = sqrt(2) * alpha_t.real
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
+
+    def grads_psi(self, t: float) -> Tensor:
+        grad_delta = 0.0
+        grad_alpha0 = 2 * self.alpha0
+        return torch.tensor([grad_delta, grad_alpha0]).detach()
+
+    def grads_expect(self, t: float) -> Tensor:
+        grad_x_delta = sqrt(2) * self.alpha0 * -t * sin(-self.delta * t)
+        grad_p_delta = sqrt(2) * self.alpha0 * -t * cos(-self.delta * t)
+        grad_x_alpha0 = sqrt(2) * cos(-self.delta * t)
+        grad_p_alpha0 = sqrt(2) * sin(-self.delta * t)
+
+        return torch.tensor(
+            [
+                [grad_x_delta, grad_x_alpha0],
+                [grad_p_delta, grad_p_alpha0],
+            ]
+        ).detach()

@@ -1,3 +1,5 @@
+import logging
+
 import torch
 
 import dynamiqs as dq
@@ -74,3 +76,42 @@ class SESolverTester:
 
     def test_correctness(self):
         pass
+
+
+class SEGradientSolverTester(SESolverTester):
+    def _test_gradient(
+        self,
+        options: Options,
+        system: ClosedSystem,
+        *,
+        num_t_save: int,
+        rtol: float = 1e-3,
+        atol: float = 1e-5,
+    ):
+        t_save = system.t_save(num_t_save)
+        result = system.sesolve(t_save, options)
+
+        # === test gradients depending on y_save
+        loss_psi = system.loss_psi(result.y_save[-1])
+        grads_psi = torch.autograd.grad(loss_psi, system.parameters, retain_graph=True)
+        grads_psi = torch.stack(grads_psi)
+        true_grads_psi = system.grads_psi(t_save[-1])
+
+        logging.warning(f'grads_psi         = {grads_psi}')
+        logging.warning(f'true_grads_psi    = {true_grads_psi}')
+
+        assert torch.allclose(grads_psi, true_grads_psi, rtol=rtol, atol=atol)
+
+        # === test gradient depending on exp_save
+        losses_expect = system.losses_expect(result.exp_save[:, -1])
+        grads_expect = [
+            torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
+            for loss in losses_expect
+        ]
+        grads_expect = torch.stack(grads_expect)
+        true_grads_expect = system.grads_expect(t_save[-1])
+
+        logging.warning(f'grads_expect      = {grads_expect}')
+        logging.warning(f'true_grads_expect = {true_grads_expect}')
+
+        assert torch.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)
