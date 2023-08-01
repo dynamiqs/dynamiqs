@@ -1,5 +1,7 @@
 # Contributing to dynamiqs
 
+We warmly welcome all contributions to the library from anyone who, like us, believes in the value dynamiqs can add to the quantum community. To contribute efficiently, a few guidelines are compiled below.
+
 ## Requirements
 
 The project was written using Python 3.8+, you must have a compatible version of Python (i.e. >= 3.8) installed on your computer.

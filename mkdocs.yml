@@ -34,6 +34,13 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+copyright: "&copy Copyright 2023, dynamiqs developers."
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dynamiqs/dynamiqs
+    - icon: fontawesome/brands/slack
+      link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 extra_css:
   - stylesheets/extra.css
 plugins:
@@ -80,11 +87,11 @@ nav:
   - Home: index.md
   - Getting started:
       - getting_started/index.md
+      - What is dynamiqs?: getting_started/whatis.md
       - Installation: getting_started/installation.md
-      - First steps: getting_started/first_steps.md
+      - First examples: getting_started/examples.md
+      - Contributing: getting_started/contributing.md
+      - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
-      - Optimal control: tutorials/optimal_control.md
-      - SNAP: tutorials/snap.md
-      - ECD: tutorials/ecd.md
   - Python API: python_api/

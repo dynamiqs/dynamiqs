@@ -6,8 +6,13 @@ import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..solvers.utils.td_tensor import CallableTDTensor, ConstantTDTensor
-from ..solvers.utils.utils import cache, inv_sqrtm, kraus_map
+from ..solvers.utils import (
+    CallableTDTensor,
+    ConstantTDTensor,
+    cache,
+    inv_sqrtm,
+    kraus_map,
+)
 from ..utils.utils import unit
 from .me_solver import MESolver
 
@@ -17,14 +22,14 @@ class MERouchon(MESolver, AdjointFixedSolver):
         super().__init__(*args, **kwargs)
 
         self.n = self.H.size(-1)
-        self.I = torch.eye(self.n, device=self.H.device, dtype=self.H.dtype)  # (n, n)
+        self.I = torch.eye(self.n, device=self.device, dtype=self.cdtype)  # (n, n)
 
 
 class MERouchon1(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not self.options.trace_normalization:
+        if not self.options.sqrt_normalization:
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
             # self.M1s: (1, len(jump_ops), n, n)
@@ -56,8 +61,8 @@ class MERouchon1(MERouchon):
             self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
 
             # define M1s and M1srev
-            self.M1s = sqrt(self.dt) * self.S @ self.jump_ops
-            self.M1srev = sqrt(self.dt) * self.Srev @ self.jump_ops
+            self.M1s = sqrt(self.dt) * self.jump_ops @ self.S
+            self.M1srev = sqrt(self.dt) * self.jump_ops @ self.Srev
 
         self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
         self.M1sdag = self.M1s.mH  # (1, len(jump_ops), n, n)
@@ -141,7 +146,7 @@ class MERouchon2(MERouchon):
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
 
-        Note:
+        Notes:
             For fast time-varying Hamiltonians, this method is not order 2 because the
             second-order time derivative term is neglected. This term could be added in
             the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
@@ -173,7 +178,7 @@ class MERouchon2(MERouchon):
     def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2.
 
-        Note:
+        Notes:
             For fast time-varying Hamiltonians, this method is not order 2 because the
             second-order time derivative term is neglected. This term could be added in
             the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *

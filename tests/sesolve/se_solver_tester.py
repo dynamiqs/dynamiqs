@@ -9,7 +9,7 @@ from .closed_system import ClosedSystem
 class SESolverTester:
     def _test_batching(self, options: Options, system: ClosedSystem):
         """Test the batching of `H` and `psi0` in `sesolve`, and the returned object
-        sizes."""
+        shapes."""
         n = system.n
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)

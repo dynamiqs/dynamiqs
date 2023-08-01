@@ -11,12 +11,10 @@
 [data-md-color-scheme="default"] {
   /* Background */
   --md-default-bg-color: #ffffff;
+  --md-default-bg-header-color: #f5f5f5;
 
   /* Highlight */
   --md-code-hl-constant-color: #ed7764;
-
-  /* Border */
-  --md-border-color: #e2e2e2;
 
   /* Search text color */
   --md-primary-bg-color--light: #7e7c7c;
@@ -32,6 +30,10 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(to right top, #da5039, #de5741, #e25f49, #e56651, #e96d59, #eb735f, #ed7966, #ef7f6c, #f08572, #f18a78, #f1907f, #f29585);
+  --homepage-button-color: #ed7764;
 }
 
 /* Dark mode */
@@ -39,12 +41,10 @@
   /* Background */
   --md-default-bg-color: #333539;
   --md-code-bg-color: #444950;
+  --md-default-bg-header-color: #444950;
 
   /* Highlight */
   --md-code-hl-constant-color: #ed7764;
-
-  /* Border */
-  --md-border-color: #4d4d4d;
 
   /* Warning color shades */
   --md-warning-fg-color: #e899a6;
@@ -57,22 +57,26 @@
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(to right top, #ac3d2a, #af4330, #b24936, #b44e3c, #b75442, #b95947, #bc5d4d, #be6252, #c06758, #c26d5d, #c47263, #c67769);
+  --homepage-button-color: #b44e3c;
 }
 
 /* Header color */
 .md-header {
-  background-color: var(--md-default-bg-color);
+  background-color: var(--md-default-bg-header-color);
   color: var(--md-typeset-color);
 }
 
 .md-tabs {
-  background-color: var(--md-default-bg-color);
+  background-color: var(--md-default-bg-header-color);
   color: var(--md-typeset-color);
-  border-bottom: 1px solid var(--md-border-color);
+  box-shadow: 0 0 .2rem #0000001a, 0 .0rem .6rem #0001;
 }
 
 .md-search__form {
-  background-color: var(--md-code-bg-color);
+  background-color: var(--md-default-bg-color);
 }
 
 .md-search__input+.md-search__icon {
@@ -200,4 +204,19 @@
 
 p {
   text-align: justify;
+}
+
+.doc-md-description {
+  display: inline;
+}
+
+
+/* Italic code comments */
+.highlight .c,
+.highlight .c1,
+.highlight .ch,
+.highlight .cm,
+.highlight .cs,
+.highlight .sd {
+  font-style: italic;
 }
