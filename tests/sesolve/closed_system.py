@@ -7,7 +7,7 @@ from torch import Tensor
 import dynamiqs as dq
 from dynamiqs.options import Options
 from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import TensorLike
+from dynamiqs.utils.tensor_types import ArrayLike
 
 
 class ClosedSystem(ABC):
@@ -38,7 +38,7 @@ class ClosedSystem(ABC):
     def expects(self, t: Tensor) -> Tensor:
         return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
 
-    def sesolve(self, t_save: TensorLike, options: Options) -> Result:
+    def sesolve(self, t_save: ArrayLike, options: Options) -> Result:
         return dq.sesolve(
             self.H,
             self.psi0,
