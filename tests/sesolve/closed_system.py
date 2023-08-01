@@ -42,7 +42,7 @@ class ClosedSystem(ABC):
         """Compute an example loss function from a given ket."""
         return dq.expect(self.loss_op, psi).real
 
-    def grads_loss_psi(self, t: float) -> Tensor:
+    def grads_psi(self, t: float) -> Tensor:
         """Compute the exact gradients of the example ket loss function with respect to
         the system parameters."""
         raise NotImplementedError
@@ -51,7 +51,7 @@ class ClosedSystem(ABC):
         """Compute example loss functions for each expectation values."""
         return torch.stack(tuple(x.real for x in expect))
 
-    def grads_losses_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Tensor:
         """Compute the exact gradients of the example expectation values loss functions
         with respect to the system parameters."""
         raise NotImplementedError
@@ -119,12 +119,12 @@ class Cavity(ClosedSystem):
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_loss_psi(self, t: float) -> Tensor:
+    def grads_psi(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0
         return torch.tensor([grad_delta, grad_alpha0]).detach()
 
-    def grads_losses_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Tensor:
         grad_x_delta = sqrt(2) * self.alpha0 * -t * sin(-self.delta * t)
         grad_p_delta = sqrt(2) * self.alpha0 * -t * cos(-self.delta * t)
         grad_x_alpha0 = sqrt(2) * cos(-self.delta * t)

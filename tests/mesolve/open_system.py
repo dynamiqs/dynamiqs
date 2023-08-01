@@ -45,7 +45,7 @@ class OpenSystem(ABC):
         """Compute an example loss function from a given density matrix."""
         return dq.expect(self.loss_op, rho).real
 
-    def grads_loss_rho(self, t: float) -> Tensor:
+    def grads_rho(self, t: float) -> Tensor:
         """Compute the exact gradients of the example density matrix loss function with
         respect to the system parameters."""
         raise NotImplementedError
@@ -54,7 +54,7 @@ class OpenSystem(ABC):
         """Compute example loss functions for each expectation values."""
         return torch.stack(tuple(x.real for x in expect))
 
-    def grads_losses_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Tensor:
         """Compute the exact gradients of the example expectation values loss functions
         with respect to the system parameters."""
         raise NotImplementedError
@@ -136,14 +136,14 @@ class LeakyCavity(OpenSystem):
         exp_p = sqrt(2) * alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_loss_rho(self, t: float) -> Tensor:
+    def grads_rho(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
         grad_kappa = self.alpha0**2 * -t * exp(-self.kappa * t)
         return torch.tensor([grad_delta, grad_alpha0, grad_kappa]).detach()
 
     # flake8: noqa: E501 line too long
-    def grads_losses_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Tensor:
         # fmt: off
         grad_x_delta = sqrt(2) * self.alpha0 * -t * sin(-self.delta * t) * exp(-0.5 * self.kappa * t)
         grad_p_delta = sqrt(2) * self.alpha0 * -t * cos(-self.delta * t) * exp(-0.5 * self.kappa * t)
