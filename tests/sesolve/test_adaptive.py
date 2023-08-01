@@ -1,15 +1,10 @@
-from math import pi
-
 import dynamiqs as dq
 
-from .closed_system import Cavity
-from .se_solver_tester import SEGradientSolverTester
-
-cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
-grad_cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, requires_grad=True)
+from ..solver_tester import SolverTester
+from .closed_system import cavity_8, grad_cavity_8
 
 
-class TestAdaptive(SEGradientSolverTester):
+class TestAdaptive(SolverTester):
     def test_batching(self):
         options = dq.options.Dopri5()
         self._test_batching(options, cavity_8)
