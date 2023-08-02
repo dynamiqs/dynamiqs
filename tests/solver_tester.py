@@ -64,7 +64,7 @@ class SolverTester(ABC):
         # === test exp_save
         true_exp_save = system.expects(t_save)
         logging.warning(f'exp_save      = {result.exp_save}')
-        logging.warning(f'true_exp_save = {errs}')
+        logging.warning(f'true_exp_save = {true_exp_save}')
         assert torch.allclose(
             result.exp_save, true_exp_save, rtol=exp_save_rtol, atol=exp_save_atol
         )
