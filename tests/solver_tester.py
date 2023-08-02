@@ -58,14 +58,15 @@ class SolverTester(ABC):
 
         # === test y_save
         errs = torch.linalg.norm(result.y_save - system.states(t_save), dim=(-2, -1))
+        logging.warning(f'errs = {errs}')
         assert torch.all(errs <= y_save_norm_atol)
 
         # === test exp_save
+        true_exp_save = system.expects(t_save)
+        logging.warning(f'exp_save      = {result.exp_save}')
+        logging.warning(f'true_exp_save = {errs}')
         assert torch.allclose(
-            result.exp_save,
-            system.expects(t_save),
-            rtol=exp_save_rtol,
-            atol=exp_save_atol,
+            result.exp_save, true_exp_save, rtol=exp_save_rtol, atol=exp_save_atol
         )
 
     def test_correctness(self):
@@ -96,7 +97,7 @@ class SolverTester(ABC):
 
         assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
 
-        # === test gradient depending on final exp_save
+        # === test gradients depending on final exp_save
         loss_expect = system.loss_expect(result.exp_save[:, -1])
         grads_expect = [
             torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
