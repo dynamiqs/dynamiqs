@@ -1,18 +1,25 @@
-from math import pi
-
 import dynamiqs as dq
 
-from .closed_system import Cavity
-from .se_solver_tester import SESolverTester
-
-cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
+from ..solver_tester import SolverTester
+from .closed_system import cavity_8, grad_cavity_8
 
 
-class TestSEEuler(SESolverTester):
+class TestSEEuler(SolverTester):
     def test_batching(self):
         options = dq.options.Euler(dt=1e-2)
         self._test_batching(options, cavity_8)
 
-    def test_y_save(self):
+    def test_correctness(self):
         options = dq.options.Euler(dt=1e-4)
-        self._test_y_save(options, cavity_8, num_t_save=11)
+        self._test_correctness(
+            options,
+            cavity_8,
+            num_t_save=11,
+            y_save_norm_atol=1e-2,
+            exp_save_rtol=1e-1,
+            exp_save_atol=1e-3,
+        )
+
+    def test_autograd(self):
+        options = dq.options.Euler(dt=1e-4, gradient_alg='autograd')
+        self._test_gradient(options, grad_cavity_8, num_t_save=11, rtol=1e-1, atol=1e-2)
