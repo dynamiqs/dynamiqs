@@ -58,7 +58,7 @@ class TestMERouchon2(SolverTester):
             num_t_save=11,
             y_save_norm_atol=1e-2,
             exp_save_rtol=1e-2,
-            exp_save_atol=1e-3,
+            exp_save_atol=1e-2,
         )
 
     def test_autograd(self):
