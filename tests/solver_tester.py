@@ -49,9 +49,9 @@ class SolverTester(ABC):
         system: System,
         *,
         num_t_save: int,
-        y_save_norm_atol: float = 1e-2,
-        exp_save_rtol: float = 1e-2,
-        exp_save_atol: float = 1e-2,
+        y_save_norm_atol: float = 1e-3,
+        exp_save_rtol: float = 1e-3,
+        exp_save_atol: float = 1e-5,
     ):
         t_save = system.t_save(num_t_save)
         result = system.run(t_save, options)

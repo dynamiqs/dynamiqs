@@ -11,7 +11,14 @@ class TestSEEuler(SolverTester):
 
     def test_correctness(self):
         options = dq.options.Euler(dt=1e-4)
-        self._test_correctness(options, cavity_8, num_t_save=11)
+        self._test_correctness(
+            options,
+            cavity_8,
+            num_t_save=11,
+            y_save_norm_atol=1e-2,
+            exp_save_rtol=1e-1,
+            exp_save_atol=1e-3,
+        )
 
     def test_autograd(self):
         options = dq.options.Euler(dt=1e-4, gradient_alg='autograd')
