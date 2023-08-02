@@ -53,7 +53,12 @@ class TestMERouchon2(SolverTester):
     def test_correctness(self):
         options = dq.options.Rouchon2(dt=1e-3)
         self._test_correctness(
-            options, leaky_cavity_8, num_t_save=11, y_save_norm_atol=1e-2
+            options,
+            leaky_cavity_8,
+            num_t_save=11,
+            y_save_norm_atol=1e-2,
+            exp_save_rtol=1e-2,
+            exp_save_atol=1e-4,
         )
 
     def test_autograd(self):
