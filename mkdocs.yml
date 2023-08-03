@@ -16,7 +16,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   logo: media/logo.png
-  favicon: media/favicon.ico
+  favicon: media/favicon.svg
   palette:
     # palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
