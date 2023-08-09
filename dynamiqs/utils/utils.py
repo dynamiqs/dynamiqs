@@ -39,7 +39,7 @@ def trace(x: Tensor) -> Tensor:
         >>> dq.trace(x)
         tensor(3.)
     """
-    return torch.einsum('...ii', x)
+    return x.diagonal(dim1=-1, dim2=-2).sum(-1)
 
 
 def expect(O: Tensor, x: Tensor) -> Tensor:
