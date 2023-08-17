@@ -13,5 +13,5 @@ class MEEuler(MESolver, AdjointFixedSolver):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         rho = rho - self.dt * self.lindbladian(t, rho)
-        phi = phi + self.dt * self.lindbladian_adjoint(t, phi)
+        phi = phi + self.dt * self.adjoint_lindbladian(t, phi)
         return rho, phi

@@ -25,3 +25,13 @@ class TestMEEuler(SolverTester):
         self._test_gradient(
             options, grad_leaky_cavity_8, num_t_save=11, rtol=1e-2, atol=1e-2
         )
+
+    def test_adjoint(self):
+        options = dq.options.Euler(
+            dt=1e-3,
+            gradient_alg='adjoint',
+            parameters=grad_leaky_cavity_8.parameters,
+        )
+        self._test_gradient(
+            options, grad_leaky_cavity_8, num_t_save=11, rtol=1e-3, atol=1e-2
+        )
