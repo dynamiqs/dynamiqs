@@ -52,6 +52,8 @@ class Solver(ABC):
             y_save = torch.zeros(
                 *batch_sizes, len(t_save), m, n, dtype=self.cdtype, device=self.device
             )
+        else:
+            y_save = None
 
         if len(self.exp_ops) > 0:
             # exp_save: (..., len(exp_ops), len(t_save))
