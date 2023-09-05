@@ -126,8 +126,8 @@ def mesolve(
 
     # get saved tensors and restore correct batching
     result = solver.result
-    result.y_save = result.y_save.squeeze(0, 1)
+    result.y_save = result.y_save.squeeze(1).squeeze(0)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1)
+        result.exp_save = result.exp_save.squeeze(1).squeeze(0)
 
     return result
