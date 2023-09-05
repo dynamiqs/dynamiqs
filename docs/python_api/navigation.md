@@ -7,6 +7,8 @@
         - [eye](utils/operators/eye.md)
         - [destroy](utils/operators/destroy.md)
         - [create](utils/operators/create.md)
+        - [number](utils/operators/number.md)
+        - [parity](utils/operators/parity.md)
         - [displace](utils/operators/displace.md)
         - [squeeze](utils/operators/squeeze.md)
         - [sigmax](utils/operators/sigmax.md)

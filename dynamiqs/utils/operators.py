@@ -12,6 +12,8 @@ __all__ = [
     'eye',
     'destroy',
     'create',
+    'number',
+    'parity',
     'displace',
     'squeeze',
     'sigmax',
@@ -189,6 +191,66 @@ def _create_single(
 ) -> Tensor:
     """Bosonic creation operator."""
     return torch.arange(1, dim, device=device).sqrt().diag(-1).to(get_cdtype(dtype))
+
+
+def number(
+    dim: int,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the number operator of a bosonic mode.
+
+    It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
+    creation operators, respectively.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(dim, dim)_ Number operator.
+
+    Examples:
+        >>> dq.number(4)
+        tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]])
+    """
+    return torch.arange(dim, device=device).diag().to(get_cdtype(dtype))
+
+
+def parity(
+    dim: int,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the parity operator of a bosonic mode.
+
+    It is defined by $P = e^{i\pi a^\dag a}$, where $a$ and $a^\dag$ are the
+    annihilation and creation operators, respectively.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(dim, dim)_ Parity operator.
+
+    Examples:
+        >>> dq.parity(4)
+        tensor([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
+                [ 0.+0.j,  0.+0.j,  1.+0.j,  0.+0.j],
+                [ 0.+0.j,  0.+0.j,  0.+0.j, -1.+0.j]])
+    """
+    diag_values = torch.ones(dim, device=device, dtype=get_cdtype(dtype))
+    diag_values[1::2] = -1
+    return diag_values.diag()
 
 
 def displace(
