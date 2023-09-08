@@ -74,9 +74,20 @@ class System(ABC):
         y0: Tensor,
         t_save: ArrayLike,
         solver: str,
-        options: dict[str, Any],
+        *,
+        gradient: str | None = None,
+        options: dict[str, Any] | None = None,
     ) -> Result:
         pass
 
-    def run(self, t_save: ArrayLike, solver: str, options: dict[str, Any]) -> Result:
-        return self._run(self.H, self.y0, t_save, solver, options)
+    def run(
+        self,
+        t_save: ArrayLike,
+        solver: str,
+        *,
+        gradient: str | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> Result:
+        return self._run(
+            self.H, self.y0, t_save, solver, gradient=gradient, options=options
+        )

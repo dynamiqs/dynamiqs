@@ -25,6 +25,7 @@ def smesolve(
     seed: int | None = None,
     exp_ops: list[ArrayLike] | None = None,
     solver: str = '',
+    gradient: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     """Solve the Stochastic master equation."""
@@ -41,6 +42,7 @@ def smesolve(
     # options
     if options is None:
         options = {}
+    options['gradient_alg'] = gradient
     if solver == 'euler':
         options = Euler(**options)
         SOLVER_CLASS = SMEEuler

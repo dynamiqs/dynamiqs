@@ -19,6 +19,7 @@ def sesolve(
     *,
     exp_ops: list[ArrayLike] | None = None,
     solver: str = 'dopri5',
+    gradient: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     """Solve the Schrödinger equation."""
@@ -32,6 +33,7 @@ def sesolve(
     # options
     if options is None:
         options = {}
+    options['gradient_alg'] = gradient
     if solver == 'dopri5':
         options = Dopri5(**options)
         SOLVER_CLASS = SEDormandPrince5

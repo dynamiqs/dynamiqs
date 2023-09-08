@@ -28,7 +28,9 @@ class OpenSystem(System):
         y0: Tensor,
         t_save: ArrayLike,
         solver: str,
-        options: dict[str, Any],
+        *,
+        gradient: str | None = None,
+        options: dict[str, Any] | None = None,
     ) -> Result:
         return dq.mesolve(
             H,
@@ -37,6 +39,7 @@ class OpenSystem(System):
             t_save,
             exp_ops=self.exp_ops,
             solver=solver,
+            gradient=gradient,
             options=options,
         )
 

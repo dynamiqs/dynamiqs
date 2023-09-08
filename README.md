@@ -103,8 +103,8 @@ t_save = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dict(gradient_alg='autograd', verbose=False)
-result = dq.mesolve(H, jump_ops, rho0, t_save, options=options)
+options = dict(verbose=False)
+result = dq.mesolve(H, jump_ops, rho0, t_save, gradient='autograd', options=options)
 
 # gradient computation
 loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
