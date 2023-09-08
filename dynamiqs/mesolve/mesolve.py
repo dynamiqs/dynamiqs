@@ -24,29 +24,43 @@ def mesolve(
     gradient: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
-    """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
+    r"""Solve the Lindblad master equation.
+
+    Evolve the density matrix $\rho(t)$ from an initial state $\rho(t=0) = \rho_0$
+    according to the Lindblad master equation using a given Hamiltonian $H(t)$ and a
+    list of jump operators $\{L_k\}$. The Lindblad master equation is given by
+
+    $$
+        \dot{\rho} = -i[H, \rho] + \sum_k L_k \rho L_k^\dagger - \frac{1}{2} \left
+        \{L_k^\dagger L_k, \rho\right\}.
+    $$
+
+    For time-dependent problems, the Hamiltonian `H` can be passed as a function with
+    signature `H(t: float) -> Tensor`. Extra Hamiltonian arguments and time-dependence
+    for the jump operators are not yet supported.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
     solve multiple master equations in a single run. The jump operators `jump_ops` and
-    time list `t_save` are common to all batches.
+    time list `t_save` are then common to all batches.
 
     `mesolve` can be differentiated through using either the default PyTorch autograd
-    library (`gradient_alg="autograd"`), or a custom adjoint state differentiation
-    (`gradient_alg="adjoint"`). For the latter, a solver that is stable in the backward
-    pass should be used (e.g. Rouchon solver). By default (if no gradient is required),
-    the graph of operations is not stored to improve performance.
-
-    For time-dependent problems, the Hamiltonian `H` can be passed as a function with
-    signature `H(t: float) -> Tensor`. Piecewise constant Hamiltonians can also be
-    passed as... TODO Complete with full Hamiltonian format
+    library (pass `gradient_alg="autograd"` in `options`), or a custom adjoint state
+    differentiation (pass `gradient_alg="adjoint"` in `options`). By default, if no
+    gradient is required, the graph of operations is not stored to improve performance.
 
     Available solvers:
-      - `Dopri5`: Dormand-Prince of order 5. Default solver.
-      - `Rouchon1`: Rouchon method of order 1. Alias of `Rouchon`. Set the
+      - `Dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
+      - `Euler`: Euler method (fixed step).
+      - `Rouchon1`: Rouchon method of order 1 (fixed step). Set the
         `sqrt_normalization` option to `True` to enable built-in Kraus map trace
         renormalization, ideal for time-independent and/or stiff problems.
-      - `Rouchon2`: Rouchon method of order 2.
-      - `Euler`: Euler method.
+      - `Rouchon2`: Rouchon method of order 2 (fixed step).
+      - `Rouchon`: Alias of `Rouchon1`.
+
+    Note:
+        For fixed time step solvers, the time list `t_save` should be strictly
+        included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
+        where `dt` is defined with the `options` argument.
 
     Args:
         H _(Tensor or Callable)_: Hamiltonian.
@@ -58,16 +72,58 @@ def mesolve(
         rho0 _(Tensor)_: Initial density matrix.
             Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save _(Tensor, np.ndarray or list)_: Times for which results are saved.
-            The master equation is solved from time `t=0.0` to `t=t_save[-1]`. Note:
-            For fixed time step solvers, `t_save` does not define the time step.
-            However, all `t_save` values should be aligned with the time step.
+            The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
         exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
             the expectation value is computed at every time value in `t_save`.
         options _(Options, optional)_: Solver options. See the list of available
-            solvers.
+            solvers, and the options common to all solver below.
+
+    **Parameters for `options`**
+
+    &raquo; Common to all solvers:
+
+      - **gradient_alg** _(str, optional)_: Algorithm used for computing gradients. Can
+            be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
+      - **save_states** _(bool, optional)_: If `True`, the state is saved at every time
+            in `t_save`. If `False`, only the final state is stored and returned.
+            Defaults to `True`.
+      - **verbose** _(bool, optional)_: If `True`, prints information about the
+            integration progress. Defaults to `True`.
+      - **dtype** _(torch.dtype, optional)_: Complex data type to which all
+            complex-valued tensors are converted. `t_save` is also converted to a real
+            data type of the corresponding precision.
+      - **device** _(torch.device, optional)_: Device on which the tensors are stored.
+
+    &raquo; Required when using the adjoint state method to compute gradients:
+
+      - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
+            gradient is computed.
+
+    &raquo; Required for fixed time step solvers:
+
+      - **dt** _(float)_: Numerical time step of integration.
+
+    &raquo; Optional for adaptive time step solvers:
+
+      - **atol** _(float, optional)_: Absolute tolerance. Defaults to `1e-12`.
+      - **rtol** _(float, optional)_: Relative tolerance. Defaults to `1e-6`.
+      - **max_steps** _(int, optional)_: Maximum number of steps. Defaults to `1e6`.
+      - **safety_factor** _(float, optional)_: Safety factor in the step size
+            prediction. Defaults to `0.9`.
+      - **min_factor** _(float, optional)_: Minimum factor by which the step size can
+            decrease in a single step. Defaults to `0.2`.
+      - **max_factor** _(float, optional)_: Maximum factor by which the step size can
+            increase in a single step. Defaults to `10.0`.
+
+    &raquo; Optional for `Rouchon1` solver:
+
+      - **sqrt_normalization** _(bool, optional)_: If `True`, the Kraus map is
+            renormalized at every step to preserve the trace of the density matrix.
+            Defaults to `False`.
 
     Returns:
         Result of the master equation integration.
+
     """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
