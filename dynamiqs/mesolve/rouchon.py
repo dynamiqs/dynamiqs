@@ -27,11 +27,11 @@ class MERouchon1(MERouchon):
         if not self.options.sqrt_normalization:
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
-            # self.M1s: (1, len(L), n, n)
             self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
             self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
 
             # define M1s and M1srev
+            # self.M1s: (1, len(L), n, n)
             self.M1s = sqrt(self.dt) * self.L
             self.M1srev = self.M1s
         else:
@@ -51,11 +51,11 @@ class MERouchon1(MERouchon):
 
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
-            # self.M1s, self.M1srev: (1, len(L), n, n)
             self.M0 = cache(lambda Hnh: self.S - 1j * self.dt * Hnh @ self.S)
             self.M0rev = cache(lambda Hnh: self.Srev + 1j * self.dt * Hnh @ self.Srev)
 
             # define M1s and M1srev
+            # self.M1s, self.M1srev: (1, len(L), n, n)
             self.M1s = sqrt(self.dt) * self.L @ self.S
             self.M1srev = sqrt(self.dt) * self.L @ self.Srev
 
