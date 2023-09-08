@@ -21,7 +21,7 @@ def mesolve(
     *,
     exp_ops: list[ArrayLike] | None = None,
     solver: str = 'dopri5',
-    gradient: str = '',
+    gradient: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
