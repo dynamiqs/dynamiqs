@@ -58,20 +58,20 @@ def sesolve(
             the expectation value is computed at every time value in `t_save`.
         solver _(str, optional)_: Solver to use. See the list of available solvers.
             Defaults to `"dopri5"`.
+        gradient _(str, optional)_: Algorithm used for computing gradients.
+            Can be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
         options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
     Note: Available solvers
-      - `Dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
-      - `Euler`: Euler method (fixed step).
-      - `Propagator`: Exact propagator computation through matrix exponentiation (fixed
+      - `dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
+      - `euler`: Euler method (fixed step).
+      - `propagator`: Exact propagator computation through matrix exponentiation (fixed
       step). Only for time-independent problems.
 
     Note: Available keys for `options`
-        &raquo; Common to all solvers:
+        Common to all solvers:
 
-        - **gradient_alg** _(str, optional)_: Algorithm used for computing gradients.
-            Can be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
         - **save_states** _(bool, optional)_: If `True`, the state is saved at every
             time in `t_save`. If `False`, only the final state is stored and returned.
             Defaults to `True`.
@@ -82,16 +82,16 @@ def sesolve(
             data type of the corresponding precision.
         - **device** _(torch.device, optional)_: Device on which the tensors are stored.
 
-        &raquo; Required when using the adjoint state method to compute gradients:
+        Required for `gradient="adjoint"`:
 
         - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
             gradient is computed.
 
-        &raquo; Required for fixed time step solvers:
+        Required for fixed step solvers (`euler`, `propagator`):
 
         - **dt** _(float)_: Numerical time step of integration.
 
-        &raquo; Optional for adaptive time step solvers:
+        Optional for adaptive step solvers (`dopri5`):
 
         - **atol** _(float, optional)_: Absolute tolerance. Defaults to `1e-12`.
         - **rtol** _(float, optional)_: Relative tolerance. Defaults to `1e-6`.
@@ -103,12 +103,6 @@ def sesolve(
         - **max_factor** _(float, optional)_: Maximum factor by which the step size can
             increase in a single step. Defaults to `10.0`.
 
-        &raquo; Optional for `Rouchon1` solver:
-
-        - **sqrt_normalization** _(bool, optional)_: If `True`, the Kraus map is
-            renormalized at every step to preserve the trace of the density matrix.
-            Defaults to `False`.
-
     Warning: Fixed step solvers
         For fixed time step solvers, the time list `t_save` should be strictly
         included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
@@ -116,10 +110,15 @@ def sesolve(
 
     Returns:
         Result of the master equation integration, as an instance of the `Result` class.
-            The `result` object has the following attributes: `options`, `y_save`,
-            `exp_save`, `meas_save`, `start_time`, `end_time`, `states`, `expects`,
-            `measurements`, `solver_str`, `start_datetime`, `end_datetime`,
-            `total_time`.
+            The `result` object has the following attributes:
+
+              - **y_save** or **states** _(Tensor)_: Saved states.
+              - **exp_save** or **expects** _(Tensor)_: Saved expectation values.
+              - **solver_str** (str): String representation of the solver.
+              - **start_datetime** _(datetime)_: Start time of the integration.
+              - **end_datetime** _(datetime)_: End time of the integration.
+              - **total_time** _(datetime)_: Total time of the integration.
+              - **options** _(dict)_: Solver options.
     """
     # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
