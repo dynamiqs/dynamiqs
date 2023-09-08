@@ -31,7 +31,7 @@ def mesolve(
     list of jump operators $\{L_k\}$. The Lindblad master equation is given by
 
     $$
-        \dot{\rho} = -i[H, \rho] + \sum_k L_k \rho L_k^\dagger - \frac{1}{2} \left
+        \frac{d\rho}{dt} = -i[H, \rho] + \sum_k L_k \rho L_k^\dagger - \frac{1}{2} \left
         \{L_k^\dagger L_k, \rho\right\}.
     $$
 
@@ -122,8 +122,11 @@ def mesolve(
             Defaults to `False`.
 
     Returns:
-        Result of the master equation integration.
-
+        Result of the master equation integration, as an instance of the `Result` class.
+            The `result` object has the following attributes: `options`, `y_save`,
+            `exp_save`, `meas_save`, `start_time`, `end_time`, `states`, `expects`,
+            `measurements`, `solver_str`, `start_datetime`, `end_datetime`,
+            `total_time`.
     """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
