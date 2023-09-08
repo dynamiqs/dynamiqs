@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from math import sqrt
 
-import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
@@ -18,11 +17,7 @@ from .me_solver import MESolver
 
 
 class MERouchon(MESolver, AdjointFixedSolver):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.n = self.H.size(-1)
-        self.I = torch.eye(self.n, device=self.device, dtype=self.cdtype)  # (n, n)
+    pass
 
 
 class MERouchon1(MERouchon):
