@@ -15,17 +15,20 @@ class SMESolver(MESolver):
         self,
         *args,
         jump_ops: Tensor,
-        meas_ops: Tensor,
         etas: Tensor,
         generator: torch.Generator,
         t_meas: Tensor,
     ):
-        self.V = meas_ops  # (len(V), n, n)
-        self.etas = etas  # (len(V))
-        self.generator = generator
         self.t_meas = t_meas  # (len(t_meas))
-
         super().__init__(*args, jump_ops=jump_ops)
+
+        # split jump operators between purely dissipative (eta = 0) and
+        # monitored (eta != 0)
+        mask = etas == 0.0
+        self.T = jump_ops[mask]  # (len(T), n, n) purely dissipative
+        self.V = jump_ops[~mask]  # (len(V), n, n) monitored
+        self.etas = etas[~mask]  # (len(V))
+        self.generator = generator
 
         # initialize additional save tensors
         batch_sizes = self.y0.shape[:-2]

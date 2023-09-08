@@ -88,10 +88,6 @@ def smesolve(
     if torch.any(etas < 0.0) or torch.any(etas > 1.0):
         raise ValueError('Argument `etas` must contain values between 0 and 1.')
 
-    # split jump operators between purely dissipative (eta = 0) and monitored (eta != 0)
-    mask = etas == 0.0
-    meas_ops, etas = jump_ops[~mask], etas[~mask]
-
     # convert t_meas to a tensor
     t_meas = to_tensor(t_meas, dtype=options.rdtype, device=options.device)
     check_time_tensor(t_meas, arg_name='t_meas', allow_empty=True)
@@ -104,7 +100,6 @@ def smesolve(
     args = (H, rho0, t_save, exp_ops, options)
     kwargs = dict(
         jump_ops=jump_ops,
-        meas_ops=meas_ops,
         etas=etas,
         generator=generator,
         t_meas=t_meas,
