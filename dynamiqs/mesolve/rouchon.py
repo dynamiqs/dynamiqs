@@ -33,8 +33,8 @@ class MERouchon1(MERouchon):
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
             # self.M1s: (1, len(L), n, n)
-            self.M0 = cache(lambda H_nh: self.I - 1j * self.dt * H_nh)
-            self.M0rev = cache(lambda H_nh: self.I + 1j * self.dt * H_nh)
+            self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
+            self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
 
             # define M1s and M1srev
             self.M1s = sqrt(self.dt) * self.L
@@ -43,22 +43,22 @@ class MERouchon1(MERouchon):
             # compute the inverse square root renormalization matrix
             # (for time-dependent Hamiltonians, exclude the Hamiltonian from
             # normalization)
-            # H_nh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
+            # Hnh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
             if isinstance(self.H, ConstantTDTensor):
-                H_nh_const = self.H_nh(0.0)
+                Hnh_const = self.Hnh(0.0)
             elif isinstance(self.H, CallableTDTensor):
-                H_nh_const = -0.5j * self.LdagL
+                Hnh_const = -0.5j * self.LdagL
 
-            M0 = self.I - 1j * self.dt * H_nh_const
-            M0rev = self.I + 1j * self.dt * H_nh_const
+            M0 = self.I - 1j * self.dt * Hnh_const
+            M0rev = self.I + 1j * self.dt * Hnh_const
             self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.LdagL)
             self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.LdagL)
 
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
             # self.M1s, self.M1srev: (1, len(L), n, n)
-            self.M0 = cache(lambda H_nh: self.S - 1j * self.dt * H_nh @ self.S)
-            self.M0rev = cache(lambda H_nh: self.Srev + 1j * self.dt * H_nh @ self.Srev)
+            self.M0 = cache(lambda Hnh: self.S - 1j * self.dt * Hnh @ self.S)
+            self.M0rev = cache(lambda Hnh: self.Srev + 1j * self.dt * Hnh @ self.Srev)
 
             # define M1s and M1srev
             self.M1s = sqrt(self.dt) * self.L @ self.S
@@ -80,10 +80,10 @@ class MERouchon1(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        # H, H_nh, M0: (b_H, 1, n, n)
+        # H, Hnh, M0: (b_H, 1, n, n)
         H = self.H(t)
-        H_nh = self.H_nh(H)
-        M0 = self.M0(H_nh)
+        Hnh = self.Hnh(H)
+        M0 = self.M0(Hnh)
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
@@ -107,12 +107,12 @@ class MERouchon1(MERouchon):
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        # H, H_nh, M0, M0dag, M0rev: (b_H, 1, n, n)
+        # H, Hnh, M0, M0dag, M0rev: (b_H, 1, n, n)
         H = self.H(t)
-        H_nh = self.H_nh(H)
-        M0 = self.M0(H_nh)
+        Hnh = self.Hnh(H)
+        M0 = self.M0(Hnh)
         M0dag = self.M0dag(M0)
-        M0rev = self.M0rev(H_nh)
+        M0rev = self.M0rev(Hnh)
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
@@ -132,11 +132,11 @@ class MERouchon2(MERouchon):
         # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
         # self.M1s, self.M1sdag: (b_H, len(L), n, n)
         self.M0 = cache(
-            lambda H_nh: self.I - 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
+            lambda Hnh: self.I - 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
         )
         self.M0dag = cache(lambda M0: M0.mH)
         self.M0rev = cache(
-            lambda H_nh: self.I + 1j * self.dt * H_nh - 0.5 * self.dt**2 * H_nh @ H_nh
+            lambda Hnh: self.I + 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
         )
         self.M1s = cache(lambda M0: 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L))
         self.M1sdag = cache(lambda M1s: M1s.mH)
@@ -160,10 +160,10 @@ class MERouchon2(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        # H, H_nh, M0: (b_H, 1, n, n)
+        # H, Hnh, M0: (b_H, 1, n, n)
         H = self.H(t)
-        H_nh = self.H_nh(H)
-        M0 = self.M0(H_nh)
+        Hnh = self.Hnh(H)
+        M0 = self.M0(Hnh)
         M1s = self.M1s(M0)  # (b_H, len(L), n, n)
 
         # compute rho(t+dt)
@@ -195,13 +195,13 @@ class MERouchon2(MERouchon):
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        # H, H_nh, M0, M0dag, M0rev: (b_H, 1, n, n)
+        # H, Hnh, M0, M0dag, M0rev: (b_H, 1, n, n)
         # M1s, M1sdag: (b_H, len(L), n, n)
         H = self.H(t)
-        H_nh = self.H_nh(H)
-        M0 = self.M0(H_nh)
+        Hnh = self.Hnh(H)
+        M0 = self.M0(Hnh)
         M0dag = self.M0dag(M0)
-        M0rev = self.M0rev(H_nh)
+        M0rev = self.M0rev(Hnh)
         M1s = self.M1s(M0)
         M1sdag = self.M1sdag(M1s)
 
