@@ -174,12 +174,23 @@
   margin-bottom: 0.2em;
 }
 
+/* Header sizes */
+article.md-typeset h1 {
+    font-size: 1.6em;
+    line-height: 1.0;
+    margin: 0 0 1.0em;
+    text-transform: uppercase;
+    font-weight: 400;
+    letter-spacing:-0.02em;
+    font-family: var(--md-text-font-family);
+}
+
 /* Function name */
 .md-typeset .doc-function-name {
   color: #ed7764;
   padding: 3px 0;
-  font-weight: 600;
   width: 100%;
+  font-size: 0.85em;
 }
 
 /* Signature */
@@ -188,6 +199,14 @@
 }
 
 /* API table */
+.md-typeset table:not([class]) {
+    border:none;
+}
+
+.md-typeset table:not([class]) td {
+    border-top:none;
+}
+
 .md-typeset table:not([class]) td.fixed_height {
   height: 4.7em;
   vertical-align: middle;
@@ -195,6 +214,10 @@
 
 .md-typeset table:not([class]) td.fixed_height code {
   font-weight: 600;
+}
+
+.md-typeset table:not([class]) tr:nth-child(odd) {
+    background-color: color-mix(in srgb,var(--md-default-bg-color),#8e8e8e 5%);
 }
 
 /* Fix for two-line parameters when deploying doc */
