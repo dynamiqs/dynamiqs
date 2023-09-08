@@ -70,48 +70,49 @@ def mesolve(
             solvers, and the options common to all solver below.
 
     Note-: Available solvers
-      - `dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
-      - `euler`: Euler method (fixed step).
-      - `rouchon1`: Rouchon method of order 1 (fixed step).
-      - `rouchon2`: Rouchon method of order 2 (fixed step).
+      - `dopri5` --- Dormand-Prince method of order 5 (adaptive step). Default solver.
+      - `euler` --- Euler method (fixed step).
+      - `rouchon1` --- Rouchon method of order 1 (fixed step).
+      - `rouchon2` --- Rouchon method of order 2 (fixed step).
 
     Note-: Available keys for `options`
         Common to all solvers:
 
-        - **save_states** _(bool, optional)_: If `True`, the state is saved at every
+        - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
             time in `t_save`. If `False`, only the final state is stored and returned.
             Defaults to `True`.
-        - **verbose** _(bool, optional)_: If `True`, prints information about the
+        - **verbose** _(bool, optional)_ – If `True`, prints information about the
             integration progress. Defaults to `True`.
-        - **dtype** _(torch.dtype, optional)_: Complex data type to which all
+        - **dtype** _(torch.dtype, optional)_ – Complex data type to which all
             complex-valued tensors are converted. `t_save` is also converted to a real
             data type of the corresponding precision.
-        - **device** _(torch.device, optional)_: Device on which the tensors are stored.
+        - **device** _(torch.device, optional)_ – Device on which the tensors are
+            stored.
 
         Required for `gradient="adjoint"`:
 
-        - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
-            gradient is computed.
+        - **parameters** _(tuple of nn.Parameter)_ – Parameters with respect to which
+            the gradient is computed.
 
         Required for fixed step solvers (`euler`, `propagator`):
 
-        - **dt** _(float)_: Numerical time step of integration.
+        - **dt** _(float)_ – Numerical time step of integration.
 
         Optional for adaptive step solvers (`dopri5`):
 
-        - **atol** _(float, optional)_: Absolute tolerance. Defaults to `1e-12`.
-        - **rtol** _(float, optional)_: Relative tolerance. Defaults to `1e-6`.
-        - **max_steps** _(int, optional)_: Maximum number of steps. Defaults to `1e6`.
-        - **safety_factor** _(float, optional)_: Safety factor in the step size
+        - **atol** _(float, optional)_ – Absolute tolerance. Defaults to `1e-12`.
+        - **rtol** _(float, optional)_ – Relative tolerance. Defaults to `1e-6`.
+        - **max_steps** _(int, optional)_ – Maximum number of steps. Defaults to `1e6`.
+        - **safety_factor** _(float, optional)_ – Safety factor in the step size
             prediction. Defaults to `0.9`.
-        - **min_factor** _(float, optional)_: Minimum factor by which the step size can
+        - **min_factor** _(float, optional)_ – Minimum factor by which the step size can
             decrease in a single step. Defaults to `0.2`.
-        - **max_factor** _(float, optional)_: Maximum factor by which the step size can
+        - **max_factor** _(float, optional)_ – Maximum factor by which the step size can
             increase in a single step. Defaults to `10.0`.
 
         Optional for `solver="rouchon1"`:
 
-        - **sqrt_normalization** _(bool, optional)_: If `True`, the Kraus map is
+        - **sqrt_normalization** _(bool, optional)_ – If `True`, the Kraus map is
             renormalized at every step to preserve the trace of the density matrix.
             Only for time-independent problems. Ideal for stiff problems.
             Defaults to `False`.
@@ -125,13 +126,13 @@ def mesolve(
         Result of the master equation integration, as an instance of the `Result` class.
             The `result` object has the following attributes:
 
-              - **y_save** or **states** _(Tensor)_: Saved states.
-              - **exp_save** or **expects** _(Tensor)_: Saved expectation values.
+              - **y_save** or **states** _(Tensor)_ – Saved states.
+              - **exp_save** or **expects** _(Tensor)_ – Saved expectation values.
               - **solver_str** (str): String representation of the solver.
-              - **start_datetime** _(datetime)_: Start time of the integration.
-              - **end_datetime** _(datetime)_: End time of the integration.
-              - **total_time** _(datetime)_: Total time of the integration.
-              - **options** _(dict)_: Solver options.
+              - **start_datetime** _(datetime)_ – Start time of the integration.
+              - **end_datetime** _(datetime)_ – End time of the integration.
+              - **total_time** _(datetime)_ – Total time of the integration.
+              - **options** _(dict)_ – Solver options.
     """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save) with
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)

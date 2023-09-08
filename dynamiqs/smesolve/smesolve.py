@@ -93,25 +93,26 @@ def smesolve(
             solvers, and the options common to all solver below.
 
     Note-: Available solvers
-      - `euler`: Euler method (fixed step).
-      - `rouchon1`: Rouchon method of order 1 (fixed step).
+      - `euler` --- Euler method (fixed step).
+      - `rouchon1` --- Rouchon method of order 1 (fixed step).
 
     Note-: Available keys for `options`
         Common to all solvers:
 
-        - **save_states** _(bool, optional)_: If `True`, the state is saved at every
+        - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
             time in `t_save`. If `False`, only the final state is stored and returned.
             Defaults to `True`.
-        - **verbose** _(bool, optional)_: If `True`, prints information about the
+        - **verbose** _(bool, optional)_ – If `True`, prints information about the
             integration progress. Defaults to `True`.
-        - **dtype** _(torch.dtype, optional)_: Complex data type to which all
+        - **dtype** _(torch.dtype, optional)_ – Complex data type to which all
             complex-valued tensors are converted. `t_save` is also converted to a real
             data type of the corresponding precision.
-        - **device** _(torch.device, optional)_: Device on which the tensors are stored.
+        - **device** _(torch.device, optional)_ – Device on which the tensors are
+            stored.
 
         Required for fixed step solvers (`euler`, `rouchon1`):
 
-        - **dt** _(float)_: Numerical time step of integration.
+        - **dt** _(float)_ – Numerical time step of integration.
 
     Warning: Warning for fixed step solvers
         For fixed time step solvers, both time lists `t_save` and `t_meas` should be
@@ -122,14 +123,14 @@ def smesolve(
         Result of the master equation integration, as an instance of the `Result` class.
             The `result` object has the following attributes:
 
-              - **y_save** or **states** _(Tensor)_: Saved states.
-              - **exp_save** or **expects** _(Tensor)_: Saved expectation values.
-              - **measurements** _(Tensor)_: Saved measurement signals.
+              - **y_save** or **states** _(Tensor)_ – Saved states.
+              - **exp_save** or **expects** _(Tensor)_ – Saved expectation values.
+              - **measurements** _(Tensor)_ – Saved measurement signals.
               - **solver_str** (str): String representation of the solver.
-              - **start_datetime** _(datetime)_: Start time of the integration.
-              - **end_datetime** _(datetime)_: End time of the integration.
-              - **total_time** _(datetime)_: Total time of the integration.
-              - **options** _(dict)_: Solver options.
+              - **start_datetime** _(datetime)_ – Start time of the integration.
+              - **end_datetime** _(datetime)_ – End time of the integration.
+              - **total_time** _(datetime)_ – Total time of the integration.
+              - **options** _(dict)_ – Solver options.
     """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save, meas_save) with
     #    - y_save: (b_H?, b_rho0?, ntrajs, len(t_save), n, n)
