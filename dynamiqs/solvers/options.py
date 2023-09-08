@@ -5,14 +5,13 @@ from typing import Any
 import torch
 import torch.nn as nn
 
-from ._utils import to_device
-from .utils.tensor_types import dtype_complex_to_real, get_cdtype
+from .._utils import to_device
+from ..utils.tensor_types import dtype_complex_to_real, get_cdtype
 
 __all__ = [
     'Propagator',
     'Dopri5',
     'Euler',
-    'Rouchon',
     'Rouchon1',
     'Rouchon2',
 ]
@@ -151,10 +150,6 @@ class Dopri5(ODEAdaptiveStep):
     pass
 
 
-# make alias for Dopri5
-Default = Dopri5
-
-
 class Euler(ODEFixedStep):
     pass
 
@@ -163,10 +158,6 @@ class Rouchon1(ODEFixedStep, AdjointOptions):
     def __init__(self, *, sqrt_normalization: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.sqrt_normalization = sqrt_normalization
-
-
-# make alias for Rouchon1
-Rouchon = Rouchon1
 
 
 class Rouchon2(ODEFixedStep, AdjointOptions):

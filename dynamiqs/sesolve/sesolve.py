@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
 from .._utils import obj_type_str
-from ..options import Dopri5, Euler, Options, Propagator
+from ..solvers.options import Dopri5, Euler, Propagator
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
@@ -16,7 +18,8 @@ def sesolve(
     t_save: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    options: Options | None = None,
+    solver: str = 'dopri5',
+    options: dict[str, Any] | None = None,
 ) -> Result:
     """Solve the Schrödinger equation."""
     # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (y_save, exp_save) with
@@ -26,8 +29,20 @@ def sesolve(
     # TODO support density matrices too
     # TODO add test to check that psi0 has the correct shape
 
-    # default options
-    options = options or Dopri5()
+    # options
+    if options is None:
+        options = {}
+    if solver == 'dopri5':
+        options = Dopri5(**options)
+        SOLVER_CLASS = SEDormandPrince5
+    elif solver == 'euler':
+        options = Euler(**options)
+        SOLVER_CLASS = SEEuler
+    elif solver == 'propagator':
+        options = Propagator(**options)
+        SOLVER_CLASS = SEPropagator
+    else:
+        raise ValueError(f'Solver "{solver}" is not supported.')
 
     # check exp_ops
     if exp_ops is not None and not isinstance(exp_ops, list):
@@ -52,14 +67,7 @@ def sesolve(
 
     # define the solver
     args = (H, psi0, t_save, exp_ops, options)
-    if isinstance(options, Euler):
-        solver = SEEuler(*args)
-    elif isinstance(options, Dopri5):
-        solver = SEDormandPrince5(*args)
-    elif isinstance(options, Propagator):
-        solver = SEPropagator(*args)
-    else:
-        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
+    solver = SOLVER_CLASS(*args)
 
     # compute the result
     solver.run()

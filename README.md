@@ -103,7 +103,7 @@ t_save = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dq.options.Dopri5(gradient_alg='autograd', verbose=False)
+options = dict(gradient_alg='autograd', verbose=False)
 result = dq.mesolve(H, jump_ops, rho0, t_save, options=options)
 
 # gradient computation

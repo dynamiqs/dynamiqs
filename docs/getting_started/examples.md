@@ -1,6 +1,7 @@
 # First examples
 
 First time using dynamiqs? Below are a few basic examples to help you get started. For more advanced tutorials, check out our [Tutorials](../tutorials/index.md) section.
+
 ## Simulate a lossy quantum harmonic oscillator
 
 This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$ using QuTiP-defined objects:
@@ -70,7 +71,7 @@ t_save = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dq.options.Dopri5(gradient_alg='autograd', verbose=False)
+options = dict(gradient_alg='autograd', verbose=False)
 result = dq.mesolve(H, jump_ops, rho0, t_save, options=options)
 
 # gradient computation
