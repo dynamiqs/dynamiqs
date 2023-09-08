@@ -41,8 +41,7 @@ def sesolve(
     then common to all batches.
 
     `sesolve` can be differentiated through using either the default PyTorch autograd
-    library (pass `gradient_alg="autograd"` in `options`), or a custom adjoint state
-    differentiation (pass `gradient_alg="adjoint"` in `options`). By default, if no
+    library (pass `gradient_alg="autograd"` in `options`). By default, if no
     gradient is required, the graph of operations is not stored to improve performance.
 
     Args:
@@ -59,7 +58,7 @@ def sesolve(
         solver _(str, optional)_: Solver to use. See the list of available solvers.
             Defaults to `"dopri5"`.
         gradient _(str, optional)_: Algorithm used for computing gradients.
-            Can be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
+            Can be either `"autograd"` or `None`. Defaults to `None`.
         options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
@@ -81,11 +80,6 @@ def sesolve(
             complex-valued tensors are converted. `t_save` is also converted to a real
             data type of the corresponding precision.
         - **device** _(torch.device, optional)_: Device on which the tensors are stored.
-
-        Required for `gradient="adjoint"`:
-
-        - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
-            gradient is computed.
 
         Required for fixed step solvers (`euler`, `propagator`):
 

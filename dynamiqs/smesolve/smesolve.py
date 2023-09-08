@@ -88,7 +88,7 @@ def smesolve(
         solver _(str, optional)_: Solver to use. See the list of available solvers.
             Defaults to `""` (no default solver).
         gradient _(str, optional)_: Algorithm used for computing gradients.
-            Can be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
+            Can be either `"autograd"` or `None`. Defaults to `None`.
         options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
@@ -108,11 +108,6 @@ def smesolve(
             complex-valued tensors are converted. `t_save` is also converted to a real
             data type of the corresponding precision.
         - **device** _(torch.device, optional)_: Device on which the tensors are stored.
-
-        Required for `gradient="adjoint"`:
-
-        - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
-            gradient is computed.
 
         Required for fixed step solvers (`euler`, `rouchon1`):
 
