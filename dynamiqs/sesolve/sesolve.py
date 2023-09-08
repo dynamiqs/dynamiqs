@@ -45,17 +45,6 @@ def sesolve(
     differentiation (pass `gradient_alg="adjoint"` in `options`). By default, if no
     gradient is required, the graph of operations is not stored to improve performance.
 
-    Available solvers:
-      - `Dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
-      - `Euler`: Euler method (fixed step).
-      - `Propagator`: Exact propagator computation from matrix exponentiation (fixed
-      step). Only for time-independent problems.
-
-    Note:
-        For fixed time step solvers, the time list `t_save` should be strictly
-        included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
-        where `dt` is defined with the `options` argument.
-
     Args:
         H _(Tensor or Callable)_: Hamiltonian.
             Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
@@ -67,51 +56,63 @@ def sesolve(
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
         exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
             the expectation value is computed at every time value in `t_save`.
-        options _(Options, optional)_: Solver options. See the list of available
+        solver _(str, optional)_: Solver to use. See the list of available solvers.
+            Defaults to `"dopri5"`.
+        options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
-    **Parameters for `options`**
+    Note: Available solvers
+      - `Dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
+      - `Euler`: Euler method (fixed step).
+      - `Propagator`: Exact propagator computation through matrix exponentiation (fixed
+      step). Only for time-independent problems.
 
-    &raquo; Common to all solvers:
+    Note: Available keys for `options`
+        &raquo; Common to all solvers:
 
-      - **gradient_alg** _(str, optional)_: Algorithm used for computing gradients. Can
-            be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
-      - **save_states** _(bool, optional)_: If `True`, the state is saved at every time
-            in `t_save`. If `False`, only the final state is stored and returned.
+        - **gradient_alg** _(str, optional)_: Algorithm used for computing gradients.
+            Can be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
+        - **save_states** _(bool, optional)_: If `True`, the state is saved at every
+            time in `t_save`. If `False`, only the final state is stored and returned.
             Defaults to `True`.
-      - **verbose** _(bool, optional)_: If `True`, prints information about the
+        - **verbose** _(bool, optional)_: If `True`, prints information about the
             integration progress. Defaults to `True`.
-      - **dtype** _(torch.dtype, optional)_: Complex data type to which all
+        - **dtype** _(torch.dtype, optional)_: Complex data type to which all
             complex-valued tensors are converted. `t_save` is also converted to a real
             data type of the corresponding precision.
-      - **device** _(torch.device, optional)_: Device on which the tensors are stored.
+        - **device** _(torch.device, optional)_: Device on which the tensors are stored.
 
-    &raquo; Required when using the adjoint state method to compute gradients:
+        &raquo; Required when using the adjoint state method to compute gradients:
 
-      - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
+        - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
             gradient is computed.
 
-    &raquo; Required for fixed time step solvers:
+        &raquo; Required for fixed time step solvers:
 
-      - **dt** _(float)_: Numerical time step of integration.
+        - **dt** _(float)_: Numerical time step of integration.
 
-    &raquo; Optional for adaptive time step solvers:
+        &raquo; Optional for adaptive time step solvers:
 
-      - **atol** _(float, optional)_: Absolute tolerance. Defaults to `1e-12`.
-      - **rtol** _(float, optional)_: Relative tolerance. Defaults to `1e-6`.
-      - **max_steps** _(int, optional)_: Maximum number of steps. Defaults to `1e6`.
-      - **safety_factor** _(float, optional)_: Safety factor in the step size
+        - **atol** _(float, optional)_: Absolute tolerance. Defaults to `1e-12`.
+        - **rtol** _(float, optional)_: Relative tolerance. Defaults to `1e-6`.
+        - **max_steps** _(int, optional)_: Maximum number of steps. Defaults to `1e6`.
+        - **safety_factor** _(float, optional)_: Safety factor in the step size
             prediction. Defaults to `0.9`.
-      - **min_factor** _(float, optional)_: Minimum factor by which the step size can
+        - **min_factor** _(float, optional)_: Minimum factor by which the step size can
             decrease in a single step. Defaults to `0.2`.
-      - **max_factor** _(float, optional)_: Maximum factor by which the step size can
+        - **max_factor** _(float, optional)_: Maximum factor by which the step size can
             increase in a single step. Defaults to `10.0`.
 
-    &raquo; Optional for `Rouchon1` solver:
+        &raquo; Optional for `Rouchon1` solver:
 
-      - **sqrt_normalization** _(bool, optional)_: If `True`, the Kraus map is
+        - **sqrt_normalization** _(bool, optional)_: If `True`, the Kraus map is
             renormalized at every step to preserve the trace of the density matrix.
             Defaults to `False`.
+
+    Warning: Fixed step solvers
+        For fixed time step solvers, the time list `t_save` should be strictly
+        included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
+        where `dt` is defined with the `options` argument.
 
     Returns:
         Result of the master equation integration, as an instance of the `Result` class.
