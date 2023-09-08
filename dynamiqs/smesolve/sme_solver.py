@@ -110,7 +110,9 @@ class SMESolver(MESolver):
         prefactor = self.etas.sqrt() * dw
         return (prefactor[..., None, None] * tmp).sum(-3)
 
-    def update_meas(self, dw: Tensor, rho: Tensor):
-        Lp_rho = self.Lp(rho)  # (..., b, n, n)
-        exp_val = self.exp_val(Lp_rho)  # (..., b)
-        self.bin_meas += self.etas.sqrt() * exp_val * self.dt + dw
+    def update_meas(self, dw: Tensor, rho: Tensor) -> Tensor:
+        Lp_rho = self.Lp(rho)  # (..., len(V), n, n)
+        exp_val = self.exp_val(Lp_rho)  # (..., len(V))
+        dy = self.etas.sqrt() * exp_val * self.dt + dw  # (..., len(V))
+        self.bin_meas += dy
+        return dy
