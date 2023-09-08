@@ -47,12 +47,12 @@ class MERouchon1(MERouchon):
             if isinstance(self.H, ConstantTDTensor):
                 Hnh_const = self.Hnh(0.0)
             elif isinstance(self.H, CallableTDTensor):
-                Hnh_const = -0.5j * self.LdagL
+                Hnh_const = -0.5j * self.sum_LdagL
 
             M0 = self.I - 1j * self.dt * Hnh_const
             M0rev = self.I + 1j * self.dt * Hnh_const
-            self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.LdagL)
-            self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.LdagL)
+            self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_LdagL)
+            self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
 
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
