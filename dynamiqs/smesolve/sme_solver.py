@@ -20,8 +20,8 @@ class SMESolver(MESolver):
         generator: torch.Generator,
         t_meas: Tensor,
     ):
-        self.meas_ops = meas_ops  # (len(meas_ops), n, n)
-        self.etas = etas  # (len(meas_ops))
+        self.V = meas_ops  # (len(V), n, n)
+        self.etas = etas  # (len(V))
         self.generator = generator
         self.t_meas = t_meas  # (len(t_meas))
 
@@ -30,9 +30,9 @@ class SMESolver(MESolver):
         # initialize additional save tensors
         batch_sizes = self.y0.shape[:-2]
 
-        self.meas_shape = (*batch_sizes, len(self.meas_ops))
+        self.meas_shape = (*batch_sizes, len(self.V))
 
-        # meas_save: (..., len(meas_ops), len(t_meas))
+        # meas_save: (..., len(V), len(t_meas))
         if len(t_meas) > 0:
             meas_save = torch.zeros(
                 *self.meas_shape,
@@ -80,9 +80,9 @@ class SMESolver(MESolver):
 
     @cache
     def Lp(self, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
+        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, len(V), n, n)
         # L @ rho + rho @ Ldag
-        L_rho = torch.einsum('bij,...jk->...bik', self.meas_ops, rho)
+        L_rho = torch.einsum('bij,...jk->...bik', self.V, rho)
         return L_rho + L_rho.mH
 
     @cache
@@ -99,11 +99,12 @@ class SMESolver(MESolver):
         # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
 
         # L @ rho + rho @ Ldag
-        Lp_rho = self.Lp(rho)  # (..., b, n, n)
-        exp_val = self.exp_val(Lp_rho)  # (..., b)
+        Lp_rho = self.Lp(rho)  # (..., len(V), n, n)
+        exp_val = self.exp_val(Lp_rho)  # (..., len(V))
 
         # L @ rho + rho @ Ldag - Tr(L @ rho + rho @  Ldag) rho
-        tmp = Lp_rho - exp_val[..., None, None] * rho[..., None, :, :]  # (..., b, n, n)
+        # tmp: (..., len(V), n, n)
+        tmp = Lp_rho - exp_val[..., None, None] * rho[..., None, :, :]
 
         # sum sqrt(eta) * dw * [L @ rho + rho @ Ldag - Tr(L @ rho + rho @ Ldag) rho]
         prefactor = self.etas.sqrt() * dw
