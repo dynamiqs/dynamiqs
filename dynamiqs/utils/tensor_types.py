@@ -201,7 +201,7 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj
 
         Note that the tensor product structure is not inferred automatically, it must be
         specified with the `dims` argument using QuTiP dimensions format:
-        >>> I = dq.eye(3, 2)
+        >>> I = dq.qeye(3, 2)
         >>> dq.to_qutip(I)
         Quantum object: dims = [[6], [6]], shape = (6, 6), type = oper, isherm = True
         Qobj data =
