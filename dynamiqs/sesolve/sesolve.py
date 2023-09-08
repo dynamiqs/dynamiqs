@@ -103,7 +103,7 @@ def sesolve(
         - **max_factor** _(float, optional)_: Maximum factor by which the step size can
             increase in a single step. Defaults to `10.0`.
 
-    Warning: Fixed step solvers
+    Warning: Warning for fixed step solvers
         For fixed time step solvers, the time list `t_save` should be strictly
         included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
         where `dt` is defined with the `options` argument.
