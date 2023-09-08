@@ -33,7 +33,8 @@
 
   /* Home page */
   --homepage-gradient: linear-gradient(to right top, #da5039, #de5741, #e25f49, #e56651, #e96d59, #eb735f, #ed7966, #ef7f6c, #f08572, #f18a78, #f1907f, #f29585);
-  --homepage-button-color: #ed7764;
+  --homepage-button-hover-color: #ed9487;
+  --homepage-button-font-color: #cf6656;
 }
 
 /* Dark mode */
@@ -59,8 +60,9 @@
   --md-admonition-bg-color: var(--md-default-bg-color);
 
   /* Home page */
-  --homepage-gradient: linear-gradient(to right top, #ac3d2a, #af4330, #b24936, #b44e3c, #b75442, #b95947, #bc5d4d, #be6252, #c06758, #c26d5d, #c47263, #c67769);
-  --homepage-button-color: #b44e3c;
+  --homepage-gradient: linear-gradient(to right top, #85382b, #9c4030, #b34834, #cb5039, #e3583d);
+  --homepage-button-hover-color: #743020;
+  --homepage-button-font-color: #943e2b;
 }
 
 /* Header color */
