@@ -171,3 +171,7 @@ Rouchon = Rouchon1
 
 class Rouchon2(ODEFixedStep, AdjointOptions):
     pass
+
+
+class Rouchon1SME(ODEFixedStep):
+    pass
