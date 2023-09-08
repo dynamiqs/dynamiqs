@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import torch
 from torch import Tensor
 
 from ..mesolve.rouchon import MERouchon1
@@ -10,7 +11,11 @@ from .sme_solver import SMESolver
 
 
 class SMERouchon(SMESolver, FixedSolver):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.n = self.H.shape[-1]
+        self.I = torch.eye(self.n, device=self.device, dtype=self.cdtype)  # (n, n)
 
 
 class SMERouchon1(SMERouchon, MERouchon1):

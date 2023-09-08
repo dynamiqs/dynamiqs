@@ -3,12 +3,13 @@ from __future__ import annotations
 import torch
 
 from .._utils import obj_type_str
-from ..options import Euler, Options
+from ..options import Euler, Options, Rouchon1
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import is_ket, ket_to_dm
 from .euler import SMEEuler
+from .rouchon import SMERouchon1
 
 
 def smesolve(
@@ -104,7 +105,13 @@ def smesolve(
         generator=generator,
         t_meas=t_meas,
     )
-    if isinstance(options, Euler):
+    if isinstance(options, Rouchon1):
+        if options.gradient_alg == 'adjoint':
+            raise ValueError(
+                'The gradient algorithm "adjoint" is not supported by smesolve.'
+            )
+        solver = SMERouchon1(*args, **kwargs)
+    elif isinstance(options, Euler):
         solver = SMEEuler(*args, **kwargs)
     else:
         raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
