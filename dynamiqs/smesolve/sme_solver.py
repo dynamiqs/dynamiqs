@@ -79,40 +79,40 @@ class SMESolver(MESolver):
         ).to(dtype=self.rdtype)
 
     @cache
-    def Lp(self, rho: Tensor) -> Tensor:
+    def Vp(self, rho: Tensor) -> Tensor:
         # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, len(V), n, n)
-        # L @ rho + rho @ Ldag
-        L_rho = torch.einsum('bij,...jk->...bik', self.V, rho)
-        return L_rho + L_rho.mH
+        # V @ rho + rho @ Vdag
+        V_rho = torch.einsum('bij,...jk->...bik', self.V, rho)
+        return V_rho + V_rho.mH
 
     @cache
-    def exp_val(self, Lp_rho: Tensor) -> Tensor:
-        return trace(Lp_rho).real
+    def exp_val(self, Vp_rho: Tensor) -> Tensor:
+        return trace(Vp_rho).real
 
     def diff_backaction(self, dw: Tensor, rho: Tensor) -> Tensor:
         # Compute the measurement backaction term of the diffusive SME.
-        # $$ \sum_k \sqrt{\eta_k} \mathcal{M}[L_k](\rho) dW_k $$
+        # $$ \sum_k \sqrt{\eta_k} \mathcal{M}[V_k](\rho) dW_k $$
         # where
-        # $$ \mathcal{M}[L](\rho) = L \rho + \rho L^\dag -
-        # \mathrm{Tr}\left[(L + L^\dag) \rho\right] \rho $$
+        # $$ \mathcal{M}[V](\rho) = V \rho + \rho V^\dag -
+        # \mathrm{Tr}\left[(V + V^\dag) \rho\right] \rho $$
 
         # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
 
-        # L @ rho + rho @ Ldag
-        Lp_rho = self.Lp(rho)  # (..., len(V), n, n)
-        exp_val = self.exp_val(Lp_rho)  # (..., len(V))
+        # V @ rho + rho @ Vdag
+        Vp_rho = self.Vp(rho)  # (..., len(V), n, n)
+        exp_val = self.exp_val(Vp_rho)  # (..., len(V))
 
-        # L @ rho + rho @ Ldag - Tr(L @ rho + rho @  Ldag) rho
+        # V @ rho + rho @ Vdag - Tr(V @ rho + rho @ Vdag) rho
         # tmp: (..., len(V), n, n)
-        tmp = Lp_rho - exp_val[..., None, None] * rho[..., None, :, :]
+        tmp = Vp_rho - exp_val[..., None, None] * rho[..., None, :, :]
 
-        # sum sqrt(eta) * dw * [L @ rho + rho @ Ldag - Tr(L @ rho + rho @ Ldag) rho]
+        # sum sqrt(eta) * dw * [V @ rho + rho @ Vdag - Tr(V @ rho + rho @ Vdag) rho]
         prefactor = self.etas.sqrt() * dw
         return (prefactor[..., None, None] * tmp).sum(-3)
 
     def update_meas(self, dw: Tensor, rho: Tensor) -> Tensor:
-        Lp_rho = self.Lp(rho)  # (..., len(V), n, n)
-        exp_val = self.exp_val(Lp_rho)  # (..., len(V))
+        Vp_rho = self.Vp(rho)  # (..., len(V), n, n)
+        exp_val = self.exp_val(Vp_rho)  # (..., len(V))
         dy = self.etas.sqrt() * exp_val * self.dt + dw  # (..., len(V))
         self.bin_meas += dy
         return dy
