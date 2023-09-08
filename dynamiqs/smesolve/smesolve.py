@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 import torch
 
 from .._utils import obj_type_str
-from ..options import Euler, Options, Rouchon1SME
+from ..solvers.options import Euler, Rouchon1
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
@@ -23,7 +25,9 @@ def smesolve(
     t_meas: ArrayLike | None = None,
     seed: int | None = None,
     exp_ops: list[ArrayLike] | None = None,
-    options: Options | None = None,
+    solver: str = '',
+    gradient: str | None = None,
+    options: dict[str, Any] | None = None,
 ) -> Result:
     """Solve the Stochastic master equation."""
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save, meas_save) with
@@ -31,11 +35,23 @@ def smesolve(
     #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(t_save))
     #    - meas_save: (b_H?, b_rho0?, ntrajs, len(meas_ops), len(t_meas) - 1)
 
-    # default options
-    if options is None:
+    # default solver
+    if solver == '':
         raise ValueError(
-            'No default solver yet, please specify one using the `options` argument.'
+            'No default solver yet, please specify one using the `solver` argument.'
         )
+    # options
+    if options is None:
+        options = {}
+    options['gradient_alg'] = gradient
+    if solver == 'euler':
+        options = Euler(**options)
+        SOLVER_CLASS = SMEEuler
+    elif solver == 'rouchon1':
+        options = Rouchon1(**options)
+        SOLVER_CLASS = SMERouchon1
+    else:
+        raise ValueError(f'Solver "{solver}" is not supported.')
 
     # check jump_ops
     if not isinstance(jump_ops, list):
@@ -105,12 +121,7 @@ def smesolve(
         generator=generator,
         t_meas=t_meas,
     )
-    if isinstance(options, Rouchon1SME):
-        solver = SMERouchon1(*args, **kwargs)
-    elif isinstance(options, Euler):
-        solver = SMEEuler(*args, **kwargs)
-    else:
-        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
+    solver = SOLVER_CLASS(*args, **kwargs)
 
     # compute the result
     solver.run()

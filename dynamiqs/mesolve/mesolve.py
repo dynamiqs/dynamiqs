@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
 from .._utils import obj_type_str
-from ..options import Dopri5, Euler, Options, Rouchon1, Rouchon2
+from ..solvers.options import Dopri5, Euler, Rouchon1, Rouchon2
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
@@ -18,7 +20,9 @@ def mesolve(
     t_save: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    options: Options | None = None,
+    solver: str = 'dopri5',
+    gradient: str | None = None,
+    options: dict[str, Any] | None = None,
 ) -> Result:
     """Solve the Lindblad master equation for a Hamiltonian and set of jump operators.
 
@@ -69,8 +73,24 @@ def mesolve(
     #    - y_save: (b_H?, b_rho0?, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, len(exp_ops), len(t_save))
 
-    # default options
-    options = options or Dopri5()
+    # options
+    if options is None:
+        options = {}
+    options['gradient_alg'] = gradient
+    if solver == 'dopri5':
+        options = Dopri5(**options)
+        SOLVER_CLASS = MEDormandPrince5
+    elif solver == 'euler':
+        options = Euler(**options)
+        SOLVER_CLASS = MEEuler
+    elif solver == 'rouchon' or solver == 'rouchon1':
+        options = Rouchon1(**options)
+        SOLVER_CLASS = MERouchon1
+    elif solver == 'rouchon2':
+        options = Rouchon2(**options)
+        SOLVER_CLASS = MERouchon2
+    else:
+        raise ValueError(f'Solver "{solver}" is not supported.')
 
     # check jump_ops
     if not isinstance(jump_ops, list):
@@ -110,16 +130,7 @@ def mesolve(
 
     # define the solver
     args = (H, rho0, t_save, exp_ops, options)
-    if isinstance(options, Rouchon1):
-        solver = MERouchon1(*args, jump_ops=jump_ops)
-    elif isinstance(options, Rouchon2):
-        solver = MERouchon2(*args, jump_ops=jump_ops)
-    elif isinstance(options, Dopri5):
-        solver = MEDormandPrince5(*args, jump_ops=jump_ops)
-    elif isinstance(options, Euler):
-        solver = MEEuler(*args, jump_ops=jump_ops)
-    else:
-        raise ValueError(f'Solver options {obj_type_str(options)} is not supported.')
+    solver = SOLVER_CLASS(*args, jump_ops=jump_ops)
 
     # compute the result
     solver.run()
