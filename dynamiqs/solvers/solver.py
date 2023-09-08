@@ -6,7 +6,7 @@ from time import time
 import torch
 from torch import Tensor
 
-from ..options import Options
+from .options import Options
 from .result import Result
 from .utils.td_tensor import TDTensor
 from .utils.utils import bexpect

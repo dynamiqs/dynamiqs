@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import logging
 from abc import ABC
+from typing import Any
 
 import torch
-
-from dynamiqs.options import Options
 
 from .system import System
 
 
 class SolverTester(ABC):
-    def _test_batching(self, options: Options, system: System):
+    def _test_batching(
+        self, system: System, solver: str, *, options: dict[str, Any] | None = None
+    ):
         """Test the batching of `H` and `y0`, and the returned object sizes."""
         m, n = system._state_shape
         n_exp_ops = len(system.exp_ops)
@@ -18,7 +21,7 @@ class SolverTester(ABC):
         num_t_save = 11
         t_save = system.t_save(num_t_save)
 
-        run = lambda H, y0: system._run(H, y0, t_save, options)
+        run = lambda H, y0: system._run(H, y0, t_save, solver, options=options)
 
         # no batching
         result = run(system.H, system.y0)
@@ -45,16 +48,17 @@ class SolverTester(ABC):
 
     def _test_correctness(
         self,
-        options: Options,
         system: System,
+        solver: str,
         *,
+        options: dict[str, Any] | None = None,
         num_t_save: int,
         y_save_norm_atol: float = 1e-3,
         exp_save_rtol: float = 1e-3,
         exp_save_atol: float = 1e-5,
     ):
         t_save = system.t_save(num_t_save)
-        result = system.run(t_save, options)
+        result = system.run(t_save, solver, options=options)
 
         # === test y_save
         errs = torch.linalg.norm(result.y_save - system.states(t_save), dim=(-2, -1))
@@ -74,15 +78,17 @@ class SolverTester(ABC):
 
     def _test_gradient(
         self,
-        options: Options,
         system: System,
+        solver: str,
+        gradient: str,
         *,
+        options: dict[str, Any] | None = None,
         num_t_save: int,
         rtol: float = 1e-3,
         atol: float = 1e-5,
     ):
         t_save = system.t_save(num_t_save)
-        result = system.run(t_save, options)
+        result = system.run(t_save, solver, gradient=gradient, options=options)
 
         # === test gradients depending on final y_save
         loss_state = system.loss_state(result.y_save[-1])
