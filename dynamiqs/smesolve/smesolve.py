@@ -36,8 +36,20 @@ def smesolve(
     $\{\eta_k\}$. The stochastic master equation is given by
 
     $$
-        \frac{d\rho}{dt} = -i[H, \rho] + \sum_k \left(L_k \rho L_k^\dagger -
-        \frac{1}{2} \left\{L_k^\dagger L_k, \rho\right\}\right) + \sum_k .
+    \begin{split}
+        d\rho_t = -i[H, \rho_t] dt &+ \sum_k \left(L_k \rho_t L_k^\dagger -
+        \frac{1}{2} \left\{L_k^\dagger L_k, \rho_t\right\}\right) dt \\
+        &+ \sum_k \sqrt{\eta_k} \left( L_k \rho_t + \rho_t L_k^\dagger
+        - \mathrm{Tr}[(L_k+L_k^\dagger) \rho_t] \right) dW_t^{(k)}
+    \end{split}
+    $$
+
+    where $dW_t^{(k)} \sim N(0, t)$ is a Wiener process, numerically sampled from a
+    white noise distribution. The measurement signals are then given by
+
+    $$
+        dy_t^{(k)} = \sqrt{\eta_k} \mathrm{Tr}[(L_k + L_k^\dagger) \rho_t] dt
+        + dW_t^{(k)}.
     $$
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
@@ -45,14 +57,13 @@ def smesolve(
     for the jump operators are not yet supported.
 
     The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
-    solve multiple master equations in a single run. The jump operators `jump_ops` and
-    time list `t_save` are then common to all batches.
+    solve multiple stochastic master equations in a single run. The jump operators
+    `jump_ops` and time list `t_save` are then common to all batches.
 
-    `mesolve` can be differentiated through using either the default PyTorch autograd
+    `smesolve` can be differentiated through using either the default PyTorch autograd
     library (pass `gradient_alg="autograd"` in `options`), or a custom adjoint state
     differentiation (pass `gradient_alg="adjoint"` in `options`). By default, if no
     gradient is required, the graph of operations is not stored to improve performance.
-
 
     Args:
         H _(Tensor or Callable)_: Hamiltonian.
@@ -65,20 +76,25 @@ def smesolve(
             Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save _(Tensor, np.ndarray or list)_: Times for which results are saved.
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
+        etas _(Tensor, np.ndarray or list)_: Measurement efficiencies, of same length
+            as `jump_ops`.
+        ntrajs _(int)_: Number of stochastic trajectories.
+        t_meas _(Tensor, np.ndarray or list, optional)_: Times for which measurement
+            signals are saved. Defaults to `t_save`.
+        seed _(int, optional)_: Seed for the random number generator. Defaults to
+            `None`.
         exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
             the expectation value is computed at every time value in `t_save`.
         solver _(str, optional)_: Solver to use. See the list of available solvers.
-            Defaults to `"dopri5"`.
+            Defaults to `""` (no default solver).
         gradient _(str, optional)_: Algorithm used for computing gradients.
             Can be either `"autograd"`, `"adjoint"` or `None`. Defaults to `None`.
         options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
     Note-: Available solvers
-      - `dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
       - `euler`: Euler method (fixed step).
       - `rouchon1`: Rouchon method of order 1 (fixed step).
-      - `rouchon2`: Rouchon method of order 2 (fixed step).
 
     Note-: Available keys for `options`
         Common to all solvers:
@@ -98,33 +114,14 @@ def smesolve(
         - **parameters** _(tuple of nn.Parameter)_: Parameters with respect to which the
             gradient is computed.
 
-        Required for fixed step solvers (`euler`, `propagator`):
+        Required for fixed step solvers (`euler`, `rouchon1`):
 
         - **dt** _(float)_: Numerical time step of integration.
 
-        Optional for adaptive step solvers (`dopri5`):
-
-        - **atol** _(float, optional)_: Absolute tolerance. Defaults to `1e-12`.
-        - **rtol** _(float, optional)_: Relative tolerance. Defaults to `1e-6`.
-        - **max_steps** _(int, optional)_: Maximum number of steps. Defaults to `1e6`.
-        - **safety_factor** _(float, optional)_: Safety factor in the step size
-            prediction. Defaults to `0.9`.
-        - **min_factor** _(float, optional)_: Minimum factor by which the step size can
-            decrease in a single step. Defaults to `0.2`.
-        - **max_factor** _(float, optional)_: Maximum factor by which the step size can
-            increase in a single step. Defaults to `10.0`.
-
-        Optional for `solver="rouchon1"`:
-
-        - **sqrt_normalization** _(bool, optional)_: If `True`, the Kraus map is
-            renormalized at every step to preserve the trace of the density matrix.
-            Only for time-independent problems. Ideal for stiff problems.
-            Defaults to `False`.
-
     Warning: Warning for fixed step solvers
-        For fixed time step solvers, the time list `t_save` should be strictly
-        included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
-        where `dt` is defined with the `options` argument.
+        For fixed time step solvers, both time lists `t_save` and `t_meas` should be
+        strictly included in the time list used by the solver, given by
+        `[0, dt, 2 * dt, ...]` where `dt` is defined with the `options` argument.
 
     Returns:
         Result of the master equation integration, as an instance of the `Result` class.
@@ -132,6 +129,7 @@ def smesolve(
 
               - **y_save** or **states** _(Tensor)_: Saved states.
               - **exp_save** or **expects** _(Tensor)_: Saved expectation values.
+              - **measurements** _(Tensor)_: Saved measurement signals.
               - **solver_str** (str): String representation of the solver.
               - **start_datetime** _(datetime)_: Start time of the integration.
               - **end_datetime** _(datetime)_: End time of the integration.
