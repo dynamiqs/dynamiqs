@@ -31,8 +31,8 @@ def mesolve(
     list of jump operators $\{L_k\}$. The Lindblad master equation is given by
 
     $$
-        \frac{d\rho}{dt} = -i[H, \rho] + \sum_k L_k \rho L_k^\dagger - \frac{1}{2} \left
-        \{L_k^\dagger L_k, \rho\right\}.
+        \frac{d\rho}{dt} = -i[H, \rho] + \sum_k \left(L_k \rho L_k^\dagger -
+        \frac{1}{2} \left \{L_k^\dagger L_k, \rho\right\}\right).
     $$
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
@@ -69,13 +69,13 @@ def mesolve(
         options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
-    Note: Available solvers
+    Note-: Available solvers
       - `dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
       - `euler`: Euler method (fixed step).
       - `rouchon1`: Rouchon method of order 1 (fixed step).
       - `rouchon2`: Rouchon method of order 2 (fixed step).
 
-    Note: Available keys for `options`
+    Note-: Available keys for `options`
         Common to all solvers:
 
         - **save_states** _(bool, optional)_: If `True`, the state is saved at every

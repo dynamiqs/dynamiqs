@@ -63,13 +63,13 @@ def sesolve(
         options _(dict, optional)_: Solver options. See the list of available
             solvers, and the options common to all solver below.
 
-    Note: Available solvers
+    Note-: Available solvers
       - `dopri5`: Dormand-Prince method of order 5 (adaptive step). Default solver.
       - `euler`: Euler method (fixed step).
       - `propagator`: Exact propagator computation through matrix exponentiation (fixed
       step). Only for time-independent problems.
 
-    Note: Available keys for `options`
+    Note-: Available keys for `options`
         Common to all solvers:
 
         - **save_states** _(bool, optional)_: If `True`, the state is saved at every
