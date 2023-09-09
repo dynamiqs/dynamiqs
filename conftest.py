@@ -1,13 +1,15 @@
 import pytest
 import torch
+from matplotlib import pyplot as plt
 
 import dynamiqs
 
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def add_dq(doctest_namespace):
+def add_default_imports(doctest_namespace):
     doctest_namespace['dq'] = dynamiqs
+    doctest_namespace['plt'] = plt
 
 
 # doctest fixture
