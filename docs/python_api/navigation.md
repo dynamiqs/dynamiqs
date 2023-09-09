@@ -51,3 +51,5 @@
         - [spost](utils/vectorization/spost.md)
         - [sdissipator](utils/vectorization/sdissipator.md)
         - [slindbladian](utils/vectorization/slindbladian.md)
+    - Quantum optimal control
+        - [rand_pwc](utils/optimal_control/rand_pwc.md)
