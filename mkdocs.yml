@@ -13,6 +13,7 @@ theme:
     - navigation.indexes
     - navigation.top
     - search.suggest
+    - content.code.copy
   icon:
     repo: fontawesome/brands/github
   logo: media/logo.png
@@ -68,12 +69,15 @@ plugins:
             separate_signature: true
             line_length: 88
 markdown_extensions:
-  - pymdownx.arithmatex:
-      generic: true
   - admonition
+  - attr_list
   - pymdownx.details
   - pymdownx.superfences
-  - attr_list
+  - pymdownx.blocks.html
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      use_pygments: true
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
@@ -94,4 +98,5 @@ nav:
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
+      - Simulating Quantum Systems: tutorials/simulating_quantum_systems.md
   - Python API: python_api/
