@@ -10,15 +10,19 @@ from .me_solver import MESolver
 class MEPropagator(MESolver, Propagator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.lindbladian = slindbladian(self.H, self.L)
+        self.lindbladian = slindbladian(self.H, self.L)  # (b_H, 1, n*n, n*n)
+        self.y0 = operator_to_vector(self.y0)  # (b_H, b_rho, n*n, 1)
 
     @cache
     def propagator(self, delta_t: float) -> Tensor:
         # -> (b_H, 1, n * n, n * n)
         return torch.matrix_exp(self.lindbladian * delta_t)
 
-    def forward(self, t: float, delta_t: float, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        rho_vec = operator_to_vector(rho)  # (b_H, b_rho, n * n, 1)
-        new_rho_vec = self.propagator(delta_t) @ rho_vec  # (b_H, b_rho, n * n, 1)
-        return vector_to_operator(new_rho_vec)
+    def forward(self, t: float, delta_t: float, rho_vec: Tensor) -> Tensor:
+        # rho: (b_H, b_rho, n*n, 1) -> (b_H, b_rho, n*n, 1)
+        return self.propagator(delta_t) @ rho_vec  # (b_H, b_rho, n*n, 1)
+
+    def save(self, y: Tensor):
+        # override `save` method to convert `y` from vector to operator
+        y = vector_to_operator(y)  # (b_H, b_rho, n, n)
+        super().save(y)
