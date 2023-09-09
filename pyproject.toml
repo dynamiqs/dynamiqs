@@ -81,11 +81,11 @@ cmd = "echo '\n>>> pytest' && pytest"
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = "echo '\n>>> doctest dynamiqs/' && pytest --doctest-modules dynamiqs"
+cmd = "echo '\n>>> doctest dynamiqs/' && rm -f docs/figs-code/*.png && pytest --doctest-modules dynamiqs"
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = "echo '\n>>> doctest docs/' && pytest --doctest-modules docs --doctest-glob '*.md' --ignore-glob '*generate_python_api.py'"
+cmd = "echo '\n>>> doctest docs/' && rm -f docs/figs-docs/*.png && pytest --doctest-modules docs --doctest-glob '*.md' --ignore-glob '*generate_python_api.py'"
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]

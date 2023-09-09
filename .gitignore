@@ -28,3 +28,9 @@ dist/
 
 # mkdocs build files
 site/
+
+# doctest generated figures
+docs/figs-code/**
+!docs/figs-code/.gitkeep
+docs/figs-docs/**
+!docs/figs-docs/.gitkeep
