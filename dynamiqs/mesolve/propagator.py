@@ -15,7 +15,7 @@ class MEPropagator(MESolver, Propagator):
 
     @cache
     def propagator(self, delta_t: float) -> Tensor:
-        # -> (b_H, 1, n * n, n * n)
+        # -> (b_H, 1, n^2, n^2)
         return torch.matrix_exp(self.lindbladian * delta_t)
 
     def forward(self, t: float, delta_t: float, rho_vec: Tensor) -> Tensor:
