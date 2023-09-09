@@ -194,8 +194,7 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj
         >>> rhos = torch.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         torch.Size([5, 16, 16])
-        >>> rhos_qt = dq.to_qutip(rhos)
-        >>> len(rhos_qt)
+        >>> len(dq.to_qutip(rhos))
         5
 
         ```
