@@ -52,6 +52,7 @@ plugins:
   - literate-nav:
       nav_file: navigation.md
   - section-index
+  - mkdocs-jupyter
   - mkdocstrings:
       default_handler: python
       custom_templates: docs/templates
@@ -73,7 +74,6 @@ markdown_extensions:
   - attr_list
   - pymdownx.details
   - pymdownx.superfences
-  - pymdownx.blocks.html
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.highlight:
@@ -98,5 +98,5 @@ nav:
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
-      - Simulating quantum dynamics: tutorials/simulatingdynamics.md
+      - Simulating quantum dynamics: tutorials/simulatingdynamics.ipynb
   - Python API: python_api/

@@ -204,11 +204,11 @@ article.md-typeset h1 {
 
 /* API table */
 .md-typeset table:not([class]) {
-    border:none;
+  border: none;
 }
 
 .md-typeset table:not([class]) td {
-    border-top:none;
+  border-top: none;
 }
 
 .md-typeset table:not([class]) td.fixed_height {
@@ -221,7 +221,7 @@ article.md-typeset h1 {
 }
 
 .md-typeset table:not([class]) tr:nth-child(odd) {
-    background-color: color-mix(in srgb,var(--md-default-bg-color),#8e8e8e 5%);
+  background-color: color-mix(in srgb, var(--md-default-bg-color), #8e8e8e 5%);
 }
 
 /* Fix for two-line parameters when deploying doc */
@@ -249,50 +249,44 @@ p {
 
 /* Spacing before/after latex formula */
 .md-typeset .arithmatex {
-    margin: -0.5em 0 -1em 0;
+  margin: -0.5em 0 -1em 0;
 }
 
 /* Header sizes */
 article.md-typeset h1 {
-    font-size: 1.8em;
-    letter-spacing: 0.02em;
-    font-family: var(--md-header-font-family);
-    color: var(--md-typeset-color);
+  font-size: 1.8em;
+  letter-spacing: 0.02em;
+  font-family: var(--md-header-font-family);
+  color: var(--md-typeset-color);
 }
 
 .md-typeset h2 {
-    font-size: 1.4em;
-    letter-spacing: 0.01em;
-    font-family: var(--md-header-font-family);
+  font-size: 1.4em;
+  letter-spacing: 0.01em;
+  font-family: var(--md-header-font-family);
 }
 
 .md-typeset h3 {
-    font-size: 1.0em;
-    font-weight: 600;
+  font-size: 1.0em;
+  font-weight: 600;
 }
 
 /* Ignore chevron in pycon code */
-.highlight .gp, .highlight .go { /* Generic.Prompt, Generic.Output */
-    user-select: none;
+.highlight .gp,
+.highlight .go {
+  /* Generic.Prompt, Generic.Output */
+  user-select: none;
 }
 
 /* Function names in API */
 .md-typeset .doc-function-name {
-    color: #ed7764;
-    padding: 3px 0;
-    width: 100%;
-    font-size: 0.85em;
+  color: #ed7764;
+  padding: 3px 0;
+  width: 100%;
+  font-size: 0.85em;
 }
 
 /* Code blocks */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
-    border-left: 3px solid #ed7764;
-}
-
-.md-typeset .code-output .highlight:not(.doc-contents > .highlight) {
-    border-left: none;
-}
-
-.md-typeset .highlight + .code-output pre {
-    margin-top: -0.8em;
+  border-left: 3px solid #ed7764;
 }
