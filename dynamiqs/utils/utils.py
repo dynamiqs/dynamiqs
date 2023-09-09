@@ -357,7 +357,7 @@ def lindbladian(H: Tensor, L: Tensor, rho: Tensor) -> Tensor:
                 [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                 [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]])
     """
-    return -1j * (H @ rho - rho @ H) + dissipator(L, rho).sum(0)
+    return -1j * (H @ rho - rho @ H) + dissipator(L, rho).sum(-3)
 
 
 def is_ket(x: Tensor) -> bool:
