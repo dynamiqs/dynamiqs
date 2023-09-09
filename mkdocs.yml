@@ -98,5 +98,5 @@ nav:
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
-      - Simulating Quantum Systems: tutorials/simulating_quantum_systems.md
+      - Simulating quantum dynamics: tutorials/simulatingdynamics.md
   - Python API: python_api/

@@ -1,4 +1,4 @@
-# Simulating Quantum Systems
+# Simulating quantum dynamics
 
 The wavefunction of any closed quantum system is governed by the linear *Schrödinger equation*.
 Under certain assumptions, it can be reduced to a *Lindblad master equation* that governs the density matrix of an open system of reduced size.

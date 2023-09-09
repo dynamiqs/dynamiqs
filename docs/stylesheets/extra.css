@@ -237,7 +237,6 @@ p {
   display: inline;
 }
 
-
 /* Italic code comments */
 .highlight .c,
 .highlight .c1,
@@ -255,25 +254,21 @@ p {
 
 /* Header sizes */
 article.md-typeset h1 {
-    font-size: 1.6em;
-    line-height: 1.0;
-    margin: 0 0 1.0em;
-    text-transform: uppercase;
-    font-weight: 400;
-    letter-spacing:-0.02em;
+    font-size: 1.8em;
+    letter-spacing: 0.02em;
     font-family: var(--md-header-font-family);
+    color: var(--md-typeset-color);
 }
 
 .md-typeset h2 {
     font-size: 1.4em;
-    font-weight: 400;
+    letter-spacing: 0.01em;
     font-family: var(--md-header-font-family);
 }
 
 .md-typeset h3 {
-    font-size: 1.3em;
-    font-weight: 300;
-    font-family: var(--md-header-font-family);
+    font-size: 1.0em;
+    font-weight: 600;
 }
 
 /* Ignore chevron in pycon code */
@@ -281,13 +276,13 @@ article.md-typeset h1 {
     user-select: none;
 }
 
-/* Function name */
+/* Function names in API */
 .md-typeset .doc-function-name {
     color: #ed7764;
     padding: 3px 0;
     width: 100%;
     font-size: 0.85em;
-  }
+}
 
 /* Code blocks */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
