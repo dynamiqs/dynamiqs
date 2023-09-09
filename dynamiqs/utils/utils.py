@@ -322,7 +322,7 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     return L @ rho @ L.mH - 0.5 * L.mH @ L @ rho - 0.5 * rho @ L.mH @ L
 
 
-def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
+def lindbladian(H: Tensor, L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -340,7 +340,7 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
 
     Args:
         H _(..., n, n)_: Hamiltonian.
-        Ls _(..., N, n, n)_: Sequence of jump operators (arbitrary operators).
+        L _(..., N, n, n)_: Sequence of jump operators (arbitrary operators).
         rho _(..., n, n)_: Density matrix.
 
     Returns:
@@ -349,15 +349,15 @@ def lindbladian(H: Tensor, Ls: Tensor, rho: Tensor) -> Tensor:
     Examples:
         >>> a = dq.destroy(4)
         >>> H = a.mH @ a
-        >>> Ls = torch.stack([a, a.mH @ a])
+        >>> L = torch.stack([a, a.mH @ a])
         >>> rho = dq.fock_dm(4, 1)
-        >>> dq.lindbladian(H, Ls, rho)
+        >>> dq.lindbladian(H, L, rho)
         tensor([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                 [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
                 [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                 [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]])
     """
-    return -1j * (H @ rho - rho @ H) + dissipator(Ls, rho).sum(0)
+    return -1j * (H @ rho - rho @ H) + dissipator(L, rho).sum(-3)
 
 
 def is_ket(x: Tensor) -> bool:

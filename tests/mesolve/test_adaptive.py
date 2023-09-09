@@ -2,7 +2,7 @@ from ..solver_tester import SolverTester
 from .open_system import grad_leaky_cavity_8, leaky_cavity_8
 
 
-class TestAdaptive(SolverTester):
+class TestMEAdaptive(SolverTester):
     def test_batching(self):
         self._test_batching(leaky_cavity_8, 'dopri5')
 
