@@ -45,6 +45,7 @@ extra:
 extra_css:
   - stylesheets/extra.css
   - stylesheets/jupyter.css
+  - stylesheets/theme.css
 plugins:
   - search
   - gen-files:

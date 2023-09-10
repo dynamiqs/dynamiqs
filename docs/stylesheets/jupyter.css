@@ -1,3 +1,8 @@
+/*
+File: jupyter.css
+Description: CSS for jupyter notebooks
+*/
+
 /* hide jupyter notebooks input/output numbers */
 .jp-InputPrompt {
   display: none !important;
@@ -7,6 +12,7 @@
   display: none !important;
 }
 
+/* add "Output:" before output cells */
 .jp-Cell-outputWrapper::before {
     content: "Output:";
     margin-left: 1.5em;
@@ -20,6 +26,7 @@
     padding: 0px 10px !important;
 }
 
+/* Change color of jupyter notebook cells */
 .highlight-ipynb .nb {
   color: var(--jp-mirror-editor-variable-color);
 }
@@ -28,10 +35,12 @@
   color: var(--jp-mirror-editor-link-color);
 }
 
+/* Reduce padding between code and markdown cells */
 .jupyter-wrapper .jp-Cell {
     padding: 0 var(--jp-cell-padding) !important;
 }
 
+/* Change hover color of hyperlinks */
 .md-typeset a:hover code {
     background-color: var(--md-accent-fg-color--transparent);
     color: var(--md-accent-fg-color);
@@ -41,30 +50,7 @@
     color: var(--md-accent-fg-color) !important;
 }
 
+/* Line breaks margin */
 .md-typeset hr {
     margin: 3.0em 0 0 0;
-}
-/* Code block colors */
-[data-md-color-scheme="default"] .jupyter-wrapper .jp-Cell {
-  --jp-mirror-editor-variable-color: #ed7764;
-  --jp-mirror-editor-link-color: #ed7764;
-  --jp-mirror-editor-number-color: #cf5e89;
-  --jp-mirror-editor-string-color: #25adab;
-  --jp-mirror-editor-string-2-color: #25adab;
-  --jp-mirror-editor-keyword-color: #25adab;
-  --jp-mirror-editor-operator-color: #3b7091;
-  --jp-mirror-editor-comment-color: #8b949e;
-  --jp-mirror-editor-punctuation-color: #0000008a;
-}
-
-[data-md-color-scheme="slate"] .jupyter-wrapper .jp-Cell {
-  --jp-mirror-editor-variable-color: #ed7764;
-  --jp-mirror-editor-link-color: #ed7764;
-  --jp-mirror-editor-number-color: #e56395;
-  --jp-mirror-editor-string-color: #23bebb;
-  --jp-mirror-editor-string-2-color: #23bebb;
-  --jp-mirror-editor-keyword-color: #23bebb;
-  --jp-mirror-editor-operator-color: #89aabe;
-  --jp-mirror-editor-comment-color: #747a81;
-  --jp-mirror-editor-punctuation-color: #d2d7f99e;
 }
