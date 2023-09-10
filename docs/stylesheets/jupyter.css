@@ -32,6 +32,18 @@
     padding: 0 var(--jp-cell-padding) !important;
 }
 
+.md-typeset a:hover code {
+    background-color: var(--md-accent-fg-color--transparent);
+    color: var(--md-accent-fg-color);
+}
+
+.jupyter-wrapper a:hover {
+    color: var(--md-accent-fg-color) !important;
+}
+
+.md-typeset hr {
+    margin: 3.0em 0 0 0;
+}
 /* Code block colors */
 [data-md-color-scheme="default"] .jupyter-wrapper .jp-Cell {
   --jp-mirror-editor-variable-color: #ed7764;

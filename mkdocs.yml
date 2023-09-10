@@ -97,5 +97,5 @@ nav:
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
-      - Simulating quantum dynamics: tutorials/simulatingdynamics.ipynb
+      - Example: tutorials/example.ipynb
   - Python API: python_api/

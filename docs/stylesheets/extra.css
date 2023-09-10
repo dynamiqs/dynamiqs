@@ -25,6 +25,9 @@
   --md-code-hl-function-color: #39464b;
   --md-code-hl-punctuation-color: 0000008a;
 
+  /* Hover color */
+  --md-accent-fg-color--transparent: #f5eae9;
+
   /* Search text color */
   --md-primary-bg-color--light: #7e7c7c;
 
@@ -63,6 +66,9 @@
   --md-code-hl-operator-color: #89aabe;
   --md-code-hl-function-color: #d5d7e2;
   --md-code-hl-punctuation-color: #d2d7f99e;
+
+  /* Hover color */
+  --md-accent-fg-color--transparent: #494241;
 
   /* Warning color shades */
   --md-warning-fg-color: #e293b1;
