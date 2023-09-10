@@ -1,1 +1,0 @@
-::: dynamiqs.utils.wigners.wigner

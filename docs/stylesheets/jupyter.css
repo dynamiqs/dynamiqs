@@ -8,34 +8,34 @@
 }
 
 .highlight-ipynb .nb {
-    color: var(--jp-mirror-editor-variable-color);
+  color: var(--jp-mirror-editor-variable-color);
 }
 
 .jupyter-wrapper .jp-Cell a {
-    color: var(--jp-mirror-editor-link-color);
+  color: var(--jp-mirror-editor-link-color);
 }
 
 /* Code block colors */
 [data-md-color-scheme="default"] .jupyter-wrapper .jp-Cell {
-    --jp-mirror-editor-variable-color: #ed7764;
-    --jp-mirror-editor-link-color: #ed7764;
-    --jp-mirror-editor-number-color: #cf5e89;
-    --jp-mirror-editor-string-color: #25adab;
-    --jp-mirror-editor-string-2-color: #25adab;
-    --jp-mirror-editor-keyword-color: #25adab;
-    --jp-mirror-editor-operator-color: #3b7091;
-    --jp-mirror-editor-comment-color: #8b949e;
-    --jp-mirror-editor-punctuation-color: #0000008a;
+  --jp-mirror-editor-variable-color: #ed7764;
+  --jp-mirror-editor-link-color: #ed7764;
+  --jp-mirror-editor-number-color: #cf5e89;
+  --jp-mirror-editor-string-color: #25adab;
+  --jp-mirror-editor-string-2-color: #25adab;
+  --jp-mirror-editor-keyword-color: #25adab;
+  --jp-mirror-editor-operator-color: #3b7091;
+  --jp-mirror-editor-comment-color: #8b949e;
+  --jp-mirror-editor-punctuation-color: #0000008a;
 }
 
 [data-md-color-scheme="slate"] .jupyter-wrapper .jp-Cell {
-    --jp-mirror-editor-variable-color: #ed7764;
-    --jp-mirror-editor-link-color: #ed7764;
-    --jp-mirror-editor-number-color: #e56395;
-    --jp-mirror-editor-string-color: #23bebb;
-    --jp-mirror-editor-string-2-color: #23bebb;
-    --jp-mirror-editor-keyword-color: #23bebb;
-    --jp-mirror-editor-operator-color: #89aabe;
-    --jp-mirror-editor-comment-color: #747a81;
-    --jp-mirror-editor-punctuation-color: #d2d7f99e;
+  --jp-mirror-editor-variable-color: #ed7764;
+  --jp-mirror-editor-link-color: #ed7764;
+  --jp-mirror-editor-number-color: #e56395;
+  --jp-mirror-editor-string-color: #23bebb;
+  --jp-mirror-editor-string-2-color: #23bebb;
+  --jp-mirror-editor-keyword-color: #23bebb;
+  --jp-mirror-editor-operator-color: #89aabe;
+  --jp-mirror-editor-comment-color: #747a81;
+  --jp-mirror-editor-punctuation-color: #d2d7f99e;
 }

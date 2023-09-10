@@ -1,1 +1,0 @@
-::: dynamiqs.utils.states.coherent

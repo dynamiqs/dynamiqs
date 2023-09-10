@@ -66,11 +66,11 @@
 
   /* Warning color shades */
   --md-warning-fg-color: #e293b1;
-  --md-warning-bg-color: #503c44;
+  --md-warning-bg-color: #5c434d;
 
   /* Note color shades */
   --md-note-fg-color: #23bebb;
-  --md-note-bg-color: #384d4c;
+  --md-note-bg-color: #3e5656;
 
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);

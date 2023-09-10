@@ -1,1 +1,0 @@
-::: dynamiqs.utils.operators.parity
