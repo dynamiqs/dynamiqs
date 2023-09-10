@@ -44,6 +44,7 @@ extra:
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/jupyter.css
 plugins:
   - search
   - gen-files:

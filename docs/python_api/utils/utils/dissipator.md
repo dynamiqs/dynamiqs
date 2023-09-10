@@ -1,0 +1,1 @@
+::: dynamiqs.utils.utils.dissipator
