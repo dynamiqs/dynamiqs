@@ -29,7 +29,7 @@ dev = [
     "mkdocs-jupyter",
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
-    "mkdocs-section-index"
+    "mkdocs-section-index",
 ]
 
 [tool.isort]
