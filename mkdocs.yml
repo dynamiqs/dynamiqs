@@ -98,5 +98,5 @@ nav:
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
-      - Example: tutorials/example.ipynb
+      - Workflow in dynamiqs: tutorials/workflow.ipynb
   - Python API: python_api/
