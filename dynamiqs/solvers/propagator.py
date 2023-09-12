@@ -19,8 +19,8 @@ def round_truncate(x: np.float32 | np.float64) -> np.float32 | np.float64:
     # removes any numerical error that may have accumulated in the 5 least significant
     # bits of the mantissa.
     leading = abs(int(np.log2(x)))
-    kept = leading + 18
-    return (x * 2**kept).round() / 2**kept
+    keep = leading + 18
+    return (x * 2**keep).round() / 2**keep
 
 
 class Propagator(AutogradSolver):
