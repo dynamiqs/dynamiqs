@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from .tensor_types import dtype_complex_to_real, get_cdtype
+from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
 __all__ = [
     'rand_pwc',
@@ -76,6 +76,11 @@ def rand_pwc(
                 -0.280-4.991j, -5.601+2.661j,  3.047-2.671j, -6.372-3.192j,
                 -0.807+7.717j, -2.032-2.096j])
     """
+    # Note: We need to manually fetch the default device, because if `device` is `None`
+    # `torch.Generator` picks "cpu" as the default device, and not the device set by
+    # `torch.set_default_device`.
+    device = to_device(device)
+
     # define random number generator from seed
     generator = torch.Generator(device=device)
     generator.seed() if seed is None else generator.manual_seed(seed)
