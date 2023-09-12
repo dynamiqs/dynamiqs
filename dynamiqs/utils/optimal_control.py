@@ -3,10 +3,12 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
+from .._utils import linmap
 from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
 __all__ = [
     'rand_complex',
+    'pwc_pulse',
 ]
 
 
@@ -82,3 +84,48 @@ def rand_complex(
     x.requires_grad = requires_grad
 
     return x
+
+
+def pwc_pulse(t_start: float, t_end: float, x: Tensor) -> callable[[float], Tensor]:
+    """Returns a piecewise-constant (PWC) pulse.
+
+    TODO: explain better what a PWC pulse is and how it is defined from `x`. Also it
+    returns 0.0 outside of `[t_start, t_end]`.
+
+    Note:
+        You can use [rand_complex()][dynamiqs.rand_complex] to generate a tensor
+        filled with random complex numbers for the parameter `x`.
+
+    Args:
+        t_start: Start time of the pulse.
+        t_end: End time of the pulse.
+        x _(..., nbins)_: Pulse complex values where `nbins` is the number of different
+            values between `t_start` and `t_end`.
+
+    Returns:
+        Function that takes a time `t` and returns the pulse value at time `t` (a
+            tensor of shape _(...)_).
+
+    Examples:
+        >>> x = dq.rand_complex((2, 5), rmax=2.0, seed=42)
+        >>> pulse = dq.pwc_pulse(0.0, 1.0, x)
+        >>> type(pulse)
+        <class 'function'>
+        >>> pulse(0.5)
+        tensor([ 0.844-0.905j, -1.593-0.798j])
+        >>> pulse(1.2)
+        tensor([0.+0.j, 0.+0.j])
+    """
+
+    def pulse(t):
+        if t < t_start or t > t_end:
+            # return a null tensor of appropriate shape
+            batch_sizes = x.shape[:-1]
+            return torch.zeros(batch_sizes, dtype=x.dtype, device=x.device)
+        else:
+            # find the index corresponding to time `t`
+            nbins = x.size(-1)
+            idx = int(linmap(t, t_start, t_end, 0, nbins - 1))
+            return x[..., idx]
+
+    return pulse

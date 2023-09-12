@@ -53,3 +53,4 @@
         - [slindbladian](utils/vectorization/slindbladian.md)
     - Quantum optimal control
         - [rand_complex](utils/optimal_control/rand_complex.md)
+        - [pwc_pulse](utils/optimal_control/pwc_pulse.md)
