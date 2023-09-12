@@ -14,9 +14,13 @@ def round_truncate(x: np.float32 | np.float64) -> np.float32 | np.float64:
     # round a strictly positive-valued float to remove numerical errors, and enable
     # comparing floats for equality
 
-    # round to 5 additional decimal places beyond the highest digit of the number
-    decimals = abs(int(np.log10(x))) + 5
-    return (x * 10**decimals).round() / 10**decimals
+    # The mantissa of a float32 is stored using 23 bits. The following code rounds and
+    # truncates the float value to the 18 most significant bits of its mantissa. This
+    # removes any numerical error that may have accumulated in the 5 least significant
+    # bits of the mantissa.
+    leading = abs(int(np.log2(x)))
+    kept = leading + 18
+    return (x * 2**kept).round() / 2**kept
 
 
 class Propagator(AutogradSolver):
