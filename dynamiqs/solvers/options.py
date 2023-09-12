@@ -28,6 +28,7 @@ class Options:
         verbose: bool = True,
         dtype: torch.complex64 | torch.complex128 | None = None,
         device: str | torch.device | None = None,
+        H_args: tuple[Any, ...] = (),
     ):
         """...
 
@@ -42,6 +43,7 @@ class Options:
                 the corresponding precision.
             device (string or torch.device, optional): Device on which the tensors are
                 stored.
+            H_args (tuple, optional): Additional arguments passed to the Hamiltonian
         """
         self.gradient_alg = gradient_alg
         self.save_states = save_states
@@ -49,6 +51,7 @@ class Options:
         self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)
         self.device = to_device(device)
+        self.H_args = H_args
 
         # check that the gradient algorithm is supported
         if self.gradient_alg is not None and self.gradient_alg not in self.GRADIENT_ALG:

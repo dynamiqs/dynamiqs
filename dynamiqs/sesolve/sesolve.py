@@ -57,7 +57,9 @@ def sesolve(
     # H: (b_H, 1, n, n)
     # psi0: (b_H, b_psi0, n, 1)
     # exp_ops: (len(exp_ops), n, n)
-    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
+    H = to_td_tensor(
+        H, dtype=options.cdtype, device=options.device, args=options.H_args
+    )
     psi0 = to_tensor(psi0, dtype=options.cdtype, device=options.device)
     H = batch_H(H)
     psi0 = batch_y0(psi0, H)

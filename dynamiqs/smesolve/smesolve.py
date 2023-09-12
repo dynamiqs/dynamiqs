@@ -73,7 +73,9 @@ def smesolve(
     # rho0: (b_H, b_rho0, ntrajs, n, n)
     # exp_ops: (len(exp_ops), n, n)
     # jump_ops: (len(jump_ops), n, n)
-    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
+    H = to_td_tensor(
+        H, dtype=options.cdtype, device=options.device, args=options.H_args
+    )
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H).unsqueeze(2)
     rho0 = batch_y0(rho0, H).unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)

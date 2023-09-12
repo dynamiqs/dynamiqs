@@ -38,8 +38,8 @@ def mesolve(
     the graph of operations is not stored to improve performance.
 
     For time-dependent problems, the Hamiltonian `H` can be passed as a function with
-    signature `H(t: float) -> Tensor`. Piecewise constant Hamiltonians can also be
-    passed as... TODO Complete with full Hamiltonian format
+    signature `H(t: float, *H_args) -> Tensor`. Piecewise constant Hamiltonians can also
+    be passed as... TODO Complete with full Hamiltonian format
 
     Available solvers:
       - `Dopri5`: Dormand-Prince of order 5. Default solver.
@@ -52,8 +52,8 @@ def mesolve(
     Args:
         H _(Tensor or Callable)_: Hamiltonian.
             Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
-            `H(t: float) -> Tensor` that returns a tensor of either possible shapes
-            at every time between `t=0` and `t=t_save[-1]`.
+            `H(t: float, *H_args) -> Tensor` that returns a tensor of either possible
+            shapes at every time between `t=0` and `t=t_save[-1]`.
         jump_ops _(Tensor, or list of Tensors)_: List of jump operators.
             Each jump operator should be a tensor of shape `(n, n)`.
         rho0 _(Tensor)_: Initial density matrix.
@@ -119,7 +119,9 @@ def mesolve(
     # rho0: (b_H, b_rho0, n, n)
     # exp_ops: (len(exp_ops), n, n)
     # jump_ops: (len(jump_ops), n, n)
-    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
+    H = to_td_tensor(
+        H, dtype=options.cdtype, device=options.device, args=options.H_args
+    )
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H)
     rho0 = batch_y0(rho0, H)

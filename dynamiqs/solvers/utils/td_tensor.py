@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import get_args
+from typing import Any, get_args
 
 import torch
 from torch import Tensor
@@ -15,6 +15,7 @@ def to_td_tensor(
     x: TDArrayLike,
     dtype: torch.dtype | None = None,
     device: str | torch.device | None = None,
+    args: tuple[Any, ...] = (),
 ) -> TDTensor:
     """Convert a `TDArrayLike` object to a `TDTensor` object."""
     device = to_device(device)
@@ -27,12 +28,14 @@ def to_td_tensor(
         dtype = get_rdtype(dtype) if dtype is None else dtype  # assume real by default
 
         # compute initial value of the callable
-        x0 = x(0.0)
+        x0 = x(0.0, *args)
 
         # check callable
         check_callable(x0, dtype, device)
 
-        return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
+        return CallableTDTensor(
+            x, shape=x0.shape, dtype=dtype, device=device, args=args
+        )
 
 
 def check_callable(
@@ -112,15 +115,17 @@ class CallableTDTensor(TDTensor):
         shape: torch.Size,
         dtype: torch.dtype,
         device: torch.device,
+        args: tuple[Any, ...] = (),
     ):
         self._callable = f
         self._shape = shape
         self.dtype = dtype
         self.device = device
+        self.args = args
 
     @cache
     def __call__(self, t: float) -> Tensor:
-        return self._callable(t).view(self._shape)
+        return self._callable(t, *self.args).view(self._shape)
 
     def size(self, dim: int) -> int:
         return self._shape[dim]
@@ -133,5 +138,9 @@ class CallableTDTensor(TDTensor):
         new_shape.insert(dim, 1)
         new_shape = torch.Size(new_shape)
         return CallableTDTensor(
-            f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
+            f=self._callable,
+            shape=new_shape,
+            dtype=self.dtype,
+            device=self.device,
+            args=self.args,
         )
