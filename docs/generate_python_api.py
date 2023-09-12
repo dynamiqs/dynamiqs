@@ -12,6 +12,7 @@ PATHS_TO_PARSE = [
     'dynamiqs/utils/utils.py',
     'dynamiqs/utils/tensor_types.py',
     'dynamiqs/utils/wigners.py',
+    'dynamiqs/utils/vectorization.py',
 ]
 
 

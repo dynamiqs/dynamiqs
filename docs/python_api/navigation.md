@@ -44,3 +44,10 @@
         - [from_qutip](utils/tensor_types/from_qutip.md)
     - Wigner distribution
         - [wigner](utils/wigners/wigner.md)
+    - Vectorization
+        - [operator_to_vector](utils/vectorization/operator_to_vector.md)
+        - [vector_to_operator](utils/vectorization/vector_to_operator.md)
+        - [spre](utils/vectorization/spre.md)
+        - [spost](utils/vectorization/spost.md)
+        - [sdissipator](utils/vectorization/sdissipator.md)
+        - [slindbladian](utils/vectorization/slindbladian.md)

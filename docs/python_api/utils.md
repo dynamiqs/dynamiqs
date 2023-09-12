@@ -29,3 +29,9 @@
 ::: dynamiqs.utils.wigners
     options:
         table: true
+
+## Vectorization
+
+::: dynamiqs.utils.vectorization
+    options:
+        table: true

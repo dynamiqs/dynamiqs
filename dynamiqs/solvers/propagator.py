@@ -16,6 +16,7 @@ class Propagator(AutogradSolver):
             raise TypeError(
                 'Solver `Propagator` requires a time-independent Hamiltonian.'
             )
+        self.H = self.H(0.0)
 
     def run_autograd(self):
         y, t1 = self.y0, 0.0
