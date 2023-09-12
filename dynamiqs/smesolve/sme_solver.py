@@ -15,24 +15,27 @@ class SMESolver(MESolver):
         self,
         *args,
         jump_ops: Tensor,
-        meas_ops: Tensor,
         etas: Tensor,
         generator: torch.Generator,
         t_meas: Tensor,
     ):
-        self.meas_ops = meas_ops  # (len(meas_ops), n, n)
-        self.etas = etas  # (len(meas_ops))
-        self.generator = generator
         self.t_meas = t_meas  # (len(t_meas))
-
         super().__init__(*args, jump_ops=jump_ops)
+
+        # split jump operators between purely dissipative (eta = 0) and
+        # monitored (eta != 0)
+        mask = etas == 0.0
+        self.Lc = jump_ops[mask]  # (len(Lc), n, n) purely dissipative
+        self.Lm = jump_ops[~mask]  # (len(Lm), n, n) monitored
+        self.etas = etas[~mask]  # (len(Lm))
+        self.generator = generator
 
         # initialize additional save tensors
         batch_sizes = self.y0.shape[:-2]
 
-        self.meas_shape = (*batch_sizes, len(self.meas_ops))
+        self.meas_shape = (*batch_sizes, len(self.Lm))
 
-        # meas_save: (..., len(meas_ops), len(t_meas))
+        # meas_save: (..., len(Lm), len(t_meas))
         if len(t_meas) > 0:
             meas_save = torch.zeros(
                 *self.meas_shape,
@@ -79,37 +82,40 @@ class SMESolver(MESolver):
         ).to(dtype=self.rdtype)
 
     @cache
-    def Lp(self, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
-        # L @ rho + rho @ Ldag
-        L_rho = torch.einsum('bij,...jk->...bik', self.meas_ops, rho)
-        return L_rho + L_rho.mH
+    def Lmp(self, rho: Tensor) -> Tensor:
+        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, len(Lm), n, n)
+        # Lm @ rho + rho @ Lmdag
+        Lm_rho = torch.einsum('bij,...jk->...bik', self.Lm, rho)
+        return Lm_rho + Lm_rho.mH
 
     @cache
-    def exp_val(self, Lp_rho: Tensor) -> Tensor:
-        return trace(Lp_rho).real
+    def exp_val(self, Lmp_rho: Tensor) -> Tensor:
+        return trace(Lmp_rho).real
 
     def diff_backaction(self, dw: Tensor, rho: Tensor) -> Tensor:
         # Compute the measurement backaction term of the diffusive SME.
-        # $$ \sum_k \sqrt{\eta_k} \mathcal{M}[L_k](\rho) dW_k $$
+        # $$ \sum_k \sqrt{\eta_k} \mathcal{M}[Lm_k](\rho) dW_k $$
         # where
-        # $$ \mathcal{M}[L](\rho) = L \rho + \rho L^\dag -
-        # \mathrm{Tr}\left[(L + L^\dag) \rho\right] \rho $$
+        # $$ \mathcal{M}[Lm](\rho) = Lm \rho + \rho Lm^\dag -
+        # \mathrm{Tr}\left[(Lm + Lm^\dag) \rho\right] \rho $$
 
         # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
 
-        # L @ rho + rho @ Ldag
-        Lp_rho = self.Lp(rho)  # (..., b, n, n)
-        exp_val = self.exp_val(Lp_rho)  # (..., b)
+        # Lm @ rho + rho @ Lmdag
+        Lmp_rho = self.Lmp(rho)  # (..., len(Lm), n, n)
+        exp_val = self.exp_val(Lmp_rho)  # (..., len(Lm))
 
-        # L @ rho + rho @ Ldag - Tr(L @ rho + rho @  Ldag) rho
-        tmp = Lp_rho - exp_val[..., None, None] * rho[..., None, :, :]  # (..., b, n, n)
+        # Lm @ rho + rho @ Lmdag - Tr(Lm @ rho + rho @ Lmdag) rho
+        # tmp: (..., len(Lm), n, n)
+        tmp = Lmp_rho - exp_val[..., None, None] * rho[..., None, :, :]
 
-        # sum sqrt(eta) * dw * [L @ rho + rho @ Ldag - Tr(L @ rho + rho @ Ldag) rho]
+        # sum sqrt(eta) * dw * [Lm @ rho + rho @ Lmdag - Tr(Lm @ rho + rho @ Lmdag) rho]
         prefactor = self.etas.sqrt() * dw
         return (prefactor[..., None, None] * tmp).sum(-3)
 
-    def update_meas(self, dw: Tensor, rho: Tensor):
-        Lp_rho = self.Lp(rho)  # (..., b, n, n)
-        exp_val = self.exp_val(Lp_rho)  # (..., b)
-        self.bin_meas += self.etas.sqrt() * exp_val * self.dt + dw
+    def update_meas(self, dw: Tensor, rho: Tensor) -> Tensor:
+        Lmp_rho = self.Lmp(rho)  # (..., len(Lm), n, n)
+        exp_val = self.exp_val(Lmp_rho)  # (..., len(Lm))
+        dy = self.etas.sqrt() * exp_val * self.dt + dw  # (..., len(Lm))
+        self.bin_meas += dy
+        return dy
