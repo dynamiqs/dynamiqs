@@ -6,47 +6,29 @@ from torch import Tensor
 from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
 __all__ = [
-    'rand_pwc',
+    'rand_complex',
 ]
 
 
-def _rand_complex_uniform(
-    size: list[int],
-    rmax: float,
-    generator: torch.Generator,
-    dtype: torch.complex64 | torch.complex128,
-    device: str | torch.device | None,
-):
-    rdtype = dtype_complex_to_real(get_cdtype(dtype))
-    rand = lambda: torch.rand(size, generator=generator, dtype=rdtype, device=device)
-
-    # generate random magnitude with values in [0, rmax], the sqrt ensures that the
-    # resulting complex numbers are uniformly distributed in the complex plane
-    r = rmax * rand().sqrt()
-    # generate random phase with values in [0, 2pi]
-    theta = 2 * torch.pi * rand()
-
-    return r * torch.exp(1j * theta)
-
-
-def rand_pwc(
-    *size: int,
-    amp_max: float = 1.0,
+def rand_complex(
+    size: int | tuple[int, ...],
+    *,
+    rmax: float = 1.0,
     requires_grad: bool = False,
     seed: int | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns a random piecewise-constant (PWC) pulse.
+    r"""Returns a tensor filled with random complex numbers uniformly distributed in the
+    complex plane.
 
-    Each element of the returned tensor is a complex number uniformly distributed in the
-    complex plane with a magnitude between 0 and `amp_max` and a random phase.
-    Formally, each element is defined by
+    Each element of the returned tensor has a random magnitude between 0 and `rmax` and
+    a random phase. Formally, each element is defined by
 
     $$
         x = re^{i\theta}\ \text{with}\
         \left\{\begin{aligned}
-        r      &= \texttt{amp_max} \cdot \sqrt{\texttt{rand(0,1)}} \\
+        r      &= \texttt{rmax} \cdot \sqrt{\texttt{rand(0,1)}} \\
         \theta &= 2\pi \cdot \texttt{rand(0,1)}
         \end{aligned}\right.
     $$
@@ -58,8 +40,8 @@ def rand_pwc(
         resulting complex numbers are uniformly distributed in the complex plane.
 
     Args:
-        *size: Returned tensor dimensions.
-        amp_max: Maximum pulse amplitude.
+        size: Size of the returned tensor.
+        rmax: Maximum magnitude.
         requires_grad: Whether gradients need to be computed with respect to the
             returned tensor.
         seed: Seed for the random number generator.
@@ -67,14 +49,15 @@ def rand_pwc(
         device: Device of the returned tensor.
 
     Returns:
-        _(*size)_ Random PWC pulse.
+        _(*size)_ Tensor filled with random complex numbers.
 
     Examples:
-        >>> pulse = dq.rand_pwc(10, amp_max=8.0, seed=42)
-        >>> pulse
-        tensor([ 6.889-3.002j, -6.367-4.245j,  3.375-3.621j, -7.137-3.234j,
-                -0.280-4.991j, -5.601+2.661j,  3.047-2.671j, -6.372-3.192j,
-                -0.807+7.717j, -2.032-2.096j])
+        >>> x = dq.rand_complex((2, 5), rmax=2.0, seed=42)
+        >>> x
+        tensor([[ 1.722-0.750j, -1.592-1.061j,  0.844-0.905j, -1.784-0.809j,
+                 -0.070-1.248j],
+                [-1.400+0.665j,  0.762-0.668j, -1.593-0.798j, -0.202+1.929j,
+                 -0.508-0.524j]])
     """
     # Note: We need to manually fetch the default device, because if `device` is `None`
     # `torch.Generator` picks "cpu" as the default device, and not the device set by
@@ -85,6 +68,17 @@ def rand_pwc(
     generator = torch.Generator(device=device)
     generator.seed() if seed is None else generator.manual_seed(seed)
 
-    pwc_pulse = _rand_complex_uniform(size, amp_max, generator, dtype, device)
-    pwc_pulse.requires_grad = requires_grad
-    return pwc_pulse
+    rdtype = dtype_complex_to_real(get_cdtype(dtype))
+
+    rand = lambda: torch.rand(size, generator=generator, dtype=rdtype, device=device)
+
+    # generate random magnitude with values in [0, rmax], the sqrt ensures that the
+    # resulting complex numbers are uniformly distributed in the complex plane
+    r = rmax * rand().sqrt()
+    # generate random phase with values in [0, 2pi]
+    theta = 2 * torch.pi * rand()
+    x = r * torch.exp(1j * theta)
+
+    x.requires_grad = requires_grad
+
+    return x
