@@ -27,8 +27,8 @@ class SMERouchon1(SMERouchon):
         # self.M1s: # (1, len(L), n, n)
         self.M1s = torch.cat(
             [
-                sqrt(self.dt) * self.T,
-                torch.sqrt(self.dt * (1 - self.etas))[..., None, None] * self.V,
+                sqrt(self.dt) * self.Lc,
+                torch.sqrt(self.dt * (1 - self.etas))[..., None, None] * self.Lm,
             ],
         )[None, ...]
 
@@ -49,7 +49,7 @@ class SMERouchon1(SMERouchon):
 
         # update state
         # M0: (b_H, 1, ntrajs, n, n)
-        M0 = M0_tmp + ((self.etas.sqrt() * dy)[..., None, None] * self.V).sum(-3)
+        M0 = M0_tmp + ((self.etas.sqrt() * dy)[..., None, None] * self.Lm).sum(-3)
         rho = M0 @ rho @ M0.mH + kraus_map(rho, self.M1s)
         rho = unit(rho)
 
