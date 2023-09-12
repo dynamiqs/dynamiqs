@@ -1,3 +1,4 @@
+import torch
 from torch import Tensor
 
 from ..solvers.solver import Solver
@@ -13,6 +14,9 @@ class MESolver(Solver):
         # define cached operator
         # non-hermitian Hamiltonian
         self.Hnh = cache(lambda H: H - 0.5j * self.sum_LdagL)  # (b_H, 1, n, n)
+
+        n = self.H.size(-1)
+        self.I = torch.eye(n, device=self.device, dtype=self.cdtype)  # (n, n)
 
     def lindbladian(self, t: float, rho: Tensor) -> Tensor:
         """Compute the action of the Lindbladian on the density matrix.
