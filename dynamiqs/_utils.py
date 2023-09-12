@@ -28,3 +28,8 @@ def to_device(device: str | torch.device | None) -> torch.device:
             'Argument `device` must be a string, a `torch.device` or `None` but has'
             f' type {obj_type_str(device)}.'
         )
+
+
+def linmap(x: float, a: float, b: float, c: float, d: float) -> float:
+    # map $x$ linearly from $[a,b]$ to $[c,d]$
+    return (x - a) / (b - a) * (d - c) + c
