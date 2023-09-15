@@ -42,7 +42,7 @@ def rand_complex(
         resulting complex numbers are uniformly distributed in the complex plane.
 
     Args:
-        size: Size of the returned tensor.
+        size _(int or tuple of ints)_: Size of the returned tensor.
         rmax: Maximum magnitude.
         requires_grad: Whether gradients need to be computed with respect to the
             returned tensor.
