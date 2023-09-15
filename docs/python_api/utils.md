@@ -32,3 +32,9 @@ The utilities API follows closely that of [QuTiP](https://qutip.org/), with ligh
 ::: dynamiqs.utils.wigners
     options:
         table: true
+
+## Vectorization
+
+::: dynamiqs.utils.vectorization
+    options:
+        table: true

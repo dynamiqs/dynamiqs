@@ -5,12 +5,13 @@ from typing import Any
 import torch
 
 from .._utils import obj_type_str
-from ..solvers.options import Euler
+from ..solvers.options import Euler, Rouchon1
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import is_ket, ket_to_dm
 from .euler import SMEEuler
+from .rouchon import SMERouchon1
 
 
 def smesolve(
@@ -149,6 +150,9 @@ def smesolve(
     if solver == 'euler':
         options = Euler(**options)
         SOLVER_CLASS = SMEEuler
+    elif solver == 'rouchon1':
+        options = Rouchon1(**options)
+        SOLVER_CLASS = SMERouchon1
     else:
         raise ValueError(f'Solver "{solver}" is not supported.')
 
@@ -204,10 +208,6 @@ def smesolve(
     if torch.any(etas < 0.0) or torch.any(etas > 1.0):
         raise ValueError('Argument `etas` must contain values between 0 and 1.')
 
-    # split jump operators between purely dissipative (eta = 0) and monitored (eta != 0)
-    mask = etas == 0.0
-    meas_ops, etas = jump_ops[~mask], etas[~mask]
-
     # convert t_meas to a tensor
     t_meas = to_tensor(t_meas, dtype=options.rdtype, device=options.device)
     check_time_tensor(t_meas, arg_name='t_meas', allow_empty=True)
@@ -220,7 +220,6 @@ def smesolve(
     args = (H, rho0, t_save, exp_ops, options)
     kwargs = dict(
         jump_ops=jump_ops,
-        meas_ops=meas_ops,
         etas=etas,
         generator=generator,
         t_meas=t_meas,

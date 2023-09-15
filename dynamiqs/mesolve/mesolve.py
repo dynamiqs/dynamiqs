@@ -3,13 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 from .._utils import obj_type_str
-from ..solvers.options import Dopri5, Euler, Rouchon1, Rouchon2
+from ..solvers.options import Dopri5, Euler, Propagator, Rouchon1, Rouchon2
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import is_ket, ket_to_dm
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
+from .propagator import MEPropagator
 from .rouchon import MERouchon1, MERouchon2
 
 
@@ -154,6 +155,9 @@ def mesolve(
     elif solver == 'rouchon2':
         options = Rouchon2(**options)
         SOLVER_CLASS = MERouchon2
+    elif solver == 'propagator':
+        options = Propagator(**options)
+        SOLVER_CLASS = MEPropagator
     else:
         raise ValueError(f'Solver "{solver}" is not supported.')
 

@@ -2,7 +2,7 @@ from ..solver_tester import SolverTester
 from .closed_system import cavity_8, grad_cavity_8
 
 
-class TestPropagator(SolverTester):
+class TestSEPropagator(SolverTester):
     def test_batching(self):
         self._test_batching(cavity_8, 'propagator')
 
