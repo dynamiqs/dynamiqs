@@ -24,6 +24,7 @@
     - Quantum utilities
         - [trace](utils/utils/trace.md)
         - [expect](utils/utils/expect.md)
+        - [dag](utils/utils/dag.md)
         - [norm](utils/utils/norm.md)
         - [unit](utils/utils/unit.md)
         - [tensprod](utils/utils/tensprod.md)
