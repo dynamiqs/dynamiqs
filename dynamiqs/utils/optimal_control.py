@@ -15,22 +15,21 @@ __all__ = [
 def rand_complex(
     size: int | tuple[int, ...],
     *,
-    rmax: float = 1.0,
     requires_grad: bool = False,
     seed: int | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
     r"""Returns a tensor filled with random complex numbers uniformly distributed in the
-    complex plane.
+    complex plane unit disk.
 
-    Each element of the returned tensor has a random magnitude between 0 and `rmax` and
-    a random phase. Formally, each element is defined by
+    Each element of the returned tensor has a random magnitude between 0 and 1 and a
+    random phase. Formally, each element is defined by
 
     $$
         x = re^{i\theta}\ \text{with}\
         \left\{\begin{aligned}
-        r      &= \texttt{rmax} \cdot \sqrt{\texttt{rand(0,1)}} \\
+        r      &= \sqrt{\texttt{rand(0,1)}} \\
         \theta &= 2\pi \cdot \texttt{rand(0,1)}
         \end{aligned}\right.
     $$
@@ -39,11 +38,11 @@ def rand_complex(
 
     Note:
         The square root in the definition of the magnitude $r$ ensures that the
-        resulting complex numbers are uniformly distributed in the complex plane.
+        resulting complex numbers are uniformly distributed in the complex plane unit
+        disk.
 
     Args:
         size _(int or tuple of ints)_: Size of the returned tensor.
-        rmax: Maximum magnitude.
         requires_grad: Whether gradients need to be computed with respect to the
             returned tensor.
         seed: Seed for the random number generator.
@@ -54,12 +53,12 @@ def rand_complex(
         _(*size)_ Tensor filled with random complex numbers.
 
     Examples:
-        >>> x = dq.rand_complex((2, 5), rmax=2.0, seed=42)
+        >>> x = dq.rand_complex((2, 5), seed=42)
         >>> x
-        tensor([[ 1.722-0.750j, -1.592-1.061j,  0.844-0.905j, -1.784-0.809j,
-                 -0.070-1.248j],
-                [-1.400+0.665j,  0.762-0.668j, -1.593-0.798j, -0.202+1.929j,
-                 -0.508-0.524j]])
+        tensor([[ 0.861-0.375j, -0.796-0.531j,  0.422-0.453j, -0.892-0.404j,
+                 -0.035-0.624j],
+                [-0.700+0.333j,  0.381-0.334j, -0.797-0.399j, -0.101+0.965j,
+                 -0.254-0.262j]])
     """
     # Note: We need to manually fetch the default device, because if `device` is `None`
     # `torch.Generator` picks "cpu" as the default device, and not the device set by
@@ -74,10 +73,10 @@ def rand_complex(
 
     rand = lambda: torch.rand(size, generator=generator, dtype=rdtype, device=device)
 
-    # generate random magnitude with values in [0, rmax], the sqrt ensures that the
+    # generate random magnitude with values in [0, 1[, the sqrt ensures that the
     # resulting complex numbers are uniformly distributed in the complex plane
-    r = rmax * rand().sqrt()
-    # generate random phase with values in [0, 2pi]
+    r = rand().sqrt()
+    # generate random phase with values in [0, 2pi[
     theta = 2 * torch.pi * rand()
     x = r * torch.exp(1j * theta)
 
@@ -89,7 +88,7 @@ def rand_complex(
 def pwc_pulse(
     t_start: float, t_end: float, values: Tensor
 ) -> callable[[float], Tensor]:
-    """Returns a piecewise-constant (PWC) pulse.
+    """Returns a piecewise-constant (PWC) pulse. TODO: a callable
 
     TODO: explain better what a PWC pulse is and how it is defined from `x`. Also it
     returns 0.0 outside of `[t_start, t_end]`.
@@ -109,12 +108,12 @@ def pwc_pulse(
             tensor of shape _(...)_).
 
     Examples:
-        >>> x = dq.rand_complex((2, 5), rmax=2.0, seed=42)
+        >>> x = dq.rand_complex((2, 5), seed=42)
         >>> pulse = dq.pwc_pulse(0.0, 1.0, x)
         >>> type(pulse)
         <class 'function'>
         >>> pulse(0.5)
-        tensor([ 0.844-0.905j, -1.593-0.798j])
+        tensor([ 0.422-0.453j, -0.797-0.399j])
         >>> pulse(1.2)
         tensor([0.+0.j, 0.+0.j])
     """
