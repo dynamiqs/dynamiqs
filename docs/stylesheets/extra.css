@@ -188,11 +188,12 @@ article.md-typeset h1 {
 }
 
 /* Function name */
-.md-typeset .doc-function-name {
+
+.md-typeset .doc-object-name {
   color: #ed7764;
-  padding: 3px 0;
-  width: 100%;
   font-size: 0.85em;
+  text-transform: lowercase;
+  font-weight: bold;
 }
 
 /* Signature */

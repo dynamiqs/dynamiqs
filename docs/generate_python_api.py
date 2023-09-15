@@ -52,6 +52,9 @@ for path in PATHS_TO_PARSE:
 
         # create the function page
         with mkdocs_gen_files.open(doc_path_function, 'w') as f:
+            module = identifier.split('.')[0]
             print(f'::: {identifier}.{function}', file=f)
+            print(f'    options:', file=f)
+            print(f'        module: {module}', file=f)
 
         mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)
