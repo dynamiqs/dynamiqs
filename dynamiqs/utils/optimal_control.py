@@ -86,7 +86,9 @@ def rand_complex(
     return x
 
 
-def pwc_pulse(t_start: float, t_end: float, x: Tensor) -> callable[[float], Tensor]:
+def pwc_pulse(
+    t_start: float, t_end: float, values: Tensor
+) -> callable[[float], Tensor]:
     """Returns a piecewise-constant (PWC) pulse.
 
     TODO: explain better what a PWC pulse is and how it is defined from `x`. Also it
@@ -99,8 +101,8 @@ def pwc_pulse(t_start: float, t_end: float, x: Tensor) -> callable[[float], Tens
     Args:
         t_start: Start time of the pulse.
         t_end: End time of the pulse.
-        x _(..., nbins)_: Pulse complex values where `nbins` is the number of different
-            values between `t_start` and `t_end`.
+        values _(..., nbins)_: Pulse complex values where `nbins` is the number of
+            different values between `t_start` and `t_end`.
 
     Returns:
         Function that takes a time `t` and returns the pulse value at time `t` (a
@@ -120,12 +122,12 @@ def pwc_pulse(t_start: float, t_end: float, x: Tensor) -> callable[[float], Tens
     def pulse(t):
         if t < t_start or t > t_end:
             # return a null tensor of appropriate shape
-            batch_sizes = x.shape[:-1]
-            return torch.zeros(batch_sizes, dtype=x.dtype, device=x.device)
+            batch_sizes = values.shape[:-1]
+            return torch.zeros(batch_sizes, dtype=values.dtype, device=values.device)
         else:
             # find the index corresponding to time `t`
-            nbins = x.size(-1)
+            nbins = values.size(-1)
             idx = int(linmap(t, t_start, t_end, 0, nbins - 1))
-            return x[..., idx]
+            return values[..., idx]
 
     return pulse
