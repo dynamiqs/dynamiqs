@@ -4,10 +4,10 @@
     - [smesolve](solvers/smesolve.md)
 - [Utilities](utils.md)
     - Operators
-        - [qeye](utils/operators/qeye.md)
+        - [eye](utils/operators/eye.md)
         - [destroy](utils/operators/destroy.md)
         - [create](utils/operators/create.md)
-        - [num](utils/operators/num.md)
+        - [number](utils/operators/number.md)
         - [parity](utils/operators/parity.md)
         - [displace](utils/operators/displace.md)
         - [squeeze](utils/operators/squeeze.md)

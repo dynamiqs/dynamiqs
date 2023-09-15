@@ -9,10 +9,10 @@ from .tensor_types import get_cdtype
 from .utils import tensprod
 
 __all__ = [
-    'qeye',
+    'eye',
     'destroy',
     'create',
-    'num',
+    'number',
     'parity',
     'displace',
     'squeeze',
@@ -24,15 +24,15 @@ __all__ = [
 ]
 
 
-def qeye(
+def eye(
     *dims: int,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
     r"""Returns the identity operator.
 
-    If only a single dimension is provided, `qeye` returns the identity operator
-    of corresponding dimension. If instead multiples dimensions are provided, `qeye`
+    If only a single dimension is provided, `eye` returns the identity operator
+    of corresponding dimension. If instead multiples dimensions are provided, `eye`
     returns the identity operator of the composite Hilbert space given by the product
     of all dimensions.
 
@@ -45,12 +45,12 @@ def qeye(
         _(n, n)_ Identity operator (with _n_ the product of dimensions in `dims`).
 
     Examples:
-        >>> dq.qeye(4)
+        >>> dq.eye(4)
         tensor([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])
-        >>> dq.qeye(2, 3)
+        >>> dq.eye(2, 3)
         tensor([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -110,7 +110,7 @@ def destroy(
         return _destroy_single(dims[0], dtype=get_cdtype(dtype), device=device)
 
     a = [_destroy_single(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
-    I = [qeye(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
+    I = [eye(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
     return tuple(
         tensprod(*[a[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
@@ -176,7 +176,7 @@ def create(
         return _create_single(dims[0], dtype=cdtype, device=device)
 
     adag = [_create_single(dim, dtype=cdtype, device=device) for dim in dims]
-    I = [qeye(dim, dtype=cdtype, device=device) for dim in dims]
+    I = [eye(dim, dtype=cdtype, device=device) for dim in dims]
     return tuple(
         tensprod(*[adag[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
@@ -193,13 +193,13 @@ def _create_single(
     return torch.arange(1, dim, device=device).sqrt().diag(-1).to(get_cdtype(dtype))
 
 
-def num(
+def number(
     dim: int,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the num operator of a bosonic mode.
+    r"""Returns the number operator of a bosonic mode.
 
     It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
     creation operators, respectively.
@@ -213,7 +213,7 @@ def num(
         _(dim, dim)_ Number operator.
 
     Examples:
-        >>> dq.num(4)
+        >>> dq.number(4)
         tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
