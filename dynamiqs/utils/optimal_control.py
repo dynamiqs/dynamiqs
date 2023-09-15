@@ -28,10 +28,10 @@ def rand_complex(
 
     $$
         x = re^{i\theta}\ \text{with}\
-        \left\{\begin{aligned}
-        r      &= \sqrt{\texttt{rand(0,1)}} \\
-        \theta &= 2\pi \cdot \texttt{rand(0,1)}
-        \end{aligned}\right.
+        \begin{cases}
+            r = \sqrt{\texttt{rand(0,1)}} \\
+            \theta = 2\pi \cdot \texttt{rand(0,1)}
+        \end{cases}
     $$
 
     where $\texttt{rand(0,1)}$ is a random number uniformly distributed between 0 and 1.
