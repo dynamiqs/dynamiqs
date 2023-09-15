@@ -20,7 +20,7 @@ def rand_complex(
     device: str | torch.device | None = None,
 ) -> Tensor:
     r"""Returns a tensor filled with random complex numbers uniformly distributed in the
-    complex plane unit disk.
+    unit disc of the complex plane.
 
     Each element of the returned tensor has a random magnitude between 0 and 1 and a
     random phase. Formally, each element is defined by
@@ -37,8 +37,8 @@ def rand_complex(
 
     Note:
         The square root in the definition of the magnitude $r$ ensures that the
-        resulting complex numbers are uniformly distributed in the complex plane unit
-        disk.
+        resulting complex numbers are uniformly distributed in the unit disc of the
+        complex plane.
 
     Args:
         size _(int or tuple of ints)_: Size of the returned tensor.
@@ -87,12 +87,12 @@ def rand_complex(
 def pwc_pulse(
     t_start: float, t_end: float, values: Tensor
 ) -> callable[[float], Tensor]:
-    r"""Returns a piecewise-constant (PWC) pulse as a function that takes a single
-    parameter $t$ and returns the pulse value at this time.
+    r"""Returns a function that takes a time $t$ and returns the piecewise-constant
+    (PWC) pulse value at this time.
 
     The time interval $[t_\text{start}, t_\text{end}]$ is split into $n$ bins, where
-    $n$ is the last dimension of `values` (which can be batched with size _(..., n)_).
-    The pulse value at time $t$ is defined by
+    $n$ is the last dimension of `values` with shape _(..., n)_. The pulse value at
+    time $t$ is defined by
 
     - `torch.zeros(...)` if $t$ is not in $[t_\text{start}, t_\text{end}]$,
     - `values[..., k]` if $t$ is in the $k$-th bin of $[t_\text{start}, t_\text{end}]$.
