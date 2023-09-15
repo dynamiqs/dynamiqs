@@ -29,7 +29,110 @@ def smesolve(
     gradient: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
-    """Solve the Stochastic master equation."""
+    r"""Solve the stochastic master equation.
+
+    Evolve the density matrix $\rho(t)$ from an initial state $\rho(t=0) = \rho_0$
+    according to the stochastic master equation using a given Hamiltonian $H(t)$, a
+    list of jump operators $\{L_k\}$ with respective measurement efficiencies
+    $\{\eta_k\}$. The stochastic master equation is given by
+
+    $$
+    \begin{split}
+        d\rho_t = -i[H, \rho_t] dt &+ \sum_k \left(L_k \rho_t L_k^\dagger -
+        \frac{1}{2} \left\{L_k^\dagger L_k, \rho_t\right\}\right) dt \\
+        &+ \sum_k \sqrt{\eta_k} \left( L_k \rho_t + \rho_t L_k^\dagger
+        - \mathrm{Tr}[(L_k+L_k^\dagger) \rho_t] \right) dW_t^{(k)}
+    \end{split}
+    $$
+
+    where $dW_t^{(k)} \sim N(0, t)$ is a Wiener process, numerically sampled from a
+    white noise distribution. The measurement signals are then given by
+
+    $$
+        dy_t^{(k)} = \sqrt{\eta_k} \mathrm{Tr}[(L_k + L_k^\dagger) \rho_t] dt
+        + dW_t^{(k)}.
+    $$
+
+    For time-dependent problems, the Hamiltonian `H` can be passed as a function with
+    signature `H(t: float) -> Tensor`. Extra Hamiltonian arguments and time-dependence
+    for the jump operators are not yet supported.
+
+    The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
+    solve multiple stochastic master equations in a single run. The jump operators
+    `jump_ops` and time list `t_save` are then common to all batches.
+
+    `smesolve` can be differentiated through using either the default PyTorch autograd
+    library (pass `gradient_alg="autograd"` in `options`), or a custom adjoint state
+    differentiation (pass `gradient_alg="adjoint"` in `options`). By default, if no
+    gradient is required, the graph of operations is not stored to improve performance.
+
+    Args:
+        H _(Tensor or Callable)_: Hamiltonian.
+            Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
+            `H(t: float) -> Tensor` that returns a tensor of either possible shapes
+            at every time between `t=0` and `t=t_save[-1]`.
+        jump_ops _(Tensor, or list of Tensors)_: List of jump operators.
+            Each jump operator should be a tensor of shape `(n, n)`.
+        rho0 _(Tensor)_: Initial density matrix.
+            Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
+        t_save _(Tensor, np.ndarray or list)_: Times for which results are saved.
+            The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
+        etas _(Tensor, np.ndarray or list)_: Measurement efficiencies, of same length
+            as `jump_ops`.
+        ntrajs _(int)_: Number of stochastic trajectories.
+        t_meas _(Tensor, np.ndarray or list, optional)_: Times for which measurement
+            signals are saved. Defaults to `t_save`.
+        seed _(int, optional)_: Seed for the random number generator. Defaults to
+            `None`.
+        exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
+            the expectation value is computed at every time value in `t_save`.
+        solver _(str, optional)_: Solver to use. See the list of available solvers.
+            Defaults to `""` (no default solver).
+        gradient _(str, optional)_: Algorithm used for computing gradients.
+            Can be either `"autograd"` or `None`. Defaults to `None`.
+        options _(dict, optional)_: Solver options. See the list of available
+            solvers, and the options common to all solver below.
+
+    Note-: Available solvers
+      - `euler` --- Euler method (fixed step).
+      - `rouchon1` --- Rouchon method of order 1 (fixed step).
+
+    Note-: Available keys for `options`
+        Common to all solvers:
+
+        - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
+            time in `t_save`. If `False`, only the final state is stored and returned.
+            Defaults to `True`.
+        - **verbose** _(bool, optional)_ – If `True`, prints information about the
+            integration progress. Defaults to `True`.
+        - **dtype** _(torch.dtype, optional)_ – Complex data type to which all
+            complex-valued tensors are converted. `t_save` is also converted to a real
+            data type of the corresponding precision.
+        - **device** _(torch.device, optional)_ – Device on which the tensors are
+            stored.
+
+        Required for fixed step solvers (`euler`, `rouchon1`):
+
+        - **dt** _(float)_ – Numerical time step of integration.
+
+    Warning: Warning for fixed step solvers
+        For fixed time step solvers, both time lists `t_save` and `t_meas` should be
+        strictly included in the time list used by the solver, given by
+        `[0, dt, 2 * dt, ...]` where `dt` is defined with the `options` argument.
+
+    Returns:
+        Result of the master equation integration, as an instance of the `Result` class.
+            The `result` object has the following attributes:
+
+              - **y_save** or **states** _(Tensor)_ – Saved states.
+              - **exp_save** or **expects** _(Tensor)_ – Saved expectation values.
+              - **measurements** _(Tensor)_ – Saved measurement signals.
+              - **solver_str** (str): String representation of the solver.
+              - **start_datetime** _(datetime)_ – Start time of the integration.
+              - **end_datetime** _(datetime)_ – End time of the integration.
+              - **total_time** _(datetime)_ – Total time of the integration.
+              - **options** _(dict)_ – Solver options.
+    """
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (y_save, exp_save, meas_save) with
     #    - y_save: (b_H?, b_rho0?, ntrajs, len(t_save), n, n)
     #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(t_save))
