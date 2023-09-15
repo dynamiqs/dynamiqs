@@ -78,7 +78,7 @@ class LeakyCavity(OpenSystem):
         # prepare quantum operators
         self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.jump_ops = [torch.sqrt(self.kappa) * a, dq.qeye(self.n)]
+        self.jump_ops = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
         self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
         # prepare initial states

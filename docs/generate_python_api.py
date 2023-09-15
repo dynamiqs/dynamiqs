@@ -47,7 +47,7 @@ for path in PATHS_TO_PARSE:
 
     # loop over all functions in file
     for function in get_elements_from_all(src_path):
-        # convert to e.g 'python_api/utils/operators/qeye.md'
+        # convert to e.g 'python_api/utils/operators/eye.md'
         doc_path_function = Path(doc_path, function).with_suffix('.md')
 
         # create the function page
