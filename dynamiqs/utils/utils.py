@@ -8,6 +8,7 @@ from torch import Tensor
 __all__ = [
     'trace',
     'expect',
+    'dag',
     'norm',
     'unit',
     'tensprod',
@@ -83,6 +84,30 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
             'Argument `x` must be a ket, bra or density matrix, but has shape'
             f' {tuple(x.shape)}.'
         )
+
+
+def dag(x: Tensor) -> Tensor:
+    r"""Returns the adjoint (conjugate-transpose) of a ket, bra, density matrix or
+    operator.
+
+    Args:
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra, density matrix or
+            operator.
+
+    Returns:
+       _(..., n, 1) or (..., 1, n) or (..., n, n)_ Adjoint of `x`.
+
+    Notes:
+        This function is equivalent to `x.mH`.
+
+    Examples:
+        >>> dq.fock(2, 0)
+        tensor([[1.+0.j],
+                [0.+0.j]])
+        >>> dq.dag(dq.fock(2, 0))
+        tensor([[1.-0.j, 0.-0.j]])
+    """
+    return x.mH
 
 
 def norm(x: Tensor) -> Tensor:
