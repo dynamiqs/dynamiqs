@@ -13,6 +13,7 @@ theme:
     - navigation.indexes
     - navigation.top
     - search.suggest
+    - content.code.copy
   icon:
     repo: fontawesome/brands/github
   logo: media/logo.png
@@ -43,6 +44,7 @@ extra:
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/jupyter.css
 plugins:
   - search
   - gen-files:
@@ -51,6 +53,7 @@ plugins:
   - literate-nav:
       nav_file: navigation.md
   - section-index
+  - mkdocs-jupyter
   - mkdocstrings:
       default_handler: python
       custom_templates: docs/templates
@@ -94,4 +97,5 @@ nav:
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
+      - Example: tutorials/example.ipynb
   - Python API: python_api/

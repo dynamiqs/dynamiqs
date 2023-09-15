@@ -5,6 +5,7 @@
   --md-accent-fg-color: #cc5d4c;
   --md-accent-fg-color--light: #cd9a92;
   --md-accent-fg-color--dark: #66190e;
+  --md-header-font-family: 'Tahoma';
 }
 
 /* Light mode */
@@ -13,19 +14,30 @@
   --md-default-bg-color: #ffffff;
   --md-default-bg-header-color: #f5f5f5;
 
-  /* Highlight */
+  /* Code highlight */
   --md-code-hl-constant-color: #ed7764;
+  --md-code-hl-number-color: #cf5e89;
+  --md-code-hl-color: #0b4f6c;
+  --md-code-hl-string-color: #25adab;
+  --md-code-hl-special-color: #25adab;
+  --md-code-hl-keyword-color: #25adab;
+  --md-code-hl-operator-color: #3b7091;
+  --md-code-hl-function-color: #39464b;
+  --md-code-hl-punctuation-color: 0000008a;
+
+  /* Hover color */
+  --md-accent-fg-color--transparent: #f5eae9;
 
   /* Search text color */
   --md-primary-bg-color--light: #7e7c7c;
 
   /* Warning color shades */
-  --md-warning-fg-color: #e899a6;
-  --md-warning-bg-color: #ffe6ea;
+  --md-warning-fg-color: #e190b0;
+  --md-warning-bg-color: #fbdde9;
 
   /* Note color shades */
-  --md-note-fg-color: #008080;
-  --md-note-bg-color: #cde5e5;
+  --md-note-fg-color: #25adab;
+  --md-note-bg-color: #cfe8e8;
 
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
@@ -44,16 +56,27 @@
   --md-code-bg-color: #444950;
   --md-default-bg-header-color: #444950;
 
-  /* Highlight */
+  /* Code highlight */
   --md-code-hl-constant-color: #ed7764;
+  --md-code-hl-number-color: #e56395;
+  --md-code-hl-color: #0b4f6c;
+  --md-code-hl-string-color: #23bebb;
+  --md-code-hl-special-color: #23bebb;
+  --md-code-hl-keyword-color: #23bebb;
+  --md-code-hl-operator-color: #89aabe;
+  --md-code-hl-function-color: #d5d7e2;
+  --md-code-hl-punctuation-color: #d2d7f99e;
+
+  /* Hover color */
+  --md-accent-fg-color--transparent: #494241;
 
   /* Warning color shades */
-  --md-warning-fg-color: #e899a6;
-  --md-warning-bg-color: #443639;
+  --md-warning-fg-color: #e293b1;
+  --md-warning-bg-color: #5c434d;
 
   /* Note color shades */
-  --md-note-fg-color: #008080;
-  --md-note-bg-color: #384848;
+  --md-note-fg-color: #23bebb;
+  --md-note-bg-color: #3e5656;
 
   /* Admonition color shades */
   --md-admonition-fg-color: var(--md-default-fg-color);
@@ -203,11 +226,11 @@ article.md-typeset h1 {
 
 /* API table */
 .md-typeset table:not([class]) {
-    border:none;
+  border: none;
 }
 
 .md-typeset table:not([class]) td {
-    border-top:none;
+  border-top: none;
 }
 
 .md-typeset table:not([class]) td.fixed_height {
@@ -220,7 +243,7 @@ article.md-typeset h1 {
 }
 
 .md-typeset table:not([class]) tr:nth-child(odd) {
-    background-color: color-mix(in srgb,var(--md-default-bg-color),#8e8e8e 5%);
+  background-color: color-mix(in srgb, var(--md-default-bg-color), #8e8e8e 5%);
 }
 
 /* Fix for two-line parameters when deploying doc */
@@ -236,7 +259,6 @@ p {
   display: inline;
 }
 
-
 /* Italic code comments */
 .highlight .c,
 .highlight .c1,
@@ -245,4 +267,48 @@ p {
 .highlight .cs,
 .highlight .sd {
   font-style: italic;
+}
+
+/* Spacing before/after latex formula */
+.md-typeset .arithmatex {
+  margin: -0.5em 0 -1em 0;
+}
+
+/* Header sizes */
+article.md-typeset h1 {
+  font-size: 1.8em;
+  letter-spacing: 0.02em;
+  font-family: var(--md-header-font-family);
+  color: var(--md-typeset-color);
+}
+
+.md-typeset h2 {
+  font-size: 1.4em;
+  letter-spacing: 0.01em;
+  font-family: var(--md-header-font-family);
+}
+
+.md-typeset h3 {
+  font-size: 1.0em;
+  font-weight: 600;
+}
+
+/* Ignore chevron in pycon code */
+.highlight .gp,
+.highlight .go {
+  /* Generic.Prompt, Generic.Output */
+  user-select: none;
+}
+
+/* Function names in API */
+.md-typeset .doc-function-name {
+  color: #ed7764;
+  padding: 3px 0;
+  width: 100%;
+  font-size: 0.85em;
+}
+
+/* Code blocks */
+.md-typeset .highlight:not(.doc-contents > .highlight) {
+  border-left: 3px solid #ed7764;
 }
