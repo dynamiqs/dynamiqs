@@ -41,9 +41,6 @@ class Solver(ABC):
         self.rdtype = self.options.rdtype
         self.device = self.options.device
 
-        # initialize save logic and save initial state if necessary
-        self._init_save()
-
         # initialize save tensors
         batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
 
@@ -68,6 +65,9 @@ class Solver(ABC):
             exp_save = None
 
         self.result = Result(options, y_save, exp_save)
+
+        # initialize save logic and save initial state if necessary
+        self._init_save()
 
     def run(self):
         self.result.start_time = time()

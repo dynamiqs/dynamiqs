@@ -24,5 +24,6 @@ class MEPropagator(MESolver, Propagator):
 
     def save(self, y: Tensor):
         # override `save` method to convert `y` from vector to operator
-        y = vector_to_operator(y)  # (b_H, b_rho, n, n)
+        if y.shape[-1] == 1:
+            y = vector_to_operator(y)  # (b_H, b_rho, n, n)
         super().save(y)

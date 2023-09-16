@@ -41,7 +41,7 @@ class FixedSolver(AutogradSolver):
         nobar = not self.options.verbose
         for ts in tqdm(self.t_stop(), disable=nobar):
             # integrate the ODE forward
-            t, y = self.integrate(t, ts, y)
+            y = self.integrate(t, ts, y)
             self.save(y)
             t = ts
 
