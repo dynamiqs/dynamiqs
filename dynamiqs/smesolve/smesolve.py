@@ -9,7 +9,7 @@ from ..solvers.options import Euler, Rouchon1
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
-from ..utils.utils import is_ket, ket_to_dm
+from ..utils.utils import isket, ket_to_dm
 from .euler import SMEEuler
 from .rouchon import SMERouchon1
 
@@ -184,7 +184,7 @@ def smesolve(
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H).unsqueeze(2)
     rho0 = batch_y0(rho0, H).unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)
-    if is_ket(rho0):
+    if isket(rho0):
         rho0 = ket_to_dm(rho0)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
     jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
