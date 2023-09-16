@@ -36,23 +36,17 @@ class Propagator(AutogradSolver):
 
     def run_autograd(self):
         # initialize time and state
-        y, t = self.y0, 0.0
-
-        # save initial state
-        if self.t_save[0] == 0.0:
-            self.save(y)
+        t, y = 0.0, self.y0
 
         # run the ode routine
         nobar = not self.options.verbose
         for ts in tqdm(self.t_stop(), disable=nobar):
             # round time difference to avoid numerical errors when comparing floats
             delta_t = round_truncate(ts - t)
+
+            # integrate the ODE forward
             y = self.forward(t, delta_t, y)
-
-            # save state
             self.save(y)
-
-            # iterate time
             t = ts
 
     @abstractmethod

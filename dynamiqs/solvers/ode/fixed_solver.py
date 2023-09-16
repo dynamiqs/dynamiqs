@@ -35,23 +35,14 @@ class FixedSolver(AutogradSolver):
             )
 
         # initialize time and state
-        t = 0.0
-        y = self.y0
-
-        # save initial state
-        if self.t_save[0] == 0.0:
-            self.save(y)
+        t, y = 0.0, self.y0
 
         # run the ode routine
         nobar = not self.options.verbose
         for ts in tqdm(self.t_stop(), disable=nobar):
             # integrate the ODE forward
-            y = self.integrate(t, ts, y)
-
-            # save solution
+            t, y = self.integrate(t, ts, y)
             self.save(y)
-
-            # iterate time
             t = ts
 
     def integrate(self, t0: float, t1: float, y: Tensor) -> Tensor:

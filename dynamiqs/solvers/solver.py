@@ -41,8 +41,8 @@ class Solver(ABC):
         self.rdtype = self.options.rdtype
         self.device = self.options.device
 
-        # initialize save counter
-        self.t_save_counter = 0
+        # initialize save logic and save initial state if necessary
+        self._init_save()
 
         # initialize save tensors
         batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
@@ -82,19 +82,11 @@ class Solver(ABC):
     def run_nograd(self):
         pass
 
-    def t_stop(self):
-        """Return t_save excluding the initial time."""
-        if self.t_save[0] != 0.0:
-            return self.t_save.cpu().numpy()
-        else:
-            return self.t_save[1:].cpu().numpy()
-
-    def t_stop_backward(self):
-        """Return t_save excluding the final time."""
-        t_stop = self.t_save[:-1]
-        if t_stop[0] != 0.0:
-            t_stop = torch.cat((torch.zeros(1), t_stop))
-        return t_stop.cpu().numpy()
+    def _init_save(self):
+        """Initialize the save logic and save the initial state if necessary."""
+        self.t_save_counter = 0
+        if self.t_save[0] == 0.0:
+            self.save(self.y0)
 
     def save(self, y: Tensor):
         self._save_y(y)
@@ -111,6 +103,20 @@ class Solver(ABC):
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
             self.result.exp_save[..., self.t_save_counter] = bexpect(self.exp_ops, y)
+
+    def t_stop(self):
+        """Return t_save excluding `t=0.0`."""
+        if self.t_save[0] != 0.0:
+            return self.t_save.cpu().numpy()
+        else:
+            return self.t_save[1:].cpu().numpy()
+
+    def t_stop_backward(self):
+        """Return t_save excluding the final time and including `t=0.0`."""
+        t_stop = self.t_save[:-1]
+        if t_stop[0] != 0.0:
+            t_stop = torch.cat((torch.zeros(1), t_stop))
+        return t_stop.cpu().numpy()
 
 
 class AutogradSolver(Solver):

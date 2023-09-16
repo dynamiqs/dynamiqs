@@ -33,20 +33,12 @@ class AdaptiveSolver(AutogradSolver):
         dt = self.init_tstep(f0, self.y0, 0.0)
         error = 1.0
 
-        # save initial state
-        if self.t_save[0] == 0.0:
-            self.save(self.y0)
-
         # run the ODE routine
         t, y, ft = 0.0, self.y0, f0
         for ts in self.t_stop():
             # integrate the ODE forward
             y, ft, dt, error = self.integrate(t, ts, y, ft, dt, error)
-
-            # save solution
             self.save(y)
-
-            # iterate time
             t = ts
 
         # close progress bar
