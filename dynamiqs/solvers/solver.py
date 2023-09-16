@@ -17,7 +17,7 @@ class Solver(ABC):
         self,
         H: TDTensor,
         y0: Tensor,
-        t_save: Tensor,
+        tsave: Tensor,
         exp_ops: Tensor,
         options: Options,
     ):
@@ -26,13 +26,13 @@ class Solver(ABC):
         Args:
             H:
             y0: Initial quantum state, of shape `(..., m, n)`.
-            t_save: Times for which results are saved.
+            tsave: Times for which results are saved.
             exp_ops:
             options:
         """
         self.H = H
         self.y0 = y0
-        self.t_save = t_save
+        self.tsave = tsave
         self.exp_ops = exp_ops
         self.options = options
 
@@ -48,33 +48,33 @@ class Solver(ABC):
         batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
 
         if self.options.save_states:
-            # y_save: (..., len(t_save), m, n)
-            y_save = torch.zeros(
-                *batch_sizes, len(t_save), m, n, dtype=self.cdtype, device=self.device
+            # ysave: (..., len(tsave), m, n)
+            ysave = torch.zeros(
+                *batch_sizes, len(tsave), m, n, dtype=self.cdtype, device=self.device
             )
         else:
-            y_save = None
+            ysave = None
 
         if len(self.exp_ops) > 0:
-            # exp_save: (..., len(exp_ops), len(t_save))
+            # exp_save: (..., len(exp_ops), len(tsave))
             exp_save = torch.zeros(
                 *batch_sizes,
                 len(exp_ops),
-                len(t_save),
+                len(tsave),
                 dtype=self.cdtype,
                 device=self.device,
             )
         else:
             exp_save = None
 
-        self.result = Result(options, y_save, exp_save)
+        self.result = Result(options, ysave, exp_save)
 
     def _init_time_logic(self):
-        self.t_stop = self.t_save
-        self.t_stop_counter = 0
+        self.tstop = self.tsave
+        self.tstop_counter = 0
 
-        self.t_save_mask = torch.isin(self.t_stop, self.t_save)
-        self.t_save_counter = 0
+        self.tsave_mask = torch.isin(self.tstop, self.tsave)
+        self.tsave_counter = 0
 
     def run(self):
         self.result.start_time = time()
@@ -89,29 +89,29 @@ class Solver(ABC):
     def run_nograd(self):
         pass
 
-    def next_t_stop(self) -> float:
-        return self.t_stop[self.t_stop_counter].item()
+    def next_tstop(self) -> float:
+        return self.tstop[self.tstop_counter].item()
 
     def save(self, y: Tensor):
         self._save(y)
-        self.t_stop_counter += 1
+        self.tstop_counter += 1
 
     def _save(self, y: Tensor):
-        if self.t_save_mask[self.t_stop_counter]:
+        if self.tsave_mask[self.tstop_counter]:
             self._save_y(y)
             self._save_exp_ops(y)
-            self.t_save_counter += 1
+            self.tsave_counter += 1
 
     def _save_y(self, y: Tensor):
         if self.options.save_states:
-            self.result.y_save[..., self.t_save_counter, :, :] = y
+            self.result.ysave[..., self.tsave_counter, :, :] = y
         # otherwise only save the state if it is the final state
-        elif self.t_save_counter == len(self.t_save) - 1:
-            self.result.y_save = y
+        elif self.tsave_counter == len(self.tsave) - 1:
+            self.result.ysave = y
 
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
-            self.result.exp_save[..., self.t_save_counter] = bexpect(self.exp_ops, y)
+            self.result.exp_save[..., self.tsave_counter] = bexpect(self.exp_ops, y)
 
 
 class AutogradSolver(Solver):
