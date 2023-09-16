@@ -13,6 +13,7 @@ PATHS_TO_PARSE = [
     'dynamiqs/utils/tensor_types.py',
     'dynamiqs/utils/wigners.py',
     'dynamiqs/utils/vectorization.py',
+    'dynamiqs/utils/optimal_control.py',
 ]
 
 
@@ -54,7 +55,5 @@ for path in PATHS_TO_PARSE:
         with mkdocs_gen_files.open(doc_path_function, 'w') as f:
             module = identifier.split('.')[0]
             print(f'::: {identifier}.{function}', file=f)
-            print(f'    options:', file=f)
-            print(f'        module: {module}', file=f)
 
         mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)
