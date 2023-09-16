@@ -1,4 +1,5 @@
-<!-- ::: dynamiqs.sesolve.sesolve.sesolve
+::: dynamiqs.sesolve.sesolve.sesolve
     options:
         show_root_heading: true
-        heading_level: 1 -->
+        heading_level: 1
+        module: dynamiqs

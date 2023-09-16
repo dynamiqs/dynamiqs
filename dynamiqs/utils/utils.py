@@ -8,15 +8,16 @@ from torch import Tensor
 __all__ = [
     'trace',
     'expect',
+    'dag',
     'norm',
     'unit',
     'tensprod',
     'ptrace',
     'dissipator',
     'lindbladian',
-    'is_ket',
-    'is_bra',
-    'is_dm',
+    'isket',
+    'isbra',
+    'isdm',
     'ket_to_bra',
     'ket_to_dm',
     'ket_overlap',
@@ -72,17 +73,41 @@ def expect(O: Tensor, x: Tensor) -> Tensor:
         >>> dq.expect(a.mH @ a, psi)
         tensor(4.000+0.j)
     """
-    if is_ket(x):
+    if isket(x):
         return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
-    elif is_bra(x):
+    elif isbra(x):
         return torch.einsum('...ij,jk,...kl->...', x, O, x.mH)
-    elif is_dm(x):
+    elif isdm(x):
         return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
     else:
         raise ValueError(
             'Argument `x` must be a ket, bra or density matrix, but has shape'
             f' {tuple(x.shape)}.'
         )
+
+
+def dag(x: Tensor) -> Tensor:
+    r"""Returns the adjoint (conjugate-transpose) of a ket, bra, density matrix or
+    operator.
+
+    Args:
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra, density matrix or
+            operator.
+
+    Returns:
+       _(..., n, 1) or (..., 1, n) or (..., n, n)_ Adjoint of `x`.
+
+    Notes:
+        This function is equivalent to `x.mH`.
+
+    Examples:
+        >>> dq.fock(2, 0)
+        tensor([[1.+0.j],
+                [0.+0.j]])
+        >>> dq.dag(dq.fock(2, 0))
+        tensor([[1.-0.j, 0.-0.j]])
+    """
+    return x.mH
 
 
 def norm(x: Tensor) -> Tensor:
@@ -114,9 +139,9 @@ def norm(x: Tensor) -> Tensor:
 
         ```
     """
-    if is_ket(x) or is_bra(x):
+    if isket(x) or isbra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
-    elif is_dm(x):
+    elif isdm(x):
         return trace(x).real
     else:
         raise ValueError(
@@ -247,7 +272,7 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
-    hilbert_size = x.size(-2) if is_ket(x) else x.size(-1)
+    hilbert_size = x.size(-2) if isket(x) else x.size(-1)
     prod_dims = torch.prod(dims)
     if not prod_dims == hilbert_size:
         dims_prod_str = '*'.join(str(d.item()) for d in dims) + f'={prod_dims}'
@@ -274,11 +299,11 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
 
     # trace out x over unkept dimensions
     batch_dims = x.shape[:-2]
-    if is_ket(x) or is_bra(x):
+    if isket(x) or isbra(x):
         x = x.view(-1, *dims)  # e.g. (..., 20, 2, 5)
         eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
         x = torch.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
-    elif is_dm(x):
+    elif isdm(x):
         x = x.view(-1, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
         eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
         x = torch.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
@@ -360,7 +385,7 @@ def lindbladian(H: Tensor, L: Tensor, rho: Tensor) -> Tensor:
     return -1j * (H @ rho - rho @ H) + dissipator(L, rho).sum(-3)
 
 
-def is_ket(x: Tensor) -> bool:
+def isket(x: Tensor) -> bool:
     r"""Returns True if a tensor is in the format of a ket.
 
     Args:
@@ -370,17 +395,17 @@ def is_ket(x: Tensor) -> bool:
         True if the last dimension of `x` is 1, False otherwise.
 
     Examples:
-        >>> dq.is_ket(torch.ones(3, 1))
+        >>> dq.isket(torch.ones(3, 1))
         True
-        >>> dq.is_ket(torch.ones(5, 3, 1))
+        >>> dq.isket(torch.ones(5, 3, 1))
         True
-        >>> dq.is_ket(torch.ones(3, 3))
+        >>> dq.isket(torch.ones(3, 3))
         False
     """
     return x.size(-1) == 1
 
 
-def is_bra(x: Tensor) -> bool:
+def isbra(x: Tensor) -> bool:
     r"""Returns True if a tensor is in the format of a bra.
 
     Args:
@@ -390,17 +415,17 @@ def is_bra(x: Tensor) -> bool:
         True if the second to last dimension of `x` is 1, False otherwise.
 
     Examples:
-        >>> dq.is_bra(torch.ones(1, 3))
+        >>> dq.isbra(torch.ones(1, 3))
         True
-        >>> dq.is_bra(torch.ones(5, 1, 3))
+        >>> dq.isbra(torch.ones(5, 1, 3))
         True
-        >>> dq.is_bra(torch.ones(3, 3))
+        >>> dq.isbra(torch.ones(3, 3))
         False
     """
     return x.size(-2) == 1
 
 
-def is_dm(x: Tensor) -> bool:
+def isdm(x: Tensor) -> bool:
     r"""Returns True if a tensor is in the format of a density matrix.
 
     Args:
@@ -410,11 +435,11 @@ def is_dm(x: Tensor) -> bool:
         True if the last two dimensions of `x` are equal, False otherwise.
 
     Examples:
-        >>> dq.is_dm(torch.ones(3, 3))
+        >>> dq.isdm(torch.ones(3, 3))
         True
-        >>> dq.is_dm(torch.ones(5, 3, 3))
+        >>> dq.isdm(torch.ones(5, 3, 3))
         True
-        >>> dq.is_dm(torch.ones(3, 1))
+        >>> dq.isdm(torch.ones(3, 1))
         False
     """
     return x.size(-1) == x.size(-2)
@@ -422,11 +447,11 @@ def is_dm(x: Tensor) -> bool:
 
 def _quantum_type(x: Tensor) -> str:
     """Returns the quantum type of a tensor."""
-    if is_ket(x):
+    if isket(x):
         return 'ket'
-    elif is_bra(x):
+    elif isbra(x):
         return 'bra'
-    elif is_dm(x):
+    elif isdm(x):
         return 'density matrix'
     else:
         raise ValueError(

@@ -13,6 +13,7 @@ theme:
     - navigation.indexes
     - navigation.top
     - search.suggest
+    - content.code.copy
   icon:
     repo: fontawesome/brands/github
   logo: media/logo.png
@@ -43,6 +44,8 @@ extra:
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/jupyter.css
+  - stylesheets/theme.css
 plugins:
   - search
   - gen-files:
@@ -51,6 +54,7 @@ plugins:
   - literate-nav:
       nav_file: navigation.md
   - section-index
+  - mkdocs-jupyter
   - mkdocstrings:
       default_handler: python
       custom_templates: docs/templates
@@ -89,9 +93,10 @@ nav:
       - getting_started/index.md
       - What is dynamiqs?: getting_started/whatis.md
       - Installation: getting_started/installation.md
-      - First examples: getting_started/examples.md
+      - Basic examples: getting_started/examples.ipynb
       - Contributing: getting_started/contributing.md
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
+      - Workflow in dynamiqs: tutorials/workflow.ipynb
   - Python API: python_api/
