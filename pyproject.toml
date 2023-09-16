@@ -11,6 +11,10 @@ dependencies = [
     "methodtools",
 ]
 
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
 [project.optional-dependencies]
 dev = [
     "taskipy",
@@ -22,13 +26,11 @@ dev = [
     "pytest-sugar",
     "mkdocs-material",
     "mkdocstrings[python]",
+    "mkdocs-jupyter",
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
     "mkdocs-section-index",
 ]
-
-[tool.setuptools]
-packages = ["dynamiqs"]
 
 [tool.isort]
 profile = "black"

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from math import cos, pi, sin, sqrt
+from typing import Any
 
 import torch
 from torch import Tensor
 
 import dynamiqs as dq
-from dynamiqs.options import Options
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
@@ -19,13 +19,22 @@ class ClosedSystem(System):
         return self.n, 1
 
     def _run(
-        self, H: Tensor, y0: Tensor, t_save: ArrayLike, options: Options
+        self,
+        H: Tensor,
+        y0: Tensor,
+        t_save: ArrayLike,
+        solver: str,
+        *,
+        gradient: str | None = None,
+        options: dict[str, Any] | None = None,
     ) -> Result:
         return dq.sesolve(
             H,
             y0,
             t_save,
             exp_ops=self.exp_ops,
+            solver=solver,
+            gradient=gradient,
             options=options,
         )
 

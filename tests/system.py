@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
+from typing import Any
 
 import torch
 from torch import Tensor
 
 import dynamiqs as dq
-from dynamiqs.options import Options
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
@@ -69,9 +69,25 @@ class System(ABC):
 
     @abstractmethod
     def _run(
-        self, H: Tensor, y0: Tensor, t_save: ArrayLike, options: Options
+        self,
+        H: Tensor,
+        y0: Tensor,
+        t_save: ArrayLike,
+        solver: str,
+        *,
+        gradient: str | None = None,
+        options: dict[str, Any] | None = None,
     ) -> Result:
         pass
 
-    def run(self, t_save: ArrayLike, options: Options) -> Result:
-        return self._run(self.H, self.y0, t_save, options)
+    def run(
+        self,
+        t_save: ArrayLike,
+        solver: str,
+        *,
+        gradient: str | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> Result:
+        return self._run(
+            self.H, self.y0, t_save, solver, gradient=gradient, options=options
+        )

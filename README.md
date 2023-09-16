@@ -26,11 +26,10 @@ We hope that this library will prove beneficial to the community for e.g. simula
 
 ## Installation
 
-We will soon make a first release of the library on PyPi. In the meantime, you can clone the repository locally and install directly from source:
+We will soon make a first release of the library on PyPi. In the meantime, you can install directly from source:
 
 ```shell
-git clone https://github.com/dynamiqs/dynamiqs.git
-pip install -e dynamiqs
+pip install git+https://github.com/dynamiqs/dynamiqs.git
 ```
 
 ## Examples
@@ -104,8 +103,8 @@ t_save = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dq.options.Dopri5(gradient_alg='autograd', verbose=False)
-result = dq.mesolve(H, jump_ops, rho0, t_save, options=options)
+options = dict(verbose=False)
+result = dq.mesolve(H, jump_ops, rho0, t_save, gradient='autograd', options=options)
 
 # gradient computation
 loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]

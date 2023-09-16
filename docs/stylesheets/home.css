@@ -1,3 +1,8 @@
+/*
+File: home.css
+Description: CSS for the homepage
+*/
+
 /* Remove sidebars */
 .md-sidebar--primary,
 .md-sidebar--secondary {
@@ -126,15 +131,15 @@
 
 .tx-hero .md-button--primary {
     background-color: var(--md-primary-bg-color);
-    color: var(--homepage-button-color);
+    color: var(--homepage-button-font-color);
     border-color: var(--md-primary-bg-color)
 }
 
 .tx-hero .md-button:focus,
 .tx-hero .md-button:hover {
-    background-color: var(--homepage-button-color);
-    color: var(--md-default-bg-color);
-    border-color: var(--homepage-button-color);
+    background-color: var(--homepage-button-hover-color);
+    color: var(--md-primary-bg-color);
+    border-color: var(--homepage-button-hover-color);
 }
 
 /* Feature boxes */
@@ -162,4 +167,5 @@
 
 .feature-item p a {
     color: var(--md-accent-fg-color);
+    font-weight: bold;
 }

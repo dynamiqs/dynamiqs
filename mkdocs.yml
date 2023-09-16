@@ -7,12 +7,12 @@ theme:
   name: material
   custom_dir: docs/overrides
   features:
-    - navigation.instant
     - navigation.tabs
     - navigation.sections
     - navigation.indexes
     - navigation.top
     - search.suggest
+    - content.code.copy
   icon:
     repo: fontawesome/brands/github
   logo: media/logo.png
@@ -43,6 +43,9 @@ extra:
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/jupyter.css
+  - stylesheets/theme.css
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
   - gen-files:
@@ -51,6 +54,7 @@ plugins:
   - literate-nav:
       nav_file: navigation.md
   - section-index
+  - mkdocs-jupyter
   - mkdocstrings:
       default_handler: python
       custom_templates: docs/templates
@@ -78,9 +82,9 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 extra_javascript:
-  - javascripts/mathjax.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - javascripts/katex.js
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
 watch:
   - dynamiqs
 nav:
@@ -89,9 +93,10 @@ nav:
       - getting_started/index.md
       - What is dynamiqs?: getting_started/whatis.md
       - Installation: getting_started/installation.md
-      - First examples: getting_started/examples.md
+      - Basic examples: getting_started/examples.ipynb
       - Contributing: getting_started/contributing.md
       - Let's dicuss: getting_started/discussion.md
   - Tutorials:
       - tutorials/index.md
+      - Workflow in dynamiqs: tutorials/workflow.ipynb
   - Python API: python_api/

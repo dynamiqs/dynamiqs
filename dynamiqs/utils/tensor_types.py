@@ -164,8 +164,9 @@ def from_qutip(
     return torch.from_numpy(x.full()).to(dtype=get_cdtype(dtype), device=device)
 
 
-def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
-    r"""Convert a PyTorch tensor to a QuTiP quantum object.
+def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj]:
+    r"""Convert a PyTorch tensor to a QuTiP quantum object (or a list of QuTiP quantum
+    object if the tensor is batched).
 
     Args:
         x: PyTorch tensor.
@@ -173,9 +174,10 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
             _(2, n)_ where _n_ is the number of modes in the tensor product.
 
     Returns:
-        QuTiP quantum object.
+        QuTiP quantum object or list of QuTiP quantum object.
 
     Examples:
+        ```python
         >>> psi = dq.fock(3, 1)
         >>> psi
         tensor([[0.+0.j],
@@ -187,6 +189,15 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
         [[0.]
          [1.]
          [0.]]
+
+        # batched tensor
+        >>> rhos = torch.stack([dq.coherent_dm(16, i) for i in range(5)])
+        >>> rhos.shape
+        torch.Size([5, 16, 16])
+        >>> len(dq.to_qutip(rhos))
+        5
+
+        ```
 
         Note that the tensor product structure is not inferred automatically, it must be
         specified with the `dims` argument using QuTiP dimensions format:
@@ -210,7 +221,10 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj:
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
-    return Qobj(x.numpy(force=True), dims=dims)
+    if x.ndim > 2:
+        return [to_qutip(sub_x) for sub_x in x]
+    else:
+        return Qobj(x.numpy(force=True), dims=dims)
 
 
 def to_device(device: str | torch.device | None) -> torch.device:

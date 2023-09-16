@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from torch import Tensor
 
-from ..options import Options
+from .options import Options
 
 
 def memory_bytes(x: Tensor) -> int:
