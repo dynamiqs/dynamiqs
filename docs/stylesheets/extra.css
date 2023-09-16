@@ -114,24 +114,10 @@ Description: Extra CSS for the dynamiqs documentation
   margin-bottom: 0.2em;
 }
 
-/* Header sizes */
-article.md-typeset h1 {
-    font-size: 1.6em;
-    line-height: 1.0;
-    margin: 0 0 1.0em;
-    text-transform: uppercase;
-    font-weight: 400;
-    letter-spacing:-0.02em;
-    font-family: var(--md-text-font-family);
-}
-
 /* Function name */
-
 .md-typeset .doc-object-name {
   color: #ed7764;
   font-size: 0.85em;
-  text-transform: lowercase;
-  font-weight: bold;
 }
 
 /* Signature */
@@ -226,4 +212,15 @@ article.md-typeset h1 {
 /* Code blocks */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
   border-left: 3px solid #ed7764;
+}
+
+/* bullet point lists */
+.md-typeset ul li {
+    margin-bottom: 0;
+    padding-left: 0.3em
+}
+
+.md-typeset ul li::marker {
+    content: "»";
+    font-weight:600;
 }
