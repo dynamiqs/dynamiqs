@@ -17,14 +17,14 @@ from .rouchon import SMERouchon1
 def smesolve(
     H: TDArrayLike,
     jump_ops: list[ArrayLike],
+    etas: ArrayLike,
     rho0: ArrayLike,
     t_save: ArrayLike,
-    etas: ArrayLike,
-    ntrajs: int,
     *,
-    t_meas: ArrayLike | None = None,
-    seed: int | None = None,
     exp_ops: list[ArrayLike] | None = None,
+    t_meas: ArrayLike | None = None,
+    ntrajs: int = 1,
+    seed: int | None = None,
     solver: str = '',
     gradient: str | None = None,
     options: dict[str, Any] | None = None,
@@ -73,19 +73,19 @@ def smesolve(
             at every time between `t=0` and `t=t_save[-1]`.
         jump_ops _(Tensor, or list of Tensors)_: List of jump operators.
             Each jump operator should be a tensor of shape `(n, n)`.
+        etas _(Tensor, np.ndarray or list)_: Measurement efficiencies, of same length
+            as `jump_ops`.
         rho0 _(Tensor)_: Initial density matrix.
             Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
         t_save _(Tensor, np.ndarray or list)_: Times for which results are saved.
             The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
-        etas _(Tensor, np.ndarray or list)_: Measurement efficiencies, of same length
-            as `jump_ops`.
-        ntrajs _(int)_: Number of stochastic trajectories.
-        t_meas _(Tensor, np.ndarray or list, optional)_: Times for which measurement
-            signals are saved. Defaults to `t_save`.
-        seed _(int, optional)_: Seed for the random number generator. Defaults to
-            `None`.
         exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
             the expectation value is computed at every time value in `t_save`.
+        t_meas _(Tensor, np.ndarray or list, optional)_: Times for which measurement
+            signals are saved. Defaults to `t_save`.
+        ntrajs _(int, optional)_: Number of stochastic trajectories. Defaults to 1.
+        seed _(int, optional)_: Seed for the random number generator. Defaults to
+            `None`.
         solver _(str, optional)_: Solver to use. See the list of available solvers.
             Defaults to `""` (no default solver).
         gradient _(str, optional)_: Algorithm used for computing gradients.
@@ -208,7 +208,9 @@ def smesolve(
     if torch.any(etas < 0.0) or torch.any(etas > 1.0):
         raise ValueError('Argument `etas` must contain values between 0 and 1.')
 
-    # convert t_meas to a tensor
+    # convert t_meas to a tensor (default to `t_save` if None)
+    if t_meas is None:
+        t_meas = t_save
     t_meas = to_tensor(t_meas, dtype=options.rdtype, device=options.device)
     check_time_tensor(t_meas, arg_name='t_meas', allow_empty=True)
 
