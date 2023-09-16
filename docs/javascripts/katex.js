@@ -4,15 +4,15 @@ document$.subscribe(({ body }) => {
         "\\dd": '\\mathrm{d}',
         "\\dt": '\\mathrm{d}t',
         "\\tr": "\\mathrm{Tr}\\left[#1\\right]",
-      };
+    };
 
     renderMathInElement(body, {
-      delimiters: [
-        { left: "$$",  right: "$$",  display: true },
-        { left: "$",   right: "$",   display: false },
-        { left: "\\(", right: "\\)", display: false },
-        { left: "\\[", right: "\\]", display: true }
-      ],
-      macros: macros,
+        delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false },
+            { left: "\\[", right: "\\]", display: true }
+        ],
+        macros: macros,
     })
-  })
+});
