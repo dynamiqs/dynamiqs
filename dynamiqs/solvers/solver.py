@@ -67,7 +67,7 @@ class Solver(ABC):
         else:
             exp_save = None
 
-        self.result = Result(options, y_save, exp_save)
+        self.result = Result(options, y_save, t_save, exp_save)
 
     def _init_time_logic(self):
         self.t_stop = self.t_save
