@@ -9,7 +9,9 @@ class MEEuler(MESolver, AdjointFixedSolver):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         return rho + self.dt * self.lindbladian(t, rho)
 
-    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor) -> Tensor:
+    def backward_augmented(
+        self, t: float, rho: Tensor, phi: Tensor
+    ) -> tuple[Tensor, Tensor]:
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         rho = rho - self.dt * self.lindbladian(t, rho)
