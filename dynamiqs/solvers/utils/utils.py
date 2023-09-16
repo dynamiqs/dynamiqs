@@ -8,7 +8,7 @@ from methodtools import lru_cache
 from torch import Tensor
 from tqdm import tqdm as std_tqdm
 
-from ...utils.utils import is_ket
+from ...utils.utils import isket
 
 # define a default progress bar format
 PBAR_FORMAT = '|{bar}| {percentage:4.1f}% - time {elapsed}/{remaining}'
@@ -70,7 +70,7 @@ def bexpect(O: Tensor, x: Tensor) -> Tensor:
     Returns:
         Tensor of shape `(..., b)` holding the operators expectation values.
     """
-    if is_ket(x):
+    if isket(x):
         return torch.einsum('...ij,bjk,...kl->...b', x.mH, O, x)  # <x|O|x>
     return torch.einsum('bij,...ji->...b', O, x)  # tr(Ox)
 
