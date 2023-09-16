@@ -22,60 +22,82 @@ class AdaptiveSolver(AutogradSolver):
         Series in Computational Mathematics`.
         """
         # initialize the progress bar
-        pbar = tqdm(total=self.t_stop[-1].item(), disable=not self.options.verbose)
+        nobar = not self.options.verbose
+        self.pbar = tqdm(total=self.t_save[-1].item(), disable=nobar)
+
+        # initialize step counter
+        self.step_counter = 0
 
         # initialize the ODE routine
-        t0 = 0.0
-        f0 = self.odefun(t0, self.y0)
-        dt = self.init_tstep(f0, self.y0, t0)
+        f0 = self.odefun(0.0, self.y0)
+        dt = self.init_tstep(f0, self.y0, 0.0)
         error = 1.0
-        cache = (dt, error)
+
+        # save initial state
+        if self.t_save[0] == 0.0:
+            self.save(self.y0)
 
         # run the ODE routine
-        t, y, ft = t0, self.y0, f0
-        step_counter = 0
-        for ts in self.t_stop.cpu().numpy():
-            while t < ts:
-                # update time step
-                dt = self.update_tstep(dt, error)
-
-                # check for time overflow
-                if t + dt >= ts:
-                    cache = (dt, error)
-                    dt = ts - t
-
-                # perform a single step of size dt
-                ft_new, y_new, y_err = self.step(ft, y, t, dt)
-
-                # compute estimated error of this step
-                error = self.get_error(y_err, y, y_new)
-
-                # update if step is accepted
-                if error <= 1:
-                    t, y, ft = t + dt, y_new, ft_new
-
-                    # update the progress bar
-                    pbar.update(dt)
-
-                # raise error if max_steps reached
-                step_counter += 1
-                if step_counter == self.options.max_steps:
-                    raise RuntimeError(
-                        'Maximum number of time steps reached in adaptive time step ODE'
-                        f' solver at time t={t:.2g}'
-                        f' (`options.max_steps={self.options.max_steps}`).'
-                    )
+        t, y, ft = 0.0, self.y0, f0
+        for ts in self.t_stop():
+            # integrate the ODE forward
+            y, ft, dt, error = self.integrate(t, ts, y, ft, dt, error)
 
             # save solution
             self.save(y)
 
-            # use cache to retrieve time step and error
-            dt, error = cache
+            # iterate time
+            t = ts
 
         # close progress bar
         with warnings.catch_warnings():  # ignore tqdm precision overflow
             warnings.simplefilter('ignore', TqdmWarning)
-            pbar.close()
+            self.pbar.close()
+
+    def integrate(
+        self, t0: float, t1: float, y: Tensor, ft: Tensor, dt: float, error: float
+    ) -> tuple[Tensor, Tensor, float, float]:
+        """Integrate the ODE forward from time `t0` to time `t1`."""
+        cache = (dt, error)
+
+        t = t0
+        while t < t1:
+            # update time step
+            dt = self.update_tstep(dt, error)
+
+            # check for time overflow
+            if t + dt >= t1:
+                cache = (dt, error)
+                dt = t1 - t
+
+            # perform a single step of size dt
+            ft_new, y_new, y_err = self.step(ft, y, t, dt)
+
+            # compute estimated error of this step
+            error = self.get_error(y_err, y, y_new)
+
+            # update if step is accepted
+            if error <= 1:
+                t, y, ft = t + dt, y_new, ft_new
+
+                # update the progress bar
+                self.pbar.update(dt)
+
+            # check max steps are not reached
+            self.increment_step_counter(t)
+
+        dt, error = cache
+        return y, ft, dt, error
+
+    def increment_step_counter(self, t: float):
+        """Increment the step counter and check for max steps."""
+        self.step_counter += 1
+        if self.step_counter == self.options.max_steps:
+            raise RuntimeError(
+                'Maximum number of time steps reached in adaptive time step ODE'
+                f' solver at time t={t:.2g}'
+                f' (`options.max_steps={self.options.max_steps}`).'
+            )
 
     @property
     @abstractmethod

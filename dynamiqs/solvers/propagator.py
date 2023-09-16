@@ -35,14 +35,25 @@ class Propagator(AutogradSolver):
         self.H = self.H(0.0)
 
     def run_autograd(self):
-        y, t1 = self.y0, 0.0
-        for t2 in tqdm(self.t_stop.cpu().numpy(), disable=not self.options.verbose):
-            if t2 != 0.0:
-                # round time difference to avoid numerical errors when comparing floats
-                delta_t = round_truncate(t2 - t1)
-                y = self.forward(t1, delta_t, y)
+        # initialize time and state
+        y, t = self.y0, 0.0
+
+        # save initial state
+        if self.t_save[0] == 0.0:
             self.save(y)
-            t1 = t2
+
+        # run the ode routine
+        nobar = not self.options.verbose
+        for ts in tqdm(self.t_stop(), disable=nobar):
+            # round time difference to avoid numerical errors when comparing floats
+            delta_t = round_truncate(ts - t)
+            y = self.forward(t, delta_t, y)
+
+            # save state
+            self.save(y)
+
+            # iterate time
+            t = ts
 
     @abstractmethod
     def forward(self, t: float, delta_t: float, y: Tensor):
