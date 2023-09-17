@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import warnings
+
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
+from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver
 from ..utils.utils import tqdm
@@ -101,6 +104,11 @@ class AdjointAdaptiveAutograd(torch.autograd.Function):
 
                 # iterate time
                 t = ts
+
+        # close progress bar
+        with warnings.catch_warnings():  # ignore tqdm precision overflow
+            warnings.simplefilter('ignore', TqdmWarning)
+            solver.pbar.close()
 
         # convert gradients of real-valued parameters to real-valued gradients
         g = tuple(

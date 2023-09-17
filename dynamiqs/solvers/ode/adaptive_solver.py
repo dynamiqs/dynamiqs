@@ -244,7 +244,7 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
         pass
 
 
-class DormandPrince5(AdaptiveSolver):
+class DormandPrince5(AdjointAdaptiveSolver):
     """Dormand-Prince method for adaptive time step ODE integration.
 
     This is a fifth order solver that uses a fourth order solution to estimate the

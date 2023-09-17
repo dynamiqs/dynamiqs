@@ -111,7 +111,7 @@ class ODEFixedStep(AutogradOptions):
         return super().as_dict() | {'dt': self.dt}
 
 
-class ODEAdaptiveStep(AutogradOptions):
+class ODEAdaptiveStep(AdjointOptions):
     def __init__(
         self,
         *,

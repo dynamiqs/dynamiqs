@@ -11,3 +11,14 @@ class TestMEAdaptive(SolverTester):
 
     def test_autograd(self):
         self._test_gradient(grad_leaky_cavity_8, 'dopri5', 'autograd', num_t_save=11)
+
+    def test_adjoint(self):
+        options = dict(parameters=grad_leaky_cavity_8.parameters)
+        self._test_gradient(
+            grad_leaky_cavity_8,
+            'dopri5',
+            'adjoint',
+            options=options,
+            num_t_save=11,
+            atol=1e-3,
+        )
