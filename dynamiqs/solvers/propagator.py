@@ -36,7 +36,7 @@ class Propagator(AutogradSolver):
 
     def run_autograd(self):
         y, t1 = self.y0, 0.0
-        for t2 in tqdm(self.t_stop.cpu().numpy(), disable=not self.options.verbose):
+        for t2 in tqdm(self.tstop.cpu().numpy(), disable=not self.options.verbose):
             if t2 != 0.0:
                 # round time difference to avoid numerical errors when comparing floats
                 delta_t = round_truncate(t2 - t1)

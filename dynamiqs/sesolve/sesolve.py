@@ -15,7 +15,7 @@ from .propagator import SEPropagator
 def sesolve(
     H: TDArrayLike,
     psi0: ArrayLike,
-    t_save: ArrayLike,
+    tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
     solver: str = 'dopri5',
@@ -37,7 +37,7 @@ def sesolve(
     supported.
 
     The Hamiltonian `H` and the initial wavefunction `psi0` can be batched over to
-    solve multiple Schrödinger equations in a single run. The time list `t_save` is
+    solve multiple Schrödinger equations in a single run. The time list `tsave` is
     then common to all batches.
 
     `sesolve` can be differentiated through using either the default PyTorch autograd
@@ -48,13 +48,13 @@ def sesolve(
         H _(Tensor or Callable)_: Hamiltonian.
             Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
             `H(t: float) -> Tensor` that returns a tensor of either possible shapes
-            at every time between `t=0` and `t=t_save[-1]`.
+            at every time between `t=0` and `t=tsave[-1]`.
         psi0 _(Tensor)_: Initial wavefunction.
             Tensor of shape `(n, 1)` or `(b_rho, n, 1)` if batched.
-        t_save _(Tensor, np.ndarray or list)_: Times for which results are saved.
-            The master equation is solved from time `t=0.0` to `t=t_save[-1]`.
+        tsave _(Tensor, np.ndarray or list)_: Times for which results are saved.
+            The master equation is solved from time `t=0.0` to `t=tsave[-1]`.
         exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
-            the expectation value is computed at every time value in `t_save`.
+            the expectation value is computed at every time value in `tsave`.
         solver _(str, optional)_: Solver to use. See the list of available solvers.
             Defaults to `"dopri5"`.
         gradient _(str, optional)_: Algorithm used for computing gradients.
@@ -72,12 +72,12 @@ def sesolve(
         Common to all solvers:
 
         - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
-            time in `t_save`. If `False`, only the final state is stored and returned.
+            time in `tsave`. If `False`, only the final state is stored and returned.
             Defaults to `True`.
         - **verbose** _(bool, optional)_ – If `True`, prints information about the
             integration progress. Defaults to `True`.
         - **dtype** _(torch.dtype, optional)_ – Complex data type to which all
-            complex-valued tensors are converted. `t_save` is also converted to a real
+            complex-valued tensors are converted. `tsave` is also converted to a real
             data type of the corresponding precision.
         - **device** _(torch.device, optional)_ – Device on which the tensors are
             stored.
@@ -99,7 +99,7 @@ def sesolve(
             increase in a single step. Defaults to `10.0`.
 
     Warning: Warning for fixed step solvers
-        For fixed time step solvers, the time list `t_save` should be strictly
+        For fixed time step solvers, the time list `tsave` should be strictly
         included in the time list used by the solver, given by `[0, dt, 2 * dt, ...]`
         where `dt` is defined with the `options` argument.
 
@@ -107,7 +107,7 @@ def sesolve(
         Result of the master equation integration, as an instance of the `Result` class.
             The `result` object has the following attributes:
 
-              - **y_save** or **states** _(Tensor)_ – Saved states.
+              - **ysave** or **states** _(Tensor)_ – Saved states.
               - **exp_save** or **expects** _(Tensor)_ – Saved expectation values.
               - **solver_str** (str): String representation of the solver.
               - **start_datetime** _(datetime)_ – Start time of the integration.
@@ -115,9 +115,9 @@ def sesolve(
               - **total_time** _(datetime)_ – Total time of the integration.
               - **options** _(dict)_ – Solver options.
     """
-    # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (y_save, exp_save) with
-    #    - y_save: (b_H?, b_psi0?, len(t_save), n, 1)
-    #    - exp_save: (b_H?, b_psi0?, len(exp_ops), len(t_save))
+    # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (ysave, exp_save) with
+    #    - ysave: (b_H?, b_psi0?, len(tsave), n, 1)
+    #    - exp_save: (b_H?, b_psi0?, len(exp_ops), len(tsave))
 
     # TODO support density matrices too
     # TODO add test to check that psi0 has the correct shape
@@ -155,12 +155,12 @@ def sesolve(
     psi0 = batch_y0(psi0, H)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
 
-    # convert t_save to tensor
-    t_save = to_tensor(t_save, dtype=options.rdtype, device=options.device)
-    check_time_tensor(t_save, arg_name='t_save')
+    # convert tsave to tensor
+    tsave = to_tensor(tsave, dtype=options.rdtype, device=options.device)
+    check_time_tensor(tsave, arg_name='tsave')
 
     # define the solver
-    args = (H, psi0, t_save, exp_ops, options)
+    args = (H, psi0, tsave, exp_ops, options)
     solver = SOLVER_CLASS(*args)
 
     # compute the result
@@ -168,7 +168,7 @@ def sesolve(
 
     # get saved tensors and restore correct batching
     result = solver.result
-    result.y_save = result.y_save.squeeze(1).squeeze(0)
+    result.ysave = result.ysave.squeeze(1).squeeze(0)
     if result.exp_save is not None:
         result.exp_save = result.exp_save.squeeze(1).squeeze(0)
 
