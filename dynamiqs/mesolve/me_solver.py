@@ -28,3 +28,14 @@ class MESolver(Solver):
         H = self.H(t)
         out = -1j * self.Hnh(H) @ rho + 0.5 * kraus_map(rho, self.L)
         return out + out.mH  # (b_H, b_rho, n, n)
+
+    def adjoint_lindbladian(self, t: float, phi: Tensor) -> Tensor:
+        """Compute the action of the adjoint Lindbladian on an operator.
+
+        Notes:
+            Hermiticity of the output is enforced to avoid numerical instability
+            with Runge-Kutta solvers.
+        """
+        H = self.H(t)
+        out = 1j * self.Hnh(H).mH @ phi + 0.5 * kraus_map(phi, self.L.mH)
+        return out + out.mH

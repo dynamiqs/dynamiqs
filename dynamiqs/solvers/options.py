@@ -150,7 +150,7 @@ class Dopri5(ODEAdaptiveStep):
     pass
 
 
-class Euler(ODEFixedStep):
+class Euler(ODEFixedStep, AdjointOptions):
     pass
 
 
