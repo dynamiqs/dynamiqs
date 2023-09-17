@@ -30,11 +30,13 @@ class Result:
         self,
         options: Options,
         ysave: Tensor,
+        tsave: Tensor,
         exp_save: Tensor,
         meas_save: Tensor | None = None,
     ):
         self.options = options
         self.ysave = ysave
+        self.tsave = tsave
         self.exp_save = exp_save
         self.meas_save = meas_save
         self.start_time: float | None = None
@@ -44,6 +46,11 @@ class Result:
     def states(self) -> Tensor:
         # alias for ysave
         return self.ysave
+
+    @property
+    def times(self) -> Tensor:
+        # alias for tsave
+        return self.tsave
 
     @property
     def expects(self) -> Tensor | None:
