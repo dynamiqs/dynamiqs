@@ -25,7 +25,7 @@ class System(ABC):
         pass
 
     @abstractmethod
-    def t_save(self, n: int) -> Tensor:
+    def tsave(self, n: int) -> Tensor:
         """Compute the save time tensor."""
         pass
 
@@ -72,7 +72,7 @@ class System(ABC):
         self,
         H: Tensor,
         y0: Tensor,
-        t_save: ArrayLike,
+        tsave: ArrayLike,
         solver: str,
         *,
         gradient: str | None = None,
@@ -82,12 +82,12 @@ class System(ABC):
 
     def run(
         self,
-        t_save: ArrayLike,
+        tsave: ArrayLike,
         solver: str,
         *,
         gradient: str | None = None,
         options: dict[str, Any] | None = None,
     ) -> Result:
         return self._run(
-            self.H, self.y0, t_save, solver, gradient=gradient, options=options
+            self.H, self.y0, tsave, solver, gradient=gradient, options=options
         )

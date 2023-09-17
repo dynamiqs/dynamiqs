@@ -13,8 +13,8 @@ class TestSEEuler(SolverTester):
             cavity_8,
             'euler',
             options=options,
-            num_t_save=11,
-            y_save_norm_atol=1e-2,
+            num_tsave=11,
+            ysave_norm_atol=1e-2,
             exp_save_rtol=1e-1,
             exp_save_atol=1e-3,
         )
@@ -26,7 +26,7 @@ class TestSEEuler(SolverTester):
             'euler',
             'autograd',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
             rtol=1e-1,
             atol=1e-2,
         )

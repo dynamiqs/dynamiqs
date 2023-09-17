@@ -38,7 +38,7 @@ class Options:
                 time value. If `False`, only the final state is stored and returned.
                 Defaults to `True`.
             dtype (torch.dtype, optional): Complex data type to which all complex-valued
-                tensors are converted. `t_save` is also converted to a real data type of
+                tensors are converted. `tsave` is also converted to a real data type of
                 the corresponding precision.
             device (string or torch.device, optional): Device on which the tensors are
                 stored.

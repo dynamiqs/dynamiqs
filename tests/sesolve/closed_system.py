@@ -22,7 +22,7 @@ class ClosedSystem(System):
         self,
         H: Tensor,
         y0: Tensor,
-        t_save: ArrayLike,
+        tsave: ArrayLike,
         solver: str,
         *,
         gradient: str | None = None,
@@ -31,7 +31,7 @@ class ClosedSystem(System):
         return dq.sesolve(
             H,
             y0,
-            t_save,
+            tsave,
             exp_ops=self.exp_ops,
             solver=solver,
             gradient=gradient,
@@ -76,9 +76,9 @@ class Cavity(ClosedSystem):
             dq.coherent(self.n, -1j * self.alpha0),
         ]
 
-    def t_save(self, num_t_save: int) -> Tensor:
+    def tsave(self, num_tsave: int) -> Tensor:
         t_end = 2 * pi / self.delta  # a full rotation
-        return torch.linspace(0.0, t_end.item(), num_t_save)
+        return torch.linspace(0.0, t_end.item(), num_tsave)
 
     def _alpha(self, t: float) -> Tensor:
         return self.alpha0 * torch.exp(-1j * self.delta * t)
