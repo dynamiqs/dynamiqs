@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
