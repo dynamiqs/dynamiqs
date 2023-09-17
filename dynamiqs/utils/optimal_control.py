@@ -35,7 +35,7 @@ def rand_complex(
 
     where $\texttt{rand(0,1)}$ is a random number uniformly distributed between 0 and 1.
 
-    Note:
+    Notes:
         The square root in the definition of the magnitude $r$ ensures that the
         resulting complex numbers are uniformly distributed in the unit disc of the
         complex plane.
@@ -97,7 +97,7 @@ def pwc_pulse(
     - `torch.zeros(...)` if $t$ is not in $[t_\text{start}, t_\text{end}]$,
     - `values[..., k]` if $t$ is in the $k$-th bin of $[t_\text{start}, t_\text{end}]$.
 
-    Note:
+    Notes:
         You can use [rand_complex()][dynamiqs.rand_complex] to generate a tensor
         filled with random complex numbers for the parameter `values`.
 
