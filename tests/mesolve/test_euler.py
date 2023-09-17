@@ -38,7 +38,7 @@ class TestMEEuler(SolverTester):
             'euler',
             'adjoint',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
             rtol=1e-3,
             atol=1e-2,
         )
