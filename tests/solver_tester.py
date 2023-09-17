@@ -18,30 +18,30 @@ class SolverTester(ABC):
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)
         b_y0 = len(system.y0_batched)
-        num_t_save = 11
-        t_save = system.t_save(num_t_save)
+        num_tsave = 11
+        tsave = system.tsave(num_tsave)
 
-        run = lambda H, y0: system._run(H, y0, t_save, solver, options=options)
+        run = lambda H, y0: system._run(H, y0, tsave, solver, options=options)
 
         # no batching
         result = run(system.H, system.y0)
-        assert result.y_save.shape == (num_t_save, m, n)
-        assert result.exp_save.shape == (n_exp_ops, num_t_save)
+        assert result.ysave.shape == (num_tsave, m, n)
+        assert result.exp_save.shape == (n_exp_ops, num_tsave)
 
         # batched H
         result = run(system.H_batched, system.y0)
-        assert result.y_save.shape == (b_H, num_t_save, m, n)
-        assert result.exp_save.shape == (b_H, n_exp_ops, num_t_save)
+        assert result.ysave.shape == (b_H, num_tsave, m, n)
+        assert result.exp_save.shape == (b_H, n_exp_ops, num_tsave)
 
         # batched y0
         result = run(system.H, system.y0_batched)
-        assert result.y_save.shape == (b_y0, num_t_save, m, n)
-        assert result.exp_save.shape == (b_y0, n_exp_ops, num_t_save)
+        assert result.ysave.shape == (b_y0, num_tsave, m, n)
+        assert result.exp_save.shape == (b_y0, n_exp_ops, num_tsave)
 
         # batched H and y0
         result = run(system.H_batched, system.y0_batched)
-        assert result.y_save.shape == (b_H, b_y0, num_t_save, m, n)
-        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, num_t_save)
+        assert result.ysave.shape == (b_H, b_y0, num_tsave, m, n)
+        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, num_tsave)
 
     def test_batching(self):
         pass
@@ -52,21 +52,21 @@ class SolverTester(ABC):
         solver: str,
         *,
         options: dict[str, Any] | None = None,
-        num_t_save: int,
-        y_save_norm_atol: float = 1e-3,
+        num_tsave: int,
+        ysave_norm_atol: float = 1e-3,
         exp_save_rtol: float = 1e-3,
         exp_save_atol: float = 1e-5,
     ):
-        t_save = system.t_save(num_t_save)
-        result = system.run(t_save, solver, options=options)
+        tsave = system.tsave(num_tsave)
+        result = system.run(tsave, solver, options=options)
 
-        # === test y_save
-        errs = torch.linalg.norm(result.y_save - system.states(t_save), dim=(-2, -1))
+        # === test ysave
+        errs = torch.linalg.norm(result.ysave - system.states(tsave), dim=(-2, -1))
         logging.warning(f'errs = {errs}')
-        assert torch.all(errs <= y_save_norm_atol)
+        assert torch.all(errs <= ysave_norm_atol)
 
         # === test exp_save
-        true_exp_save = system.expects(t_save)
+        true_exp_save = system.expects(tsave)
         logging.warning(f'exp_save      = {result.exp_save}')
         logging.warning(f'true_exp_save = {true_exp_save}')
         assert torch.allclose(
@@ -83,20 +83,20 @@ class SolverTester(ABC):
         gradient: str,
         *,
         options: dict[str, Any] | None = None,
-        num_t_save: int,
+        num_tsave: int,
         rtol: float = 1e-3,
         atol: float = 1e-5,
     ):
-        t_save = system.t_save(num_t_save)
-        result = system.run(t_save, solver, gradient=gradient, options=options)
+        tsave = system.tsave(num_tsave)
+        result = system.run(tsave, solver, gradient=gradient, options=options)
 
-        # === test gradients depending on final y_save
-        loss_state = system.loss_state(result.y_save[-1])
+        # === test gradients depending on final ysave
+        loss_state = system.loss_state(result.ysave[-1])
         grads_state = torch.autograd.grad(
             loss_state, system.parameters, retain_graph=True
         )
         grads_state = torch.stack(grads_state)
-        true_grads_state = system.grads_state(t_save[-1])
+        true_grads_state = system.grads_state(tsave[-1])
 
         logging.warning(f'grads_state       = {grads_state}')
         logging.warning(f'true_grads_state  = {true_grads_state}')
@@ -110,7 +110,7 @@ class SolverTester(ABC):
             for loss in loss_expect
         ]
         grads_expect = torch.stack(grads_expect)
-        true_grads_expect = system.grads_expect(t_save[-1])
+        true_grads_expect = system.grads_expect(tsave[-1])
 
         logging.warning(f'grads_expect      = {grads_expect}')
         logging.warning(f'true_grads_expect = {true_grads_expect}')

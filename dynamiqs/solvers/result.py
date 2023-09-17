@@ -29,14 +29,14 @@ class Result:
     def __init__(
         self,
         options: Options,
-        y_save: Tensor,
-        t_save: Tensor,
+        ysave: Tensor,
+        tsave: Tensor,
         exp_save: Tensor,
         meas_save: Tensor | None = None,
     ):
         self.options = options
-        self.y_save = y_save
-        self.t_save = t_save
+        self.ysave = ysave
+        self.tsave = tsave
         self.exp_save = exp_save
         self.meas_save = meas_save
         self.start_time: float | None = None
@@ -44,13 +44,13 @@ class Result:
 
     @property
     def states(self) -> Tensor:
-        # alias for y_save
-        return self.y_save
+        # alias for ysave
+        return self.ysave
 
     @property
     def times(self) -> Tensor:
-        # alias for t_save
-        return self.t_save
+        # alias for tsave
+        return self.tsave
 
     @property
     def expects(self) -> Tensor | None:

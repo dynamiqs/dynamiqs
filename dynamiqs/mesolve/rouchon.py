@@ -86,7 +86,9 @@ class MERouchon1(MERouchon):
 
         return rho
 
-    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
+    def backward_augmented(
+        self, t: float, rho: Tensor, phi: Tensor
+    ) -> tuple[Tensor, Tensor]:
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1.
 
         Args:
@@ -168,7 +170,9 @@ class MERouchon2(MERouchon):
 
         return rho
 
-    def backward_augmented(self, t: float, rho: Tensor, phi: Tensor):
+    def backward_augmented(
+        self, t: float, rho: Tensor, phi: Tensor
+    ) -> tuple[Tensor, Tensor]:
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2.
 
         Notes:
