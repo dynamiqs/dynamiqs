@@ -7,7 +7,7 @@ from torch import Tensor
 
 from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
-from .adjoint_autograd import AdjointAutograd
+from .adjoint_autograd import AdjointFixedAutograd
 
 
 class FixedSolver(AutogradSolver):
@@ -65,7 +65,7 @@ class FixedSolver(AutogradSolver):
 
 class AdjointFixedSolver(FixedSolver, AdjointSolver):
     def run_adjoint(self):
-        AdjointAutograd.apply(self, self.y0, *self.options.parameters)
+        AdjointFixedAutograd.apply(self, self.y0, *self.options.parameters)
 
     def integrate_augmented(
         self, t1: float, t0: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]

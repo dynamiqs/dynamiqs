@@ -8,8 +8,9 @@ import torch
 from torch import Tensor
 from tqdm.std import TqdmWarning
 
-from ..solver import AutogradSolver
-from ..utils.utils import hairer_norm, tqdm
+from ..solver import AdjointSolver, AutogradSolver
+from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like, tqdm
+from .adjoint_autograd import AdjointAdaptiveAutograd
 
 
 class AdaptiveSolver(AutogradSolver):
@@ -30,7 +31,7 @@ class AdaptiveSolver(AutogradSolver):
 
         # initialize the ODE routine
         f0 = self.odefun(0.0, self.y0)
-        dt = self.init_tstep(f0, self.y0, 0.0)
+        dt = self.init_tstep(f0, self.y0, 0.0, self.odefun)
         error = 1.0
 
         # run the ODE routine
@@ -63,7 +64,7 @@ class AdaptiveSolver(AutogradSolver):
                 dt = t1 - t
 
             # perform a single step of size dt
-            ft_new, y_new, y_err = self.step(ft, y, t, dt)
+            ft_new, y_new, y_err = self.step(ft, y, t, dt, self.odefun)
 
             # compute estimated error of this step
             error = self.get_error(y_err, y, y_new)
@@ -107,7 +108,7 @@ class AdaptiveSolver(AutogradSolver):
 
     @abstractmethod
     def step(
-        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+        self, f0: Tensor, y0: Tensor, t0: float, dt: float, fun: callable
     ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         pass
@@ -123,7 +124,7 @@ class AdaptiveSolver(AutogradSolver):
         return hairer_norm(y_err / scale).max().item()
 
     @torch.no_grad()
-    def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
+    def init_tstep(self, f0: Tensor, y0: Tensor, t0: float, fun: callable) -> float:
         """Initialize the time step of an adaptive step size integrator.
 
         See Equation (4.14) of `Hairer et al., Solving Ordinary Differential Equations I
@@ -139,7 +140,7 @@ class AdaptiveSolver(AutogradSolver):
             h0 = 0.01 * d0 / d1
 
         y1 = y0 + h0 * f0
-        f1 = self.odefun(t0 + h0, y1)
+        f1 = fun(t0 + h0, y1)
         d2 = hairer_norm((f1 - f0) / sc).max().item() / h0
         if d1 <= 1e-15 and d2 <= 1e-15:
             h1 = max(1e-6, h0 * 1e-3)
@@ -173,6 +174,74 @@ class AdaptiveSolver(AutogradSolver):
                 self.options.min_factor,
                 self.options.safety_factor * error ** (-1.0 / self.order),
             )
+
+
+class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
+    def run_adjoint(self):
+        AdjointAdaptiveAutograd.apply(self, self.y0, *self.options.parameters)
+
+    def integrate_augmented(
+        self,
+        t1: float,
+        t0: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        ft: Tensor,
+        lt: Tensor,
+        dt: float,
+        error: float,
+    ) -> tuple[Tensor, Tensor, tuple[Tensor, ...], Tensor, Tensor, float, float]:
+        """Integrate the augmented ODE backward from time `t1` to `t0`."""
+        cache = (dt, error)
+
+        t = t1
+        while t > t0:
+            # update time step
+            dt = self.update_tstep(dt, error)
+
+            # check for time overflow
+            if t - dt <= t0:
+                cache = (dt, error)
+                dt = t - t0
+
+            with torch.enable_grad():
+                # perform a single step of size dt
+                ft_new, y_new, y_err = self.step(ft, y, t, dt, self.odefun_backward)
+                lt_new, a_new, a_err = self.step(lt, a, t, dt, self.odefun_adjoint)
+
+                # compute estimated error of this step
+                error_y = self.get_error(y_err, y, y_new)
+                error_a = self.get_error(a_err, a, a_new)
+                error = max(error_y, error_a)
+
+                # update if step is accepted
+                if error <= 1:
+                    t, y, a, ft, lt = t - dt, y_new, a_new, ft_new, lt_new
+
+                    # compute g(t-dt)
+                    dg = torch.autograd.grad(
+                        a,
+                        self.options.parameters,
+                        y,
+                        allow_unused=True,
+                        retain_graph=True,
+                    )
+                    dg = none_to_zeros_like(dg, self.options.parameters)
+                    g = add_tuples(g, dg)
+
+                    # update the progress bar
+                    self.pbar.update(dt)
+
+            # free the graph of y and a
+            y, a = y.data, a.data
+
+        dt, error = cache
+        return y, a, g, ft, lt, dt, error
+
+    @abstractmethod
+    def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
+        pass
 
 
 class DormandPrince5(AdaptiveSolver):
@@ -221,7 +290,7 @@ class DormandPrince5(AdaptiveSolver):
         return alpha, beta, csol5, csol5 - csol4
 
     def step(
-        self, f: Tensor, y: Tensor, t: float, dt: float
+        self, f: Tensor, y: Tensor, t: float, dt: float, fun: callable
     ) -> tuple[Tensor, Tensor, Tensor]:
         # import butcher tableau
         alpha, beta, csol, cerr = self.tableau
@@ -231,7 +300,7 @@ class DormandPrince5(AdaptiveSolver):
         k[0] = f
         for i in range(1, 7):
             dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
-            k[i] = self.odefun(t + dt * alpha[i - 1].item(), y + dy)
+            k[i] = fun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results
         f_new = k[-1]
