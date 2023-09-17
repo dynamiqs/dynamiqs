@@ -51,7 +51,7 @@ class FixedSolver(AutogradSolver):
         self.save(y)
 
     @abstractmethod
-    def forward(self, t: float, y: Tensor):
+    def forward(self, t: float, y: Tensor) -> Tensor:
         pass
 
 
@@ -113,7 +113,9 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         self.g_bwd = g
 
     @abstractmethod
-    def backward_augmented(self, t: float, y: Tensor, a: Tensor):
+    def backward_augmented(
+        self, t: float, y: Tensor, a: Tensor
+    ) -> tuple[Tensor, Tensor]:
         pass
 
 
