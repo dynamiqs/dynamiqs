@@ -31,7 +31,7 @@ class Result:
         options: Options,
         ysave: Tensor,
         tsave: Tensor,
-        exp_save: Tensor,
+        exp_save: Tensor | None,
         meas_save: Tensor | None = None,
     ):
         self.options = options
