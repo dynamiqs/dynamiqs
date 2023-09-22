@@ -27,41 +27,49 @@ def mesolve(
 ) -> Result:
     r"""Solve the Lindblad master equation.
 
-    This function computes the evolution of the density matrix $\rho_t$, starting
-    from an initial state $\rho_0$ at time $t=0$, according to the Lindblad master
-    equation:
+    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
+    starting from an initial state $\rho(t=0)$, according to the Lindblad master
+    equation (with $\hbar=1$):
     $$
-        \frac{\mathrm{d}\rho_t}{\mathrm{d}t} =-i[H_t, \rho_t]
+        \frac{\mathrm{d}\rho(t)}{\mathrm{d}t} =-i[H(t), \rho(t)]
         + \sum_{k=1}^N \left(
-            L_k \rho_t L_k^\dagger
-            - \frac{1}{2} L_k^\dagger L_k \rho_t
-            - \frac{1}{2} \rho_t L_k^\dagger L_k
+            L_k \rho(t) L_k^\dagger
+            - \frac{1}{2} L_k^\dagger L_k \rho(t)
+            - \frac{1}{2} \rho(t) L_k^\dagger L_k
         \right),
     $$
-    where $H_t$ is the system's Hamiltonian at time $t$ and $\{L_k\}$ is a collection of
-    $N$ jump operators.
+    where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k\}$ is a collection
+    of jump operators.
+
+    Notes: Time-dependent Hamiltonian
+        If the Hamiltonian depends on time, it can be passed as a function with
+        signature `H(t: float) -> Tensor`.
 
     Notes: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial density matrix `rho0` can be batched to
         solve multiple master equations concurrently. All other arguments are common
         to every batch.
 
+    Notes: Computing gradient
+        `mesolve` can be differentiated through using PyTorch autograd library with
+        `gradient="autograd"`, or the adjoint state method with `gradient="adjoint"`.
+
     Args:
-        H _(array-like or function)_: System's Hamiltonian. It has shape _(n, n)_ or
-            _(bH, n, n)_ if batched. For time-dependent problems, you should provide a
-            function with signature `H(t: float) -> Tensor` that returns a tensor
-            (batched or not) for any given time between `t = 0.0` and `t = tsave[-1]`.
+        H _(array-like or function)_: Hamiltonian, of shape _(n, n)_ or _(bH, n, n)_ if
+            batched. For time-dependent problems, provide a function with signature
+            `H(t: float) -> Tensor` that returns a tensor (batched or not) for any
+            given time between `t = 0.0` and `t = tsave[-1]`.
         jump_ops: List of jump operators. Each jump operator has shape _(n, n)_.
-        rho0: Initial density matrix. It has shape _(n, n)_ or _(brho0, n, n)_ if
+        rho0: Initial density matrix. It has shape _(n, n)_ or _(brho, n, n)_ if
             batched.
         tsave: Times at which the states and expectation values are saved. The master
             equation is solved from `t = 0.0` to `t = tsave[-1]`.
         exp_ops: List of operators for which the expectation value is computed. Each
             operator has shape _(n, n)_.
-        solver : Solver to use (see the list below).
+        solver: Solver for the differential equation integration (see the list below).
         gradient: Algorithm used to compute the gradient. Can be either `None`,
-            `"autograd"` (PyTorch autograd library) or `"adjoint"` (adjoint
-            state differentiation).
+            `"autograd"` (PyTorch autograd library) or `"adjoint"` (differentiation
+            with the adjoint state method).
         options: Solver options (see the list below).
 
     Note-: Available solvers
@@ -70,9 +78,10 @@ def mesolve(
         except for testing purposes.
       - `rouchon1`: Rouchon method of order 1 (fixed step size ODE solver).
       - `rouchon2`: Rouchon method of order 2 (fixed step size ODE solver).
-      - `propagator`: Compute explicitly the Liouvillian exponential to evolve
-        the state between each time in `tsave`. Not recommended for systems with
-        dimension $n\geq10$.
+      - `propagator`: Explicitly compute the Liouvillian exponential to evolve
+        the state between each time in `tsave`. Not recommended for systems of large
+        dimension, due to the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian
+        exponential.
 
     Note-: Available options
         Common to all solvers:
@@ -118,13 +127,13 @@ def mesolve(
             the gradient is computed.
 
     Warning: Fixed step size ODE solvers
-        For ODE solvers with fixed step size, the times in `tsave` must be multiples
+        For ODE solvers with fixed step sizes, the times in `tsave` must be multiples
         of the numerical step size of integration `dt` defined in the `options`
         argument.
 
     Warning: Time-dependent jump operators
-        Time-dependent jump operators are not yet supported. If this is a feature you
-        need, we would be glad to discuss it with you, please
+        Time-dependent jump operators are not yet supported. If this is a required
+        feature, we would be glad to discuss it, please
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Returns:
@@ -132,9 +141,9 @@ def mesolve(
             following attributes:
 
             - **states** _(Tensor)_ – Saved states with shape
-                _(bH?, brho0?, len(tsave), n, n)_.
+                _(bH?, brho?, len(tsave), n, n)_.
             - **expects** _(Tensor, optional)_ – Saved expectation values with shape
-                _(bH?, brho0?, len(exp_ops), len(tsave))_.
+                _(bH?, brho?, len(exp_ops), len(tsave))_.
             - **tsave** or **times** _(Tensor)_ – Times for which states and expectation
                 values were saved.
             - **solver_str** (str): Solver used.
