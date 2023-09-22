@@ -1,7 +1,7 @@
 # Solvers
 
-**dynamiqs** provides end-to-end differentiable solvers for three quantum differential equations.
+**dynamiqs** provides differentiable solvers for three types of differential equations describing quantum systems:
 
- - [sesolve](solvers/sesolve.md) for the Schrödinger equation<br style="line-height:1.6">
- - [mesolve](solvers/mesolve.md) for the Lindblad master equation<br style="line-height:1.6">
- - [smesolve](solvers/smesolve.md) for the stochastic master equation<br style="line-height:1.6">
+- [sesolve](solvers/sesolve.md) for closed systems described by the Schrödinger equation,
+- [mesolve](solvers/mesolve.md) for open systems described by the Lindblad master equation,
+- [smesolve](solvers/smesolve.md) for continuously measured systems described by the stochastic master equation.
