@@ -41,16 +41,16 @@ def mesolve(
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k\}$ is a collection
     of jump operators.
 
-    Notes: Time-dependent Hamiltonian
+    Quote: Time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be passed as a function with
         signature `H(t: float) -> Tensor`.
 
-    Notes: Running multiple simulations concurrently
+    Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial density matrix `rho0` can be batched to
         solve multiple master equations concurrently. All other arguments are common
         to every batch.
 
-    Notes: Computing gradient
+    Quote: Computing gradient
         `mesolve` can be differentiated through using PyTorch autograd library with
         `gradient="autograd"`, or the adjoint state method with `gradient="adjoint"`.
 
@@ -131,11 +131,6 @@ def mesolve(
         of the numerical step size of integration `dt` defined in the `options`
         argument.
 
-    Warning: Time-dependent jump operators
-        Time-dependent jump operators are not yet supported. If this is a required
-        feature, we would be glad to discuss it, please
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
-
     Returns:
         Object holding the results of the master equation integration. It has the
             following attributes:
@@ -151,6 +146,11 @@ def mesolve(
             - **end_datetime** _(datetime)_ – End date and time of the integration.
             - **total_time** _(timedelta)_ – Total duration of the integration.
             - **options** _(dict)_ – Solver options passed by the user.
+
+    Warning: Time-dependent jump operators
+        Time-dependent jump operators are not yet supported. If this is a required
+        feature, we would be glad to discuss it, please
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """
     # options
     if options is None:
