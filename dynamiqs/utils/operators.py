@@ -7,6 +7,7 @@ from torch import Tensor
 
 from .tensor_types import get_cdtype
 from .utils import tensprod
+from .optimal_control import rand_complex
 
 __all__ = [
     'eye',
@@ -21,6 +22,8 @@ __all__ = [
     'sigmaz',
     'sigmap',
     'sigmam',
+    'rnd_unitary',
+    'rnd_herm',
 ]
 
 
@@ -458,3 +461,86 @@ def sigmam(
     return torch.tensor(
         [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
     )
+
+def rnd_unitary(dim: int,
+                dtype: torch.complex64 | torch.complex128 | None = None,
+                device: str | torch.device | None = None) -> Tensor:
+    r"""
+    Returns a random unitary of dimension 'n, n' sampled from the Haar measure.
+    It uses the algorithm described in [Mezzadri 2007].
+
+    Args:
+        dim: Dimension of the unitary matrix.
+
+    Returns:
+        _(..., n, n)_ Unitary matrix.
+    
+    Examples:
+        >>> dq.rnd_unitary(3)
+        tensor([[-0.5040-0.1190j,  0.1239-0.2702j, -0.2731+0.7543j],
+                [ 0.1685+0.1365j,  0.9422-0.0290j,  0.2469+0.0584j],
+                [ 0.8255-0.0579j, -0.1516-0.0104j, -0.0806+0.5344j]])
+
+    References:
+        .. [Mezzadri 2007] Mezzadri, F. (2007).
+           How to generate random matrices from the classical compact groups.
+           arXiv preprint math-ph/0609050 (https://arxiv.org/pdf/math-ph/0609050.pdf).
+    """
+    # generate random complex numbers
+    x = torch.randn(dim, dim, 2, dtype=get_cdtype(dtype), device=device)
+    # convert to complex
+    x = x[..., 0] + 1j * x[..., 1]
+    # renormalize
+    x /= 2**.5
+    # compute QR decomposition
+    q, r = torch.linalg.qr(x)
+    # compute lambda
+    lam = torch.diag(r)
+    lam /= torch.abs(lam)
+    # return unitary
+    return q @ torch.diag(lam)
+
+def rnd_herm(dim: int,
+             density: float = 1.,
+             pos_def: bool = False,
+             dtype: torch.complex64 | torch.complex128 | None = None,
+             device: str | torch.device | None = None) -> Tensor:
+    r"""
+    Returns a random Hermitian matrix of dimension 'n, n'.\n
+    It uses the property the fact that the sum of a matrix and its conjugate transpose
+    is Hermitian:
+
+    $$
+        H = \frac{1}{2} (X + X^\dagger)
+    $$
+
+    When pos_def is True, the returned matrix is positive definite, using diagonal
+    dominance.
+
+    Args:
+        dim: Dimension of the Hermitian matrix.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(..., n, n)_ Hermitian matrix.
+
+        https://www.researchgate.net/publication/233919002_Positive_definite_random_matrices
+        https://search.r-project.org/CRAN/refmans/clusterGeneration/html/genPositiveDefMat.html
+
+    """
+    num_elems = torch.ceil(torch.Tensor([dim * (dim + 1) * density]))/2
+    num_elems = int(num_elems)
+    data = rand_complex(num_elems)
+    row_idx = torch.randint(dim, (num_elems,), device=device)
+    col_idx = torch.randint(dim, (num_elems,), device=device)
+    M = torch.sparse_coo_tensor(
+            torch.stack([row_idx, col_idx]), data, (dim, dim),
+            dtype=get_cdtype(dtype)).to_dense()
+    M = 0.5 * (M + M.conj().t())
+    if pos_def:
+        M = M + dim * eye(dim, dtype=get_cdtype(dtype), device=device)
+    return M
+
+
+

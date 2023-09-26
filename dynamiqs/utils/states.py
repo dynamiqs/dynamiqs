@@ -5,11 +5,17 @@ from math import prod
 import torch
 from torch import Tensor
 
-from .operators import displace
+from .operators import displace, rnd_unitary
 from .tensor_types import get_cdtype
 from .utils import ket_to_dm
 
-__all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
+__all__ = [
+    'fock',
+    'fock_dm',
+    'coherent',
+    'coherent_dm',
+    'rnd_ket',           
+]
 
 
 def fock(
@@ -153,3 +159,25 @@ def coherent_dm(
                 [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]])
     """
     return ket_to_dm(coherent(dim, alpha, dtype=get_cdtype(dtype), device=device))
+
+def rnd_ket(dim: int, *, dtype: torch.complex64 | torch.complex128 | None = None, device: str | torch.device | None = None):
+    r"""
+    Returns a random ket of dimension 'n, 1' sampled from the Haar measure.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(..., n, 1)_ Ket.
+
+    Examples:
+        >>> dq.rnd_ket(3)
+        tensor([[-0.5952-0.2949j],
+                [-0.4213+0.0871j],
+                [ 0.1651-0.5885j]])
+    """
+    psi = rnd_unitary(dim, dtype=get_cdtype(dtype), device=device) @ \
+        fock(dim, 0, dtype=get_cdtype(dtype), device=device)
+    return psi
