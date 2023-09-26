@@ -55,22 +55,24 @@ def mesolve(
         `gradient="autograd"`, or the adjoint state method with `gradient="adjoint"`.
 
     Args:
-        H _(array-like or function)_: Hamiltonian, of shape _(n, n)_ or _(bH, n, n)_ if
-            batched. For time-dependent problems, provide a function with signature
+        H _(array-like or function, shape (n, n) or (bH, n, n))_: Hamiltonian. For
+            time-dependent problems, provide a function with signature
             `H(t: float) -> Tensor` that returns a tensor (batched or not) for any
             given time between `t = 0.0` and `t = tsave[-1]`.
-        jump_ops: List of jump operators. Each jump operator has shape _(n, n)_.
-        rho0: Initial density matrix. It has shape _(n, n)_ or _(brho, n, n)_ if
-            batched.
-        tsave: Times at which the states and expectation values are saved. The master
-            equation is solved from `t = 0.0` to `t = tsave[-1]`.
-        exp_ops: List of operators for which the expectation value is computed. Each
-            operator has shape _(n, n)_.
-        solver: Solver for the differential equation integration (see the list below).
-        gradient: Algorithm used to compute the gradient. Can be either `None`,
-            `"autograd"` (PyTorch autograd library) or `"adjoint"` (differentiation
-            with the adjoint state method).
-        options: Solver options (see the list below).
+        jump_ops _(list of 2d array-like, each with shape (n, n))_: List of jump
+            operators.
+        rho0 _(array-like, shape (n, n) or (brho, n, n))_: Initial density matrix.
+        tsave _(1d array-like)_: Times at which the states and expectation values are
+            saved. The master equation is solved from `t = 0.0` to `t = tsave[-1]`.
+        exp_ops _(list of 2d array-like, each with shape (n, n), optional)_: List of
+            operators for which the expectation value is computed. Defaults to `None`.
+        solver _(str, optional)_: Solver for the differential equation integration (see
+            the list below). Defaults to `"dopri5"`.
+        gradient _(str, optional)_: Algorithm used to compute the gradient. Can be
+            either `None`, `"autograd"` (PyTorch autograd library) or `"adjoint"`
+            (differentiation with the adjoint state method). Defaults to `None`.
+        options _(dict, optional)_: Solver options (see the list below). Defaults to
+            `None`.
 
     Note-: Available solvers
       - `dopri5`: Dormand-Prince method of order 5 (adaptive step size ODE solver).
