@@ -24,6 +24,7 @@ dev = [
     "flake8",
     "pytest",
     "pytest-sugar",
+    "pytest-xdist",
     "mkdocs-material",
     "mkdocstrings[python]",
     "mkdocs-jupyter",
@@ -70,15 +71,15 @@ cmd = "task isort && task black && task codespell && task flake8"
 help = "lint the code and check style (isort + black + codespell + flake8)"
 
 [tool.taskipy.tasks.test]
-cmd = "echo '\n>>> pytest -v -m \"not long\"' && pytest -v -m \"not long\""
+cmd = "echo '\n>>> pytest -n=auto -m \"not long\"' && pytest -n=auto -m \"not long\""
 help = "run the unit tests suite excluding long tests (pytest)"
 
 [tool.taskipy.tasks.test-long]
-cmd = "echo '\n>>> pytest -v -m \"long\"' && pytest -v -m \"long\""
+cmd = "echo '\n>>> pytest -n=auto -m \"long\"' && pytest -n=auto -m \"long\""
 help = "run the unit tests suite including only long tests (pytest)"
 
 [tool.taskipy.tasks.test-all]
-cmd = "echo '\n>>> pytest' && pytest"
+cmd = "echo '\n>>> pytest -n=auto' && pytest -n=auto"
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
