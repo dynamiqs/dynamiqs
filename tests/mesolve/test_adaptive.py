@@ -7,10 +7,10 @@ class TestMEAdaptive(SolverTester):
         self._test_batching(leaky_cavity_8, 'dopri5')
 
     def test_correctness(self):
-        self._test_correctness(leaky_cavity_8, 'dopri5', num_t_save=11)
+        self._test_correctness(leaky_cavity_8, 'dopri5', num_tsave=11)
 
     def test_autograd(self):
-        self._test_gradient(grad_leaky_cavity_8, 'dopri5', 'autograd', num_t_save=11)
+        self._test_gradient(grad_leaky_cavity_8, 'dopri5', 'autograd', num_tsave=11)
 
     def test_adjoint(self):
         options = dict(parameters=grad_leaky_cavity_8.parameters)
@@ -19,6 +19,6 @@ class TestMEAdaptive(SolverTester):
             'dopri5',
             'adjoint',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
             atol=1e-3,
         )

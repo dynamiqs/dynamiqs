@@ -40,7 +40,7 @@ class Propagator(AutogradSolver):
 
         # run the ode routine
         nobar = not self.options.verbose
-        for ts in tqdm(self.t_stop(), disable=nobar):
+        for ts in tqdm(self.tstop, disable=nobar):
             # round time difference to avoid numerical errors when comparing floats
             delta_t = round_truncate(ts - t)
 
@@ -50,5 +50,5 @@ class Propagator(AutogradSolver):
             t = ts
 
     @abstractmethod
-    def forward(self, t: float, delta_t: float, y: Tensor):
+    def forward(self, t: float, delta_t: float, y: Tensor) -> Tensor:
         pass

@@ -25,12 +25,10 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # assert that `t_save` values are multiples of `dt`
-        if not torch.allclose(
-            torch.round(self.t_save / self.dt), self.t_save / self.dt
-        ):
+        # assert that `tsave` values are multiples of `dt`
+        if not torch.allclose(torch.round(self.tsave / self.dt), self.tsave / self.dt):
             raise ValueError(
-                'Every value of `t_save` (and `t_meas` for SME solvers) must be a'
+                'Every value of `tsave` (and `tmeas` for SME solvers) must be a'
                 ' multiple of the time step `dt` for fixed time step ODE solvers.'
             )
 
@@ -39,7 +37,7 @@ class FixedSolver(AutogradSolver):
 
         # run the ode routine
         nobar = not self.options.verbose
-        for ts in tqdm(self.t_stop(), disable=nobar):
+        for ts in tqdm(self.tstop, disable=nobar):
             # integrate the ODE forward
             y = self.integrate(t, ts, y)
             self.save(y)
@@ -59,7 +57,7 @@ class FixedSolver(AutogradSolver):
         return y
 
     @abstractmethod
-    def forward(self, t: float, y: Tensor):
+    def forward(self, t: float, y: Tensor) -> Tensor:
         pass
 
 
@@ -77,7 +75,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
         # run the ode routine
         nobar = not self.options.verbose
-        for t in tqdm(times[:-1], leave=False, disable=nobar):
+        for t in tqdm(times[:-1].cpu().numpy(), leave=False, disable=nobar):
             y, a = y.requires_grad_(True), a.requires_grad_(True)
 
             with torch.enable_grad():
@@ -98,5 +96,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         return y, a, g
 
     @abstractmethod
-    def backward_augmented(self, t: float, y: Tensor, a: Tensor):
+    def backward_augmented(
+        self, t: float, y: Tensor, a: Tensor
+    ) -> tuple[Tensor, Tensor]:
         pass
