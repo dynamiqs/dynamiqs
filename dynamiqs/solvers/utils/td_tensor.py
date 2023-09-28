@@ -1,38 +1,78 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from itertools import compress
 from typing import get_args
 
+import numpy as np
 import torch
 from torch import Tensor
 
 from ..._utils import obj_type_str, to_device, type_str
-from ...utils.tensor_types import ArrayLike, TDArrayLike, get_rdtype, to_tensor
+from ...utils.tensor_types import (
+    ArrayLike,
+    TDArrayLike,
+    dtype_complex_to_real,
+    get_cdtype,
+    to_tensor,
+)
 from .utils import cache
 
 
 def to_td_tensor(
     x: TDArrayLike,
-    dtype: torch.dtype | None = None,
+    dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> TDTensor:
     """Convert a `TDArrayLike` object to a `TDTensor` object."""
+    cdtype = get_cdtype(dtype)
+    rdtype = dtype_complex_to_real(cdtype)
     device = to_device(device)
 
-    if isinstance(x, get_args(ArrayLike)):
+    if isinstance(x, tuple):
+        if len(x) == 0:
+            raise ValueError(
+                'The piecewise-constant operator must be a non-empty tuple.'
+            )
+
+        # split tuple elements between static and pwc elements using a mask
+        is_static = np.array([isinstance(_x, get_args(ArrayLike)) for _x in x])
+        if not any(is_static):
+            x_static = None
+        else:
+            # sum static parts to a single tensor
+            x_static = list(compress(x, is_static))
+            x_static = [to_tensor(_x, dtype=cdtype, device=device) for _x in x_static]
+            x_static = torch.sum(torch.stack(x_static), dim=0)
+
+        # if there is only static parts, convert to constant tensor
+        if all(is_static):
+            return to_td_tensor(x_static, dtype=dtype, device=device)
+
+        # convert all pwc parts to tensors
+        x_pwc = list(compress(x, ~is_static))
+        x_pwc = [
+            (
+                to_tensor(tensor, dtype=cdtype, device=device),
+                to_tensor(times, dtype=rdtype, device=device),
+                to_tensor(values, dtype=cdtype, device=device),
+            )
+            for tensor, times, values in x_pwc
+        ]
+
+        return PWCTDTensor(x_static, x_pwc)
+    elif isinstance(x, get_args(ArrayLike)):
         # convert to tensor
-        x = to_tensor(x, dtype=dtype, device=device)
+        x = to_tensor(x, dtype=cdtype, device=device)
         return ConstantTDTensor(x)
     elif callable(x):
-        dtype = get_rdtype(dtype) if dtype is None else dtype  # assume real by default
-
         # compute initial value of the callable
         x0 = x(0.0)
 
         # check callable
-        check_callable(x0, dtype, device)
+        check_callable(x0, cdtype, device)
 
-        return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
+        return CallableTDTensor(x, shape=x0.shape, dtype=cdtype, device=device)
 
 
 def check_callable(
@@ -135,3 +175,42 @@ class CallableTDTensor(TDTensor):
         return CallableTDTensor(
             f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
         )
+
+
+class PWCTDTensor(TDTensor):
+    def __init__(self, static: Tensor | None, pwc: list[tuple[Tensor, Tensor, Tensor]]):
+        # argument pwc must be a non-empty list
+        tensor0, _, values0 = pwc[0]
+        self._dtype = tensor0.dtype
+        self._device = tensor0.device
+        self._shape = torch.Size((*values0.shape[:-1], *tensor0.shape))  # (..., n, n)
+
+        self._static = static  # (n, n)
+        self._pwc = pwc
+
+    def __call__(self, t: float) -> Tensor:
+        total_tensor = torch.zeros(self._shape, dtype=self._dtype, device=self._device)
+        if self._static is not None:
+            total_tensor += self._static
+        for x in self._pwc:
+            tensor, times, values = x
+            if t < times[0] or t >= times[-1]:
+                continue
+            else:
+                idx = torch.searchsorted(times, t, side='right') - 1
+                v = values[..., idx]  # (...)
+                total_tensor += v[..., None, None] * tensor  # (..., n, n)
+        return total_tensor
+
+    def size(self, dim: int) -> int:
+        return self._shape[dim]
+
+    def dim(self) -> int:
+        return len(self._shape)
+
+    def unsqueeze(self, dim: int) -> TDTensor:
+        pwc = [
+            (tensor, times, values.unsqueeze(dim))
+            for tensor, times, values in self._pwc
+        ]
+        return PWCTDTensor(self._static, pwc)

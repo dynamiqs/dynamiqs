@@ -18,9 +18,15 @@ __all__ = [
 # type for objects convertible to a torch.Tensor using `to_tensor`
 ArrayLike = Union[list, np.ndarray, Tensor, Qobj]
 
-# TODO add typing for Hamiltonian with piecewise-constant factor
 # type for time-dependent objects
-TDArrayLike = Union[ArrayLike, Callable[[float], Tensor]]
+# - constant: e.g. H0
+# - callable: e.g. lambda t: H0 + H1 * f(t)
+# - piecewise-constant (pwc): e.g. (H0, (H1, times, values))
+TDArrayLike = Union[
+    ArrayLike,  # constant
+    Callable[[float], Tensor],  # callable
+    tuple[Union[ArrayLike, tuple[ArrayLike, ArrayLike, ArrayLike]]],  # pwc
+]
 
 
 def to_tensor(
