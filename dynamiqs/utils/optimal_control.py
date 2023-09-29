@@ -93,12 +93,12 @@ def pwc_pulse(
     r"""Returns a function that takes a time $t$ and returns the piecewise-constant
     (PWC) pulse value at this time.
 
-    The time interval $[t_\text{start}, t_\text{end}]$ is split into $n$ bins, where
+    The time interval $[t_\text{start}, t_\text{end})$ is split into $n$ bins, where
     $n$ is the last dimension of `values` with shape _(..., n)_. The pulse value at
     time $t$ is defined by
 
-    - `torch.zeros(...)` if $t$ is not in $[t_\text{start}, t_\text{end}]$,
-    - `values[..., k]` if $t$ is in the $k$-th bin of $[t_\text{start}, t_\text{end}]$.
+    - `torch.zeros(...)` if $t$ is not in $[t_\text{start}, t_\text{end})$,
+    - `values[..., k]` if $t$ is in the $k$-th bin of $[t_\text{start}, t_\text{end})$.
 
     Notes:
         You can use [rand_complex()][dynamiqs.rand_complex] to generate a tensor
@@ -126,14 +126,10 @@ def pwc_pulse(
     """
 
     def pulse(t):
-        if t < t_start or t > t_end:
+        if t < t_start or t >= t_end:
             # return a null tensor of appropriate shape
             batch_sizes = values.shape[:-1]
             return torch.zeros(batch_sizes, dtype=values.dtype, device=values.device)
-        elif t == t_end:
-            # return the last value, this case if necessary to avoid an out of bounds
-            # index error when computing `idx` below
-            return values[..., -1]
         else:
             # find the index corresponding to time t for t in [t_start, t_end[
             n = values.size(-1)
