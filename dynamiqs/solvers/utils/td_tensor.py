@@ -16,7 +16,7 @@ from ...utils.tensor_types import (
     get_cdtype,
     to_tensor,
 )
-from .utils import cache
+from .utils import cache, merge_tensors
 
 
 def to_td_tensor(
@@ -187,6 +187,8 @@ class PWCTDTensor(TDTensor):
 
         self._static = static  # (n, n)
         self._pwc = pwc
+
+        self.times = merge_tensors(*[times for _, times, _ in pwc])
 
     def __call__(self, t: float) -> Tensor:
         total_tensor = torch.zeros(self._shape, dtype=self._dtype, device=self._device)
