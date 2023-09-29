@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from ..mesolve.me_solver import MESolver
-from ..solvers.utils import cache
+from ..solvers.utils import cache, merge_tensors
 from ..utils.utils import trace
 
 
@@ -52,7 +52,7 @@ class SMESolver(MESolver):
         self.bin_meas = torch.zeros(self.meas_shape)  # (..., len(etas))
 
     def _init_time_logic(self):
-        self.tstop = torch.cat((self.tsave, self.tmeas)).unique().sort()[0]
+        self.tstop = merge_tensors(self.tsave, self.tmeas)
         self.tstop_counter = 0
 
         self.tsave_mask = torch.isin(self.tstop, self.tsave)

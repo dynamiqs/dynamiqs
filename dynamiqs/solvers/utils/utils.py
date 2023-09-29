@@ -171,3 +171,7 @@ def check_time_tensor(x: Tensor, arg_name: str, allow_empty=False):
         )
     if not torch.all(x >= 0):
         raise ValueError(f'Argument `{arg_name}` must contain positive values only.')
+
+
+def merge_tensors(*x: Tensor) -> Tensor:
+    return torch.cat(x).unique().sort()[0]
