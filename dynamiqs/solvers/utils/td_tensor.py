@@ -85,20 +85,20 @@ def check_callable(
     if not isinstance(x0, Tensor):
         raise TypeError(
             f'The time-dependent operator must be a {type_str(Tensor)}, but has type'
-            f' {obj_type_str(x0)}. The provided callable must return a tensor, to avoid'
+            f' {obj_type_str(x0)}. The provided function must return a tensor, to avoid'
             ' costly type conversion at each time solver step.'
         )
     elif x0.dtype != expected_dtype:
         raise TypeError(
             f'The time-dependent operator must have dtype `{expected_dtype}`, but has'
-            f' dtype `{x0.dtype}`. The provided callable must return a tensor with the'
+            f' dtype `{x0.dtype}`. The provided function must return a tensor with the'
             ' same `dtype` as provided to the solver, to avoid costly dtype conversion'
             ' at each solver time step.'
         )
     elif x0.device != expected_device:
         raise TypeError(
             f'The time-dependent operator must be on device `{expected_device}`, but is'
-            f' on device `{x0.device}`. The provided callable must return a tensor on'
+            f' on device `{x0.device}`. The provided function must return a tensor on'
             ' the same device as provided to the solver, to avoid costly device'
             ' transfer at each solver time step.'
         )

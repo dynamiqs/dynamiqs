@@ -31,8 +31,7 @@ class Propagator(AutogradSolver):
         if isinstance(self.H, CallableTDTensor):
             raise ValueError(
                 'Solver `Propagator` requires a time-independent or piecewise-constant'
-                ' Hamiltonian, but a time-dependent Hamiltonian in the callable format'
-                ' was provided.'
+                ' Hamiltonian, but a time-dependent Hamiltonian function was provided.'
             )
         elif isinstance(self.H, PWCTDTensor):
             # merge tstop with pwc times that are in the interval [0.0, tsave[-1]],

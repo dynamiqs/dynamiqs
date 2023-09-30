@@ -46,7 +46,7 @@ def sesolve(
 
     Args:
         H _(Tensor or Callable)_: Hamiltonian.
-            Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
+            Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a function
             `H(t: float) -> Tensor` that returns a tensor of either possible shapes
             at every time between `t=0` and `t=tsave[-1]`.
         psi0 _(Tensor)_: Initial wavefunction.
