@@ -28,7 +28,8 @@ class AdjointAdaptiveAutograd(torch.autograd.Function):
         ctx.tsave = solver.tsave
 
         # integrate the ODE forward without storing the graph of operations
-        solver.run_nograd()
+        with torch.no_grad():
+            solver.run_autograd()
 
         # save results and model parameters
         ctx.save_for_backward(solver.result.ysave)
@@ -136,7 +137,8 @@ class AdjointFixedAutograd(torch.autograd.Function):
         ctx.tsave = solver.tsave
 
         # integrate the ODE forward without storing the graph of operations
-        solver.run_nograd()
+        with torch.no_grad():
+            solver.run_autograd()
 
         # save results and model parameters
         ctx.save_for_backward(solver.result.ysave)
