@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Union, get_args
+from typing import Callable, Tuple, Union, get_args
 
 import numpy as np
 import torch
@@ -25,7 +25,7 @@ ArrayLike = Union[list, np.ndarray, Tensor, Qobj]
 TDArrayLike = Union[
     ArrayLike,  # constant
     Callable[[float], Tensor],  # callable
-    tuple[Union[ArrayLike, tuple[ArrayLike, ArrayLike, ArrayLike]]],  # pwc
+    Tuple[Union[ArrayLike, Tuple[ArrayLike, ArrayLike, ArrayLike]]],  # pwc
 ]
 
 
