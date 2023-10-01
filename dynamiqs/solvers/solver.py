@@ -67,7 +67,7 @@ class Solver(ABC):
         self.result = Result(options, ysave, tsave, exp_save)
 
         # initialize save logic and save initial state if necessary
-        self._initsave()
+        self._init_save()
 
     def run(self):
         self.result.start_time = time()
@@ -82,7 +82,7 @@ class Solver(ABC):
     def run_nograd(self):
         pass
 
-    def _initsave(self):
+    def _init_save(self):
         """Initialize the save logic and save the initial state if necessary."""
         self.tsave_counter = 0
         if self.tsave[0] == 0.0:
