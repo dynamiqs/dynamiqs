@@ -207,13 +207,11 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                ft_new, y_new, y_err = self.step(ft, y, t, dt, self.odefun_backward)
+                ft_new, y_new, _ = self.step(ft, y, t, dt, self.odefun_backward)
                 lt_new, a_new, a_err = self.step(lt, a, t, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
-                error_y = self.get_error(y_err, y, y_new)
-                error_a = self.get_error(a_err, a, a_new)
-                error = max(error_y, error_a)
+                error = self.get_error(a_err, a, a_new)
 
                 # update if step is accepted
                 if error <= 1:
