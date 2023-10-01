@@ -84,6 +84,49 @@ Description: Extra CSS for the dynamiqs documentation
   color: var(--md-note-fg-color);
 }
 
+/* Admonition styling */
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .quote {
+  margin: 1.1em 0;
+}
+
+.md-typeset .quote {
+  background-color: var(--md-admonition-bg-color);
+  color: var(--md-admonition-fg-color);
+  border: .01rem solid #9e9e9e;
+  border-radius: .2rem;
+  display: flow-root;
+  overflow: visible;
+  font-size: .64rem;
+  padding: 0 .6rem;
+  padding-top: 0;
+  page-break-inside: avoid;
+  transition: box-shadow 125ms;
+}
+
+.md-typeset .quote > * {
+  box-sizing: border-box;
+}
+
+html .md-typeset .quote > :last-child {
+  margin-bottom: .6rem;
+}
+
+.unclickable {
+  cursor: default;
+  pointer-events: none;
+}
+
+.md-typeset .quote > summary::before,
+.md-typeset .quote > summary::after {
+  display: none;
+}
+
+[dir="ltr"] .md-typeset .quote summary {
+  padding-left: 0.8rem;
+}
+
 /* Page spacing */
 .md-typeset {
   line-height: 1.4;
@@ -216,11 +259,11 @@ article.md-typeset h1 {
 
 /* bullet point lists */
 .md-typeset ul li {
-    margin-bottom: 0;
-    padding-left: 0.3em
+  margin-bottom: 0;
+  padding-left: 0.3em
 }
 
 .md-typeset ul li::marker {
-    content: "»";
-    font-weight:600;
+  content: "»";
+  font-weight: 600;
 }
