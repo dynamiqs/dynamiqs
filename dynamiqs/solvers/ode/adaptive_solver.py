@@ -234,7 +234,7 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
                     self.pbar.update(dt)
 
             # free the graph of y and a
-            y, a = y.data, a.data
+            y, a, ft, lt = y.data, a.data, ft.data, lt.data
 
         dt, error = cache
         return y, a, g, ft, lt, dt, error
