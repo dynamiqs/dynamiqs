@@ -17,9 +17,9 @@ class SMESolver(MESolver):
         jump_ops: Tensor,
         etas: Tensor,
         generator: torch.Generator,
-        t_meas: Tensor,
+        tmeas: Tensor,
     ):
-        self.t_meas = t_meas  # (len(t_meas))
+        self.tmeas = tmeas  # (len(tmeas))
         super().__init__(*args, jump_ops=jump_ops)
 
         # split jump operators between purely dissipative (eta = 0) and
@@ -35,11 +35,11 @@ class SMESolver(MESolver):
 
         self.meas_shape = (*batch_sizes, len(self.Lm))
 
-        # meas_save: (..., len(Lm), len(t_meas))
-        if len(t_meas) > 0:
+        # meas_save: (..., len(Lm), len(tmeas))
+        if len(tmeas) > 0:
             meas_save = torch.zeros(
                 *self.meas_shape,
-                len(t_meas) - 1,
+                len(tmeas) - 1,
                 dtype=self.rdtype,
                 device=self.device,
             )
@@ -52,27 +52,25 @@ class SMESolver(MESolver):
         self.bin_meas = torch.zeros(self.meas_shape)  # (..., len(etas))
 
     def _init_time_logic(self):
-        self.t_stop = torch.cat((self.t_save, self.t_meas)).unique().sort()[0]
-        self.t_stop_counter = 0
+        self.tstop = torch.cat((self.tsave, self.tmeas)).unique().sort()[0]
+        self.tstop_counter = 0
 
-        self.t_save_mask = torch.isin(self.t_stop, self.t_save)
-        self.t_save_counter = 0
+        self.tsave_mask = torch.isin(self.tstop, self.tsave)
+        self.tsave_counter = 0
 
-        self.t_meas_mask = torch.isin(self.t_stop, self.t_meas)
-        self.t_meas_counter = 0
+        self.tmeas_mask = torch.isin(self.tstop, self.tmeas)
+        self.tmeas_counter = 0
 
     def _save(self, y: Tensor):
         super()._save(y)
-        if self.t_meas_mask[self.t_stop_counter]:
+        if self.tmeas_mask[self.tstop_counter]:
             self._save_meas()
-            self.t_meas_counter += 1
+            self.tmeas_counter += 1
 
     def _save_meas(self):
-        if self.t_meas_counter != 0:
-            t_bin = (
-                self.t_meas[self.t_meas_counter] - self.t_meas[self.t_meas_counter - 1]
-            )
-            self.result.meas_save[..., self.t_meas_counter - 1] = self.bin_meas / t_bin
+        if self.tmeas_counter != 0:
+            t_bin = self.tmeas[self.tmeas_counter] - self.tmeas[self.tmeas_counter - 1]
+            self.result.meas_save[..., self.tmeas_counter - 1] = self.bin_meas / t_bin
             self.bin_meas = torch.zeros_like(self.bin_meas)
 
     def sample_wiener(self, dt: float) -> Tensor:

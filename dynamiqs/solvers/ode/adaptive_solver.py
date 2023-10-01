@@ -23,7 +23,7 @@ class AdaptiveSolver(AutogradSolver):
         """
         # initialize the progress bar
         nobar = not self.options.verbose
-        self.pbar = tqdm(total=self.t_save[-1].item(), disable=nobar)
+        self.pbar = tqdm(total=self.tsave[-1].item(), disable=nobar)
 
         # initialize step counter
         self.step_counter = 0
@@ -35,7 +35,7 @@ class AdaptiveSolver(AutogradSolver):
 
         # run the ODE routine
         t, y, ft = 0.0, self.y0, f0
-        for ts in self.t_stop():
+        for ts in self.tstop():
             # integrate the ODE forward
             y, ft, dt, error = self.integrate(t, ts, y, ft, dt, error)
             self.save(y)

@@ -14,34 +14,37 @@ __all__ = [
 def rand_complex(
     size: int | tuple[int, ...],
     *,
+    rmax: float = 1.0,
     requires_grad: bool = False,
     seed: int | None = None,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns a tensor filled with random complex numbers uniformly distributed in the
-    unit disc of the complex plane.
+    r"""Returns a tensor filled with random complex numbers uniformly distributed in
+    the complex plane.
 
-    Each element of the returned tensor has a random magnitude between 0 and 1 and a
-    random phase. Formally, each element is defined by
+    Each element of the returned tensor has a random magnitude in the interval
+    $[0, \texttt{rmax})$ and a random phase in the interval $[0, 2\pi)$. Formally, each
+    element is defined by
 
     $$
         x = re^{i\theta}\ \text{with}\
         \begin{cases}
-            r = \sqrt{\texttt{rand(0,1)}} \\
+            r = \texttt{rmax} \cdot \sqrt{\texttt{rand(0,1)}} \\
             \theta = 2\pi \cdot \texttt{rand(0,1)}
         \end{cases}
     $$
 
     where $\texttt{rand(0,1)}$ is a random number uniformly distributed between 0 and 1.
 
-    Note:
+    Notes:
         The square root in the definition of the magnitude $r$ ensures that the
-        resulting complex numbers are uniformly distributed in the unit disc of the
-        complex plane.
+        resulting complex numbers are uniformly distributed in the disc of the complex
+        plane with a radius of `rmax`.
 
     Args:
         size _(int or tuple of ints)_: Size of the returned tensor.
+        rmax: Maximum magnitude of the random complex numbers.
         requires_grad: Whether gradients need to be computed with respect to the
             returned tensor.
         seed: Seed for the random number generator.
@@ -52,12 +55,12 @@ def rand_complex(
         _(*size)_ Tensor filled with random complex numbers.
 
     Examples:
-        >>> x = dq.rand_complex((2, 5), seed=42)
+        >>> x = dq.rand_complex((2, 5), rmax=5.0, seed=42)
         >>> x
-        tensor([[ 0.861-0.375j, -0.796-0.531j,  0.422-0.453j, -0.892-0.404j,
-                 -0.035-0.624j],
-                [-0.700+0.333j,  0.381-0.334j, -0.797-0.399j, -0.101+0.965j,
-                 -0.254-0.262j]])
+        tensor([[ 4.305-1.876j, -3.980-2.653j,  2.109-2.263j, -4.461-2.021j,
+                 -0.175-3.119j],
+                [-3.501+1.663j,  1.904-1.670j, -3.983-1.995j, -0.504+4.823j,
+                 -1.270-1.310j]])
     """
     # Note: We need to manually fetch the default device, because if `device` is `None`
     # `torch.Generator` picks "cpu" as the default device, and not the device set by
@@ -72,9 +75,9 @@ def rand_complex(
 
     rand = lambda: torch.rand(size, generator=generator, dtype=rdtype, device=device)
 
-    # generate random magnitude with values in [0, 1[, the sqrt ensures that the
+    # generate random magnitude with values in [0, rmax[, the sqrt ensures that the
     # resulting complex numbers are uniformly distributed in the complex plane
-    r = rand().sqrt()
+    r = rmax * rand().sqrt()
     # generate random phase with values in [0, 2pi[
     theta = 2 * torch.pi * rand()
     x = r * torch.exp(1j * theta)
@@ -97,7 +100,7 @@ def pwc_pulse(
     - `torch.zeros(...)` if $t$ is not in $[t_\text{start}, t_\text{end}]$,
     - `values[..., k]` if $t$ is in the $k$-th bin of $[t_\text{start}, t_\text{end}]$.
 
-    Note:
+    Notes:
         You can use [rand_complex()][dynamiqs.rand_complex] to generate a tensor
         filled with random complex numbers for the parameter `values`.
 
@@ -112,12 +115,12 @@ def pwc_pulse(
             tensor of shape _(...)_).
 
     Examples:
-        >>> values = dq.rand_complex((2, 5), seed=42)
+        >>> values = dq.rand_complex((2, 5), rmax=5.0, seed=42)
         >>> pulse = dq.pwc_pulse(0.0, 1.0, values)
         >>> type(pulse)
         <class 'function'>
         >>> pulse(0.5)
-        tensor([ 0.422-0.453j, -0.797-0.399j])
+        tensor([ 2.109-2.263j, -3.983-1.995j])
         >>> pulse(1.2)
         tensor([0.+0.j, 0.+0.j])
     """

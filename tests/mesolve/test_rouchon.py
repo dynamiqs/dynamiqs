@@ -16,8 +16,8 @@ class TestMERouchon1(SolverTester):
             leaky_cavity_8,
             'rouchon1',
             options=options,
-            num_t_save=11,
-            y_save_norm_atol=1e-2,
+            num_tsave=11,
+            ysave_norm_atol=1e-2,
             exp_save_rtol=1e-2,
             exp_save_atol=1e-2,
         )
@@ -30,7 +30,7 @@ class TestMERouchon1(SolverTester):
             'rouchon1',
             'autograd',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
             rtol=1e-2,
             atol=1e-2,
         )
@@ -47,7 +47,7 @@ class TestMERouchon1(SolverTester):
             'rouchon1',
             'adjoint',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
             rtol=1e-2,
             atol=1e-2,
         )
@@ -64,8 +64,8 @@ class TestMERouchon2(SolverTester):
             leaky_cavity_8,
             'rouchon2',
             options=options,
-            num_t_save=11,
-            y_save_norm_atol=1e-2,
+            num_tsave=11,
+            ysave_norm_atol=1e-2,
             exp_save_rtol=1e-2,
             exp_save_atol=1e-2,
         )
@@ -77,7 +77,7 @@ class TestMERouchon2(SolverTester):
             'rouchon2',
             gradient='autograd',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
         )
 
     def test_adjoint(self):
@@ -87,6 +87,6 @@ class TestMERouchon2(SolverTester):
             'rouchon2',
             'adjoint',
             options=options,
-            num_t_save=11,
+            num_tsave=11,
             atol=1e-4,
         )

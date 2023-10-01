@@ -55,13 +55,13 @@ a = qt.destroy(n)
 H = omega * a.dag() * a
 jump_ops = [np.sqrt(kappa) * a]
 rho0 = qt.coherent_dm(n, alpha0)
-t_save = np.linspace(0, 1.0, 101)
+tsave = np.linspace(0, 1.0, 101)
 
 # uncomment the next line to run the simulation on GPU
 # torch.set_default_device('gpu')
 
 # simulation
-result = dq.mesolve(H, jump_ops, rho0, t_save)
+result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
 ```
 
@@ -97,14 +97,14 @@ a = dq.destroy(n)
 H = omega * a.mH @ a
 jump_ops = [torch.sqrt(kappa) * a]
 rho0 = dq.coherent_dm(n, alpha0)
-t_save = np.linspace(0, 1.0, 101)
+tsave = np.linspace(0, 1.0, 101)
 
 # uncomment the next line to run the simulation on GPU
 # torch.set_default_device('gpu')
 
 # simulation
 options = dict(verbose=False)
-result = dq.mesolve(H, jump_ops, rho0, t_save, gradient='autograd', options=options)
+result = dq.mesolve(H, jump_ops, rho0, tsave, gradient='autograd', options=options)
 
 # gradient computation
 loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
