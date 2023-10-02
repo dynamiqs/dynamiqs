@@ -33,9 +33,9 @@ def mesolve(
     $$
         \frac{\mathrm{d}\rho(t)}{\mathrm{d}t} =-i[H(t), \rho(t)]
         + \sum_{k=1}^N \left(
-            L_k \rho(t) L_k^\dagger
-            - \frac{1}{2} L_k^\dagger L_k \rho(t)
-            - \frac{1}{2} \rho(t) L_k^\dagger L_k
+            L_k \rho(t) L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho(t)
+            - \frac{1}{2} \rho(t) L_k^\dag L_k
         \right),
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k\}$ is a collection
