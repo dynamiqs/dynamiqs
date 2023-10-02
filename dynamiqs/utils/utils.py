@@ -536,6 +536,39 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
     return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
 
 
+def fidelity(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the fidelity of two states, kets or density matrix.
+
+    Args:
+        x _(..., n, 1)_ or _(..., n, n)_: First ket or density matrix.
+        y _(..., n, 1)_ or _(..., n, n)_: Second ket or density matrix.
+
+    Returns:
+        _(...)_ Real-valued fidelity.
+
+    Examples:
+        >>> fock0 = dq.fock(3, 0)
+        >>> dq.fidelity(fock0, fock0)
+        tensor(1.)
+        >>> fock01 = 0.5 * (ket_to_dm(fock(3, 1)) + ket_to_dm(fock(3, 0)))
+        >>> dq.fidelity(fock1, fock1)
+        tensor(1)
+        >>> dq.fidelity(fock0, fock01)
+        tensor(0.5)
+    """
+
+    if isket(x) and isket(y):
+        return ket_fidelity(x, y)
+    else:
+        if isket(x):
+            x = ket_to_dm(x)
+
+        if isket(y):
+            y = ket_to_dm(y)
+
+        return dm_fidelity(x, y)
+
+
 def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the fidelity of two kets.
 
