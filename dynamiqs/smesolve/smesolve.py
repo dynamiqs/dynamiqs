@@ -168,6 +168,8 @@ def smesolve(
                 _(bH?, brho?, ntrajs, len(exp_ops), len(tsave))_.
             - **tsave** or **times** _(Tensor)_ – Times for which states and expectation
                 values were saved.
+            - **tmeas** _(Tensor)_ – Time intervals for which measured signals were
+                averaged.
             - **solver_str** (str): Solver used.
             - **start_datetime** _(datetime)_ – Start date and time of the integration.
             - **end_datetime** _(datetime)_ – End date and time of the integration.
