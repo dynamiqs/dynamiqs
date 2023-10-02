@@ -239,3 +239,23 @@ def to_device(device: str | torch.device | None) -> torch.device:
             f'Argument `device` ({device}) must be a string, a `torch.device` object or'
             ' `None`.'
         )
+
+
+def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
+    if isinstance(x, list):
+        if len(x) == 0:
+            return np.array([])
+        if not isinstance(x[0], get_args(ArrayLike)):
+            return np.array(x)
+        else:
+            return np.array([to_numpy(el) for el in x])
+    elif isinstance(x, np.ndarray):
+        return x
+    elif isinstance(x, Tensor):
+        return x.numpy(force=True)
+    elif isinstance(x, Qobj):
+        return x.full()
+    else:
+        raise TypeError(
+            f'Argument `x` must be an array-like object but has type {obj_type_str(x)}.'
+        )
