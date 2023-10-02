@@ -21,8 +21,8 @@ def plot_pwc_pulse(
     *,
     ax: Axes = None,
     ycenter: bool = True,
-    real_color='#0C5DA5',
-    imag_color='#845B97',
+    real_color: str = '#0C5DA5',
+    imag_color: str = '#845B97',
 ):
     times = to_numpy(times)
     values = to_numpy(values)
