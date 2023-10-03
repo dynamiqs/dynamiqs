@@ -13,6 +13,7 @@ __all__ = [
     'to_tensor',
     'from_qutip',
     'to_qutip',
+    'to_numpy',
 ]
 
 # type for objects convertible to a torch.Tensor using `to_tensor`
@@ -242,6 +243,30 @@ def to_device(device: str | torch.device | None) -> torch.device:
 
 
 def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
+    """Convert an array-like object or a list of array-like objects to a NumPy array.
+
+    Args:
+        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
+            of these types.
+
+    Returns:
+        Output NumPy array.
+
+    Examples:
+        >>> import qutip as qt
+        >>> dq.to_numpy(dq.fock(3, 1))
+        array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_numpy([qt.fock(3, 1), qt.fock(3, 2)])
+        array([[[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]],
+        <BLANKLINE>
+               [[0.+0.j],
+                [0.+0.j],
+                [1.+0.j]]])
+    """
     if isinstance(x, list):
         if len(x) == 0:
             return np.array([])
