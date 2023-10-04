@@ -611,45 +611,14 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
 
 
 def _ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two kets.
-
-    The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
-    squared overlap:
-
-    $$
-        F(\ket\varphi, \ket\psi) = \left|\braket{\varphi, \psi}\right|^2.
-    $$
-
-    Args:
-        x _(..., n, 1)_: First ket.
-        y _(..., n, 1)_: Second ket.
-
-    Returns:
-        _(...)_ Real-valued fidelity.
-    """
+    # returns the fidelity of two kets: |<x, y>|^2
+    # x: (..., n, 1), y: (..., n, 1) -> (...)
     return ket_overlap(x, y).abs().pow(2).real
 
 
 def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two density matrices.
-
-    The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
-
-    $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
-    $$
-
-    Warning:
-        This definition is different from `qutip.fidelity()` which uses the square root
-        fidelity $F_\text{qutip} = \sqrt{F}$.
-
-    Args:
-        x _(..., n, n)_: First density matrix.
-        y _(..., n, n)_: Second density matrix.
-
-    Returns:
-        _(...)_ Real-valued fidelity.
-    """
+    # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
+    # x: (..., n, n), y: (..., n, n) -> (...)
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
 
@@ -667,27 +636,9 @@ def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
 
 def _ket_dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity between a pure state and a density matrix
-
-    The fidelity of a pure state $\rho$ and $\psi$ is defined by:
-
-    $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
-    $$
-    where $\sigma = \ket{\psi}\bra{\psi}$  and simplifiable to
-    $
-        F(\rho, \sigma) = \tr{\bra{\psi}\rho\ket{\psi}}^2.
-    $$
-
-    Args:
-        x _(..., n, n)_: A density matrix.
-        y _(..., n, n)_: A ket.
-
-    Returns:
-        _(...)_ Real-valued fidelity.
-
-    """
-    return trace(ket_to_bra(x) @ y @ x).real
+    # returns the fidelity of a ket `x` and a density matrix `y`: <x|y|x>
+    # x: (..., n, 1), y: (..., n, n) -> (...)
+    return trace(tobra(x) @ y @ x).real
 
 
 def _sqrtm(x: Tensor) -> Tensor:
