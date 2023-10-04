@@ -36,18 +36,79 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.mH)
 
 
-def inv_sqrtm(mat: Tensor) -> Tensor:
-    """Compute the inverse square root of a complex Hermitian or real symmetric matrix
-    using its eigendecomposition.
+pade_p = torch.tensor([1.0, -2.75, 2.75, -1.203125, 0.21484375, -0.0107421875])
+pade_q = torch.tensor([1.0, -2.25, 1.75, -0.546875, 0.05859375, -0.0009765625])
 
-    TODO Replace with Schur decomposition once released by PyTorch.
-         See the feature request at https://github.com/pytorch/pytorch/issues/78809.
-         Alternatively, see a sqrtm implementation at
-         https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176.
+
+def matrix_pade_approximant_inverse(p, eye):
+    p_sqrt = pade_p[0] * eye
+    q_sqrt = pade_q[0] * eye
+    p_app = eye - p
+    p_hat = p_app
+
+    for i in range(5):
+        p_sqrt += pade_p[i + 1] * p_hat
+        q_sqrt += pade_q[i + 1] * p_hat
+        p_hat = p_hat.bmm(p_app)
+
+    return torch.linalg.solve(p_sqrt, q_sqrt)
+
+
+class InvSqrtm(torch.autograd.Function):
     """
-    vals, vecs = torch.linalg.eigh(mat)
-    inv_sqrt_vals = torch.diag(vals ** (-0.5)).to(vecs)
-    return vecs @ torch.linalg.solve(vecs, inv_sqrt_vals, left=False)
+    Original code is from https://github.com/KingJamesSong/FastDifferentiableMatSqrt
+    See also :https://arxiv.org/abs/2201.08663
+    """
+
+    @staticmethod
+    def forward(ctx, mat):
+        if len(mat.shape) == 2:
+            mat = mat.unsqueeze(0)
+
+        norm_mat = torch.norm(mat, dim=[1, 2])
+        norm_mat = norm_mat.reshape(mat.size(0), 1, 1)
+        eye = (
+            torch.eye(
+                mat.size(1), requires_grad=False, device=mat.device, dtype=mat.dtype
+            )
+            .reshape(1, mat.size(1), mat.size(1))
+            .repeat(mat.size(0), 1, 1)
+        )
+        mat_sqrt_inv = matrix_pade_approximant_inverse(mat / norm_mat, eye)
+        mat_sqrt_inv = mat_sqrt_inv / torch.sqrt(norm_mat)
+        ctx.save_for_backward(mat, mat_sqrt_inv, eye)
+        return mat_sqrt_inv
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        mat, mat_sqrt_inv, eye = ctx.saved_tensors
+        mat_inv = mat_sqrt_inv.bmm(mat_sqrt_inv)
+        grad_lya = -mat_inv.bmm(grad_output).bmm(mat_inv)
+        norm_sqrt_inv = torch.norm(mat_sqrt_inv)
+        b = mat_sqrt_inv / norm_sqrt_inv
+        c = grad_lya / norm_sqrt_inv
+        for i in range(8):
+            b_2 = b.bmm(b)
+            c = 0.5 * (c.bmm(3.0 * eye - b_2) - b_2.bmm(c) + b.bmm(c).bmm(b))
+            b = 0.5 * b.bmm(3.0 * eye - b_2)
+        grad_input = 0.5 * c
+        return grad_input
+
+
+inv_sqrtm = InvSqrtm.apply
+
+# def inv_sqrtm(mat: Tensor) -> Tensor:
+#     """Compute the inverse square root of a complex Hermitian or real symmetric matrix
+#     using its eigendecomposition.
+#
+#     TODO Replace with Schur decomposition once released by PyTorch.
+#          See the feature request at https://github.com/pytorch/pytorch/issues/78809.
+#          Alternatively, see a sqrtm implementation at
+#          https://github.com/pytorch/pytorch/issues/25481#issuecomment-584896176.
+#     """
+#     vals, vecs = torch.linalg.eigh(mat)
+#     inv_sqrt_vals = torch.diag(vals ** (-0.5)).to(vecs)
+#     return vecs @ torch.linalg.solve(vecs, inv_sqrt_vals, left=False)
 
 
 def bexpect(O: Tensor, x: Tensor) -> Tensor:
