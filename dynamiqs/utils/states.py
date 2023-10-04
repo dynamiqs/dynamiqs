@@ -7,7 +7,7 @@ from torch import Tensor
 
 from .operators import displace
 from .tensor_types import get_cdtype
-from .utils import ket_to_dm
+from .utils import todm
 
 __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
 
@@ -93,7 +93,7 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
     """
-    return ket_to_dm(fock(dims, states, dtype=get_cdtype(dtype), device=device))
+    return todm(fock(dims, states, dtype=get_cdtype(dtype), device=device))
 
 
 def coherent(
@@ -152,4 +152,4 @@ def coherent_dm(
                 [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
                 [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]])
     """
-    return ket_to_dm(coherent(dim, alpha, dtype=get_cdtype(dtype), device=device))
+    return todm(coherent(dim, alpha, dtype=get_cdtype(dtype), device=device))
