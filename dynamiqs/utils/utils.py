@@ -605,7 +605,7 @@ def braket(x: Tensor, y: Tensor) -> Tensor:
         y _(..., n, 1) or (..., 1, n)_: Left-side quantum state.
 
     Returns:
-        _(...)_ Braket between both quantum states.
+        _(...)_ Complex-valued inner product.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
