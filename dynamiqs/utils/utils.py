@@ -22,8 +22,7 @@ __all__ = [
     'tobra',
     'todm',
     'ket_overlap',
-    'ket_fidelity',
-    'dm_fidelity',
+    'fidelity',
 ]
 
 
@@ -577,74 +576,58 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
     return (tobra(x) @ y).squeeze(-1).sum(-1)
 
 
-def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two kets.
+def fidelity(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the fidelity of two states, kets or density matrices.
 
-    The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
-    squared overlap:
+    The fidelity is computed
 
-    $$
-        F(\ket\varphi, \ket\psi) = \left|\braket{\varphi, \psi}\right|^2.
-    $$
+    - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
+      arguments are kets,
+    - as $F(\ket\psi,\rho)=\braket{\psi|\rho|\psi}$ if one arguments is a ket and the
+      other is a density matrix,
+    - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
+      density matrices.
 
     Warning:
         This definition is different from `qutip.fidelity()` which uses the square root
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x _(..., n, 1)_: First ket.
-        y _(..., n, 1)_: Second ket.
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+        y _(..., n, 1) or (..., n, n)_: Ket or density matrix.
 
     Returns:
         _(...)_ Real-valued fidelity.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
-        >>> dq.ket_fidelity(fock0, fock0)
+        >>> dq.fidelity(fock0, fock0)
         tensor(1.)
-        >>> fock1 = dq.fock(3, 1)
-        >>> dq.ket_fidelity(fock0, fock1)
-        tensor(0.)
-        >>> alpha0 = dq.coherent(8, 0.0)
-        >>> alpha1 = dq.coherent(8, 1.0)
-        >>> dq.ket_fidelity(alpha0, alpha1)
-        tensor(0.368)
+        >>> fock01 = 0.5 * (dq.fock_dm(3, 1) + dq.fock_dm(3, 0))
+        >>> dq.fidelity(fock01, fock01)
+        tensor(1.000)
+        >>> dq.fidelity(fock0, fock01)
+        tensor(0.500)
     """
+    if isket(x) and isket(y):
+        return _ket_fidelity(x, y)
+    elif isket(x):
+        return _ket_dm_fidelity(x, y)
+    elif isket(y):
+        return _ket_dm_fidelity(y, x)
+    else:
+        return _dm_fidelity(x, y)
+
+
+def _ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    # returns the fidelity of two kets: |<x, y>|^2
+    # x: (..., n, 1), y: (..., n, 1) -> (...)
     return ket_overlap(x, y).abs().pow(2).real
 
 
-def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two density matrices.
-
-    The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
-
-    $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
-    $$
-
-    Warning:
-        This definition is different from `qutip.fidelity()` which uses the square root
-        fidelity $F_\text{qutip} = \sqrt{F}$.
-
-    Args:
-        x _(..., n, n)_: First density matrix.
-        y _(..., n, n)_: Second density matrix.
-
-    Returns:
-        _(...)_ Real-valued fidelity.
-
-    Examples:
-        >>> fock0 = dq.fock_dm(3, 0)
-        >>> dq.dm_fidelity(fock0, fock0)
-        tensor(1.)
-        >>> fock1 = dq.fock_dm(3, 1)
-        >>> dq.dm_fidelity(fock0, fock1)
-        tensor(0.)
-        >>> alpha0 = dq.coherent_dm(8, 0.0)
-        >>> alpha1 = dq.coherent_dm(8, 1.0)
-        >>> dq.dm_fidelity(alpha0, alpha1)
-        tensor(0.368)
-    """
+def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
+    # x: (..., n, n), y: (..., n, n) -> (...)
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
 
@@ -659,6 +642,12 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     trace_sqrtm_tmp = torch.sqrt(eigvals_tmp).sum(-1)
 
     return trace_sqrtm_tmp.pow(2).real
+
+
+def _ket_dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    # returns the fidelity of a ket `x` and a density matrix `y`: <x|y|x>
+    # x: (..., n, 1), y: (..., n, n) -> (...)
+    return (tobra(x) @ y @ x).real.squeeze(-2, -1)
 
 
 def _sqrtm(x: Tensor) -> Tensor:
