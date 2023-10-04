@@ -21,8 +21,7 @@ __all__ = [
     'ket_to_bra',
     'ket_to_dm',
     'ket_overlap',
-    'ket_fidelity',
-    'dm_fidelity',
+    'fidelity',
 ]
 
 
@@ -539,9 +538,13 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
 def fidelity(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the fidelity of two states, kets or density matrix.
 
+    Warning:
+        This definition is different from `qutip.fidelity()` which uses the square root
+        fidelity $F_\text{qutip} = \sqrt{F}$.
+
     Args:
-        x _(..., n, 1)_ or _(..., n, n)_: First ket or density matrix.
-        y _(..., n, 1)_ or _(..., n, n)_: Second ket or density matrix.
+        x _(..., n, 1) or (..., n, n)_: First ket or density matrix.
+        y _(..., n, 1) or (..., n, n)_: Second ket or density matrix.
 
     Returns:
         _(...)_ Real-valued fidelity.
@@ -550,26 +553,24 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> fock0 = dq.fock(3, 0)
         >>> dq.fidelity(fock0, fock0)
         tensor(1.)
-        >>> fock01 = 0.5 * (ket_to_dm(fock(3, 1)) + ket_to_dm(fock(3, 0)))
-        >>> dq.fidelity(fock1, fock1)
-        tensor(1)
+        >>> fock01 = 0.5 * (ket_to_dm(dq.fock(3, 1)) + ket_to_dm(dq.fock(3, 0)))
+        >>> dq.fidelity(fock01, fock01)
+        tensor(1.000)
         >>> dq.fidelity(fock0, fock01)
-        tensor(0.5)
+        tensor(0.500)
     """
 
     if isket(x) and isket(y):
-        return ket_fidelity(x, y)
+        return _ket_fidelity(x, y)
+    elif isket(x):
+        return _ket_dm_fidelity(x, y)
+    elif isket(y):
+        return _ket_dm_fidelity(y, x)
     else:
-        if isket(x):
-            x = ket_to_dm(x)
-
-        if isket(y):
-            y = ket_to_dm(y)
-
-        return dm_fidelity(x, y)
+        return _dm_fidelity(x, y)
 
 
-def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
+def _ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the fidelity of two kets.
 
     The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
@@ -579,33 +580,17 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
         F(\ket\varphi, \ket\psi) = \left|\braket{\varphi, \psi}\right|^2.
     $$
 
-    Warning:
-        This definition is different from `qutip.fidelity()` which uses the square root
-        fidelity $F_\text{qutip} = \sqrt{F}$.
-
     Args:
         x _(..., n, 1)_: First ket.
         y _(..., n, 1)_: Second ket.
 
     Returns:
         _(...)_ Real-valued fidelity.
-
-    Examples:
-        >>> fock0 = dq.fock(3, 0)
-        >>> dq.ket_fidelity(fock0, fock0)
-        tensor(1.)
-        >>> fock1 = dq.fock(3, 1)
-        >>> dq.ket_fidelity(fock0, fock1)
-        tensor(0.)
-        >>> alpha0 = dq.coherent(8, 0.0)
-        >>> alpha1 = dq.coherent(8, 1.0)
-        >>> dq.ket_fidelity(alpha0, alpha1)
-        tensor(0.368)
     """
     return ket_overlap(x, y).abs().pow(2).real
 
 
-def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
+def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the fidelity of two density matrices.
 
     The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
@@ -624,18 +609,6 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 
     Returns:
         _(...)_ Real-valued fidelity.
-
-    Examples:
-        >>> fock0 = dq.fock_dm(3, 0)
-        >>> dq.dm_fidelity(fock0, fock0)
-        tensor(1.)
-        >>> fock1 = dq.fock_dm(3, 1)
-        >>> dq.dm_fidelity(fock0, fock1)
-        tensor(0.)
-        >>> alpha0 = dq.coherent_dm(8, 0.0)
-        >>> alpha1 = dq.coherent_dm(8, 1.0)
-        >>> dq.dm_fidelity(alpha0, alpha1)
-        tensor(0.368)
     """
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
@@ -651,6 +624,33 @@ def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     trace_sqrtm_tmp = torch.sqrt(eigvals_tmp).sum(-1)
 
     return trace_sqrtm_tmp.pow(2).real
+
+
+def _ket_dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the fidelity between a pure state and a density matrix
+
+    The fidelity of a pure state $\rho$ and $\sigma$ is defined by:
+
+    $$
+        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
+    $$
+
+    Assuming $\rho = \ket{\psi}\bra{\psi}$, $\rho^2 = \rho$ thus $\rho = \sqrt{\rho}$
+    $$
+        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2
+        = \tr{\sqrt{\rho\sigma\rho}}^2
+        = \tr{\sqrt{\ket{\psi}\braket{}^2
+    $$
+
+    Args:
+        x _(..., n, n)_: A density matrix.
+        y _(..., n, n)_: A ket.
+
+    Returns:
+        _(...)_ Real-valued fidelity.
+
+    """
+    return trace(ket_to_bra(x) @ y @ x).real
 
 
 def _sqrtm(x: Tensor) -> Tensor:

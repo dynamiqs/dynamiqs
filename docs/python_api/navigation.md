@@ -37,8 +37,7 @@
         - [ket_to_bra](utils/utils/ket_to_bra.md)
         - [ket_to_dm](utils/utils/ket_to_dm.md)
         - [ket_overlap](utils/utils/ket_overlap.md)
-        - [ket_fidelity](utils/utils/ket_fidelity.md)
-        - [dm_fidelity](utils/utils/dm_fidelity.md)
+        - [fidelity](utils/utils/fidelity.md)
     - Tensor conversion
         - [to_tensor](utils/tensor_types/to_tensor.md)
         - [to_qutip](utils/tensor_types/to_qutip.md)
