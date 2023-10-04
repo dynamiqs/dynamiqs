@@ -29,110 +29,158 @@ def smesolve(
     gradient: str | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
-    r"""Solve the stochastic master equation.
+    r"""Solve the diffusive stochastic master equation (SME).
 
-    Evolve the density matrix $\rho(t)$ from an initial state $\rho(t=0) = \rho_0$
-    according to the stochastic master equation using a given Hamiltonian $H(t)$, a
-    list of jump operators $\{L_k\}$ with respective measurement efficiencies
-    $\{\eta_k\}$. The stochastic master equation is given by
-
-    $$
-    \begin{split}
-        d\rho_t = -i[H, \rho_t] dt &+ \sum_k \left(L_k \rho_t L_k^\dagger -
-        \frac{1}{2} \left\{L_k^\dagger L_k, \rho_t\right\}\right) dt \\
-        &+ \sum_k \sqrt{\eta_k} \left( L_k \rho_t + \rho_t L_k^\dagger
-        - \mathrm{Tr}[(L_k+L_k^\dagger) \rho_t] \right) dW_t^{(k)}
-    \end{split}
-    $$
-
-    where $dW_t^{(k)} \sim N(0, t)$ is a Wiener process, numerically sampled from a
-    white noise distribution. The measurement signals are then given by
+    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
+    starting from an initial state $\rho(t=0)$, according to the diffusive SME in Itô
+    form (with $\hbar=1$):
 
     $$
-        dy_t^{(k)} = \sqrt{\eta_k} \mathrm{Tr}[(L_k + L_k^\dagger) \rho_t] dt
-        + dW_t^{(k)}.
+        \begin{split}
+            \mathrm{d}\rho(t) =&~ -i[H(t), \rho(t)] \mathrm{d}t\\
+            &+ \sum_{k=1}^N \left(
+                L_k \rho(t) L_k^\dag
+                - \frac{1}{2} L_k^\dag L_k \rho(t)
+                - \frac{1}{2} \rho(t) L_k^\dag L_k
+            \right)\mathrm{d}t\\
+            &+ \sum_{k=1}^N \sqrt{\eta_k} \left(
+                L_k \rho(t)
+                + \rho(t) L_k^\dag
+                - \tr{(L_k+L_k^\dag)\rho(t)}\rho(t)\ \mathrm{d}W_k(t)
+            \right),
+        \end{split}
     $$
 
-    For time-dependent problems, the Hamiltonian `H` can be passed as a function with
-    signature `H(t: float) -> Tensor`. Extra Hamiltonian arguments and time-dependence
-    for the jump operators are not yet supported.
+    where $H(t)$ is the system's Hamiltonian at time $t$, $\{L_k\}$ is a collection
+    of jump operators, each continuously measured with efficiency $0\leq\eta_k\leq1$
+    ($\eta_k=0$ for purely dissipative loss channels) and $\mathrm{d}W_k(t)$ are
+    independent Wiener processes.
 
-    The Hamiltonian `H` and the initial density matrix `rho0` can be batched over to
-    solve multiple stochastic master equations in a single run. The jump operators
-    `jump_ops` and time list `tsave` are then common to all batches.
+    Notes:
+        In quantum optics the diffusive SME corresponds to homodyne or heterodyne
+        detection schemes, as opposed to the jump SME which corresponds to photon
+        counting schemes. No solver for the jump SME is provided yet, if it is needed
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
-    `smesolve` can be differentiated through using either the default PyTorch autograd
-    library (pass `gradient_alg="autograd"` in `options`), or a custom adjoint state
-    differentiation (pass `gradient_alg="adjoint"` in `options`). By default, if no
-    gradient is required, the graph of operations is not stored to improve performance.
+    The measured signals $I_k(t)=\mathrm{d}y_k(t)/\mathrm{d}t$ verify:
+    $$
+        \mathrm{d}y_k(t) =\sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho(t)} \mathrm{d}t
+        + \mathrm{d}W_k(t).
+    $$
+
+    Notes:
+        Sometimes the signals are defined with a different but equivalent normalisation
+        $\mathrm{d}y_k'(t) = \mathrm{d}y_k(t)/(2\sqrt{\eta_k})$.
+
+    The signals $I_k(t)$ are singular quantities, the solver returns the averaged signals
+    $J_k(t)$ defined for a time interval $[t_0, t_1]$ by:
+    $$
+        J_k([t_0, t_1]) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t) \mathrm{d}t
+        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \mathrm{d}y_k(t).
+    $$
+    The time intervals for integration are defined by the argument `t_meas`, which
+    defines `len(t_meas) - 1` intervals. By default, `t_meas = tsave`, so the signals
+    are averaged between the times at which the states are saved.
+
+    Quote: Time-dependent Hamiltonian
+        If the Hamiltonian depends on time, it can be passed as a function with
+        signature `H(t: float) -> Tensor`.
+
+    Quote: Running multiple simulations concurrently
+        Both the Hamiltonian `H` and the initial density matrix `rho0` can be batched to
+        solve multiple SMEs concurrently. All other arguments are common to every batch.
+
+    Quote: Computing gradient
+        `smesolve` can be differentiated through using PyTorch autograd library with
+        `gradient="autograd"`.
 
     Args:
-        H _(Tensor or Callable)_: Hamiltonian.
-            Can be a tensor of shape `(n, n)` or `(b_H, n, n)` if batched, or a callable
-            `H(t: float) -> Tensor` that returns a tensor of either possible shapes
-            at every time between `t=0` and `t=tsave[-1]`.
-        jump_ops _(Tensor, or list of Tensors)_: List of jump operators.
-            Each jump operator should be a tensor of shape `(n, n)`.
-        etas _(Tensor, np.ndarray or list)_: Measurement efficiencies, of same length
-            as `jump_ops`.
-        rho0 _(Tensor)_: Initial density matrix.
-            Tensor of shape `(n, n)` or `(b_rho, n, n)` if batched.
-        tsave _(Tensor, np.ndarray or list)_: Times for which results are saved.
-            The master equation is solved from time `t=0.0` to `t=tsave[-1]`.
-        exp_ops _(Tensor, or list of Tensors, optional)_: List of operators for which
-            the expectation value is computed at every time value in `tsave`.
-        tmeas _(Tensor, np.ndarray or list, optional)_: Times for which measurement
-            signals are saved. Defaults to `tsave`.
-        ntrajs _(int, optional)_: Number of stochastic trajectories. Defaults to 1.
-        seed _(int, optional)_: Seed for the random number generator. Defaults to
+        H _(array-like or function, shape (n, n) or (bH, n, n))_: Hamiltonian. For
+            time-dependent problems, provide a function with signature
+            `H(t: float) -> Tensor` that returns a tensor (batched or not) for any
+            given time between `t = 0.0` and `t = tsave[-1]`.
+        jump_ops _(list of 2d array-like, each with shape (n, n))_: List of jump
+            operators.
+        etas _(1d array-like)_: Measurement efficiencies, must be of the same length
+            as `jump_ops` with values between 0 and 1. For a purely dissipative loss
+            channel, set the corresponding efficiency to 0. No measurement signal will
+            be returned for such channels.
+        rho0 _(array-like, shape (n, n) or (brho, n, n))_: Initial density matrix.
+        tsave _(1d array-like)_: Times at which the states and expectation values are
+            saved. The SME is solved from `t = 0.0` to `t = tsave[-1]`.
+        exp_ops _(list of 2d array-like, each with shape (n, n), optional)_: List of
+            operators for which the expectation value is computed. Defaults to `None`.
+        tmeas _(1d array-like, optional)_: Times between which measurement signals are
+            averaged and saved. Defaults to `tsave`.
+        ntrajs _(int, optional)_: Number of stochastic trajectories to solve
+            concurrently. Defaults to 1.
+        seed _(int, optional)_: Seed for the random number generator used to numerically
+            sample the Wiener processes. Defaults to `None`, in which case the generator
+            is seeded using a non-deterministic random number (see
+            [`torch.Generator.seed()`](https://pytorch.org/docs/stable/generated/torch.Generator.html#torch.Generator.seed)).
+        solver _(str, optional)_: Solver for the SME integration (see the list below).
+            Defaults to `""` (no default solver, you have to specify one).
+        gradient _(str, optional)_: Algorithm used to compute the gradient. Can be
+            either `None` or `"autograd"` (PyTorch autograd library). Defaults to
             `None`.
-        solver _(str, optional)_: Solver to use. See the list of available solvers.
-            Defaults to `""` (no default solver).
-        gradient _(str, optional)_: Algorithm used for computing gradients.
-            Can be either `"autograd"` or `None`. Defaults to `None`.
-        options _(dict, optional)_: Solver options. See the list of available
-            solvers, and the options common to all solver below.
+        options _(dict, optional)_: Solver options (see the list below). Defaults to
+            `None`.
 
     Note-: Available solvers
-      - `euler` --- Euler method (fixed step).
-      - `rouchon1` --- Rouchon method of order 1 (fixed step).
+      - `euler`: Euler method (fixed step size SDE solver), not recommended
+        except for testing purposes.
+      - `rouchon1`: Rouchon method of order 1 (fixed step size SDE solver).
 
-    Note-: Available keys for `options`
+    Note-: Available options
         Common to all solvers:
 
         - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
-            time in `tsave`. If `False`, only the final state is stored and returned.
-            Defaults to `True`.
-        - **verbose** _(bool, optional)_ – If `True`, prints information about the
-            integration progress. Defaults to `True`.
+            time in `tsave`. If `False`, only the final state is returned. Defaults to
+            `True`.
+        - **verbose** _(bool, optional)_ – If `True`, print a progress bar during the
+            integration. Defaults to `True`.
         - **dtype** _(torch.dtype, optional)_ – Complex data type to which all
-            complex-valued tensors are converted. `tsave` is also converted to a real
-            data type of the corresponding precision.
+            complex-valued tensors are converted. `tsave` is converted to a real data
+            type of the corresponding precision. Defaults to the complex data type set
+            by `torch.set_default_dtype`.
         - **device** _(torch.device, optional)_ – Device on which the tensors are
-            stored.
+            stored. Defaults to the device set by `torch.set_default_device`.
 
-        Required for fixed step solvers (`euler`, `rouchon1`):
+        Required for fixed step size SDE solvers (`euler`, `rouchon1`):
 
-        - **dt** _(float)_ – Numerical time step of integration.
+        - **dt** _(float)_ – Numerical step size of integration.
 
-    Warning: Warning for fixed step solvers
-        For fixed time step solvers, both time lists `tsave` and `tmeas` should be
-        strictly included in the time list used by the solver, given by
-        `[0, dt, 2 * dt, ...]` where `dt` is defined with the `options` argument.
+    Warning: Fixed step size SDE solvers
+        For SDE solvers with fixed step sizes, the times in `tsave` and `tmeas` must be
+        multiples of the numerical step size of integration `dt` defined in the
+        `options` argument.
 
     Returns:
-        Result of the master equation integration, as an instance of the `Result` class.
-            The `result` object has the following attributes:
+        Object holding the results of the SME integration. It has the following
+            attributes:
 
-              - **ysave** or **states** _(Tensor)_ – Saved states.
-              - **exp_save** or **expects** _(Tensor)_ – Saved expectation values.
-              - **measurements** _(Tensor)_ – Saved measurement signals.
-              - **solver_str** (str): String representation of the solver.
-              - **start_datetime** _(datetime)_ – Start time of the integration.
-              - **end_datetime** _(datetime)_ – End time of the integration.
-              - **total_time** _(datetime)_ – Total time of the integration.
-              - **options** _(dict)_ – Solver options.
-    """
+            - **states** _(Tensor)_ – Saved states with shape
+                _(bH?, brho?, ntrajs, len(tsave), n, n)_.
+            - **measurements** _(Tensor)_ - Saved measured signals with shape
+                _(bH?, brho?, ntrajs, M, len(tmeas) - 1)_ where _M_ is the number of
+                jump operators with non-zero efficiency.
+            - **expects** _(Tensor, optional)_ – Saved expectation values with shape
+                _(bH?, brho?, ntrajs, len(exp_ops), len(tsave))_.
+            - **tsave** or **times** _(Tensor)_ – Times for which states and expectation
+                values were saved.
+            - **tmeas** _(Tensor)_ – Time intervals for which measured signals were
+                averaged.
+            - **solver_str** (str): Solver used.
+            - **start_datetime** _(datetime)_ – Start date and time of the integration.
+            - **end_datetime** _(datetime)_ – End date and time of the integration.
+            - **total_time** _(timedelta)_ – Total duration of the integration.
+            - **options** _(dict)_ – Solver options passed by the user.
+
+    Warning: Time-dependent jump operators
+        Time-dependent jump operators are not yet supported. If this is a required
+        feature, we would be glad to discuss it, please
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
+    """  # noqa: E501
     # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (ysave, exp_save, meas_save) with
     #    - ysave: (b_H?, b_rho0?, ntrajs, len(tsave), n, n)
     #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(tsave))
