@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from cmath import exp as cexp
-from math import prod, sqrt
+from math import prod
 
 import torch
 from torch import Tensor
@@ -343,7 +343,7 @@ def quadrature(
 ) -> Tensor:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
-    It is defined by $x(\phi) = e^{i\phi} a + e^{-i\phi} a^\dag$, where $a$ and
+    It is defined by $x(\phi) = (e^{i\phi} a + e^{-i\phi} a^\dag) / 2$, where $a$ and
     $a^\dag$ are the annihilation and creation operators respectively.
 
     Args:
@@ -358,16 +358,16 @@ def quadrature(
     Examples:
         >>> from math import pi
         >>> dq.quadrature(3, 0.0)
-        tensor([[0.0000+0.j, 0.7071+0.j, 0.0000+0.j],
-                [0.7071+0.j, 0.0000+0.j, 1.0000+0.j],
-                [0.0000+0.j, 1.0000+0.j, 0.0000+0.j]])
+        tensor([[0.000+0.j, 0.707+0.j, 0.000+0.j],
+                [0.707+0.j, 0.000+0.j, 1.000+0.j],
+                [0.000+0.j, 1.000+0.j, 0.000+0.j]])
         >>> dq.quadrature(3, pi / 2)
         tensor([[0.0000e+00+0.0000j, 4.3298e-17+0.7071j, 0.0000e+00+0.0000j],
                 [4.3298e-17-0.7071j, 0.0000e+00+0.0000j, 6.1232e-17+1.0000j],
                 [0.0000e+00+0.0000j, 6.1232e-17-1.0000j, 0.0000e+00+0.0000j]])
     """
     a = destroy(dim, dtype=dtype, device=device)
-    return (cexp(1.0j * phi) * a + cexp(-1.0j * phi) * a.mH) / sqrt(2)
+    return 0.5 * (cexp(1.0j * phi) * a + cexp(-1.0j * phi) * a.mH)
 
 
 def position(
@@ -376,7 +376,7 @@ def position(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the position operator $x = (a + a^\dag) / \sqrt{2}$.
+    r"""Returns the position operator $x = (a + a^\dag) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
@@ -388,12 +388,12 @@ def position(
 
     Examples:
         >>> dq.position(3)
-        tensor([[0.0000+0.j, 0.7071+0.j, 0.0000+0.j],
-                [0.7071+0.j, 0.0000+0.j, 1.0000+0.j],
-                [0.0000+0.j, 1.0000+0.j, 0.0000+0.j]])
+        tensor([[0.000+0.j, 0.707+0.j, 0.000+0.j],
+                [0.707+0.j, 0.000+0.j, 1.000+0.j],
+                [0.000+0.j, 1.000+0.j, 0.000+0.j]])
     """
     a = destroy(dim, dtype=dtype, device=device)
-    return (a + a.mH) / sqrt(2)
+    return 0.5 * (a + a.mH)
 
 
 def momentum(
@@ -402,7 +402,7 @@ def momentum(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the momentum operator $p = i (a - a^\dag) / \sqrt{2}$.
+    r"""Returns the momentum operator $p = i (a - a^\dag) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
@@ -414,12 +414,12 @@ def momentum(
 
     Examples:
         >>> dq.momentum(3)
-        tensor([[0.+0.0000j, 0.+0.7071j, 0.+0.0000j],
-                [-0.-0.7071j, 0.+0.0000j, 0.+1.0000j],
-                [0.+0.0000j, -0.-1.0000j, 0.+0.0000j]])
+        tensor([[0.+0.000j, 0.+0.707j, 0.+0.000j],
+                [-0.-0.707j, 0.+0.000j, 0.+1.000j],
+                [0.+0.000j, -0.-1.000j, 0.+0.000j]])
     """
     a = destroy(dim, dtype=dtype, device=device)
-    return 1j * (a - a.mH) / sqrt(2)
+    return 0.5j * (a - a.mH)
 
 
 def sigmax(
