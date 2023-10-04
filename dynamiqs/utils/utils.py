@@ -21,7 +21,8 @@ __all__ = [
     'toket',
     'tobra',
     'todm',
-    'ket_overlap',
+    'overlap',
+    'braket',
     'ket_fidelity',
     'dm_fidelity',
 ]
@@ -551,30 +552,81 @@ def todm(x: Tensor) -> Tensor:
         )
 
 
-def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the overlap (inner product) $\braket{\varphi,\psi}$ between two kets
-    $\ket\varphi$ and $\ket\psi$.
+def overlap(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the overlap between two quantum states.
+
+    For pure quantum states $\ket\psi$ and $\ket\varphi$, the overlap is defined by
+    $\lvert\braket{\varphi|\psi}\rvert^2$. For density matrices $\rho$ and $\sigma$,
+    the overlap is defined by $\tr{\sigma^\dagger \rho}$.
 
     Args:
-        x _(..., n, 1)_: First ket.
-        y _(..., n, 1)_: Second ket.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Right-side quantum state.
+        y _(..., n, 1) or (..., 1, n) or (..., n, n)_: Left-side quantum state.
 
     Returns:
-        _(...)_ Complex-valued overlap.
+        _(...)_ Overlap between both quantum states.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
-        >>> dq.ket_overlap(fock0, fock0)
-        tensor(1.+0.j)
-        >>> fock1 = dq.fock(3, 1)
-        >>> dq.ket_overlap(fock0, fock1)
-        tensor(0.+0.j)
-        >>> alpha0 = dq.coherent(8, 0.0)
-        >>> alpha1 = dq.coherent(8, 1.0)
-        >>> dq.ket_overlap(alpha0, alpha1)
-        tensor(0.607+0.j)
+        >>> dq.overlap(fock0, fock0)
+        tensor(1.)
+        >>> fock01_dm = dq.unit(dq.fock_dm(3, 0) + dq.fock_dm(3, 1))
+        >>> dq.overlap(fock0, fock01_dm)
+        tensor(0.5000)
     """
-    return (tobra(x) @ y).squeeze(-1).sum(-1)
+    if not isket(x) and not isbra(x) and not isdm(x):
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
+    if not isket(y) and not isbra(y) and not isdm(y):
+        raise ValueError(
+            'Argument `y` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(y.shape)}.'
+        )
+
+    x = toket(x) if isbra(x) else x
+    y = tobra(y) if isket(y) else y
+
+    if isket(x) and isbra(y):
+        return (y @ x).squeeze(-1).squeeze(-1).abs().pow(2)
+    elif isket(x) and isdm(y):
+        return (tobra(x) @ dag(y) @ x).squeeze(-1).squeeze(-1).real
+    elif isdm(x) and isbra(y):
+        return (y @ x @ toket(y)).squeeze(-1).squeeze(-1).real
+    elif isdm(x) and isdm(y):
+        return trace(dag(y) @ x).squeeze(-1).squeeze(-1).real
+
+
+def braket(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the braket of two pure quantum states, $\braket{\varphi|\psi}$.
+
+    Args:
+        x _(..., n, 1) or (..., 1, n)_: Right-side quantum state.
+        y _(..., n, 1) or (..., 1, n)_: Left-side quantum state.
+
+    Returns:
+        _(...)_ Braket between both quantum states.
+
+    Examples:
+        >>> fock0 = dq.fock(3, 0)
+        >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
+        >>> dq.braket(fock0, fock01)
+        tensor(0.7071+0.j)
+    """
+    if not isket(x) and not isbra(x):
+        raise ValueError(
+            f'Argument `x` must be a ket or bra, but has shape {tuple(x.shape)}.'
+        )
+    if not isket(y) and not isbra(y):
+        raise ValueError(
+            f'Argument `y` must be a ket or bra, but has shape {tuple(y.shape)}.'
+        )
+
+    x = toket(x) if isbra(x) else x
+    y = tobra(y) if isket(y) else y
+
+    return (y @ x).squeeze(-1).squeeze(-1)
 
 
 def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
@@ -610,7 +662,7 @@ def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> dq.ket_fidelity(alpha0, alpha1)
         tensor(0.368)
     """
-    return ket_overlap(x, y).abs().pow(2).real
+    return overlap(x, y)
 
 
 def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
