@@ -577,7 +577,7 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
 
 
 def fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two states, kets or density matrix.
+    r"""Returns the fidelity of two states, kets or density matrices.
 
     Warning:
         This definition is different from `qutip.fidelity()` which uses the square root
