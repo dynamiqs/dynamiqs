@@ -552,8 +552,7 @@ def todm(x: Tensor) -> Tensor:
 
 
 def braket(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets $\ket\psi$
-    and $\ket\varphi$.
+    r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets.
 
     Args:
         x _(..., n, 1)_: Left-side ket.
@@ -582,11 +581,11 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
     The overlap is computed
 
     - as $\lvert\braket{\psi|\varphi}\rvert^2$ if both arguments are kets $\ket\psi$
-        and $\ket\varphi$,
+      and $\ket\varphi$,
     - as $\lvert\bra\psi \rho \ket\psi\rvert$ if one argument is a ket $\ket\psi$ and
-        the other is a density matrix $\rho$,
+      the other is a density matrix $\rho$,
     - as $\tr{\rho^\dag\sigma}$ if both arguments are density matrices $\rho$ and
-        $\sigma$.
+      $\sigma$.
 
     Args:
         x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
@@ -617,9 +616,9 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
     if isket(x) and isket(y):
         return (x.mH @ y).squeeze(-2, -1).abs().pow(2)
     elif isket(x) and isdm(y):
-        return (x.mH @ y @ x).squeeze(-2, -1).real
+        return (x.mH @ y @ x).squeeze(-2, -1).abs()
     elif isdm(x) and isket(y):
-        return (y.mH @ x @ y).squeeze(-2, -1).real
+        return (y.mH @ x @ y).squeeze(-2, -1).abs()
     elif isdm(x) and isdm(y):
         return trace(x.mH @ y).squeeze(-2, -1).real
 
@@ -632,7 +631,7 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
     - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
       arguments are kets,
     - as $F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert$ if one arguments is a
-        ket and the other is a density matrix,
+      ket and the other is a density matrix,
     - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
       density matrices.
 
