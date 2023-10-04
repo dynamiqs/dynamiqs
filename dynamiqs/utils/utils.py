@@ -615,11 +615,11 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
 
     if isket(x) and isket(y):
         return (x.mH @ y).squeeze(-2, -1).abs().pow(2)
-    elif isket(x) and isdm(y):
+    elif isket(x):
         return (x.mH @ y @ x).squeeze(-2, -1).abs()
-    elif isdm(x) and isket(y):
+    elif isket(y):
         return (y.mH @ x @ y).squeeze(-2, -1).abs()
-    elif isdm(x) and isdm(y):
+    else:
         return trace(x.mH @ y).squeeze(-2, -1).real
 
 
