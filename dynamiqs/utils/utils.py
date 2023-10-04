@@ -579,6 +579,15 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
 def fidelity(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the fidelity of two states, kets or density matrices.
 
+    The fidelity is computed
+
+    - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
+      arguments are kets,
+    - as $F(\ket\psi,\rho)=\braket{\psi|\rho|\psi}$ if one arguments is a ket an the
+      other is a density matrix,
+    - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
+      density matrices.
+
     Warning:
         This definition is different from `qutip.fidelity()` which uses the square root
         fidelity $F_\text{qutip} = \sqrt{F}$.
