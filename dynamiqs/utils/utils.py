@@ -622,8 +622,8 @@ def braket(x: Tensor, y: Tensor) -> Tensor:
             f'Argument `y` must be a ket or bra, but has shape {tuple(y.shape)}.'
         )
 
-    x = toket(x) if isbra(x) else x
-    y = tobra(y) if isket(y) else y
+    x = toket(x)
+    y = tobra(y)
 
     return (y @ x).squeeze(-1).squeeze(-1)
 
