@@ -281,10 +281,10 @@ def smesolve(
 
     # get saved tensors and restore correct batching
     result = solver.result
-    result.ysave = result.ysave.squeeze(1).squeeze(0)
+    result.ysave = result.ysave.squeeze(0, 1)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(1).squeeze(0)
+        result.exp_save = result.exp_save.squeeze(0, 1)
     if result.meas_save is not None:
-        result.meas_save = result.meas_save.squeeze(1).squeeze(0)
+        result.meas_save = result.meas_save.squeeze(0, 1)
 
     return result
