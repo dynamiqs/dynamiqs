@@ -583,7 +583,7 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
 
     - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
       arguments are kets,
-    - as $F(\ket\psi,\rho)=\braket{\psi|\rho|\psi}$ if one arguments is a ket an the
+    - as $F(\ket\psi,\rho)=\braket{\psi|\rho|\psi}$ if one arguments is a ket and the
       other is a density matrix,
     - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
       density matrices.
