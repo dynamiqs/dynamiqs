@@ -629,17 +629,14 @@ def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 def _ket_dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the fidelity between a pure state and a density matrix
 
-    The fidelity of a pure state $\rho$ and $\sigma$ is defined by:
+    The fidelity of a pure state $\rho$ and $\psi$ is defined by:
 
     $$
         F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
     $$
-
-    Assuming $\rho = \ket{\psi}\bra{\psi}$, $\rho^2 = \rho$ thus $\rho = \sqrt{\rho}$
-    $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2
-        = \tr{\sqrt{\rho\sigma\rho}}^2
-        = \tr{\sqrt{\ket{\psi}\braket{}^2
+    where $\sigma = \ket{\psi}\bra{\psi}$  and simplifiable to
+    $
+        F(\rho, \sigma) = \tr{\bra{\psi}\rho\ket{\psi}}^2.
     $$
 
     Args:
