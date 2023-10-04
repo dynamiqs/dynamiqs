@@ -572,7 +572,7 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
         tensor(1.)
         >>> fock01_dm = dq.unit(dq.fock_dm(3, 0) + dq.fock_dm(3, 1))
         >>> dq.overlap(fock0, fock01_dm)
-        tensor(0.5000)
+        tensor(0.500)
     """
     if not isket(x) and not isbra(x) and not isdm(x):
         raise ValueError(
@@ -612,7 +612,7 @@ def braket(x: Tensor, y: Tensor) -> Tensor:
         >>> fock0 = dq.fock(3, 0)
         >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
         >>> dq.braket(fock0, fock01)
-        tensor(0.7071+0.j)
+        tensor(0.707+0.j)
     """
     if not isket(x) and not isbra(x):
         raise ValueError(
