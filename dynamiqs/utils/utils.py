@@ -569,7 +569,7 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
         >>> fock0 = dq.fock(3, 0)
         >>> dq.overlap(fock0, fock0)
         tensor(1.)
-        >>> fock01_dm = dq.unit(dq.fock_dm(3, 0) + dq.fock_dm(3, 1))
+        >>> fock01_dm = 0.5 * (dq.fock_dm(3, 0) + dq.fock_dm(3, 1))
         >>> dq.overlap(fock0, fock01_dm)
         tensor(0.500)
     """
