@@ -584,8 +584,8 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x _(..., n, 1) or (..., n, n)_: First ket or density matrix.
-        y _(..., n, 1) or (..., n, n)_: Second ket or density matrix.
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+        y _(..., n, 1) or (..., n, n)_: Ket or density matrix.
 
     Returns:
         _(...)_ Real-valued fidelity.
