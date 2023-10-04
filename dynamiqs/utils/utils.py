@@ -625,7 +625,7 @@ def braket(x: Tensor, y: Tensor) -> Tensor:
     x = toket(x)
     y = tobra(y)
 
-    return (y @ x).squeeze(-1).squeeze(-1)
+    return (y @ x).squeeze(-2, -1)
 
 
 def fidelity(x: Tensor, y: Tensor) -> Tensor:
