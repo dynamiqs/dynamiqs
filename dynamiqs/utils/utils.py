@@ -638,7 +638,7 @@ def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
 def _ket_dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     # returns the fidelity of a ket `x` and a density matrix `y`: <x|y|x>
     # x: (..., n, 1), y: (..., n, n) -> (...)
-    return trace(tobra(x) @ y @ x).real
+    return (tobra(x) @ y @ x).real.squeeze(-2, -1)
 
 
 def _sqrtm(x: Tensor) -> Tensor:
