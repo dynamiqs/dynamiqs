@@ -18,8 +18,9 @@ __all__ = [
     'isket',
     'isbra',
     'isdm',
-    'ket_to_bra',
-    'ket_to_dm',
+    'toket',
+    'tobra',
+    'todm',
     'ket_overlap',
     'fidelity',
 ]
@@ -459,54 +460,94 @@ def _quantum_type(x: Tensor) -> str:
         )
 
 
-def ket_to_bra(x: Tensor) -> Tensor:
-    r"""Returns the bra $\bra\psi$ associated to a ket $\ket\psi$.
+def toket(x: Tensor) -> Tensor:
+    r"""Returns the ket representation of a pure quantum state.
 
     Args:
-        x _(..., n, 1)_: Ket.
+        x _(..., 1, n) or (..., n, 1)_: Input bra or ket.
+
+    Returns:
+        _(..., n, 1)_ Ket.
+
+    Examples:
+        >>> psi = dq.tobra(dq.fock(3, 0))  # shape: (1, 3)
+        >>> psi
+        tensor([[1.-0.j, 0.-0.j, 0.-0.j]])
+        >>> dq.toket(psi)  # shape: (3, 1)
+        tensor([[1.+0.j],
+                [0.+0.j],
+                [0.+0.j]])
+    """
+    if isbra(x):
+        return x.mH
+    elif isket(x):
+        return x
+    else:
+        raise ValueError(
+            f'Argument `x` must be a ket or bra, but has shape {tuple(x.shape)}.'
+        )
+
+
+def tobra(x: Tensor) -> Tensor:
+    r"""Returns the bra representation of a pure quantum state.
+
+    Args:
+        x _(..., 1, n) or (..., n, 1)_: Input bra or ket.
 
     Returns:
         _(..., 1, n)_ Bra.
 
-    Notes:
-        This function is equivalent to `x.mH`.
-
     Examples:
-        >>> psi = dq.fock(3, 1)  # shape: (3, 1)
+        >>> psi = dq.fock(3, 0)  # shape: (3, 1)
         >>> psi
-        tensor([[0.+0.j],
-                [1.+0.j],
+        tensor([[1.+0.j],
+                [0.+0.j],
                 [0.+0.j]])
-        >>> dq.ket_to_bra(psi)  # shape: (1, 3)
-        tensor([[0.-0.j, 1.-0.j, 0.-0.j]])
+        >>> dq.tobra(psi)  # shape: (1, 3)
+        tensor([[1.-0.j, 0.-0.j, 0.-0.j]])
     """
-    return x.mH
+    if isbra(x):
+        return x
+    elif isket(x):
+        return x.mH
+    else:
+        raise ValueError(
+            f'Argument `x` must be a ket or bra, but has shape {tuple(x.shape)}.'
+        )
 
 
-def ket_to_dm(x: Tensor) -> Tensor:
-    r"""Returns the density matrix $\ket\psi\bra\psi$ associated to a ket $\ket\psi$.
+def todm(x: Tensor) -> Tensor:
+    r"""Returns the density matrix representation of a quantum state.
 
     Args:
-        x _(..., n, 1)_: Ket.
+        x _(..., 1, n), (..., n, 1) or (..., n, n)_: Input bra, ket or density
+            matrix.
 
     Returns:
         _(..., n, n)_ Density matrix.
 
-    Notes:
-        This function is equivalent to `x @ x.mH`.
-
     Examples:
-        >>> psi = dq.fock(3, 1)  # shape: (3, 1)
+        >>> psi = dq.fock(3, 0)  # shape: (3, 1)
         >>> psi
-        tensor([[0.+0.j],
-                [1.+0.j],
+        tensor([[1.+0.j],
+                [0.+0.j],
                 [0.+0.j]])
-        >>> dq.ket_to_dm(psi)  # shape: (3, 3)
-        tensor([[0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 1.+0.j, 0.+0.j],
+        >>> dq.todm(psi)  # shape: (3, 3)
+        tensor([[1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j]])
     """
-    return x @ ket_to_bra(x)
+    if isbra(x):
+        return x.mH @ x
+    elif isket(x):
+        return x @ x.mH
+    elif isdm(x):
+        return x
+    else:
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
@@ -532,7 +573,7 @@ def ket_overlap(x: Tensor, y: Tensor) -> Tensor:
         >>> dq.ket_overlap(alpha0, alpha1)
         tensor(0.607+0.j)
     """
-    return (ket_to_bra(x) @ y).squeeze(-1).sum(-1)
+    return (tobra(x) @ y).squeeze(-1).sum(-1)
 
 
 def fidelity(x: Tensor, y: Tensor) -> Tensor:

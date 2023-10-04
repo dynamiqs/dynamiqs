@@ -34,8 +34,9 @@
         - [isket](utils/utils/isket.md)
         - [isbra](utils/utils/isbra.md)
         - [isdm](utils/utils/isdm.md)
-        - [ket_to_bra](utils/utils/ket_to_bra.md)
-        - [ket_to_dm](utils/utils/ket_to_dm.md)
+        - [toket](utils/utils/toket.md)
+        - [tobra](utils/utils/tobra.md)
+        - [todm](utils/utils/todm.md)
         - [ket_overlap](utils/utils/ket_overlap.md)
         - [fidelity](utils/utils/fidelity.md)
     - Tensor conversion
