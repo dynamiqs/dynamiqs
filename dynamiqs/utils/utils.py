@@ -554,9 +554,11 @@ def todm(x: Tensor) -> Tensor:
 def overlap(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the overlap between two quantum states.
 
-    For pure quantum states $\ket\psi$ and $\ket\varphi$, the overlap is defined by
-    $\lvert\braket{\varphi|\psi}\rvert^2$. For density matrices $\rho$ and $\sigma$,
-    the overlap is defined by $\tr{\sigma^\dagger \rho}$.
+    The overlap is computed
+
+    - as $\left|\braket{\psi|\varphi}\right|^2$ if both arguments are kets or bras,
+    - as ... if one argument is a ket or bra and the other is a density matrix,
+    - as $\tr{\sigma^\dag\rho}$ if both arguments are density matrices.
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Right-side quantum state.
@@ -588,21 +590,21 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
     y = tobra(y) if isket(y) else y
 
     if isket(x) and isbra(y):
-        return (y @ x).squeeze(-1).squeeze(-1).abs().pow(2)
+        return (y @ x).squeeze(-2, -1).abs().pow(2)
     elif isket(x) and isdm(y):
-        return (tobra(x) @ dag(y) @ x).squeeze(-1).squeeze(-1).real
+        return (tobra(x) @ y.mH @ x).squeeze(-2, -1).real
     elif isdm(x) and isbra(y):
-        return (y @ x @ toket(y)).squeeze(-1).squeeze(-1).real
+        return (y @ x @ toket(y)).squeeze(-2, -1).real
     elif isdm(x) and isdm(y):
-        return trace(dag(y) @ x).squeeze(-1).squeeze(-1).real
+        return trace(y.mH @ x).squeeze(-2, -1).real
 
 
 def braket(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the inner product $\braket{\varphi|\psi}$ between two kets.
 
     Args:
-        x _(..., n, 1) or (..., 1, n)_: Right-side quantum state.
-        y _(..., n, 1) or (..., 1, n)_: Left-side quantum state.
+        x _(..., n, 1) or (..., 1, n)_: Right-side ket or bra.
+        y _(..., n, 1) or (..., 1, n)_: Left-side ket or bra.
 
     Returns:
         _(...)_ Complex-valued inner product.
@@ -655,10 +657,10 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> fock0 = dq.fock(3, 0)
         >>> dq.fidelity(fock0, fock0)
         tensor(1.)
-        >>> fock01 = 0.5 * (dq.fock_dm(3, 1) + dq.fock_dm(3, 0))
-        >>> dq.fidelity(fock01, fock01)
+        >>> fock01_dm = 0.5 * (dq.fock_dm(3, 1) + dq.fock_dm(3, 0))
+        >>> dq.fidelity(fock01_dm, fock01_dm)
         tensor(1.000)
-        >>> dq.fidelity(fock0, fock01)
+        >>> dq.fidelity(fock0, fock01_dm)
         tensor(0.500)
     """
     if isket(x) and isket(y):
