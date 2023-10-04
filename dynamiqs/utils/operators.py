@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from math import prod
+from cmath import exp as cexp
+from math import prod, sqrt
 
 import torch
 from torch import Tensor
@@ -16,6 +17,9 @@ __all__ = [
     'parity',
     'displace',
     'squeeze',
+    'quadrature',
+    'position',
+    'momentum',
     'sigmax',
     'sigmay',
     'sigmaz',
@@ -328,6 +332,94 @@ def squeeze(
     a2 = a @ a
     z = torch.as_tensor(z)
     return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))
+
+
+def quadrature(
+    dim: int,
+    phi: float,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the quadrature operator of phase angle $\phi$.
+
+    It is defined by $x(\phi) = e^{i\phi} a + e^{-i\phi} a^\dag$, where $a$ and
+    $a^\dag$ are the annihilation and creation operators respectively.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        phi: Phase angle.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(dim, dim)_ Quadrature operator.
+
+    Examples:
+        >>> from math import pi
+        >>> dq.quadrature(3, 0.0)
+        tensor([[0.0000+0.j, 0.7071+0.j, 0.0000+0.j],
+                [0.7071+0.j, 0.0000+0.j, 1.0000+0.j],
+                [0.0000+0.j, 1.0000+0.j, 0.0000+0.j]])
+        >>> dq.quadrature(3, pi / 2)
+        tensor([[0.0000e+00+0.0000j, 4.3298e-17+0.7071j, 0.0000e+00+0.0000j],
+                [4.3298e-17-0.7071j, 0.0000e+00+0.0000j, 6.1232e-17+1.0000j],
+                [0.0000e+00+0.0000j, 6.1232e-17-1.0000j, 0.0000e+00+0.0000j]])
+    """
+    a = destroy(dim, dtype=dtype, device=device)
+    return (cexp(1.0j * phi) * a + cexp(-1.0j * phi) * a.mH) / sqrt(2)
+
+
+def position(
+    dim: int,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the position operator $x = (a + a^\dag) / \sqrt{2}$.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(dim, dim)_ Position operator.
+
+    Examples:
+        >>> dq.position(3)
+        tensor([[0.0000+0.j, 0.7071+0.j, 0.0000+0.j],
+                [0.7071+0.j, 0.0000+0.j, 1.0000+0.j],
+                [0.0000+0.j, 1.0000+0.j, 0.0000+0.j]])
+    """
+    a = destroy(dim, dtype=dtype, device=device)
+    return (a + a.mH) / sqrt(2)
+
+
+def momentum(
+    dim: int,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the momentum operator $p = i (a - a^\dag) / \sqrt{2}$.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(dim, dim)_ Momentum operator.
+
+    Examples:
+        >>> dq.momentum(3)
+        tensor([[0.+0.0000j, 0.+0.7071j, 0.+0.0000j],
+                [-0.-0.7071j, 0.+0.0000j, 0.+1.0000j],
+                [0.+0.0000j, -0.-1.0000j, 0.+0.0000j]])
+    """
+    a = destroy(dim, dtype=dtype, device=device)
+    return 1j * (a - a.mH) / sqrt(2)
 
 
 def sigmax(
