@@ -600,7 +600,6 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> dq.fidelity(fock0, fock01)
         tensor(0.500)
     """
-
     if isket(x) and isket(y):
         return _ket_fidelity(x, y)
     elif isket(x):
