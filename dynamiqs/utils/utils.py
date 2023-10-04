@@ -561,8 +561,10 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
     - as $\tr{\sigma^\dag\rho}$ if both arguments are density matrices.
 
     Args:
-        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Right-side quantum state.
-        y _(..., n, 1) or (..., 1, n) or (..., n, n)_: Left-side quantum state.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Right-side ket, bra or density
+            matrix.
+        y _(..., n, 1) or (..., 1, n) or (..., n, n)_: Left-side ket, bra or density
+            matrix.
 
     Returns:
         _(...)_ Real-valued overlap.
