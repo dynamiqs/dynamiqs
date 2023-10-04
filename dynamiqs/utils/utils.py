@@ -553,7 +553,7 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> fock0 = dq.fock(3, 0)
         >>> dq.fidelity(fock0, fock0)
         tensor(1.)
-        >>> fock01 = 0.5 * (ket_to_dm(dq.fock(3, 1)) + ket_to_dm(dq.fock(3, 0)))
+        >>> fock01 = 0.5 * (dq.ket_to_dm(dq.fock(3, 1)) + dq.ket_to_dm(dq.fock(3, 0)))
         >>> dq.fidelity(fock01, fock01)
         tensor(1.000)
         >>> dq.fidelity(fock0, fock01)
