@@ -598,7 +598,7 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
 
 
 def braket(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the braket of two pure quantum states, $\braket{\varphi|\psi}$.
+    r"""Returns the inner product $\braket{\varphi|\psi}$ between two kets.
 
     Args:
         x _(..., n, 1) or (..., 1, n)_: Right-side quantum state.
