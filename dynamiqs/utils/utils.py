@@ -563,7 +563,7 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
         y _(..., n, 1) or (..., 1, n) or (..., n, n)_: Left-side quantum state.
 
     Returns:
-        _(...)_ Overlap between both quantum states.
+        _(...)_ Real-valued overlap.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
