@@ -21,8 +21,8 @@ __all__ = [
     'toket',
     'tobra',
     'todm',
-    'overlap',
     'braket',
+    'overlap',
     'fidelity',
 ]
 
@@ -551,20 +551,46 @@ def todm(x: Tensor) -> Tensor:
         )
 
 
+def braket(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets $\ket\psi$
+    and $\ket\varphi$.
+
+    Args:
+        x _(..., n, 1)_: Left-side ket.
+        y _(..., n, 1)_: Right-side ket.
+
+    Returns:
+        _(...)_ Complex-valued inner product.
+
+    Examples:
+        >>> fock0 = dq.fock(3, 0)
+        >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
+        >>> dq.braket(fock0, fock01)
+        tensor(0.707+0.j)
+    """
+    if not isket(x):
+        raise ValueError(f'Argument `x` must be a ket but has shape {tuple(x.shape)}.')
+    if not isket(y):
+        raise ValueError(f'Argument `y` must be a ket but has shape {tuple(y.shape)}.')
+
+    return (x.mH @ y).squeeze(-2, -1)
+
+
 def overlap(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the overlap between two quantum states.
 
     The overlap is computed
 
-    - as $\left|\braket{\psi|\varphi}\right|^2$ if both arguments are kets or bras,
-    - as ... if one argument is a ket or bra and the other is a density matrix,
-    - as $\tr{\sigma^\dag\rho}$ if both arguments are density matrices.
+    - as $\lvert\braket{\psi|\varphi}\rvert^2$ if both arguments are kets $\ket\psi$
+        and $\ket\varphi$,
+    - as $\lvert\bra\psi \rho \ket\psi\rvert$ if one argument is a ket $\ket\psi$ and
+        the other is a density matrix $\rho$,
+    - as $\tr{\rho^\dag\sigma}$ if both arguments are density matrices $\rho$ and
+        $\sigma$.
 
     Args:
-        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Right-side ket, bra or density
-            matrix.
-        y _(..., n, 1) or (..., 1, n) or (..., n, n)_: Left-side ket, bra or density
-            matrix.
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+        y _(..., n, 1) or (..., n, n)_: Ket or density matrix.
 
     Returns:
         _(...)_ Real-valued overlap.
@@ -577,59 +603,25 @@ def overlap(x: Tensor, y: Tensor) -> Tensor:
         >>> dq.overlap(fock0, fock01_dm)
         tensor(0.500)
     """
-    if not isket(x) and not isbra(x) and not isdm(x):
+    if not isket(x) and not isdm(x):
         raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            'Argument `x` must be a ket or density matrix, but has shape'
             f' {tuple(x.shape)}.'
         )
-    if not isket(y) and not isbra(y) and not isdm(y):
+    if not isket(y) and not isdm(y):
         raise ValueError(
-            'Argument `y` must be a ket, bra or density matrix, but has shape'
+            'Argument `y` must be a ket or density matrix, but has shape'
             f' {tuple(y.shape)}.'
         )
 
-    x = toket(x) if isbra(x) else x
-    y = tobra(y) if isket(y) else y
-
-    if isket(x) and isbra(y):
-        return (y @ x).squeeze(-2, -1).abs().pow(2)
+    if isket(x) and isket(y):
+        return (x.mH @ y).squeeze(-2, -1).abs().pow(2)
     elif isket(x) and isdm(y):
-        return (tobra(x) @ y.mH @ x).squeeze(-2, -1).real
-    elif isdm(x) and isbra(y):
-        return (y @ x @ toket(y)).squeeze(-2, -1).real
+        return (x.mH @ y @ x).squeeze(-2, -1).real
+    elif isdm(x) and isket(y):
+        return (y.mH @ x @ y).squeeze(-2, -1).real
     elif isdm(x) and isdm(y):
-        return trace(y.mH @ x).squeeze(-2, -1).real
-
-
-def braket(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the inner product $\braket{\varphi|\psi}$ between two kets.
-
-    Args:
-        x _(..., n, 1) or (..., 1, n)_: Right-side ket or bra.
-        y _(..., n, 1) or (..., 1, n)_: Left-side ket or bra.
-
-    Returns:
-        _(...)_ Complex-valued inner product.
-
-    Examples:
-        >>> fock0 = dq.fock(3, 0)
-        >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
-        >>> dq.braket(fock0, fock01)
-        tensor(0.707+0.j)
-    """
-    if not isket(x) and not isbra(x):
-        raise ValueError(
-            f'Argument `x` must be a ket or bra, but has shape {tuple(x.shape)}.'
-        )
-    if not isket(y) and not isbra(y):
-        raise ValueError(
-            f'Argument `y` must be a ket or bra, but has shape {tuple(y.shape)}.'
-        )
-
-    x = toket(x)
-    y = tobra(y)
-
-    return (y @ x).squeeze(-2, -1)
+        return trace(x.mH @ y).squeeze(-2, -1).real
 
 
 def fidelity(x: Tensor, y: Tensor) -> Tensor:
@@ -639,8 +631,8 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
 
     - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
       arguments are kets,
-    - as $F(\ket\psi,\rho)=\braket{\psi|\rho|\psi}$ if one arguments is a ket and the
-      other is a density matrix,
+    - as $F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert$ if one arguments is a
+        ket and the other is a density matrix,
     - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
       density matrices.
 
@@ -665,12 +657,8 @@ def fidelity(x: Tensor, y: Tensor) -> Tensor:
         >>> dq.fidelity(fock0, fock01_dm)
         tensor(0.500)
     """
-    if isket(x) and isket(y):
+    if isket(x) or isket(y):
         return overlap(x, y)
-    elif isket(x):
-        return _ket_dm_fidelity(x, y)
-    elif isket(y):
-        return _ket_dm_fidelity(y, x)
     else:
         return _dm_fidelity(x, y)
 
@@ -692,12 +680,6 @@ def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
     trace_sqrtm_tmp = torch.sqrt(eigvals_tmp).sum(-1)
 
     return trace_sqrtm_tmp.pow(2).real
-
-
-def _ket_dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    # returns the fidelity of a ket `x` and a density matrix `y`: <x|y|x>
-    # x: (..., n, 1), y: (..., n, n) -> (...)
-    return (tobra(x) @ y @ x).real.squeeze(-2, -1)
 
 
 def _sqrtm(x: Tensor) -> Tensor:
