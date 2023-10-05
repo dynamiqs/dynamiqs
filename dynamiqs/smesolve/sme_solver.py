@@ -47,6 +47,7 @@ class SMESolver(MESolver):
             meas_save = None
 
         self.result.meas_save = meas_save
+        self.result.tmeas = tmeas
 
         # tensor to hold the sum of measurement results on a time bin
         self.bin_meas = torch.zeros(self.meas_shape)  # (..., len(etas))

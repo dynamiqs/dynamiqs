@@ -33,12 +33,14 @@ class Result:
         tsave: Tensor,
         exp_save: Tensor | None,
         meas_save: Tensor | None = None,
+        tmeas: Tensor | None = None,
     ):
         self.options = options
         self.ysave = ysave
         self.tsave = tsave
         self.exp_save = exp_save
         self.meas_save = meas_save
+        self.tmeas = tmeas
         self.start_time: float | None = None
         self.end_time: float | None = None
 

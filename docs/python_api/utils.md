@@ -15,7 +15,7 @@ The utilities API closely mirrors that of [QuTiP](https://qutip.org/), with slig
     options:
         table: true
 
-## Quantum utilites
+## Quantum utilities
 
 ::: dynamiqs.utils.utils
     options:
