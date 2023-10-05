@@ -2,16 +2,11 @@ from __future__ import annotations
 
 from math import sqrt
 
+import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..solvers.utils import (
-    CallableTDTensor,
-    ConstantTDTensor,
-    cache,
-    inv_sqrtm,
-    kraus_map,
-)
+from ..solvers.utils import cache, kraus_map
 from ..utils.utils import unit
 from .me_solver import MESolver
 
@@ -24,6 +19,12 @@ class MERouchon1(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
+        self.M1s = sqrt(self.dt) * self.L
+        self.S = cache(lambda M0: M0.mH @ M0 + self.dt * self.sum_LdagL)
+        self.T = cache(lambda S: torch.linalg.cholesky_ex(S)[0])
+
+        """
         if not self.options.sqrt_normalization:
             # define cached operators
             # self.M0, self.M0rev: (b_H, 1, n, n)
@@ -60,7 +61,7 @@ class MERouchon1(MERouchon):
             self.M1srev = sqrt(self.dt) * self.L @ self.Srev
 
         self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
-        self.M1sdag = self.M1s.mH  # (1, len(L), n, n)
+        self.M1sdag = self.M1s.mH  # (1, len(L), n, n)"""
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
@@ -75,14 +76,21 @@ class MERouchon1(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        # H, Hnh, M0: (b_H, 1, n, n)
+        # H, Hnh, M0, S, T: (b_H, 1, n, n)
         H = self.H(t)
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-        rho = unit(rho)
+
+        if self.options.cholesky_normalization:
+            S = self.S(M0)
+            T = self.T(S)
+            rho = torch.linalg.solve(T, rho)
+            rho = torch.linalg.solve(T.mH, rho, left=False)
+        else:
+            rho = unit(rho)
 
         return rho
 
