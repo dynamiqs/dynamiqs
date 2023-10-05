@@ -35,7 +35,7 @@ class SMESolver(MESolver):
 
         self.meas_shape = (*batch_sizes, len(self.Lm))
 
-        # meas_save: (..., len(Lm), len(tmeas))
+        # meas_save: (..., len(Lm), len(tmeas) - 1)
         if len(tmeas) > 0:
             meas_save = torch.zeros(
                 *self.meas_shape,
@@ -50,7 +50,8 @@ class SMESolver(MESolver):
         self.result.tmeas = tmeas
 
         # tensor to hold the sum of measurement results on a time bin
-        self.bin_meas = torch.zeros(self.meas_shape)  # (..., len(etas))
+        # self.bin_meas: (..., len(Lm))
+        self.bin_meas = torch.zeros(self.meas_shape, device=self.device)
 
     def _init_time_logic(self):
         self.tstop = torch.cat((self.tsave, self.tmeas)).unique().sort()[0]
@@ -77,7 +78,9 @@ class SMESolver(MESolver):
     def sample_wiener(self, dt: float) -> Tensor:
         # -> (b_H, b_rho, ntrajs)
         return torch.normal(
-            torch.zeros(*self.meas_shape), sqrt(dt), generator=self.generator
+            torch.zeros(self.meas_shape, device=self.device),
+            sqrt(dt),
+            generator=self.generator,
         ).to(dtype=self.rdtype)
 
     @cache
