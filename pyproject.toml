@@ -7,7 +7,7 @@ dependencies = [
     "numpy",
     "matplotlib",
     "tqdm",
-    "torch",
+    "torch>=2.0",
     "methodtools",
 ]
 

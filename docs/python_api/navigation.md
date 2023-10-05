@@ -37,7 +37,8 @@
         - [toket](utils/utils/toket.md)
         - [tobra](utils/utils/tobra.md)
         - [todm](utils/utils/todm.md)
-        - [ket_overlap](utils/utils/ket_overlap.md)
+        - [braket](utils/utils/braket.md)
+        - [overlap](utils/utils/overlap.md)
         - [fidelity](utils/utils/fidelity.md)
     - Tensor conversion
         - [to_tensor](utils/tensor_types/to_tensor.md)
