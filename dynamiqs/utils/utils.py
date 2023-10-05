@@ -21,10 +21,9 @@ __all__ = [
     'toket',
     'tobra',
     'todm',
-    'overlap',
     'braket',
-    'ket_fidelity',
-    'dm_fidelity',
+    'overlap',
+    'fidelity',
 ]
 
 
@@ -552,61 +551,15 @@ def todm(x: Tensor) -> Tensor:
         )
 
 
-def overlap(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the overlap between two quantum states.
-
-    For pure quantum states $\ket\psi$ and $\ket\varphi$, the overlap is defined by
-    $\lvert\braket{\varphi|\psi}\rvert^2$. For density matrices $\rho$ and $\sigma$,
-    the overlap is defined by $\tr{\sigma^\dagger \rho}$.
-
-    Args:
-        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Right-side quantum state.
-        y _(..., n, 1) or (..., 1, n) or (..., n, n)_: Left-side quantum state.
-
-    Returns:
-        _(...)_ Overlap between both quantum states.
-
-    Examples:
-        >>> fock0 = dq.fock(3, 0)
-        >>> dq.overlap(fock0, fock0)
-        tensor(1.)
-        >>> fock01_dm = dq.unit(dq.fock_dm(3, 0) + dq.fock_dm(3, 1))
-        >>> dq.overlap(fock0, fock01_dm)
-        tensor(0.500)
-    """
-    if not isket(x) and not isbra(x) and not isdm(x):
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {tuple(x.shape)}.'
-        )
-    if not isket(y) and not isbra(y) and not isdm(y):
-        raise ValueError(
-            'Argument `y` must be a ket, bra or density matrix, but has shape'
-            f' {tuple(y.shape)}.'
-        )
-
-    x = toket(x) if isbra(x) else x
-    y = tobra(y) if isket(y) else y
-
-    if isket(x) and isbra(y):
-        return (y @ x).squeeze(-1).squeeze(-1).abs().pow(2)
-    elif isket(x) and isdm(y):
-        return (tobra(x) @ dag(y) @ x).squeeze(-1).squeeze(-1).real
-    elif isdm(x) and isbra(y):
-        return (y @ x @ toket(y)).squeeze(-1).squeeze(-1).real
-    elif isdm(x) and isdm(y):
-        return trace(dag(y) @ x).squeeze(-1).squeeze(-1).real
-
-
 def braket(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the braket of two pure quantum states, $\braket{\varphi|\psi}$.
+    r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets.
 
     Args:
-        x _(..., n, 1) or (..., 1, n)_: Right-side quantum state.
-        y _(..., n, 1) or (..., 1, n)_: Left-side quantum state.
+        x _(..., n, 1)_: Left-side ket.
+        y _(..., n, 1)_: Right-side ket.
 
     Returns:
-        _(...)_ Braket between both quantum states.
+        _(...)_ Complex-valued inner product.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
@@ -614,89 +567,104 @@ def braket(x: Tensor, y: Tensor) -> Tensor:
         >>> dq.braket(fock0, fock01)
         tensor(0.707+0.j)
     """
-    if not isket(x) and not isbra(x):
+    if not isket(x):
+        raise ValueError(f'Argument `x` must be a ket but has shape {tuple(x.shape)}.')
+    if not isket(y):
+        raise ValueError(f'Argument `y` must be a ket but has shape {tuple(y.shape)}.')
+
+    return (x.mH @ y).squeeze(-2, -1)
+
+
+def overlap(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the overlap between two quantum states.
+
+    The overlap is computed
+
+    - as $\lvert\braket{\psi|\varphi}\rvert^2$ if both arguments are kets $\ket\psi$
+      and $\ket\varphi$,
+    - as $\lvert\bra\psi \rho \ket\psi\rvert$ if one argument is a ket $\ket\psi$ and
+      the other is a density matrix $\rho$,
+    - as $\tr{\rho^\dag\sigma}$ if both arguments are density matrices $\rho$ and
+      $\sigma$.
+
+    Args:
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+        y _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+
+    Returns:
+        _(...)_ Real-valued overlap.
+
+    Examples:
+        >>> fock0 = dq.fock(3, 0)
+        >>> dq.overlap(fock0, fock0)
+        tensor(1.)
+        >>> fock01_dm = 0.5 * (dq.fock_dm(3, 0) + dq.fock_dm(3, 1))
+        >>> dq.overlap(fock0, fock01_dm)
+        tensor(0.500)
+    """
+    if not isket(x) and not isdm(x):
         raise ValueError(
-            f'Argument `x` must be a ket or bra, but has shape {tuple(x.shape)}.'
+            'Argument `x` must be a ket or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
         )
-    if not isket(y) and not isbra(y):
+    if not isket(y) and not isdm(y):
         raise ValueError(
-            f'Argument `y` must be a ket or bra, but has shape {tuple(y.shape)}.'
+            'Argument `y` must be a ket or density matrix, but has shape'
+            f' {tuple(y.shape)}.'
         )
 
-    x = toket(x) if isbra(x) else x
-    y = tobra(y) if isket(y) else y
+    if isket(x) and isket(y):
+        return (x.mH @ y).squeeze(-2, -1).abs().pow(2)
+    elif isket(x):
+        return (x.mH @ y @ x).squeeze(-2, -1).abs()
+    elif isket(y):
+        return (y.mH @ x @ y).squeeze(-2, -1).abs()
+    else:
+        return trace(x.mH @ y).squeeze(-2, -1).real
 
-    return (y @ x).squeeze(-1).squeeze(-1)
 
+def fidelity(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the fidelity of two states, kets or density matrices.
 
-def ket_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two kets.
+    The fidelity is computed
 
-    The fidelity of two pure states $\ket\varphi$ and $\ket\psi$ is defined by their
-    squared overlap:
-
-    $$
-        F(\ket\varphi, \ket\psi) = \left|\braket{\varphi, \psi}\right|^2.
-    $$
+    - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
+      arguments are kets,
+    - as $F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert$ if one arguments is a
+      ket and the other is a density matrix,
+    - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
+      density matrices.
 
     Warning:
         This definition is different from `qutip.fidelity()` which uses the square root
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x _(..., n, 1)_: First ket.
-        y _(..., n, 1)_: Second ket.
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+        y _(..., n, 1) or (..., n, n)_: Ket or density matrix.
 
     Returns:
         _(...)_ Real-valued fidelity.
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
-        >>> dq.ket_fidelity(fock0, fock0)
+        >>> dq.fidelity(fock0, fock0)
         tensor(1.)
-        >>> fock1 = dq.fock(3, 1)
-        >>> dq.ket_fidelity(fock0, fock1)
-        tensor(0.)
-        >>> alpha0 = dq.coherent(8, 0.0)
-        >>> alpha1 = dq.coherent(8, 1.0)
-        >>> dq.ket_fidelity(alpha0, alpha1)
-        tensor(0.368)
+        >>> fock01_dm = 0.5 * (dq.fock_dm(3, 1) + dq.fock_dm(3, 0))
+        >>> dq.fidelity(fock01_dm, fock01_dm)
+        tensor(1.000)
+        >>> dq.fidelity(fock0, fock01_dm)
+        tensor(0.500)
     """
-    return overlap(x, y)
+    if isket(x) or isket(y):
+        return overlap(x, y)
+    else:
+        return _dm_fidelity(x, y)
 
 
-def dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
-    r"""Returns the fidelity of two density matrices.
-
-    The fidelity of two density matrices $\rho$ and $\sigma$ is defined by:
-
-    $$
-        F(\rho, \sigma) = \tr{\sqrt{\sqrt{\rho}\sigma\sqrt{\rho}}}^2.
-    $$
-
-    Warning:
-        This definition is different from `qutip.fidelity()` which uses the square root
-        fidelity $F_\text{qutip} = \sqrt{F}$.
-
-    Args:
-        x _(..., n, n)_: First density matrix.
-        y _(..., n, n)_: Second density matrix.
-
-    Returns:
-        _(...)_ Real-valued fidelity.
-
-    Examples:
-        >>> fock0 = dq.fock_dm(3, 0)
-        >>> dq.dm_fidelity(fock0, fock0)
-        tensor(1.)
-        >>> fock1 = dq.fock_dm(3, 1)
-        >>> dq.dm_fidelity(fock0, fock1)
-        tensor(0.)
-        >>> alpha0 = dq.coherent_dm(8, 0.0)
-        >>> alpha1 = dq.coherent_dm(8, 1.0)
-        >>> dq.dm_fidelity(alpha0, alpha1)
-        tensor(0.368)
-    """
+def _dm_fidelity(x: Tensor, y: Tensor) -> Tensor:
+    # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
+    # x: (..., n, n), y: (..., n, n) -> (...)
     sqrtm_x = _sqrtm(x)
     tmp = sqrtm_x @ y @ sqrtm_x
 
