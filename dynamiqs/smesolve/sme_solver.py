@@ -35,7 +35,7 @@ class SMESolver(MESolver):
 
         self.meas_shape = (*batch_sizes, len(self.Lm))
 
-        # meas_save: (..., len(Lm), len(tmeas))
+        # meas_save: (..., len(Lm), len(tmeas) - 1)
         if len(tmeas) > 0:
             meas_save = torch.zeros(
                 *self.meas_shape,
