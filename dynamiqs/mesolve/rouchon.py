@@ -19,49 +19,20 @@ class MERouchon1(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # forward time operators
         self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
         self.M1s = sqrt(self.dt) * self.L
         self.S = cache(lambda M0: M0.mH @ M0 + self.dt * self.sum_LdagL)
         self.T = cache(lambda S: torch.linalg.cholesky_ex(S)[0])
 
-        """
-        if not self.options.sqrt_normalization:
-            # define cached operators
-            # self.M0, self.M0rev: (b_H, 1, n, n)
-            self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
-            self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
+        # heisenberg picture operators
+        self.Sdag = cache(lambda M0: M0 @ M0.mH + self.dt * self.sum_LdagL)
+        self.Tdag = cache(lambda Sdag: torch.linalg.cholesky_ex(Sdag)[0])
 
-            # define M1s and M1srev
-            # self.M1s: (1, len(L), n, n)
-            self.M1s = sqrt(self.dt) * self.L
-            self.M1srev = self.M1s
-        else:
-            # compute the inverse square root renormalization matrix
-            # (for time-dependent Hamiltonians, exclude the Hamiltonian from
-            # normalization)
-            # Hnh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
-            if isinstance(self.H, ConstantTDTensor):
-                Hnh_const = self.Hnh(0.0)
-            elif isinstance(self.H, CallableTDTensor):
-                Hnh_const = -0.5j * self.sum_LdagL
-
-            M0 = self.I - 1j * self.dt * Hnh_const
-            M0rev = self.I + 1j * self.dt * Hnh_const
-            self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_LdagL)
-            self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
-
-            # define cached operators
-            # self.M0, self.M0rev: (b_H, 1, n, n)
-            self.M0 = cache(lambda Hnh: self.S - 1j * self.dt * Hnh @ self.S)
-            self.M0rev = cache(lambda Hnh: self.Srev + 1j * self.dt * Hnh @ self.Srev)
-
-            # define M1s and M1srev
-            # self.M1s, self.M1srev: (1, len(L), n, n)
-            self.M1s = sqrt(self.dt) * self.L @ self.S
-            self.M1srev = sqrt(self.dt) * self.L @ self.Srev
-
-        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
-        self.M1sdag = self.M1s.mH  # (1, len(L), n, n)"""
+        # reverse time operators
+        self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
+        self.Srev = cache(lambda M0rev: M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
+        self.Trev = cache(lambda Srev: torch.linalg.cholesky_ex(Srev)[0])
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
@@ -116,15 +87,27 @@ class MERouchon1(MERouchon):
         H = self.H(t)
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
-        M0dag = self.M0dag(M0)
         M0rev = self.M0rev(Hnh)
 
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
-        rho = unit(rho)
+        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
+
+        if self.options.cholesky_normalization:
+            Srev = self.Srev(M0rev)
+            Trev = self.Trev(Srev)
+            rho = torch.linalg.solve(Trev, rho)
+            rho = torch.linalg.solve(Trev.mH, rho, left=False)
+        else:
+            rho = unit(rho)
 
         # compute phi(t-dt)
-        phi = kraus_map(phi, M0dag) + kraus_map(phi, self.M1sdag)
+        phi = kraus_map(phi, M0.mH) + kraus_map(phi, self.M1s.mH)
+
+        if self.options.cholesky_normalization:
+            Sdag = self.Sdag(M0)
+            Tdag = self.Tdag(Sdag)
+            phi = torch.linalg.solve(Tdag, phi)
+            phi = torch.linalg.solve(Tdag.mH, phi, left=False)
 
         return rho, phi
 

@@ -18,7 +18,7 @@ class TestMERouchon1(SolverTester):
             options=options,
             num_tsave=11,
             ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-3,
+            exp_save_rtol=1e-4,
             exp_save_atol=1e-2,
         )
 
@@ -31,7 +31,7 @@ class TestMERouchon1(SolverTester):
             'autograd',
             options=options,
             num_tsave=11,
-            rtol=1e-2,
+            rtol=1e-4,
             atol=1e-2,
         )
 
@@ -48,7 +48,7 @@ class TestMERouchon1(SolverTester):
             'adjoint',
             options=options,
             num_tsave=11,
-            rtol=1e-2,
+            rtol=1e-4,
             atol=1e-2,
         )
 
