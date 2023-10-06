@@ -4,6 +4,7 @@ from math import sqrt
 
 import torch
 from torch import Tensor
+from torch.linalg import cholesky_ex as chol
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
 from ..solvers.utils import cache, kraus_map
@@ -22,17 +23,16 @@ class MERouchon1(MERouchon):
         # forward time operators
         self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
         self.M1s = sqrt(self.dt) * self.L
-        self.S = cache(lambda M0: M0.mH @ M0 + self.dt * self.sum_LdagL)
-        self.T = cache(lambda S: torch.linalg.cholesky_ex(S)[0])
+        self.T = cache(lambda M0: chol(M0.mH @ M0 + self.dt * self.sum_LdagL)[0])
 
         # heisenberg picture operators
-        self.Sdag = cache(lambda M0: M0 @ M0.mH + self.dt * self.sum_LdagL)
-        self.Tdag = cache(lambda Sdag: torch.linalg.cholesky_ex(Sdag)[0])
+        self.Tdag = cache(lambda M0: chol(M0 @ M0.mH + self.dt * self.sum_LdagL)[0])
 
         # reverse time operators
         self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
-        self.Srev = cache(lambda M0rev: M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
-        self.Trev = cache(lambda Srev: torch.linalg.cholesky_ex(Srev)[0])
+        self.Trev = cache(
+            lambda M0rev: chol(M0rev.mH @ M0rev - self.dt * self.sum_LdagL)[0]
+        )
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
@@ -56,8 +56,7 @@ class MERouchon1(MERouchon):
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
 
         if self.options.cholesky_normalization:
-            S = self.S(M0)
-            T = self.T(S)
+            T = self.T(M0)
             rho = torch.linalg.solve(T, rho)
             rho = torch.linalg.solve(T.mH, rho, left=False)
         else:
@@ -93,8 +92,7 @@ class MERouchon1(MERouchon):
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
 
         if self.options.cholesky_normalization:
-            Srev = self.Srev(M0rev)
-            Trev = self.Trev(Srev)
+            Trev = self.Trev(M0rev)
             rho = torch.linalg.solve(Trev, rho)
             rho = torch.linalg.solve(Trev.mH, rho, left=False)
         else:
@@ -104,8 +102,7 @@ class MERouchon1(MERouchon):
         phi = kraus_map(phi, M0.mH) + kraus_map(phi, self.M1s.mH)
 
         if self.options.cholesky_normalization:
-            Sdag = self.Sdag(M0)
-            Tdag = self.Tdag(Sdag)
+            Tdag = self.Tdag(M0)
             phi = torch.linalg.solve(Tdag, phi)
             phi = torch.linalg.solve(Tdag.mH, phi, left=False)
 
