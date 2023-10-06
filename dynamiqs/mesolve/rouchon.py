@@ -25,9 +25,6 @@ class MERouchon1(MERouchon):
         self.M1s = sqrt(self.dt) * self.L
         self.T = cache(lambda M0: chol(M0.mH @ M0 + self.dt * self.sum_LdagL)[0])
 
-        # heisenberg picture operators
-        self.Tdag = cache(lambda M0: chol(M0 @ M0.mH + self.dt * self.sum_LdagL)[0])
-
         # reverse time operators
         self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
         self.Trev = cache(
@@ -53,13 +50,14 @@ class MERouchon1(MERouchon):
         M0 = self.M0(Hnh)
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-
         if self.options.cholesky_normalization:
             T = self.T(M0)
             rho = torch.linalg.solve(T, rho)
             rho = torch.linalg.solve(T.mH, rho, left=False)
-        else:
+
+        rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
+
+        if not self.options.cholesky_normalization:
             rho = unit(rho)
 
         return rho
@@ -89,22 +87,23 @@ class MERouchon1(MERouchon):
         M0rev = self.M0rev(Hnh)
 
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
-
         if self.options.cholesky_normalization:
             Trev = self.Trev(M0rev)
             rho = torch.linalg.solve(Trev, rho)
             rho = torch.linalg.solve(Trev.mH, rho, left=False)
-        else:
+
+        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
+
+        if not self.options.cholesky_normalization:
             rho = unit(rho)
 
         # compute phi(t-dt)
-        phi = kraus_map(phi, M0.mH) + kraus_map(phi, self.M1s.mH)
-
         if self.options.cholesky_normalization:
-            Tdag = self.Tdag(M0)
-            phi = torch.linalg.solve(Tdag, phi)
-            phi = torch.linalg.solve(Tdag.mH, phi, left=False)
+            T = self.T(M0)
+            phi = torch.linalg.solve(T, phi)
+            phi = torch.linalg.solve(T.mH, phi, left=False)
+
+        phi = kraus_map(phi, M0.mH) + kraus_map(phi, self.M1s.mH)
 
         return rho, phi
 
