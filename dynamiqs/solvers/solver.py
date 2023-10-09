@@ -114,11 +114,11 @@ class Solver(ABC):
 
     @property
     def tstop_backward(self):
-        """Return tsave excluding the final time and including `t=0.0`."""
+        """Return the backward `tstop` with negative times sorted in ascending order."""
         tstop = self.tsave[:-1]
         if tstop[0] != 0.0:
             tstop = torch.cat((torch.zeros(1), tstop))
-        return tstop.cpu().numpy()
+        return (-tstop).cpu().numpy()[::-1]
 
 
 class AutogradSolver(Solver):

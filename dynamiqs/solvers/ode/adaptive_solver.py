@@ -182,8 +182,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
     def integrate_augmented(
         self,
-        t1: float,
         t0: float,
+        t1: float,
         y: Tensor,
         a: Tensor,
         g: tuple[Tensor, ...],
@@ -192,30 +192,30 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
         dt: float,
         error: float,
     ) -> tuple[Tensor, Tensor, tuple[Tensor, ...], Tensor, Tensor, float, float]:
-        """Integrate the augmented ODE backward from time `t1` to `t0`."""
+        """Integrate the augmented ODE backward from time `t0` to `t1`."""
         cache = (dt, error)
 
-        t = t1
-        while t > t0:
+        t = t0
+        while t < t1:
             # update time step
             dt = self.update_tstep(dt, error)
 
             # check for time overflow
-            if t - dt <= t0:
+            if t + dt >= t1:
                 cache = (dt, error)
-                dt = t - t0
+                dt = t1 - t
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                ft_new, y_new, _ = self.step(ft, y, t, -dt, self.odefun_backward)
-                lt_new, a_new, a_err = self.step(lt, a, t, -dt, self.odefun_adjoint)
+                ft_new, y_new, _ = self.step(ft, y, t, dt, self.odefun_backward)
+                lt_new, a_new, a_err = self.step(lt, a, t, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
                 error = self.get_error(a_err, a, a_new)
 
                 # update if step is accepted
                 if error <= 1:
-                    t, y, a, ft, lt = t - dt, y_new, a_new, ft_new, lt_new
+                    t, y, a, ft, lt = t + dt, y_new, a_new, ft_new, lt_new
 
                     # compute g(t-dt)
                     dg = torch.autograd.grad(
@@ -297,12 +297,12 @@ class DormandPrince5(AdjointAdaptiveSolver):
         k = torch.empty(7, *f.shape, dtype=self.cdtype, device=self.device)
         k[0] = f
         for i in range(1, 7):
-            dy = torch.tensordot(abs(dt) * beta[i - 1, :i], k[:i], dims=([0], [0]))
+            dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
             k[i] = fun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results
         f_new = k[-1]
-        y_new = y + torch.tensordot(abs(dt) * csol[:6], k[:6], dims=([0], [0]))
-        y_err = torch.tensordot(abs(dt) * cerr, k, dims=([0], [0]))
+        y_new = y + torch.tensordot(dt * csol[:6], k[:6], dims=([0], [0]))
+        y_err = torch.tensordot(dt * cerr, k, dims=([0], [0]))
 
         return f_new, y_new, y_err

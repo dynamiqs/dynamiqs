@@ -102,10 +102,11 @@ class MERouchon1(MERouchon):
         """
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # t is passed in as negative time
 
         # compute cached operators
         # H, Hnh, M0, M0dag, M0rev: (b_H, 1, n, n)
-        H = self.H(t)
+        H = self.H(-t)
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
         M0dag = self.M0dag(M0)
@@ -192,11 +193,12 @@ class MERouchon2(MERouchon):
         """
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # t is passed in as negative time
 
         # compute cached operators
         # H, Hnh, M0, M0dag, M0rev: (b_H, 1, n, n)
         # M1s, M1sdag: (b_H, len(L), n, n)
-        H = self.H(t)
+        H = self.H(-t)
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
         M0dag = self.M0dag(M0)

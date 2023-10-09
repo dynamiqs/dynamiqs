@@ -66,12 +66,12 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         AdjointFixedAutograd.apply(self, self.y0, *self.options.parameters)
 
     def integrate_augmented(
-        self, t1: float, t0: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]
+        self, t0: float, t1: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]
     ) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
-        """Integrate the augmented ODE backward from time `t1` to `t0`."""
+        """Integrate the augmented ODE backward from time `t0` to `t1`."""
         # define time values
         num_times = round((t1 - t0) / self.dt) + 1
-        times = torch.linspace(t1, t0, num_times)
+        times = torch.linspace(t0, t1, num_times)
 
         # run the ode routine
         nobar = not self.options.verbose

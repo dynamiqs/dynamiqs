@@ -70,12 +70,12 @@ class AdjointAdaptiveAutograd(torch.autograd.Function):
             g = tuple(torch.zeros_like(p).to(y) for p in solver.options.parameters)
 
             # initialize time
-            T = tsave[-1].item()
             tstop = solver.tstop_backward
+            T = -tsave[-1].item()
 
             # initialize the progress bar
             nobar = not solver.options.verbose
-            solver.pbar = tqdm(total=T, disable=nobar)
+            solver.pbar = tqdm(total=-T, disable=nobar)
 
             # initialize the ODE routine
             f0, l0 = solver.odefun_augmented(T, y, a)
@@ -86,7 +86,7 @@ class AdjointAdaptiveAutograd(torch.autograd.Function):
 
             # integrate the augmented equation backward between every saved state
             t, ft, lt = T, f0, l0
-            for i, ts in enumerate(tstop[::-1]):
+            for i, ts in enumerate(tstop):
                 y, a, g, ft, lt, dt, error = solver.integrate_augmented(
                     t, ts, y, a, g, ft, lt, dt, error
                 )
@@ -179,12 +179,12 @@ class AdjointFixedAutograd(torch.autograd.Function):
             g = tuple(torch.zeros_like(p).to(y) for p in solver.options.parameters)
 
             # initialize time
-            t = tsave[-1].item()
+            t = -tsave[-1].item()
             tstop = solver.tstop_backward
 
             # integrate the augmented equation backward between every saved state
             nobar = not solver.options.verbose
-            for i, ts in enumerate(tqdm(tstop[::-1], disable=nobar)):
+            for i, ts in enumerate(tqdm(tstop, disable=nobar)):
                 y, a, g = solver.integrate_augmented(t, ts, y, a, g)
 
                 if solver.options.save_states:
