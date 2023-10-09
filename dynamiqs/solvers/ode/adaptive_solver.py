@@ -207,8 +207,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                ft_new, y_new, _ = self.step(ft, y, t, dt, self.odefun_backward)
-                lt_new, a_new, a_err = self.step(lt, a, t, dt, self.odefun_adjoint)
+                ft_new, y_new, _ = self.step(ft, y, t, -dt, self.odefun_backward)
+                lt_new, a_new, a_err = self.step(lt, a, t, -dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
                 error = self.get_error(a_err, a, a_new)
@@ -297,12 +297,12 @@ class DormandPrince5(AdjointAdaptiveSolver):
         k = torch.empty(7, *f.shape, dtype=self.cdtype, device=self.device)
         k[0] = f
         for i in range(1, 7):
-            dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
+            dy = torch.tensordot(abs(dt) * beta[i - 1, :i], k[:i], dims=([0], [0]))
             k[i] = fun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results
         f_new = k[-1]
-        y_new = y + torch.tensordot(dt * csol[:6], k[:6], dims=([0], [0]))
-        y_err = torch.tensordot(dt * cerr, k, dims=([0], [0]))
+        y_new = y + torch.tensordot(abs(dt) * csol[:6], k[:6], dims=([0], [0]))
+        y_err = torch.tensordot(abs(dt) * cerr, k, dims=([0], [0]))
 
         return f_new, y_new, y_err
