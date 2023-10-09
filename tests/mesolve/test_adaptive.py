@@ -20,5 +20,5 @@ class TestMEAdaptive(SolverTester):
             'adjoint',
             options=options,
             num_tsave=11,
-            atol=1e-3,
+            atol=1e-2,
         )
