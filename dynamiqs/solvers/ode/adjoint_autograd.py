@@ -11,7 +11,6 @@ from tqdm.std import TqdmWarning
 from ..solver import AdjointSolver
 from ..utils.utils import tqdm
 
-
 class AdjointAdaptiveAutograd(torch.autograd.Function):
     """Class for ODE integration with a custom adjoint method backward pass."""
 

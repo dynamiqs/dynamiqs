@@ -12,6 +12,7 @@ from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like, tqdm
 from .adjoint_autograd import AdjointAdaptiveAutograd
 
+import sys
 
 class AdaptiveSolver(AutogradSolver):
     def run_autograd(self):
@@ -207,11 +208,13 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                ft_new, y_new, _ = self.step(ft, y, t, dt, self.odefun_backward)
+                ft_new, y_new, y_err = self.step(ft, y, t, dt, self.odefun_backward)
                 lt_new, a_new, a_err = self.step(lt, a, t, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
-                error = self.get_error(a_err, a, a_new)
+                error_a = self.get_error(a_err, a, a_new)
+                error_y = self.get_error(y_err, y, y_new)
+                error = max(error_a, error_y)
 
                 # update if step is accepted
                 if error <= 1:
