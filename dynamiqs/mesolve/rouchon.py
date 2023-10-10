@@ -4,12 +4,15 @@ from math import sqrt
 
 import torch
 from torch import Tensor
-from torch.linalg import cholesky_ex as chol
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
 from ..solvers.utils import cache, kraus_map
 from ..utils.utils import unit
 from .me_solver import MESolver
+
+
+def chol(A: Tensor) -> Tensor:
+    return torch.linalg.cholesky_ex(A)[0]
 
 
 class MERouchon(MESolver, AdjointFixedSolver):
@@ -23,12 +26,12 @@ class MERouchon1(MERouchon):
         # forward time operators
         self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
         self.M1s = sqrt(self.dt) * self.L
-        self.T = cache(lambda M0: chol(M0.mH @ M0 + self.dt * self.sum_LdagL)[0])
+        self.T = cache(lambda M0: chol(M0.mH @ M0 + self.dt * self.sum_LdagL))
 
         # reverse time operators
         self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
         self.Trev = cache(
-            lambda M0rev: chol(M0rev.mH @ M0rev - self.dt * self.sum_LdagL)[0]
+            lambda M0rev: chol(M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
         )
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
@@ -112,18 +115,32 @@ class MERouchon2(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # define cached operators
-        # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
-        # self.M1s, self.M1sdag: (b_H, len(L), n, n)
+        # self.M0, self.M0rev, self.S1, self.T, self.Trev: (b_H, 1, n, n)
+        # self.M1s: (b_H, len(L), n, n)
+
+        # forward time operators
         self.M0 = cache(
             lambda Hnh: self.I - 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
         )
-        self.M0dag = cache(lambda M0: M0.mH)
+        self.M1s = cache(lambda M0: 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L))
+        self.S1 = cache(
+            lambda M0: (self.M1s(M0).mH @ self.M1s(M0)).sum(dim=1, keepdim=True)
+        )
+        self.T = cache(
+            lambda M0: chol(M0.mH @ M0 + self.S1(M0) + 0.5 * self.S1(M0) @ self.S1(M0))
+        )
+
+        # reverse time operators
         self.M0rev = cache(
             lambda Hnh: self.I + 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
         )
-        self.M1s = cache(lambda M0: 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L))
-        self.M1sdag = cache(lambda M1s: M1s.mH)
+        self.Trev = cache(
+            lambda M0rev: chol(
+                M0rev.mH @ M0rev
+                - self.S1(M0rev)
+                + 0.5 * self.S1(M0rev) @ self.S1(M0rev)
+            )
+        )
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
@@ -151,9 +168,16 @@ class MERouchon2(MERouchon):
         M1s = self.M1s(M0)  # (b_H, len(L), n, n)
 
         # compute rho(t+dt)
+        if self.options.cholesky_normalization:
+            T = self.T(M0)
+            rho = torch.linalg.solve_triangular(T.mH, rho, upper=True)
+            rho = torch.linalg.solve_triangular(T, rho, upper=False, left=False)
+
         tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
         rho = kraus_map(rho, M0) + tmp + 0.5 * kraus_map(tmp, M1s)  # (b_H, b_rho, n, n)
-        rho = unit(rho)  # (b_H, b_rho, n, n)
+
+        if not self.options.cholesky_normalization:
+            rho = unit(rho)  # (b_H, b_rho, n, n)
 
         return rho
 
@@ -186,18 +210,28 @@ class MERouchon2(MERouchon):
         H = self.H(t)
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
-        M0dag = self.M0dag(M0)
         M0rev = self.M0rev(Hnh)
         M1s = self.M1s(M0)
-        M1sdag = self.M1sdag(M1s)
 
         # compute rho(t-dt)
+        if self.options.cholesky_normalization:
+            Trev = self.Trev(M0rev)
+            rho = torch.linalg.solve_triangular(Trev.mH, rho, upper=True)
+            rho = torch.linalg.solve_triangular(Trev, rho, upper=False, left=False)
+
         tmp = kraus_map(rho, M1s)
         rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1s)
-        rho = unit(rho)
+
+        if not self.options.cholesky_normalization:
+            rho = unit(rho)
 
         # compute phi(t-dt)
-        tmp = kraus_map(phi, M1sdag)
-        phi = kraus_map(phi, M0dag) + tmp + 0.5 * kraus_map(tmp, M1sdag)
+        tmp = kraus_map(phi, M1s.mH)
+        phi = kraus_map(phi, M0.mH) + tmp + 0.5 * kraus_map(tmp, M1s.mH)
+
+        if self.options.cholesky_normalization:
+            T = self.T(M0)
+            phi = torch.linalg.solve_triangular(T, phi, upper=False)
+            phi = torch.linalg.solve_triangular(T.mH, phi, upper=True, left=False)
 
         return rho, phi

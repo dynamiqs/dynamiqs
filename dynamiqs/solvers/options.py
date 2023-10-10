@@ -161,7 +161,9 @@ class Rouchon1(ODEFixedStep, AdjointOptions):
 
 
 class Rouchon2(ODEFixedStep, AdjointOptions):
-    pass
+    def __init__(self, *, cholesky_normalization: bool = False, **kwargs):
+        super().__init__(**kwargs)
+        self.cholesky_normalization = cholesky_normalization
 
 
 class Rouchon1SME(ODEFixedStep):

@@ -58,20 +58,22 @@ class TestMERouchon2(SolverTester):
         options = dict(dt=1e-2)
         self._test_batching(leaky_cavity_8, 'rouchon2', options=options)
 
-    def test_correctness(self):
-        options = dict(dt=1e-3)
+    @pytest.mark.parametrize('cholesky_normalization', [False, True])
+    def test_correctness(self, cholesky_normalization):
+        options = dict(dt=1e-3, cholesky_normalization=cholesky_normalization)
         self._test_correctness(
             leaky_cavity_8,
             'rouchon2',
             options=options,
             num_tsave=11,
-            ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
-            exp_save_atol=1e-2,
+            ysave_norm_atol=1e-4,
+            exp_save_rtol=1e-4,
+            exp_save_atol=1e-4,
         )
 
-    def test_autograd(self):
-        options = dict(dt=1e-3)
+    @pytest.mark.parametrize('cholesky_normalization', [False, True])
+    def test_autograd(self, cholesky_normalization):
+        options = dict(dt=1e-3, cholesky_normalization=cholesky_normalization)
         self._test_gradient(
             grad_leaky_cavity_8,
             'rouchon2',
@@ -80,8 +82,13 @@ class TestMERouchon2(SolverTester):
             num_tsave=11,
         )
 
-    def test_adjoint(self):
-        options = dict(dt=1e-3, parameters=grad_leaky_cavity_8.parameters)
+    @pytest.mark.parametrize('cholesky_normalization', [False, True])
+    def test_adjoint(self, cholesky_normalization):
+        options = dict(
+            dt=1e-3,
+            cholesky_normalization=cholesky_normalization,
+            parameters=grad_leaky_cavity_8.parameters,
+        )
         self._test_gradient(
             grad_leaky_cavity_8,
             'rouchon2',
