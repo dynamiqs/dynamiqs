@@ -52,8 +52,8 @@ class MERouchon1(MERouchon):
         # compute rho(t+dt)
         if self.options.cholesky_normalization:
             T = self.T(M0)
-            rho = torch.linalg.solve(T.mH, rho)
-            rho = torch.linalg.solve(T, rho, left=False)
+            rho = torch.linalg.solve_triangular(T.mH, rho, upper=True)
+            rho = torch.linalg.solve_triangular(T, rho, upper=False, left=False)
 
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
 
@@ -89,8 +89,8 @@ class MERouchon1(MERouchon):
         # compute rho(t-dt)
         if self.options.cholesky_normalization:
             Trev = self.Trev(M0rev)
-            rho = torch.linalg.solve(Trev.mH, rho)
-            rho = torch.linalg.solve(Trev, rho, left=False)
+            rho = torch.linalg.solve_triangular(Trev.mH, rho, upper=True)
+            rho = torch.linalg.solve_triangular(Trev, rho, upper=False, left=False)
 
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
 
@@ -102,8 +102,8 @@ class MERouchon1(MERouchon):
 
         if self.options.cholesky_normalization:
             T = self.T(M0)
-            phi = torch.linalg.solve(T, phi)
-            phi = torch.linalg.solve(T.mH, phi, left=False)
+            phi = torch.linalg.solve_triangular(T, phi, upper=False)
+            phi = torch.linalg.solve_triangular(T.mH, phi, upper=True, left=False)
 
         return rho, phi
 
