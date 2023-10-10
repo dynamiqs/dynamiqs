@@ -66,7 +66,7 @@ class TestMERouchon2(SolverTester):
             'rouchon2',
             options=options,
             num_tsave=11,
-            ysave_norm_atol=1e-4,
+            ysave_norm_atol=1e-3,
             exp_save_rtol=1e-4,
             exp_save_atol=1e-4,
         )

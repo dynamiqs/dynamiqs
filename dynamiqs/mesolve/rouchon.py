@@ -123,24 +123,22 @@ class MERouchon2(MERouchon):
             lambda Hnh: self.I - 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
         )
         self.M1s = cache(lambda M0: 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L))
-        self.S1 = cache(
-            lambda M0: (self.M1s(M0).mH @ self.M1s(M0)).sum(dim=1, keepdim=True)
-        )
-        self.T = cache(
-            lambda M0: chol(M0.mH @ M0 + self.S1(M0) + 0.5 * self.S1(M0) @ self.S1(M0))
-        )
+        self.S1 = lambda M0: (self.M1s(M0).mH @ self.M1s(M0)).sum(dim=1, keepdim=True)
+        self.T = cache(lambda M0: chol(M0.mH @ M0 + self.S1(M0) + self.S2))
 
         # reverse time operators
         self.M0rev = cache(
             lambda Hnh: self.I + 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
         )
         self.Trev = cache(
-            lambda M0rev: chol(
-                M0rev.mH @ M0rev
-                - self.S1(M0rev)
-                + 0.5 * self.S1(M0rev) @ self.S1(M0rev)
-            )
+            lambda M0rev: chol(M0rev.mH @ M0rev - self.S1(M0rev) + self.S2)
         )
+
+    @property
+    def S2(self) -> Tensor:
+        M2s = self.L.unsqueeze(1) @ self.L.unsqueeze(2)
+        M2s = M2s.view(1, self.L.size(1) ** 2, *self.L.size()[2:])
+        return 0.5 * self.dt**2 * (M2s.mH @ M2s).sum(dim=1, keepdim=True)
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.

@@ -156,12 +156,28 @@ class Euler(ODEFixedStep, AdjointOptions):
 
 class Rouchon1(ODEFixedStep, AdjointOptions):
     def __init__(self, *, cholesky_normalization: bool = False, **kwargs):
+        """Rouchon method of order 1.
+
+        Args:
+            cholesky_normalization (bool, optional): If `True`, the Cholesky
+                decomposition is used to normalize the state and adjoint state
+                matrices. Defaults to `False`. Idea by Rémi Robin and Lev-Arcady
+                Sellem, Inria Paris, to be published.
+        """
         super().__init__(**kwargs)
         self.cholesky_normalization = cholesky_normalization
 
 
 class Rouchon2(ODEFixedStep, AdjointOptions):
     def __init__(self, *, cholesky_normalization: bool = False, **kwargs):
+        """Rouchon method of order 2.
+
+        Args:
+            cholesky_normalization (bool, optional): If `True`, the Cholesky
+                decomposition is used to normalize the state and adjoint state
+                matrices. Defaults to `False`. Idea by Rémi Robin and Lev-Arcady
+                Sellem, Inria Paris, to be published.
+        """
         super().__init__(**kwargs)
         self.cholesky_normalization = cholesky_normalization
 
