@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from .tensor_types import dtype_real_to_complex
-from .utils import isket, ket_to_dm
+from .utils import isket, todm
 
 __all__ = ['wigner']
 
@@ -45,7 +45,7 @@ def wigner(
     pvec = torch.linspace(-p_max, p_max, num_pixels)
 
     if method == 'clenshaw':
-        state = ket_to_dm(state) if isket(state) else state
+        state = todm(state) if isket(state) else state
         w = _wigner_clenshaw(state, xvec, pvec)
     elif method == 'fft':
         if isket(state):

@@ -7,7 +7,7 @@ from ..solvers.options import Dopri5, Euler, Propagator, Rouchon1, Rouchon2
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
-from ..utils.utils import isket, ket_to_dm
+from ..utils.utils import isket, todm
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .propagator import MEPropagator
@@ -33,9 +33,9 @@ def mesolve(
     $$
         \frac{\mathrm{d}\rho(t)}{\mathrm{d}t} =-i[H(t), \rho(t)]
         + \sum_{k=1}^N \left(
-            L_k \rho(t) L_k^\dagger
-            - \frac{1}{2} L_k^\dagger L_k \rho(t)
-            - \frac{1}{2} \rho(t) L_k^\dagger L_k
+            L_k \rho(t) L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho(t)
+            - \frac{1}{2} \rho(t) L_k^\dag L_k
         \right),
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k\}$ is a collection
@@ -204,7 +204,7 @@ def mesolve(
     H = batch_H(H)
     rho0 = batch_y0(rho0, H)
     if isket(rho0):
-        rho0 = ket_to_dm(rho0)
+        rho0 = todm(rho0)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
     jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
@@ -221,8 +221,8 @@ def mesolve(
 
     # get saved tensors and restore correct batching
     result = solver.result
-    result.ysave = result.ysave.squeeze(1).squeeze(0)
+    result.ysave = result.ysave.squeeze(0, 1)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(1).squeeze(0)
+        result.exp_save = result.exp_save.squeeze(0, 1)
 
     return result
