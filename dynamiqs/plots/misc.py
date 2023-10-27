@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from ..utils.tensor_types import ArrayLike, to_numpy
-from .utils import add_colorbar, fock_ticks, optax, sample_cmap
+from .utils import add_colorbar, colors, fock_ticks, optax, sample_cmap
 
 __all__ = [
     'plot_pwc_pulse',
@@ -21,8 +21,8 @@ def plot_pwc_pulse(
     *,
     ax: Axes = None,
     ycenter: bool = True,
-    real_color: str = '#0c5da5',
-    imag_color: str = '#845b97',
+    real_color: str = colors['blue'],
+    imag_color: str = colors['purple'],
 ):
     times = to_numpy(times)  # (n + 1)
     values = to_numpy(values)  # (n)
@@ -34,12 +34,12 @@ def plot_pwc_pulse(
     values = values.repeat(2)  # (2n)
 
     # real part
-    ax.plot(times, values.real, alpha=0.6, lw=2.0, label='real', color=real_color)
-    ax.fill_between(times, 0, values.real, alpha=0.2, color=real_color)
+    ax.plot(times, values.real, label='real', color=real_color, alpha=0.7)
+    ax.fill_between(times, 0, values.real, color=real_color, alpha=0.2)
 
     # imaginary part
-    ax.plot(times, values.imag, alpha=0.6, lw=2.0, label='imag', color=imag_color)
-    ax.fill_between(times, 0, values.imag, alpha=0.2, color=imag_color)
+    ax.plot(times, values.imag, label='imag', color=imag_color, alpha=0.7)
+    ax.fill_between(times, 0, values.imag, color=imag_color, alpha=0.2)
 
     ax.legend(loc='lower right')
 
@@ -59,9 +59,9 @@ def plot_fock(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
-    alpha: float = 1.0,
     xticksall: bool = True,
     ymax: float | None = 1.0,
+    color: str = colors['blue'],
 ):
     """Plot the photon number population."""
     state = to_numpy(state)
@@ -70,7 +70,7 @@ def plot_fock(
     y = populations(state)
 
     # plot
-    ax.bar(x, y, alpha=alpha)
+    ax.bar(x, y, color=color)
     if ymax is not None:
         ax.set_ylim(ymax=ymax)
     ax.set(xlim=(0 - 0.5, n - 0.5))

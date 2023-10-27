@@ -4,6 +4,7 @@ from functools import wraps
 
 import matplotlib as mpl
 import numpy as np
+from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
@@ -68,30 +69,59 @@ def optax(func):
     return wrapper
 
 
+colors = {
+    'blue': '#0c5dA5',
+    'red': '#ff6b6b',
+    'turquoise': '#2ec4b6',
+    'yellow': '#ffc463',
+    'grey': '#9e9e9e',
+    'purple': '#845b97',
+    'brown': '#c0675c',
+    'darkgreen': '#20817d',
+    'darkgrey': '#666666',
+}
+
+
 def mplstyle(*, latex: bool = True):
     """Set custom Matplotlib style."""
     plt.rcParams.update(
         {
-            'figure.facecolor': 'white',
-            'axes.facecolor': 'white',
-            'font.size': 12,
-            'figure.dpi': 72.0,
+            # xtick
             'xtick.direction': 'in',
-            'ytick.direction': 'in',
-            'xtick.major.size': 5.0,
+            'xtick.major.size': 4.5,
             'xtick.minor.size': 2.5,
-            'ytick.major.size': 5.0,
-            'ytick.minor.size': 2.5,
+            'xtick.major.width': 1.0,
+            'xtick.labelsize': 12,
             'xtick.minor.visible': True,
+            # ytick
+            'ytick.direction': 'in',
+            'ytick.major.size': 4.5,
+            'ytick.minor.size': 2.5,
+            'ytick.major.width': 1.0,
+            'ytick.labelsize': 12,
             'ytick.minor.visible': True,
+            # axes
+            'axes.facecolor': 'white',
             'axes.grid': False,
-            'axes.titlesize': 'larger',
-            'axes.labelsize': 'larger',
+            'axes.titlesize': 12,
+            'axes.labelsize': 12,
+            'axes.linewidth': 1.0,
+            'axes.prop_cycle': cycler('color', colors.values()),
+            # grid
             'grid.color': 'gray',
             'grid.linestyle': '--',
             'grid.alpha': 0.3,
+            # legend
+            'legend.frameon': False,
+            'legend.fontsize': 12,
+            # figure
+            'figure.facecolor': 'white',
+            'figure.dpi': 72,
+            # other
+            'savefig.facecolor': 'white',
+            'font.size': 12,
             'scatter.marker': 'x',
-            'lines.linewidth': 1.0,
+            'lines.linewidth': 2.0,
         }
     )
     if latex:
