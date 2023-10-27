@@ -17,7 +17,7 @@ def quadrature_sign(
 ) -> Tensor:
     r"""Returns the quadrature sign operator of phase angle $\phi$.
 
-    It is defined by $s(\phi) = \mathrm{sign}(e^{i\phi} a + e^{-i\phi} a^\dag)$, where
+    It is defined by $s(\phi) = \mathrm{sign}(e^{i\phi} a^\dag + e^{-i\phi} a)$, where
     $a$ and $a^\dag$ are the annihilation and creation operators respectively.
 
     Args:
