@@ -10,7 +10,7 @@ from .utils import add_colorbar, fock_ticks, optax, sample_cmap
 __all__ = [
     'plot_pwc_pulse',
     'plot_fock',
-    'plot_focks',
+    'plot_fock_evolution',
 ]
 
 
@@ -21,32 +21,33 @@ def plot_pwc_pulse(
     *,
     ax: Axes = None,
     ycenter: bool = True,
-    real_color: str = '#0C5DA5',
-    imag_color: str = '#845B97',
+    real_color: str = '#0c5da5',
+    imag_color: str = '#845b97',
 ):
-    times = to_numpy(times)
-    values = to_numpy(values)
+    times = to_numpy(times)  # (n + 1)
+    values = to_numpy(values)  # (n)
 
     # format times and values, for example:
-    # times  = [0, 1, 2, 3] -> [0, 1, 1, 2, 2, 3, 3, 4]
-    # values = [6, 7, 8, 9] -> [6, 6, 7, 7, 8, 8, 9, 9]
-    times = times.repeat(2)[1:-1]
-    values = values.repeat(2)
-    zeros = np.zeros_like(times)
+    # times  = [0, 1, 2, 3] -> [0, 1, 1, 2, 2, 3]
+    # values = [4, 5, 6]    -> [4, 4, 5, 5, 6, 6]
+    times = times.repeat(2)[1:-1]  # (2n)
+    values = values.repeat(2)  # (2n)
 
     # real part
     ax.plot(times, values.real, alpha=0.6, lw=2.0, label='real', color=real_color)
-    ax.fill_between(times, zeros, values.real, alpha=0.2, color=real_color)
+    ax.fill_between(times, 0, values.real, alpha=0.2, color=real_color)
 
     # imaginary part
     ax.plot(times, values.imag, alpha=0.6, lw=2.0, label='imag', color=imag_color)
-    ax.fill_between(times, zeros, values.imag, alpha=0.2, color=imag_color)
+    ax.fill_between(times, 0, values.imag, alpha=0.2, color=imag_color)
 
     ax.legend(loc='lower right')
 
     if ycenter:
         ymax = max(ax.get_ylim(), key=abs)
         ax.set_ylim(ymin=-ymax, ymax=ymax)
+
+    ax.set(xlim=(0, times[-1]))
 
 
 def populations(s: np.ndarray) -> np.ndarray:
@@ -60,6 +61,7 @@ def plot_fock(
     ax: Axes | None = None,
     alpha: float = 1.0,
     xticksall: bool = True,
+    ymax: float | None = 1.0,
 ):
     """Plot the photon number population."""
     state = to_numpy(state)
@@ -69,14 +71,16 @@ def plot_fock(
 
     # plot
     ax.bar(x, y, alpha=alpha)
-    ax.set(xlim=(0 - 0.5, n - 0.5), ylim=(0, 1 + 0.05))
+    if ymax is not None:
+        ax.set_ylim(ymax=ymax)
+    ax.set(xlim=(0 - 0.5, n - 0.5))
 
     # set x ticks
     fock_ticks(ax.xaxis, n, all=xticksall)
 
 
 @optax
-def plot_focks(
+def plot_fock_evolution(
     states: list[ArrayLike],
     *,
     ax: Axes | None = None,
