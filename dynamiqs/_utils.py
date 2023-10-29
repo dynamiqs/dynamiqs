@@ -33,7 +33,6 @@ def to_device(device: str | torch.device | None) -> torch.device:
         )
 
 
-
 def hdim(x: Tensor) -> int:
     if isket(x):
         return x.size(-2)
