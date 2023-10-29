@@ -37,6 +37,7 @@
         - [isket](utils/utils/isket.md)
         - [isbra](utils/utils/isbra.md)
         - [isdm](utils/utils/isdm.md)
+        - [isop](utils/utils/isop.md)
         - [toket](utils/utils/toket.md)
         - [tobra](utils/utils/tobra.md)
         - [todm](utils/utils/todm.md)
