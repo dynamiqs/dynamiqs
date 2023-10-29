@@ -26,11 +26,28 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # assert that `tstop` values are multiples of `dt`
+        # assert that `tstop` values are multiples of `dt`. If not raise an error.
         if not torch.allclose(torch.round(self.tstop / self.dt), self.tstop / self.dt):
+            if hasattr(self, 'tmeas'):
+                tmeas_indices = torch.nonzero(
+                    torch.round(self.tmeas / self.dt) != self.tmeas / self.dt
+                )
+                if len(tmeas_indices) > 0:
+                    idx = tmeas_indices[0]
+                    raise ValueError(
+                        'For fixed time step solvers, every value of `tmeas` must be a'
+                        f' multiple of the time step `dt`, but `dt = {self.dt:.5e}` and'
+                        f' `tmeas[{idx.item()}] = {self.tmeas[idx].item():.5e}`.'
+                    )
+
+            tsave_indices = torch.nonzero(
+                torch.round(self.tsave / self.dt) != self.tsave / self.dt
+            )
+            idx = tsave_indices[0]
             raise ValueError(
-                'Every value of `tsave` (and `tmeas` for SME solvers) must be a'
-                ' multiple of the time step `dt` for fixed time step ODE solvers.'
+                'For fixed time step solvers, every value of `tsave` must be a'
+                f' multiple of the time step `dt`, but `dt = {self.dt:.5e}` and'
+                f' `tsave[{idx.item()}] = {self.tsave[idx].item():.5e}`.'
             )
 
         # define time values
