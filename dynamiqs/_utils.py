@@ -5,6 +5,8 @@ from typing import Any
 import torch
 from torch import Tensor
 
+from .utils.utils import isket
+
 
 def type_str(type: Any) -> str:
     if type.__module__ in ('builtins', '__main__'):
@@ -29,6 +31,14 @@ def to_device(device: str | torch.device | None) -> torch.device:
             'Argument `device` must be a string, a `torch.device` or `None` but has'
             f' type {obj_type_str(device)}.'
         )
+
+
+
+def hdim(x: Tensor) -> int:
+    if isket(x):
+        return x.size(-2)
+    else:
+        return x.size(-1)
 
 
 def check_time_tensor(x: Tensor, arg_name: str, allow_empty=False):
