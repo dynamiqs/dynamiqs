@@ -87,58 +87,49 @@ def rand_complex(
     return x
 
 
-def pwc_pulse(
-    t_start: float, t_end: float, values: Tensor
-) -> callable[[float], Tensor]:
-    r"""Returns a function that takes a time $t$ and returns the piecewise-constant
-    (PWC) pulse value at this time.
+def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
+    r"""Returns a function that takes a time $t$ and returns the corresponding
+    piecewise-constant pulse value.
 
-    The time interval $[t_\text{start}, t_\text{end}]$ is split into $n$ bins, where
-    $n$ is the last dimension of `values` with shape _(..., n)_. The pulse value at
-    time $t$ is defined by
+    The `times` tensor $(t_0,\dots,t_n)$ of shape _(n+1)_ defines the time interval for
+    each element of the `values` tensor of shape _(..., n)_. The pulse value at time
+    $t$ is defined by
 
-    - `torch.zeros(...)` if $t$ is not in $[t_\text{start}, t_\text{end}]$,
-    - `values[..., k]` if $t$ is in the $k$-th bin of $[t_\text{start}, t_\text{end}]$.
+    - `torch.zeros(...)` if $t<t_0$ or $t>=t_n$,
+    - `values[..., k]` if $t\in[t_k, t_{k+1})$.
 
     Notes:
         You can use [rand_complex()][dynamiqs.rand_complex] to generate a tensor
         filled with random complex numbers for the parameter `values`.
 
     Args:
-        t_start: Start time of the pulse.
-        t_end: End time of the pulse.
-        values _(..., n)_: Pulse complex values where `n` is the number of different
-            values between `t_start` and `t_end`.
+        Times _(n+1)_: Time intervals.
+        values _(..., n)_: Pulse complex values.
 
     Returns:
-        Function that takes a time $t$ and returns the pulse value at time $t$ (a
-            tensor of shape _(...)_).
+        Function with signature `float -> Tensor` that takes a time $t$ and returns the
+            corresponding pulse value, a tensor of shape _(...)_.
 
     Examples:
-        >>> values = dq.rand_complex((2, 5), rmax=5.0, seed=42)
-        >>> pulse = dq.pwc_pulse(0.0, 1.0, values)
+        >>> times = torch.linspace(0.0, 1.0, 11)
+        >>> values = dq.rand_complex((2, 10), rmax=5.0, seed=42)
+        >>> pulse = dq.pwc_pulse(times, values)
         >>> type(pulse)
         <class 'function'>
         >>> pulse(0.5)
-        tensor([ 2.109-2.263j, -3.983-1.995j])
+        tensor([-0.474+3.847j,  1.186-3.054j])
         >>> pulse(1.2)
         tensor([0.+0.j, 0.+0.j])
     """
 
     def pulse(t):
-        if t < t_start or t > t_end:
+        if t < times[0] or t >= times[-1]:
             # return a null tensor of appropriate shape
             batch_sizes = values.shape[:-1]
             return torch.zeros(batch_sizes, dtype=values.dtype, device=values.device)
-        elif t == t_end:
-            # return the last value, this case if necessary to avoid an out of bounds
-            # index error when computing `idx` below
-            return values[..., -1]
         else:
-            # find the index corresponding to time t for t in [t_start, t_end[
-            n = values.size(-1)
-            tbin = (t_end - t_start) / n
-            idx = int(t / tbin)
+            # find the index $k$ such that $t \in [t_k, t_{k+1})$
+            idx = torch.searchsorted(times, t)
             return values[..., idx]
 
     return pulse
