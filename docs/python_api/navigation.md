@@ -5,6 +5,7 @@
 - [Utilities](utils.md)
     - Operators
         - [eye](utils/operators/eye.md)
+        - [zero](utils/operators/zero.md)
         - [destroy](utils/operators/destroy.md)
         - [create](utils/operators/create.md)
         - [number](utils/operators/number.md)
