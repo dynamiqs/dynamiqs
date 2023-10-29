@@ -5,6 +5,7 @@
 - [Utilities](utils.md)
     - Operators
         - [eye](utils/operators/eye.md)
+        - [zero](utils/operators/zero.md)
         - [destroy](utils/operators/destroy.md)
         - [create](utils/operators/create.md)
         - [number](utils/operators/number.md)
@@ -48,6 +49,7 @@
         - [to_tensor](utils/tensor_types/to_tensor.md)
         - [to_qutip](utils/tensor_types/to_qutip.md)
         - [from_qutip](utils/tensor_types/from_qutip.md)
+        - [to_numpy](utils/tensor_types/to_numpy.md)
     - Wigner distribution
         - [wigner](utils/wigners/wigner.md)
     - Vectorization
