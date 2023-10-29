@@ -48,6 +48,7 @@
         - [to_tensor](utils/tensor_types/to_tensor.md)
         - [to_qutip](utils/tensor_types/to_qutip.md)
         - [from_qutip](utils/tensor_types/from_qutip.md)
+        - [to_numpy](utils/tensor_types/to_numpy.md)
     - Wigner distribution
         - [wigner](utils/wigners/wigner.md)
     - Vectorization
