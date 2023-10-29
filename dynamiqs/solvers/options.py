@@ -155,8 +155,20 @@ class Euler(ODEFixedStep, AdjointOptions):
 
 
 class Rouchon1(ODEFixedStep, AdjointOptions):
-    def __init__(self, *, cholesky_normalization: bool = False, **kwargs):
+    def __init__(
+        self,
+        *,
+        sqrt_normalization: bool = False,
+        cholesky_normalization: bool = False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
+        if sqrt_normalization and cholesky_normalization:
+            raise ValueError(
+                'Only one of `sqrt_normalization` and `cholesky_normalization`'
+                ' can be set to `True`.'
+            )
+        self.sqrt_normalization = sqrt_normalization
         self.cholesky_normalization = cholesky_normalization
 
 

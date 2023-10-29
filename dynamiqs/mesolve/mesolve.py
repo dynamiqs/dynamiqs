@@ -119,9 +119,12 @@ def mesolve(
         Optional for solver `rouchon1`:
 
         - **sqrt_normalization** _(bool, optional)_ – If `True`, the Kraus map is
-            renormalized at every step to preserve the trace of the density matrix.
-            Recommended only for time-independent problems. Ideal for stiff problems.
+            renormalized with a matrix square root at every time step a CPTP Kraus map.
+            Available only for time-independent problems. Ideal for stiff problems.
             Defaults to `False`.
+        - **cholesky_normalization** _(bool, optional)_ - If `True`, the Kraus map is
+            renormalized with a Cholesky decomposition at every time step to preserve
+            a CPTP Kraus map. Ideal for stiff problems. Defaults to `False`.
 
         Required for `gradient="adjoint"`:
 
