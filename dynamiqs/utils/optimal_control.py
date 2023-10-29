@@ -3,6 +3,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
+from .._utils import check_time_tensor
 from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
 __all__ = [
@@ -121,6 +122,8 @@ def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
         >>> pulse(1.2)
         tensor([0.+0.j, 0.+0.j])
     """
+
+    check_time_tensor(times, 'times')
 
     def pulse(t):
         if t < times[0] or t >= times[-1]:
