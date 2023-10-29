@@ -104,7 +104,7 @@ def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
         filled with random complex numbers for the parameter `values`.
 
     Args:
-        Times _(n+1)_: Time intervals.
+        times _(n+1)_: Time points between which the pulse takes constant values.
         values _(..., n)_: Pulse complex values.
 
     Returns:
