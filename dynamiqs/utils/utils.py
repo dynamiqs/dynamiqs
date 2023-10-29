@@ -18,6 +18,7 @@ __all__ = [
     'isket',
     'isbra',
     'isdm',
+    'isop',
     'toket',
     'tobra',
     'todm',
@@ -441,6 +442,26 @@ def isdm(x: Tensor) -> bool:
         >>> dq.isdm(torch.ones(5, 3, 3))
         True
         >>> dq.isdm(torch.ones(3, 1))
+        False
+    """
+    return x.size(-1) == x.size(-2)
+
+
+def isop(x: Tensor) -> bool:
+    r"""Returns True if a tensor is in the format of an operator.
+
+    Args:
+        x _(...)_: Tensor.
+
+    Returns:
+        True if the last two dimensions of `x` are equal, False otherwise.
+
+    Examples:
+        >>> dq.isop(torch.ones(3, 3))
+        True
+        >>> dq.isop(torch.ones(5, 3, 3))
+        True
+        >>> dq.isop(torch.ones(3, 1))
         False
     """
     return x.size(-1) == x.size(-2)

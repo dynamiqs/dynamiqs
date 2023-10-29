@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from .._utils import obj_type_str
+from .._utils import check_time_tensor, obj_type_str
 from ..solvers.options import Dopri5, Euler, Propagator, Rouchon1, Rouchon2
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_y0, check_time_tensor, to_td_tensor
+from ..solvers.utils import batch_H, batch_y0, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import isket, todm
 from .adaptive import MEDormandPrince5

@@ -11,6 +11,7 @@ from .utils import tensprod
 
 __all__ = [
     'eye',
+    'zero',
     'destroy',
     'create',
     'number',
@@ -64,6 +65,44 @@ def eye(
     """
     dim = prod(dims)
     return torch.eye(dim, dtype=get_cdtype(dtype), device=device)
+
+
+def zero(
+    *dims: int,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the null operator.
+
+    If only a single dimension is provided, `zero` returns the null operator
+    of corresponding dimension. If instead multiples dimensions are provided, `zero`
+    returns the null operator of the composite Hilbert space given by the product
+    of all dimensions.
+
+    Args:
+        *dims: Variable length argument list of the Hilbert space dimensions.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(n, n)_ Null operator (with _n_ the product of dimensions in `dims`).
+
+    Examples:
+        >>> dq.zero(4)
+        tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
+        >>> dq.zero(2, 3)
+        tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
+    """
+    dim = prod(dims)
+    return torch.zeros(dim, dim, dtype=get_cdtype(dtype), device=device)
 
 
 def destroy(
