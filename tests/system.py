@@ -7,6 +7,8 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs.gradient import Gradient
+from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
@@ -73,9 +75,9 @@ class System(ABC):
         H: Tensor,
         y0: Tensor,
         tsave: ArrayLike,
-        solver: str,
+        solver: Solver,
         *,
-        gradient: str | None = None,
+        gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
     ) -> Result:
         pass
@@ -83,9 +85,9 @@ class System(ABC):
     def run(
         self,
         tsave: ArrayLike,
-        solver: str,
+        solver: Solver,
         *,
-        gradient: str | None = None,
+        gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
     ) -> Result:
         return self._run(

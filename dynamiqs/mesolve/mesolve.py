@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from .._utils import check_time_tensor, obj_type_str
-from ..solvers.options import Dopri5, Euler, Propagator, Rouchon1, Rouchon2
+from ..gradient import Gradient
+from ..solver import Dopri5, Euler, Propagator, Rouchon1, Rouchon2, Solver
+from ..solvers.options import Options
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
@@ -21,8 +23,8 @@ def mesolve(
     tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    solver: str = 'dopri5',
-    gradient: str | None = None,
+    solver: Solver | None = None,
+    gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     r"""Solve the Lindblad master equation.
@@ -154,27 +156,25 @@ def mesolve(
         feature, we would be glad to discuss it, please
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """
+
+    # default solver
+    if solver is None:
+        solver = Dopri5()
+
     # options
-    if options is None:
-        options = {}
-    options['gradient_alg'] = gradient
-    if solver == 'dopri5':
-        options = Dopri5(**options)
-        SOLVER_CLASS = MEDormandPrince5
-    elif solver == 'euler':
-        options = Euler(**options)
-        SOLVER_CLASS = MEEuler
-    elif solver == 'rouchon' or solver == 'rouchon1':
-        options = Rouchon1(**options)
-        SOLVER_CLASS = MERouchon1
-    elif solver == 'rouchon2':
-        options = Rouchon2(**options)
-        SOLVER_CLASS = MERouchon2
-    elif solver == 'propagator':
-        options = Propagator(**options)
-        SOLVER_CLASS = MEPropagator
-    else:
-        raise ValueError(f'Solver "{solver}" is not supported.')
+    options = Options(solver=solver, gradient=gradient, options=options)
+
+    # solver class
+    solvers = {
+        Propagator: MEPropagator,
+        Euler: MEEuler,
+        Rouchon1: MERouchon1,
+        Rouchon2: MERouchon2,
+        Dopri5: MEDormandPrince5,
+    }
+    if not isinstance(solver, tuple(solvers.keys())):
+        raise ValueError(f'Solver `{type(solver).__name__}` is not supported.')
+    SOLVER_CLASS = solvers[type(solver)]
 
     # check jump_ops
     if not isinstance(jump_ops, list):

@@ -6,6 +6,7 @@ from time import time
 import torch
 from torch import Tensor
 
+from ..gradient import Adjoint, Autograd
 from .options import Options
 from .result import Result
 from .utils.td_tensor import TDTensor
@@ -82,7 +83,7 @@ class Solver(ABC):
         self.result.end_time = time()
 
     def _run(self):
-        if self.options.gradient_alg is None:
+        if self.options.gradient is None:
             self.run_nograd()
 
     @abstractmethod
@@ -117,7 +118,7 @@ class Solver(ABC):
 class AutogradSolver(Solver):
     def _run(self):
         super()._run()
-        if self.options.gradient_alg == 'autograd':
+        if isinstance(self.options.gradient, Autograd):
             self.run_autograd()
 
     def run_nograd(self):
@@ -132,7 +133,7 @@ class AutogradSolver(Solver):
 class AdjointSolver(AutogradSolver):
     def _run(self):
         super()._run()
-        if self.options.gradient_alg == 'adjoint':
+        if isinstance(self.options.gradient, Adjoint):
             self.run_adjoint()
 
     @abstractmethod

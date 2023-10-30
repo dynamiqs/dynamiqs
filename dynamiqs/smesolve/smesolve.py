@@ -5,7 +5,9 @@ from typing import Any
 import torch
 
 from .._utils import check_time_tensor, obj_type_str
-from ..solvers.options import Euler, Rouchon1
+from ..gradient import Gradient
+from ..solver import Euler, Rouchon1, Solver
+from ..solvers.options import Options
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
@@ -25,8 +27,8 @@ def smesolve(
     tmeas: ArrayLike | None = None,
     ntrajs: int = 1,
     seed: int | None = None,
-    solver: str = '',
-    gradient: str | None = None,
+    solver: Solver | None = None,
+    gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     r"""Solve the diffusive stochastic master equation (SME).
@@ -187,22 +189,22 @@ def smesolve(
     #    - meas_save: (b_H?, b_rho0?, ntrajs, len(meas_ops), len(tmeas) - 1)
 
     # default solver
-    if solver == '':
+    if solver is None:
         raise ValueError(
             'No default solver yet, please specify one using the `solver` argument.'
         )
+
     # options
-    if options is None:
-        options = {}
-    options['gradient_alg'] = gradient
-    if solver == 'euler':
-        options = Euler(**options)
-        SOLVER_CLASS = SMEEuler
-    elif solver == 'rouchon1':
-        options = Rouchon1(**options)
-        SOLVER_CLASS = SMERouchon1
-    else:
-        raise ValueError(f'Solver "{solver}" is not supported.')
+    options = Options(solver=solver, gradient=gradient, options=options)
+
+    # solver class
+    solvers = {
+        Euler: SMEEuler,
+        Rouchon1: SMERouchon1,
+    }
+    if not isinstance(solver, tuple(solvers.keys())):
+        raise ValueError(f'Solver `{type(solver).__name__}` is not supported.')
+    SOLVER_CLASS = solvers[type(solver)]
 
     # check jump_ops
     if not isinstance(jump_ops, list):
