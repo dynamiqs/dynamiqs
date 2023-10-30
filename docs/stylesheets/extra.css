@@ -105,27 +105,37 @@ Description: Extra CSS for the dynamiqs documentation
   transition: box-shadow 125ms;
 }
 
-.md-typeset .quote > * {
+.md-typeset .quote>* {
   box-sizing: border-box;
 }
 
-html .md-typeset .quote > :last-child {
+html .md-typeset .quote> :last-child {
   margin-bottom: .6rem;
 }
 
-.unclickable {
-  cursor: default;
-  pointer-events: none;
+[dir="rtl"] .md-typeset .quote-title {
+  border-top-right-radius: .1rem;
 }
 
-.md-typeset .quote > summary::before,
-.md-typeset .quote > summary::after {
-  display: none;
-}
-
-[dir="ltr"] .md-typeset .quote summary {
+[dir="ltr"] .md-typeset .quote-title {
   padding-left: 0.8rem;
+  padding-right: 1.8rem;
+  border-left-width: .2rem;
+  border-top-right-radius: .1rem;
+  border-top-left-radius: .1rem;
 }
+
+.md-typeset .quote-title {
+  background-color: #9e9e9e1a;
+  border: none;
+  border-left-width: medium;
+  font-weight: 700;
+  margin: 0 -.6rem;
+  padding-bottom: .4rem;
+  padding-top: .4rem;
+  position: relative;
+}
+
 
 /* Page spacing */
 .md-typeset {
