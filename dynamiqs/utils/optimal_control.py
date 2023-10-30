@@ -9,6 +9,7 @@ from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 __all__ = [
     'rand_complex',
     'pwc_pulse',
+    'snap_gate',
 ]
 
 
@@ -136,3 +137,45 @@ def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
             return values[..., idx]
 
     return pulse
+
+
+def snap_gate(
+    phase: Tensor,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns a SNAP gate.
+
+    The *selective number-dependent arbitrary phase* (SNAP) gate imparts a different
+    phase $\theta_k$ to each Fock state $\ket{k}\bra{k}$. It is defined by
+    $$
+        \mathrm{SNAP}(\theta_0,\dots,\theta_{n-1}) =
+        \sum_{k=0}^{n-1} e^{i\theta_k} \ket{k}\bra{k}.
+    $$
+
+    Args:
+        phase _(..., n)_: Phase for each Fock state. The tensor last dimension _n_
+            defines the Hilbert space dimension.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(..., n, n)_ SNAP gate operator.
+
+    Examples:
+        >>> dq.snap_gate(torch.tensor([0, 1, 2]))
+        tensor([[ 1.000+0.000j,  0.000+0.000j,  0.000+0.000j],
+                [ 0.000+0.000j,  0.540+0.841j,  0.000+0.000j],
+                [ 0.000+0.000j,  0.000+0.000j, -0.416+0.909j]])
+        >>> dq.snap_gate(torch.tensor([[0, 1], [2, 3]]))
+        tensor([[[ 1.000+0.000j,  0.000+0.000j],
+                 [ 0.000+0.000j,  0.540+0.841j]],
+        <BLANKLINE>
+                [[-0.416+0.909j,  0.000+0.000j],
+                 [ 0.000+0.000j, -0.990+0.141j]]])
+    """
+    cdtype = get_cdtype(dtype)
+    rdtype = dtype_complex_to_real(cdtype)
+    phase = phase.to(dtype=rdtype, device=device)
+    return torch.diag_embed(torch.exp(1j * phase))
