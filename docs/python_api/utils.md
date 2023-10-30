@@ -38,3 +38,9 @@ The utilities API closely mirrors that of [QuTiP](https://qutip.org/), with slig
 ::: dynamiqs.utils.vectorization
     options:
         table: true
+
+## Quantum optimal control
+
+::: dynamiqs.utils.optimal_control
+    options:
+        table: true
