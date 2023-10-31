@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from .._utils import check_time_tensor, obj_type_str
-from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
@@ -21,7 +20,6 @@ def sesolve(
     *,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver | None = None,
-    gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     r"""Solve the Schrödinger equation.
@@ -141,7 +139,7 @@ def sesolve(
         solver = Dopri5()
 
     # options
-    options = Options(solver=solver, gradient=gradient, options=options)
+    options = Options(solver=solver, options=options)
 
     # solver class
     solvers = {

@@ -5,7 +5,6 @@ from typing import Any
 import torch
 
 from .._utils import check_time_tensor, obj_type_str
-from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
@@ -28,7 +27,6 @@ def smesolve(
     ntrajs: int = 1,
     seed: int | None = None,
     solver: Solver | None = None,
-    gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     r"""Solve the diffusive stochastic master equation (SME).
@@ -195,7 +193,7 @@ def smesolve(
         )
 
     # options
-    options = Options(solver=solver, gradient=gradient, options=options)
+    options = Options(solver=solver, options=options)
 
     # solver class
     solvers = {

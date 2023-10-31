@@ -5,30 +5,17 @@ from typing import Any
 import torch
 
 from .._utils import to_device
-from ..gradient import Gradient
 from ..solver import Solver
 from ..utils.tensor_types import dtype_complex_to_real, get_cdtype
 
 
 class Options:
-    def __init__(
-        self, solver: Solver, gradient: Gradient | None, options: dict[str, Any] | None
-    ):
-        if gradient is not None and not solver.supports_gradient(gradient):
-            supported_gradient_str = ', '.join(
-                f'`{type(x).__name__}`' for x in solver.SUPPORTED_GRADIENT
-            )
-            raise ValueError(
-                f'Gradient algorithm `{type(gradient).__name__}` is not supported by '
-                f' solver `{type(solver).__name__}` (supported:'
-                f' {supported_gradient_str}).'
-            )
-
+    def __init__(self, solver: Solver, options: dict[str, Any] | None):
         if options is None:
             options = {}
 
         self.solver = solver
-        self.gradient = gradient
+        self.gradient = solver.gradient
         self.options = SharedOptions(**options)
 
     def __getattr__(self, name: str) -> Any:

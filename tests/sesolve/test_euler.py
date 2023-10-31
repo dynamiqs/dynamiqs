@@ -1,4 +1,3 @@
-from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Euler
 
 from ..solver_tester import SolverTester
@@ -22,11 +21,10 @@ class TestSEEuler(SolverTester):
         )
 
     def test_autograd(self):
-        solver = Euler(dt=1e-4)
+        solver = Euler(dt=1e-4).autograd()
         self._test_gradient(
             grad_cavity_8,
             solver,
-            Autograd(),
             num_tsave=11,
             rtol=1e-1,
             atol=1e-2,

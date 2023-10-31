@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from .._utils import check_time_tensor, obj_type_str
-from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Rouchon1, Rouchon2, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
@@ -24,7 +23,6 @@ def mesolve(
     *,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver | None = None,
-    gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     r"""Solve the Lindblad master equation.
@@ -70,9 +68,6 @@ def mesolve(
             operators for which the expectation value is computed. Defaults to `None`.
         solver _(str, optional)_: Solver for the differential equation integration (see
             the list below). Defaults to `"dopri5"`.
-        gradient _(str, optional)_: Algorithm used to compute the gradient. Can be
-            either `None`, `"autograd"` (PyTorch autograd library) or `"adjoint"`
-            (differentiation with the adjoint state method). Defaults to `None`.
         options _(dict, optional)_: Solver options (see the list below). Defaults to
             `None`.
 
@@ -162,7 +157,7 @@ def mesolve(
         solver = Dopri5()
 
     # options
-    options = Options(solver=solver, gradient=gradient, options=options)
+    options = Options(solver=solver, options=options)
 
     # solver class
     solvers = {

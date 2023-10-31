@@ -1,4 +1,3 @@
-from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Dopri5
 
 from ..solver_tester import SolverTester
@@ -13,4 +12,4 @@ class TestSEAdaptive(SolverTester):
         self._test_correctness(cavity_8, Dopri5(), num_tsave=11)
 
     def test_autograd(self):
-        self._test_gradient(grad_cavity_8, Dopri5(), Autograd(), num_tsave=11)
+        self._test_gradient(grad_cavity_8, Dopri5().autograd(), num_tsave=11)

@@ -1,29 +1,22 @@
-from .gradient import Adjoint, Autograd, Gradient
+from .gradient import AdjointMethod, AutogradMethod
 
 
 class Solver:
-    SUPPORTED_GRADIENT = ()
-
-    def supports_gradient(self, gradient: Gradient) -> bool:
-        if len(self.SUPPORTED_GRADIENT) == 0:
-            return False
-        return isinstance(gradient, self.SUPPORTED_GRADIENT)
+    def __init__(self):
+        self.gradient = None
 
 
-class Propagator(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
+class Propagator(Solver, AutogradMethod):
+    pass
 
 
-class _ODEFixedStep(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
-
+class _ODEFixedStep(Solver, AutogradMethod):
     def __init__(self, *, dt: float):
+        super().__init__()
         self.dt = dt
 
 
-class _ODEAdaptiveStep(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
-
+class _ODEAdaptiveStep(Solver, AutogradMethod):
     def __init__(
         self,
         *,
@@ -34,6 +27,7 @@ class _ODEAdaptiveStep(Solver):
         min_factor: float = 0.2,
         max_factor: float = 5.0,
     ):
+        super().__init__()
         self.atol = atol
         self.rtol = rtol
         self.max_steps = max_steps
@@ -46,17 +40,15 @@ class Dopri5(_ODEAdaptiveStep):
     pass
 
 
-class Euler(_ODEFixedStep):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
+class Euler(_ODEFixedStep, AdjointMethod, AutogradMethod):
+    pass
 
 
-class Rouchon1(_ODEFixedStep):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
-
+class Rouchon1(_ODEFixedStep, AdjointMethod, AutogradMethod):
     def __init__(self, *, dt: float, sqrt_normalization: bool = False):
         super().__init__(dt=dt)
         self.sqrt_normalization = sqrt_normalization
 
 
-class Rouchon2(_ODEFixedStep):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
+class Rouchon2(_ODEFixedStep, AdjointMethod, AutogradMethod):
+    pass

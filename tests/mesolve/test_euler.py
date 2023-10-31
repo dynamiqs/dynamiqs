@@ -1,4 +1,3 @@
-from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Euler
 
 from ..solver_tester import SolverTester
@@ -22,23 +21,20 @@ class TestMEEuler(SolverTester):
         )
 
     def test_autograd(self):
-        solver = Euler(dt=1e-3)
+        solver = Euler(dt=1e-3).autograd()
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
-            Autograd(),
             num_tsave=11,
             rtol=1e-2,
             atol=1e-2,
         )
 
     def test_adjoint(self):
-        solver = Euler(dt=1e-3)
-        gradient = Adjoint(parameters=grad_leaky_cavity_8.parameters)
+        solver = Euler(dt=1e-3).adjoint(parameters=grad_leaky_cavity_8.parameters)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
-            gradient,
             num_tsave=11,
             rtol=1e-3,
             atol=1e-2,

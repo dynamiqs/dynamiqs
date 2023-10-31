@@ -6,7 +6,6 @@ from typing import Any
 
 import torch
 
-from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 
 from .system import System
@@ -83,7 +82,6 @@ class SolverTester(ABC):
         self,
         system: System,
         solver: Solver,
-        gradient: Gradient,
         *,
         options: dict[str, Any] | None = None,
         num_tsave: int,
@@ -91,7 +89,7 @@ class SolverTester(ABC):
         atol: float = 1e-5,
     ):
         tsave = system.tsave(num_tsave)
-        result = system.run(tsave, solver, gradient=gradient, options=options)
+        result = system.run(tsave, solver, options=options)
 
         # === test gradients depending on final ysave
         loss_state = system.loss_state(result.ysave[-1])

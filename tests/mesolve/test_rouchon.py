@@ -1,6 +1,5 @@
 import pytest
 
-from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Rouchon1, Rouchon2
 
 from ..solver_tester import SolverTester
@@ -26,11 +25,10 @@ class TestMERouchon1(SolverTester):
 
     @pytest.mark.parametrize('sqrt_normalization', [False, True])
     def test_autograd(self, sqrt_normalization):
-        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization)
+        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization).autograd()
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
-            Autograd(),
             num_tsave=11,
             rtol=1e-2,
             atol=1e-2,
@@ -38,12 +36,12 @@ class TestMERouchon1(SolverTester):
 
     @pytest.mark.parametrize('sqrt_normalization', [False, True])
     def test_adjoint(self, sqrt_normalization):
-        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization)
-        gradient = Adjoint(parameters=grad_leaky_cavity_8.parameters)
+        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization).adjoint(
+            parameters=grad_leaky_cavity_8.parameters
+        )
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
-            gradient,
             num_tsave=11,
             rtol=1e-2,
             atol=1e-2,
@@ -67,21 +65,18 @@ class TestMERouchon2(SolverTester):
         )
 
     def test_autograd(self):
-        solver = Rouchon2(dt=1e-3)
+        solver = Rouchon2(dt=1e-3).autograd()
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
-            Autograd(),
             num_tsave=11,
         )
 
     def test_adjoint(self):
-        solver = Rouchon2(dt=1e-3)
-        gradient = Adjoint(parameters=grad_leaky_cavity_8.parameters)
+        solver = Rouchon2(dt=1e-3).adjoint(parameters=grad_leaky_cavity_8.parameters)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
-            gradient,
             num_tsave=11,
             atol=1e-4,
         )

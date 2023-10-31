@@ -7,7 +7,6 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
-from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
@@ -27,7 +26,6 @@ class ClosedSystem(System):
         tsave: ArrayLike,
         solver: Solver,
         *,
-        gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
     ) -> Result:
         return dq.sesolve(
@@ -36,7 +34,6 @@ class ClosedSystem(System):
             tsave,
             exp_ops=self.exp_ops,
             solver=solver,
-            gradient=gradient,
             options=options,
         )
 

@@ -1,22 +1,28 @@
 from __future__ import annotations
 
-import torch.nn as nn
-
 
 class Gradient:
     pass
+
+
+class AutogradMethod:
+    def autograd(self):
+        self.gradient = Autograd()
+        return self
 
 
 class Autograd(Gradient):
     pass
 
 
-class Adjoint(Gradient):
-    def __init__(self, *, parameters: tuple[nn.Parameter, ...] | None = None):
-        """
+class AdjointMethod:
+    def adjoint(self, parameters):
+        self.gradient = Adjoint(parameters)
+        return self
 
-        Args:
-            parameters (tuple of nn.Parameter): Parameters with respect to which
-                gradients are computed during the adjoint state backward pass.
-        """
+
+class Adjoint(Gradient):
+    NAME = "adjoint"
+
+    def __init__(self, parameters):
         self.parameters = parameters
