@@ -22,60 +22,66 @@ class AdaptiveSolver(AutogradSolver):
         Series in Computational Mathematics`.
         """
         # initialize the progress bar
-        pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
+        self.pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
+
+        # initialize step counter
+        self.step_counter = 0
 
         # initialize the ODE routine
         t0 = 0.0
         f0 = self.odefun(t0, self.y0)
-        dt = self.init_tstep(f0, self.y0, t0)
+        dt = self.init_tstep(t0, self.y0, f0, self.odefun)
         error = 1.0
-        cache = (dt, error)
 
         # run the ODE routine
         t, y, ft = t0, self.y0, f0
-        step_counter = 0
         for ts in self.tstop.cpu().numpy():
-            while t < ts:
-                # update time step
-                dt = self.update_tstep(dt, error)
-
-                # check for time overflow
-                if t + dt >= ts:
-                    cache = (dt, error)
-                    dt = ts - t
-
-                # perform a single step of size dt
-                ft_new, y_new, y_err = self.step(ft, y, t, dt)
-
-                # compute estimated error of this step
-                error = self.get_error(y_err, y, y_new)
-
-                # update if step is accepted
-                if error <= 1:
-                    t, y, ft = t + dt, y_new, ft_new
-
-                    # update the progress bar
-                    pbar.update(dt)
-
-                # raise error if max_steps reached
-                step_counter += 1
-                if step_counter == self.options.max_steps:
-                    raise RuntimeError(
-                        'Maximum number of time steps reached in adaptive time step ODE'
-                        f' solver at time t={t:.2g}'
-                        f' (`options.max_steps={self.options.max_steps}`).'
-                    )
-
-            # save solution
+            y, ft, dt, error = self.integrate(t, ts, y, ft, dt, error)
             self.save(y)
-
-            # use cache to retrieve time step and error
-            dt, error = cache
+            t = ts
 
         # close progress bar
         with warnings.catch_warnings():  # ignore tqdm precision overflow
             warnings.simplefilter('ignore', TqdmWarning)
-            pbar.close()
+            self.pbar.close()
+
+    def integrate(
+        self, t0: float, t1: float, y: Tensor, ft: Tensor, dt: float, error: float
+    ) -> tuple[Tensor, Tensor, float, float]:
+        """Integrate the ODE forward from time `t0` to time `t1`."""
+        cache = (dt, error)
+        t = t0
+        while t < t1:
+            dt = self.update_tstep(dt, error)
+
+            # check for time overflow
+            if t + dt >= t1:
+                cache = (dt, error)
+                dt = t1 - t
+
+            # compute next step
+            ft_new, y_new, y_err = self.step(t, y, ft, dt, self.odefun)
+            error = self.get_error(y_err, y, y_new)
+            if error <= 1:
+                t, y, ft = t + dt, y_new, ft_new
+                self.pbar.update(dt)
+
+            # check max steps are not reached
+            self.increment_step_counter(t)
+
+        dt, error = cache
+        return y, ft, dt, error
+
+    def increment_step_counter(self, t: float):
+        """Increment the step counter and check for max steps."""
+        self.step_counter += 1
+        if self.step_counter == self.options.max_steps:
+            raise RuntimeError(
+                'Maximum number of time steps reached in adaptive time step ODE'
+                f' solver at time t={t:.2g} (`max_steps={self.options.max_steps}`).'
+                ' This is likely due to a diverging solution. Try increasing the'
+                ' maximum number of steps, or use a different solver.'
+            )
 
     @property
     @abstractmethod
@@ -93,7 +99,7 @@ class AdaptiveSolver(AutogradSolver):
 
     @abstractmethod
     def step(
-        self, f0: Tensor, y0: Tensor, t0: float, dt: float
+        self, t0: float, y0: Tensor, f0: Tensor, dt: float, fun: callable
     ) -> tuple[Tensor, Tensor, Tensor]:
         """Compute a single step of the ODE integration."""
         pass
@@ -109,7 +115,7 @@ class AdaptiveSolver(AutogradSolver):
         return hairer_norm(y_err / scale).max().item()
 
     @torch.no_grad()
-    def init_tstep(self, f0: Tensor, y0: Tensor, t0: float) -> float:
+    def init_tstep(self, t0: float, y0: Tensor, f0: Tensor, fun: callable) -> float:
         """Initialize the time step of an adaptive step size integrator.
 
         See Equation (4.14) of `Hairer et al., Solving Ordinary Differential Equations I
@@ -125,7 +131,7 @@ class AdaptiveSolver(AutogradSolver):
             h0 = 0.01 * d0 / d1
 
         y1 = y0 + h0 * f0
-        f1 = self.odefun(t0 + h0, y1)
+        f1 = fun(t0 + h0, y1)
         d2 = hairer_norm((f1 - f0) / sc).max().item() / h0
         if d1 <= 1e-15 and d2 <= 1e-15:
             h1 = max(1e-6, h0 * 1e-3)
@@ -207,7 +213,7 @@ class DormandPrince5(AdaptiveSolver):
         return alpha, beta, csol5, csol5 - csol4
 
     def step(
-        self, f: Tensor, y: Tensor, t: float, dt: float
+        self, t: float, y: Tensor, f: Tensor, dt: float, fun: callable
     ) -> tuple[Tensor, Tensor, Tensor]:
         # import butcher tableau
         alpha, beta, csol, cerr = self.tableau
@@ -217,7 +223,7 @@ class DormandPrince5(AdaptiveSolver):
         k[0] = f
         for i in range(1, 7):
             dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
-            k[i] = self.odefun(t + dt * alpha[i - 1].item(), y + dy)
+            k[i] = fun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results
         f_new = k[-1]
