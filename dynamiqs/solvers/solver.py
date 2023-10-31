@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from math import inf
 from time import time
 
 import torch
@@ -46,6 +45,8 @@ class Solver(ABC):
 
         # initialize time logic
         self.tstop = torch.cat((self.tsave, self.tmeas)).unique().sort()[0]
+        self.tsave_mask = torch.isin(self.tstop, self.tsave)
+        self.tmeas_mask = torch.isin(self.tstop, self.tsave)
         self.tstop_counter = 0
         self.tsave_counter = 0
         self.tmeas_counter = 0
@@ -93,25 +94,15 @@ class Solver(ABC):
     def run_nograd(self):
         pass
 
-    def next_tsave(self) -> float:
-        if self.tsave_counter == len(self.tsave):
-            return inf
-        return self.tsave[self.tsave_counter].item()
-
-    def next_tmeas(self) -> float:
-        if self.tmeas_counter == len(self.tmeas):
-            return inf
-        return self.tmeas[self.tmeas_counter].item()
-
     def next_tstop(self) -> float:
         return self.tstop[self.tstop_counter].item()
 
     def save(self, y: Tensor):
-        if self.next_tstop() == self.next_tsave():
+        if self.tsave_mask[self.tstop_counter]:
             self._save_y(y)
             self._save_exp_ops(y)
             self.tsave_counter += 1
-        if self.next_tstop() == self.next_tmeas():
+        if self.tmeas_mask[self.tstop_counter]:
             self._save_meas()
             self.tmeas_counter += 1
         self.tstop_counter += 1
@@ -120,7 +111,7 @@ class Solver(ABC):
         if self.options.save_states:
             next(self.ysave_iter)[:] = y
         # otherwise only save the state if it is the final state
-        elif self.next_tsave() is inf:
+        elif self.tsave_counter == len(self.tsave) - 1:
             self.ysave = y
 
     def _save_exp_ops(self, y: Tensor):
