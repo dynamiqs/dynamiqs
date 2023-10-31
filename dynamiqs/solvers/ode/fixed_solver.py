@@ -47,8 +47,7 @@ class FixedSolver(AutogradSolver):
         self.pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
 
         # initialize time and state
-        t0 = 0.0
-        t, y = t0, self.y0
+        t, y = self.t0, self.y0
 
         # run the ode routine
         for ts in self.tstop.cpu().numpy():

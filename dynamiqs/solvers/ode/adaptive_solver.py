@@ -28,13 +28,12 @@ class AdaptiveSolver(AutogradSolver):
         self.step_counter = 0
 
         # initialize the ODE routine
-        t0 = 0.0
-        f0 = self.odefun(t0, self.y0)
-        dt = self.init_tstep(t0, self.y0, f0, self.odefun)
+        f0 = self.odefun(self.t0, self.y0)
+        dt = self.init_tstep(self.t0, self.y0, f0, self.odefun)
         error = 1.0
 
         # run the ODE routine
-        t, y, ft = t0, self.y0, f0
+        t, y, ft = self.t0, self.y0, f0
         for ts in self.tstop.cpu().numpy():
             y, ft, dt, error = self.integrate(t, ts, y, ft, dt, error)
             self.save(y)
