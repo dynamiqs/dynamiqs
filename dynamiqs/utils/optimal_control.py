@@ -4,13 +4,12 @@ import torch
 from torch import Tensor
 
 from .._utils import check_time_tensor
+from ..utils.operators import _destroy_single
+from ..utils.states import fock
+from ..utils.utils import tensprod, tobra
 from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
-__all__ = [
-    'rand_complex',
-    'pwc_pulse',
-    'snap_gate',
-]
+__all__ = ['rand_complex', 'pwc_pulse', 'snap_gate', 'bdisplace', 'ecd_gate']
 
 
 def rand_complex(
@@ -179,3 +178,36 @@ def snap_gate(
     rdtype = dtype_complex_to_real(cdtype)
     phase = phase.to(dtype=rdtype, device=device)
     return torch.diag_embed(torch.exp(1j * phase))
+
+
+def bdisplace(
+    dim: int,
+    alpha: Tensor,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    # todo: doc
+    # todo: integrate with dynamiqs.utils.utils.displace?
+    cdtype = get_cdtype(dtype)
+    a = _destroy_single(dim, dtype=cdtype, device=device)
+    alpha = alpha.to(dtype=cdtype, device=device)
+    return torch.stack([torch.matrix_exp(x * a.mH - x.conj() * a) for x in alpha])
+
+
+def ecd_gate(
+    dim: int,
+    alpha: Tensor,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    # todo: doc
+    # \mathrm{ECD}(\alpha) = D(\alpha/2)\ket{e}\bra{g} + D(-\alpha/2)\ket{g}\bra{e}
+    # alpha: tensor of displacements, with shape (n)
+    # --> (n, 2*dim, 2*dim)
+    g = fock(2, 0, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
+    e = fock(2, 1, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
+    disp_plus = bdisplace(dim, alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
+    disp_minus = bdisplace(dim, -alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
+    return tensprod(disp_plus, e @ tobra(g)) + tensprod(disp_minus, g @ tobra(e))
