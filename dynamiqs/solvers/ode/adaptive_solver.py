@@ -10,7 +10,7 @@ from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like, tqdm
-from .adjoint_autograd import AdjointAdaptiveAutograd
+from .adjoint_autograd import AdjointAutograd
 
 
 class AdaptiveSolver(AutogradSolver):
@@ -169,7 +169,17 @@ class AdaptiveSolver(AutogradSolver):
 
 class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
     def run_adjoint(self):
-        AdjointAdaptiveAutograd.apply(self, self.y0, *self.options.params)
+        AdjointAutograd.apply(self, self.y0, *self.options.params)
+
+    def init_augmented(
+        self, t0: float, y: Tensor, a: Tensor
+    ) -> tuple[Tensor, Tensor, float, float]:
+        f0, l0 = self.odefun_augmented(t0, y, a)
+        dt_y = self.init_tstep(t0, y, f0, self.odefun_backward)
+        dt_a = self.init_tstep(t0, a, l0, self.odefun_adjoint)
+        dt = min(dt_y, dt_a)
+        error = 1.0
+        return f0, l0, dt, error
 
     def integrate_augmented(
         self,
