@@ -86,7 +86,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
     def integrate_augmented(
         self, t0: float, t1: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]
     ) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
-        """Integrate the augmented ODE from time `t0` to `t1`."""
+        """Integrate the augmented ODE from time `t0` to `t1`, with `t0` < `t1` < 0."""
         # define time values
         num_times = round((t1 - t0) / self.dt) + 1
         times = torch.linspace(t0, t1, num_times)
