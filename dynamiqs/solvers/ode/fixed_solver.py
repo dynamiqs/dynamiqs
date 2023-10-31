@@ -28,15 +28,22 @@ class FixedSolver(AutogradSolver):
         """
         # assert that `tsave` values are multiples of `dt`
         if not torch.allclose(torch.round(self.tsave / self.dt), self.tsave / self.dt):
+            where_diff = torch.round(self.tsave / self.dt) != self.tsave / self.dt
+            idx_diff = torch.nonzero(where_diff)[0]
             raise ValueError(
-                'Every value of `tsave` must be a multiple of the time step `dt` for '
-                'fixed time step ODE solvers.'
+                'For fixed time step solvers, every value of `tsave` must be a'
+                f' multiple of the time step `dt`, but `dt = {self.dt:.5e}` and'
+                f' `tsave[{idx_diff.item()}] = {self.tsave[idx_diff].item():.5e}`.'
             )
+
         # assert that `tmeas` values are multiples of `dt`
         if not torch.allclose(torch.round(self.tmeas / self.dt), self.tmeas / self.dt):
+            where_diff = torch.round(self.tmeas / self.dt) != self.tmeas / self.dt
+            idx_diff = torch.nonzero(where_diff)[0]
             raise ValueError(
-                'Every value of `tmeas` must be a multiple of the time step `dt` for '
-                'fixed time step ODE solvers.'
+                'For fixed time step SME solvers, every value of `tmeas` must be a'
+                f' multiple of the time step `dt`, but `dt = {self.dt:.5e}` and'
+                f' `tmeas[{idx_diff.item()}] = {self.tmeas[idx_diff].item():.5e}`.'
             )
 
         # define time values
