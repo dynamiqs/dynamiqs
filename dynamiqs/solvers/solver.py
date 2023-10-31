@@ -44,7 +44,7 @@ class Solver(ABC):
         self.device = self.options.device
 
         # initialize time logic
-        self.tstop = torch.cat((self.tsave, self.tmeas)).unique().sort()[0]
+        self.tstop = torch.cat((self.tsave, self.tmeas)).unique()
         self.tsave_mask = torch.isin(self.tstop, self.tsave)
         self.tmeas_mask = torch.isin(self.tstop, self.tmeas)
         self.tstop_counter = 0
