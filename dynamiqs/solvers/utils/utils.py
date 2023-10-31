@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import partial, wraps
 from math import sqrt
+from typing import Iterator
 
 import torch
 from methodtools import lru_cache
@@ -154,3 +155,8 @@ def cache(func):
         return grad_cached_func(*args, grad_enabled=torch.is_grad_enabled(), **kwargs)
 
     return wrapper
+
+
+def iteraxis(x: Tensor, axis: int = 0) -> Iterator[Tensor]:
+    for i in range(x.size(axis)):
+        yield x.select(axis, i)
