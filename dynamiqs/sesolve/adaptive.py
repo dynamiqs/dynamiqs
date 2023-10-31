@@ -9,6 +9,17 @@ class SEAdaptive(AdaptiveSolver):
         # psi: (b_H, b_psi, n, 1) -> (b_H, b_psi, n, 1)
         return -1j * self.H(t) @ psi
 
+    def odefun_adjoint(self, t: float, phi: Tensor) -> Tensor:
+        raise NotImplementedError
+
+    def odefun_backward(self, t: float, psi: Tensor) -> Tensor:
+        raise NotImplementedError
+
+    def odefun_augmented(
+        self, t: float, psi: Tensor, phi: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        raise NotImplementedError
+
 
 class SEDormandPrince5(SEAdaptive, DormandPrince5):
     pass

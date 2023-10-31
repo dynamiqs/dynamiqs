@@ -26,7 +26,7 @@ class _ODEFixedStep(Solver):
 
 
 class _ODEAdaptiveStep(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
+    SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
     def __init__(
         self,
