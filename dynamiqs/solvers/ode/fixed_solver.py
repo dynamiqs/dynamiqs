@@ -26,11 +26,17 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # assert that `tstop` values are multiples of `dt`
-        if not torch.allclose(torch.round(self.tstop / self.dt), self.tstop / self.dt):
+        # assert that `tsave` values are multiples of `dt`
+        if not torch.allclose(torch.round(self.tsave / self.dt), self.tsave / self.dt):
             raise ValueError(
-                'Every value of `tsave` (and `tmeas` for SME solvers) must be a'
-                ' multiple of the time step `dt` for fixed time step ODE solvers.'
+                'Every value of `tsave` must be a multiple of the time step `dt` for '
+                'fixed time step ODE solvers.'
+            )
+        # assert that `tmeas` values are multiples of `dt`
+        if not torch.allclose(torch.round(self.tmeas / self.dt), self.tmeas / self.dt):
+            raise ValueError(
+                'Every value of `tmeas` must be a multiple of the time step `dt` for '
+                'fixed time step ODE solvers.'
             )
 
         # define time values
@@ -138,10 +144,10 @@ class AdjointFixedAutograd(torch.autograd.Function):
         solver.run_nograd()
 
         # save results and model parameters
-        ctx.save_for_backward(solver.result.ysave)
+        ctx.save_for_backward(solver.ysave)
 
         # returning `ysave` is required for custom backward functions
-        return solver.result.ysave, solver.result.exp_save
+        return solver.ysave, solver.exp_save
 
     @staticmethod
     def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:

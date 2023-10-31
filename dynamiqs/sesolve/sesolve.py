@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import torch
+
 from .._utils import check_time_tensor, obj_type_str
 from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
@@ -173,14 +175,13 @@ def sesolve(
     check_time_tensor(tsave, arg_name='tsave')
 
     # define the solver
-    args = (H, psi0, tsave, exp_ops, options)
-    solver = SOLVER_CLASS(*args)
+    tmeas = torch.empty(0)
+    solver = SOLVER_CLASS(H, psi0, tsave, tmeas, exp_ops, options)
 
     # compute the result
-    solver.run()
+    result = solver.run()
 
     # get saved tensors and restore correct batching
-    result = solver.result
     result.ysave = result.ysave.squeeze(0, 1)
     if result.exp_save is not None:
         result.exp_save = result.exp_save.squeeze(0, 1)
