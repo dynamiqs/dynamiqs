@@ -155,8 +155,8 @@ def snap_gate(
     $$
 
     Args:
-        phase _(..., n)_: Phase for each Fock state. The tensor last dimension _n_
-            defines the Hilbert space dimension.
+        phase _(..., n)_: Phase for each Fock state. The size of the last tensor
+            dimension _n_ defines the Hilbert space dimension.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
