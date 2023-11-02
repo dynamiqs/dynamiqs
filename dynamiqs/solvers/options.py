@@ -15,13 +15,13 @@ class Options:
         self, solver: Solver, gradient: Gradient | None, options: dict[str, Any] | None
     ):
         if gradient is not None and not solver.supports_gradient(gradient):
-            supported_gradient_str = ', '.join(
-                f'`{type(x).__name__}`' for x in solver.SUPPORTED_GRADIENT
+            supported_str = ', '.join(
+                f'`{x.__name__}`' for x in solver.SUPPORTED_GRADIENT
             )
             raise ValueError(
-                f'Gradient algorithm `{type(gradient).__name__}` is not supported by '
-                f' solver `{type(solver).__name__}` (supported:'
-                f' {supported_gradient_str}).'
+                f'Gradient of type `{type(gradient).__name__}` is not supported by'
+                f' solver of type `{type(solver).__name__}` (supported gradient types:'
+                f' {supported_str}).'
             )
 
         if options is None:

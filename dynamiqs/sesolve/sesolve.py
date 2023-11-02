@@ -150,7 +150,11 @@ def sesolve(
         Dopri5: SEDormandPrince5,
     }
     if not isinstance(solver, tuple(solvers.keys())):
-        raise ValueError(f'Solver `{type(solver).__name__}` is not supported.')
+        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
+        raise ValueError(
+            f'Solver of type `{type(solver).__name__}` is not supported (supported'
+            f' solver types: {supported_str}).'
+        )
     SOLVER_CLASS = solvers[type(solver)]
 
     # check exp_ops
