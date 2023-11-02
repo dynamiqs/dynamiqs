@@ -263,20 +263,22 @@ def smesolve(
     generator.seed() if seed is None else generator.manual_seed(seed)
 
     # define the solver
-    args = (H, rho0, tsave, exp_ops, options)
-    kwargs = dict(
+    solver = SOLVER_CLASS(
+        H,
+        rho0,
+        tsave,
+        tmeas,
+        exp_ops,
+        options,
         jump_ops=jump_ops,
         etas=etas,
         generator=generator,
-        tmeas=tmeas,
     )
-    solver = SOLVER_CLASS(*args, **kwargs)
 
     # compute the result
-    solver.run()
+    result = solver.run()
 
     # get saved tensors and restore correct batching
-    result = solver.result
     result.ysave = result.ysave.squeeze(0, 1)
     if result.exp_save is not None:
         result.exp_save = result.exp_save.squeeze(0, 1)
