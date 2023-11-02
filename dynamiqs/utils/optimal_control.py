@@ -183,12 +183,39 @@ def bdisplace(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    # todo: doc
-    # todo: integrate with dynamiqs.utils.utils.displace?
+    r"""Returns batched displacement operator of complex amplitudes $\alpha$.
+
+    It is defined by
+    $$
+        D(\alpha) = \exp(\alpha a^\dag - \alpha^* a),
+    $$
+    where $a$ and $a^\dag$ are the annihilation and creation operators, respectively.
+
+    Note:
+        The main difference with [dq.displace()][dynamiqs.displace] is that the
+        argument `alpha` can be batched, and the returned tensor is batched accordingly.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        alpha _(...)_: Displacement amplitude.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(..., dim, dim)_ Displacement operator.
+
+    Examples:
+        >>> dq.bdisplace(3, torch.tensor([0.1]))
+        tensor([[[ 0.995+0.j, -0.100+0.j,  0.007+0.j],
+                 [ 0.100+0.j,  0.985+0.j, -0.141+0.j],
+                 [ 0.007+0.j,  0.141+0.j,  0.990+0.j]]])
+        >>> dq.bdisplace(3, torch.tensor([0.1, 0.2])).shape
+        torch.Size([2, 3, 3])
+    """
     cdtype = get_cdtype(dtype)
     a = _destroy_single(dim, dtype=cdtype, device=device)
-    alpha = alpha.to(dtype=cdtype, device=device)
-    return torch.stack([torch.matrix_exp(x * a.mH - x.conj() * a) for x in alpha])
+    alpha = alpha.to(dtype=cdtype, device=device)[..., None, None]
+    return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
 
 
 def ecd_gate(
@@ -198,10 +225,36 @@ def ecd_gate(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    # todo: doc
-    # \mathrm{ECD}(\alpha) = D(\alpha/2)\ket{e}\bra{g} + D(-\alpha/2)\ket{g}\bra{e}
-    # alpha: tensor of displacements, with shape (n)
-    # --> (n, 2*dim, 2*dim)
+    r"""Returns an ECD gate.
+
+    The *echoed conditional displacement* (ECD) gate displaces an oscillator depending
+    on a coupled two-level system state. It is defined by
+    $$
+       \mathrm{ECD}(\alpha) = D(\alpha/2)\ket{e}\bra{g} + D(-\alpha/2)\ket{g}\bra{e}.
+    $$,
+    where $\ket{g}=\ket0$ and $\ket{e}=\ket1$ are the ground and excited states of the
+    two-level system.
+
+    Args:
+        dim: Dimension of the Hilbert space.
+        alpha _(...)_: Displacement amplitude.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(..., dim*2, dim*2)_ ECD gate operator.
+
+    Examples:
+        >>> dq.ecd_gate(3, torch.tensor([0.1]))
+        tensor([[[ 0.000+0.j,  0.999+0.j,  0.000+0.j,  0.050+0.j,  0.000+0.j,  0.002+0.j],
+                 [ 0.999+0.j,  0.000+0.j, -0.050+0.j,  0.000+0.j,  0.002+0.j,  0.000+0.j],
+                 [ 0.000+0.j, -0.050+0.j,  0.000+0.j,  0.996+0.j,  0.000+0.j,  0.071+0.j],
+                 [ 0.050+0.j,  0.000+0.j,  0.996+0.j,  0.000+0.j, -0.071+0.j,  0.000+0.j],
+                 [ 0.000+0.j,  0.002+0.j,  0.000+0.j, -0.071+0.j,  0.000+0.j,  0.998+0.j],
+                 [ 0.002+0.j,  0.000+0.j,  0.071+0.j,  0.000+0.j,  0.998+0.j,  0.000+0.j]]])
+        >>> dq.ecd_gate(3, torch.tensor([0.1, 0.2])).shape
+        torch.Size([2, 6, 6])
+    """  # noqa: E501
     g = fock(2, 0, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
     e = fock(2, 1, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
     disp_plus = bdisplace(dim, alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)

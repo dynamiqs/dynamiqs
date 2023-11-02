@@ -63,3 +63,5 @@
         - [rand_complex](utils/optimal_control/rand_complex.md)
         - [pwc_pulse](utils/optimal_control/pwc_pulse.md)
         - [snap_gate](utils/optimal_control/snap_gate.md)
+        - [bdisplace](utils/optimal_control/bdisplace.md)
+        - [ecd_gate](utils/optimal_control/ecd_gate.md)
