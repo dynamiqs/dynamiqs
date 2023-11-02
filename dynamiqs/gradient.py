@@ -12,7 +12,7 @@ class Autograd(Gradient):
 
 
 class Adjoint(Gradient):
-    def __init__(self, *, parameters: tuple[nn.Parameter, ...] | None = None):
+    def __init__(self, *, parameters: tuple[nn.Parameter, ...]):
         """
 
         Args:
