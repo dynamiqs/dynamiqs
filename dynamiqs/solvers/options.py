@@ -43,22 +43,6 @@ class Options:
                 f'Attribute `{name}` not found in `{type(self).__name__}`.'
             )
 
-    # def as_dict(self) -> dict[str, Any]:
-    #     return {
-    #         'gradient_alg': self.gradient_alg,
-    #         'save_states': self.save_states,
-    #         'verbose': self.verbose,
-    #         'dtype': self.cdtype,
-    #         'device': self.device,
-    #     }
-
-    # def __repr__(self) -> str:
-    #     return self.__str__()
-
-    # def __str__(self) -> str:
-    #     attributes_str = ', '.join(f'{k}={v}' for k, v in self.as_dict().items())
-    #     return f'{type(self).__name__}({attributes_str})'
-
 
 class SharedOptions:
     def __init__(
