@@ -13,10 +13,6 @@ class Autograd(Gradient):
 
 class Adjoint(Gradient):
     def __init__(self, *, parameters: tuple[nn.Parameter, ...]):
-        """
-
-        Args:
-            parameters (tuple of nn.Parameter): Parameters with respect to which
-                gradients are computed during the adjoint state backward pass.
-        """
+        # parameters (tuple of nn.Parameter): Parameters with respect to which
+        #     gradients are computed during the adjoint state backward pass.
         self.parameters = parameters

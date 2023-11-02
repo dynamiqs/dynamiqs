@@ -69,18 +69,14 @@ class SharedOptions:
         dtype: torch.complex64 | torch.complex128 | None = None,
         device: str | torch.device | None = None,
     ):
-        """...
-
-        Args:
-            save_states (bool, optional): If `True`, the state is saved at every
-                time value. If `False`, only the final state is stored and returned.
-                Defaults to `True`.
-            dtype (torch.dtype, optional): Complex data type to which all complex-valued
-                tensors are converted. `tsave` is also converted to a real data type of
-                the corresponding precision.
-            device (string or torch.device, optional): Device on which the tensors are
-                stored.
-        """
+        # save_states (bool, optional): If `True`, the state is saved at every
+        #     time value. If `False`, only the final state is stored and returned.
+        #     Defaults to `True`.
+        # dtype (torch.dtype, optional): Complex data type to which all complex-valued
+        #     tensors are converted. `tsave` is also converted to a real data type of
+        #     the corresponding precision.
+        # device (string or torch.device, optional): Device on which the tensors are
+        #     stored.
         self.save_states = save_states
         self.verbose = verbose
         self.cdtype = get_cdtype(dtype)
