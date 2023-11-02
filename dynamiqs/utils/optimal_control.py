@@ -9,7 +9,7 @@ from ..utils.states import fock
 from ..utils.utils import tensprod, tobra
 from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
-__all__ = ['rand_complex', 'pwc_pulse', 'snap_gate', 'bdisplace', 'ecd_gate']
+__all__ = ['rand_complex', 'pwc_pulse', 'snap_gate', 'bdisplace', 'cd_gate']
 
 
 def rand_complex(
@@ -218,19 +218,19 @@ def bdisplace(
     return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
 
 
-def ecd_gate(
+def cd_gate(
     dim: int,
     alpha: Tensor,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns an ECD gate.
+    r"""Returns a conditional displacement gate.
 
-    The *echoed conditional displacement* (ECD) gate displaces an oscillator depending
-    on a coupled two-level system state. It is defined by
+    The *conditional displacement* (CD) gate displaces an oscillator conditioned on
+    the state of a coupled two-level system state. It is defined by
     $$
-       \mathrm{ECD}(\alpha) = D(\alpha/2)\ket{e}\bra{g} + D(-\alpha/2)\ket{g}\bra{e}.
+       \mathrm{CD}(\alpha) = D(\alpha/2)\ket{g}\bra{g} + D(-\alpha/2)\ket{e}\bra{e}.
     $$,
     where $\ket{g}=\ket0$ and $\ket{e}=\ket1$ are the ground and excited states of the
     two-level system.
@@ -245,18 +245,18 @@ def ecd_gate(
         _(..., dim*2, dim*2)_ ECD gate operator.
 
     Examples:
-        >>> dq.ecd_gate(3, torch.tensor([0.1]))
-        tensor([[[ 0.000+0.j,  0.999+0.j,  0.000+0.j,  0.050+0.j,  0.000+0.j,  0.002+0.j],
-                 [ 0.999+0.j,  0.000+0.j, -0.050+0.j,  0.000+0.j,  0.002+0.j,  0.000+0.j],
-                 [ 0.000+0.j, -0.050+0.j,  0.000+0.j,  0.996+0.j,  0.000+0.j,  0.071+0.j],
+        >>> dq.cd_gate(3, torch.tensor([0.1]))
+        tensor([[[ 0.999+0.j,  0.000+0.j, -0.050+0.j,  0.000+0.j,  0.002+0.j,  0.000+0.j],
+                 [ 0.000+0.j,  0.999+0.j,  0.000+0.j,  0.050+0.j,  0.000+0.j,  0.002+0.j],
                  [ 0.050+0.j,  0.000+0.j,  0.996+0.j,  0.000+0.j, -0.071+0.j,  0.000+0.j],
-                 [ 0.000+0.j,  0.002+0.j,  0.000+0.j, -0.071+0.j,  0.000+0.j,  0.998+0.j],
-                 [ 0.002+0.j,  0.000+0.j,  0.071+0.j,  0.000+0.j,  0.998+0.j,  0.000+0.j]]])
-        >>> dq.ecd_gate(3, torch.tensor([0.1, 0.2])).shape
+                 [ 0.000+0.j, -0.050+0.j,  0.000+0.j,  0.996+0.j,  0.000+0.j,  0.071+0.j],
+                 [ 0.002+0.j,  0.000+0.j,  0.071+0.j,  0.000+0.j,  0.998+0.j,  0.000+0.j],
+                 [ 0.000+0.j,  0.002+0.j,  0.000+0.j, -0.071+0.j,  0.000+0.j,  0.998+0.j]]])
+        >>> dq.cd_gate(3, torch.tensor([0.1, 0.2])).shape
         torch.Size([2, 6, 6])
     """  # noqa: E501
     g = fock(2, 0, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
     e = fock(2, 1, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
     disp_plus = bdisplace(dim, alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
     disp_minus = bdisplace(dim, -alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
-    return tensprod(disp_plus, e @ tobra(g)) + tensprod(disp_minus, g @ tobra(e))
+    return tensprod(disp_plus, g @ tobra(g)) + tensprod(disp_minus, e @ tobra(e))

@@ -64,4 +64,4 @@
         - [pwc_pulse](utils/optimal_control/pwc_pulse.md)
         - [snap_gate](utils/optimal_control/snap_gate.md)
         - [bdisplace](utils/optimal_control/bdisplace.md)
-        - [ecd_gate](utils/optimal_control/ecd_gate.md)
+        - [cd_gate](utils/optimal_control/cd_gate.md)
