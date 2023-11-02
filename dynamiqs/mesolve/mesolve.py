@@ -52,10 +52,6 @@ def mesolve(
         solve multiple master equations concurrently. All other arguments are common
         to every batch.
 
-    Quote: Computing gradient
-        `mesolve` can be differentiated through using PyTorch autograd library with
-        `gradient="autograd"`, or the adjoint state method with `gradient="adjoint"`.
-
     Args:
         H _(array-like or function, shape (n, n) or (bH, n, n))_: Hamiltonian. For
             time-dependent problems, provide a function with signature
@@ -68,28 +64,31 @@ def mesolve(
             saved. The master equation is solved from `t = 0.0` to `t = tsave[-1]`.
         exp_ops _(list of 2d array-like, each with shape (n, n), optional)_: List of
             operators for which the expectation value is computed. Defaults to `None`.
-        solver _(str, optional)_: Solver for the differential equation integration (see
-            the list below). Defaults to `"dopri5"`.
-        gradient _(str, optional)_: Algorithm used to compute the gradient. Can be
-            either `None`, `"autograd"` (PyTorch autograd library) or `"adjoint"`
-            (differentiation with the adjoint state method). Defaults to `None`.
-        options _(dict, optional)_: Solver options (see the list below). Defaults to
+        solver _(Solver, optional)_: Solver for the differential equation integration
+            (see the list below). Defaults to `dq.solver.Dopri5()`.
+        gradient _(Gradient, optional)_: Algorithm used to compute the gradient (see
+            the list below). Defaults to `None`.
+        options _(dict, optional)_: Generic options (see the list below). Defaults to
             `None`.
 
     Note-: Available solvers
-      - `dopri5`: Dormand-Prince method of order 5 (adaptive step size ODE solver).
-      - `euler`: Euler method (fixed step size ODE solver), not recommended
-        except for testing purposes.
-      - `rouchon1`: Rouchon method of order 1 (fixed step size ODE solver).
-      - `rouchon2`: Rouchon method of order 2 (fixed step size ODE solver).
-      - `propagator`: Explicitly compute the Liouvillian exponential to evolve
-        the state between each time in `tsave`. Not recommended for systems of large
-        dimension, due to the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian
-        exponential.
+      - `dq.solver.Dopri5`: Dormand-Prince method of order 5 (adaptive step size ODE
+         solver).
+      - `dq.solver.Euler`: Euler method (fixed step size ODE solver), not recommended
+         except for testing purposes.
+      - `dq.solver.Rouchon1`: Rouchon method of order 1 (fixed step size ODE solver).
+      - `dq.solver.Rouchon2`: Rouchon method of order 2 (fixed step size ODE solver).
+      - `dq.solver.Propagator`: Explicitly compute the Liouvillian exponential to evolve
+         the state between each time in `tsave`. Not recommended for systems of large
+         dimension, due to the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian
+         exponential.
+
+    Note-: Available gradient algorithms
+        - `None`: No gradient.
+        - `dq.gradient.Autograd`: PyTorch autograd library
+        - `dq.gradient.Adjoint`: Differentiation with the adjoint state method.
 
     Note-: Available options
-        Common to all solvers:
-
         - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
             time in `tsave`. If `False`, only the final state is returned. Defaults to
             `True`.
@@ -102,41 +101,8 @@ def mesolve(
         - **device** _(torch.device, optional)_ – Device on which the tensors are
             stored. Defaults to the device set by `torch.set_default_device`.
 
-        Required for fixed step size ODE solvers (`euler`, `rouchon1`, `rouchon2`):
-
-        - **dt** _(float)_ – Numerical step size of integration.
-
-        Optional for adaptive step size ODE solvers (`dopri5`):
-
-        - **atol** _(float, optional)_ – Absolute tolerance. Defaults to `1e-8`.
-        - **rtol** _(float, optional)_ – Relative tolerance. Defaults to `1e-6`.
-        - **max_steps** _(int, optional)_ – Maximum number of steps. Defaults to `1e5`.
-        - **safety_factor** _(float, optional)_ – Safety factor in the step size
-            prediction. Defaults to `0.9`.
-        - **min_factor** _(float, optional)_ – Minimum factor by which the step size can
-            decrease in a single step. Defaults to `0.2`.
-        - **max_factor** _(float, optional)_ – Maximum factor by which the step size can
-            increase in a single step. Defaults to `5.0`.
-
-        Optional for solver `rouchon1`:
-
-        - **sqrt_normalization** _(bool, optional)_ – If `True`, the Kraus map is
-            renormalized at every step to preserve the trace of the density matrix.
-            Recommended only for time-independent problems. Ideal for stiff problems.
-            Defaults to `False`.
-
-        Required for `gradient="adjoint"`:
-
-        - **parameters** _(tuple of nn.Parameter)_ – Parameters with respect to which
-            the gradient is computed.
-
-    Warning: Fixed step size ODE solvers
-        For ODE solvers with fixed step sizes, the times in `tsave` must be multiples
-        of the numerical step size of integration `dt` defined in the `options`
-        argument.
-
     Returns:
-        Object holding the results of the master equation integration. It has the
+        Object holding the results of the Schrödinger equation integration. It has the
             following attributes:
 
             - **states** _(Tensor)_ – Saved states with shape
@@ -145,11 +111,12 @@ def mesolve(
                 _(bH?, brho?, len(exp_ops), len(tsave))_.
             - **tsave** or **times** _(Tensor)_ – Times for which states and expectation
                 values were saved.
-            - **solver_str** (str): Solver used.
             - **start_datetime** _(datetime)_ – Start date and time of the integration.
             - **end_datetime** _(datetime)_ – End date and time of the integration.
             - **total_time** _(timedelta)_ – Total duration of the integration.
-            - **options** _(dict)_ – Solver options passed by the user.
+            - **solver** (Solver) –  Solver used.
+            - **gradient** (Gradient) – Gradient used.
+            - **options** _(dict)_  – Options used.
 
     Warning: Time-dependent jump operators
         Time-dependent jump operators are not yet supported. If this is a required
