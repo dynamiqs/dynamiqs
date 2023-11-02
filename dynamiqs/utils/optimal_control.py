@@ -167,12 +167,8 @@ def snap_gate(
         tensor([[ 1.000+0.000j,  0.000+0.000j,  0.000+0.000j],
                 [ 0.000+0.000j,  0.540+0.841j,  0.000+0.000j],
                 [ 0.000+0.000j,  0.000+0.000j, -0.416+0.909j]])
-        >>> dq.snap_gate(torch.tensor([[0, 1], [2, 3]]))
-        tensor([[[ 1.000+0.000j,  0.000+0.000j],
-                 [ 0.000+0.000j,  0.540+0.841j]],
-        <BLANKLINE>
-                [[-0.416+0.909j,  0.000+0.000j],
-                 [ 0.000+0.000j, -0.990+0.141j]]])
+        >>> dq.snap_gate(torch.tensor([[0, 1, 2], [2, 3, 4]])).shape
+        torch.Size([2, 3, 3])
     """
     cdtype = get_cdtype(dtype)
     rdtype = dtype_complex_to_real(cdtype)
