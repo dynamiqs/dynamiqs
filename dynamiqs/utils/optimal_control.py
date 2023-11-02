@@ -228,21 +228,22 @@ def cd_gate(
     r"""Returns a conditional displacement gate.
 
     The *conditional displacement* (CD) gate displaces an oscillator conditioned on
-    the state of a coupled two-level system state. It is defined by
+    the state of a coupled two-level system (TLS) state. It is defined by
     $$
-       \mathrm{CD}(\alpha) = D(\alpha/2)\ket{g}\bra{g} + D(-\alpha/2)\ket{e}\bra{e}.
-    $$,
+       \mathrm{CD}(\alpha) = D(\alpha/2)\ket{g}\bra{g} + D(-\alpha/2)\ket{e}\bra{e},
+    $$
     where $\ket{g}=\ket0$ and $\ket{e}=\ket1$ are the ground and excited states of the
-    two-level system.
+    TLS, respectively.
 
     Args:
-        dim: Dimension of the Hilbert space.
+        dim: Dimension of the oscillator Hilbert space.
         alpha _(...)_: Displacement amplitude.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
-        _(..., dim*2, dim*2)_ ECD gate operator.
+        _(..., n, n)_ ECD gate operator (acting on the oscillator + TLS system of
+            dimension _n = 2 x dim_).
 
     Examples:
         >>> dq.cd_gate(3, torch.tensor([0.1]))
