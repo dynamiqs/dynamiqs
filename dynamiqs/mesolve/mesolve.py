@@ -102,7 +102,7 @@ def mesolve(
             stored. Defaults to the device set by `torch.set_default_device`.
 
     Returns:
-        Object holding the results of the Schrödinger equation integration. It has the
+        Object holding the results of the master equation integration. It has the
             following attributes:
 
             - **states** _(Tensor)_ – Saved states with shape
