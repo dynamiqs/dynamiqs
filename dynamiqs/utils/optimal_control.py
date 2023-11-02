@@ -242,7 +242,7 @@ def cd_gate(
         device: Device of the returned tensor.
 
     Returns:
-        _(..., n, n)_ ECD gate operator (acting on the oscillator + TLS system of
+        _(..., n, n)_ CD gate operator (acting on the oscillator + TLS system of
             dimension _n = 2 x dim_).
 
     Examples:
