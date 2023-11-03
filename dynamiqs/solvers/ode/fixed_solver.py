@@ -11,6 +11,18 @@ from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
 
 
+def _assert_multiple_of_dt(dt: float, times: Tensor, name: str):
+    # assert that `times` values are multiples of `dt`
+    is_multiple = torch.isclose(torch.round(times / dt), times / dt)
+    if not torch.all(is_multiple):
+        idx_diff = torch.where(~is_multiple)[0][0].item()
+        raise ValueError(
+            f'For fixed time step solvers, every value of `{name}` must be a multiple'
+            f' of the time step `dt`, but `dt={dt:.3e}` and'
+            f' `{name}[{idx_diff}]={times[idx_diff].item():.3e}`.'
+        )
+
+
 class FixedSolver(AutogradSolver):
     def __init__(self, *args):
         super().__init__(*args)
@@ -26,18 +38,9 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # assert that `tsave` values are multiples of `dt`
-        if not torch.allclose(torch.round(self.tsave / self.dt), self.tsave / self.dt):
-            raise ValueError(
-                'Every value of `tsave` must be a multiple of the time step `dt` for '
-                'fixed time step ODE solvers.'
-            )
-        # assert that `tmeas` values are multiples of `dt`
-        if not torch.allclose(torch.round(self.tmeas / self.dt), self.tmeas / self.dt):
-            raise ValueError(
-                'Every value of `tmeas` must be a multiple of the time step `dt` for '
-                'fixed time step ODE solvers.'
-            )
+        # assert that `tsave` and `tmeas` values are multiples of `dt`
+        _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
+        _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
 
         # define time values
         num_times = torch.round(self.tstop[-1] / self.dt).int() + 1
