@@ -95,7 +95,9 @@ class SolverTester(ABC):
 
         # === test gradients depending on final ysave
         loss_state = system.loss_state(result.ysave[-1])
-        grads_state = torch.autograd.grad(loss_state, system.params, retain_graph=True)
+        grads_state = torch.autograd.grad(
+            loss_state, system.params, retain_graph=True, allow_unused=True
+        )
         grads_state = torch.stack(grads_state)
         true_grads_state = system.grads_state(tsave[-1])
 

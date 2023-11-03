@@ -47,12 +47,19 @@ class Cavity(ClosedSystem):
     # `exp_ops`: (2, n, n)
 
     def __init__(
-        self, *, n: int, delta: float, alpha0: float, requires_grad: bool = False
+        self,
+        *,
+        n: int,
+        delta: float,
+        alpha0: float,
+        t_end: float,
+        requires_grad: bool = False,
     ):
         # store parameters
         self.n = n
         self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
+        self.t_end = torch.as_tensor(t_end)
 
         # define gradient parameters
         self.params = (self.delta, self.alpha0)
@@ -79,8 +86,7 @@ class Cavity(ClosedSystem):
         ]
 
     def tsave(self, num_tsave: int) -> Tensor:
-        t_end = 2 * pi / self.delta  # a full rotation
-        return torch.linspace(0.0, t_end.item(), num_tsave)
+        return torch.linspace(0.0, self.t_end.item(), num_tsave)
 
     def _alpha(self, t: float) -> Tensor:
         return self.alpha0 * torch.exp(-1j * self.delta * t)
@@ -111,5 +117,85 @@ class Cavity(ClosedSystem):
         ]).detach()
 
 
-cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
-grad_cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, requires_grad=True)
+class TDQubit(ClosedSystem):
+    def __init__(
+        self, *, Omega: float, omega: float, t_end: float, requires_grad: bool = False
+    ):
+        # store parameters
+        self.Omega = torch.as_tensor(Omega).requires_grad_(requires_grad)
+        self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)
+        self.t_end = torch.as_tensor(t_end)
+
+        # define gradient parameters
+        self.parameters = (self.Omega, self.omega)
+
+        # loss operator
+        self.loss_op = dq.sigmaz()
+
+        # prepare quantum operators
+        self.exp_ops = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+
+        # prepare initial states
+        self.y0 = dq.fock(2, 0)
+
+    def H(self, t: float) -> Tensor:
+        return self.Omega * torch.cos(self.omega * t) * dq.sigmax()
+
+    def tsave(self, num_tsave: int) -> Tensor:
+        return torch.linspace(0.0, self.t_end.item(), num_tsave)
+
+    def _theta(self, t: float) -> float:
+        return self.Omega / self.omega * sin(self.omega * t)
+
+    def state(self, t: float) -> Tensor:
+        theta = self._theta(t)
+        return cos(theta) * dq.fock(2, 0) - 1j * sin(theta) * dq.fock(2, 1)
+
+    def expect(self, t: float) -> Tensor:
+        theta = self._theta(t)
+        return torch.tensor(
+            [0, -sin(2 * theta), cos(2 * theta)], dtype=theta.dtype.to_complex()
+        )
+
+    def grads_state(self, t: float) -> Tensor:
+        theta = self._theta(t)
+        # gradients of theta
+        dtheta_dOmega = sin(self.omega * t) / self.omega
+        dtheta_domega = self.Omega * t * cos(
+            self.omega * t
+        ) / self.omega - self.Omega / self.omega**2 * sin(self.omega * t)
+        # gradients of sigma_z
+        grad_Omega = -2 * dtheta_dOmega * sin(2 * theta)
+        grad_omega = -2 * dtheta_domega * sin(2 * theta)
+        return torch.tensor([grad_Omega, grad_omega]).detach()
+
+    def grads_expect(self, t: float) -> Tensor:
+        theta = self._theta(t)
+        # gradients of theta
+        dtheta_dOmega = sin(self.omega * t) / self.omega
+        dtheta_domega = self.Omega * t * cos(
+            self.omega * t
+        ) / self.omega - self.Omega / self.omega**2 * sin(self.omega * t)
+        # gradients of sigma_z
+        grad_z_Omega = -2 * dtheta_dOmega * sin(2 * theta)
+        grad_z_omega = -2 * dtheta_domega * sin(2 * theta)
+        # gradients of sigma_y
+        grad_y_Omega = -2 * dtheta_dOmega * cos(2 * theta)
+        grad_y_omega = -2 * dtheta_domega * cos(2 * theta)
+        # gradients of sigma_x
+        grad_x_Omega = 0
+        grad_x_omega = 0
+        return torch.tensor(
+            [
+                [grad_x_Omega, grad_x_omega],
+                [grad_y_Omega, grad_y_omega],
+                [grad_z_Omega, grad_z_omega],
+            ]
+        ).detach()
+
+
+cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0)
+grad_cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True)
+
+tdqubit = TDQubit(Omega=3.0, omega=10.0, t_end=1.0)
+grad_tdqubit = TDQubit(Omega=3.0, omega=10.0, t_end=1.0, requires_grad=True)
