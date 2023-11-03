@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Literal
+
 from .gradient import Adjoint, Autograd, Gradient
 
 
@@ -53,13 +57,18 @@ class Euler(_ODEFixedStep):
 class Rouchon1(_ODEFixedStep):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
-    def __init__(self, *, dt: float, normalize: bool = True):
-        # normalize: If `True`, the scheme is made trace-preserving (up to machine
-        # precision) by renormalizing the Kraus map applied at each time step. Ideal
-        # for stiff problems. For time-independent problem the Kraus map is normalized
-        # with a matrix square root. For time-dependent problems the Kraus map is
-        # normalized with a Cholesky decomposition at every time step.
-        # at every step to preserve the trace of the density matrix.
+    def __init__(
+        self, *, dt: float, normalize: Literal['sqrt', 'cholesky'] | None = None
+    ):
+        # normalize: The default scheme is trace-preserving at first order only. This
+        # parameter sets the normalisation behaviour:
+        # - `None`: The scheme is not normalized.
+        # - `'sqrt'`: The Kraus map is renormalized with a matrix square root. Ideal
+        #   for stiff problems, recommended for time-independent problems.
+        # - `cholesky`: The Kraus map is renormalized at each time step using a Cholesky
+        #   decomposition. Ideal for stiff problems, recommended for time-dependent
+        #   problems.
+
         super().__init__(dt=dt)
         self.normalize = normalize
 
