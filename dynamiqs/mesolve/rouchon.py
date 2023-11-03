@@ -24,14 +24,14 @@ class MERouchon(MESolver, AdjointFixedSolver):
 
 
 class MERouchon1(MERouchon):
-    @cache
+    @cache(maxsize=2)
     def R(self, M0: Tensor, dt: float) -> Tensor:
         # `R` is close to identity but not exactly, we inverse it to normalize the
         # Kraus map in order to have a trace-preserving scheme
         # -> (b_H, 1, n, n)
         return M0.mH @ M0 + dt * self.sum_LdagL
 
-    @cache
+    @cache(maxsize=2)
     def Ms(self, Hnh: Tensor, dt: float) -> tuple(Tensor, Tensor):
         # Kraus operators
         # -> (b_H, 1, n, n), (1, len(L), n, n)
@@ -48,7 +48,7 @@ class MERouchon1(MERouchon):
 
         return M0, M1s
 
-    @cache
+    @cache(maxsize=2)
     def T(self, R: Tensor) -> Tensor:
         # we normalize the map at each time step by inverting `R` using its Cholesky
         # decomposition `R = T @ T.mT`
