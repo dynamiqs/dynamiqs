@@ -5,7 +5,9 @@ from typing import Any
 import torch
 
 from .._utils import check_time_tensor, obj_type_str
-from ..solvers.options import Euler, Rouchon1
+from ..gradient import Gradient
+from ..solver import Euler, Rouchon1, Solver
+from ..solvers.options import Options
 from ..solvers.result import Result
 from ..solvers.utils import batch_H, batch_y0, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
@@ -25,8 +27,8 @@ def smesolve(
     tmeas: ArrayLike | None = None,
     ntrajs: int = 1,
     seed: int | None = None,
-    solver: str = '',
-    gradient: str | None = None,
+    solver: Solver | None = None,
+    gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
 ) -> Result:
     r"""Solve the diffusive stochastic master equation (SME).
@@ -90,10 +92,6 @@ def smesolve(
         Both the Hamiltonian `H` and the initial density matrix `rho0` can be batched to
         solve multiple SMEs concurrently. All other arguments are common to every batch.
 
-    Quote: Computing gradient
-        `smesolve` can be differentiated through using PyTorch autograd library with
-        `gradient="autograd"`.
-
     Args:
         H _(array-like or function, shape (n, n) or (bH, n, n))_: Hamiltonian. For
             time-dependent problems, provide a function with signature
@@ -118,46 +116,39 @@ def smesolve(
             sample the Wiener processes. Defaults to `None`, in which case the generator
             is seeded using a non-deterministic random number (see
             [`torch.Generator.seed()`](https://pytorch.org/docs/stable/generated/torch.Generator.html#torch.Generator.seed)).
-        solver _(str, optional)_: Solver for the SME integration (see the list below).
-            Defaults to `""` (no default solver, you have to specify one).
-        gradient _(str, optional)_: Algorithm used to compute the gradient. Can be
-            either `None` or `"autograd"` (PyTorch autograd library). Defaults to
-            `None`.
-        options _(dict, optional)_: Solver options (see the list below). Defaults to
+        solver _(Solver, optional)_: Solver for the SME integration (see the list
+            below). Defaults to `None`.
+        gradient _(Gradient, optional)_: Algorithm used to compute the gradient (see
+            the list below). Defaults to `None`.
+        options _(dict, optional)_: Generic options (see the list below). Defaults to
             `None`.
 
     Note-: Available solvers
-      - `euler`: Euler method (fixed step size SDE solver), not recommended
-        except for testing purposes.
-      - `rouchon1`: Rouchon method of order 1 (fixed step size SDE solver).
+      - `dq.solver.Euler`: Euler method (fixed step size SDE solver), not recommended
+         except for testing purposes.
+      - `dq.solver.Rouchon1`: Rouchon method of order 1 (fixed step size SDE solver).
+
+    Note-: Available gradient algorithms
+        - `None`: No gradient.
+        - `dq.gradient.Autograd`: PyTorch autograd library
+        - `dq.gradient.Adjoint`: Differentiation with the adjoint state method.
 
     Note-: Available options
-        Common to all solvers:
-
         - **save_states** _(bool, optional)_ – If `True`, the state is saved at every
             time in `tsave`. If `False`, only the final state is returned. Defaults to
             `True`.
         - **verbose** _(bool, optional)_ – If `True`, print a progress bar during the
             integration. Defaults to `True`.
         - **dtype** _(torch.dtype, optional)_ – Complex data type to which all
-            complex-valued tensors are converted. `tsave` is converted to a real data
-            type of the corresponding precision. Defaults to the complex data type set
-            by `torch.set_default_dtype`.
+            complex-valued tensors are converted. `tsave` and `tmeas` are converted to a
+            real data type of the corresponding precision. Defaults to the complex data
+            type set by `torch.set_default_dtype`.
         - **device** _(torch.device, optional)_ – Device on which the tensors are
             stored. Defaults to the device set by `torch.set_default_device`.
 
-        Required for fixed step size SDE solvers (`euler`, `rouchon1`):
-
-        - **dt** _(float)_ – Numerical step size of integration.
-
-    Warning: Fixed step size SDE solvers
-        For SDE solvers with fixed step sizes, the times in `tsave` and `tmeas` must be
-        multiples of the numerical step size of integration `dt` defined in the
-        `options` argument.
-
     Returns:
-        Object holding the results of the SME integration. It has the following
-            attributes:
+        Object holding the results of the stochastic master equation integration. It has
+            the following attributes:
 
             - **states** _(Tensor)_ – Saved states with shape
                 _(bH?, brho?, ntrajs, len(tsave), n, n)_.
@@ -170,11 +161,12 @@ def smesolve(
                 values were saved.
             - **tmeas** _(Tensor)_ – Time intervals for which measured signals were
                 averaged.
-            - **solver_str** (str): Solver used.
             - **start_datetime** _(datetime)_ – Start date and time of the integration.
             - **end_datetime** _(datetime)_ – End date and time of the integration.
             - **total_time** _(timedelta)_ – Total duration of the integration.
-            - **options** _(dict)_ – Solver options passed by the user.
+            - **solver** (Solver) –  Solver used.
+            - **gradient** (Gradient) – Gradient used.
+            - **options** _(dict)_  – Options used.
 
     Warning: Time-dependent jump operators
         Time-dependent jump operators are not yet supported. If this is a required
@@ -187,22 +179,26 @@ def smesolve(
     #    - meas_save: (b_H?, b_rho0?, ntrajs, len(meas_ops), len(tmeas) - 1)
 
     # default solver
-    if solver == '':
+    if solver is None:
         raise ValueError(
             'No default solver yet, please specify one using the `solver` argument.'
         )
+
     # options
-    if options is None:
-        options = {}
-    options['gradient_alg'] = gradient
-    if solver == 'euler':
-        options = Euler(**options)
-        SOLVER_CLASS = SMEEuler
-    elif solver == 'rouchon1':
-        options = Rouchon1(**options)
-        SOLVER_CLASS = SMERouchon1
-    else:
-        raise ValueError(f'Solver "{solver}" is not supported.')
+    options = Options(solver=solver, gradient=gradient, options=options)
+
+    # solver class
+    solvers = {
+        Euler: SMEEuler,
+        Rouchon1: SMERouchon1,
+    }
+    if not isinstance(solver, tuple(solvers.keys())):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
+        raise ValueError(
+            f'Solver of type `{type(solver).__name__}` is not supported (supported'
+            f' solver types: {supported_str}).'
+        )
+    SOLVER_CLASS = solvers[type(solver)]
 
     # check jump_ops
     if not isinstance(jump_ops, list):

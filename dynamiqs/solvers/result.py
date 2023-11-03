@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from torch import Tensor
 
+from ..gradient import Gradient
+from ..solver import Solver
 from .options import Options
 
 
@@ -35,7 +38,7 @@ class Result:
         meas_save: Tensor | None = None,
         tmeas: Tensor | None = None,
     ):
-        self.options = options
+        self._options = options
         self.ysave = ysave
         self.tsave = tsave
         self.exp_save = exp_save
@@ -43,6 +46,18 @@ class Result:
         self.tmeas = tmeas
         self.start_time: float | None = None
         self.end_time: float | None = None
+
+    @property
+    def solver(self) -> Solver:
+        return self._options.solver
+
+    @property
+    def gradient(self) -> Gradient:
+        return self._options.gradient
+
+    @property
+    def options(self) -> dict[str, Any]:
+        return self._options.options
 
     @property
     def states(self) -> Tensor:
@@ -65,10 +80,6 @@ class Result:
         return self.meas_save
 
     @property
-    def solver_str(self) -> str:
-        return self.options.__class__.__name__
-
-    @property
     def start_datetime(self) -> datetime | None:
         if self.start_time is None:
             return None
@@ -86,20 +97,23 @@ class Result:
             return None
         return self.end_datetime - self.start_datetime
 
-    def __str__(self):
-        tmp = (
-            '==== Result ====\n'
-            f'Method       : {self.solver_str}\n'
-            f'Start        : {self.start_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
-            f'End          : {self.end_datetime.strftime("%Y-%m-%d %H:%M:%S")}\n'
-            f'Total time   : {self.total_time.total_seconds():.2f} s\n'
-            f'states       : {tensor_str(self.states)}'
-        )
-        if self.expects is not None:
-            tmp += f'\nexpects      : {tensor_str(self.expects)}'
-        if self.measurements is not None:
-            tmp += f'\nmeasurements : {tensor_str(self.measurements)}'
-        return tmp
+    def __str__(self) -> str:
+        parts = {
+            'Solver': type(self.solver).__name__,
+            'Gradient': type(self.gradient).__name__ if self.gradient else None,
+            'Start': self.start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+            'End': self.end_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+            'Total time': f'{self.total_time.total_seconds():.2f} s',
+            'States': tensor_str(self.states),
+            'Expects': tensor_str(self.expects) if self.expects else None,
+            'Measurements': (
+                tensor_str(self.measurements) if self.measurements else None
+            ),
+        }
+        parts = {k: v for k, v in parts.items() if v is not None}
+        padding = max(len(k) for k in parts.keys()) + 1
+        parts_str = '\n'.join(f'{k:<{padding}}: {v}' for k, v in parts.items())
+        return '==== Result ====\n' + parts_str
 
     def to_qutip(self) -> Result:
         raise NotImplementedError
