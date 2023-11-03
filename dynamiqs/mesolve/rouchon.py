@@ -2,18 +2,22 @@ from __future__ import annotations
 
 from math import sqrt
 
+import torch
 from torch import Tensor
+from torch.linalg import cholesky_ex as cholesky
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..solvers.utils import (
-    CallableTDTensor,
-    ConstantTDTensor,
-    cache,
-    inv_sqrtm,
-    kraus_map,
-)
+from ..solvers.utils import cache, inv_sqrtm, kraus_map
 from ..utils.utils import unit
 from .me_solver import MESolver
+
+
+def inv_mm_invmh(A: Tensor, B: Tensor) -> Tensor:
+    # -> A^-1 @ B @ A.mH^-1
+    # A must be upper triangular
+    B = torch.linalg.solve_triangular(A, B)
+    B = torch.linalg.solve_triangular(A.mH, B, upper=False, left=False)
+    return B
 
 
 class MERouchon(MESolver, AdjointFixedSolver):
@@ -24,43 +28,43 @@ class MERouchon1(MERouchon):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not self.options.sqrt_normalization:
-            # define cached operators
-            # self.M0, self.M0rev: (b_H, 1, n, n)
-            self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
-            self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
+        # forward time operators
+        # M0: (b_H, 1, n, n)
+        # M1s: (1, len(L), n, n)
+        self.M0 = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
+        self.M1s = sqrt(self.dt) * self.L
 
-            # define M1s and M1srev
-            # self.M1s: (1, len(L), n, n)
-            self.M1s = sqrt(self.dt) * self.L
-            self.M1srev = self.M1s
-        else:
-            # compute the inverse square root renormalization matrix
-            # (for time-dependent Hamiltonians, exclude the Hamiltonian from
-            # normalization)
-            # Hnh, M0, M0rev, self.S, self.Srev: (b_H, 1, n, n)
-            if isinstance(self.H, ConstantTDTensor):
-                Hnh_const = self.Hnh(0.0)
-            elif isinstance(self.H, CallableTDTensor):
-                Hnh_const = -0.5j * self.sum_LdagL
+        # reverse time operators
+        # M0rev: (b_H, 1, n, n)
+        self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
 
-            M0 = self.I - 1j * self.dt * Hnh_const
-            M0rev = self.I + 1j * self.dt * Hnh_const
-            self.S = inv_sqrtm(M0.mH @ M0 + self.dt * self.sum_LdagL)
-            self.Srev = inv_sqrtm(M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
+        if self.options.normalize:
+            # `R` is close to identity but not exactly, we inverse it to normalize the
+            # Kraus map in order to have a trace-preserving scheme
+            self.R = cache(lambda M0: M0.mH @ M0 + self.dt * self.sum_LdagL)
+            self.Rrev = cache(lambda M0rev: M0rev.mH @ M0rev - self.dt * self.sum_LdagL)
 
-            # define cached operators
-            # self.M0, self.M0rev: (b_H, 1, n, n)
-            self.M0 = cache(lambda Hnh: self.S - 1j * self.dt * Hnh @ self.S)
-            self.M0rev = cache(lambda Hnh: self.Srev + 1j * self.dt * Hnh @ self.Srev)
+            if self.H.is_constant:
+                # if H is constant, we normalize the operators once by computing
+                # `S = sqrt(R)^-1` and applying is to the `Ms` operators
+                H = self.H(0.0)
+                Hnh = self.Hnh(H)
+                M0 = self.M0(Hnh)
+                M0rev = self.M0rev(Hnh)
 
-            # define M1s and M1srev
-            # self.M1s, self.M1srev: (1, len(L), n, n)
-            self.M1s = sqrt(self.dt) * self.L @ self.S
-            self.M1srev = sqrt(self.dt) * self.L @ self.Srev
+                S = inv_sqrtm(self.R(M0))
+                Srev = inv_sqrtm(self.Rrev(M0rev))
 
-        self.M0dag = cache(lambda M0: M0.mH)  # (b_H, 1, n, n)
-        self.M1sdag = self.M1s.mH  # (1, len(L), n, n)
+                self.M0 = cache(lambda Hnh: M0 @ S)
+                self.M1s = self.M1s @ S
+                self.M0rev = cache(lambda Hnh: M0rev @ Srev)
+            else:
+                # if `H` is time-dependent, we normalize the map at each time step by
+                # inverting `R` using its Cholesky decomposition `R = T @ T.mT`
+                self.T = cache(lambda R: cholesky(R)[0])  # lower triang
+                self.Trev = cache(lambda Rrev: cholesky(Rrev, True)[0])  # upper triang
+
+        self.cholesky_normalization = self.options.normalize and not self.H.is_constant
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
@@ -80,11 +84,17 @@ class MERouchon1(MERouchon):
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
 
+        # normalize the Kraus Map
+        if self.cholesky_normalization:
+            # R, T: (b_H, 1, n, n)
+            R = self.R(M0)
+            T = self.T(R)
+            rho = inv_mm_invmh(T.mH, rho)  # T.mH^-1 @ rho @ T^-1
+
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
-        rho = unit(rho)
 
-        return rho
+        return unit(rho)
 
     def backward_augmented(
         self, t: float, rho: Tensor, phi: Tensor
@@ -104,21 +114,32 @@ class MERouchon1(MERouchon):
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
         # compute cached operators
-        # H, Hnh, M0, M0dag, M0rev: (b_H, 1, n, n)
+        # H, Hnh, M0, M0rev: (b_H, 1, n, n)
         H = self.H(t)
         Hnh = self.Hnh(H)
         M0 = self.M0(Hnh)
-        M0dag = self.M0dag(M0)
         M0rev = self.M0rev(Hnh)
 
+        # normalize the Kraus Map
+        if self.cholesky_normalization:
+            # Rrev, Trev: (b_H, 1, n, n)
+            Rrev = self.Rrev(M0rev)
+            Trev = self.Trev(Rrev)
+            rho = inv_mm_invmh(Trev.mH, rho)  # Trev.mH^-1 @ rho @ Trev^-1
+
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
-        rho = unit(rho)
+        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
 
         # compute phi(t-dt)
-        phi = kraus_map(phi, M0dag) + kraus_map(phi, self.M1sdag)
+        phi = kraus_map(phi, M0.mH) + kraus_map(phi, self.M1s.mH)
 
-        return rho, phi
+        if self.cholesky_normalization:
+            # R, T: (b_H, 1, n, n)
+            R = self.R(M0)
+            T = self.T(R)
+            phi = inv_mm_invmh(T, phi)  # T^-1 @ phi @ T.mH^-1
+
+        return unit(rho), phi
 
 
 class MERouchon2(MERouchon):

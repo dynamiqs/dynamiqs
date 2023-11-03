@@ -53,9 +53,15 @@ class Euler(_ODEFixedStep):
 class Rouchon1(_ODEFixedStep):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
-    def __init__(self, *, dt: float, sqrt_normalization: bool = False):
+    def __init__(self, *, dt: float, normalize: bool = True):
+        # normalize: If `True`, the scheme is made trace-preserving (up to machine
+        # precision) by renormalizing the Kraus map applied at each time step. Ideal
+        # for stiff problems. For time-independent problem the Kraus map is normalized
+        # with a matrix square root. For time-dependent problems the Kraus map is
+        # normalized with a Cholesky decomposition at every time step.
+        # at every step to preserve the trace of the density matrix.
         super().__init__(dt=dt)
-        self.sqrt_normalization = sqrt_normalization
+        self.normalize = normalize
 
 
 class Rouchon2(_ODEFixedStep):
