@@ -215,7 +215,7 @@ def mesolve(
     check_time_tensor(tsave, arg_name='tsave')
 
     # define the solver
-    tmeas = torch.empty(0)
+    tmeas = torch.empty(0, dtype=options.rdtype, device=options.device)
     solver = SOLVER_CLASS(H, rho0, tsave, tmeas, exp_ops, options, jump_ops=jump_ops)
 
     # compute the result
