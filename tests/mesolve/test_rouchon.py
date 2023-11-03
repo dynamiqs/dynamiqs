@@ -12,40 +12,40 @@ class TestMERouchon1(SolverTester):
         solver = Rouchon1(dt=1e-2)
         self._test_batching(leaky_cavity_8, solver)
 
-    @pytest.mark.parametrize('sqrt_normalization', [False, True])
-    def test_correctness(self, sqrt_normalization):
-        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization)
+    @pytest.mark.parametrize('normalize', [False, True])
+    def test_correctness(self, normalize):
+        solver = Rouchon1(dt=1e-3, normalize=normalize)
         self._test_correctness(
             leaky_cavity_8,
             solver,
             num_tsave=11,
             ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
+            exp_save_rtol=1e-4,
             exp_save_atol=1e-2,
         )
 
-    @pytest.mark.parametrize('sqrt_normalization', [False, True])
-    def test_autograd(self, sqrt_normalization):
-        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization)
+    @pytest.mark.parametrize('normalize', [False, True])
+    def test_autograd(self, normalize):
+        solver = Rouchon1(dt=1e-3, normalize=normalize)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
             Autograd(),
             num_tsave=11,
-            rtol=1e-2,
+            rtol=1e-4,
             atol=1e-2,
         )
 
-    @pytest.mark.parametrize('sqrt_normalization', [False, True])
-    def test_adjoint(self, sqrt_normalization):
-        solver = Rouchon1(dt=1e-3, sqrt_normalization=sqrt_normalization)
+    @pytest.mark.parametrize('normalize', [False, True])
+    def test_adjoint(self, normalize):
+        solver = Rouchon1(dt=1e-3, normalize=normalize)
         gradient = Adjoint(parameters=grad_leaky_cavity_8.parameters)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
             gradient,
             num_tsave=11,
-            rtol=1e-2,
+            rtol=1e-4,
             atol=1e-2,
         )
 

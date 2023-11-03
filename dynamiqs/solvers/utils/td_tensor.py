@@ -65,6 +65,12 @@ def check_callable(
 
 
 class TDTensor(ABC):
+    @property
+    @abstractmethod
+    def is_constant(self) -> bool:
+        """Whether the tensor is constant in time."""
+        pass
+
     @abstractmethod
     def __call__(self, t: float) -> Tensor:
         """Evaluate at a given time"""
@@ -92,6 +98,10 @@ class ConstantTDTensor(TDTensor):
         self.dtype = tensor.dtype
         self.device = tensor.device
 
+    @property
+    def is_constant(self) -> bool:
+        return True
+
     def __call__(self, t: float) -> Tensor:
         return self._tensor
 
@@ -117,6 +127,10 @@ class CallableTDTensor(TDTensor):
         self._shape = shape
         self.dtype = dtype
         self.device = device
+
+    @property
+    def is_constant(self) -> bool:
+        return False
 
     @cache
     def __call__(self, t: float) -> Tensor:
