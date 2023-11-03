@@ -20,6 +20,9 @@ class TestSEEuler(SolverTester):
             exp_save_rtol=1e-2,
             exp_save_atol=1e-2,
         )
+
+    def test_td_correctness(self):
+        solver = Euler(dt=1e-4)
         self._test_correctness(
             tdqubit,
             solver,
@@ -39,6 +42,9 @@ class TestSEEuler(SolverTester):
             rtol=5e-2,
             atol=1e-2,
         )
+
+    def test_td_autograd(self):
+        solver = Euler(dt=1e-4)
         self._test_gradient(
             grad_tdqubit,
             solver,

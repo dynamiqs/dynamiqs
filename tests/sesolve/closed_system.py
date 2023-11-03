@@ -11,6 +11,7 @@ from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
+from dynamiqs.utils.tensor_types import dtype_real_to_complex as to_complex
 
 from ..system import System
 
@@ -154,7 +155,7 @@ class TDQubit(ClosedSystem):
     def expect(self, t: float) -> Tensor:
         theta = self._theta(t)
         return torch.tensor(
-            [0, -sin(2 * theta), cos(2 * theta)], dtype=theta.dtype.to_complex()
+            [0, -sin(2 * theta), cos(2 * theta)], dtype=to_complex(theta.dtype)
         )
 
     def grads_state(self, t: float) -> Tensor:

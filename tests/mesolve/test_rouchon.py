@@ -4,7 +4,12 @@ from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Rouchon1, Rouchon2
 
 from ..solver_tester import SolverTester
-from .open_system import grad_leaky_cavity_8, leaky_cavity_8
+from .open_system import (
+    damped_tdqubit,
+    grad_damped_tdqubit,
+    grad_leaky_cavity_8,
+    leaky_cavity_8,
+)
 
 
 class TestMERouchon1(SolverTester):
@@ -25,6 +30,18 @@ class TestMERouchon1(SolverTester):
         )
 
     @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    def test_td_correctness(self, normalize):
+        solver = Rouchon1(dt=1e-3, normalize=normalize)
+        self._test_correctness(
+            damped_tdqubit,
+            solver,
+            num_tsave=11,
+            ysave_norm_atol=1e-2,
+            exp_save_rtol=1e-2,
+            exp_save_atol=1e-2,
+        )
+
+    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
     def test_autograd(self, normalize):
         solver = Rouchon1(dt=1e-3, normalize=normalize)
         self._test_gradient(
@@ -34,6 +51,13 @@ class TestMERouchon1(SolverTester):
             num_tsave=11,
             rtol=1e-4,
             atol=1e-2,
+        )
+
+    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    def test_td_autograd(self, normalize):
+        solver = Rouchon1(dt=1e-3, normalize=normalize)
+        self._test_gradient(
+            grad_damped_tdqubit, solver, Autograd(), num_tsave=11, rtol=1e-4, atol=1e-2
         )
 
     @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
@@ -47,6 +71,14 @@ class TestMERouchon1(SolverTester):
             num_tsave=11,
             rtol=1e-4,
             atol=1e-2,
+        )
+
+    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    def test_td_adjoint(self, normalize):
+        solver = Rouchon1(dt=1e-3, normalize=normalize)
+        gradient = Adjoint(parameters=grad_damped_tdqubit.parameters)
+        self._test_gradient(
+            grad_damped_tdqubit, solver, gradient, num_tsave=11, rtol=1e-4, atol=1e-2
         )
 
 
@@ -66,6 +98,17 @@ class TestMERouchon2(SolverTester):
             exp_save_atol=1e-2,
         )
 
+    def test_td_correctness(self):
+        solver = Rouchon2(dt=1e-3)
+        self._test_correctness(
+            damped_tdqubit,
+            solver,
+            num_tsave=11,
+            ysave_norm_atol=1e-2,
+            exp_save_rtol=1e-2,
+            exp_save_atol=1e-2,
+        )
+
     def test_autograd(self):
         solver = Rouchon2(dt=1e-3)
         self._test_gradient(
@@ -73,6 +116,12 @@ class TestMERouchon2(SolverTester):
             solver,
             Autograd(),
             num_tsave=11,
+        )
+
+    def test_td_autograd(self):
+        solver = Rouchon2(dt=1e-3)
+        self._test_gradient(
+            grad_damped_tdqubit, solver, Autograd(), num_tsave=11, rtol=1e-2, atol=1e-3
         )
 
     def test_adjoint(self):
@@ -84,4 +133,11 @@ class TestMERouchon2(SolverTester):
             gradient,
             num_tsave=11,
             atol=1e-4,
+        )
+
+    def test_td_adjoint(self):
+        solver = Rouchon2(dt=1e-3)
+        gradient = Adjoint(parameters=grad_damped_tdqubit.parameters)
+        self._test_gradient(
+            grad_damped_tdqubit, solver, gradient, num_tsave=11, rtol=1e-2, atol=1e-3
         )

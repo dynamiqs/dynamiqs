@@ -11,8 +11,12 @@ class TestSEAdaptive(SolverTester):
 
     def test_correctness(self):
         self._test_correctness(cavity_8, Dopri5(), num_tsave=11)
+
+    def test_td_correctness(self):
         self._test_correctness(tdqubit, Dopri5(), num_tsave=11)
 
     def test_autograd(self):
         self._test_gradient(grad_cavity_8, Dopri5(), Autograd(), num_tsave=11)
+
+    def test_td_autograd(self):
         self._test_gradient(grad_tdqubit, Dopri5(), Autograd(), num_tsave=11)
