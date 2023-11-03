@@ -12,11 +12,10 @@ from ..utils.utils import unit
 from .me_solver import MESolver
 
 
-def inv_mm_invmh(A: Tensor, B: Tensor) -> Tensor:
+def inv_kraus_matmul(A: Tensor, B: Tensor, upper: bool) -> Tensor:
     # -> A^-1 @ B @ A.mH^-1
-    # A must be upper triangular
-    B = torch.linalg.solve_triangular(A, B)
-    B = torch.linalg.solve_triangular(A.mH, B, upper=False, left=False)
+    B = torch.linalg.solve_triangular(A, B, upper=upper)
+    B = torch.linalg.solve_triangular(A.mH, B, upper=not upper, left=False)
     return B
 
 
@@ -61,8 +60,8 @@ class MERouchon1(MERouchon):
             else:
                 # if `H` is time-dependent, we normalize the map at each time step by
                 # inverting `R` using its Cholesky decomposition `R = T @ T.mT`
-                self.T = cache(lambda R: cholesky(R)[0])  # lower triang
-                self.Trev = cache(lambda Rrev: cholesky(Rrev, True)[0])  # upper triang
+                self.T = cache(lambda R: cholesky(R)[0])  # lower triangular
+                self.Trev = cache(lambda Rrev: cholesky(Rrev)[0])  # lower triangular
 
         self.cholesky_normalization = self.options.normalize and not self.H.is_constant
 
@@ -89,7 +88,7 @@ class MERouchon1(MERouchon):
             # R, T: (b_H, 1, n, n)
             R = self.R(M0)
             T = self.T(R)
-            rho = inv_mm_invmh(T.mH, rho)  # T.mH^-1 @ rho @ T^-1
+            rho = inv_kraus_matmul(T.mH, rho, upper=True)  # T.mH^-1 @ rho @ T^-1
 
         # compute rho(t+dt)
         rho = kraus_map(rho, M0) + kraus_map(rho, self.M1s)  # (b_H, b_rho, n, n)
@@ -125,7 +124,7 @@ class MERouchon1(MERouchon):
             # Rrev, Trev: (b_H, 1, n, n)
             Rrev = self.Rrev(M0rev)
             Trev = self.Trev(Rrev)
-            rho = inv_mm_invmh(Trev.mH, rho)  # Trev.mH^-1 @ rho @ Trev^-1
+            rho = inv_kraus_matmul(Trev.mH, rho, upper=True)  # Tr.mH^-1 @ rho @ Tr^-1
 
         # compute rho(t-dt)
         rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
@@ -137,7 +136,7 @@ class MERouchon1(MERouchon):
             # R, T: (b_H, 1, n, n)
             R = self.R(M0)
             T = self.T(R)
-            phi = inv_mm_invmh(T, phi)  # T^-1 @ phi @ T.mH^-1
+            phi = inv_kraus_matmul(T, phi, upper=False)  # T^-1 @ phi @ T.mH^-1
 
         return unit(rho), phi
 
