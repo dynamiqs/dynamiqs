@@ -4,12 +4,12 @@ import torch
 from torch import Tensor
 
 from .._utils import check_time_tensor
-from ..utils.operators import _destroy_single
+from ..utils.operators import displace
 from ..utils.states import fock
 from ..utils.utils import tensprod, tobra
 from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
 
-__all__ = ['rand_complex', 'pwc_pulse', 'snap_gate', 'bdisplace', 'cd_gate']
+__all__ = ['rand_complex', 'pwc_pulse', 'snap_gate', 'cd_gate']
 
 
 def rand_complex(
@@ -176,48 +176,6 @@ def snap_gate(
     return torch.diag_embed(torch.exp(1j * phase))
 
 
-def bdisplace(
-    dim: int,
-    alpha: Tensor,
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Returns batched displacement operator of complex amplitudes $\alpha$.
-
-    It is defined by
-    $$
-        D(\alpha) = \exp(\alpha a^\dag - \alpha^* a),
-    $$
-    where $a$ and $a^\dag$ are the annihilation and creation operators, respectively.
-
-    Note:
-        The main difference with [dq.displace()][dynamiqs.displace] is that the
-        argument `alpha` can be batched, and the returned tensor is batched accordingly.
-
-    Args:
-        dim: Dimension of the Hilbert space.
-        alpha _(...)_: Displacement amplitude.
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
-
-    Returns:
-        _(..., dim, dim)_ Displacement operator.
-
-    Examples:
-        >>> dq.bdisplace(3, torch.tensor([0.1]))
-        tensor([[[ 0.995+0.j, -0.100+0.j,  0.007+0.j],
-                 [ 0.100+0.j,  0.985+0.j, -0.141+0.j],
-                 [ 0.007+0.j,  0.141+0.j,  0.990+0.j]]])
-        >>> dq.bdisplace(3, torch.tensor([0.1, 0.2])).shape
-        torch.Size([2, 3, 3])
-    """
-    cdtype = get_cdtype(dtype)
-    a = _destroy_single(dim, dtype=cdtype, device=device)
-    alpha = alpha.to(dtype=cdtype, device=device)[..., None, None]
-    return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
-
-
 def cd_gate(
     dim: int,
     alpha: Tensor,
@@ -258,6 +216,6 @@ def cd_gate(
     """  # noqa: E501
     g = fock(2, 0, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
     e = fock(2, 1, dtype=dtype, device=device).repeat(len(alpha), 1, 1)  # (n, 2, 1)
-    disp_plus = bdisplace(dim, alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
-    disp_minus = bdisplace(dim, -alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
+    disp_plus = displace(dim, alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
+    disp_minus = displace(dim, -alpha / 2, dtype=dtype, device=device)  # (n, dim, dim)
     return tensprod(disp_plus, g @ tobra(g)) + tensprod(disp_minus, e @ tobra(e))

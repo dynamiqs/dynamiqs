@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from .._utils import to_device
-from .tensor_types import get_cdtype
+from .tensor_types import ArrayLike, get_cdtype, to_tensor
 from .utils import tensprod
 
 __all__ = [
@@ -302,7 +302,7 @@ def parity(
 
 def displace(
     dim: int,
-    alpha: complex | Tensor,
+    alpha: int | float | complex | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -310,21 +310,19 @@ def displace(
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
-
     $$
         D(\alpha) = \exp(\alpha a^\dag - \alpha^* a),
     $$
-
     where $a$ and $a^\dag$ are the annihilation and creation operators, respectively.
 
     Args:
         dim: Dimension of the Hilbert space.
-        alpha: Displacement amplitude.
+        alpha _(...)_: Displacement amplitude.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
-        _(dim, dim)_ Displacement operator.
+        _(..., dim, dim)_ Displacement operator.
 
     Examples:
         >>> dq.displace(4, 0.5)
@@ -332,15 +330,25 @@ def displace(
                 [ 0.441+0.j,  0.662+0.j, -0.542+0.j,  0.270+0.j],
                 [ 0.156+0.j,  0.542+0.j,  0.442+0.j, -0.697+0.j],
                 [ 0.047+0.j,  0.270+0.j,  0.697+0.j,  0.662+0.j]])
+        >>> dq.displace(4, [0.1, 0.2]).shape
+        torch.Size([2, 4, 4])
     """
-    a = destroy(dim, dtype=dtype, device=device)
-    alpha = torch.as_tensor(alpha)
+    cdtype = get_cdtype(dtype)
+    device = to_device(device)
+
+    if isinstance(alpha, (int, float, complex)):
+        alpha = torch.as_tensor(alpha, dtype=cdtype, device=device)
+    else:
+        alpha = to_tensor(alpha, dtype=cdtype, device=device)
+    alpha = alpha[..., None, None]  # (..., 1, 1)
+
+    a = destroy(dim, dtype=cdtype, device=device)  # (n, n)
     return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
 
 
 def squeeze(
     dim: int,
-    z: complex | Tensor,
+    z: int | float | complex | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -348,21 +356,19 @@ def squeeze(
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
-
     $$
         S(z) = \exp\left(\frac{1}{2}\left(z^* a^2 - z a^{\dag 2}\right)\right),
     $$
-
     where $a$ and $a^\dag$ are the annihilation and creation operators, respectively.
 
     Args:
         dim: Dimension of the Hilbert space.
-        z: Squeezing amplitude.
+        z _(...)_: Squeezing amplitude.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
     Returns:
-        _(dim, dim)_ Squeezing operator.
+        _(..., dim, dim)_ Squeezing operator.
 
     Examples:
         >>> dq.squeeze(4, 0.5)
@@ -370,10 +376,20 @@ def squeeze(
                 [ 0.000+0.j,  0.818+0.j,  0.000+0.j,  0.575+0.j],
                 [-0.346+0.j,  0.000+0.j,  0.938+0.j,  0.000+0.j],
                 [ 0.000+0.j, -0.575+0.j,  0.000+0.j,  0.818+0.j]])
+        >>> dq.squeeze(4, [0.1, 0.2]).shape
+        torch.Size([2, 4, 4])
     """
-    a = destroy(dim, dtype=dtype, device=device)
+    cdtype = get_cdtype(dtype)
+    device = to_device(device)
+
+    if isinstance(z, (int, float, complex)):
+        z = torch.as_tensor(z, dtype=cdtype, device=device)
+    else:
+        z = to_tensor(z, dtype=cdtype, device=device)
+    z = z[..., None, None]  # (..., 1, 1)
+
+    a = destroy(dim, dtype=dtype, device=device)  # (n, n)
     a2 = a @ a
-    z = torch.as_tensor(z)
     return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))
 
 
