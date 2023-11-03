@@ -130,21 +130,13 @@ class MERouchon1(MERouchon):
 
 
 class MERouchon2(MERouchon):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # define cached operators
-        # self.M0, self.M0dag, self.M0rev: (b_H, 1, n, n)
-        # self.M1s, self.M1sdag: (b_H, len(L), n, n)
-        self.M0 = cache(
-            lambda Hnh: self.I - 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
-        )
-        self.M0dag = cache(lambda M0: M0.mH)
-        self.M0rev = cache(
-            lambda Hnh: self.I + 1j * self.dt * Hnh - 0.5 * self.dt**2 * Hnh @ Hnh
-        )
-        self.M1s = cache(lambda M0: 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L))
-        self.M1sdag = cache(lambda M1s: M1s.mH)
+    @cache(maxsize=2)
+    def Ms(self, Hnh: Tensor, dt: float) -> tuple(Tensor, Tensor):
+        # Kraus operators
+        # -> (b_H, 1, n, n), (b_H, len(L), n, n)
+        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, 1, n, n)
+        M1s = 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L)  # (b_H, len(L), n, n)
+        return M0, M1s
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
@@ -164,12 +156,9 @@ class MERouchon2(MERouchon):
         """
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        # compute cached operators
-        # H, Hnh, M0: (b_H, 1, n, n)
-        H = self.H(t)
-        Hnh = self.Hnh(H)
-        M0 = self.M0(Hnh)
-        M1s = self.M1s(M0)  # (b_H, len(L), n, n)
+        H = self.H(t)  # (b_H, 1, n, n)
+        Hnh = self.Hnh(H)  # (b_H, 1, n, n)
+        M0, M1s = self.Ms(Hnh, self.dt)  # (b_H, 1, n, n), (b_H, len(L), n, n)
 
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
@@ -201,24 +190,22 @@ class MERouchon2(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        # compute cached operators
-        # H, Hnh, M0, M0dag, M0rev: (b_H, 1, n, n)
-        # M1s, M1sdag: (b_H, len(L), n, n)
         H = self.H(t)
         Hnh = self.Hnh(H)
-        M0 = self.M0(Hnh)
-        M0dag = self.M0dag(M0)
-        M0rev = self.M0rev(Hnh)
-        M1s = self.M1s(M0)
-        M1sdag = self.M1sdag(M1s)
+
+        # === reverse time
+        M0rev, M1srev = self.Ms(Hnh, -self.dt)
 
         # compute rho(t-dt)
-        tmp = kraus_map(rho, M1s)
-        rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1s)
+        tmp = kraus_map(rho, M1srev)
+        rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1srev)
         rho = unit(rho)
 
+        # === forward time
+        M0, M1s = self.Ms(Hnh, self.dt)
+
         # compute phi(t-dt)
-        tmp = kraus_map(phi, M1sdag)
-        phi = kraus_map(phi, M0dag) + tmp + 0.5 * kraus_map(tmp, M1sdag)
+        tmp = kraus_map(phi, M1s.mH)
+        phi = kraus_map(phi, M0.mH) + tmp + 0.5 * kraus_map(tmp, M1s.mH)
 
         return rho, phi
