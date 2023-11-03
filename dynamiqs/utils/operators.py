@@ -6,6 +6,7 @@ from math import prod
 import torch
 from torch import Tensor
 
+from .._utils import to_device
 from .tensor_types import get_cdtype
 from .utils import tensprod
 
@@ -149,11 +150,13 @@ def destroy(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j],
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j]])
     """
+    cdtype = get_cdtype(dtype)
+    device = to_device(device)
     if len(dims) == 1:
-        return _destroy_single(dims[0], dtype=get_cdtype(dtype), device=device)
+        return _destroy_single(dims[0], dtype=cdtype, device=device)
 
-    a = [_destroy_single(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
-    I = [eye(dim, dtype=get_cdtype(dtype), device=device) for dim in dims]
+    a = [_destroy_single(dim, dtype=cdtype, device=device) for dim in dims]
+    I = [eye(dim, dtype=cdtype, device=device) for dim in dims]
     return tuple(
         tensprod(*[a[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
@@ -163,11 +166,11 @@ def destroy(
 def _destroy_single(
     dim: int,
     *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
+    dtype: torch.complex64 | torch.complex128,
+    device: torch.device,
 ) -> Tensor:
     """Bosonic annihilation operator."""
-    return torch.arange(1, dim, device=device).sqrt().diag(1).to(get_cdtype(dtype))
+    return torch.arange(1, dim, device=device).sqrt().diag(1).to(dtype)
 
 
 def create(
@@ -215,6 +218,7 @@ def create(
                 [0.000+0.j, 0.000+0.j, 0.000+0.j, 0.000+0.j, 1.414+0.j, 0.000+0.j]])
     """
     cdtype = get_cdtype(dtype)
+    device = to_device(device)
     if len(dims) == 1:
         return _create_single(dims[0], dtype=cdtype, device=device)
 
@@ -229,11 +233,11 @@ def create(
 def _create_single(
     dim: int,
     *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
+    dtype: torch.complex64 | torch.complex128,
+    device: torch.device,
 ) -> Tensor:
     """Bosonic creation operator."""
-    return torch.arange(1, dim, device=device).sqrt().diag(-1).to(get_cdtype(dtype))
+    return torch.arange(1, dim, device=device).sqrt().diag(-1).to(dtype)
 
 
 def number(
@@ -329,7 +333,7 @@ def displace(
                 [ 0.156+0.j,  0.542+0.j,  0.442+0.j, -0.697+0.j],
                 [ 0.047+0.j,  0.270+0.j,  0.697+0.j,  0.662+0.j]])
     """
-    a = destroy(dim, dtype=get_cdtype(dtype), device=device)
+    a = destroy(dim, dtype=dtype, device=device)
     alpha = torch.as_tensor(alpha)
     return torch.matrix_exp(alpha * a.mH - alpha.conj() * a)
 
@@ -367,7 +371,7 @@ def squeeze(
                 [-0.346+0.j,  0.000+0.j,  0.938+0.j,  0.000+0.j],
                 [ 0.000+0.j, -0.575+0.j,  0.000+0.j,  0.818+0.j]])
     """
-    a = destroy(dim, dtype=get_cdtype(dtype), device=device)
+    a = destroy(dim, dtype=dtype, device=device)
     a2 = a @ a
     z = torch.as_tensor(z)
     return torch.matrix_exp(0.5 * (z.conj() * a2 - z * a2.mH))
