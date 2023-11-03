@@ -35,7 +35,9 @@ class MERouchon1(MERouchon):
 
         # reverse time operators
         # M0rev: (b_H, 1, n, n)
+        # M1srev: (1, len(L), n, n)
         self.M0rev = cache(lambda Hnh: self.I + 1j * self.dt * Hnh)
+        self.M1srev = self.M1s
 
         if self.options.normalize:
             # `R` is close to identity but not exactly, we inverse it to normalize the
@@ -56,7 +58,8 @@ class MERouchon1(MERouchon):
 
                 self.M0 = cache(lambda Hnh: M0 @ S)
                 self.M1s = self.M1s @ S
-                self.M0rev = cache(lambda Hnh: M0rev @ Srev)
+                self.M0rev = cache(lambda Hnh: Srev @ M0rev)
+                self.M1srev = Srev @ self.M1s
             else:
                 # if `H` is time-dependent, we normalize the map at each time step by
                 # inverting `R` using its Cholesky decomposition `R = T @ T.mT`
@@ -127,7 +130,7 @@ class MERouchon1(MERouchon):
             rho = inv_kraus_matmul(Trev.mH, rho, upper=True)  # Tr.mH^-1 @ rho @ Tr^-1
 
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1s)
+        rho = kraus_map(rho, M0rev) - kraus_map(rho, self.M1srev)
 
         # compute phi(t-dt)
         phi = kraus_map(phi, M0.mH) + kraus_map(phi, self.M1s.mH)
