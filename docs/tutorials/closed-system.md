@@ -90,7 +90,7 @@ There are two main types of ODE solvers:
 
 ## 4. Using dynamiqs
 
-You can create the state and Hamiltonian using Numpy, QuTiP or dynamiqs. Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using Numpy, QuTiP, PyTorch or dynamiqs. Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
 >>> import numpy as np
