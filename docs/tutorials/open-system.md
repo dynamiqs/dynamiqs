@@ -1,12 +1,12 @@
 # Open systems
 
-This tutorial introduces the quantum state for an open quantum system, describes its evolution with the Lindblad master equation, and explains three principal numerical approaches to simulate the evolution: computing the propagator, solving the ODE iteratively or with a Monte-Carlo approach.
+This tutorial introduces the quantum state for an open quantum system, describes its evolution with the Lindblad master equation, and explains three common numerical methods to simulate the evolution: computing the propagator, solving the ODE iteratively or sampling trajectories.
 
 ***
 
 ## The quantum state
 
-The **quantum state** $\rho$ is a matrix of size $n\times n$[^1]. It is a positive semi-definite Hermitian matrix with unit trace, also called **density matrix**.
+The quantum state that describes an open quantum system is a **density matrix** $\rho$. It is a positive semi-definite Hermitian matrix with unit trace, of size $n\times n$[^1].
 
 [^1]: Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
 
@@ -35,7 +35,7 @@ We can also write
 $$
     \frac{\dd\rho(t)}{\dt} = \mathcal{L}(\rho(t)),
 $$
-where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (or **Lindbladian**). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
+where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (sometimes referred as Lindbladian). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
 
 [^2]: A superoperator is a linear map that takes an operator and returns an operator.
 
@@ -54,7 +54,7 @@ where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (or **Lind
 
 There are three common ideas for solving the Lindblad master equation.
 
-### Compute the propagator
+### Computing the propagator
 
 The state at time $t$ is given by $\rho(t)=e^{\mathcal{L}t}(\rho(0))$, where $\rho(0)$ is the state at time $t=0$. The superoperator $e^{\mathcal{L}t}$ is called the **propagator**, in vectorized form it is a matrix of size $n^2\times n^2$.
 
@@ -72,7 +72,9 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 ^^Time complexity^^: $O(n^6)$ (complexity of computing the $n^2\times n^2$ Liouvillian matrix exponential[^3]).
 [^3]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
-### Solve the ODE iteratively
+For large Hilbert space sizes, the time complexity of computing the matrix exponential is often prohibitive, hence the need for other methods such as the ones we now describe.
+
+### Integrating the ODE
 
 The Lindblad master equation is an ODE, for which a wide variety of solvers have been developed. The simplest approach is the Euler method, a first-order ODE solver with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
 $$
@@ -86,13 +88,13 @@ where we used the Lindblad master equation to replace the time derivative of the
 There are two main types of ODE solvers:
 
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
-- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. The best know method is the *Dormand-Prince method*.
+- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
 
 ^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
 
 ^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
 
-### Use a Monte-Carlo approach
+### Sampling trajectories
 
 Also called the **quantum-jump** approach.
 
