@@ -13,6 +13,10 @@ Description: Color theme of the dynamiqs documentation
   --md-accent-fg-color--light: #cd9a92;
   --md-accent-fg-color--dark: #66190e;
   --md-header-font-family: 'Tahoma';
+
+  /* Default admonition color shades */
+  --md-admonition-fg-color: var(--md-note-fg-color);
+  --md-admonition-bg-color: var(--md-note-bg-color);
 }
 
 /* --------------------------- */
@@ -49,9 +53,13 @@ Description: Color theme of the dynamiqs documentation
   --md-note-fg-color: #25adab;
   --md-note-bg-color: #cfe8e8;
 
-  /* Admonition color shades */
-  --md-admonition-fg-color: var(--md-default-fg-color);
-  --md-admonition-bg-color: var(--md-default-bg-color);
+  /* Example color shades */
+  --md-example-fg-color: #3E517A;
+  --md-example-bg-color: #d3d6de;
+
+  /* Quote color shades */
+  --md-quote-fg-color: #9e9e9e;
+  --md-quote-bg-color: #9e9e9e1a;
 
   /* Home page */
   --homepage-gradient: linear-gradient(to right top, #da5039, #de5741, #e25f49, #e56651, #e96d59, #eb735f, #ed7966, #ef7f6c, #f08572, #f18a78, #f1907f, #f29585);
@@ -99,15 +107,19 @@ Description: Color theme of the dynamiqs documentation
 
   /* Warning color shades */
   --md-warning-fg-color: #e293b1;
-  --md-warning-bg-color: #5c434d;
+  --md-warning-bg-color: #523b45;
 
   /* Note color shades */
-  --md-note-fg-color: #23bebb;
-  --md-note-bg-color: #3e5656;
+  --md-note-fg-color: #249897;
+  --md-note-bg-color: #334545;
 
-  /* Admonition color shades */
-  --md-admonition-fg-color: var(--md-default-fg-color);
-  --md-admonition-bg-color: var(--md-default-bg-color);
+  /* Example color shades */
+  --md-example-fg-color: #54658b;
+  --md-example-bg-color: #333e49;
+
+  /* Quote color shades */
+  --md-quote-fg-color: #9e9e9e;
+  --md-quote-bg-color: #9e9e9e1a;
 
   /* Home page */
   --homepage-gradient: linear-gradient(to right top, #85382b, #9c4030, #b34834, #cb5039, #e3583d);

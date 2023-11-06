@@ -15,6 +15,8 @@ theme:
     - content.code.copy
   icon:
     repo: fontawesome/brands/github
+    admonition:
+      example: material/human-male-board
   logo: media/logo.png
   favicon: media/favicon.svg
   palette:
