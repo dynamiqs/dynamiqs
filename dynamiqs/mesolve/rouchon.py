@@ -25,26 +25,28 @@ class MERouchon(MESolver, AdjointFixedSolver):
 
 class MERouchon1(MERouchon):
     @cache(maxsize=2)
-    def R(self, M0: Tensor, dt: float) -> Tensor:
+    def R(self, M0: Tensor, fwd: bool = True) -> Tensor:
         # `R` is close to identity but not exactly, we inverse it to normalize the
         # Kraus map in order to have a trace-preserving scheme
         # -> (b_H, 1, n, n)
+        dt = self.dt if fwd else -self.dt
         return M0.mH @ M0 + dt * self.sum_LdagL
 
     @cache(maxsize=2)
-    def Ms(self, Hnh: Tensor, dt: float) -> tuple(Tensor, Tensor):
+    def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
         # -> (b_H, 1, n, n), (1, len(L), n, n)
+        dt = self.dt if fwd else -self.dt
         M0 = self.I - 1j * dt * Hnh  # (b_H, 1, n, n)
-        M1s = sqrt(self.dt) * self.L  # (1, len(L), n, n)
+        M1s = sqrt(abs(dt)) * self.L  # (1, len(L), n, n)
 
         if self.options.normalize == 'sqrt':
-            R = self.R(M0, dt)
+            R = self.R(M0, fwd=fwd)
             # we normalize the operators by computing `S = sqrt(R)^-1` and applying it
             # to the `Ms` operators
             S = inv_sqrtm(R)
-            M0 = M0 @ S if dt >= 0 else S @ M0
-            M1s = M1s @ S if dt >= 0 else S @ M1s
+            M0 = M0 @ S if fwd else S @ M0
+            M1s = M1s @ S if fwd else S @ M1s
 
         return M0, M1s
 
@@ -69,11 +71,11 @@ class MERouchon1(MERouchon):
 
         H = self.H(t)  # (b_H, 1, n, n)
         Hnh = self.Hnh(H)  # (b_H, 1, n, n)
-        M0, M1s = self.Ms(Hnh, self.dt)  # (b_H, 1, n, n), (1, len(L), n, n)
+        M0, M1s = self.Ms(Hnh)  # (b_H, 1, n, n), (1, len(L), n, n)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
-            R = self.R(M0, self.dt)  # (b_H, 1, n, n)
+            R = self.R(M0)  # (b_H, 1, n, n)
             T = self.T(R)  # (b_H, 1, n, n)
             rho = inv_kraus_matmul(T.mH, rho, upper=True)  # T.mH^-1 @ rho @ T^-1
 
@@ -103,11 +105,11 @@ class MERouchon1(MERouchon):
         Hnh = self.Hnh(H)
 
         # === reverse time
-        M0rev, M1srev = self.Ms(Hnh, -self.dt)
+        M0rev, M1srev = self.Ms(Hnh, fwd=False)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
-            Rrev = self.R(M0rev, -self.dt)
+            Rrev = self.R(M0rev, fwd=False)
             Trev = self.T(Rrev)
             rho = inv_kraus_matmul(Trev.mH, rho, upper=True)  # Tr.mH^-1 @ rho @ Tr^-1
 
@@ -115,14 +117,14 @@ class MERouchon1(MERouchon):
         rho = kraus_map(rho, M0rev) - kraus_map(rho, M1srev)
 
         # === forward time
-        M0, M1s = self.Ms(Hnh, self.dt)
+        M0, M1s = self.Ms(Hnh)
 
         # compute phi(t-dt)
         phi = kraus_map(phi, M0.mH) + kraus_map(phi, M1s.mH)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
-            R = self.R(M0, self.dt)
+            R = self.R(M0)
             T = self.T(R)
             phi = inv_kraus_matmul(T, phi, upper=False)  # T^-1 @ phi @ T.mH^-1
 
@@ -131,11 +133,12 @@ class MERouchon1(MERouchon):
 
 class MERouchon2(MERouchon):
     @cache(maxsize=2)
-    def Ms(self, Hnh: Tensor, dt: float) -> tuple(Tensor, Tensor):
+    def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
         # -> (b_H, 1, n, n), (b_H, len(L), n, n)
+        dt = self.dt if fwd else -self.dt
         M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, 1, n, n)
-        M1s = 0.5 * sqrt(self.dt) * (self.L @ M0 + M0 @ self.L)  # (b_H, len(L), n, n)
+        M1s = 0.5 * sqrt(abs(dt)) * (self.L @ M0 + M0 @ self.L)  # (b_H, len(L), n, n)
         return M0, M1s
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
@@ -158,7 +161,7 @@ class MERouchon2(MERouchon):
 
         H = self.H(t)  # (b_H, 1, n, n)
         Hnh = self.Hnh(H)  # (b_H, 1, n, n)
-        M0, M1s = self.Ms(Hnh, self.dt)  # (b_H, 1, n, n), (b_H, len(L), n, n)
+        M0, M1s = self.Ms(Hnh)  # (b_H, 1, n, n), (b_H, len(L), n, n)
 
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
@@ -194,7 +197,7 @@ class MERouchon2(MERouchon):
         Hnh = self.Hnh(H)
 
         # === reverse time
-        M0rev, M1srev = self.Ms(Hnh, -self.dt)
+        M0rev, M1srev = self.Ms(Hnh, fwd=False)
 
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1srev)
@@ -202,7 +205,7 @@ class MERouchon2(MERouchon):
         rho = unit(rho)
 
         # === forward time
-        M0, M1s = self.Ms(Hnh, self.dt)
+        M0, M1s = self.Ms(Hnh)
 
         # compute phi(t-dt)
         tmp = kraus_map(phi, M1s.mH)
