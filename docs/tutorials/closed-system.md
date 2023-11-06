@@ -35,10 +35,10 @@ The state evolution is described by the **Schrödinger equation**:
 $$
     i\hbar\frac{\dd\ket{\psi(t)}}{\dt}=H\ket{\psi(t)},
 $$
-where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, it is usually assumed $\hbar=1$.
+where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
 
 !!! Example "Example for a two-level system"
-    The Hamiltonian of a two-level system with energy difference $\hbar\omega$ is $H=\frac{\hbar}{2}\begin{pmatrix}\omega&0\\0&-\omega\end{pmatrix}$.
+    The Hamiltonian of a two-level system with energy difference $\omega$ is $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$.
 
 ## Solving the Schrödinger equation numerically
 
@@ -53,7 +53,7 @@ The state at time $t$ is given by $\ket{\psi(t)}=e^{-iHt}\ket{\psi(0)}$, where $
     $$
         \ket{\psi(t)} = \mathcal{T}\exp\left(-i\int_0^tH(t')\dt'\right)\ket{\psi(0)},
     $$
-    where $\mathcal{T}$ is the *time-ordering meta-operator*, which indicates the time-ordering of the Hamiltonian upon expansion of the matrix exponential (Hamiltonians at different times do not commute).
+    where $\mathcal{T}$ is the *time-ordering meta-operator*, which indicates the time-ordering of the Hamiltonians upon expansion of the matrix exponential (Hamiltonians at different times do not commute).
 
 The first idea is to explicitly compute the propagator to evolve the state up to time $t$. There are various ways to compute the matrix exponential, such as exact diagonalization of the Hamiltonian or approximate methods such as truncated Taylor series expansions.
 
@@ -61,12 +61,12 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ^^Time complexity^^: $O(n^3)$ (complexity of the matrix exponentiation[^2]).
 
-[^2]: The time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$, and computing a matrix exponential requires a few matrix multiplications.
+[^2]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 !!! Example "Example for a two-level system"
-    For $H=\frac{\hbar}{2}\begin{pmatrix}\omega&0\\0&-\omega\end{pmatrix}$, the propagator is straighforward to compute:
+    For $H=-\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
     $$
-        U(t) = e^{-iHt} = \begin{pmatrix}e^{-i\hbar\omega t / 2} & 0 \\\\ 0 & e^{i\hbar\omega t / 2}\end{pmatrix}.
+        U(t) = e^{-iHt} = \begin{pmatrix}e^{i\omega t/2} & 0 \\\\ 0 & e^{-i\omega t/2}\end{pmatrix}.
     $$
 
 ### Solve the ODE iteratively
@@ -91,19 +91,19 @@ There are two main types of ODE solvers:
 
 ## Using dynamiqs
 
-You can create the state and Hamiltonian using Numpy, QuTiP, PyTorch or dynamiqs. Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using any common array type (Python lists, Numpy arrays, QuTiP objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
 >>> import numpy as np
 >>> import dynamiqs as dq
->>> psi0 = np.array([[1], [0]])       # initial state
->>> H = np.array([[1, 0], [0, -1]])   # Hamiltonian
->>> tsave = np.linspace(0, 1.0, 11)   # times at which the state should be saved
+>>> psi0 = [[1], [0]]                 # initial state
+>>> H = [[-1, 0], [0, 1]]             # Hamiltonian
+>>> tsave = np.linspace(0, 1.0, 11)   # saving times
 >>> res = dq.sesolve(H, psi0, tsave)  # run the simulation
 >>> res.states[-1]                    # print the final state
-tensor([[0.540-0.841j],
+tensor([[0.540+0.841j],
         [0.000+0.000j]])
 
 ```
 
-If you want to know more about the available solvers or the different options, head to the [sesolve()](../python_api/solvers/sesolve.html) API documentation.
+If you want to know more about the available solvers or the different options, head to the [sesolve()](../python_api/solvers/sesolve.md) API documentation.
