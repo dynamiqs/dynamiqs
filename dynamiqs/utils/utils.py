@@ -324,9 +324,8 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
-
     $$
-        \mathcal{D}[L](\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
+        \mathcal{D}[L] (\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
         - \frac{1}{2}\rho L^\dag L.
     $$
 
@@ -353,9 +352,8 @@ def lindbladian(H: Tensor, L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
-
     $$
-        \mathcal{L}(\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k](\rho),
+        \mathcal{L} (\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k] (\rho),
     $$
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
