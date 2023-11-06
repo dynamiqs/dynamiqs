@@ -36,15 +36,14 @@ def smesolve(
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
     starting from an initial state $\rho(t=0)$, according to the diffusive SME in Itô
     form (with $\hbar=1$):
-
     $$
         \begin{split}
-            \dd\rho(t) =&~ -i[H(t), \rho(t)] \dt\\
+            \dd\rho(t) =&~ -i[H(t), \rho(t)] \dt \\\\
             &+ \sum_{k=1}^N \left(
                 L_k \rho(t) L_k^\dag
                 - \frac{1}{2} L_k^\dag L_k \rho(t)
                 - \frac{1}{2} \rho(t) L_k^\dag L_k
-            \right)\dt\\
+            \right)\dt \\\\
             &+ \sum_{k=1}^N \sqrt{\eta_k} \left(
                 L_k \rho(t)
                 + \rho(t) L_k^\dag
@@ -52,7 +51,6 @@ def smesolve(
             \right),
         \end{split}
     $$
-
     where $H(t)$ is the system's Hamiltonian at time $t$, $\{L_k\}$ is a collection
     of jump operators, each continuously measured with efficiency $0\leq\eta_k\leq1$
     ($\eta_k=0$ for purely dissipative loss channels) and $\dd W_k(t)$ are
