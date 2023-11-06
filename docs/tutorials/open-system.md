@@ -1,0 +1,119 @@
+# Open systems
+
+This tutorial introduces the quantum state for an open quantum system, describes its evolution with the Lindblad master equation, and explains three principal numerical approaches to simulate the evolution: computing the propagator, solving the ODE iteratively or with a Monte-Carlo approach.
+
+***
+
+## The quantum state
+
+The **quantum state** $\rho$ is a matrix of size $n\times n$[^1]. It is a positive semi-definite Hermitian matrix with unit trace, also called **density matrix**.
+
+[^1]: Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
+
+!!! Example "Example for a two-level system"
+    For a two-level system, $\rho=\begin{pmatrix}a & b\\ c & d\end{pmatrix}$ with $a,d\in\R^+$ and $b,c\in\mathbb{C}$ with $b^*=c$ (Hermitian matrix), $a+d=1$ (unit trace) and all its eigenvalues are positive (positive semi-definite).
+
+Numerically, each coefficient of the state is stored as a complex number represented by two real numbers (the real and the imaginary parts), stored either
+
+- in single precision: the `complex64` type which uses two `float32`,
+- in double precision: the `complex128` type which uses two `float64`.
+
+A greater precision will give a more accurate result, but will also take longer to calculate.
+
+## The Lindblad master equation
+
+The state evolution is described by the **Lindblad master equation**:
+$$
+    \frac{\dd\rho(t)}{\dt} = -\frac{i}{\hbar}[H(t), \rho(t)] + \sum_{k=1}^N \left(L_k \rho(t) L_k^\dag - \frac{1}{2} L_k^\dag L_k \rho(t) - \frac{1}{2} \rho(t) L_k^\dag L_k\right),
+$$
+where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
+
+!!! Example "Example for a two-level system"
+    For example, $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$ and a single jump operator $L=\sqrt\gamma\sigma_-=\begin{pmatrix}0&0\\\sqrt\gamma&0\end{pmatrix}$.
+
+We can also write
+$$
+    \frac{\dd\rho(t)}{\dt} = \mathcal{L}(\rho(t)),
+$$
+where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (or **Lindbladian**). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
+
+[^2]: A superoperator is a linear map that takes an operator and returns an operator.
+
+!!! Example "Example for a two-level system"
+    For example, for $H=-\frac{\omega}{2}\sigma_z$ and a single jump operator $L=\sqrt\gamma\sigma_-$, the Liouvillian in vectorized form is a $4\times4$ matrix:
+    $$
+        \mathcal{L} = \begin{pmatrix}
+        -\gamma & 0 & 0 & 0\\\\
+        0 & -\gamma/2-\omega i & 0 & 0\\\\
+        0 & 0 & -\gamma/2+\omega i & 0\\\\
+        \gamma & 0 & 0 & 0\\\\
+        \end{pmatrix}
+    $$
+
+## Solving the Lindblad master equation numerically
+
+There are three common ideas for solving the Lindblad master equation.
+
+### Compute the propagator
+
+The state at time $t$ is given by $\rho(t)=e^{\mathcal{L}t}(\rho(0))$, where $\rho(0)$ is the state at time $t=0$. The superoperator $e^{\mathcal{L}t}$ is called the **propagator**, in vectorized form it is a matrix of size $n^2\times n^2$.
+
+??? Note "Solution for a time-dependent Liouvillian"
+    For a time-dependent Liouvillian $\mathcal{L}(t)$, the solution at time $t$ is
+    $$
+        \rho(t) = \mathcal{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right)(\rho(0)),
+    $$
+    where $\mathcal{T}$ is the *time-ordering meta-operator*, which indicates the time-ordering of the Liouvillians upon expansion of the matrix exponential (Liouvillians at different times do not commute).
+
+The first idea is to explicitly compute the propagator to evolve the state up to time $t$. There are various ways to compute the matrix exponential, such as exact diagonalization of the Liouvillian or approximate methods such as truncated Taylos series expansions.
+
+^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
+
+^^Time complexity^^: $O(n^6)$ (complexity of the $n^2\times n^2$ Liouvillian matrix exponentiation[^3]).
+[^3]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
+
+### Solve the ODE iteratively
+
+The Lindblad master equation is an ODE, for which a wide variety of solvers have been developed. The simplest approach is the Euler method, a first-order ODE solver with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
+$$
+    \begin{aligned}
+        \rho(t+\dt) &= \rho(t)+\dt\frac{\dd\rho(t)}{\dt}+\mathcal{O}(\dt^2) \\\\
+        &\approx \rho(t)+\dt\mathcal{L}(\rho(t)),
+    \end{aligned}
+$$
+where we used the Lindblad master equation to replace the time derivative of the state. By choosing a sufficiently small step size $\dt$ and starting from $\rho(0)$, the state is then iteratively evolved to a final time using the previous equation.
+
+There are two main types of ODE solvers:
+
+- **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
+- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. The best know method is the *Dormand-Prince method*.
+
+^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
+
+^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
+
+### Use a Monte-Carlo approach
+
+Also called the **quantum-jump** approach.
+
+!!! Warning "Work in progress."
+
+## Using dynamiqs
+
+You can create the state, Hamiltonian and jump operators using any common array type (Python lists, Numpy arrays, QuTiP objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+
+```python
+>>> import numpy as np
+>>> import dynamiqs as dq
+>>> rho0 = [[1, 0], [0, 0]]                     # initial state
+>>> H = [[-1, 0], [0, 1]]                       # Hamiltonian
+>>> jump_ops = [[[0, 0], [1, 0]]]               # list of jump operators
+>>> tsave = np.linspace(0, 1.0, 11)             # saving times
+>>> res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
+>>> res.states[-1]                              # print the final state
+tensor([[0.368+0.j, 0.000+0.j],
+        [0.000+0.j, 0.632+0.j]])
+
+```
+
+If you want to know more about the available solvers or the different options, head to the [mesolve()](../python_api/solvers/mesolve.md) API documentation.
