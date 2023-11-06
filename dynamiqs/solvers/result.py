@@ -105,9 +105,9 @@ class Result:
             'End': self.end_datetime.strftime('%Y-%m-%d %H:%M:%S'),
             'Total time': f'{self.total_time.total_seconds():.2f} s',
             'States': tensor_str(self.states),
-            'Expects': tensor_str(self.expects) if self.expects else None,
+            'Expects': tensor_str(self.expects) if self.expects is not None else None,
             'Measurements': (
-                tensor_str(self.measurements) if self.measurements else None
+                tensor_str(self.measurements) if self.measurements is not None else None
             ),
         }
         parts = {k: v for k, v in parts.items() if v is not None}
