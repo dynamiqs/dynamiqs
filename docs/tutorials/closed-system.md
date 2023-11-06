@@ -91,7 +91,7 @@ There are two main types of ODE solvers:
 
 ## Using dynamiqs
 
-You can create the state and Hamiltonian using any common array type (Python lists, Numpy arrays, QuTiP objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+You can create the state and Hamiltonian using any common array type (Python lists, Numpy arrays, QuTiP objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
 >>> import numpy as np
