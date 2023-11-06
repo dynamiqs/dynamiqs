@@ -39,23 +39,23 @@ def smesolve(
 
     $$
         \begin{split}
-            \mathrm{d}\rho(t) =&~ -i[H(t), \rho(t)] \mathrm{d}t\\
+            \dd\rho(t) =&~ -i[H(t), \rho(t)] \dt\\
             &+ \sum_{k=1}^N \left(
                 L_k \rho(t) L_k^\dag
                 - \frac{1}{2} L_k^\dag L_k \rho(t)
                 - \frac{1}{2} \rho(t) L_k^\dag L_k
-            \right)\mathrm{d}t\\
+            \right)\dt\\
             &+ \sum_{k=1}^N \sqrt{\eta_k} \left(
                 L_k \rho(t)
                 + \rho(t) L_k^\dag
-                - \tr{(L_k+L_k^\dag)\rho(t)}\rho(t)\ \mathrm{d}W_k(t)
+                - \tr{(L_k+L_k^\dag)\rho(t)}\rho(t)\ \dd W_k(t)
             \right),
         \end{split}
     $$
 
     where $H(t)$ is the system's Hamiltonian at time $t$, $\{L_k\}$ is a collection
     of jump operators, each continuously measured with efficiency $0\leq\eta_k\leq1$
-    ($\eta_k=0$ for purely dissipative loss channels) and $\mathrm{d}W_k(t)$ are
+    ($\eta_k=0$ for purely dissipative loss channels) and $\dd W_k(t)$ are
     independent Wiener processes.
 
     Notes:
@@ -64,21 +64,20 @@ def smesolve(
         counting schemes. No solver for the jump SME is provided yet, if it is needed
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
-    The measured signals $I_k(t)=\mathrm{d}y_k(t)/\mathrm{d}t$ verify:
+    The measured signals $I_k(t)=\dd y_k(t)/\dt$ verify:
     $$
-        \mathrm{d}y_k(t) =\sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho(t)} \mathrm{d}t
-        + \mathrm{d}W_k(t).
+        \dd y_k(t) =\sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho(t)} \dt + \dd W_k(t).
     $$
 
     Notes:
         Sometimes the signals are defined with a different but equivalent normalisation
-        $\mathrm{d}y_k'(t) = \mathrm{d}y_k(t)/(2\sqrt{\eta_k})$.
+        $\dd y_k'(t) = \dd y_k(t)/(2\sqrt{\eta_k})$.
 
     The signals $I_k(t)$ are singular quantities, the solver returns the averaged signals
     $J_k(t)$ defined for a time interval $[t_0, t_1]$ by:
     $$
-        J_k([t_0, t_1]) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t) \mathrm{d}t
-        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \mathrm{d}y_k(t).
+        J_k([t_0, t_1]) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t) \dt
+        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd y_k(t).
     $$
     The time intervals for integration are defined by the argument `t_meas`, which
     defines `len(t_meas) - 1` intervals. By default, `t_meas = tsave`, so the signals

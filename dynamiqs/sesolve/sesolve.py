@@ -32,7 +32,7 @@ def sesolve(
     $t$, starting from an initial state $\ket{\psi(t=0)}$, according to the Schrödinger
     equation (with $\hbar=1$):
     $$
-        \frac{\mathrm{d}\ket{\psi(t)}}{\mathrm{d}t} = -i H(t) \ket{\psi(t)},
+        \frac{\dd\ket{\psi(t)}}{\dt} = -i H(t) \ket{\psi(t)},
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$.
 
