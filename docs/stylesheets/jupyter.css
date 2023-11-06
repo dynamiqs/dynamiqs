@@ -54,3 +54,8 @@ Description: CSS for jupyter notebooks
 .md-typeset hr {
     margin: 3.0em 0 0 0;
 }
+
+/* Remove collapser */
+.jupyter-wrapper .jp-Collapser {
+    display: none !important;
+}
