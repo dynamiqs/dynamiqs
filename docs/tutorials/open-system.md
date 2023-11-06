@@ -69,7 +69,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
 
-^^Time complexity^^: $O(n^6)$ (complexity of the $n^2\times n^2$ Liouvillian matrix exponentiation[^3]).
+^^Time complexity^^: $O(n^6)$ (complexity of computing the $n^2\times n^2$ Liouvillian matrix exponential[^3]).
 [^3]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 ### Solve the ODE iteratively

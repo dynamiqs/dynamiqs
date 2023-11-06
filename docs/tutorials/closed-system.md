@@ -59,7 +59,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian).
 
-^^Time complexity^^: $O(n^3)$ (complexity of the matrix exponentiation[^2]).
+^^Time complexity^^: $O(n^3)$ (complexity of computing the matrix exponential[^2]).
 
 [^2]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
