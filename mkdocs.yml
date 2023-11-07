@@ -101,6 +101,7 @@ nav:
       - tutorials/td-system.md
       - tutorials/closed-system.md
       - tutorials/open-system.md
+      - tutorials/batching.md
   - Python API:
     - python_api/index.md
     - Solvers:

@@ -224,6 +224,31 @@ html .md-typeset .quote> :last-child {
   margin-bottom: 0.2em;
 }
 
+/* Navigation titles spacing */
+@media screen and (min-width: 60em) {
+    .md-nav--secondary .md-nav__title {
+        box-shadow: None;
+    }
+}
+
+@media screen and (min-width: 76.25em) {
+    .md-nav__link {
+        margin-top: 0.325em;
+    }
+
+    .md-nav__container > .md-nav__link {
+        margin-bottom: 0.0em;
+    }
+
+    .md-nav__item--section {
+        margin: 0 0 1.25em 0;
+    }
+
+    .md-nav--lifted > .md-nav__list > .md-nav__item--active > .md-nav__link {
+        margin-bottom: 1em;
+    }
+}
+
 /* Function name */
 .md-typeset .doc-object-name {
   color: var(--md-primary-fg-color);
