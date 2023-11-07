@@ -1,6 +1,6 @@
 # Getting started with dynamiqs
 
-This guide is an overview and explains the important features; details are found in [API reference](../python_api/utils.md).
+This guide is an overview and explains the important features; details are found in [API reference](../python_api/index.md).
 
 - [What is dynamiqs?](whatis.md)
 - [Installation](installation.md)
