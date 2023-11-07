@@ -65,7 +65,7 @@ def H(t):
     To define a time-dependent Hamiltonian with additional arguments, you can use Python's lambda:
     ```python
     def H_args(t, omega):
-        return dq.sigmaz() + torch.cos(omega*t)*dq.sigmax()
+        return dq.sigmaz() + torch.cos(omega * t) * dq.sigmax()
     H = lambda t: H_args(t, 1.0)
     ```
 
