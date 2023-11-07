@@ -118,7 +118,6 @@ res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
 >>> res.states[-1]                          # print the final state
 tensor([[0.368+0.j, 0.000+0.j],
         [0.000+0.j, 0.632+0.j]])
-
 ```
 
 If you want to know more about the available solvers or the different options, head to the [mesolve()](../python_api/solvers/mesolve.md) API documentation.

@@ -30,7 +30,6 @@ H = torch.tensor([[1, 0], [0, -1]])
 # using dynamiqs
 import dynamiqs as dq
 H = dq.sigmaz()
-
 ```
 
 !!! Warning "Computing operators adjoint and products"
@@ -46,7 +45,6 @@ H = dq.sigmaz()
     >>> dq.sigmax() * dq.sigmax()  # incorrect
     tensor([[0.+0.j, 1.+0.j],
             [1.+0.j, 0.+0.j]])
-
     ```
 
 ## Time-dependent Hamiltonians
@@ -58,7 +56,6 @@ For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sig
 ```python
 def H(t):
     return dq.sigmaz() + torch.cos(t) * dq.sigmax()
-
 ```
 
 !!! Warning "Function returning non-tensor object"
@@ -70,7 +67,6 @@ def H(t):
     def H_args(t, omega):
         return dq.sigmaz() + torch.cos(omega*t)*dq.sigmax()
     H = lambda t: H_args(t, 1.0)
-
     ```
 
 ## Piecewise constant Hamiltonians

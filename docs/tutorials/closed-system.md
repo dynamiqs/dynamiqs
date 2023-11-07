@@ -106,7 +106,6 @@ res = dq.sesolve(H, psi0, tsave)  # run the simulation
 >>> res.states[-1]                # print the final state
 tensor([[0.540+0.841j],
         [0.000+0.000j]])
-
 ```
 
 If you want to know more about the available solvers or the different options, head to the [sesolve()](../python_api/solvers/sesolve.md) API documentation.
