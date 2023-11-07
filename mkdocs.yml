@@ -105,4 +105,5 @@ nav:
       - Workflow in dynamiqs: tutorials/workflow.ipynb
       - tutorials/closed-system.md
       - tutorials/open-system.md
+      - tutorials/td-system.md
   - Python API: python_api/
