@@ -53,9 +53,6 @@ plugins:
   - gen-files:
       scripts:
         - docs/generate_python_api.py
-  - literate-nav:
-      nav_file: navigation.md
-  - section-index
   - mkdocs-jupyter
   - mkdocstrings:
       default_handler: python
@@ -82,9 +79,6 @@ markdown_extensions:
   - pymdownx.caret
   - attr_list
   - footnotes
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
 extra_javascript:
   - javascripts/katex.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js
@@ -94,15 +88,83 @@ watch:
 nav:
   - Home: index.md
   - Getting started:
-      - getting_started/index.md
-      - What is dynamiqs?: getting_started/whatis.md
-      - Installation: getting_started/installation.md
-      - Basic examples: getting_started/examples.ipynb
-      - Contributing: getting_started/contributing.md
-      - Let's discuss: getting_started/discussion.md
+    - getting_started/index.md
+    - What is dynamiqs?: getting_started/whatis.md
+    - Installation: getting_started/installation.md
+    - Basic examples: getting_started/examples.ipynb
+    - Contributing: getting_started/contributing.md
+    - Let's discuss: getting_started/discussion.md
   - Tutorials:
-      - tutorials/index.md
-      - Workflow in dynamiqs: tutorials/workflow.ipynb
-      - tutorials/closed-system.md
-      - tutorials/open-system.md
-  - Python API: python_api/
+    - tutorials/index.md
+    - Workflow in dynamiqs: tutorials/workflow.ipynb
+    - tutorials/closed-system.md
+    - tutorials/open-system.md
+  - Python API:
+    - Solvers:
+      - python_api/solvers/index.md
+      - sesolve: python_api/solvers/sesolve.md
+      - mesolve: python_api/solvers/mesolve.md
+      - smesolve: python_api/solvers/smesolve.md
+    - Utilities:
+      - python_api/utils/index.md
+      - Operators:
+        - eye: python_api/utils/operators/eye.md
+        - zero: python_api/utils/operators/zero.md
+        - destroy: python_api/utils/operators/destroy.md
+        - create: python_api/utils/operators/create.md
+        - number: python_api/utils/operators/number.md
+        - parity: python_api/utils/operators/parity.md
+        - displace: python_api/utils/operators/displace.md
+        - squeeze: python_api/utils/operators/squeeze.md
+        - quadrature: python_api/utils/operators/quadrature.md
+        - position: python_api/utils/operators/position.md
+        - momentum: python_api/utils/operators/momentum.md
+        - sigmax: python_api/utils/operators/sigmax.md
+        - sigmay: python_api/utils/operators/sigmay.md
+        - sigmaz: python_api/utils/operators/sigmaz.md
+        - sigmap: python_api/utils/operators/sigmap.md
+        - sigmam: python_api/utils/operators/sigmam.md
+      - States:
+        - fock: python_api/utils/states/fock.md
+        - fock_dm: python_api/utils/states/fock_dm.md
+        - coherent: python_api/utils/states/coherent.md
+        - coherent_dm: python_api/utils/states/coherent_dm.md
+      - Quantum utilities:
+        - dag: python_api/utils/utils/dag.md
+        - trace: python_api/utils/utils/trace.md
+        - ptrace: python_api/utils/utils/ptrace.md
+        - tensprod: python_api/utils/utils/tensprod.md
+        - expect: python_api/utils/utils/expect.md
+        - norm: python_api/utils/utils/norm.md
+        - unit: python_api/utils/utils/unit.md
+        - dissipator: python_api/utils/utils/dissipator.md
+        - lindbladian: python_api/utils/utils/lindbladian.md
+        - isket: python_api/utils/utils/isket.md
+        - isbra: python_api/utils/utils/isbra.md
+        - isdm: python_api/utils/utils/isdm.md
+        - isop: python_api/utils/utils/isop.md
+        - toket: python_api/utils/utils/toket.md
+        - tobra: python_api/utils/utils/tobra.md
+        - todm: python_api/utils/utils/todm.md
+        - braket: python_api/utils/utils/braket.md
+        - overlap: python_api/utils/utils/overlap.md
+        - fidelity: python_api/utils/utils/fidelity.md
+      - Tensor conversion:
+        - to_tensor: python_api/utils/tensor_types/to_tensor.md
+        - to_qutip: python_api/utils/tensor_types/to_qutip.md
+        - to_numpy: python_api/utils/tensor_types/to_numpy.md
+        - from_qutip: python_api/utils/tensor_types/from_qutip.md
+      - Wigner distribution:
+        - wigner: python_api/utils/wigners/wigner.md
+      - Vectorization:
+        - operator_to_vector: python_api/utils/vectorization/operator_to_vector.md
+        - vector_to_operator: python_api/utils/vectorization/vector_to_operator.md
+        - spre: python_api/utils/vectorization/spre.md
+        - spost: python_api/utils/vectorization/spost.md
+        - sdissipator: python_api/utils/vectorization/sdissipator.md
+        - slindbladian: python_api/utils/vectorization/slindbladian.md
+      - Quantum optimal control:
+        - rand_complex: python_api/utils/optimal_control/rand_complex.md
+        - pwc_pulse: python_api/utils/optimal_control/pwc_pulse.md
+        - snap_gate: python_api/utils/optimal_control/snap_gate.md
+        - cd_gate: python_api/utils/optimal_control/cd_gate.md
