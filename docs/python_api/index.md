@@ -16,7 +16,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
                     <tbody>
                         <tr>
                             <td class="fixed_height">
-                                <a href="/python_api/solvers/sesolve.md">
+                                <a href="/python_api/solvers/sesolve.html">
                                 <code>
                                     sesolve
                                 </code>
@@ -30,7 +30,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
                         </tr>
                         <tr>
                             <td class="fixed_height">
-                                <a href="/python_api/solvers/mesolve.md">
+                                <a href="/python_api/solvers/mesolve.html">
                                 <code>
                                     mesolve
                                 </code>
@@ -44,7 +44,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
                         </tr>
                         <tr>
                             <td class="fixed_height">
-                                <a href="/python_api/solvers/smesolve.md">
+                                <a href="/python_api/solvers/smesolve.html">
                                 <code>
                                     smesolve
                                 </code>
