@@ -1,4 +1,4 @@
-from doctest import ELLIPSIS
+from doctest import ELLIPSIS, SKIP
 
 import pytest
 import torch
@@ -23,7 +23,7 @@ def set_torch_print_options():
 # sybil configuration (better doctest for the documentation)
 pytest_collect_file = Sybil(
     parsers=[
-        DocTestDirectiveParser(optionflags=ELLIPSIS),
+        DocTestDirectiveParser(optionflags=ELLIPSIS | SKIP),
         PythonCodeBlockParser(),
     ],
     patterns=['*.md'],

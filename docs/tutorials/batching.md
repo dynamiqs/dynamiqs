@@ -74,13 +74,13 @@ For instance, for the simulation of a Schrödinger equation batched over Hamilto
 ...                     dq.unit(dq.fock(2, 0) - dq.fock(2, 1))])
 >>> tsave = torch.linspace(0, 1, 10)
 >>> exp_ops = [dq.sigmaz()]
->>> results = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops)
+>>> result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops)
 >>> result.states.shape
 torch.Size([3, 4, 10, 2, 1])
 >>> result.expects.shape
-torch.Size([3, 4, 10, 1])
+torch.Size([3, 4, 1, 10])
 ```
-The returned `states` Tensor has shape `(3, 4, 10, 2, 1)` where `(2, 1)` is the individual shape of each state, `(10,)` is the shape of the time vector, `(4,)` is the shape of the batched initial state, and `(3,)` is the shape of the batched Hamiltonian. Similarly, `expects` has the same batching dimensions, but an individual shape `(1,)` since only a single expectation operator is provided.
+The returned `states` Tensor has shape `(3, 4, 10, 2, 1)` where `(2, 1)` is the individual shape of each state, `(10,)` is the shape of the time vector, `(4,)` is the shape of the batched initial state, and `(3,)` is the shape of the batched Hamiltonian. Similarly, `expects` has the same batching dimensions, but with a dimension `(1,)` that corresponds to the single expectation value provided, and a dimension `(10,)` that corresponds to the time vector.
 
 
 ## Why batching?
@@ -105,11 +105,11 @@ angles = torch.linspace(0, 2 * pi, 20)
 alphas = 2.0 * torch.exp(1j * angles)
 psi0 = dq.coherent(N, alphas)
 
-# Dissipation
+# Jump operator
 gamma = 0.1
 jump_ops = [sqrt(gamma) * a]
 
-# Time evolution
+# Time array
 tsave = torch.linspace(0, 1, 30)
 
 def run_batched():
@@ -120,6 +120,8 @@ def run_unbatched():
         for j in range(psi0.shape[0]):
             dq.mesolve(H[i], jump_ops, psi0[j], tsave)
 
+```
+```text
 %timeit run_batched()
 # 1.69 s ± 7.32 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 %timeit run_unbatched()
@@ -127,4 +129,4 @@ def run_unbatched():
 
 ```
 
-In this example, we gain a factor 4 in speedup from batching !
+Even in this simple example, we gain a factor 4 in speedup just from batching !

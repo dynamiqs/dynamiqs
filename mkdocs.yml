@@ -96,7 +96,6 @@ nav:
       - tutorials/index.md
       - Basics:
           - Workflow in dynamiqs: tutorials/workflow.md
-          - tutorials/td-system.md
           - tutorials/defining-hamiltonians.md
           - tutorials/closed-system.md
           - tutorials/open-system.md
