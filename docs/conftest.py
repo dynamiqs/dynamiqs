@@ -1,8 +1,9 @@
 from doctest import ELLIPSIS
-from sybil import Sybil
-from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser
+
 import pytest
 import torch
+from sybil import Sybil
+from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser
 
 import dynamiqs
 
