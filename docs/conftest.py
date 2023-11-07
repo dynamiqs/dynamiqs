@@ -1,3 +1,5 @@
+from sybil import Sybil
+from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser
 import pytest
 import torch
 
@@ -14,3 +16,13 @@ def add_dq(doctest_namespace):
 @pytest.fixture(scope='session', autouse=True)
 def set_torch_print_options():
     torch.set_printoptions(precision=3, sci_mode=False)
+
+
+# pytest configuration
+pytest_collect_file = Sybil(
+    parsers=[
+        DocTestDirectiveParser(),
+        PythonCodeBlockParser(),
+    ],
+    patterns=['*.md'],
+).pytest()
