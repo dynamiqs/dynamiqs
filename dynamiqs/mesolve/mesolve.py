@@ -35,7 +35,7 @@ def mesolve(
     starting from an initial state $\rho(t=0)$, according to the Lindblad master
     equation (with $\hbar=1$):
     $$
-        \frac{\mathrm{d}\rho(t)}{\mathrm{d}t} =-i[H(t), \rho(t)]
+        \frac{\dd\rho(t)}{\dt} =-i[H(t), \rho(t)]
         + \sum_{k=1}^N \left(
             L_k \rho(t) L_k^\dag
             - \frac{1}{2} L_k^\dag L_k \rho(t)

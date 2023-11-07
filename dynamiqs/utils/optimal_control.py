@@ -27,15 +27,13 @@ def rand_complex(
     Each element of the returned tensor has a random magnitude in the interval
     $[0, \texttt{rmax})$ and a random phase in the interval $[0, 2\pi)$. Formally, each
     element is defined by
-
     $$
         x = re^{i\theta}\ \text{with}\
         \begin{cases}
-            r = \texttt{rmax} \cdot \sqrt{\texttt{rand(0,1)}} \\
+            r = \texttt{rmax} \cdot \sqrt{\texttt{rand(0,1)}} \\\\
             \theta = 2\pi \cdot \texttt{rand(0,1)}
         \end{cases}
     $$
-
     where $\texttt{rand(0,1)}$ is a random number uniformly distributed between 0 and 1.
 
     Notes:
