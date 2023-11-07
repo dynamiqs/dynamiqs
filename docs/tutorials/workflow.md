@@ -20,9 +20,9 @@ from math import sqrt
 
 ## 1. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.html) for more details. Otherwise, you can define specific states and operators using [NumPy](https://numpy.org/) arrays, [QuTiP](http://qutip.org/) objects, or [PyTorch](https://pytorch.org/) tensors.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using [NumPy](https://numpy.org/) arrays, [QuTiP](http://qutip.org/) objects, or [PyTorch](https://pytorch.org/) tensors.
 
-Here, we will use [`dq.fock`](../python_api/utils/states/fock.html) to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz`](../python_api/utils/operators/sigmaz.html) and [`dq.sigmax`](../python_api/utils/operators/sigmax.html) to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
+Here, we will use [`dq.fock`](../python_api/utils/states/fock.md) to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz`](../python_api/utils/operators/sigmaz.md) and [`dq.sigmax`](../python_api/utils/operators/sigmax.md) to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
 ```python
 # initial state
@@ -49,7 +49,7 @@ In particular, kets have a shape `(..., N, 1)`.
 
 Next, we define the scope of the simulation. This includes the total duration of time evolution, the observables we want to measure and how often we measure them. Observables are defined similarly to the Hamiltonian, using Tensors and dynamiqs utility functions. The total duration and how often measurements are performed is defined in a single object named `tsave`. It is an arbitrary array of time points, of which `tsave[-1]` specifies the total duration of time evolution.
 
-We also need to specify the solver and options related to it, namely the method of integration and the eventual related parameters. The list of available solvers and their parameters is available in the [API documentation](../python_api/index.html) for each quantum differential equation.
+We also need to specify the solver and options related to it, namely the method of integration and the eventual related parameters. The list of available solvers and their parameters is available in the [API documentation](../python_api/index.md) for each quantum differential equation.
 
 ```python
 # define sampling times
@@ -72,7 +72,7 @@ options = {
 
 ## 3. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve`](../python_api/solvers/sesolve.html) function, which returns an instance of the [`Result`](../python_api/index.html) class. This object contains the computed states, the observables, and various information about the solver. It also features utility methods to convert result Tensors to NumPy arrays or QuTiP objects.
+We can now run the simulation. This is done by calling the [`dq.sesolve`](../python_api/solvers/sesolve.md) function, which returns an instance of the [`Result`](../python_api/index.md) class. This object contains the computed states, the observables, and various information about the solver. It also features utility methods to convert result Tensors to NumPy arrays or QuTiP objects.
 
 ```python
 # run simulation
