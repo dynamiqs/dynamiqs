@@ -105,14 +105,17 @@ Also called the **quantum-jump** approach.
 You can create the state, Hamiltonian and jump operators using any array-like object (Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
->>> import numpy as np
->>> import dynamiqs as dq
->>> rho0 = [[1, 0], [0, 0]]                     # initial state
->>> H = [[-1, 0], [0, 1]]                       # Hamiltonian
->>> jump_ops = [[[0, 0], [1, 0]]]               # list of jump operators
->>> tsave = np.linspace(0, 1.0, 11)             # saving times
->>> res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
->>> res.states[-1]                              # print the final state
+import numpy as np
+import dynamiqs as dq
+rho0 = [[1, 0], [0, 0]]                     # initial state
+H = [[-1, 0], [0, 1]]                       # Hamiltonian
+jump_ops = [[[0, 0], [1, 0]]]               # list of jump operators
+tsave = np.linspace(0, 1.0, 11)             # saving times
+res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
+```
+
+```python
+>>> res.states[-1]                          # print the final state
 tensor([[0.368+0.j, 0.000+0.j],
         [0.000+0.j, 0.632+0.j]])
 
