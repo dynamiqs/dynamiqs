@@ -96,9 +96,10 @@ nav:
     - Let's discuss: getting_started/discussion.md
   - Tutorials:
     - tutorials/index.md
-    - Workflow in dynamiqs: tutorials/workflow.ipynb
-    - tutorials/closed-system.md
-    - tutorials/open-system.md
+    - Basics:
+      - Workflow in dynamiqs: tutorials/workflow.ipynb
+      - tutorials/closed-system.md
+      - tutorials/open-system.md
   - Python API:
     - python_api/index.md
     - Solvers:
