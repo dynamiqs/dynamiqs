@@ -100,13 +100,12 @@ nav:
     - tutorials/closed-system.md
     - tutorials/open-system.md
   - Python API:
+    - python_api/index.md
     - Solvers:
-      - python_api/solvers/index.md
       - sesolve: python_api/solvers/sesolve.md
       - mesolve: python_api/solvers/mesolve.md
       - smesolve: python_api/solvers/smesolve.md
     - Utilities:
-      - python_api/utils/index.md
       - Operators:
         - eye: python_api/utils/operators/eye.md
         - zero: python_api/utils/operators/zero.md
