@@ -13,9 +13,9 @@ import qutip as qt
 import torch
 
 # parameters
-n = 128  # Hilbert space dimension
-omega = 1.0  # frequency
-kappa = 0.1  # decay rate
+n = 128       # Hilbert space dimension
+omega = 1.0   # frequency
+kappa = 0.1   # decay rate
 alpha0 = 1.0  # initial coherent state amplitude
 
 # QuTiP operators, initial state and saving times
@@ -31,8 +31,9 @@ tsave = np.linspace(0, 1.0, 101)
 # simulation
 result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
-
 ```
+
+Output:
 
 ```text
 |██████████| 100.0% - time 00:00/00:00
@@ -70,15 +71,22 @@ tsave = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dict(verbose=False)
-result = dq.mesolve(H, jump_ops, rho0, tsave, gradient='autograd', options=options)
+result = dq.mesolve(
+    H, jump_ops, rho0, tsave,
+    gradient=dq.gradient.Autograd(),
+    options=dict(verbose=False),
+)
 
 # gradient computation
 loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
 grads = torch.autograd.grad(loss, (kappa, alpha0))
-print(f'gradient wrt to kappa  : {grads[0]}\ngradient wrt to alpha0 : {grads[1]}')
-
+print(
+    f'gradient wrt to kappa  : {grads[0]}\n'
+    f'gradient wrt to alpha0 : {grads[1]}'
+)
 ```
+
+Output:
 
 ```text
 gradient wrt to kappa  : tensor([-0.9048])
