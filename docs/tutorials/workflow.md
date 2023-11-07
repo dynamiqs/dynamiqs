@@ -1,10 +1,11 @@
 # Workflow in dynamiqs
 
 The core of dynamiqs is to solve quantum differential equations. This tutorial goes over the basic workflow of such simulations. There are mainly four steps:
- - **Define the system**: Design the state and operators you are interested in.
- - **Define the scope**: Specify the duration, observables or solver of your simulation.
- - **Run the simulation**: Solve the differential equation and collect the results.
- - **Analyze the results**: Plot results and extract the information you are interested in.
+
+- **Define the system**: Design the state and operators you are interested in.
+- **Define the scope**: Specify the duration, observables or solver of your simulation.
+- **Run the simulation**: Solve the differential equation and collect the results.
+- **Analyze the results**: Plot results and extract the information you are interested in.
 
 In the rest of this tutorial, we go over these steps in detail, taking the example of the Rabi oscillations of a two-level system.
 
@@ -21,7 +22,7 @@ from math import sqrt
 
 After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.html) for more details. Otherwise, you can define specific states and operators using [NumPy](https://numpy.org/) arrays, [QuTiP](http://qutip.org/) objects, or [PyTorch](https://pytorch.org/) tensors.
 
-Here, we will use [`dq.fock`](../python_api/utils/states/fock.html) to define the initial state $\lvert \psi_0 \rangle = \lvert 0 \rangle$, [`dq.sigmaz`](../python_api/utils/operators/sigmaz.html) and [`dq.sigmax`](../python_api/utils/operators/sigmax.html) to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
+Here, we will use [`dq.fock`](../python_api/utils/states/fock.html) to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz`](../python_api/utils/operators/sigmaz.html) and [`dq.sigmax`](../python_api/utils/operators/sigmax.html) to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
 ```python
 # initial state
@@ -101,7 +102,7 @@ Expects    : Tensor (1, 100) | 0.78 Kb
 
 ## 4. Analyze the results
 
-Finally, we can analyze the results in whichever relevant way. In our example, let us plot the $\langle \sigma_z \rangle$ observable as a function of time. To do so, we call `result.expects[0].real` which extracts the first measured observable (here, the only one) and plot its real part (our observable is hermitian, so measurements are real-valued). We compare to the expected analytical result.
+Finally, we can analyze the results in whichever relevant way. In our example, let us plot the $\braket{\sigma_z}$ observable as a function of time. To do so, we call `result.expects[0].real` which extracts the first measured observable (here, the only one) and plot its real part (our observable is hermitian, so measurements are real-valued). We compare to the expected analytical result.
 
 ```python
 # analytical result
@@ -121,9 +122,6 @@ plt.xlim(0, 10)
 plt.ylim(-1, 1)
 plt.legend(('Analytical', 'dynamiqs'))
 plt.style.use('bmh')
-
-# display plot
-plt.show()
 ```
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.
