@@ -19,7 +19,7 @@ def set_torch_print_options():
     torch.set_printoptions(precision=3, sci_mode=False)
 
 
-# pytest configuration
+# sybil configuration (better doctest for the documentation)
 pytest_collect_file = Sybil(
     parsers=[
         DocTestDirectiveParser(optionflags=ELLIPSIS),
