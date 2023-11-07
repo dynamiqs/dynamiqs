@@ -2,6 +2,13 @@
 
 Batching refers to the process of grouping similar tasks that require similar resources to streamline their completion and improve efficiency. In the context of quantum simulations, batching can be used to run multiple simulations concurrently, and can dramatically speedup simulations. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
 
+```python
+import torch
+import dynamiqs as dq
+import timeit
+from math import pi, sqrt
+```
+
 ***
 
 ## Batching over Hamiltonians
@@ -10,7 +17,6 @@ To batch over multiple Hamiltonians, you can pass a Tensor of shape `(b, n, n)` 
 
 In general, this can be achieved using `torch.stack`. For instance:
 ```python
->>> import torch
 >>> H0 = dq.sigmaz()
 >>> H1 = dq.sigmax()
 >>> H = torch.stack([H0 + 0.1 * H1, H0 + 0.2 * H1, H0 + 0.3 * H1])
@@ -75,3 +81,50 @@ torch.Size([3, 4, 10, 2, 1])
 torch.Size([3, 4, 10, 1])
 ```
 The returned `states` Tensor has shape `(3, 4, 10, 2, 1)` where `(2, 1)` is the individual shape of each state, `(10,)` is the shape of the time vector, `(4,)` is the shape of the batched initial state, and `(3,)` is the shape of the batched Hamiltonian. Similarly, `expects` has the same batching dimensions, but an individual shape `(1,)` since only a single expectation operator is provided.
+
+
+## Why batching?
+
+Batching can be used to run multiple simulations concurrently, and can dramatically speedup simulations. This is particularly useful when running simulations on GPUs, where the overhead of moving data to and from the GPU can be significant. In this case, batching can be used to reduce the number of data transfers to and from the GPU, and thus improve the overall performance of the simulation.
+
+Even when running simulations on CPUs, batching can be used to improve the performance of simulations.
+
+```python
+# Hilbert space size
+N = 20
+
+# Batched Hamiltonian
+amplitudes = torch.linspace(-5, 5, 10)
+a = dq.destroy(N)
+H0 = a.mH @ a
+H1 = a + a.mH
+H = H0 + amplitudes[:, None, None] * H1
+
+# Batched initial state
+angles = torch.linspace(0, 2 * pi, 20)
+alphas = 2.0 * torch.exp(1j * angles)
+psi0 = dq.coherent(N, alphas)
+
+# Dissipation
+gamma = 0.1
+jump_ops = [sqrt(gamma) * a]
+
+# Time evolution
+tsave = torch.linspace(0, 1, 30)
+
+def run_batched():
+    dq.mesolve(H, jump_ops, psi0, tsave)
+
+def run_unbatched():
+    for i in range(H.shape[0]):
+        for j in range(psi0.shape[0]):
+            dq.mesolve(H[i], jump_ops, psi0[j], tsave)
+
+%timeit run_batched()
+# 1.69 s ± 7.32 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+%timeit run_unbatched()
+# 6.9 s ± 187 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+```
+
+In this example, we gain a factor 4 in speedup from batching !
