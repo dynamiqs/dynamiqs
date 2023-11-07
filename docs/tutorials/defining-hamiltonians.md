@@ -1,10 +1,10 @@
-# Defining Hamiltonian
+# Defining Hamiltonians
 
-In this short tutorial, we explain how to define Hamiltonian in dynamiqs. There are currently three ways: using array-like objects for constant Hamiltonian, defining a function for time-dependent Hamiltonian, and using a custom list format for piecewise constant Hamiltonian.
+In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently three ways: using array-like objects for constant Hamiltonians, defining a function for time-dependent Hamiltonians, and using a custom list format for piecewise constant Hamiltonians.
 
 ***
 
-## Constant Hamiltonian
+## Constant Hamiltonians
 
 A constant Hamiltonian can be defined using **array-like objects**, i.e. Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors. In all cases, the Hamiltonian is then converted internally into a PyTorch tensor for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common Hamiltonians.
 
@@ -47,7 +47,7 @@ H = dq.sigmaz()
             [1.+0.j, 0.+0.j]])
     ```
 
-## Time-dependent Hamiltonian
+## Time-dependent Hamiltonians
 
 A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float) -> Tensor` that returns the Hamiltonian as a PyTorch tensor for any time `t`.
 
@@ -67,8 +67,8 @@ def H(t):
     def H_args(t, omega):
         return dq.sigmaz() + torch.cos(omega * t) * dq.sigmax()
     H = lambda t: H_args(t, 1.0)
-    ```
+```
 
-## Piecewise constant Hamiltonian
+## Piecewise constant Hamiltonians
 
 !!! Warning "Work in Progress."
