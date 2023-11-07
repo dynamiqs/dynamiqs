@@ -76,7 +76,7 @@ result = dq.mesolve(
 )
 
 # gradient computation
-loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
+loss = dq.expect(a.mH @ a, result.states[-1]).real  # Tr[a^dag a rho]
 grads = torch.autograd.grad(loss, (kappa, alpha0))
 print(
     f'gradient wrt to kappa  : {grads[0]}\n'
