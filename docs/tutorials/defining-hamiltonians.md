@@ -67,7 +67,7 @@ def H(t):
     def H_args(t, omega):
         return dq.sigmaz() + torch.cos(omega * t) * dq.sigmax()
     H = lambda t: H_args(t, 1.0)
-```
+    ```
 
 ## Piecewise constant Hamiltonians
 
