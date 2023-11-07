@@ -8,7 +8,7 @@ In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There
 
 A constant Hamiltonian can be defined using **array-like objects**, i.e. Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors. In all cases, the Hamiltonian is then converted internally into a PyTorch tensor for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common Hamiltonians.
 
-For instance, to define the Pauli Z operator $H = \sigma_z$, one can use any of the following syntaxes:
+For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 ```python
 >>> # using Python lists
@@ -53,7 +53,7 @@ For instance, to define the Pauli Z operator $H = \sigma_z$, one can use any of 
 
 A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float) -> Tensor` that returns the Hamiltonian as a PyTorch tensor for any time `t`.
 
-For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, one can use the following syntax:
+For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, you can use the following syntax:
 
 ```python
 >>> def H(t):
@@ -65,7 +65,7 @@ For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sig
     An error is raised if `H(t)` return a non-tensor object, or a tensor with a different `dtype` or `device` than the ones specified to the solver. This is enforced to avoid costly type, dtype or device conversions at every time step of the numerical integration.
 
 ??? Note "Function with optional arguments"
-    To define a time-dependent Hamiltonian with additional arguments, one can use Python's lambda:
+    To define a time-dependent Hamiltonian with additional arguments, you can use Python's lambda:
     ```python
     >>> def H_args(t, omega):
     ...    return dq.sigmaz() + torch.cos(omega*t)*dq.sigmax()
