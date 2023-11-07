@@ -71,23 +71,23 @@ cmd = "task isort && task black && task codespell && task flake8"
 help = "lint the code and check style (isort + black + codespell + flake8)"
 
 [tool.taskipy.tasks.test]
-cmd = "echo '\n>>> pytest -n=auto -m \"not long\"' && pytest -n=auto -m \"not long\""
+cmd = "echo '\n>>> pytest -n=auto -m \"not long\" tests' && pytest -n=auto -m \"not long\" tests"
 help = "run the unit tests suite excluding long tests (pytest)"
 
 [tool.taskipy.tasks.test-long]
-cmd = "echo '\n>>> pytest -n=auto -m \"long\"' && pytest -n=auto -m \"long\""
+cmd = "echo '\n>>> pytest -n=auto -m \"long\" tests' && pytest -n=auto -m \"long\" tests"
 help = "run the unit tests suite including only long tests (pytest)"
 
 [tool.taskipy.tasks.test-all]
-cmd = "echo '\n>>> pytest -n=auto' && pytest -n=auto"
+cmd = "echo '\n>>> pytest -n=auto tests' && pytest -n=auto tests"
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = "echo '\n>>> doctest dynamiqs/' && pytest --doctest-modules dynamiqs"
+cmd = "echo '\n>>> doctest dynamiqs' && pytest --doctest-modules dynamiqs"
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-doc]
-cmd = "echo '\n>>> pytest docs/' && pytest docs"
+cmd = "echo '\n>>> pytest docs' && pytest docs"
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
