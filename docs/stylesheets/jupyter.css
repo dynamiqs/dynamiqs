@@ -3,6 +3,11 @@ File: jupyter.css
 Description: CSS for jupyter notebooks
 */
 
+/* Change padding of jupyter notebook pages to match markdown */
+.jupyter-wrapper .jp-Notebook {
+  --jp-notebook-padding: 0;
+}
+
 /* hide jupyter notebooks input/output numbers */
 .jp-InputPrompt {
   display: none !important;
@@ -14,16 +19,16 @@ Description: CSS for jupyter notebooks
 
 /* add "Output:" before output cells */
 .jp-Cell-outputWrapper::before {
-    content: "Output:";
-    margin-left: 1.5em;
-    font-size: 0.75em;
-    color: var(--md-primary-bg-color--light);
-    letter-spacing: 0.01em;
+  content: "Output:";
+  margin-left: 1.5em;
+  font-size: 0.75em;
+  color: var(--md-primary-bg-color--light);
+  letter-spacing: 0.01em;
 }
 
 .jupyter-wrapper .jp-OutputArea-output pre {
-    margin: 0 !important;
-    padding: 0px 10px !important;
+  margin: 0 !important;
+  padding: 0px 10px !important;
 }
 
 /* Change color of jupyter notebook cells */
@@ -37,25 +42,45 @@ Description: CSS for jupyter notebooks
 
 /* Reduce padding between code and markdown cells */
 .jupyter-wrapper .jp-Cell {
-    padding: 0 var(--jp-cell-padding) !important;
+  padding: 0 !important;
 }
 
 /* Change hover color of hyperlinks */
 .md-typeset a:hover code {
-    background-color: var(--md-accent-fg-color--transparent);
-    color: var(--md-accent-fg-color);
+  background-color: var(--md-accent-fg-color--transparent);
+  color: var(--md-accent-fg-color);
 }
 
 .jupyter-wrapper a:hover {
-    color: var(--md-accent-fg-color) !important;
+  color: var(--md-accent-fg-color) !important;
 }
 
 /* Line breaks margin */
 .md-typeset hr {
-    margin: 3.0em 0 0 0;
+  margin: 3.0em 0 0 0;
 }
 
 /* Remove collapser */
 .jupyter-wrapper .jp-Collapser {
-    display: none !important;
+  display: none !important;
 }
+
+/* Left border on jupyter code cells */
+.jupyter-wrapper .jp-Cell.jp-CodeCell .jp-Cell-inputWrapper {
+  border-left: 3px solid var(--md-primary-fg-color);
+}
+
+.jupyter-wrapper .jp-InputArea-editor {
+  border: None !important;
+}
+
+/* Code font size */
+.jupyter-wrapper .CodeMirror {
+  --jp-code-font-size: 0.85em !important;
+}
+
+.highlight-ipynb .kn {
+  font-weight: normal !important;
+}
+
+/* Change clipboard button */
