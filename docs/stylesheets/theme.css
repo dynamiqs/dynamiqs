@@ -67,19 +67,6 @@ Description: Color theme of the dynamiqs documentation
   --homepage-button-font-color: #cf6656;
 }
 
-/* Jupyter notebook colors */
-[data-md-color-scheme="default"] .jupyter-wrapper .jp-Cell {
-  --jp-mirror-editor-variable-color: #ed7764;
-  --jp-mirror-editor-link-color: #ed7764;
-  --jp-mirror-editor-number-color: #cf5e89;
-  --jp-mirror-editor-string-color: #25adab;
-  --jp-mirror-editor-string-2-color: #25adab;
-  --jp-mirror-editor-keyword-color: #25adab;
-  --jp-mirror-editor-operator-color: #3b7091;
-  --jp-mirror-editor-comment-color: #8b949e;
-  --jp-mirror-editor-punctuation-color: #0000008a;
-}
-
 
 /* --------------------------- */
 /* Dark mode                  */
@@ -125,17 +112,4 @@ Description: Color theme of the dynamiqs documentation
   --homepage-gradient: linear-gradient(to right top, #85382b, #9c4030, #b34834, #cb5039, #e3583d);
   --homepage-button-hover-color: #743020;
   --homepage-button-font-color: #943e2b;
-}
-
-/* Jupyter notebook colors */
-[data-md-color-scheme="slate"] .jupyter-wrapper .jp-Cell {
-  --jp-mirror-editor-variable-color: #ed7764;
-  --jp-mirror-editor-link-color: #ed7764;
-  --jp-mirror-editor-number-color: #e56395;
-  --jp-mirror-editor-string-color: #23bebb;
-  --jp-mirror-editor-string-2-color: #23bebb;
-  --jp-mirror-editor-keyword-color: #23bebb;
-  --jp-mirror-editor-operator-color: #89aabe;
-  --jp-mirror-editor-comment-color: #747a81;
-  --jp-mirror-editor-punctuation-color: #d2d7f99e;
 }

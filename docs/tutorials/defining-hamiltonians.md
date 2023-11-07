@@ -11,26 +11,25 @@ A constant Hamiltonian can be defined using **array-like objects**, i.e. Python 
 For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 ```python
->>> # using Python lists
->>> H = [[1, 0], [0, -1]]
+# using Python lists
+H = [[1, 0], [0, -1]]
 
->>> # using NumPy arrays
->>> import numpy as np
->>> H = np.array([[1, 0], [0, -1]])
+# using NumPy arrays
+import numpy as np
+H = np.array([[1, 0], [0, -1]])
 
->>> # using QuTiP quantum objects
->>> import qutip as qt
->>> H = qt.Qobj([[1, 0], [0, -1]])
->>> H = qt.sigmaz()
+# using QuTiP quantum objects
+import qutip as qt
+H = qt.Qobj([[1, 0], [0, -1]])
+H = qt.sigmaz()
 
->>> # using PyTorch tensors
->>> import torch
->>> H = torch.tensor([[1, 0], [0, -1]])
+# using PyTorch tensors
+import torch
+H = torch.tensor([[1, 0], [0, -1]])
 
->>> # using dynamiqs
->>> import dynamiqs as dq
->>> H = dq.sigmaz()
-
+# using dynamiqs
+import dynamiqs as dq
+H = dq.sigmaz()
 ```
 
 !!! Warning "Computing operators adjoint and products"
@@ -46,7 +45,6 @@ For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of 
     >>> dq.sigmax() * dq.sigmax()  # incorrect
     tensor([[0.+0.j, 1.+0.j],
             [1.+0.j, 0.+0.j]])
-
     ```
 
 ## Time-dependent Hamiltonians
@@ -56,9 +54,8 @@ A time-dependent Hamiltonian can be defined using a Python function with signatu
 For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, you can use the following syntax:
 
 ```python
->>> def H(t):
-...     return dq.sigmaz() + torch.cos(t) * dq.sigmax()
-
+def H(t):
+    return dq.sigmaz() + torch.cos(t) * dq.sigmax()
 ```
 
 !!! Warning "Function returning non-tensor object"
@@ -67,10 +64,9 @@ For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sig
 ??? Note "Function with optional arguments"
     To define a time-dependent Hamiltonian with additional arguments, you can use Python's lambda:
     ```python
-    >>> def H_args(t, omega):
-    ...    return dq.sigmaz() + torch.cos(omega*t)*dq.sigmax()
-    >>> H = lambda t: H_args(t, 1.0)
-
+    def H_args(t, omega):
+        return dq.sigmaz() + torch.cos(omega * t) * dq.sigmax()
+    H = lambda t: H_args(t, 1.0)
     ```
 
 ## Piecewise constant Hamiltonians
