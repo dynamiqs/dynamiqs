@@ -18,7 +18,7 @@ def add_dq(doctest_namespace):
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def set_torch_print_options():
+def torch_set_printoptions():
     torch.set_printoptions(precision=3, sci_mode=False)
 
 
