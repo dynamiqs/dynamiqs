@@ -1,12 +1,12 @@
 # Closed systems
 
-This tutorial introduces the quantum state for a closed quantum system, describes its evolution with the Schrödinger equation, and explains two principal numerical approaches to simulate the evolution: computing the propagator or solving the ODE iteratively.
+This tutorial introduces the quantum state for a closed quantum system, describes its evolution with the Schrödinger equation, and explains two common numerical methods to simulate the evolution: computing the propagator or solving the ODE iteratively.
 
 ***
 
 ## The quantum state
 
-The **quantum state** $\ket\psi$ is a column vector of size $n$[^1]:
+The quantum state that describes a closed quantum system is a **state vector** $\ket\psi$, i.e. a column vector of size $n$[^1]:
 $$
     \ket\psi=
     \begin{pmatrix}
@@ -44,7 +44,7 @@ where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\t
 
 There are two common ideas for solving the Schrödinger equation.
 
-### Compute the propagator
+### Computing the propagator
 
 The state at time $t$ is given by $\ket{\psi(t)}=e^{-iHt}\ket{\psi(0)}$, where $\psi(0)$ is the state at time $t=0$. The operator $U(t)=e^{-iHt}$ is called the **propagator**, a matrix of size $n\times n$.
 
@@ -59,7 +59,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian).
 
-^^Time complexity^^: $O(n^3)$ (complexity of the matrix exponentiation[^2]).
+^^Time complexity^^: $O(n^3)$ (complexity of computing the matrix exponential[^2]).
 
 [^2]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
@@ -69,7 +69,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
         U(t) = e^{-iHt} = \begin{pmatrix}e^{i\omega t/2} & 0 \\\\ 0 & e^{-i\omega t/2}\end{pmatrix}.
     $$
 
-### Solve the ODE iteratively
+### Integrating the ODE
 
 The Schrödinger equation is an ODE, for which a wide variety of solvers have been developed. The simplest approach is the Euler method, a first-order ODE solver with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
 $$
@@ -83,7 +83,7 @@ where we used the Schrödinger equation to replace the time derivative of the st
 There are two main types of ODE solvers:
 
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
-- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. The best know method is the *Dormand-Prince method*.
+- **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
 
 ^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian).
 
