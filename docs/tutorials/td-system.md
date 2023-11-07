@@ -1,14 +1,15 @@
 # Defining Hamiltonians
 
-In this short tutorial, we will show how to define Hamiltonians in dynamiqs. There are currently three main ways: using array-like objects for constant Hamiltonians, using `callable` objects for time-dependent Hamiltonians, and using a custom list format for piecewise constant Hamiltonians.
+In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently three ways: using array-like objects for constant Hamiltonians, defining a function for time-dependent Hamiltonians, and using a custom list format for piecewise constant Hamiltonians.
 
 ***
 
 ## Constant Hamiltonians
 
-A constant Hamiltonian can be defined using **array-like objects**, i.e. Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors. In all cases, the Hamiltonian is then converted internally into a PyTorch tensor for differentiability and GPU support. It is also possible to use the [utility functions](../python_api/utils.md) provided by dynamiqs to define Hamiltonians.
+A constant Hamiltonian can be defined using **array-like objects**, i.e. Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors. In all cases, the Hamiltonian is then converted internally into a PyTorch tensor for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/utils.md) for common Hamiltonians.
 
-For instance, to define the Pauli Z operator $H = \sigma_z$, one can use the following syntax:
+For instance, to define the Pauli Z operator $H = \sigma_z$, one can use any of the following syntaxes:
+
 ```python
 >>> # using Python lists
 >>> H = [[1, 0], [0, -1]]
@@ -20,47 +21,58 @@ For instance, to define the Pauli Z operator $H = \sigma_z$, one can use the fol
 >>> # using QuTiP quantum objects
 >>> import qutip as qt
 >>> H = qt.Qobj([[1, 0], [0, -1]])
+>>> H = qt.sigmaz()
 
 >>> # using PyTorch tensors
 >>> import torch
 >>> H = torch.tensor([[1, 0], [0, -1]])
 
 >>> # using dynamiqs
+>>> import dynamiqs as dq
 >>> H = dq.sigmaz()
+
 ```
 
-!!! Warning "No Tensor subclassing in dynamiqs"
-    Contrary to QuTiP in which a `qutip.QObj` is internally a SciPy or NumPy array, dynamiqs **does not** subclass PyTorch tensors. This means that you cannot use non-PyTorch methods directly on Tensor objects. For example, you should use `H.mH` or `H.adjoint()` (PyTorch methods) instead of `H.dag()`.
+!!! Warning "Computing operators adjoint and products"
+    dynamiqs functions return PyTorch `Tensor` objects, which only support PyTorch tensor methods.
 
-    Also, to compute the **product of quantum operators**, one should use the matrix multiplication operator `@` instead of the `*` operator as in QuTiP. For instance:
+    For example, to compute the **adjoint of an operator** you should use `H.mH` or `H.adjoint()` (PyTorch methods) instead of `H.dag()` (as in QuTiP). Alternatively, you can also use `dq.dag(H)`.
+
+    Also, to compute the **product of quantum operators**, one should use the matrix multiplication operator `@` instead of the element-wise multiplication operator `*` (as in QuTiP). For instance:
     ```python
-    >>> print(dq.sigmax() @ dq.sigmax() == dq.eye(2))
-    True
-    >>> print(dq.sigmax() * dq.sigmax() == dq.eye(2))
-    False
+    >>> dq.sigmax() @ dq.sigmax()  # correct
+    tensor([[1.+0.j, 0.+0.j],
+            [0.+0.j, 1.+0.j]])
+    >>> dq.sigmax() * dq.sigmax()  # incorrect
+    tensor([[0.+0.j, 1.+0.j],
+            [1.+0.j, 0.+0.j]])
+
     ```
 
 ## Time-dependent Hamiltonians
 
-A time-dependent Hamiltonian can be defined using a **callable**, i.e. a Python function or a Python class with a `__call__` method. The function should have signature `H(t: float) -> Tensor` where `t` is the time, and should return a Hamiltonian as a PyTorch tensor.
+A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float) -> Tensor` that returns the Hamiltonian as a PyTorch tensor for any time `t`.
 
 For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, one can use the following syntax:
+
 ```python
 >>> def H(t):
->>>     return dq.sigmaz() + torch.cos(t) * dq.sigmax()
+...     return dq.sigmaz() + torch.cos(t) * dq.sigmax()
+
 ```
 
-!!! Warning "Returning non-Tensor arrays"
-    An error will be raised if `H(t)` return a non-Tensor array, or a Tensor with a different `dtype` or `device` than specified to the solver. This is enforced to avoid costly type, dtype or device conversions at every time step of the numerical integration.
+!!! Warning "Function returning non-tensor object"
+    An error is raised if `H(t)` return a non-tensor object, or a tensor with a different `dtype` or `device` than the ones specified to the solver. This is enforced to avoid costly type, dtype or device conversions at every time step of the numerical integration.
 
-??? Note "Optional arguments"
-    To define a time-dependent Hamiltonian with additional arguments, one can use the following syntax:
+??? Note "Function with optional arguments"
+    To define a time-dependent Hamiltonian with additional arguments, one can use Python's lambda:
     ```python
     >>> def H_args(t, omega):
-    >>>    return dq.sigmaz() + torch.cos(omega * t) * dq.sigmax()
+    ...    return dq.sigmaz() + torch.cos(omega*t)*dq.sigmax()
     >>> H = lambda t: H_args(t, 1.0)
+
     ```
 
-## Piecewise constant
+## Piecewise constant Hamiltonians
 
 !!! Warning "Work in Progress."
