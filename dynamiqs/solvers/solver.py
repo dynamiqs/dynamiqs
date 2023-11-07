@@ -6,10 +6,11 @@ from time import time
 import torch
 from torch import Tensor
 
+from ..gradient import Adjoint, Autograd
 from .options import Options
 from .result import Result
 from .utils.td_tensor import TDTensor
-from .utils.utils import bexpect
+from .utils.utils import bexpect, iteraxis
 
 
 class Solver(ABC):
@@ -18,6 +19,7 @@ class Solver(ABC):
         H: TDTensor,
         y0: Tensor,
         tsave: Tensor,
+        tmeas: Tensor,
         exp_ops: Tensor,
         options: Options,
     ):
@@ -33,6 +35,7 @@ class Solver(ABC):
         self.H = H
         self.y0 = y0
         self.tsave = tsave
+        self.tmeas = tmeas
         self.exp_ops = exp_ops
         self.options = options
 
@@ -41,48 +44,51 @@ class Solver(ABC):
         self.rdtype = self.options.rdtype
         self.device = self.options.device
 
-        # initialize saving logic
-        self._init_time_logic()
+        # initialize time logic
+        self.tstop = torch.cat((self.tsave, self.tmeas)).unique()
+        self.tsave_mask = torch.isin(self.tstop, self.tsave)
+        self.tmeas_mask = torch.isin(self.tstop, self.tmeas)
+        self.tstop_counter = 0
+        self.tsave_counter = 0
+        self.tmeas_counter = 0
 
         # initialize save tensors
         batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
 
         if self.options.save_states:
             # ysave: (..., len(tsave), m, n)
-            ysave = torch.zeros(
+            self.ysave = torch.zeros(
                 *batch_sizes, len(tsave), m, n, dtype=self.cdtype, device=self.device
             )
+            self.ysave_iter = iteraxis(self.ysave, axis=-3)
         else:
-            ysave = None
+            self.ysave = None
 
         if len(self.exp_ops) > 0:
             # exp_save: (..., len(exp_ops), len(tsave))
-            exp_save = torch.zeros(
+            self.exp_save = torch.zeros(
                 *batch_sizes,
                 len(exp_ops),
                 len(tsave),
                 dtype=self.cdtype,
                 device=self.device,
             )
+            self.exp_save_iter = iteraxis(self.exp_save, axis=-1)
         else:
-            exp_save = None
+            self.exp_save = None
 
-        self.result = Result(options, ysave, tsave, exp_save)
-
-    def _init_time_logic(self):
-        self.tstop = self.tsave
-        self.tstop_counter = 0
-
-        self.tsave_mask = torch.isin(self.tstop, self.tsave)
-        self.tsave_counter = 0
-
-    def run(self):
-        self.result.start_time = time()
+    def run(self) -> Result:
+        start_time = time()
         self._run()
-        self.result.end_time = time()
+        end_time = time()
+
+        result = Result(self.options, self.ysave, self.tsave, self.exp_save)
+        result.start_time = start_time
+        result.end_time = end_time
+        return result
 
     def _run(self):
-        if self.options.gradient_alg is None:
+        if self.options.gradient is None:
             self.run_nograd()
 
     @abstractmethod
@@ -93,31 +99,34 @@ class Solver(ABC):
         return self.tstop[self.tstop_counter].item()
 
     def save(self, y: Tensor):
-        self._save(y)
-        self.tstop_counter += 1
-
-    def _save(self, y: Tensor):
         if self.tsave_mask[self.tstop_counter]:
             self._save_y(y)
             self._save_exp_ops(y)
             self.tsave_counter += 1
+        if self.tmeas_mask[self.tstop_counter]:
+            self._save_meas()
+            self.tmeas_counter += 1
+        self.tstop_counter += 1
 
     def _save_y(self, y: Tensor):
         if self.options.save_states:
-            self.result.ysave[..., self.tsave_counter, :, :] = y
+            next(self.ysave_iter)[:] = y
         # otherwise only save the state if it is the final state
         elif self.tsave_counter == len(self.tsave) - 1:
-            self.result.ysave = y
+            self.ysave = y
 
     def _save_exp_ops(self, y: Tensor):
         if len(self.exp_ops) > 0:
-            self.result.exp_save[..., self.tsave_counter] = bexpect(self.exp_ops, y)
+            next(self.exp_save_iter)[:] = bexpect(self.exp_ops, y)
+
+    def _save_meas(self):
+        pass
 
 
 class AutogradSolver(Solver):
     def _run(self):
         super()._run()
-        if self.options.gradient_alg == 'autograd':
+        if isinstance(self.options.gradient, Autograd):
             self.run_autograd()
 
     def run_nograd(self):
@@ -132,7 +141,7 @@ class AutogradSolver(Solver):
 class AdjointSolver(AutogradSolver):
     def _run(self):
         super()._run()
-        if self.options.gradient_alg == 'adjoint':
+        if isinstance(self.options.gradient, Adjoint):
             self.run_adjoint()
 
     @abstractmethod

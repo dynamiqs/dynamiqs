@@ -7,12 +7,14 @@ import torch
 from qutip import Qobj
 from torch import Tensor
 
-from .._utils import obj_type_str
+from .._utils import hdim, obj_type_str
+from .utils import isbra, isket, isop
 
 __all__ = [
     'to_tensor',
     'from_qutip',
     'to_qutip',
+    'to_numpy',
 ]
 
 # type for objects convertible to a torch.Tensor using `to_tensor`
@@ -164,14 +166,15 @@ def from_qutip(
     return torch.from_numpy(x.full()).to(dtype=get_cdtype(dtype), device=device)
 
 
-def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj]:
+def to_qutip(x: Tensor, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert a PyTorch tensor to a QuTiP quantum object (or a list of QuTiP quantum
     object if the tensor is batched).
 
     Args:
         x: PyTorch tensor.
-        dims _(list of list of int or None)_: QuTiP object dimensions, with shape
-            _(2, n)_ where _n_ is the number of modes in the tensor product.
+        dims _(tuple of ints)_: Dimensions of each subsystem in a composite system
+            Hilbert space tensor product, defaults to `None` (a single system with the
+            same dimension as `x`).
 
     Returns:
         QuTiP quantum object or list of QuTiP quantum object.
@@ -200,7 +203,7 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj
         ```
 
         Note that the tensor product structure is not inferred automatically, it must be
-        specified with the `dims` argument using QuTiP dimensions format:
+        specified with the `dims` argument:
         >>> I = dq.eye(3, 2)
         >>> dq.to_qutip(I)
         Quantum object: dims = [[6], [6]], shape = (6, 6), type = oper, isherm = True
@@ -211,7 +214,7 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj
          [0. 0. 0. 1. 0. 0.]
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
-        >>> dq.to_qutip(I, [[3, 2], [3, 2]])
+        >>> dq.to_qutip(I, (3, 2))
         Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
@@ -224,6 +227,15 @@ def to_qutip(x: Tensor, dims: list[list[int]] | None = None) -> Qobj | list[Qobj
     if x.ndim > 2:
         return [to_qutip(sub_x) for sub_x in x]
     else:
+        if dims is None:
+            dims = [hdim(x)]
+        dims = list(dims)
+        if isket(x):  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]
+            dims = [dims, [1] * len(dims)]
+        elif isbra(x):  # [[1], [3]] or for composite systems [[1, 1], [3, 4]]
+            dims = [[1] * len(dims), dims]
+        elif isop(x):  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
+            dims = [dims, dims]
         return Qobj(x.numpy(force=True), dims=dims)
 
 
@@ -238,4 +250,48 @@ def to_device(device: str | torch.device | None) -> torch.device:
         raise TypeError(
             f'Argument `device` ({device}) must be a string, a `torch.device` object or'
             ' `None`.'
+        )
+
+
+def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
+    """Convert an array-like object or a list of array-like objects to a NumPy array.
+
+    Args:
+        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
+            of these types.
+
+    Returns:
+        Output NumPy array.
+
+    Examples:
+        >>> import qutip as qt
+        >>> dq.to_numpy(dq.fock(3, 1))
+        array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_numpy([qt.fock(3, 1), qt.fock(3, 2)])
+        array([[[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]],
+        <BLANKLINE>
+               [[0.+0.j],
+                [0.+0.j],
+                [1.+0.j]]])
+    """
+    if isinstance(x, list):
+        if len(x) == 0:
+            return np.array([])
+        if not isinstance(x[0], get_args(ArrayLike)):
+            return np.array(x)
+        else:
+            return np.array([to_numpy(el) for el in x])
+    elif isinstance(x, np.ndarray):
+        return x
+    elif isinstance(x, Tensor):
+        return x.numpy(force=True)
+    elif isinstance(x, Qobj):
+        return x.full()
+    else:
+        raise TypeError(
+            f'Argument `x` must be an array-like object but has type {obj_type_str(x)}.'
         )

@@ -6,12 +6,15 @@ from typing import Any
 
 import torch
 
+from dynamiqs.gradient import Gradient
+from dynamiqs.solver import Solver
+
 from .system import System
 
 
 class SolverTester(ABC):
     def _test_batching(
-        self, system: System, solver: str, *, options: dict[str, Any] | None = None
+        self, system: System, solver: Solver, *, options: dict[str, Any] | None = None
     ):
         """Test the batching of `H` and `y0`, and the returned object sizes."""
         m, n = system._state_shape
@@ -49,7 +52,7 @@ class SolverTester(ABC):
     def _test_correctness(
         self,
         system: System,
-        solver: str,
+        solver: Solver,
         *,
         options: dict[str, Any] | None = None,
         num_tsave: int,
@@ -79,8 +82,8 @@ class SolverTester(ABC):
     def _test_gradient(
         self,
         system: System,
-        solver: str,
-        gradient: str,
+        solver: Solver,
+        gradient: Gradient,
         *,
         options: dict[str, Any] | None = None,
         num_tsave: int,

@@ -41,13 +41,44 @@ Description: Extra CSS for the dynamiqs documentation
   font-size: .95rem;
 }
 
-
-/* Warning admonition color shades */
-.md-typeset .warning>.admonition-title,
-.md-typeset .warning>summary {
-  background-color: var(--md-warning-bg-color);
+/* Note admonition color shades */
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .admonition.note,
+.md-typeset details.note,
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  border-color: var(--md-note-fg-color);
 }
 
+.md-typeset .admonition-title::before,
+.md-typeset summary::before,
+.md-typeset .note>.admonition-title::before,
+.md-typeset .note>summary::before,
+.md-typeset .info>.admonition-title::before,
+.md-typeset .info>summary::before{
+  background-color: var(--md-note-fg-color);
+}
+
+.md-typeset .admonition-title::after,
+.md-typeset summary::after,
+.md-typeset .note>.admonition-title::after,
+.md-typeset .note>summary::after,
+.md-typeset .info>.admonition-title::after,
+.md-typeset .info>summary::after {
+  color: var(--md-note-fg-color);
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary,
+.md-typeset .note>.admonition-title,
+.md-typeset .note>summary,
+.md-typeset .info>.admonition-title,
+.md-typeset .info>summary {
+  background-color: var(--md-note-bg-color);
+}
+
+/* Warning admonition color shades */
 .md-typeset .admonition.warning,
 .md-typeset details.warning {
   border-color: var(--md-warning-fg-color);
@@ -63,38 +94,65 @@ Description: Extra CSS for the dynamiqs documentation
   color: var(--md-warning-fg-color);
 }
 
-/* Note admonition color shades */
-.md-typeset .note>.admonition-title,
-.md-typeset .note>summary {
-  background-color: var(--md-note-bg-color);
+.md-typeset .warning>.admonition-title,
+.md-typeset .warning>summary {
+  background-color: var(--md-warning-bg-color);
 }
 
-.md-typeset .admonition.note,
-.md-typeset details.note {
-  border-color: var(--md-note-fg-color);
+/* Example admonition color shades */
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  border-color: var(--md-example-fg-color);
 }
 
-.md-typeset .note>.admonition-title::before,
-.md-typeset .note>summary::before {
-  background-color: var(--md-note-fg-color);
+.md-typeset .example>.admonition-title::before,
+.md-typeset .example>summary::before {
+  background-color: var(--md-example-fg-color);
 }
 
-.md-typeset .note>.admonition-title::after,
-.md-typeset .note>summary::after {
-  color: var(--md-note-fg-color);
+.md-typeset .example>.admonition-title::after,
+.md-typeset .example>summary::after {
+  color: var(--md-example-fg-color);
+}
+
+.md-typeset .example>.admonition-title,
+.md-typeset .example>summary {
+  background-color: var(--md-example-bg-color);
+}
+
+/* Quote admonition color shades */
+.md-typeset .quote {
+  border-color: var(--md-quote-fg-color);
+}
+
+.md-typeset .quote-title::before {
+  background-color: var(--md-quote-fg-color);
+}
+
+.md-typeset .quote-title::after {
+  color: var(--md-quote-fg-color);
+}
+
+.md-typeset .quote-title {
+  background-color: var(--md-quote-bg-color);
 }
 
 /* Admonition styling */
 .md-typeset .admonition,
 .md-typeset details,
-.md-typeset .quote {
+.md-typeset .quote,
+.md-typeset .admonition.note,
+.md-typeset details.note,
+.md-typeset .admonition.info,
+.md-typeset details.info,
+.md-typeset .admonition.example,
+.md-typeset details.example {
   margin: 1.1em 0;
 }
 
+/* Quote admonition styling */
 .md-typeset .quote {
-  background-color: var(--md-admonition-bg-color);
-  color: var(--md-admonition-fg-color);
-  border: .01rem solid #9e9e9e;
+  border: .01rem solid var(--md-quote-fg-color);
   border-radius: .2rem;
   display: flow-root;
   overflow: visible;
@@ -105,27 +163,36 @@ Description: Extra CSS for the dynamiqs documentation
   transition: box-shadow 125ms;
 }
 
-.md-typeset .quote > * {
+.md-typeset .quote>* {
   box-sizing: border-box;
 }
 
-html .md-typeset .quote > :last-child {
+html .md-typeset .quote> :last-child {
   margin-bottom: .6rem;
 }
 
-.unclickable {
-  cursor: default;
-  pointer-events: none;
+[dir="rtl"] .md-typeset .quote-title {
+  border-top-right-radius: .1rem;
 }
 
-.md-typeset .quote > summary::before,
-.md-typeset .quote > summary::after {
-  display: none;
-}
-
-[dir="ltr"] .md-typeset .quote summary {
+[dir="ltr"] .md-typeset .quote-title {
   padding-left: 0.8rem;
+  padding-right: 1.8rem;
+  border-left-width: .2rem;
+  border-top-right-radius: .1rem;
+  border-top-left-radius: .1rem;
 }
+
+.md-typeset .quote-title {
+  border: none;
+  border-left-width: medium;
+  font-weight: 700;
+  margin: 0 -.6rem;
+  padding-bottom: .4rem;
+  padding-top: .4rem;
+  position: relative;
+}
+
 
 /* Page spacing */
 .md-typeset {
@@ -159,13 +226,13 @@ html .md-typeset .quote > :last-child {
 
 /* Function name */
 .md-typeset .doc-object-name {
-  color: #ed7764;
+  color: var(--md-primary-fg-color);
   font-size: 0.85em;
 }
 
 /* Signature */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
-  border-left: 3px solid #ed7764;
+  border-left: 3px solid var(--md-primary-fg-color);
 }
 
 /* API table */
@@ -246,7 +313,7 @@ article.md-typeset h1 {
 
 /* Function names in API */
 .md-typeset .doc-function-name {
-  color: #ed7764;
+  color: var(--md-primary-fg-color);
   padding: 3px 0;
   width: 100%;
   font-size: 0.85em;
@@ -254,7 +321,7 @@ article.md-typeset h1 {
 
 /* Code blocks */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
-  border-left: 3px solid #ed7764;
+  border-left: 3px solid var(--md-primary-fg-color);
 }
 
 /* bullet point lists */

@@ -4,7 +4,7 @@
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
 
-[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml)  ![python version](https://img.shields.io/badge/python-3.8%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: GPLv3](https://img.shields.io/badge/license-GPLv3-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.8%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 High-performance quantum systems simulation with PyTorch.
 
@@ -65,9 +65,7 @@ result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
 ```
 
-Output:
-
-```shell
+```text
 |██████████| 100.0% - time 00:00/00:00
 ==== Result ====
 Method       : Dopri5
@@ -103,11 +101,14 @@ tsave = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dict(verbose=False)
-result = dq.mesolve(H, jump_ops, rho0, tsave, gradient='autograd', options=options)
+result = dq.mesolve(
+    H, jump_ops, rho0, tsave,
+    gradient=dq.gradient.Autograd(),
+    options=dict(verbose=False),
+)
 
 # gradient computation
-loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
+loss = dq.expect(a.mH @ a, result.states[-1]).real  # Tr[a^dag a rho]
 grads = torch.autograd.grad(loss, (kappa, alpha0))
 print(
     f'gradient wrt to kappa  : {grads[0]}\n'
@@ -115,9 +116,7 @@ print(
 )
 ```
 
-Output:
-
-```shell
+```text
 gradient wrt to kappa  : tensor([-0.9048])
 gradient wrt to alpha0 : tensor([1.8097])
 ```
