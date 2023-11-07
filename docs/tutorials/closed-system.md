@@ -1,6 +1,6 @@
 # Closed systems
 
-This tutorial introduces the quantum state for a closed quantum system, describes its evolution with the Schrödinger equation, and explains two principal numerical approaches to simulate the evolution: computing the propagator or solving the ODE iteratively.
+This tutorial introduces the quantum state for a closed quantum system, describes its evolution with the Schrödinger equation, and explains two common numerical methods to simulate the evolution: computing the propagator or solving the ODE iteratively.
 
 ***
 
