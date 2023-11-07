@@ -4,6 +4,6 @@ This guide is an overview and explains the important features; details are found
 
 - [What is dynamiqs?](whatis.md)
 - [Installation](installation.md)
-- [Basic examples](examples.ipynb)
+- [Basic examples](examples.md)
 - [Contributing](contributing.md)
 - [Let's discuss](discussion.md)
