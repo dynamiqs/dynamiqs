@@ -97,7 +97,7 @@ nav:
   - Tutorials:
     - tutorials/index.md
     - Basics:
-      - Workflow in dynamiqs: tutorials/workflow.ipynb
+      - Workflow in dynamiqs: tutorials/workflow.md
       - tutorials/td-system.md
       - tutorials/closed-system.md
       - tutorials/open-system.md
