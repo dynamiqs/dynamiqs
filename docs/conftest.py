@@ -2,6 +2,7 @@ from doctest import ELLIPSIS
 
 import pytest
 import torch
+from matplotlib import pyplot as plt
 from sybil import Sybil
 from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser
 
@@ -12,6 +13,7 @@ import dynamiqs
 @pytest.fixture(scope='session', autouse=True)
 def add_dq(doctest_namespace):
     doctest_namespace['dq'] = dynamiqs
+    doctest_namespace['plt'] = plt
 
 
 # doctest fixture
