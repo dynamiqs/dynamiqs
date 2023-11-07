@@ -226,13 +226,13 @@ html .md-typeset .quote> :last-child {
 
 /* Function name */
 .md-typeset .doc-object-name {
-  color: #ed7764;
+  color: var(--md-primary-fg-color);
   font-size: 0.85em;
 }
 
 /* Signature */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
-  border-left: 3px solid #ed7764;
+  border-left: 3px solid var(--md-primary-fg-color);
 }
 
 /* API table */
@@ -313,7 +313,7 @@ article.md-typeset h1 {
 
 /* Function names in API */
 .md-typeset .doc-function-name {
-  color: #ed7764;
+  color: var(--md-primary-fg-color);
   padding: 3px 0;
   width: 100%;
   font-size: 0.85em;
@@ -321,7 +321,7 @@ article.md-typeset h1 {
 
 /* Code blocks */
 .md-typeset .highlight:not(.doc-contents > .highlight) {
-  border-left: 3px solid #ed7764;
+  border-left: 3px solid var(--md-primary-fg-color);
 }
 
 /* bullet point lists */
