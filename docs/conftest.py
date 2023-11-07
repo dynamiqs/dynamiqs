@@ -22,6 +22,12 @@ def torch_set_printoptions():
     torch.set_printoptions(precision=3, sci_mode=False)
 
 
+# doctest fixture
+@pytest.fixture(scope='session', autouse=True)
+def mplstyle():
+    dynamiqs.plots.utils.mplstyle()
+
+
 # sybil configuration (better doctest for the documentation)
 pytest_collect_file = Sybil(
     parsers=[
