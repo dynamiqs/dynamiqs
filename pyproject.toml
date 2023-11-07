@@ -27,7 +27,6 @@ dev = [
     "pytest-xdist",
     "mkdocs-material",
     "mkdocstrings[python]",
-    "mkdocs-jupyter",
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
     "mkdocs-section-index",
