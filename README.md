@@ -65,8 +65,6 @@ result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
 ```
 
-Output:
-
 ```text
 |██████████| 100.0% - time 00:00/00:00
 ==== Result ====
@@ -117,8 +115,6 @@ print(
     f'gradient wrt to alpha0 : {grads[1]}'
 )
 ```
-
-Output:
 
 ```text
 gradient wrt to kappa  : tensor([-0.9048])
