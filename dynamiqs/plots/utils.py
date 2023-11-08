@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from functools import wraps
 
+import matplotlib
 import matplotlib as mpl
 import numpy as np
 from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.cm import get_cmap
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator, NullLocator
@@ -26,10 +26,10 @@ __all__ = [
 ]
 
 
-def figax(w: float = 10.0, h: float | None = None, **kwargs) -> tuple[Figure, Axes]:
+def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axes]:
     """Return a figure with specified width and length."""
     if h is None:
-        h = w / 2
+        h = w / 1.6
     return plt.subplots(1, 1, figsize=(w, h), **kwargs)
 
 
@@ -58,7 +58,7 @@ def optax(func):
     def wrapper(
         *args,
         ax: Axes | None = None,
-        w: float = 10.0,
+        w: float = 7.0,
         h: float | None = None,
         **kwargs,
     ):
@@ -116,6 +116,7 @@ def mplstyle(*, latex: bool = True):
         # figure
         'figure.facecolor': 'white',
         'figure.dpi': 72,
+        'figure.figsize': (7, 7 / 1.6),
         # other
         'savefig.facecolor': 'white',
         'font.size': 12,
@@ -152,7 +153,7 @@ def fock_ticks(axis: Axis, n: int, all: bool = True):
 
 
 def sample_cmap(name: str, n: int, alpha: float = 1.0) -> np.ndarray:
-    sampled_cmap = get_cmap(name)(np.linspace(0, 1, n))
+    sampled_cmap = matplotlib.colormaps.get_cmap(name)(np.linspace(0, 1, n))
     sampled_cmap[:, -1] = alpha
     return sampled_cmap
 

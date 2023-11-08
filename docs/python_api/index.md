@@ -106,3 +106,9 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.utils.optimal_control
     options:
         table: true
+
+### Plotting
+
+::: dynamiqs.plots.misc
+    options:
+        table: true

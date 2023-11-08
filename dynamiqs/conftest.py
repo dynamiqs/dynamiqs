@@ -31,7 +31,7 @@ def mplstyle():
 def render():
     def savefig_code(figname):
         filename = f'docs/figs-code/{figname}.png'
-        plt.gcf().savefig(filename, bbox_inches='tight')
+        plt.gcf().savefig(filename, bbox_inches='tight', dpi=300)
 
     return savefig_code
 
