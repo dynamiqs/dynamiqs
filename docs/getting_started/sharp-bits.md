@@ -53,6 +53,10 @@ time = torch.linspace(0, 1, 100)
 dq.sesolve(a @ b, rho, time, device="cuda") # method 2
 ```
 
+## Numpy interoperability
+
+A PyTorch Tensor bears a strong resemblance to a NumPy array, given that both support a similar range of methods. However, it is crucial to remember that they are not entirely interchangeable. Occasionally, you might encounter situations where you need to apply functions to your tensors that are exclusively compatible with NumPy arrays. To convert a tensor into a NumPy array, simply invoke `tensor.numpy()`. Should the tensor reside on the GPU, you can perform the conversion by using `tensor.numpy(force=True)`.
+
 ## `RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn`
 
 To calculate gradients using a Dynamiqs solver, it is necessary to designate a gradient algorithm explicitly. Failing to do so will prompt PyTorch to raise a `RuntimeError`, specifically stating that `element 0 of tensors does not require grad and does not have a grad_fn.`
