@@ -13,8 +13,8 @@ __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
 
 
 def fock(
-    dims: int | tuple[int, ...],
-    states: int | tuple[int, ...],
+    dim: int | tuple[int, ...],
+    number: int | tuple[int, ...],
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -22,8 +22,8 @@ def fock(
     r"""Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
     Args:
-        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        states _(int or tuple of ints)_: Fock state of each mode.
+        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        number _(int or tuple of ints)_: Fock state number of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -44,26 +44,26 @@ def fock(
                 [0.+0.j]])
     """
     # convert integer inputs to tuples by default, and check dimensions match
-    dims = (dims,) if isinstance(dims, int) else dims
-    states = (states,) if isinstance(states, int) else states
-    if len(dims) != len(states):
+    dim = (dim,) if isinstance(dim, int) else dim
+    number = (number,) if isinstance(number, int) else number
+    if len(dim) != len(number):
         raise ValueError(
-            'Arguments `states` must have the same length as `dims` of length'
-            f' {len(dims)}, but has length {len(states)}.'
+            'Arguments `number` must have the same length as `dim` of length'
+            f' {len(dim)}, but has length {len(number)}.'
         )
 
     # compute the required basis state
     n = 0
-    for dim, state in zip(dims, states):
-        n = dim * n + state
-    ket = torch.zeros(prod(dims), 1, dtype=get_cdtype(dtype), device=device)
+    for d, s in zip(dim, number):
+        n = d * n + s
+    ket = torch.zeros(prod(dim), 1, dtype=get_cdtype(dtype), device=device)
     ket[n] = 1.0
     return ket
 
 
 def fock_dm(
-    dims: int | tuple[int, ...],
-    states: int | tuple[int, ...],
+    dim: int | tuple[int, ...],
+    number: int | tuple[int, ...],
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -72,8 +72,8 @@ def fock_dm(
     product of Fock states.
 
     Args:
-        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        states _(int or tuple of ints)_: Fock state of each mode.
+        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        number _(int or tuple of ints)_: Fock state number of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -93,12 +93,12 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
     """
-    return todm(fock(dims, states, dtype=dtype, device=device))
+    return todm(fock(dim, number, dtype=dtype, device=device))
 
 
 def coherent(
-    dims: int | tuple[int, ...],
-    alphas: int | float | complex | tuple[int | float | complex, ...] | ArrayLike,
+    dim: int | tuple[int, ...],
+    alpha: int | float | complex | tuple[int | float | complex, ...] | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -107,8 +107,8 @@ def coherent(
     states.
 
     Args:
-        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alphas _(number or array-like object)_: Coherent state amplitude of each mode.
+        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        alpha _(number or array-like object)_: Coherent state amplitude of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -132,36 +132,36 @@ def coherent(
     cdtype = get_cdtype(dtype)
 
     # convert inputs to tuples by default, and check dimensions match
-    dims = (dims,) if isinstance(dims, int) else dims
-    if isinstance(alphas, (int, float, complex, tuple)):
-        alphas = torch.as_tensor(alphas, dtype=cdtype, device=device)
+    dim = (dim,) if isinstance(dim, int) else dim
+    if isinstance(alpha, (int, float, complex, tuple)):
+        alpha = torch.as_tensor(alpha, dtype=cdtype, device=device)
     else:
-        alphas = to_tensor(alphas, dtype=cdtype, device=device)
+        alpha = to_tensor(alpha, dtype=cdtype, device=device)
 
-    if alphas.ndim == 0:
-        alphas = alphas.unsqueeze(-1)
-    elif alphas.ndim > 1:
+    if alpha.ndim == 0:
+        alpha = alpha.unsqueeze(-1)
+    elif alpha.ndim > 1:
         raise ValueError(
-            'Argument `alphas` must be a 0-D or 1-D array-like object, but is'
-            f'a {alphas.ndim}-D object.'
+            'Argument `alpha` must be a 0-D or 1-D array-like object, but is'
+            f'a {alpha.ndim}-D object.'
         )
-    if len(dims) != len(alphas):
+    if len(dim) != len(alpha):
         raise ValueError(
-            'Arguments `alphas` must have the same length as `dims` of length'
-            f' {len(dims)}, but has length {len(alphas)}.'
+            'Arguments `alpha` must have the same length as `dim` of length'
+            f' {len(dim)}, but has length {len(alpha)}.'
         )
 
     kets = [
-        displace(dim, alpha, dtype=cdtype, device=device)
-        @ fock(dim, 0, dtype=cdtype, device=device)
-        for dim, alpha in zip(dims, alphas)
+        displace(d, a, dtype=cdtype, device=device)
+        @ fock(d, 0, dtype=cdtype, device=device)
+        for d, a in zip(dim, alpha)
     ]
     return tensprod(*kets)
 
 
 def coherent_dm(
-    dims: int | tuple[int, ...],
-    alphas: complex | tuple[complex, ...] | Tensor,
+    dim: int | tuple[int, ...],
+    alpha: int | float | complex | tuple[int | float | complex, ...] | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -170,9 +170,8 @@ def coherent_dm(
     tensor product of coherent states.
 
     Args:
-        dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alphas _(complex, tuple of complex, or Tensor)_: Coherent state amplitude of
-            each mode.
+        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
+        alpha _(number or array-like object)_: Coherent state amplitude of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -199,4 +198,4 @@ def coherent_dm(
                 [-0.062+0.000j, -0.000+0.031j,  0.012+0.000j, -0.034+0.000j,
                  -0.000+0.017j,  0.006+0.000j]])
     """
-    return todm(coherent(dims, alphas, dtype=dtype, device=device))
+    return todm(coherent(dim, alpha, dtype=dtype, device=device))
