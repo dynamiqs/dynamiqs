@@ -99,6 +99,7 @@ nav:
           - tutorials/defining-hamiltonians.md
           - tutorials/closed-system.md
           - tutorials/open-system.md
+          - tutorials/gradients.md
   - Python API:
       - python_api/index.md
       - Solvers:
