@@ -1,6 +1,8 @@
 # Batching simulations
 
-Batching refers to the process of grouping similar tasks that require similar resources to streamline their completion and improve efficiency. In the context of quantum simulations, batching can be used to run multiple simulations concurrently, and can dramatically speedup simulations. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
+Batching can be used to **run multiple independent simulations simultaneously**, and can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
+
+***
 
 ```python
 import torch
@@ -9,130 +11,138 @@ import timeit
 from math import pi, sqrt
 ```
 
-***
+## Batched simulation
 
-## Batching over Hamiltonians
+To simulate multiple Hamiltonians, you can pass a list of Hamiltonians for the argument `H` to [`sesolve()`](/python_api/solvers/sesolve.md), [`mesolve()`](/python_api/solvers/mesolve.md) or [`smesolve()`](/python_api/solvers/smesolve.md). You can also pass a list of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
 
-To batch over multiple Hamiltonians, you can pass a Tensor of shape `(b, n, n)` as the `H` argument of [`sesolve`](/python_api/solvers/sesolve.html), [`mesolve`](/python_api/solvers/mesolve.html) or [`smesolve`](/python_api/solvers/smesolve.html). In this case, `n` is the Hilbert space dimension, and `b` the batching dimension.
+!!! Note "Result of a batched simulation"
+    When a simulation is batched in dynamiqs, the result of the simulation is a batched tensor (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(bH?, bstate?, nt, n, m)` where
 
-In general, this can be achieved using `torch.stack`. For instance:
+    - `bH` is the number of Hamiltonians,
+    - `bstate` is the number of initial states,
+    - `nt` is the number of saved states,
+    - `n` is the Hilbert space dimension,
+    - `m=1` for closed systems and `m=n` for open systems.
 
-```python
->>> H0 = dq.sigmaz()
->>> H1 = dq.sigmax()
->>> H = torch.stack([H0 + 0.1 * H1, H0 + 0.2 * H1, H0 + 0.3 * H1])
->>> H.shape
-torch.Size([3, 2, 2])
-```
+    The `?` in the shape `(bH?, bstate?, nt, n, n)` indicates that the dimension is only present if the simulation is batched over Hamiltonians or initial states.
 
-Similar constructions can be applied with the use of PyTorch broadcasting semantics. The same batched Hamiltonian as before can be defined with:
-
-```python
->>> amplitudes = torch.linspace(0.1, 0.3, 3)
->>> H = H0 + amplitudes[:, None, None] * H1
->>> H.shape
-torch.Size([3, 2, 2])
-```
-
-## Batching over initial states
-
-To batch over multiple initial states, you can pass a Tensor of shape `(b, n, m)` as the `psi0` or `rho0` argument of simulation functions. In this case, `n` and `m` are the Hilbert space dimension (with `m=1` for a ket and `m=n` for a density matrix), and `b` the batching dimension.
-
-Similarly as with Hamiltonians, this can be achieved using `torch.stack`, broadcasting semantics or batchable utility functions. For instance:
+For instance, let's simulate the Schrödinger equation on multiple initial states:
 
 ```python
->>> psi0 = torch.stack([
-...     dq.fock(2, 0),
-...     dq.fock(2, 1),
-...     dq.unit(dq.fock(2, 0) + dq.fock(2, 1)),
-...     dq.unit(dq.fock(2, 0) - dq.fock(2, 1))
-... ])
->>> psi0.shape
-torch.Size([4, 2, 1])
-```
+# initial states
+g = dq.fock(2, 0)
+e = dq.fock(2, 1)
+plus = dq.unit(g + e)
+minus = dq.unit(g - e)
+psi0 = [g, e, plus, minus]  # shape (4, 2, 1)
 
-or
+H = dq.sigmaz()
+tsave = torch.linspace(0, 1, 11)  # shape (11)
+exp_ops = [dq.sigmaz()]  # shape (1, 2, 2)
+result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops)
+```
 
 ```python
->>> alphas = torch.linspace(0, 1, 3)
->>> rho0 = dq.coherent_dm(20, alphas)
->>> rho0.shape
-torch.Size([3, 20, 20])
+>>> result.states.shape
+torch.Size([4, 11, 2, 1])
 ```
+
+The returned `states` Tensor has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
+
+```python
+>>> result.expects.shape
+torch.Size([4, 1, 11])
+```
+
+Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial states, `1` is the number of `exp_ops` operators (a single one here) and `11` is the number of saved expectation values (the length of `tsave`).
+
+!!! Note "Creating a batched tensor with PyTorch"
+    To directly create a batched PyTorch tensor, use `torch.stack`:
+
+    ```python
+    H0 = dq.sigmaz()
+    H1 = dq.sigmax()
+    H = torch.stack([H0 + 0.1 * H1, H0 + 0.2 * H1, H0 + 0.3 * H1])  # shape (3, 2, 2)
+    ```
+
+    or PyTorch broadcasting semantics:
+
+    ```python
+    amplitudes = torch.linspace(0.1, 0.3, 3)
+    H = H0 + amplitudes[:, None, None] * H1  # shape (3, 2, 2)
+    ```
 
 ## Batching over stochastic trajectories (SME)
 
-For the diffusive stochastic master equation solver, many stochastic trajectories must often be solved to obtain faithful statistics of the evolved density matrix. In this case, dynamiqs also provides batching over trajectories. This is performed automatically by passing a non-zero `ntrajs` to `smesolve` optional arguments. See the [smesolve()](../python_api/solvers/smesolve.md) API documentation for more detils.
-
-## Results of a batched simulation
-
-When a simulation is batched in dynamiqs, the result of the simulation is also returned with batched tensors. In this case, the batching dimensions are returned with the following order: `(bH, brho, ntrajs, ...)`. For any of these three batching dimensions to the Tensor, if batching is not performed, the dimension is removed and a Tensor with one less dimension is returned.
-
-For instance, for the simulation of a Schrödinger equation batched over Hamiltonian and initial state, we have:
-
-```python
->>> amplitudes = torch.linspace(0.1, 0.3, 3)
->>> H = dq.sigmaz() + amplitudes[:, None, None] * dq.sigmax()
->>> psi0 = torch.stack([
-...     dq.fock(2, 0),
-...     dq.fock(2, 1),
-...     dq.unit(dq.fock(2, 0) + dq.fock(2, 1)),
-...     dq.unit(dq.fock(2, 0) - dq.fock(2, 1))
-... ])
->>> tsave = torch.linspace(0, 1, 11)
->>> exp_ops = [dq.sigmaz()]
->>> result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops)
->>> result.states.shape
-torch.Size([3, 4, 11, 2, 1])
->>> result.expects.shape
-torch.Size([3, 4, 1, 11])
-```
-
-The returned `states` Tensor has shape `(3, 4, 11, 2, 1)` where `(2, 1)` is the individual shape of each state, `(11,)` is the shape of the time vector, `(4,)` is the shape of the batched initial state, and `(3,)` is the shape of the batched Hamiltonian. Similarly, `expects` has the same batching dimensions, but with a dimension `(1,)` that corresponds to the single expectation value provided, and a dimension `(11,)` that corresponds to the time vector.
+For the diffusive stochastic master equation solver, many stochastic trajectories must often be solved to obtain faithful statistics of the evolved density matrix. In this case, dynamiqs also provides batching over trajectories to run them simultaneously. This is performed automatically by setting the value of the `ntrajs` argument in [smesolve()](../python_api/solvers/smesolve.md). The resulting `states` object has shape `(bH?, brho?, ntrajs, nt, n, n)`.
 
 ## Why batching?
 
-Batching can be used to run multiple simulations concurrently, and can dramatically speedup simulations. This is particularly useful when running simulations on GPUs, where the overhead of moving data to and from the GPU can be significant. In this case, batching can be used to reduce the number of data transfers to and from the GPU, and thus improve the overall performance of the simulation.
+When batching multiple simulations, the state is not a 2-D tensor that evolves in time but a N-D tensor which holds each independent simulation. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the subsequent analysis of the simulation, because all the results are gathered in a single large array.
 
-Even when running simulations on CPUs, batching can be used to improve the performance of simulations.
+Common use cases for batching include:
+
+- simulating a system with different values of a parameter (e.g. a drive amplitude),
+- simulate a system with different initial states (e.g. for gate tomography),
+- perform optimisation using multiple starting points with random initial guesses (for parameters fitting or quantum optimal control).
+
+Let's quickly benchmark the speedup obtained by batching a simple simulation:
 
 ```python
 # Hilbert space size
-N = 20
+n = 16
 
-# Batched Hamiltonian
-amplitudes = torch.linspace(-5, 5, 11)
-a = dq.destroy(N)
-H0 = a.mH @ a
-H1 = a + a.mH
-H = H0 + amplitudes[:, None, None] * H1
+# Hamiltonians
+amplitudes = torch.linspace(-1, 1, 11)
+a = dq.destroy(n)
+H = amplitudes[:, None, None] * (a + a.mH)  # shape (11, 16, 16)
 
-# Batched initial state
-angles = torch.linspace(0, 2 * pi, 21)
+# jump operator
+jump_ops = [sqrt(0.1) * a]
+
+# initial states
+angles = torch.linspace(0, 2 * pi, 11)
 alphas = 2.0 * torch.exp(1j * angles)
-psi0 = dq.coherent(N, alphas)
+rho0 = torch.stack([dq.coherent_dm(n, a) for a in alphas])  # shape (11, 16, 16)
 
-# Jump operator
-gamma = 0.1
-jump_ops = [sqrt(gamma) * a]
+# time vector
+tsave = torch.linspace(0, 1, 11)
 
-# Time array
-tsave = torch.linspace(0, 1, 31)
-
-def run_batched():
-    dq.mesolve(H, jump_ops, psi0, tsave)
-
-def run_unbatched():
+def run_unbatched(device):
+    options=dict(device=device, verbose=False)
     for i in range(H.shape[0]):
-        for j in range(psi0.shape[0]):
-            dq.mesolve(H[i], jump_ops, psi0[j], tsave)
+        for j in range(rho0.shape[0]):
+            dq.mesolve(H[i], jump_ops, rho0[j], tsave, options=options)
+
+def run_batched(device):
+    options=dict(device=device, verbose=False)
+    dq.mesolve(H, jump_ops, rho0, tsave, options=options)
 ```
 
-```text
-%timeit run_batched()
-# 1.69 s ± 7.32 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
-%timeit run_unbatched()
-# 6.9 s ± 187 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+So we want to run a total of `11 * 11 = 121` simulations. Let's compare how long it takes to run them unbatched vs batched on CPU[^1]:
+[^1]: Apple M1 chip with 8-core CPU.
+
+% skip: start
+
+```python
+>>> %timeit run_unbatched('cpu')
+1.78 s ± 184 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+>>> %timeit run_batched('cpu')
+284 ms ± 129 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
-Even in this simple example, we gain a factor 4 in speedup just from batching !
+Even with this simple example, we gain a **factor x6** in speedup just from batching.
+
+The result is even more striking on GPU[^2]:
+[^2]: NVIDIA GeForce RTX 4090.
+
+```python
+>>> %timeit run_unbatched('cuda')
+1.51 s ± 1.98 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+>>> %timeit run_batched('cuda')
+20.1 ms ± 78.7 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+```
+
+On the GPU, because we save costly data transfers with the CPU and do N-D matrices multiplications, we gain a **factor x75** in speedup!
+
+% skip: end
