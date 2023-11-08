@@ -27,10 +27,10 @@ dev = [
     "pytest-xdist",
     "mkdocs-material",
     "mkdocstrings[python]",
-    "mkdocs-jupyter",
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
     "mkdocs-section-index",
+    "sybil",
 ]
 
 [tool.isort]
@@ -71,23 +71,23 @@ cmd = "task isort && task black && task codespell && task flake8"
 help = "lint the code and check style (isort + black + codespell + flake8)"
 
 [tool.taskipy.tasks.test]
-cmd = "echo '\n>>> pytest -n=auto -m \"not long\"' && pytest -n=auto -m \"not long\""
+cmd = "echo '\n>>> pytest -n=auto -m \"not long\" tests' && pytest -n=auto -m \"not long\" tests"
 help = "run the unit tests suite excluding long tests (pytest)"
 
 [tool.taskipy.tasks.test-long]
-cmd = "echo '\n>>> pytest -n=auto -m \"long\"' && pytest -n=auto -m \"long\""
+cmd = "echo '\n>>> pytest -n=auto -m \"long\" tests' && pytest -n=auto -m \"long\" tests"
 help = "run the unit tests suite including only long tests (pytest)"
 
 [tool.taskipy.tasks.test-all]
-cmd = "echo '\n>>> pytest -n=auto' && pytest -n=auto"
+cmd = "echo '\n>>> pytest -n=auto tests' && pytest -n=auto tests"
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = "echo '\n>>> doctest dynamiqs/' && pytest --doctest-modules dynamiqs"
+cmd = "echo '\n>>> pytest dynamiqs' && rm -f docs/figs-code/*.png && pytest dynamiqs"
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = "echo '\n>>> doctest docs/' && pytest --doctest-modules docs --doctest-glob '*.md' --ignore-glob '*generate_python_api.py'"
+cmd = "echo '\n>>> pytest docs' && rm -f docs/figs-docs/*.png && pytest docs"
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]

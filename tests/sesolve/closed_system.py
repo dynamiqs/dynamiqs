@@ -7,6 +7,8 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs.gradient import Gradient
+from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
@@ -23,9 +25,9 @@ class ClosedSystem(System):
         H: Tensor,
         y0: Tensor,
         tsave: ArrayLike,
-        solver: str,
+        solver: Solver,
         *,
-        gradient: str | None = None,
+        gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
     ) -> Result:
         return dq.sesolve(
@@ -53,7 +55,7 @@ class Cavity(ClosedSystem):
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
         # define gradient parameters
-        self.parameters = (self.delta, self.alpha0)
+        self.params = (self.delta, self.alpha0)
 
         # bosonic operators
         a = dq.destroy(self.n)
@@ -103,12 +105,10 @@ class Cavity(ClosedSystem):
         grad_x_alpha0 = sqrt(2) * cos(-self.delta * t)
         grad_p_alpha0 = sqrt(2) * sin(-self.delta * t)
 
-        return torch.tensor(
-            [
-                [grad_x_delta, grad_x_alpha0],
-                [grad_p_delta, grad_p_alpha0],
-            ]
-        ).detach()
+        return torch.tensor([
+            [grad_x_delta, grad_x_alpha0],
+            [grad_p_delta, grad_p_alpha0],
+        ]).detach()
 
 
 cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)

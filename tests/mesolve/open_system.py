@@ -7,6 +7,8 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs.gradient import Gradient
+from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 
@@ -27,9 +29,9 @@ class OpenSystem(System):
         H: Tensor,
         y0: Tensor,
         tsave: ArrayLike,
-        solver: str,
+        solver: Solver,
         *,
-        gradient: str | None = None,
+        gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
     ) -> Result:
         return dq.mesolve(
@@ -66,7 +68,7 @@ class LeakyCavity(OpenSystem):
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
         # define gradient parameters
-        self.parameters = (self.delta, self.alpha0, self.kappa)
+        self.params = (self.delta, self.alpha0, self.kappa)
 
         # bosonic operators
         a = dq.destroy(self.n)
@@ -127,12 +129,10 @@ class LeakyCavity(OpenSystem):
         grad_p_kappa = sqrt(2) * self.alpha0 * sin(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
         # fmt: on
 
-        return torch.tensor(
-            [
-                [grad_x_delta, grad_x_alpha0, grad_x_kappa],
-                [grad_p_delta, grad_p_alpha0, grad_p_kappa],
-            ]
-        ).detach()
+        return torch.tensor([
+            [grad_x_delta, grad_x_alpha0, grad_x_kappa],
+            [grad_p_delta, grad_p_alpha0, grad_p_kappa],
+        ]).detach()
 
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)

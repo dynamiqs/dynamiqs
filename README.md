@@ -65,9 +65,7 @@ result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
 ```
 
-Output:
-
-```shell
+```text
 |██████████| 100.0% - time 00:00/00:00
 ==== Result ====
 Method       : Dopri5
@@ -103,11 +101,14 @@ tsave = np.linspace(0, 1.0, 101)
 # torch.set_default_device('gpu')
 
 # simulation
-options = dict(verbose=False)
-result = dq.mesolve(H, jump_ops, rho0, tsave, gradient='autograd', options=options)
+result = dq.mesolve(
+    H, jump_ops, rho0, tsave,
+    gradient=dq.gradient.Autograd(),
+    options=dict(verbose=False),
+)
 
 # gradient computation
-loss = dq.expect(a.mH @ a, result.states[-1])  # Tr[a^dag a rho]
+loss = dq.expect(a.mH @ a, result.states[-1]).real  # Tr[a^dag a rho]
 grads = torch.autograd.grad(loss, (kappa, alpha0))
 print(
     f'gradient wrt to kappa  : {grads[0]}\n'
@@ -115,14 +116,12 @@ print(
 )
 ```
 
-Output:
-
-```shell
+```text
 gradient wrt to kappa  : tensor([-0.9048])
 gradient wrt to alpha0 : tensor([1.8097])
 ```
 
-## Let's discuss
+## Let's talk!
 
 If you're curious, have questions or suggestions, wish to contribute or simply want to say hello, please don't hesitate to engage with us, we're always happy to chat! You can join the community on Slack via [this invite link](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA), open an issue on GitHub, or contact the lead developer via email at <pierreguilmin@gmail.com>.
 

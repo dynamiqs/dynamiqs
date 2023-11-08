@@ -6,12 +6,15 @@ from typing import Any
 
 import torch
 
+from dynamiqs.gradient import Gradient
+from dynamiqs.solver import Solver
+
 from .system import System
 
 
 class SolverTester(ABC):
     def _test_batching(
-        self, system: System, solver: str, *, options: dict[str, Any] | None = None
+        self, system: System, solver: Solver, *, options: dict[str, Any] | None = None
     ):
         """Test the batching of `H` and `y0`, and the returned object sizes."""
         m, n = system._state_shape
@@ -49,7 +52,7 @@ class SolverTester(ABC):
     def _test_correctness(
         self,
         system: System,
-        solver: str,
+        solver: Solver,
         *,
         options: dict[str, Any] | None = None,
         num_tsave: int,
@@ -79,8 +82,8 @@ class SolverTester(ABC):
     def _test_gradient(
         self,
         system: System,
-        solver: str,
-        gradient: str,
+        solver: Solver,
+        gradient: Gradient,
         *,
         options: dict[str, Any] | None = None,
         num_tsave: int,
@@ -92,9 +95,7 @@ class SolverTester(ABC):
 
         # === test gradients depending on final ysave
         loss_state = system.loss_state(result.ysave[-1])
-        grads_state = torch.autograd.grad(
-            loss_state, system.parameters, retain_graph=True
-        )
+        grads_state = torch.autograd.grad(loss_state, system.params, retain_graph=True)
         grads_state = torch.stack(grads_state)
         true_grads_state = system.grads_state(tsave[-1])
 
@@ -106,7 +107,7 @@ class SolverTester(ABC):
         # === test gradients depending on final exp_save
         loss_expect = system.loss_expect(result.exp_save[:, -1])
         grads_expect = [
-            torch.stack(torch.autograd.grad(loss, system.parameters, retain_graph=True))
+            torch.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
             for loss in loss_expect
         ]
         grads_expect = torch.stack(grads_expect)

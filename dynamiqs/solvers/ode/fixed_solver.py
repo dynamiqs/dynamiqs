@@ -10,6 +10,18 @@ from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
 from .adjoint_autograd import AdjointFixedAutograd
 
 
+def _assert_multiple_of_dt(dt: float, times: Tensor, name: str):
+    # assert that `times` values are multiples of `dt`
+    is_multiple = torch.isclose(torch.round(times / dt), times / dt)
+    if not torch.all(is_multiple):
+        idx_diff = torch.where(~is_multiple)[0][0].item()
+        raise ValueError(
+            f'For fixed time step solvers, every value of `{name}` must be a multiple'
+            f' of the time step `dt`, but `dt={dt:.3e}` and'
+            f' `{name}[{idx_diff}]={times[idx_diff].item():.3e}`.'
+        )
+
+
 class FixedSolver(AutogradSolver):
     def __init__(self, *args):
         super().__init__(*args)
@@ -25,18 +37,9 @@ class FixedSolver(AutogradSolver):
             step inside `solver` and the time step inside the iteration loop. A small
             error can thus buildup throughout the ODE integration. TODO Fix this.
         """
-        # assert that `tsave` values are multiples of `dt`
-        if not torch.allclose(torch.round(self.tsave / self.dt), self.tsave / self.dt):
-            raise ValueError(
-                'Every value of `tsave` must be a multiple of the time step `dt` for '
-                'fixed time step ODE solvers.'
-            )
-        # assert that `tmeas` values are multiples of `dt`
-        if not torch.allclose(torch.round(self.tmeas / self.dt), self.tmeas / self.dt):
-            raise ValueError(
-                'Every value of `tmeas` must be a multiple of the time step `dt` for '
-                'fixed time step ODE solvers.'
-            )
+        # assert that `tsave` and `tmeas` values are multiples of `dt`
+        _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
+        _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
 
         # define time values
         num_times = torch.round(self.tstop[-1] / self.dt).int() + 1
@@ -62,7 +65,7 @@ class FixedSolver(AutogradSolver):
 
 class AdjointFixedSolver(FixedSolver, AdjointSolver):
     def run_adjoint(self):
-        AdjointFixedAutograd.apply(self, self.y0, *self.options.parameters)
+        AdjointFixedAutograd.apply(self, self.y0, *self.options.params)
 
     def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
@@ -104,9 +107,9 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
                 # compute g(t-dt)
                 dg = torch.autograd.grad(
-                    a, self.options.parameters, y, allow_unused=True, retain_graph=True
+                    a, self.options.params, y, allow_unused=True, retain_graph=True
                 )
-                dg = none_to_zeros_like(dg, self.options.parameters)
+                dg = none_to_zeros_like(dg, self.options.params)
                 g = add_tuples(g, dg)
 
             # free the graph of y and a

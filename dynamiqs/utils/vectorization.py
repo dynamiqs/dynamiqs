@@ -4,12 +4,14 @@ import torch
 from torch import Tensor
 
 from .operators import eye
+from .utils import _bkron
 
 __all__ = [
     'operator_to_vector',
     'vector_to_operator',
     'spre',
     'spost',
+    'sprepost',
     'sdissipator',
     'slindbladian',
 ]
@@ -73,7 +75,7 @@ def spre(x: Tensor) -> Tensor:
     """
     n = x.size(-1)
     I = eye(n)
-    return torch.kron(x, I)
+    return torch.kron(I, x)
 
 
 def spost(x: Tensor) -> Tensor:
@@ -94,16 +96,32 @@ def spost(x: Tensor) -> Tensor:
     # torch.kron has undocumented dependence on memory layout, so we need to use
     # contiguous() here, see e.g. https://github.com/pytorch/pytorch/issues/74442
     # and https://github.com/pytorch/pytorch/issues/54135
-    return torch.kron(I, x.mT.contiguous())
+    return torch.kron(x.mT.contiguous(), I)
+
+
+def sprepost(x: Tensor, y: Tensor) -> Tensor:
+    r"""Returns the superoperator formed from pre- and post-multiplication by operators.
+
+    Args:
+        x _(..., n, n)_: Operator for pre-multiplication.
+        y _(..., n, n)_: Operator for post-multiplication.
+
+    Returns:
+        _(..., n^2, n^2)_ Pre- and post-multiplication superoperator.
+
+    Examples:
+        >>> dq.sprepost(dq.destroy(3), dq.create(3)).shape
+        torch.Size([9, 9])
+    """
+    return _bkron(y.mT, x)
 
 
 def sdissipator(L: Tensor) -> Tensor:
     r"""Returns the Lindblad dissipation superoperator (in matrix form).
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
-
     $$
-        \mathcal{D}[L](\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
+        \mathcal{D}[L] (\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
         - \frac{1}{2}\rho L^\dag L.
     $$
 
@@ -114,16 +132,15 @@ def sdissipator(L: Tensor) -> Tensor:
         _(..., n^2, n^2)_ Dissipator superoperator.
     """
     LdagL = L.mH @ L
-    return spre(L) @ spost(L.mH) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
+    return sprepost(L, L.mH) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
 def slindbladian(H: Tensor, L: Tensor) -> Tensor:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
-
     $$
-        \mathcal{L}(\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k](\rho),
+        \mathcal{L} (\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k] (\rho),
     $$
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
@@ -140,4 +157,4 @@ def slindbladian(H: Tensor, L: Tensor) -> Tensor:
     Returns:
         _(..., n^2, n^2)_ Lindbladian superoperator.
     """
-    return -1j * (spre(H) - spost(H)) + sdissipator(L).sum(-3)
+    return 1j * (spre(H) - spost(H)) + sdissipator(L).sum(-3)

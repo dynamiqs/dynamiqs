@@ -128,18 +128,15 @@ def norm(x: Tensor) -> Tensor:
         ValueError: If `x` is not a ket, bra or density matrix.
 
     Examples:
-        ```python
-        # for a ket
+        For a ket:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
         >>> dq.norm(psi)
         tensor(1.414)
 
-        # for a density matrix
+        For a density matrix:
         >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
         >>> dq.norm(rho)
         tensor(3.)
-
-        ```
     """
     if isket(x) or isbra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real
@@ -324,9 +321,8 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
-
     $$
-        \mathcal{D}[L](\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
+        \mathcal{D}[L] (\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
         - \frac{1}{2}\rho L^\dag L.
     $$
 
@@ -353,9 +349,8 @@ def lindbladian(H: Tensor, L: Tensor, rho: Tensor) -> Tensor:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
-
     $$
-        \mathcal{L}(\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k](\rho),
+        \mathcal{L} (\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k] (\rho),
     $$
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators

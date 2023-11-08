@@ -17,7 +17,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         ctx: FunctionCtx,
         solver: AdjointSolver,
         y0: Tensor,
-        *parameters: tuple[nn.Parameter, ...],
+        *params: tuple[nn.Parameter, ...],
     ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
@@ -71,8 +71,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
                 ).sum(dim=-3)
 
             solver.g_bwd = tuple(
-                torch.zeros_like(_p).to(solver.y_bwd)
-                for _p in solver.options.parameters
+                torch.zeros_like(_p).to(solver.y_bwd) for _p in solver.options.params
             )
 
             # solve the augmented equation backward between every checkpoint
@@ -100,7 +99,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         # convert gradients of real-valued parameters to real-valued gradients
         solver.g_bwd = tuple(
             _g.real if _p.is_floating_point() else _g
-            for (_g, _p) in zip(solver.g_bwd, solver.options.parameters)
+            for (_g, _p) in zip(solver.g_bwd, solver.options.params)
         )
 
         # return the computed gradients w.r.t. each argument in `forward`
