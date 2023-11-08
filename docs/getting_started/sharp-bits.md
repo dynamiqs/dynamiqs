@@ -55,7 +55,7 @@ dq.sesolve(a @ b, rho, time, device="cuda") # method 2
 
 ## `RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn`
 
-To calculate gradients using a Dynamiqs solver, it is necessary to designate a gradient algorithm explicitly. Failing to do so will prompt PyTorch to raise a RuntimeError, specifically stating that "element 0 of tensors does not require grad and does not have a grad_fn."
+To calculate gradients using a Dynamiqs solver, it is necessary to designate a gradient algorithm explicitly. Failing to do so will prompt PyTorch to raise a `RuntimeError`, specifically stating that `element 0 of tensors does not require grad and does not have a grad_fn.`
 
 ```python
 import dynamiqs as dq
