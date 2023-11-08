@@ -49,6 +49,9 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
+  - mkdocs-simple-hooks:
+      hooks:
+          on_env: "docs.hooks:on_env"
   - gen-files:
       scripts:
         - docs/generate_python_api.py
