@@ -339,3 +339,7 @@ article.md-typeset h1 {
   display: block;
   margin: 0 auto;
 }
+
+.full-width {
+  width: 85%;
+}
