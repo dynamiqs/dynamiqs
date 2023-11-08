@@ -125,6 +125,6 @@ plt.style.use('bmh')
 render('workflow')
 ```
 
-![workflow](/figs-docs/workflow.png){.center}
+![workflow](/figs-docs/workflow.png){.center .full-width}
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.
