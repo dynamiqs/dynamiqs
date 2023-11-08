@@ -34,7 +34,7 @@ class TestMEEuler(SolverTester):
 
     def test_adjoint(self):
         solver = Euler(dt=1e-3)
-        gradient = Adjoint(params=grad_leaky_cavity_8.parameters)
+        gradient = Adjoint(params=grad_leaky_cavity_8.params)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,

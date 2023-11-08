@@ -136,7 +136,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         ctx: FunctionCtx,
         solver: AdjointFixedSolver,
         y0: Tensor,
-        *parameters: tuple[nn.Parameter, ...],
+        *params: tuple[nn.Parameter, ...],
     ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
@@ -146,7 +146,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         # integrate the ODE forward without storing the graph of operations
         solver.run_nograd()
 
-        # save results and model parameters
+        # save results and model params
         ctx.save_for_backward(solver.ysave)
 
         # returning `ysave` is required for custom backward functions
