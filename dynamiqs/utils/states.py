@@ -144,7 +144,7 @@ def coherent(
     elif alpha.ndim > 1:
         raise ValueError(
             'Argument `alpha` must be a 0-D or 1-D array-like object, but is'
-            f'a {alpha.ndim}-D object.'
+            f' a {alpha.ndim}-D object.'
         )
     if len(dim) != len(alpha):
         raise ValueError(
