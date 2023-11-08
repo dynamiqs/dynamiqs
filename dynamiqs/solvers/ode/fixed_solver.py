@@ -66,7 +66,7 @@ class FixedSolver(AutogradSolver):
 
 class AdjointFixedSolver(FixedSolver, AdjointSolver):
     def run_adjoint(self):
-        AdjointFixedAutograd.apply(self, self.y0, *self.options.parameters)
+        AdjointFixedAutograd.apply(self, self.y0, *self.options.params)
 
     def run_augmented(self):
         """Integrate the augmented ODE backward using a fixed time step integrator."""
@@ -108,9 +108,9 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
                 # compute g(t-dt)
                 dg = torch.autograd.grad(
-                    a, self.options.parameters, y, allow_unused=True, retain_graph=True
+                    a, self.options.params, y, allow_unused=True, retain_graph=True
                 )
-                dg = none_to_zeros_like(dg, self.options.parameters)
+                dg = none_to_zeros_like(dg, self.options.params)
                 g = add_tuples(g, dg)
 
             # free the graph of y and a
@@ -190,8 +190,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
                 ).sum(dim=-3)
 
             solver.g_bwd = tuple(
-                torch.zeros_like(_p).to(solver.y_bwd)
-                for _p in solver.options.parameters
+                torch.zeros_like(_p).to(solver.y_bwd) for _p in solver.options.params
             )
 
             # solve the augmented equation backward between every checkpoint
@@ -219,7 +218,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
         # convert gradients of real-valued parameters to real-valued gradients
         solver.g_bwd = tuple(
             _g.real if _p.is_floating_point() else _g
-            for (_g, _p) in zip(solver.g_bwd, solver.options.parameters)
+            for (_g, _p) in zip(solver.g_bwd, solver.options.params)
         )
 
         # return the computed gradients w.r.t. each argument in `forward`
