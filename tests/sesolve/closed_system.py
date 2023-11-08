@@ -105,12 +105,10 @@ class Cavity(ClosedSystem):
         grad_x_alpha0 = sqrt(2) * cos(-self.delta * t)
         grad_p_alpha0 = sqrt(2) * sin(-self.delta * t)
 
-        return torch.tensor(
-            [
-                [grad_x_delta, grad_x_alpha0],
-                [grad_p_delta, grad_p_alpha0],
-            ]
-        ).detach()
+        return torch.tensor([
+            [grad_x_delta, grad_x_alpha0],
+            [grad_p_delta, grad_p_alpha0],
+        ]).detach()
 
 
 cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
