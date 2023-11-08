@@ -13,7 +13,7 @@ from math import pi, sqrt
 
 ## Batched simulation
 
-To simulate multiple Hamiltonians, you can pass a list of Hamiltonians for the argument `H` to [`sesolve()`](/python_api/solvers/sesolve.md), [`mesolve()`](/python_api/solvers/mesolve.md) or [`smesolve()`](/python_api/solvers/smesolve.md). You can also pass a list of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
+To simulate multiple Hamiltonians, you can pass a list of Hamiltonians for the argument `H` to [`sesolve()`](../python_api/solvers/sesolve.md), [`mesolve()`](../python_api/solvers/mesolve.md) or [`smesolve()`](../python_api/solvers/smesolve.md). You can also pass a list of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
 
 !!! Note "Result of a batched simulation"
     When a simulation is batched in dynamiqs, the result of the simulation is a batched tensor (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(bH?, bstate?, nt, n, m)` where
