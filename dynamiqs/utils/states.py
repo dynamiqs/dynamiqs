@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import prod
+from typing import get_args
 
 import torch
 from torch import Tensor
@@ -98,7 +99,7 @@ def fock_dm(
 
 def coherent(
     dim: int | tuple[int, ...],
-    alpha: Number | tuple[Number, ...] | ArrayLike,
+    alpha: Number | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -133,7 +134,7 @@ def coherent(
 
     # convert inputs to tuples by default, and check dimensions match
     dim = (dim,) if isinstance(dim, int) else dim
-    if isinstance(alpha, (int, float, complex, tuple)):
+    if isinstance(alpha, get_args(Number)):
         alpha = torch.as_tensor(alpha, dtype=cdtype, device=device)
     else:
         alpha = to_tensor(alpha, dtype=cdtype, device=device)
@@ -161,7 +162,7 @@ def coherent(
 
 def coherent_dm(
     dim: int | tuple[int, ...],
-    alpha: Number | tuple[Number, ...] | ArrayLike,
+    alpha: Number | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,

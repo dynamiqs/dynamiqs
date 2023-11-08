@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from cmath import exp as cexp
 from math import prod
+from typing import get_args
 
 import torch
 from torch import Tensor
@@ -336,7 +337,7 @@ def displace(
     cdtype = get_cdtype(dtype)
     device = to_device(device)
 
-    if isinstance(alpha, Number):
+    if isinstance(alpha, get_args(Number)):
         alpha = torch.as_tensor(alpha, dtype=cdtype, device=device)
     else:
         alpha = to_tensor(alpha, dtype=cdtype, device=device)
@@ -382,7 +383,7 @@ def squeeze(
     cdtype = get_cdtype(dtype)
     device = to_device(device)
 
-    if isinstance(z, Number):
+    if isinstance(z, get_args(Number)):
         z = torch.as_tensor(z, dtype=cdtype, device=device)
     else:
         z = to_tensor(z, dtype=cdtype, device=device)

@@ -20,7 +20,7 @@ __all__ = [
 Number = Union[int, float, complex]
 
 # type for objects convertible to a torch.Tensor using `to_tensor`
-ArrayLike = Union[list, np.ndarray, Tensor, Qobj]
+ArrayLike = Union[tuple, list, np.ndarray, Tensor, Qobj]
 
 # TODO add typing for Hamiltonian with piecewise-constant factor
 # type for time-dependent objects
@@ -36,8 +36,9 @@ def to_tensor(
     """Convert an array-like object or a list of array-like objects to a tensor.
 
     Args:
-        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
-            of these types. If `None` returns an empty tensor of shape _(0)_.
+        x: QuTiP quantum object or NumPy array or Python list or Python tuple or PyTorch
+            tensor or list of these types. If `None` returns an empty tensor of shape
+            _(0)_.
         dtype: Data type of the returned tensor.
         device: Device on which the returned tensor is stored.
 
@@ -65,14 +66,19 @@ def to_tensor(
     """
     if x is None:
         return torch.tensor([], dtype=dtype, device=device)
-    if isinstance(x, list):
+    elif isinstance(x, tuple):
+        if len(x) == 0:
+            return torch.tensor([], dtype=dtype, device=device)
+        else:
+            return torch.as_tensor(x, dtype=dtype, device=device)
+    elif isinstance(x, list):
         if len(x) == 0:
             return torch.tensor([], dtype=dtype, device=device)
         if not isinstance(x[0], get_args(ArrayLike)):
             return torch.as_tensor(x, dtype=dtype, device=device)
         else:
             return torch.stack([to_tensor(el, dtype=dtype, device=device) for el in x])
-    if isinstance(x, Qobj):
+    elif isinstance(x, Qobj):
         return from_qutip(x, dtype=get_cdtype(dtype), device=device)
     elif isinstance(x, (np.ndarray, Tensor)):
         return torch.as_tensor(x, dtype=dtype, device=device)
@@ -256,8 +262,8 @@ def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
     """Convert an array-like object or a list of array-like objects to a NumPy array.
 
     Args:
-        x: QuTiP quantum object or NumPy array or Python list or PyTorch tensor or list
-            of these types.
+        x: QuTiP quantum object or NumPy array or Python list or Python tuple or
+            PyTorch tensor or list of these types.
 
     Returns:
         Output NumPy array.
@@ -277,7 +283,12 @@ def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
                 [0.+0.j],
                 [1.+0.j]]])
     """
-    if isinstance(x, list):
+    if isinstance(x, tuple):
+        if len(x) == 0:
+            return np.array([])
+        else:
+            return np.array(x)
+    elif isinstance(x, list):
         if len(x) == 0:
             return np.array([])
         if not isinstance(x[0], get_args(ArrayLike)):
