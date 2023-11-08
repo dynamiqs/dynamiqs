@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from functools import wraps
 
+import matplotlib
 import matplotlib as mpl
 import numpy as np
 from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.cm import get_cmap
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator, NullLocator
@@ -152,7 +152,7 @@ def fock_ticks(axis: Axis, n: int, all: bool = True):
 
 
 def sample_cmap(name: str, n: int, alpha: float = 1.0) -> np.ndarray:
-    sampled_cmap = get_cmap(name)(np.linspace(0, 1, n))
+    sampled_cmap = matplotlib.colormaps.get_cmap(name)(np.linspace(0, 1, n))
     sampled_cmap[:, -1] = alpha
     return sampled_cmap
 
