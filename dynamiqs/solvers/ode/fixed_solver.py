@@ -28,6 +28,13 @@ class FixedSolver(AutogradSolver):
     def __init__(self, *args):
         super().__init__(*args)
         self.dt = self.options.dt
+        if isinstance(self.dt, Tensor):
+            if self.dt.numel() == 1:
+                self.dt = self.dt.item()
+            else:
+                raise ValueError(
+                    f"`dt` should be a number or a 0-d tensor, but is {self.dt}."
+                )
 
     def run_autograd(self):
         """Integrate a quantum ODE with a fixed time step custom integrator.
