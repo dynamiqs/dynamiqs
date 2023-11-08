@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import warnings
 from abc import abstractmethod
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx
+from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
@@ -42,22 +44,35 @@ class FixedSolver(AutogradSolver):
         _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
         _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
 
+        # initialize the progress bar
+        self.pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
+
+        # initialize time and state
+        t0 = 0.0
+        t, y = t0, self.y0
+
+        for ts in self.tstop.cpu().numpy():
+            y = self.integrate(t, ts, y)
+            self.save(y)
+            t = ts
+
+        # close progress bar
+        with warnings.catch_warnings():  # ignore tqdm precision overflow
+            warnings.simplefilter('ignore', TqdmWarning)
+            self.pbar.close()
+
+    def integrate(self, t0: float, t1: float, y: Tensor) -> Tensor:
+        """Integrate the ODE forward from time `t0` to time `t1`."""
         # define time values
-        num_times = torch.round(self.tstop[-1] / self.dt).int() + 1
-        times = torch.linspace(0.0, self.tstop[-1], num_times)
+        num_times = round((t1 - t0) / self.dt) + 1
+        times = torch.linspace(t0, t1, num_times)
 
         # run the ode routine
-        y = self.y0
-        for t in tqdm(times[:-1].cpu().numpy(), disable=not self.options.verbose):
-            # save solution
-            if t >= self.next_tstop():
-                self.save(y)
-
-            # iterate solution
+        for t in times[:-1].cpu().numpy():
             y = self.forward(t, y)
+            self.pbar.update(self.dt)
 
-        # save final time step (`t` goes `0.0` to `tstop[-1]` excluded)
-        self.save(y)
+        return y
 
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
