@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from .operators import displace
-from .tensor_types import ArrayLike, get_cdtype, to_tensor
+from .tensor_types import ArrayLike, Number, get_cdtype, to_tensor
 from .utils import tensprod, todm
 
 __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
@@ -98,7 +98,7 @@ def fock_dm(
 
 def coherent(
     dim: int | tuple[int, ...],
-    alpha: int | float | complex | tuple[int | float | complex, ...] | ArrayLike,
+    alpha: Number | tuple[Number, ...] | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -161,7 +161,7 @@ def coherent(
 
 def coherent_dm(
     dim: int | tuple[int, ...],
-    alpha: int | float | complex | tuple[int | float | complex, ...] | ArrayLike,
+    alpha: Number | tuple[Number, ...] | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,

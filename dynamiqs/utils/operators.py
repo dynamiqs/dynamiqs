@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from .._utils import to_device
-from .tensor_types import ArrayLike, get_cdtype, to_tensor
+from .tensor_types import ArrayLike, Number, get_cdtype, to_tensor
 from .utils import tensprod
 
 __all__ = [
@@ -302,7 +302,7 @@ def parity(
 
 def displace(
     dim: int,
-    alpha: int | float | complex | ArrayLike,
+    alpha: Number | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -336,7 +336,7 @@ def displace(
     cdtype = get_cdtype(dtype)
     device = to_device(device)
 
-    if isinstance(alpha, (int, float, complex)):
+    if isinstance(alpha, Number):
         alpha = torch.as_tensor(alpha, dtype=cdtype, device=device)
     else:
         alpha = to_tensor(alpha, dtype=cdtype, device=device)
@@ -348,7 +348,7 @@ def displace(
 
 def squeeze(
     dim: int,
-    z: int | float | complex | ArrayLike,
+    z: Number | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -382,7 +382,7 @@ def squeeze(
     cdtype = get_cdtype(dtype)
     device = to_device(device)
 
-    if isinstance(z, (int, float, complex)):
+    if isinstance(z, Number):
         z = torch.as_tensor(z, dtype=cdtype, device=device)
     else:
         z = to_tensor(z, dtype=cdtype, device=device)

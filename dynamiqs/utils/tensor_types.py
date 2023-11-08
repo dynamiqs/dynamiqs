@@ -17,6 +17,8 @@ __all__ = [
     'to_numpy',
 ]
 
+Number = Union[int, float, complex]
+
 # type for objects convertible to a torch.Tensor using `to_tensor`
 ArrayLike = Union[list, np.ndarray, Tensor, Qobj]
 
