@@ -56,7 +56,7 @@ Description: Extra CSS for the dynamiqs documentation
 .md-typeset .note>.admonition-title::before,
 .md-typeset .note>summary::before,
 .md-typeset .info>.admonition-title::before,
-.md-typeset .info>summary::before{
+.md-typeset .info>summary::before {
   background-color: var(--md-note-fg-color);
 }
 
@@ -333,4 +333,9 @@ article.md-typeset h1 {
 .md-typeset ul li::marker {
   content: "»";
   font-weight: 600;
+}
+
+.center {
+  display: block;
+  margin: 0 auto;
 }

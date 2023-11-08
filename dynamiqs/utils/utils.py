@@ -128,18 +128,15 @@ def norm(x: Tensor) -> Tensor:
         ValueError: If `x` is not a ket, bra or density matrix.
 
     Examples:
-        ```python
-        # for a ket
+        For a ket:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
         >>> dq.norm(psi)
         tensor(1.414)
 
-        # for a density matrix
+        For a density matrix:
         >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
         >>> dq.norm(rho)
         tensor(3.)
-
-        ```
     """
     if isket(x) or isbra(x):
         return torch.linalg.norm(x, dim=(-2, -1)).real

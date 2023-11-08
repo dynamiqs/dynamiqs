@@ -180,7 +180,6 @@ def to_qutip(x: Tensor, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj
         QuTiP quantum object or list of QuTiP quantum object.
 
     Examples:
-        ```python
         >>> psi = dq.fock(3, 1)
         >>> psi
         tensor([[0.+0.j],
@@ -193,14 +192,12 @@ def to_qutip(x: Tensor, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj
          [1.]
          [0.]]
 
-        # batched tensor
+        For a batched tensor:
         >>> rhos = torch.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         torch.Size([5, 16, 16])
         >>> len(dq.to_qutip(rhos))
         5
-
-        ```
 
         Note that the tensor product structure is not inferred automatically, it must be
         specified with the `dims` argument:

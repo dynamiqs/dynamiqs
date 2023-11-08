@@ -83,15 +83,15 @@ cmd = "echo '\n>>> pytest -n=auto tests' && pytest -n=auto tests"
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = "echo '\n>>> doctest dynamiqs' && pytest --doctest-modules dynamiqs"
+cmd = "echo '\n>>> pytest dynamiqs' && rm -f docs/figs-code/*.png && pytest dynamiqs"
 help = "check code docstrings examples (doctest)"
 
-[tool.taskipy.tasks.doctest-doc]
-cmd = "echo '\n>>> pytest docs' && pytest docs"
+[tool.taskipy.tasks.doctest-docs]
+cmd = "echo '\n>>> pytest docs' && rm -f docs/figs-docs/*.png && pytest docs"
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
-cmd = "task doctest-code && task doctest-doc"
+cmd = "task doctest-code && task doctest-docs"
 help = "check all examples (doctest)"
 
 [tool.taskipy.tasks.docbuild]
