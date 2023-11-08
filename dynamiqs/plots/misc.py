@@ -24,6 +24,20 @@ def plot_pwc_pulse(
     real_color: str = colors['blue'],
     imag_color: str = colors['purple'],
 ):
+    """Plot a piecewise-constant pulse.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Examples:
+        >>> n = 20
+        >>> times = np.linspace(0, 1.0, n+1)
+        >>> values = dq.rand_complex(n, seed=42)
+        >>> dq.plot_pwc_pulse(times, values)
+        >>> render('plot_pwc_pulse')
+
+        ![plot_pwc_pulse](/figs-code/plot_pwc_pulse.png){.center}
+    """
     times = to_numpy(times)  # (n + 1)
     values = to_numpy(values)  # (n)
 
@@ -63,7 +77,18 @@ def plot_fock(
     ymax: float | None = 1.0,
     color: str = colors['blue'],
 ):
-    """Plot the photon number population."""
+    """Plot the photon number population of a state.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Examples:
+        >>> psi = dq.coherent(16, 2.0)
+        >>> dq.plot_fock(psi)
+        >>> render('plot_fock')
+
+        ![plot_fock](/figs-code/plot_fock.png){.center}
+    """
     state = to_numpy(state)
     n = state.shape[0]
     x = range(n)
@@ -91,7 +116,29 @@ def plot_fock_evolution(
     colorbar: bool = True,
     yticksall: bool = True,
 ):
-    """Plot the photon number population as a function of time."""
+    """Plot the photon number population of state as a function of time.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Examples:
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> psi0 = dq.coherent(16, 0.0)
+        >>> H = 2.0 * (a + a.mH)
+        >>> tsave = np.linspace(0, 1.0, 11)
+        >>> states = dq.sesolve(H, psi0, tsave).states
+        >>> dq.plot_fock_evolution(states)
+        >>> render('plot_fock_evolution')
+
+        ![plot_fock_evolution](/figs-code/plot_fock_evolution.png){.center}
+
+        Use the log scale option to visualise low populations:
+        >>> dq.plot_fock_evolution(states, logscale=True, logvmin=1e-5)
+        >>> render('plot_fock_evolution_log')
+
+        ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.center}
+    """
     states = to_numpy(states)
 
     x = np.arange(len(states)) if times is None else times
