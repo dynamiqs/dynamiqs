@@ -100,12 +100,12 @@ class Solver(ABC):
 
     def save(self, y: Tensor):
         if self.tsave_mask[self.tstop_counter]:
+            self.tsave_counter += 1
             self._save_y(y)
             self._save_exp_ops(y)
-            self.tsave_counter += 1
         if self.tmeas_mask[self.tstop_counter]:
-            self._save_meas()
             self.tmeas_counter += 1
+            self._save_meas()
         self.tstop_counter += 1
 
     def _save_y(self, y: Tensor):
