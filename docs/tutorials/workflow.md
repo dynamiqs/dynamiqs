@@ -54,7 +54,7 @@ We also need to specify the solver and options related to it, namely the method 
 ```python
 # define sampling times
 sim_time = 10.0  # total time of evolution
-num_save = 100  # number of time slots to save
+num_save = 101  # number of time slots to save
 tsave = torch.linspace(0.0, sim_time, num_save)  # (can also be a list or a numpy.array)
 
 # define list of observables
