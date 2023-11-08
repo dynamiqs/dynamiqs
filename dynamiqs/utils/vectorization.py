@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 
 from .operators import eye
+from .utils import _bkron
 
 __all__ = [
     'operator_to_vector',
@@ -96,28 +97,6 @@ def spost(x: Tensor) -> Tensor:
     # contiguous() here, see e.g. https://github.com/pytorch/pytorch/issues/74442
     # and https://github.com/pytorch/pytorch/issues/54135
     return torch.kron(x.mT.contiguous(), I)
-
-
-def _bkron(A: Tensor, B: Tensor) -> Tensor:
-    """Compute the batched Kronecker product of two matrices A and B."""
-    # extracting shapes
-    A_shape = A.shape
-    B_shape = B.shape
-
-    # ensuring A and B are batched in the same way
-    assert A_shape[:-2] == B_shape[:-2], 'The batches of A and B must be the same size'
-
-    # reshaping A and B for the computation
-    reshaped_A = A.unsqueeze(-1).unsqueeze(-3)
-    reshaped_B = B.unsqueeze(-2).unsqueeze(-4)
-
-    # computing the product
-    result = reshaped_A * reshaped_B
-
-    # reshaping to the final desired shape (..., n*m, n*m)
-    return result.reshape(
-        *A_shape[:-2], A_shape[-2] * B_shape[-2], A_shape[-1] * B_shape[-1]
-    )
 
 
 def sprepost(x: Tensor, y: Tensor) -> Tensor:
