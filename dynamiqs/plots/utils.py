@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from functools import wraps
 
+import matplotlib
 import matplotlib as mpl
 import numpy as np
 from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.cm import get_cmap
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator, NullLocator
@@ -26,10 +26,10 @@ __all__ = [
 ]
 
 
-def figax(w: float = 10.0, h: float | None = None, **kwargs) -> tuple[Figure, Axes]:
+def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axes]:
     """Return a figure with specified width and length."""
     if h is None:
-        h = w / 2
+        h = w / 1.6
     return plt.subplots(1, 1, figsize=(w, h), **kwargs)
 
 
@@ -58,7 +58,7 @@ def optax(func):
     def wrapper(
         *args,
         ax: Axes | None = None,
-        w: float = 10.0,
+        w: float = 7.0,
         h: float | None = None,
         **kwargs,
     ):
@@ -84,55 +84,52 @@ colors = {
 
 def mplstyle(*, latex: bool = True):
     """Set custom Matplotlib style."""
-    plt.rcParams.update(
-        {
-            # xtick
-            'xtick.direction': 'in',
-            'xtick.major.size': 4.5,
-            'xtick.minor.size': 2.5,
-            'xtick.major.width': 1.0,
-            'xtick.labelsize': 12,
-            'xtick.minor.visible': True,
-            # ytick
-            'ytick.direction': 'in',
-            'ytick.major.size': 4.5,
-            'ytick.minor.size': 2.5,
-            'ytick.major.width': 1.0,
-            'ytick.labelsize': 12,
-            'ytick.minor.visible': True,
-            # axes
-            'axes.facecolor': 'white',
-            'axes.grid': False,
-            'axes.titlesize': 12,
-            'axes.labelsize': 12,
-            'axes.linewidth': 1.0,
-            'axes.prop_cycle': cycler('color', colors.values()),
-            # grid
-            'grid.color': 'gray',
-            'grid.linestyle': '--',
-            'grid.alpha': 0.3,
-            # legend
-            'legend.frameon': False,
-            'legend.fontsize': 12,
-            # figure
-            'figure.facecolor': 'white',
-            'figure.dpi': 72,
-            # other
-            'savefig.facecolor': 'white',
-            'font.size': 12,
-            'scatter.marker': 'x',
-            'lines.linewidth': 2.0,
-        }
-    )
+    plt.rcParams.update({
+        # xtick
+        'xtick.direction': 'in',
+        'xtick.major.size': 4.5,
+        'xtick.minor.size': 2.5,
+        'xtick.major.width': 1.0,
+        'xtick.labelsize': 12,
+        'xtick.minor.visible': True,
+        # ytick
+        'ytick.direction': 'in',
+        'ytick.major.size': 4.5,
+        'ytick.minor.size': 2.5,
+        'ytick.major.width': 1.0,
+        'ytick.labelsize': 12,
+        'ytick.minor.visible': True,
+        # axes
+        'axes.facecolor': 'white',
+        'axes.grid': False,
+        'axes.titlesize': 12,
+        'axes.labelsize': 12,
+        'axes.linewidth': 1.0,
+        'axes.prop_cycle': cycler('color', colors.values()),
+        # grid
+        'grid.color': 'gray',
+        'grid.linestyle': '--',
+        'grid.alpha': 0.3,
+        # legend
+        'legend.frameon': False,
+        'legend.fontsize': 12,
+        # figure
+        'figure.facecolor': 'white',
+        'figure.dpi': 72,
+        'figure.figsize': (7, 7 / 1.6),
+        # other
+        'savefig.facecolor': 'white',
+        'font.size': 12,
+        'scatter.marker': 'x',
+        'lines.linewidth': 2.0,
+    })
     if latex:
-        plt.rcParams.update(
-            {
-                'text.usetex': latex,
-                'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
-                'font.family': 'serif',
-                'font.serif': 'Computer Modern Roman',
-            }
-        )
+        plt.rcParams.update({
+            'text.usetex': latex,
+            'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
+            'font.family': 'serif',
+            'font.serif': 'Computer Modern Roman',
+        })
 
 
 def integer_ticks(axis: Axis):
@@ -156,7 +153,7 @@ def fock_ticks(axis: Axis, n: int, all: bool = True):
 
 
 def sample_cmap(name: str, n: int, alpha: float = 1.0) -> np.ndarray:
-    sampled_cmap = get_cmap(name)(np.linspace(0, 1, n))
+    sampled_cmap = matplotlib.colormaps.get_cmap(name)(np.linspace(0, 1, n))
     sampled_cmap[:, -1] = alpha
     return sampled_cmap
 

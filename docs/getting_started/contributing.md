@@ -86,7 +86,7 @@ test         run the unit tests suite excluding long tests (pytest)
 test-long    run the unit tests suite including only long tests (pytest)
 test-all     run the complete unit tests suite (pytest)
 doctest-code check code docstrings examples (doctest)
-doctest-doc  check documentation examples (doctest)
+doctest-docs check documentation examples (doctest)
 doctest      check all examples (doctest)
 docbuild     build the documentation website
 docserve     preview documentation website with hot-reloading

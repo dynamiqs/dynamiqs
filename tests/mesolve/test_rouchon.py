@@ -39,7 +39,7 @@ class TestMERouchon1(SolverTester):
     @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
     def test_adjoint(self, normalize):
         solver = Rouchon1(dt=1e-3, normalize=normalize)
-        gradient = Adjoint(parameters=grad_leaky_cavity_8.parameters)
+        gradient = Adjoint(params=grad_leaky_cavity_8.params)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
@@ -77,7 +77,7 @@ class TestMERouchon2(SolverTester):
 
     def test_adjoint(self):
         solver = Rouchon2(dt=1e-3)
-        gradient = Adjoint(parameters=grad_leaky_cavity_8.parameters)
+        gradient = Adjoint(params=grad_leaky_cavity_8.params)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,

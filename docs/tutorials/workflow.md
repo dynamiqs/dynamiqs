@@ -111,7 +111,6 @@ excited_pop = Omega / Omega_star * torch.sin(tsave * Omega_star)  # excited popu
 sigmaz_analytical = 1 - 2 * excited_pop**2  # expectation value of sigma_z
 
 # plot results
-plt.figure(figsize=(6, 2.5))
 plt.plot(tsave, sigmaz_analytical, 'k', lw=1.0)
 plt.plot(tsave, result.expects[0].real, 'oC0', ms=4)
 
@@ -121,7 +120,9 @@ plt.ylabel(r'$\langle \sigma_z \rangle$')
 plt.xlim(0, 10)
 plt.ylim(-1, 1)
 plt.legend(('Analytical', 'dynamiqs'))
-plt.style.use('bmh')
+render('workflow')
 ```
+
+![workflow](/figs-docs/workflow.png){.center .full-width}
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.
