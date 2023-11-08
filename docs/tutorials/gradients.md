@@ -38,18 +38,18 @@ For more information, see [https://pytorch.org/blog/overview-of-pytorch-autograd
 Let's see a very simple case of how to compute gradients in PyTorch. In this example we compute the gradient of the square root of a gradient. 
 Let $x = [1, 2, 3]$. $||x|| = \sum_i x_i^2 = 1^2 + 2^2 + 3^2 = 14.0$. Let's compute it in torch:
 
-```python
+```pycon
 >>> import torch
 >>> x = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
->>> sum = x @ x
->>> sum
+>>> s = x @ x
+>>> s
 tensor(14., grad_fn=<DotBackward0>)
 ```
 
 Now we can compute analytically the gradient with respect to each coordinate: $\frac{\partial ||x||}{\partial x_i} = 2 * x_i $.
 Thus, we have $\frac{\partial ||x||}{\partial x} = [2, 4, 6]$. We can now compute it with torch:
 ```pycon
->>> sum.backward()
+>>> s.backward()
 >>> x.grad
 tensor([2., 4., 6.])
 ```
