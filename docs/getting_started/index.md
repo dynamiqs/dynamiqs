@@ -6,4 +6,4 @@ This guide is an overview and explains the important features; details are found
 - [Installation](installation.md)
 - [Basic examples](examples.md)
 - [Contributing](contributing.md)
-- [Let's discuss](discussion.md)
+- [Let's talk!](talk.md)
