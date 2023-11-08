@@ -6,8 +6,8 @@ import torch
 from torch import Tensor
 
 from .operators import displace
-from .tensor_types import get_cdtype
-from .utils import todm, unit
+from .tensor_types import ArrayLike, get_cdtype, to_tensor
+from .utils import tensprod, todm
 
 __all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
 
@@ -98,7 +98,7 @@ def fock_dm(
 
 def coherent(
     dims: int | tuple[int, ...],
-    alphas: complex | tuple[complex, ...] | Tensor,
+    alphas: int | float | complex | tuple[int | float | complex, ...] | ArrayLike,
     *,
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
@@ -108,8 +108,7 @@ def coherent(
 
     Args:
         dims _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alphas _(complex, tuple of complex, or Tensor)_: Coherent state amplitude of
-            each mode.
+        alphas _(number or array-like object)_: Coherent state amplitude of each mode.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
@@ -132,36 +131,32 @@ def coherent(
     """
     cdtype = get_cdtype(dtype)
 
-    # convert and check dimensions
-    if isinstance(dims, int):
-        dims = (dims,)
-    if isinstance(alphas, (complex, float, int)):
-        alphas = (alphas,)
-    elif isinstance(alphas, Tensor):
-        if alphas.ndim == 0:
-            alphas = alphas.unsqueeze(-1)
-        elif alphas.ndim > 1:
-            raise ValueError(
-                'Argument `alphas` must be a complex scalar, a 1-D tensor, or a tuple'
-                f' of complex scalars, but is a Tensor of dimension {alphas.ndim}.'
-            )
+    # convert inputs to tuples by default, and check dimensions match
+    dims = (dims,) if isinstance(dims, int) else dims
+    if isinstance(alphas, (int, float, complex, tuple)):
+        alphas = torch.as_tensor(alphas, dtype=cdtype, device=device)
+    else:
+        alphas = to_tensor(alphas, dtype=cdtype, device=device)
+
+    if alphas.ndim == 0:
+        alphas = alphas.unsqueeze(-1)
+    elif alphas.ndim > 1:
+        raise ValueError(
+            'Argument `alphas` must be a 0-D or 1-D array-like object, but is'
+            f'a {alphas.ndim}-D object.'
+        )
     if len(dims) != len(alphas):
         raise ValueError(
             'Arguments `alphas` must have the same length as `dims` of length'
             f' {len(dims)}, but has length {len(alphas)}.'
         )
 
-    # compute the required coherent state
-    dim = prod(dims)
-    ket = torch.ones(1, 1, dtype=cdtype, device=device)
-    for dim, alpha in zip(dims, alphas):
-        ket = torch.kron(
-            ket,
-            displace(dim, alpha, dtype=cdtype, device=device)
-            @ fock(dim, 0, dtype=cdtype, device=device),
-        )
-
-    return unit(ket)
+    kets = [
+        displace(dim, alpha, dtype=cdtype, device=device)
+        @ fock(dim, 0, dtype=cdtype, device=device)
+        for dim, alpha in zip(dims, alphas)
+    ]
+    return tensprod(*kets)
 
 
 def coherent_dm(
