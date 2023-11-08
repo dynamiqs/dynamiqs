@@ -84,55 +84,51 @@ colors = {
 
 def mplstyle(*, latex: bool = True):
     """Set custom Matplotlib style."""
-    plt.rcParams.update(
-        {
-            # xtick
-            'xtick.direction': 'in',
-            'xtick.major.size': 4.5,
-            'xtick.minor.size': 2.5,
-            'xtick.major.width': 1.0,
-            'xtick.labelsize': 12,
-            'xtick.minor.visible': True,
-            # ytick
-            'ytick.direction': 'in',
-            'ytick.major.size': 4.5,
-            'ytick.minor.size': 2.5,
-            'ytick.major.width': 1.0,
-            'ytick.labelsize': 12,
-            'ytick.minor.visible': True,
-            # axes
-            'axes.facecolor': 'white',
-            'axes.grid': False,
-            'axes.titlesize': 12,
-            'axes.labelsize': 12,
-            'axes.linewidth': 1.0,
-            'axes.prop_cycle': cycler('color', colors.values()),
-            # grid
-            'grid.color': 'gray',
-            'grid.linestyle': '--',
-            'grid.alpha': 0.3,
-            # legend
-            'legend.frameon': False,
-            'legend.fontsize': 12,
-            # figure
-            'figure.facecolor': 'white',
-            'figure.dpi': 72,
-            # other
-            'savefig.facecolor': 'white',
-            'font.size': 12,
-            'scatter.marker': 'x',
-            'lines.linewidth': 2.0,
-        }
-    )
+    plt.rcParams.update({
+        # xtick
+        'xtick.direction': 'in',
+        'xtick.major.size': 4.5,
+        'xtick.minor.size': 2.5,
+        'xtick.major.width': 1.0,
+        'xtick.labelsize': 12,
+        'xtick.minor.visible': True,
+        # ytick
+        'ytick.direction': 'in',
+        'ytick.major.size': 4.5,
+        'ytick.minor.size': 2.5,
+        'ytick.major.width': 1.0,
+        'ytick.labelsize': 12,
+        'ytick.minor.visible': True,
+        # axes
+        'axes.facecolor': 'white',
+        'axes.grid': False,
+        'axes.titlesize': 12,
+        'axes.labelsize': 12,
+        'axes.linewidth': 1.0,
+        'axes.prop_cycle': cycler('color', colors.values()),
+        # grid
+        'grid.color': 'gray',
+        'grid.linestyle': '--',
+        'grid.alpha': 0.3,
+        # legend
+        'legend.frameon': False,
+        'legend.fontsize': 12,
+        # figure
+        'figure.facecolor': 'white',
+        'figure.dpi': 72,
+        # other
+        'savefig.facecolor': 'white',
+        'font.size': 12,
+        'scatter.marker': 'x',
+        'lines.linewidth': 2.0,
+    })
     if latex:
-        plt.rcParams.update(
-            {
-                'text.usetex': latex,
-                'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
-                'font.family': 'serif',
-                'font.serif': 'Computer Modern Roman',
-            }
-        )
+        plt.rcParams.update({
+            'text.usetex': latex,
+            'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
+            'font.family': 'serif',
+            'font.serif': 'Computer Modern Roman',
+        })
 
 
 def integer_ticks(axis: Axis):
