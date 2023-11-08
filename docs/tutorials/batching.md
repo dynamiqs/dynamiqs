@@ -11,7 +11,7 @@ import timeit
 from math import pi, sqrt
 ```
 
-## Batched simulation
+## Batching in dynamiqs
 
 To simulate multiple Hamiltonians, you can pass a list of Hamiltonians for the argument `H` to [`sesolve()`](../python_api/solvers/sesolve.md), [`mesolve()`](../python_api/solvers/mesolve.md) or [`smesolve()`](../python_api/solvers/smesolve.md). You can also pass a list of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
 
@@ -42,14 +42,14 @@ exp_ops = [dq.sigmaz()]  # shape (1, 2, 2)
 result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops)
 ```
 
-```python
+```pycon
 >>> result.states.shape
 torch.Size([4, 11, 2, 1])
 ```
 
 The returned `states` Tensor has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
 
-```python
+```pycon
 >>> result.expects.shape
 torch.Size([4, 1, 11])
 ```
@@ -124,7 +124,7 @@ So we want to run a total of `11 * 11 = 121` simulations. Let's compare how long
 
 % skip: start
 
-```python
+```pycon
 >>> %timeit run_unbatched('cpu')
 1.78 s ± 184 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 >>> %timeit run_batched('cpu')
@@ -136,7 +136,7 @@ Even with this simple example, we gain a **factor x6** in speedup just from batc
 The result is even more striking on GPU[^2]:
 [^2]: NVIDIA GeForce RTX 4090.
 
-```python
+```pycon
 >>> %timeit run_unbatched('cuda')
 1.51 s ± 1.98 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 >>> %timeit run_batched('cuda')
