@@ -1,4 +1,4 @@
-from doctest import ELLIPSIS
+from doctest import ELLIPSIS, SKIP
 
 import pytest
 import torch
@@ -39,7 +39,7 @@ def render():
 # sybil configuration
 pytest_collect_file = Sybil(
     parsers=[
-        DocTestParser(optionflags=ELLIPSIS),
+        DocTestParser(optionflags=ELLIPSIS | SKIP),
     ],
     patterns=['*.py'],
     setup=sybil_setup,
