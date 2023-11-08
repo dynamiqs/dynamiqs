@@ -69,7 +69,8 @@ class AdjointAutograd(torch.autograd.Function):
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration.
             tstop_bwd = (-solver.tstop).flip(dims=(0,))
-            if tstop_bwd[-1] != solver.t0:
+            saved_ini = tstop_bwd[-1] == solver.t0
+            if not saved_ini:
                 tstop_bwd = torch.cat((tstop_bwd, torch.zeros(1).to(tstop_bwd)))
             t0 = tstop_bwd[0].item()
 
@@ -84,14 +85,14 @@ class AdjointAutograd(torch.autograd.Function):
             for i, ts in enumerate(tstop_bwd.cpu().numpy()[1:]):
                 y, a, g, *args = solver.integrate_augmented(t, ts, y, a, g, *args)
 
-                if solver.options.save_states:
+                if solver.options.save_states and (i < len(tstop_bwd) - 2 or saved_ini):
                     # replace y with its checkpointed version
                     y = ysave[..., -i - 2, :, :]
                     # update adjoint wrt this time point by adding dL / dy(t)
                     a += grad_y[0][..., -i - 2, :, :]
 
                 # update adjoint wrt this time point by adding dL / de(t)
-                if len(solver.exp_ops) > 0:
+                if len(solver.exp_ops) > 0 and (i < len(tstop_bwd) - 2 or saved_ini):
                     a += (
                         grad_y[1][..., :, -i - 2, None, None] * solver.exp_ops.mH
                     ).sum(dim=-3)
