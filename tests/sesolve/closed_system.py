@@ -55,7 +55,7 @@ class Cavity(ClosedSystem):
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
         # define gradient parameters
-        self.parameters = (self.delta, self.alpha0)
+        self.params = (self.delta, self.alpha0)
 
         # bosonic operators
         a = dq.destroy(self.n)

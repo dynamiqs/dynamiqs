@@ -68,7 +68,7 @@ class LeakyCavity(OpenSystem):
         self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
 
         # define gradient parameters
-        self.parameters = (self.delta, self.alpha0, self.kappa)
+        self.params = (self.delta, self.alpha0, self.kappa)
 
         # bosonic operators
         a = dq.destroy(self.n)
