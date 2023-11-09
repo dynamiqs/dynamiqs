@@ -44,6 +44,7 @@ Use `x.mH` or `dq.dag(x)` instead of `x.dag()` to get the adjoint.
 
 You may have forgotten to move the tensors on the GPU. An easy way to ensure to be on gpu is to move your operators to the GPU or to use the `device` option of your solver.
 
+%skip: start
 ```python
 import dynamiqs as dq
 import torch
@@ -52,6 +53,7 @@ rho = dq.fock((20, 20), (0, 0))
 time = torch.linspace(0, 1, 100)
 dq.sesolve(a @ b, rho, time, device="cuda") # method 2
 ```
+%skip: end
 
 ## Numpy interoperability
 
