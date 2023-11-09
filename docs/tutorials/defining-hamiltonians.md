@@ -38,7 +38,7 @@ H = dq.sigmaz()
     For example, to compute the **adjoint of an operator** you should use `H.mH` or `H.adjoint()` (PyTorch methods) instead of `H.dag()` (as in QuTiP). Alternatively, you can also use `dq.dag(H)`.
 
     Also, to compute the **product of quantum operators**, one should use the matrix multiplication operator `@` instead of the element-wise multiplication operator `*` (as in QuTiP). For instance:
-    ```python
+    ```pycon
     >>> dq.sigmax() @ dq.sigmax()  # correct
     tensor([[1.+0.j, 0.+0.j],
             [0.+0.j, 1.+0.j]])
