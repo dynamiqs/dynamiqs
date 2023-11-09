@@ -1,83 +1,74 @@
 # The sharp bits 🔪
 
-Dynamiqs provides a syntax similar to that of Qutip, yet with distinct differences. This similarity can lead to a false sense of familiarity, resulting in inadvertent errors. Below, we highlight several common pitfalls that users may encounter when initially working with the library.
+In dynamiqs a syntax similar to that of QuTiP is provided, yet with distinct differences. This similarity can lead to a false sense of familiarity, resulting in inadvertent errors. Below, we highlight several common pitfalls that users may encounter when learning to use the library.
 
-## Scalar additions
+## Operating on operators
+### Adding scalars to operators
 
-In qutip, adding a tensor with a numerical value equates to integrating the number scaled by the identity matrix into the tensor. Conversely, in Dynamiqs, appending a numerical value to a tensor results in the addition of the number to each element of the tensor on an element-wise basis.
+In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the scalar with the identity matrix. Conversely, in dynamiqs, adding a scalar to a tensor performs an element-wise addition. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**.
 
 ```pycon
->>> import torch
->>> I = torch.eye(2)
->>> a = torch.tensor([[2., 0.], [0., 2.]])
->>> a - 2 * I # good 👍
-tensor([[0., 0.],
-        [0., 0.]])
->>> a - 2 # way to write it in Qutip, but does not work in Dynamiqs.
-tensor([[0., -2.],
-        [-2., 0.]])
+>>> I = dq.eye(2)
+>>> sz = dq.sigmaz()
+>>> sz - 2 * I # correct
+tensor([[-1.+0.j,  0.+0.j],
+        [ 0.+0.j, -3.+0.j]])
+>>> sz - 2 # incorrect in dynamiqs
+tensor([[-1.+0.j, -2.+0.j],
+        [-2.+0.j, -3.+0.j]])
 ```
 
-## Matrix multiplication
+### Multiplying operators
 
-In qutip, the multiplication of operators is executed using the `*` symbol. This convention diverges from the one commonly adopted by numerous scientific libraries such as NumPy, PyTorch, and Jax. Dynamiqs, which is built on PyTorch, employs the `@` symbol to carry out matrix multiplication, whereas the `*` symbol is reserved for element-wise multiplication.
+In QuTiP, the multiplication of operators is executed using the `*` symbol. This convention diverges from the one adopted by common scientific libraries such as NumPy, PyTorch, and Jax. In dynamiqs which is built on PyTorch, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication.
 
 ```pycon
->>> import torch
->>> I = torch.eye(2)
->>> a = torch.tensor([[1., 2.], [3., 4.]])
->>> I @ a # good 👍
-tensor([[1., 2.],
-        [3., 4.]])
->>> I * a # right in qutip, not in dynamiqs 🙅
-tensor([[1., 0.],
-        [0., 4.]])
+>>> dq.sigmax() @ dq.sigmax()  # correct
+tensor([[1.+0.j, 0.+0.j],
+        [0.+0.j, 1.+0.j]])
+>>> dq.sigmax() * dq.sigmax()  # incorrect
+tensor([[0.+0.j, 1.+0.j],
+        [1.+0.j, 0.+0.j]])
 ```
 
 Likewise, use `torch.linalg.matrix_power` instead of `**` for matrix power.
 
-## Computing the adjoint
+### Computing daggers
 
-Use `x.mH` or `dq.dag(x)` instead of `x.dag()` to get the adjoint.
+Use `dq.dag(x)`, `x.mH` or `x.adjoint()` instead of `x.dag()` to get the hermitian conjugate of `x`.
 
-## If your simulation is very slow
+??? Note "Why is there no .dag() method ?"
+    For optimal performance, dynamiqs does not subclass PyTorch tensors. Because of that, it is not possible to define a custom `x.dag()` method on tensors.
 
-You may have forgotten to move the tensors on the GPU. An easy way to ensure to be on gpu is to move your operators to the GPU or to use the `device` option of your solver.
+## NumPy interoperability
 
-%skip: start
-```python
-import dynamiqs as dq
-import torch
-a, b = dq.destroy(20, 20, device="cuda") # method 1
-rho = dq.fock((20, 20), (0, 0))
-time = torch.linspace(0, 1, 100)
-dq.sesolve(a @ b, rho, time, device="cuda") # method 2
-```
-%skip: end
+A PyTorch tensor bears a strong resemblance to a NumPy array, given that both support a similar range of methods. However, it is crucial to remember that they are not entirely interchangeable. Occasionally, you might encounter situations where you need to apply functions to your tensors that are exclusively compatible with NumPy arrays. To convert a tensor into a NumPy array, simply invoke `x.numpy()`. Should the tensor reside on the GPU, you can perform the conversion by using `x.numpy(force=True)`.
 
-## Numpy interoperability
+## RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn
 
-A PyTorch Tensor bears a strong resemblance to a NumPy array, given that both support a similar range of methods. However, it is crucial to remember that they are not entirely interchangeable. Occasionally, you might encounter situations where you need to apply functions to your tensors that are exclusively compatible with NumPy arrays. To convert a tensor into a NumPy array, simply invoke `tensor.numpy()`. Should the tensor reside on the GPU, you can perform the conversion by using `tensor.numpy(force=True)`.
-
-## `RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn`
-
-To calculate gradients using a Dynamiqs solver, it is necessary to designate a gradient algorithm explicitly. Failing to do so will prompt PyTorch to raise a `RuntimeError`, specifically stating that `element 0 of tensors does not require grad and does not have a grad_fn.`
+To calculate gradients using a dynamiqs solver, it is necessary to designate a gradient algorithm explicitly. Failing to do so will prompt PyTorch to raise a `RuntimeError`, specifically stating that `element 0 of tensors does not require grad and does not have a grad_fn.`
 
 ```python
 import dynamiqs as dq
 import torch
-a = dq.destroy(20)
-param = torch.tensor(0.01, requires_grad=True)
-rho = dq.coherent(20, 3)
-time = torch.linspace(0, 1, 100)
+
+# define simulation parameters
+param = torch.tensor(0.1, requires_grad=True)
+H = dq.zero(20)
+jump_ops = [param * dq.destroy(20)]
+exp_ops = [dq.number(20)]
+rho0 = dq.coherent(20, 2.0)
+tsave = torch.linspace(0, 1, 100)
+
+# run simulation
 result = dq.mesolve(
-    0 * a, [param * a], 
-    rho, 
-    time, 
-    exp_ops=[dq.dag(a) @ a],
-    gradient=dq.gradient.Autograd() # 🚨 don't forget this
+    H, jump_ops, rho0, tsave,
+    exp_ops=exp_ops,
+    gradient=dq.gradient.Autograd() # required to calculate gradients !
 )
-loss = result.expects[0].real.sum()
+
+# compute loss and gradient
+loss = result.expects[0, -1].real
 loss.backward()
 ```
 
@@ -85,4 +76,4 @@ Should the same error persist, ensure that your simulation computation includes 
 
 ## Using `for` loops
 
-Don't. If you want to compute the evolution of multiple initial states or with multiple Hamiltonian, use the batching feature. You'll find a tutorial for it in [the batching tutorial](/tutorials/batching.html)
+If you want to compute the evolution of multiple initial states or with multiple Hamiltonian, you can use the [batching](/tutorials/batching.html) feature. Avoid using `for` loops to compute the evolution of multiple initial states or with multiple Hamiltonian, as it will be much slower than using batching.
