@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import numpy as np
+import qutip as qt
+from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
-from ..utils.tensor_types import ArrayLike, to_numpy
+from ..utils.tensor_types import ArrayLike, to_numpy, to_qutip, to_tensor
 from .utils import add_colorbar, colors, fock_ticks, optax, sample_cmap
 
 __all__ = [
     'plot_pwc_pulse',
     'plot_fock',
     'plot_fock_evolution',
+    'plot_wigner',
 ]
 
 
@@ -165,3 +168,105 @@ def plot_fock_evolution(
 
     if colorbar:
         add_colorbar(ax, cmap, norm, size='2%', pad='2%')
+
+
+@optax
+def plot_wigner_data(
+    wigner: ArrayLike,
+    xmax: float,
+    ymax: float,
+    *,
+    ax: Axes | None = None,
+    cmap: str = 'RdBu',
+    colorbar: bool = True,
+    cross: bool = False,
+    clear: bool = False,
+):
+    w = to_numpy(wigner)
+
+    # set plot norm
+    vmin, vmax = -2 / np.pi, 2 / np.pi
+    norm = Normalize(vmin=vmin, vmax=vmax)
+
+    # set the color of values outside of range [vmin, vmax]
+    cmap = plt.get_cmap(cmap)
+    cmap.set_over('black')
+    cmap.set_under('black')
+
+    # plot
+    ax.imshow(
+        w,
+        cmap=cmap,
+        norm=norm,
+        origin='lower',
+        aspect='equal',
+        interpolation='antialiased',
+        extent=[-xmax, xmax, -ymax, ymax],
+    )
+
+    # axis label
+    ax.set(xlabel=r'$\mathrm{Re}(\alpha)$', ylabel=r'$\mathrm{Im}(\alpha)$')
+
+    if colorbar and not clear:
+        cax = add_colorbar(ax, cmap, norm)
+        cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
+
+    if cross:
+        ax.axhline(0.0, color='gray', ls='-', lw=0.7)
+        ax.axvline(0.0, color='gray', ls='-', lw=0.7)
+
+    if clear:
+        ax.grid(False)
+        ax.axis(False)
+
+
+@optax
+def plot_wigner(
+    state: ArrayLike,
+    *,
+    ax: Axes | None = None,
+    cmap: str = 'RdBu',
+    colorbar: bool = True,
+    cross: bool = False,
+    clear: bool = False,
+    lim: float = 6.0,
+    xmax: float | None = None,
+    ymax: float | None = None,
+    npixels: int = 201,
+):
+    r"""Plot the Wigner quasiprobability distribution of a state.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Note:
+        Choose a diverging colormap `cmap` for better results.
+
+    Warning:
+        The axis scaling is chosen so that a coherent state $\ket{\alpha}$ lies at the
+        coordinates $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is
+        different from the default behaviour of `qutip.plot_wigner()`.
+
+    Examples:
+        >>> 3
+        3
+    """
+    state = to_tensor(state)
+
+    xmax = lim if xmax is None else xmax
+    ymax = lim if ymax is None else ymax
+
+    # todo to use dynamiqs wigner function:
+    #   - the wigner value is wrong by a factor 2
+    #   - no way to set g=2 to properly center coherent states
+    #   - choosing xmax!=ymax results in an incorrect Wigner
+
+    # _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
+
+    xvec = np.linspace(-xmax, xmax, npixels)
+    yvec = np.linspace(-ymax, ymax, npixels)
+    w = qt.wigner(to_qutip(state), xvec, yvec, g=2)
+
+    plot_wigner_data(
+        w, xmax, ymax, ax=ax, cmap=cmap, colorbar=colorbar, cross=cross, clear=clear
+    )
