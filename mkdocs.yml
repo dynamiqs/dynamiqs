@@ -57,7 +57,7 @@ plugins:
       draggable: false
   - mkdocs-simple-hooks:
       hooks:
-          on_env: "docs.hooks:on_env"
+        on_env: "docs.hooks:on_env"
   - gen-files:
       scripts:
         - docs/generate_python_api.py
