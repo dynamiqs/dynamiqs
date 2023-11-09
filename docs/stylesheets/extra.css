@@ -365,3 +365,9 @@ article.md-typeset h1 {
   margin: 0 auto;
   width: 85%;
 }
+
+.fig-half {
+  display: block;
+  margin: 0 auto;
+  width: 50%;
+}
