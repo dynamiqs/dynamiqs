@@ -2,15 +2,18 @@ import re
 
 
 def replace_render(text):
-    # This regex will match the word 'render' followed by anything inside parentheses
+    # this regex will match
+    # - the word 'render' followed by anything inside parentheses
+    # - the line '% skip: start'
+    # - the line '% skip: end'
     regex1 = (
-        r"(<span class=\"gp\">&gt;&gt;&gt; </span>)?<span"
-        r" class=\"n\">render<\/span><span class=\"p\">\(<\/span><span"
-        r" class=\"s1\">[^']*<\/span><span class=\"p\">\)<\/span>\n"
+        r'(<span class="gp">&gt;&gt;&gt; </span>)?<span'
+        r' class="n">render<\/span><span class="p">\(<\/span><span'
+        r' class="s1">[^\']*<\/span><span class="p">\)<\/span>\n'
     )
-    regex2 = r"<p>% skip: start</p>\n"
-    regex3 = r"<p>% skip: end</p>\n"
-    pattern = re.compile(f"{regex1}|{regex2}|{regex3}")
+    regex2 = r'<p>% skip: start</p>\n'
+    regex3 = r'<p>% skip: end</p>\n'
+    pattern = re.compile(f'{regex1}|{regex2}|{regex3}')
     # Replace the matched text with an empty string (or whatever you want)
     return pattern.sub('', text)
 
