@@ -80,7 +80,7 @@ def vector_to_operator(x: Tensor) -> Tensor:
     """
     batch_sizes = x.shape[:-2]
     n = int(sqrt(x.shape[-2]))
-    return x.reshape(*batch_sizes, n, n).T
+    return x.reshape(*batch_sizes, n, n).mT
 
 
 def spre(x: Tensor) -> Tensor:
