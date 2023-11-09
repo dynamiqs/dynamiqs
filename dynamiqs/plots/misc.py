@@ -34,7 +34,7 @@ def plot_pwc_pulse(
         >>> times = np.linspace(0, 1.0, n+1)
         >>> values = dq.rand_complex(n, seed=42)
         >>> dq.plot_pwc_pulse(times, values)
-        >>> render('plot_pwc_pulse')
+        >>> renderfig('plot_pwc_pulse')
 
         ![plot_pwc_pulse](/figs-code/plot_pwc_pulse.png){.center .full-width}
     """
@@ -85,7 +85,7 @@ def plot_fock(
     Examples:
         >>> psi = dq.coherent(16, 2.0)
         >>> dq.plot_fock(psi)
-        >>> render('plot_fock')
+        >>> renderfig('plot_fock')
 
         ![plot_fock](/figs-code/plot_fock.png){.center .full-width}
     """
@@ -129,13 +129,13 @@ def plot_fock_evolution(
         >>> tsave = np.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_fock_evolution(result.states)
-        >>> render('plot_fock_evolution')
+        >>> renderfig('plot_fock_evolution')
 
         ![plot_fock_evolution](/figs-code/plot_fock_evolution.png){.center .full-width}
 
         Use the log scale option to visualise low populations:
         >>> dq.plot_fock_evolution(result.states, logscale=True, logvmin=1e-5)
-        >>> render('plot_fock_evolution_log')
+        >>> renderfig('plot_fock_evolution_log')
 
         ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.center .full-width}
     """  # noqa: E501

@@ -30,6 +30,7 @@ dev = [
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
     "mkdocs-section-index",
+    "mkdocs-simple-hooks",
     "sybil",
 ]
 
