@@ -178,6 +178,7 @@ def plot_wigner_data(
     *,
     ax: Axes | None = None,
     cmap: str = 'RdBu',
+    interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
@@ -200,7 +201,7 @@ def plot_wigner_data(
         norm=norm,
         origin='lower',
         aspect='equal',
-        interpolation='antialiased',
+        interpolation=interpolation,
         extent=[-xmax, xmax, -ymax, ymax],
     )
 
@@ -212,8 +213,8 @@ def plot_wigner_data(
         cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
 
     if cross:
-        ax.axhline(0.0, color='gray', ls='-', lw=0.7)
-        ax.axvline(0.0, color='gray', ls='-', lw=0.7)
+        ax.axhline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
+        ax.axvline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
 
     if clear:
         ax.grid(False)
@@ -225,14 +226,15 @@ def plot_wigner(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
+    lim: float = 5.0,
+    xmax: float | None = None,
+    ymax: float | None = None,
+    npixels: int = 101,
     cmap: str = 'RdBu',
+    interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
-    lim: float = 6.0,
-    xmax: float | None = None,
-    ymax: float | None = None,
-    npixels: int = 201,
 ):
     r"""Plot the Wigner quasiprobability distribution of a state.
 
@@ -248,28 +250,29 @@ def plot_wigner(
         different from the default behaviour of `qutip.plot_wigner()`.
 
     Examples:
-        >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
+        >>> psi = dq.coherent(16, 2.0)
         >>> dq.plot_wigner(psi)
-        >>> renderfig('plot_wigner_1')
+        >>> renderfig('plot_wigner_coh')
 
-        ![plot_wigner_1](/figs-code/plot_wigner_1.png){.fig-half}
+        ![plot_wigner_coh](/figs-code/plot_wigner_coh.png){.fig-half}
 
+        >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
         >>> dq.plot_wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
-        >>> renderfig('plot_wigner_2')
+        >>> renderfig('plot_wigner_cat')
 
-        ![plot_wigner_2](/figs-code/plot_wigner_2.png){.fig-half}
+        ![plot_wigner_cat](/figs-code/plot_wigner_cat.png){.fig-half}
 
-        >>> psi = dq.coherent(16, 2j)
-        >>> dq.plot_wigner(psi, cross=True)
-        >>> renderfig('plot_wigner_3')
+        >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
+        >>> dq.plot_wigner(psi, lim=1.5, cross=True)
+        >>> renderfig('plot_wigner_01')
 
-        ![plot_wigner_3](/figs-code/plot_wigner_3.png){.fig-half}
+        ![plot_wigner_01](/figs-code/plot_wigner_01.png){.fig-half}
 
         >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
-        >>> dq.plot_wigner(psi, clear=True)
-        >>> renderfig('plot_wigner_4')
+        >>> dq.plot_wigner(psi, npixels=201, clear=True)
+        >>> renderfig('plot_wigner_4legged')
 
-        ![plot_wigner_4](/figs-code/plot_wigner_4.png){.fig-half}
+        ![plot_wigner_4legged](/figs-code/plot_wigner_4legged.png){.fig-half}
     """
     state = to_tensor(state)
 
@@ -288,5 +291,13 @@ def plot_wigner(
     w = qt.wigner(to_qutip(state), xvec, yvec, g=2)
 
     plot_wigner_data(
-        w, xmax, ymax, ax=ax, cmap=cmap, colorbar=colorbar, cross=cross, clear=clear
+        w,
+        xmax,
+        ymax,
+        ax=ax,
+        cmap=cmap,
+        interpolation=interpolation,
+        colorbar=colorbar,
+        cross=cross,
+        clear=clear,
     )
