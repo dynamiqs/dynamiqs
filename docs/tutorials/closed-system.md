@@ -102,7 +102,7 @@ tsave = np.linspace(0, 1.0, 11)   # saving times
 res = dq.sesolve(H, psi0, tsave)  # run the simulation
 ```
 
-```python
+```pycon
 >>> res.states[-1]                # print the final state
 tensor([[0.540+0.841j],
         [0.000+0.000j]])
