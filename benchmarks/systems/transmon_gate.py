@@ -86,7 +86,7 @@ class TransmonGate(ClosedSystem):
         return self.H0 + self.eps(t) * cos(self.omega_t * t) * self.charge
 
     @property
-    def psi0(self) -> Tensor:
+    def y0(self) -> Tensor:
         return dq.fock(self.N, 0)
 
     @property
