@@ -7,15 +7,16 @@ from torch import Tensor
 from scipy.special import erf
 
 import dynamiqs as dq
+from dynamiqs.utils.tensor_types import get_cdtype
 
-from .system import System
+from .system import ClosedSystem, OpenSystem
 
 # units
 GHz, MHz, kHz = 2 * pi, 2 * pi * 1e-3, 2 * pi * 1e-6
 ns, us = 1.0, 1e3
 
 
-class TransmonGate(System):
+class TransmonGate(ClosedSystem):
     def __init__(
         self,
         N: int = 5,
@@ -28,6 +29,7 @@ class TransmonGate(System):
         T0: float = 3 * ns,
         num_charge: int = 300,
     ):
+        # register attributes
         self.N = N
         self.num_tslots = num_tslots
         self.Ec = Ec
@@ -62,14 +64,14 @@ class TransmonGate(System):
 
         # diagonalize H0 and truncate
         evals, evecs = torch.linalg.eigh(H0)
-        self.H0 = torch.diag(evals[: self.N] - evals[0]).to(torch.complex64)
+        self.H0 = torch.diag(evals[: self.N] - evals[0]).to(get_cdtype())
 
         # transmon frequency
         self.omega_t = self.H0[1, 1].real.item()
 
         # get charge operator in truncated basis
         U = evecs[:, : self.N]  # change of basis matrix
-        self.charge = (U.mH @ charge @ U).to(torch.complex64)
+        self.charge = (U.mH @ charge @ U).to(get_cdtype())
 
     def gaussian(self, t: float) -> float:
         return exp(-((t - 0.5 * self.T) ** 2) / (2 * self.T0**2))
@@ -84,10 +86,6 @@ class TransmonGate(System):
         return self.H0 + self.eps(t) * cos(self.omega_t * t) * self.charge
 
     @property
-    def jump_ops(self) -> list[Tensor]:
-        return [sqrt(self.kappa) * torch.triu(self.charge)]
-
-    @property
     def psi0(self) -> Tensor:
         return dq.fock(self.N, 0)
 
@@ -95,8 +93,13 @@ class TransmonGate(System):
     def tsave(self) -> Tensor:
         return torch.linspace(0, self.T, self.num_tslots + 1)
 
-    def to(self, dtype: torch.dtype, device: torch.device) -> System:
-        super().to(dtype, device)
-        self.H0 = self.H0.to(dtype, device)
-        self.charge = self.charge.to(dtype, device)
-        return self
+    def to(self, dtype: torch.dtype, device: torch.device):
+        super().to(dtype=dtype, device=device)
+        self.H0 = self.H0.to(dtype=dtype, device=device)
+        self.charge = self.charge.to(dtype=dtype, device=device)
+
+
+class OpenTransmonGate(TransmonGate, OpenSystem):
+    @property
+    def jump_ops(self) -> list[Tensor]:
+        return [sqrt(self.kappa) * torch.triu(self.charge)]
