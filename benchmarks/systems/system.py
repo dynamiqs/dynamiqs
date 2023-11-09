@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from abc import ABC
 
+
 class System(ABC):
-   pass
+    pass
 
 
 class ClosedSystem(System):

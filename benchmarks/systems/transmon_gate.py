@@ -3,8 +3,8 @@ from __future__ import annotations
 from math import cos, exp, pi, sqrt
 
 import torch
-from torch import Tensor
 from scipy.special import erf
+from torch import Tensor
 
 import dynamiqs as dq
 from dynamiqs.utils.tensor_types import get_cdtype
