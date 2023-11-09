@@ -1,23 +1,21 @@
 import re
 
+# The following regex will match any line containing 'renderfig', 'skip: start' or
+# 'skip: end':
+# - '^' matches the start of a line
+# - '.*' matches any character (except for line terminators) zero or more times
+# - '$' matches the end of a line
+# - '\n?' optionally matches the newline character at the end of the line
+regex = r'^.*(renderfig|skip: start|skip: end).*$\n?'
+# `flags=re.MULTILINE` is necessary to match the start and end of each line
+pattern = re.compile(regex, flags=re.MULTILINE)
 
-def replace_render(text):
-    # this regex will match
-    # - the word 'render' followed by anything inside parentheses
-    # - the line '% skip: start'
-    # - the line '% skip: end'
-    regex1 = (
-        r'(<span class="gp">&gt;&gt;&gt; </span>)?<span'
-        r' class="n">render<\/span><span class="p">\(<\/span><span'
-        r' class="s1">[^\']*<\/span><span class="p">\)<\/span>\n'
-    )
-    regex2 = r'<p>% skip: start</p>\n'
-    regex3 = r'<p>% skip: end</p>\n'
-    pattern = re.compile(f'{regex1}|{regex2}|{regex3}')
-    # Replace the matched text with an empty string (or whatever you want)
+
+def filter_lines(text):
+    # replace the matched text with an empty string
     return pattern.sub('', text)
 
 
 def on_env(env, config, files, **kwargs):
-    env.filters['replace_render'] = replace_render
+    env.filters['filter_lines'] = filter_lines
     return env
