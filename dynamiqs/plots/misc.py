@@ -39,7 +39,7 @@ def plot_pwc_pulse(
         >>> dq.plot_pwc_pulse(times, values)
         >>> renderfig('plot_pwc_pulse')
 
-        ![plot_pwc_pulse](/figs-code/plot_pwc_pulse.png){.center .full-width}
+        ![plot_pwc_pulse](/figs-code/plot_pwc_pulse.png){.fig}
     """
     times = to_numpy(times)  # (n + 1)
     values = to_numpy(values)  # (n)
@@ -90,7 +90,7 @@ def plot_fock(
         >>> dq.plot_fock(psi)
         >>> renderfig('plot_fock')
 
-        ![plot_fock](/figs-code/plot_fock.png){.center .full-width}
+        ![plot_fock](/figs-code/plot_fock.png){.fig}
     """
     state = to_numpy(state)
     n = state.shape[0]
@@ -134,14 +134,14 @@ def plot_fock_evolution(
         >>> dq.plot_fock_evolution(result.states)
         >>> renderfig('plot_fock_evolution')
 
-        ![plot_fock_evolution](/figs-code/plot_fock_evolution.png){.center .full-width}
+        ![plot_fock_evolution](/figs-code/plot_fock_evolution.png){.fig}
 
         Use the log scale option to visualise low populations:
         >>> dq.plot_fock_evolution(result.states, logscale=True, logvmin=1e-5)
         >>> renderfig('plot_fock_evolution_log')
 
-        ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.center .full-width}
-    """  # noqa: E501
+        ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.fig}
+    """
     states = to_numpy(states)
 
     x = np.arange(len(states)) if times is None else times
