@@ -248,8 +248,28 @@ def plot_wigner(
         different from the default behaviour of `qutip.plot_wigner()`.
 
     Examples:
-        >>> 3
-        3
+        >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
+        >>> dq.plot_wigner(psi)
+        >>> renderfig('plot_wigner_1')
+
+        ![plot_wigner_1](/figs-code/plot_wigner_1.png){.fig-half}
+
+        >>> dq.plot_wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
+        >>> renderfig('plot_wigner_2')
+
+        ![plot_wigner_2](/figs-code/plot_wigner_2.png){.fig-half}
+
+        >>> psi = dq.coherent(16, 2j)
+        >>> dq.plot_wigner(psi, cross=True)
+        >>> renderfig('plot_wigner_3')
+
+        ![plot_wigner_3](/figs-code/plot_wigner_3.png){.fig-half}
+
+        >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
+        >>> dq.plot_wigner(psi, clear=True)
+        >>> renderfig('plot_wigner_4')
+
+        ![plot_wigner_4](/figs-code/plot_wigner_4.png){.fig-half}
     """
     state = to_tensor(state)
 
