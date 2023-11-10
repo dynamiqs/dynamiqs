@@ -55,7 +55,7 @@ class OpenSystem(System):
     ) -> Result:
         return dq.mesolve(
             H,
-            self.jump_ops,
+            jump_ops,
             y0,
             tsave,
             exp_ops=self.exp_ops,
