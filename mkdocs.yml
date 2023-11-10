@@ -119,6 +119,7 @@ nav:
           - tutorials/closed-system.md
           - tutorials/open-system.md
           - tutorials/batching.md
+          - tutorials/gpu.md
   - Python API:
       - python_api/index.md
       - Solvers:
