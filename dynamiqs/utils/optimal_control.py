@@ -98,7 +98,7 @@ def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
     - `values[..., k]` if $t\in[t_k, t_{k+1})$.
 
     Notes:
-        You can use [rand_complex()][dynamiqs.rand_complex] to generate a tensor
+        You can use [`dq.rand_complex()`][dynamiqs.rand_complex] to generate a tensor
         filled with random complex numbers for the parameter `values`.
 
     Args:
