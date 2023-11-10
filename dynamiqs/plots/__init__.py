@@ -1,4 +1,4 @@
-import matplotlib.cm as cm
+import matplotlib
 from matplotlib.colors import LinearSegmentedColormap
 
 from .misc import *
@@ -12,4 +12,4 @@ cmap_colors = [
     (1.0, '#BF0C0C'),
 ]
 dq_cmap = LinearSegmentedColormap.from_list('dq', cmap_colors)
-cm.register_cmap(name='dq', cmap=dq_cmap)
+matplotlib.colormaps.register(dq_cmap)
