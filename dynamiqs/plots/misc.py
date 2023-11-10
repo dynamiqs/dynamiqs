@@ -4,12 +4,12 @@ import warnings
 from math import isclose
 
 import numpy as np
-import qutip as qt
 from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
-from ..utils.tensor_types import ArrayLike, to_numpy, to_qutip, to_tensor
+from ..utils.tensor_types import ArrayLike, to_numpy, to_tensor
 from ..utils.utils import norm, unit
+from ..utils.wigners import wigner
 from .utils import add_colorbar, colors, fock_ticks, optax, sample_cmap
 
 __all__ = [
@@ -76,8 +76,7 @@ def plot_wigner(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
-    lim: float = 5.0,
-    xmax: float | None = None,
+    xmax: float = 5.0,
     ymax: float | None = None,
     vmax: float = 2 / np.pi,
     npixels: int = 101,
@@ -87,7 +86,7 @@ def plot_wigner(
     cross: bool = False,
     clear: bool = False,
 ):
-    r"""Plot the Wigner quasiprobability distribution of a state.
+    r"""Plot the Wigner function of a state.
 
     Warning:
         Documentation redaction in progress.
@@ -122,7 +121,7 @@ def plot_wigner(
         ![plot_wigner_cat](/figs-code/plot_wigner_cat.png){.fig-half}
 
         >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
-        >>> dq.plot_wigner(psi, lim=1.5, cross=True)
+        >>> dq.plot_wigner(psi, xmax=1.5, cross=True)
         >>> renderfig('plot_wigner_01')
 
         ![plot_wigner_01](/figs-code/plot_wigner_01.png){.fig-half}
@@ -144,19 +143,18 @@ def plot_wigner(
         )
         state = unit(state)
 
-    xmax = lim if xmax is None else xmax
-    ymax = lim if ymax is None else ymax
+    ymax = xmax if ymax is None else ymax
 
     # todo to use dynamiqs wigner function:
     #   - the wigner value is wrong by a factor 2
     #   - no way to set g=2 to properly center coherent states
     #   - choosing xmax!=ymax results in an incorrect Wigner
 
-    # _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
+    _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
 
-    xvec = np.linspace(-xmax, xmax, npixels)
-    yvec = np.linspace(-ymax, ymax, npixels)
-    w = qt.wigner(to_qutip(state), xvec, yvec, g=2)
+    # xvec = np.linspace(-xmax, xmax, npixels)
+    # yvec = np.linspace(-ymax, ymax, npixels)
+    # w = qt.wigner(to_qutip(state), xvec, yvec, g=2)
 
     plot_wigner_data(
         w,
