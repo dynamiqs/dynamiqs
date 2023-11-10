@@ -189,6 +189,7 @@ nav:
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
           - Plotting:
+              - plot_wigner: python_api/plots/misc/plot_wigner.md
               - plot_pwc_pulse: python_api/plots/misc/plot_pwc_pulse.md
               - plot_fock: python_api/plots/misc/plot_fock.md
               - plot_fock_evolution: python_api/plots/misc/plot_fock_evolution.md
