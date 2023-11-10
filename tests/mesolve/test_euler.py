@@ -68,7 +68,7 @@ class TestMEEuler(SolverTester):
 
     def test_td_adjoint(self):
         solver = Euler(dt=1e-3)
-        gradient = Adjoint(parameters=grad_damped_tdqubit.parameters)
+        gradient = Adjoint(params=grad_damped_tdqubit.params)
         self._test_gradient(
             grad_damped_tdqubit, solver, gradient, num_tsave=11, rtol=1e-3, atol=1e-2
         )

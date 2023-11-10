@@ -128,7 +128,7 @@ class TDQubit(ClosedSystem):
         self.t_end = torch.as_tensor(t_end)
 
         # define gradient parameters
-        self.parameters = (self.Omega, self.omega)
+        self.params = (self.Omega, self.omega)
 
         # loss operator
         self.loss_op = dq.sigmaz()
@@ -186,13 +186,11 @@ class TDQubit(ClosedSystem):
         # gradients of sigma_x
         grad_x_Omega = 0
         grad_x_omega = 0
-        return torch.tensor(
-            [
-                [grad_x_Omega, grad_x_omega],
-                [grad_y_Omega, grad_y_omega],
-                [grad_z_Omega, grad_z_omega],
-            ]
-        ).detach()
+        return torch.tensor([
+            [grad_x_Omega, grad_x_omega],
+            [grad_y_Omega, grad_y_omega],
+            [grad_z_Omega, grad_z_omega],
+        ]).detach()
 
 
 cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0)

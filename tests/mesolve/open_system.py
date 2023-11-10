@@ -154,7 +154,7 @@ class DampedTDQubit(OpenSystem):
         self.t_end = torch.as_tensor(t_end)
 
         # define gradient parameters
-        self.parameters = (self.Omega, self.omega, self.gamma)
+        self.params = (self.Omega, self.omega, self.gamma)
 
         # loss operator
         self.loss_op = dq.sigmaz()
@@ -233,13 +233,11 @@ class DampedTDQubit(OpenSystem):
         grad_x_Omega = 0
         grad_x_omega = 0
         grad_x_gamma = 0
-        return torch.tensor(
-            [
-                [grad_x_Omega, grad_x_omega, grad_x_gamma],
-                [grad_y_Omega, grad_y_omega, grad_y_gamma],
-                [grad_z_Omega, grad_z_omega, grad_z_gamma],
-            ]
-        ).detach()
+        return torch.tensor([
+            [grad_x_Omega, grad_x_omega, grad_x_gamma],
+            [grad_y_Omega, grad_y_omega, grad_y_gamma],
+            [grad_z_Omega, grad_z_omega, grad_z_gamma],
+        ]).detach()
 
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0)
