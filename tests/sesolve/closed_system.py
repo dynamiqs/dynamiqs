@@ -20,6 +20,18 @@ class ClosedSystem(System):
     def _state_shape(self) -> tuple[int, int]:
         return self.n, 1
 
+    def run(
+        self,
+        tsave: ArrayLike,
+        solver: Solver,
+        *,
+        gradient: Gradient | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> Result:
+        return self._run(
+            self.H, self.y0, tsave, solver, gradient=gradient, options=options
+        )
+
     def _run(
         self,
         H: Tensor,

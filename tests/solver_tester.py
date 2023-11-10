@@ -6,6 +6,7 @@ from typing import Any
 
 import torch
 
+from benchmarks.systems.system import ClosedSystem, OpenSystem
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 
@@ -13,39 +14,6 @@ from .system import System
 
 
 class SolverTester(ABC):
-    def _test_batching(
-        self, system: System, solver: Solver, *, options: dict[str, Any] | None = None
-    ):
-        """Test the batching of `H` and `y0`, and the returned object sizes."""
-        m, n = system._state_shape
-        n_exp_ops = len(system.exp_ops)
-        b_H = len(system.H_batched)
-        b_y0 = len(system.y0_batched)
-        ntsave = 11
-        tsave = system.tsave(ntsave)
-
-        run = lambda H, y0: system._run(H, y0, tsave, solver, options=options)
-
-        # no batching
-        result = run(system.H, system.y0)
-        assert result.ysave.shape == (ntsave, m, n)
-        assert result.exp_save.shape == (n_exp_ops, ntsave)
-
-        # batched H
-        result = run(system.H_batched, system.y0)
-        assert result.ysave.shape == (b_H, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, n_exp_ops, ntsave)
-
-        # batched y0
-        result = run(system.H, system.y0_batched)
-        assert result.ysave.shape == (b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_y0, n_exp_ops, ntsave)
-
-        # batched H and y0
-        result = run(system.H_batched, system.y0_batched)
-        assert result.ysave.shape == (b_H, b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, ntsave)
-
     def test_batching(self):
         pass
 
@@ -118,3 +86,83 @@ class SolverTester(ABC):
 
         assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
         assert torch.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)
+
+
+class ClosedSolverTester(SolverTester):
+    def _test_batching(
+        self,
+        system: ClosedSystem,
+        solver: Solver,
+        *,
+        options: dict[str, Any] | None = None,
+    ):
+        """Test the batching of `H` and `y0`, and the returned object sizes."""
+        m, n = system._state_shape
+        n_exp_ops = len(system.exp_ops)
+        b_H = len(system.H_batched)
+        b_y0 = len(system.y0_batched)
+        ntsave = 11
+        tsave = system.tsave(ntsave)
+
+        run = lambda H, y0: system._run(H, y0, tsave, solver, options=options)
+
+        # no batching
+        result = run(system.H, system.y0)
+        assert result.ysave.shape == (ntsave, m, n)
+        assert result.exp_save.shape == (n_exp_ops, ntsave)
+
+        # batched H
+        result = run(system.H_batched, system.y0)
+        assert result.ysave.shape == (b_H, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, n_exp_ops, ntsave)
+
+        # batched y0
+        result = run(system.H, system.y0_batched)
+        assert result.ysave.shape == (b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_y0, n_exp_ops, ntsave)
+
+        # batched H and y0
+        result = run(system.H_batched, system.y0_batched)
+        assert result.ysave.shape == (b_H, b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, ntsave)
+
+
+class OpenSolverTester(SolverTester):
+    def _test_batching(
+        self,
+        system: OpenSystem,
+        solver: Solver,
+        *,
+        options: dict[str, Any] | None = None,
+    ):
+        """Test the batching of `H` and `y0`, and the returned object sizes."""
+        m, n = system._state_shape
+        n_exp_ops = len(system.exp_ops)
+        b_H = len(system.H_batched)
+        b_y0 = len(system.y0_batched)
+        ntsave = 11
+        tsave = system.tsave(ntsave)
+
+        run = lambda H, jump_ops, y0: system._run(
+            H, jump_ops, y0, tsave, solver, options=options
+        )
+
+        # no batching
+        result = run(system.H, system.jump_ops, system.y0)
+        assert result.ysave.shape == (ntsave, m, n)
+        assert result.exp_save.shape == (n_exp_ops, ntsave)
+
+        # batched H
+        result = run(system.H_batched, system.jump_ops, system.y0)
+        assert result.ysave.shape == (b_H, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, n_exp_ops, ntsave)
+
+        # batched y0
+        result = run(system.H, system.jump_ops, system.y0_batched)
+        assert result.ysave.shape == (b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_y0, n_exp_ops, ntsave)
+
+        # batched H and y0
+        result = run(system.H_batched, system.jump_ops, system.y0_batched)
+        assert result.ysave.shape == (b_H, b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, ntsave)
