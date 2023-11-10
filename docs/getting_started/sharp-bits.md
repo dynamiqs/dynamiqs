@@ -20,7 +20,7 @@ tensor([[-1.+0.j, -2.+0.j],
 
 ### Multiplying operators
 
-In QuTiP, the multiplication of operators is executed using the `*` symbol. This convention diverges from the one adopted by common scientific libraries such as NumPy, PyTorch, and Jax. In dynamiqs which is built on PyTorch, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication.
+In QuTiP, the multiplication of operators is executed using the `*` symbol. This convention diverges from the one adopted by common scientific libraries such as NumPy, PyTorch, and Jax. In dynamiqs, which is built on PyTorch, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication.
 
 ```pycon
 >>> dq.sigmax() @ dq.sigmax()  # correct
