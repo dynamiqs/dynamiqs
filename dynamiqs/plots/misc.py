@@ -145,16 +145,7 @@ def plot_wigner(
 
     ymax = xmax if ymax is None else ymax
 
-    # todo to use dynamiqs wigner function:
-    #   - the wigner value is wrong by a factor 2
-    #   - no way to set g=2 to properly center coherent states
-    #   - choosing xmax!=ymax results in an incorrect Wigner
-
     _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
-
-    # xvec = np.linspace(-xmax, xmax, npixels)
-    # yvec = np.linspace(-ymax, ymax, npixels)
-    # w = qt.wigner(to_qutip(state), xvec, yvec, g=2)
 
     plot_wigner_data(
         w,
