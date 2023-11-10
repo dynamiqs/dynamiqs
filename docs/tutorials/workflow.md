@@ -16,8 +16,6 @@ import matplotlib.pyplot as plt
 from math import sqrt
 ```
 
-***
-
 ## 1. Define the system
 
 After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using [NumPy](https://numpy.org/) arrays, [QuTiP](http://qutip.org/) objects, or [PyTorch](https://pytorch.org/) tensors.

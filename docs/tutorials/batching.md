@@ -2,8 +2,6 @@
 
 Batching can be used to **run multiple independent simulations simultaneously**, and can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
 
-***
-
 ```python
 import torch
 import dynamiqs as dq
