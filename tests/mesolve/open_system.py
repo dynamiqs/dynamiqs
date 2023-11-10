@@ -10,8 +10,7 @@ import dynamiqs as dq
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike
-from dynamiqs.utils.tensor_types import dtype_real_to_complex as to_complex
+from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
 
 from ..system import System
 
@@ -160,14 +159,12 @@ class OTDQubit(OpenSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
+        self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
         self.jump_ops = [torch.sqrt(self.gamma) * dq.sigmax()]
         self.exp_ops = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)
-
-    def H(self, t: float) -> Tensor:
-        return self.eps * torch.cos(self.omega * t) * dq.sigmax()
 
     def tsave(self, n: int) -> Tensor:
         return torch.linspace(0.0, self.t_end.item(), n)
@@ -190,9 +187,12 @@ class OTDQubit(OpenSystem):
     def expect(self, t: float) -> Tensor:
         theta = self._theta(t)
         eta = self._eta(t)
+        exp_x = 0
+        exp_y = -eta * sin(2 * theta)
+        exp_z = eta * cos(2 * theta)
         return torch.tensor(
-            [0, -eta * sin(2 * theta), eta * cos(2 * theta)],
-            dtype=to_complex(theta.dtype),
+            [exp_x, exp_y, exp_z],
+            dtype=dtype_real_to_complex(theta.dtype),
         )
 
     def grads_state(self, t: float) -> Tensor:
