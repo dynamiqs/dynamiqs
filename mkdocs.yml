@@ -103,6 +103,8 @@ nav:
           - tutorials/closed-system.md
           - tutorials/open-system.md
           - tutorials/batching.md
+      - Cookbook:
+          - Experimental data fitting: tutorials/experimental-fits.md
   - Python API:
       - python_api/index.md
       - Solvers:
