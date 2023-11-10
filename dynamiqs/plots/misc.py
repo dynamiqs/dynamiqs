@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import warnings
+from math import isclose
+
 import numpy as np
 import qutip as qt
-from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from ..utils.tensor_types import ArrayLike, to_numpy, to_qutip, to_tensor
+from ..utils.utils import norm, unit
 from .utils import add_colorbar, colors, fock_ticks, optax, sample_cmap
 
 __all__ = [
@@ -24,7 +27,8 @@ def plot_wigner_data(
     ymax: float,
     *,
     ax: Axes | None = None,
-    cmap: str = 'RdBu',
+    vmax: float = 2 / np.pi,
+    cmap: str = 'bwr',
     interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
@@ -33,13 +37,11 @@ def plot_wigner_data(
     w = to_numpy(wigner)
 
     # set plot norm
-    vmin, vmax = -2 / np.pi, 2 / np.pi
-    norm = Normalize(vmin=vmin, vmax=vmax)
+    vmin = -vmax
+    norm = Normalize(vmin=vmin, vmax=vmax, clip=True)
 
-    # set the color of values outside of range [vmin, vmax]
-    cmap = plt.get_cmap(cmap)
-    cmap.set_over('black')
-    cmap.set_under('black')
+    # clip to avoid rounding errors
+    w = np.clip(w, vmin, vmax)
 
     # plot
     ax.imshow(
@@ -57,7 +59,8 @@ def plot_wigner_data(
 
     if colorbar and not clear:
         cax = add_colorbar(ax, cmap, norm)
-        cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
+        if vmax == 2 / np.pi:
+            cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
 
     if cross:
         ax.axhline(0.0, color=colors['grey'], ls='-', lw=0.7, alpha=0.8)
@@ -76,8 +79,9 @@ def plot_wigner(
     lim: float = 5.0,
     xmax: float | None = None,
     ymax: float | None = None,
+    vmax: float = 2 / np.pi,
     npixels: int = 101,
-    cmap: str = 'RdBu',
+    cmap: str = 'bwr',
     interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
@@ -95,6 +99,14 @@ def plot_wigner(
         The axis scaling is chosen so that a coherent state $\ket{\alpha}$ lies at the
         coordinates $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is
         different from the default behaviour of `qutip.plot_wigner()`.
+
+    Warning-: Non-normalized state
+        If the given state is not normalized, it will be normalized before plotting
+        and a warning will be issued. If you want to ignore the warning, use
+        ```python
+        import warnings
+        warnings.filterwarnings('ignore', module='dynamiqs')
+        ```
 
     Examples:
         >>> psi = dq.coherent(16, 2.0)
@@ -123,6 +135,15 @@ def plot_wigner(
     """
     state = to_tensor(state)
 
+    # normalize state
+    norm_state = norm(state).item()
+    if not isclose(norm_state, 1.0, rel_tol=1e-4):
+        warnings.warn(
+            'The state has been normalized to compute the Wigner (expected norm to be'
+            f' 1.0 but norm is {norm_state:.3f}).'
+        )
+        state = unit(state)
+
     xmax = lim if xmax is None else xmax
     ymax = lim if ymax is None else ymax
 
@@ -142,6 +163,7 @@ def plot_wigner(
         xmax,
         ymax,
         ax=ax,
+        vmax=vmax,
         cmap=cmap,
         interpolation=interpolation,
         colorbar=colorbar,
