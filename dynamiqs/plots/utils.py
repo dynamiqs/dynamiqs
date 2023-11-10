@@ -96,19 +96,16 @@ def gridplot(
 
         for i, age in enumerate(ages):
             axs[i//3][i%3].plot([1, 2], [1, 2], label=f'{age}')
-            axs[i//3][i%3].legend()
 
         fig.tight_layout()
         ```
         by
         ```
         ages = [0, 1, 2, 3, 4, 5]
-        fig, axs = grid_plot(6, 2, w=4.0, h=3.0)  # 6 plots, 2 rows
+        fig, axs = dq.gridplot(6, 2, w=4.0, h=3.0)  # 6 plots, 2 rows
 
-        for i, age in enumerate(ages):
-            ax = next(axs)
-            ax.plot([1, 2], [1, 2], label=f'{age}')
-            ax.legend()
+        for age in ages:
+            next(axs).plot([1, 2], [1, 2], label=f'{age}')
         ```
     """
     h = w if h is None else h
