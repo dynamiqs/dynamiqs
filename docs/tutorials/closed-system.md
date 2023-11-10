@@ -2,8 +2,6 @@
 
 This tutorial introduces the quantum state for a closed quantum system, describes its evolution with the Schrödinger equation, and explains two common numerical methods to simulate the evolution: computing the propagator or solving the ODE iteratively.
 
-***
-
 ## The quantum state
 
 The quantum state that describes a closed quantum system is a **state vector** $\ket\psi$, i.e. a column vector of size $n$[^1]:
