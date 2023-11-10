@@ -14,9 +14,9 @@ __all__ = ['wigner']
 
 def wigner(
     state: Tensor,
-    x_max: float = 6.2832,
-    p_max: float = 6.2832,
-    num_pixels: int = 200,
+    xmax: float = 6.2832,
+    ymax: float = 6.2832,
+    npixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
     g: float = 2.0,
 ) -> tuple[Tensor, Tensor, Tensor]:
@@ -24,36 +24,36 @@ def wigner(
 
     Args:
         state _(..., n, 1) or (..., n, n)_: Ket or density matrix.
-        x_max: Maximum value of x.
-        p_max: Maximum value of p. Ignored if the Wigner distribution is computed
-            with the `fft` method, in which case `p_max` is given by `2 * pi / x_max`.
-        num_pixels: Number of pixels in each direction.
+        xmax: Maximum value of x.
+        ymax: Maximum value of p. Ignored if the Wigner distribution is computed
+            with the `fft` method, in which case `ymax` is given by `2 * pi / xmax`.
+        npixels: Number of pixels in each direction.
         method _(string)_: Method used to compute the Wigner distribution. Available
             methods: `'clenshaw'` or `'fft'`.
         g: Scaling factor of Wigner quadratures, such that `a = 0.5 * g * (x + i * p)`.
 
     Returns:
-        A tuple `(xvec, pvec, w)` where
+        A tuple `(xvec, yvec, w)` where
 
-            - xvec: Tensor of shape _(num_pixels)_ containing x values
-            - pvec: Tensor of shape _(num_pixels)_ containing p values
-            - w: Tensor of shape _(num_pixels, num_pixels)_ containing the wigner
+            - xvec: Tensor of shape _(npixels)_ containing x values
+            - yvec: Tensor of shape _(npixels)_ containing p values
+            - w: Tensor of shape _(npixels, npixels)_ containing the wigner
                 distribution at all (x, p) points.
     """
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
-    xvec = torch.linspace(-x_max, x_max, num_pixels)
-    pvec = torch.linspace(-p_max, p_max, num_pixels)
+    xvec = torch.linspace(-xmax, xmax, npixels)
+    yvec = torch.linspace(-ymax, ymax, npixels)
 
     if method == 'clenshaw':
         state = todm(state)
-        w = _wigner_clenshaw(state, xvec, pvec, g)
+        w = _wigner_clenshaw(state, xvec, yvec, g)
     elif method == 'fft':
         if isket(state):
-            w, pvec = _wigner_fft_psi(state, xvec, g)
+            w, yvec = _wigner_fft_psi(state, xvec, g)
         elif isdm(state):
-            w, pvec = _wigner_fft_dm(state, xvec, g)
+            w, yvec = _wigner_fft_dm(state, xvec, g)
         else:
             raise ValueError(
                 'Input state must be a ket or density matrix, but got shape'
@@ -64,15 +64,15 @@ def wigner(
             f'Method "{method}" is not supported (supported: "clenshaw", "fft").'
         )
 
-    return xvec, pvec, w
+    return xvec, yvec, w
 
 
-def _wigner_clenshaw(rho: Tensor, xvec: Tensor, pvec: Tensor, g: float):
+def _wigner_clenshaw(rho: Tensor, xvec: Tensor, yvec: Tensor, g: float):
     """Compute the wigner distribution of a density matrix using the iterative method
     of QuTiP based on the Clenshaw summation algorithm."""
     n = rho.size(-1)
 
-    x, p = torch.meshgrid(xvec, pvec, indexing='ij')
+    x, p = torch.meshgrid(xvec, yvec, indexing='ij')
     a = 0.5 * g * (x + 1.0j * p)
     a2 = a.abs() ** 2
 
@@ -115,9 +115,9 @@ def _wigner_fft_psi(psi: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor
     psi_x = psi.T @ U
 
     # compute the wigner distribution of psi using the fast Fourier transform
-    w, pvec = _wigner_fft(psi_x[0], xvec * g / sqrt(2))
+    w, yvec = _wigner_fft(psi_x[0], xvec * g / sqrt(2))
 
-    return 0.5 * g**2 * w.T.real, pvec * sqrt(2) / g
+    return 0.5 * g**2 * w.T.real, yvec * sqrt(2) / g
 
 
 def _wigner_fft_dm(rho: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor]:
@@ -129,10 +129,10 @@ def _wigner_fft_dm(rho: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor]
     W = 0
     for i in range(rho.shape[0]):
         eig_vec = eig_vecs[:, i].reshape(rho.shape[0], 1)
-        W_psi, pvec = _wigner_fft_psi(eig_vec, xvec, g)
+        W_psi, yvec = _wigner_fft_psi(eig_vec, xvec, g)
         W += eig_vals[i] * W_psi
 
-    return W, pvec
+    return W, yvec
 
 
 def _fock_to_position(n: int, positions: Tensor) -> Tensor:
