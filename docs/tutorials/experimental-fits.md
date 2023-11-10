@@ -36,6 +36,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 ```
 
 Declare useful helpers to handle units:
+
 ```python
 MHz = 2 * np.pi
 kHz = 2 * np.pi * 1e-3
@@ -44,6 +45,7 @@ ns = 1.0e-3
 ```
 
 Define physical values that describe our system (taken from [^1]):
+
 ```python
 thermal_a, thermal_b = 0.1, 0.011
 kappa_a = 9.3e-3 * kHz
@@ -51,6 +53,7 @@ kappa_b = 2.6 * MHz
 ```
 
 Instanciate our bosonic annihilation operators:
+
 ```python
 Na, Nb = 15, 7
 a, b = dq.destroy(Na, Nb, device=device)
@@ -65,32 +68,35 @@ We provide real experimental data but also leave the possibility to simply simul
 Before running the code, you can download the data at this link (TODO: add link)
 
 Load the data
+
 ```python
 def load(file):
     x = np.loadtxt(file)
     x = torch.tensor(x, dtype=torch.float32, device=device)
     return x
-    
-alpha2 = load("alpha2.npy")
-data = load("experimental-fits-data.npy")
-time = load("experimental-fits-time.npy")
+
+
+time = load("docs/data/experimental-fits-time.npy")
+data = load("docs/data/experimental-fits-data.npy")
 ```
 
 and plot them
+
 ```python
 plt.figure(figsize=(10, 5))
 
-plt.title("Short timescale")
 plt.plot(time.numpy(force=True), data.numpy(force=True), "+")
 plt.grid()
 plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
-render('real_data')
+renderfig('g2-real-data')
 ```
+[Loaded data](/figs-docs/g2-real-data.png)
 
 #### Option 2: Synthetic data
 
 Create the synthetic data 
+
 ```python
 torch.manual_seed(42) # set the random seed for reproducibility
 
@@ -123,8 +129,10 @@ and plot them
 ```python
 plt.plot(time.numpy(force=True), data.numpy(force=True), "+")
 plt.grid()
-render('synthetic_data')
+renderfig('g2-synthetic-data')
 ```
+[Loaded data](/figs-docs/g2-synthetic-data.png)
+
 
 ### Perform the fit
 
@@ -146,7 +154,7 @@ def simulate(g2, verbose=False):
         H, [Lb_down, Lb_up, La_down, La_up],
         rho0, time, 
         exp_ops=[dq.dag(a) @ a],
-        gradient=dq.gradient.Adjoint(params=params), 
+        gradient=dq.gradient.Adjoint(params=g2), 
         options=dict(device=device, save_states=True, verbose=verbose)
     )
 
@@ -167,8 +175,9 @@ for i in range(len(alpha2)):
 plt.grid()
 plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
-render('initial_guess')
+renderfig('g2-initial-guess')
 ```
+
 
 % skip: start
 
@@ -191,8 +200,8 @@ for i in tqdm(range(5)):
 ```
 we use the `L-BFGS` Pytorch solver as its convergence is faster than a simple gradient descent.
 
-!!! warning Optimisation time
-    The full optimisation runs in 5 to 10 minutes on a ``
+!!! note Optimisation time
+    The full optimisation runs in 5 to 10 minutes on a NVIDIA GeForce RTX 4090.
 
 To retreive the values, we show the fit plot
 ```python 
@@ -227,7 +236,6 @@ tensor(0.8646, device='cuda:0', grad_fn=<DivBackward0>)
 
 ## Full code
 
-
 ```python
 import dynamiqs as dq
 import torch
@@ -258,15 +266,17 @@ thermal_a, thermal_b = 0.1, 0.011
 kappa_a = 9.3e-3 * kHz
 kappa_b = 2.6 * MHz
 
+
 # Load and plot the data
 
 def load(file):
     x = np.loadtxt(file)
     x = torch.tensor(x, dtype=torch.float32, device=device)
     return x
-    
-data = load("experimental-fits-data.npy")
-time = load("experimental-fits-time.npy")
+
+
+data = load("../data/experimental-fits-data.npy")
+time = load("../data/experimental-fits-time.npy")
 alpha2 = data[0]
 
 plt.figure(figsize=(10, 5))
@@ -275,6 +285,7 @@ plt.plot(time.numpy(force=True), data.numpy(force=True), "+")
 plt.grid()
 plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
+
 
 # Define simulation code
 
@@ -286,19 +297,20 @@ def simulate(g2, verbose=False):
     H += dq.dag(H)
 
     La_down = np.sqrt(kappa_a * (1 + thermal_a)) * a
-    La_up   = np.sqrt(kappa_a * thermal_a) * dq.dag(a)
+    La_up = np.sqrt(kappa_a * thermal_a) * dq.dag(a)
     Lb_down = np.sqrt(kappa_b * (1 + thermal_b)) * b
-    Lb_up   = np.sqrt(kappa_b * thermal_b) * dq.dag(b)
-    
+    Lb_up = np.sqrt(kappa_b * thermal_b) * dq.dag(b)
+
     result = dq.mesolve(
         H, [Lb_down, Lb_up, La_down, La_up],
-        rho0, time, 
+        rho0, time,
         exp_ops=[dq.dag(a) @ a],
-        gradient=dq.gradient.Adjoint(params=[g2]), 
+        gradient=dq.gradient.Adjoint(params=[g2]),
         options=dict(device=device, save_states=True, verbose=verbose)
     )
 
     return result
+
 
 # Plot initial guess
 
@@ -320,18 +332,20 @@ plt.show()
 
 losses = []
 
+
 def closure():
     lbfgs.zero_grad()
-    
+
     result = simulate(g2)
     criterion = torch.nn.MSELoss()
-    
+
     loss = criterion(result.expects[:, 0].real.T, data)
     loss.backward()
     losses.append(loss.item())
-    
+
     return loss
-    
+
+
 lbfgs = torch.optim.LBFGS([g2], max_iter=4, line_search_fn="strong_wolfe")
 for i in tqdm(range(5)):
     lbfgs.step(closure)
