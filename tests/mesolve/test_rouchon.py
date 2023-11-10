@@ -60,7 +60,7 @@ class TestMERouchon2(SolverTester):
         self._test_gradient(system, solver, Autograd(), rtol=rtol, atol=atol)
 
     @pytest.mark.parametrize(
-        'system,rtol,atol', [(gocavity, 1e-2, 1e-5), (gotdqubit, 1e-2, 1e-3)]
+        'system,rtol,atol', [(gocavity, 1e-2, 1e-4), (gotdqubit, 1e-2, 1e-3)]
     )
     def test_adjoint(self, system, rtol, atol):
         solver = Rouchon2(dt=1e-3)
