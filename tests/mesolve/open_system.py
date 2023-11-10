@@ -141,20 +141,20 @@ class DampedTDQubit(OpenSystem):
     def __init__(
         self,
         *,
-        Omega: float,
+        eps: float,
         omega: float,
         gamma: float,
         t_end: float,
         requires_grad: bool = False,
     ):
         # store parameters
-        self.Omega = torch.as_tensor(Omega).requires_grad_(requires_grad)
+        self.eps = torch.as_tensor(eps).requires_grad_(requires_grad)
         self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)
         self.gamma = torch.as_tensor(gamma).requires_grad_(requires_grad)
         self.t_end = torch.as_tensor(t_end)
 
         # define gradient parameters
-        self.params = (self.Omega, self.omega, self.gamma)
+        self.params = (self.eps, self.omega, self.gamma)
 
         # loss operator
         self.loss_op = dq.sigmaz()
@@ -167,13 +167,13 @@ class DampedTDQubit(OpenSystem):
         self.y0 = dq.fock(2, 0)
 
     def H(self, t: float) -> Tensor:
-        return self.Omega * torch.cos(self.omega * t) * dq.sigmax()
+        return self.eps * torch.cos(self.omega * t) * dq.sigmax()
 
     def tsave(self, num_tsave: int) -> Tensor:
         return torch.linspace(0.0, self.t_end.item(), num_tsave)
 
     def _theta(self, t: float) -> float:
-        return self.Omega / self.omega * sin(self.omega * t)
+        return self.eps / self.omega * sin(self.omega * t)
 
     def _eta(self, t: float) -> float:
         return exp(-2 * self.gamma * t)
@@ -199,44 +199,44 @@ class DampedTDQubit(OpenSystem):
         theta = self._theta(t)
         eta = self._eta(t)
         # gradients of theta
-        dtheta_dOmega = sin(self.omega * t) / self.omega
-        dtheta_domega = self.Omega * t * cos(
+        dtheta_deps = sin(self.omega * t) / self.omega
+        dtheta_domega = self.eps * t * cos(
             self.omega * t
-        ) / self.omega - self.Omega / self.omega**2 * sin(self.omega * t)
+        ) / self.omega - self.eps / self.omega**2 * sin(self.omega * t)
         # gradient of eta
         deta_dgamma = -2 * t * eta
         # gradients of sigma_z
-        grad_Omega = -2 * dtheta_dOmega * eta * sin(2 * theta)
+        grad_eps = -2 * dtheta_deps * eta * sin(2 * theta)
         grad_omega = -2 * dtheta_domega * eta * sin(2 * theta)
         grad_gamma = deta_dgamma * cos(2 * theta)
-        return torch.tensor([grad_Omega, grad_omega, grad_gamma]).detach()
+        return torch.tensor([grad_eps, grad_omega, grad_gamma]).detach()
 
     def grads_expect(self, t: float) -> Tensor:
         theta = self._theta(t)
         eta = self._eta(t)
         # gradients of theta
-        dtheta_dOmega = sin(self.omega * t) / self.omega
-        dtheta_domega = self.Omega * t * cos(
+        dtheta_deps = sin(self.omega * t) / self.omega
+        dtheta_domega = self.eps * t * cos(
             self.omega * t
-        ) / self.omega - self.Omega / self.omega**2 * sin(self.omega * t)
+        ) / self.omega - self.eps / self.omega**2 * sin(self.omega * t)
         # gradient of eta
         deta_dgamma = -2 * t * eta
         # gradients of sigma_z
-        grad_z_Omega = -2 * dtheta_dOmega * eta * sin(2 * theta)
+        grad_z_eps = -2 * dtheta_deps * eta * sin(2 * theta)
         grad_z_omega = -2 * dtheta_domega * eta * sin(2 * theta)
         grad_z_gamma = deta_dgamma * cos(2 * theta)
         # gradients of sigma_y
-        grad_y_Omega = -2 * dtheta_dOmega * eta * cos(2 * theta)
+        grad_y_eps = -2 * dtheta_deps * eta * cos(2 * theta)
         grad_y_omega = -2 * dtheta_domega * eta * cos(2 * theta)
         grad_y_gamma = -deta_dgamma * sin(2 * theta)
         # gradients of sigma_x
-        grad_x_Omega = 0
+        grad_x_eps = 0
         grad_x_omega = 0
         grad_x_gamma = 0
         return torch.tensor([
-            [grad_x_Omega, grad_x_omega, grad_x_gamma],
-            [grad_y_Omega, grad_y_omega, grad_y_gamma],
-            [grad_z_Omega, grad_z_omega, grad_z_gamma],
+            [grad_x_eps, grad_x_omega, grad_x_gamma],
+            [grad_y_eps, grad_y_omega, grad_y_gamma],
+            [grad_z_eps, grad_z_omega, grad_z_gamma],
         ]).detach()
 
 
@@ -245,7 +245,7 @@ grad_leaky_cavity_8 = LeakyCavity(
     n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True
 )
 
-damped_tdqubit = DampedTDQubit(Omega=3.0, omega=10.0, gamma=1.0, t_end=1.0)
+damped_tdqubit = DampedTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0)
 grad_damped_tdqubit = DampedTDQubit(
-    Omega=3.0, omega=10.0, gamma=1.0, t_end=1.0, requires_grad=True
+    eps=3.0, omega=10.0, gamma=1.0, t_end=1.0, requires_grad=True
 )
