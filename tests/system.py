@@ -68,28 +68,3 @@ class System(ABC):
         The returned tensor has shape _(num_exp_ops, num_params)_.
         """
         raise NotImplementedError
-
-    @abstractmethod
-    def _run(
-        self,
-        H: Tensor,
-        y0: Tensor,
-        tsave: ArrayLike,
-        solver: Solver,
-        *,
-        gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
-    ) -> Result:
-        pass
-
-    def run(
-        self,
-        tsave: ArrayLike,
-        solver: Solver,
-        *,
-        gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
-    ) -> Result:
-        return self._run(
-            self.H, self.y0, tsave, solver, gradient=gradient, options=options
-        )

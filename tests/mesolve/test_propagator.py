@@ -1,11 +1,11 @@
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Propagator
 
-from ..solver_tester import SolverTester
+from ..solver_tester import OpenSolverTester
 from .open_system import grad_leaky_cavity_8, leaky_cavity_8
 
 
-class TestMEPropagator(SolverTester):
+class TestMEPropagator(OpenSolverTester):
     def test_batching(self):
         self._test_batching(leaky_cavity_8, Propagator())
 

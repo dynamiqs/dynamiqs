@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import cos, exp, pi, sin, sqrt
-from typing import Any
+from typing import Any, List
 
 import torch
 from torch import Tensor
@@ -24,9 +24,28 @@ class OpenSystem(System):
     def _state_shape(self) -> tuple[int, int]:
         return self.n, self.n
 
+    def run(
+        self,
+        tsave: ArrayLike,
+        solver: Solver,
+        *,
+        gradient: Gradient | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> Result:
+        return self._run(
+            self.H,
+            self.jump_ops,
+            self.y0,
+            tsave,
+            solver,
+            gradient=gradient,
+            options=options,
+        )
+
     def _run(
         self,
         H: Tensor,
+        jump_ops: List[ArrayLike] | None,
         y0: Tensor,
         tsave: ArrayLike,
         solver: Solver,
@@ -129,10 +148,12 @@ class LeakyCavity(OpenSystem):
         grad_p_kappa = sqrt(2) * self.alpha0 * sin(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
         # fmt: on
 
-        return torch.tensor([
-            [grad_x_delta, grad_x_alpha0, grad_x_kappa],
-            [grad_p_delta, grad_p_alpha0, grad_p_kappa],
-        ]).detach()
+        return torch.tensor(
+            [
+                [grad_x_delta, grad_x_alpha0, grad_x_kappa],
+                [grad_p_delta, grad_p_alpha0, grad_p_kappa],
+            ]
+        ).detach()
 
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)

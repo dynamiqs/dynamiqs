@@ -20,6 +20,18 @@ class ClosedSystem(System):
     def _state_shape(self) -> tuple[int, int]:
         return self.n, 1
 
+    def run(
+        self,
+        tsave: ArrayLike,
+        solver: Solver,
+        *,
+        gradient: Gradient | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> Result:
+        return self._run(
+            self.H, self.y0, tsave, solver, gradient=gradient, options=options
+        )
+
     def _run(
         self,
         H: Tensor,
@@ -105,10 +117,12 @@ class Cavity(ClosedSystem):
         grad_x_alpha0 = sqrt(2) * cos(-self.delta * t)
         grad_p_alpha0 = sqrt(2) * sin(-self.delta * t)
 
-        return torch.tensor([
-            [grad_x_delta, grad_x_alpha0],
-            [grad_p_delta, grad_p_alpha0],
-        ]).detach()
+        return torch.tensor(
+            [
+                [grad_x_delta, grad_x_alpha0],
+                [grad_p_delta, grad_p_alpha0],
+            ]
+        ).detach()
 
 
 cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0)
