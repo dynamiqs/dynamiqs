@@ -42,7 +42,7 @@ skip_gitignore = true
 
 [tool.black]
 preview = true
-target-version = ["py38"]
+target-version = ["py38", "py39", "py310", "py311"]
 skip-string-normalization = true
 jupyter = true
 required-version = "23.11.0"
