@@ -174,7 +174,7 @@ def plot_wigner_mosaic(
     states: ArrayLike,
     *,
     n: int = 8,
-    ncols: int | None = None,
+    nrows: int = 1,
     w: float = 3.0,
     h: float | None = None,
     xmax: float = 5.0,
@@ -193,7 +193,7 @@ def plot_wigner_mosaic(
     See [`dq.plot_wigner()`][dynamiqs.plot_wigner] for more details.
 
     Examples:
-        >>> psis = [dq.fock(8, i) for i in range(3)]
+        >>> psis = [dq.fock(3, i) for i in range(3)]
         >>> dq.plot_wigner_mosaic(psis)
         >>> renderfig('plot_wigner_mosaic_fock')
 
@@ -202,10 +202,10 @@ def plot_wigner_mosaic(
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> H = dq.zero(n)
-        >>> jump_ops = [a @ a - 3.0 * dq.eye(n)]
-        >>> rho0 = dq.coherent_dm(n, 0)
+        >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]
+        >>> psi0 = dq.coherent(n, 0)
         >>> tsave = np.linspace(0, 1.0, 101)
-        >>> result = dq.mesolve(H, jump_ops, rho0, tsave)
+        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
         >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
         >>> renderfig('plot_wigner_mosaic_cat')
 
@@ -217,7 +217,7 @@ def plot_wigner_mosaic(
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = np.linspace(0, np.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=25, ncols=5, xmax=4.0)
+        >>> dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
         >>> renderfig('plot_wigner_mosaic_kerr')
 
         ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
@@ -233,7 +233,7 @@ def plot_wigner_mosaic(
     # create grid of plot
     _, axs = gridplot(
         n,
-        ncols=ncols,
+        nrows=nrows,
         w=w,
         h=h,
         gridspec_kw=dict(wspace=0, hspace=0),

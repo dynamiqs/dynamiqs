@@ -80,7 +80,8 @@ def optax(func):
 
 def gridplot(
     n: int,
-    ncols: int | None = None,
+    nrows: int = 1,
+    *,
     w: float = 4.0,
     h: float | None = None,
     **kwargs,
@@ -102,7 +103,7 @@ def gridplot(
         by
         ```
         ages = [0, 1, 2, 3, 4, 5]
-        fig, axs = grid_plot(6, 3, w=4.0, h=3.0)  # 6 plots, 3 columns
+        fig, axs = grid_plot(6, 2, w=4.0, h=3.0)  # 6 plots, 2 rows
 
         for i, age in enumerate(ages):
             ax = next(axs)
@@ -110,11 +111,8 @@ def gridplot(
             ax.legend()
         ```
     """
-    if ncols is None:
-        ncols = n
-    if h is None:
-        h = w
-    nrows = ceil(n / ncols)
+    h = w if h is None else h
+    ncols = ceil(n / nrows)
     figsize = (w * ncols, h * nrows)
     fig, axs = plt.subplots(
         nrows, ncols, figsize=figsize, constrained_layout=True, **kwargs
