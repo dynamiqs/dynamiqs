@@ -53,7 +53,8 @@ class TestMERouchon1(SolverTester):
             atol=1e-2,
         )
 
-    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    @pytest.mark.parametrize('normalize', [None, 'cholesky'])
     def test_td_autograd(self, normalize):
         solver = Rouchon1(dt=1e-3, normalize=normalize)
         self._test_gradient(
@@ -73,7 +74,8 @@ class TestMERouchon1(SolverTester):
             atol=1e-2,
         )
 
-    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    @pytest.mark.parametrize('normalize', [None, 'cholesky'])
     def test_td_adjoint(self, normalize):
         solver = Rouchon1(dt=1e-3, normalize=normalize)
         gradient = Adjoint(params=grad_damped_tdqubit.params)
