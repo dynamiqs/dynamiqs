@@ -72,7 +72,7 @@ options = {
 
 ## 3. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve`](../python_api/solvers/sesolve.md) function, which returns an instance of the [`Result`](../python_api/index.md) class. This object contains the computed states, the observables, and various information about the solver. It also features utility methods to convert result Tensors to NumPy arrays or QuTiP objects.
+We can now run the simulation. This is done by calling the [`dq.sesolve()`](../python_api/solvers/sesolve.md) function, which returns an instance of the [`Result`](../python_api/index.md) class. This object contains the computed states, the observables, and various information about the solver. It also features utility methods to convert result Tensors to NumPy arrays or QuTiP objects.
 
 ```python
 # run simulation
