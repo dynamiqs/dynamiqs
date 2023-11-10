@@ -75,3 +75,16 @@ class Rouchon1(_ODEFixedStep):
 
 class Rouchon2(_ODEFixedStep):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
+
+    def __init__(self, *, dt: float, normalize: Literal['sqrt'] | None = None):
+        # normalize: The default scheme is trace-preserving at first order only. This
+        # parameter sets the normalisation behaviour:
+        # - `None`: The scheme is not normalized.
+        # - `'sqrt'`: The Kraus map is renormalized with a matrix square root. Ideal
+        #   for stiff problems, recommended for time-independent problems.
+        # - `cholesky`: The Kraus map is renormalized at each time step using a Cholesky
+        #   decomposition. Ideal for stiff problems, recommended for time-dependent
+        #   problems.
+
+        super().__init__(dt=dt)
+        self.normalize = normalize

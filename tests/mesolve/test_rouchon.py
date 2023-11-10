@@ -55,19 +55,21 @@ class TestMERouchon2(SolverTester):
         solver = Rouchon2(dt=1e-2)
         self._test_batching(leaky_cavity_8, solver)
 
-    def test_correctness(self):
-        solver = Rouchon2(dt=1e-3)
+    @pytest.mark.parametrize('normalize', [None, 'sqrt'])
+    def test_correctness(self, normalize):
+        solver = Rouchon2(dt=1e-3, normalize=normalize)
         self._test_correctness(
             leaky_cavity_8,
             solver,
             num_tsave=11,
-            ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
-            exp_save_atol=1e-2,
+            ysave_norm_atol=1e-3,
+            exp_save_rtol=1e-4,
+            exp_save_atol=1e-4,
         )
 
-    def test_autograd(self):
-        solver = Rouchon2(dt=1e-3)
+    @pytest.mark.parametrize('normalize', [None, 'sqrt'])
+    def test_autograd(self, normalize):
+        solver = Rouchon2(dt=1e-3, normalize=normalize)
         self._test_gradient(
             grad_leaky_cavity_8,
             solver,
@@ -75,8 +77,9 @@ class TestMERouchon2(SolverTester):
             num_tsave=11,
         )
 
-    def test_adjoint(self):
-        solver = Rouchon2(dt=1e-3)
+    @pytest.mark.parametrize('normalize', [None, 'sqrt'])
+    def test_adjoint(self, normalize):
+        solver = Rouchon2(dt=1e-3, normalize=normalize)
         gradient = Adjoint(params=grad_leaky_cavity_8.params)
         self._test_gradient(
             grad_leaky_cavity_8,
