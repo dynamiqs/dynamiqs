@@ -106,4 +106,4 @@ tensor([[0.540+0.841j],
         [0.000+0.000j]])
 ```
 
-If you want to know more about the available solvers or the different options, head to the [sesolve()](../python_api/solvers/sesolve.md) API documentation.
+If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`](../python_api/solvers/sesolve.md) API documentation.

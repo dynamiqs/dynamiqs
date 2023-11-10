@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from functools import wraps
+from math import ceil
+from typing import Iterable
 
 import matplotlib
 import matplotlib as mpl
@@ -15,8 +17,10 @@ from matplotlib.ticker import MultipleLocator, NullLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __all__ = [
+    'linmap',
     'figax',
     'optax',
+    'gridplot',
     'mplstyle',
     'integer_ticks',
     'sample_cmap',
@@ -26,11 +30,16 @@ __all__ = [
 ]
 
 
+def linmap(x: float, a: float, b: float, c: float, d: float) -> float:
+    """Map $x$ linearly from $[a,b]$ to $[c,d]$."""
+    return (x - a) / (b - a) * (d - c) + c
+
+
 def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axes]:
     """Return a figure with specified width and length."""
     if h is None:
         h = w / 1.6
-    return plt.subplots(1, 1, figsize=(w, h), **kwargs)
+    return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
 def optax(func):
@@ -67,6 +76,45 @@ def optax(func):
         return func(*args, ax=ax, **kwargs)
 
     return wrapper
+
+
+def gridplot(
+    n: int,
+    nrows: int = 1,
+    *,
+    w: float = 4.0,
+    h: float | None = None,
+    **kwargs,
+) -> tuple[Figure, Iterable[Axes]]:
+    """Return an iterator on `Axes` objects organised in a grid fashion.
+
+    Examples:
+        Replace
+        ```
+        ages = [0, 1, 2, 3, 4, 5]
+        fig, axs = plt.subplots(2, 3, figsize=(3 * 4.0, 2 * 3.0))
+
+        for i, age in enumerate(ages):
+            axs[i//3][i%3].plot([1, 2], [1, 2], label=f'{age}')
+
+        fig.tight_layout()
+        ```
+        by
+        ```
+        ages = [0, 1, 2, 3, 4, 5]
+        fig, axs = dq.gridplot(6, 2, w=4.0, h=3.0)  # 6 plots, 2 rows
+
+        for age in ages:
+            next(axs).plot([1, 2], [1, 2], label=f'{age}')
+        ```
+    """
+    h = w if h is None else h
+    ncols = ceil(n / nrows)
+    figsize = (w * ncols, h * nrows)
+    fig, axs = plt.subplots(
+        nrows, ncols, figsize=figsize, constrained_layout=True, **kwargs
+    )
+    return fig, iter(axs.flatten())
 
 
 colors = {
