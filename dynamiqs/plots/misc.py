@@ -130,7 +130,7 @@ def plot_wigner(
         ![plot_wigner_cat](/figs-code/plot_wigner_cat.png){.fig-half}
 
         >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
-        >>> dq.plot_wigner(psi, xmax=1.5, cross=True)
+        >>> dq.plot_wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
         ![plot_wigner_01](/figs-code/plot_wigner_01.png){.fig-half}
