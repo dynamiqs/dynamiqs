@@ -1,6 +1,4 @@
 import matplotlib.cm as cm
-
-# custom dynamiqs colormap
 from matplotlib.colors import LinearSegmentedColormap
 
 from .misc import *
