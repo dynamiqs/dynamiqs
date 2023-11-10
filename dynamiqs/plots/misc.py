@@ -10,10 +10,19 @@ from matplotlib.colors import ListedColormap, LogNorm, Normalize
 from ..utils.tensor_types import ArrayLike, to_numpy, to_tensor
 from ..utils.utils import norm, unit
 from ..utils.wigners import wigner
-from .utils import add_colorbar, colors, fock_ticks, optax, sample_cmap
+from .utils import (
+    add_colorbar,
+    colors,
+    fock_ticks,
+    gridplot,
+    linmap,
+    optax,
+    sample_cmap,
+)
 
 __all__ = [
     'plot_wigner',
+    'plot_wigner_mosaic',
     'plot_pwc_pulse',
     'plot_fock',
     'plot_fock_evolution',
@@ -159,6 +168,98 @@ def plot_wigner(
         cross=cross,
         clear=clear,
     )
+
+
+def plot_wigner_mosaic(
+    states: ArrayLike,
+    *,
+    n: int = 8,
+    ncols: int | None = None,
+    w: float = 3.0,
+    h: float | None = None,
+    xmax: float = 5.0,
+    ymax: float | None = None,
+    vmax: float = 2 / np.pi,
+    npixels: int = 101,
+    cmap: str = 'bwr',
+    interpolation: str = 'bilinear',
+    cross: bool = False,
+):
+    r"""Plot the Wigner function of multiple states in a mosaic arrangement.
+
+    Warning:
+        Documentation redaction in progress.
+
+    See [`dq.plot_wigner()`][dynamiqs.plot_wigner] for more details.
+
+    Examples:
+        >>> psis = [dq.fock(8, i) for i in range(3)]
+        >>> dq.plot_wigner_mosaic(psis)
+        >>> renderfig('plot_wigner_mosaic_fock')
+
+        ![plot_wigner_mosaic_fock](/figs-code/plot_wigner_mosaic_fock.png){.fig}
+
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = dq.zero(n)
+        >>> jump_ops = [a @ a - 3.0 * dq.eye(n)]
+        >>> rho0 = dq.coherent_dm(n, 0)
+        >>> tsave = np.linspace(0, 1.0, 101)
+        >>> result = dq.mesolve(H, jump_ops, rho0, tsave)
+        >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
+        >>> renderfig('plot_wigner_mosaic_cat')
+
+        ![plot_wigner_mosaic_cat](/figs-code/plot_wigner_mosaic_cat.png){.fig}
+
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = a.mH @ a.mH @ a @ a  # Kerr Hamiltonian
+        >>> psi0 = dq.coherent(n, 2)
+        >>> tsave = np.linspace(0, np.pi, 101)
+        >>> result = dq.sesolve(H, psi0, tsave)
+        >>> dq.plot_wigner_mosaic(result.states, n=25, ncols=5, xmax=4.0)
+        >>> renderfig('plot_wigner_mosaic_kerr')
+
+        ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
+    """
+    states = to_tensor(states)
+
+    nstates = len(states)
+    if nstates < n:
+        n = nstates
+
+    # todo: precompute batched wigners
+
+    # create grid of plot
+    _, axs = gridplot(
+        n,
+        ncols=ncols,
+        w=w,
+        h=h,
+        gridspec_kw=dict(wspace=0, hspace=0),
+        sharex=True,
+        sharey=True,
+    )
+
+    # individual wigner plot options
+    kwargs = dict(
+        xmax=xmax,
+        ymax=ymax,
+        vmax=vmax,
+        npixels=npixels,
+        cmap=cmap,
+        interpolation=interpolation,
+        colorbar=False,
+        cross=cross,
+        clear=False,
+    )
+
+    # plot individual wigner
+    for i in range(n):
+        ax = next(axs)
+        idx = int(linmap(i, 0, n - 1, 0, nstates - 1))
+        plot_wigner(states[idx], ax=ax, **kwargs)
+        ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
 
 
 @optax
