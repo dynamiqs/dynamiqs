@@ -5,12 +5,7 @@ from math import isclose
 
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.colors import (
-    LinearSegmentedColormap,
-    ListedColormap,
-    LogNorm,
-    Normalize,
-)
+from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from ..utils.tensor_types import ArrayLike, to_numpy, to_tensor
 from ..utils.utils import norm, unit
@@ -23,18 +18,6 @@ __all__ = [
     'plot_fock',
     'plot_fock_evolution',
 ]
-
-
-def dq_cmap():
-    """Create a custom dynamiqs colormap for Wigner plots."""
-    cmap_colors = [
-        (0.0, '#05527B'),
-        (0.225, '#639DC1'),
-        (0.5, '#FFFFFF'),
-        (0.775, '#E27777'),
-        (1.0, '#BF0C0C'),
-    ]
-    return LinearSegmentedColormap.from_list('dq', cmap_colors)
 
 
 @optax
@@ -52,9 +35,6 @@ def plot_wigner_data(
     clear: bool = False,
 ):
     w = to_numpy(wigner)
-
-    # custom colormap by default
-    cmap = dq_cmap() if cmap == 'dq' else cmap
 
     # set plot norm
     vmin = -vmax
