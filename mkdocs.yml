@@ -49,9 +49,15 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
+  - glightbox:
+      effect: fade
+      slide_effect: slide
+      width: 70%
+      zoomable: false
+      draggable: false
   - mkdocs-simple-hooks:
       hooks:
-          on_env: "docs.hooks:on_env"
+        on_env: "docs.hooks:on_env"
   - gen-files:
       scripts:
         - docs/generate_python_api.py
@@ -80,12 +86,22 @@ markdown_extensions:
   - pymdownx.caret
   - attr_list
   - footnotes
+  - md_in_html
 extra_javascript:
   - javascripts/katex.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
 watch:
   - dynamiqs
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+    absolute_links: warn
+  links:
+    not_found: warn
+    absolute_links: ignore
+    unrecognized_links: warn
 nav:
   - Home: index.md
   - Getting started:
