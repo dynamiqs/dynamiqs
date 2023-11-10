@@ -47,7 +47,7 @@ class OpenSystem(System):
         )
 
 
-class LeakyCavity(OpenSystem):
+class OCavity(OpenSystem):
     # `H_batched: (3, n, n)
     # `jump_ops`: (2, n, n)
     # `y0_batched`: (4, n, n)
@@ -95,8 +95,8 @@ class LeakyCavity(OpenSystem):
             dq.coherent_dm(self.n, -1j * self.alpha0),
         ]
 
-    def tsave(self, num_tsave: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), num_tsave)
+    def tsave(self, n: int) -> Tensor:
+        return torch.linspace(0.0, self.t_end.item(), n)
 
     def _alpha(self, t: float) -> Tensor:
         return (
@@ -137,7 +137,7 @@ class LeakyCavity(OpenSystem):
         ]).detach()
 
 
-class DampedTDQubit(OpenSystem):
+class OTDQubit(OpenSystem):
     def __init__(
         self,
         *,
@@ -169,8 +169,8 @@ class DampedTDQubit(OpenSystem):
     def H(self, t: float) -> Tensor:
         return self.eps * torch.cos(self.omega * t) * dq.sigmax()
 
-    def tsave(self, num_tsave: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), num_tsave)
+    def tsave(self, n: int) -> Tensor:
+        return torch.linspace(0.0, self.t_end.item(), n)
 
     def _theta(self, t: float) -> float:
         return self.eps / self.omega * sin(self.omega * t)
@@ -240,12 +240,10 @@ class DampedTDQubit(OpenSystem):
         ]).detach()
 
 
-leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0)
-grad_leaky_cavity_8 = LeakyCavity(
+ocavity = OCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0)
+gocavity = OCavity(
     n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True
 )
 
-damped_tdqubit = DampedTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0)
-grad_damped_tdqubit = DampedTDQubit(
-    eps=3.0, omega=10.0, gamma=1.0, t_end=1.0, requires_grad=True
-)
+otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0)
+gotdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0, requires_grad=True)

@@ -86,8 +86,8 @@ class Cavity(ClosedSystem):
             dq.coherent(self.n, -1j * self.alpha0),
         ]
 
-    def tsave(self, num_tsave: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), num_tsave)
+    def tsave(self, n: int) -> Tensor:
+        return torch.linspace(0.0, self.t_end.item(), n)
 
     def _alpha(self, t: float) -> Tensor:
         return self.alpha0 * torch.exp(-1j * self.delta * t)
@@ -142,8 +142,8 @@ class TDQubit(ClosedSystem):
     def H(self, t: float) -> Tensor:
         return self.eps * torch.cos(self.omega * t) * dq.sigmax()
 
-    def tsave(self, num_tsave: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), num_tsave)
+    def tsave(self, n: int) -> Tensor:
+        return torch.linspace(0.0, self.t_end.item(), n)
 
     def _theta(self, t: float) -> float:
         return self.eps / self.omega * sin(self.omega * t)
@@ -193,8 +193,8 @@ class TDQubit(ClosedSystem):
         ]).detach()
 
 
-cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0)
-grad_cavity_8 = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True)
+cavity = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0)
+gcavity = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True)
 
 tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
-grad_tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0, requires_grad=True)
+gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0, requires_grad=True)

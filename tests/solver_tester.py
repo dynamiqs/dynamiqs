@@ -21,30 +21,30 @@ class SolverTester(ABC):
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)
         b_y0 = len(system.y0_batched)
-        num_tsave = 11
-        tsave = system.tsave(num_tsave)
+        ntsave = 11
+        tsave = system.tsave(ntsave)
 
         run = lambda H, y0: system._run(H, y0, tsave, solver, options=options)
 
         # no batching
         result = run(system.H, system.y0)
-        assert result.ysave.shape == (num_tsave, m, n)
-        assert result.exp_save.shape == (n_exp_ops, num_tsave)
+        assert result.ysave.shape == (ntsave, m, n)
+        assert result.exp_save.shape == (n_exp_ops, ntsave)
 
         # batched H
         result = run(system.H_batched, system.y0)
-        assert result.ysave.shape == (b_H, num_tsave, m, n)
-        assert result.exp_save.shape == (b_H, n_exp_ops, num_tsave)
+        assert result.ysave.shape == (b_H, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, n_exp_ops, ntsave)
 
         # batched y0
         result = run(system.H, system.y0_batched)
-        assert result.ysave.shape == (b_y0, num_tsave, m, n)
-        assert result.exp_save.shape == (b_y0, n_exp_ops, num_tsave)
+        assert result.ysave.shape == (b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_y0, n_exp_ops, ntsave)
 
         # batched H and y0
         result = run(system.H_batched, system.y0_batched)
-        assert result.ysave.shape == (b_H, b_y0, num_tsave, m, n)
-        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, num_tsave)
+        assert result.ysave.shape == (b_H, b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, ntsave)
 
     def test_batching(self):
         pass
@@ -55,25 +55,25 @@ class SolverTester(ABC):
         solver: Solver,
         *,
         options: dict[str, Any] | None = None,
-        num_tsave: int,
-        ysave_norm_atol: float = 1e-3,
-        exp_save_rtol: float = 1e-3,
-        exp_save_atol: float = 1e-5,
+        ntsave: int = 11,
+        ysave_atol: float = 1e-3,
+        esave_rtol: float = 1e-3,
+        esave_atol: float = 1e-5,
     ):
-        tsave = system.tsave(num_tsave)
+        tsave = system.tsave(ntsave)
         result = system.run(tsave, solver, options=options)
 
         # === test ysave
         errs = torch.linalg.norm(result.ysave - system.states(tsave), dim=(-2, -1))
         logging.warning(f'errs = {errs}')
-        assert torch.all(errs <= ysave_norm_atol)
+        assert torch.all(errs <= ysave_atol)
 
         # === test exp_save
         true_exp_save = system.expects(tsave)
         logging.warning(f'exp_save      = {result.exp_save}')
         logging.warning(f'true_exp_save = {true_exp_save}')
         assert torch.allclose(
-            result.exp_save, true_exp_save, rtol=exp_save_rtol, atol=exp_save_atol
+            result.exp_save, true_exp_save, rtol=esave_rtol, atol=esave_atol
         )
 
     def test_correctness(self):
@@ -86,11 +86,11 @@ class SolverTester(ABC):
         gradient: Gradient,
         *,
         options: dict[str, Any] | None = None,
-        num_tsave: int,
+        ntsave: int = 11,
         rtol: float = 1e-3,
         atol: float = 1e-5,
     ):
-        tsave = system.tsave(num_tsave)
+        tsave = system.tsave(ntsave)
         result = system.run(tsave, solver, gradient=gradient, options=options)
 
         # === test gradients depending on final ysave
