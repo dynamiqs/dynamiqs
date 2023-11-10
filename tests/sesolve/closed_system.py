@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import cos, pi, sin, sqrt
+from math import cos, sin
 from typing import Any
 
 import torch
@@ -74,7 +74,7 @@ class Cavity(ClosedSystem):
         # prepare quantum operators
         self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
+        self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent(self.n, self.alpha0)
@@ -96,8 +96,8 @@ class Cavity(ClosedSystem):
 
     def expect(self, t: float) -> Tensor:
         alpha_t = self._alpha(t)
-        exp_x = sqrt(2) * alpha_t.real
-        exp_p = sqrt(2) * alpha_t.imag
+        exp_x = alpha_t.real
+        exp_p = alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
     def grads_state(self, t: float) -> Tensor:
@@ -106,10 +106,13 @@ class Cavity(ClosedSystem):
         return torch.tensor([grad_delta, grad_alpha0]).detach()
 
     def grads_expect(self, t: float) -> Tensor:
-        grad_x_delta = sqrt(2) * self.alpha0 * -t * sin(-self.delta * t)
-        grad_p_delta = sqrt(2) * self.alpha0 * -t * cos(-self.delta * t)
-        grad_x_alpha0 = sqrt(2) * cos(-self.delta * t)
-        grad_p_alpha0 = sqrt(2) * sin(-self.delta * t)
+        cdt = cos(self.delta * t)
+        sdt = sin(self.delta * t)
+
+        grad_x_delta = -self.alpha0 * t * sdt
+        grad_p_delta = -self.alpha0 * t * cdt
+        grad_x_alpha0 = cdt
+        grad_p_alpha0 = -sdt
 
         return torch.tensor([
             [grad_x_delta, grad_x_alpha0],
@@ -194,8 +197,8 @@ class TDQubit(ClosedSystem):
         ]).detach()
 
 
-cavity = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0)
-gcavity = Cavity(n=8, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True)
+cavity = Cavity(n=8, delta=2.0, alpha0=0.5, t_end=1.0)
+gcavity = Cavity(n=8, delta=2.0, alpha0=0.5, t_end=1.0, requires_grad=True)
 
 tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
 gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0, requires_grad=True)
