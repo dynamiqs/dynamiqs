@@ -43,8 +43,8 @@ def wigner(
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
-    xvec = torch.linspace(-x_max, x_max, num_pixels + 1)
-    pvec = torch.linspace(-p_max, p_max, num_pixels + 1)
+    xvec = torch.linspace(-x_max, x_max, num_pixels)
+    pvec = torch.linspace(-p_max, p_max, num_pixels)
 
     if method == 'clenshaw':
         state = todm(state)
