@@ -1,3 +1,5 @@
+import pytest
+
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Euler
 
@@ -10,46 +12,23 @@ class TestSEEuler(SolverTester):
         solver = Euler(dt=1e-2)
         self._test_batching(cavity_8, solver)
 
-    def test_correctness(self):
+    @pytest.mark.parametrize('system,tol', [(cavity_8, 1e-2), (tdqubit, 1e-3)])
+    def test_correctness(self, system, tol):
         solver = Euler(dt=1e-4)
         self._test_correctness(
-            cavity_8,
+            system,
             solver,
             num_tsave=11,
-            ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
-            exp_save_atol=1e-2,
+            ysave_norm_atol=tol,
+            exp_save_rtol=tol,
+            exp_save_atol=tol,
         )
 
-    def test_td_correctness(self):
-        solver = Euler(dt=1e-4)
-        self._test_correctness(
-            tdqubit,
-            solver,
-            num_tsave=11,
-            ysave_norm_atol=1e-3,
-            exp_save_rtol=1e-3,
-            exp_save_atol=1e-3,
-        )
-
-    def test_autograd(self):
+    @pytest.mark.parametrize(
+        'system,rtol', [(grad_cavity_8, 5e-2), (grad_tdqubit, 1e-2)]
+    )
+    def test_autograd(self, system, rtol):
         solver = Euler(dt=1e-4)
         self._test_gradient(
-            grad_cavity_8,
-            solver,
-            Autograd(),
-            num_tsave=11,
-            rtol=5e-2,
-            atol=1e-2,
-        )
-
-    def test_td_autograd(self):
-        solver = Euler(dt=1e-4)
-        self._test_gradient(
-            grad_tdqubit,
-            solver,
-            Autograd(),
-            num_tsave=11,
-            rtol=1e-2,
-            atol=1e-2,
+            system, solver, Autograd(), num_tsave=11, rtol=rtol, atol=1e-2
         )

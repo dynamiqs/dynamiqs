@@ -1,3 +1,5 @@
+import pytest
+
 from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Euler
 
@@ -15,10 +17,11 @@ class TestMEEuler(SolverTester):
         solver = Euler(dt=1e-2)
         self._test_batching(leaky_cavity_8, solver)
 
-    def test_correctness(self):
+    @pytest.mark.parametrize('system', [leaky_cavity_8, damped_tdqubit])
+    def test_correctness(self, system):
         solver = Euler(dt=1e-4)
         self._test_correctness(
-            leaky_cavity_8,
+            system,
             solver,
             num_tsave=11,
             ysave_norm_atol=1e-2,
@@ -26,49 +29,17 @@ class TestMEEuler(SolverTester):
             exp_save_atol=1e-3,
         )
 
-    def test_td_correctness(self):
-        solver = Euler(dt=1e-4)
-        self._test_correctness(
-            damped_tdqubit,
-            solver,
-            num_tsave=11,
-            ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
-            exp_save_atol=1e-3,
-        )
-
-    def test_autograd(self):
+    @pytest.mark.parametrize('system', [grad_leaky_cavity_8, grad_damped_tdqubit])
+    def test_autograd(self, system):
         solver = Euler(dt=1e-3)
         self._test_gradient(
-            grad_leaky_cavity_8,
-            solver,
-            Autograd(),
-            num_tsave=11,
-            rtol=1e-2,
-            atol=1e-2,
+            system, solver, Autograd(), num_tsave=11, rtol=1e-2, atol=1e-2
         )
 
-    def test_td_autograd(self):
+    @pytest.mark.parametrize('system', [grad_leaky_cavity_8, grad_damped_tdqubit])
+    def test_adjoint(self, system):
         solver = Euler(dt=1e-3)
+        gradient = Adjoint(params=system.params)
         self._test_gradient(
-            grad_damped_tdqubit, solver, Autograd(), num_tsave=11, rtol=1e-2, atol=1e-2
-        )
-
-    def test_adjoint(self):
-        solver = Euler(dt=1e-3)
-        gradient = Adjoint(params=grad_leaky_cavity_8.params)
-        self._test_gradient(
-            grad_leaky_cavity_8,
-            solver,
-            gradient,
-            num_tsave=11,
-            rtol=1e-3,
-            atol=1e-2,
-        )
-
-    def test_td_adjoint(self):
-        solver = Euler(dt=1e-3)
-        gradient = Adjoint(params=grad_damped_tdqubit.params)
-        self._test_gradient(
-            grad_damped_tdqubit, solver, gradient, num_tsave=11, rtol=1e-3, atol=1e-2
+            system, solver, gradient, num_tsave=11, rtol=1e-3, atol=1e-2
         )

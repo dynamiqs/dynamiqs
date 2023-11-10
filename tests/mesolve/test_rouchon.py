@@ -17,70 +17,42 @@ class TestMERouchon1(SolverTester):
         solver = Rouchon1(dt=1e-2)
         self._test_batching(leaky_cavity_8, solver)
 
+    @pytest.mark.parametrize(
+        'system, exp_save_rtol', [(leaky_cavity_8, 1e-4), (damped_tdqubit, 1e-2)]
+    )
     @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    def test_correctness(self, normalize):
+    def test_correctness(self, system, exp_save_rtol, normalize):
         solver = Rouchon1(dt=1e-3, normalize=normalize)
         self._test_correctness(
-            leaky_cavity_8,
+            system,
             solver,
             num_tsave=11,
             ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-4,
+            exp_save_rtol=exp_save_rtol,
             exp_save_atol=1e-2,
         )
 
+    @pytest.mark.parametrize('system', [grad_leaky_cavity_8, grad_damped_tdqubit])
     @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    def test_td_correctness(self, normalize):
+    def test_autograd(self, system, normalize):
+        if system is grad_damped_tdqubit and normalize == 'sqrt':
+            pytest.skip('sqrt normalization broken for TD system gradient computation')
+
         solver = Rouchon1(dt=1e-3, normalize=normalize)
-        self._test_correctness(
-            damped_tdqubit,
-            solver,
-            num_tsave=11,
-            ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
-            exp_save_atol=1e-2,
+        self._test_gradient(
+            system, solver, Autograd(), num_tsave=11, rtol=1e-4, atol=1e-2
         )
 
+    @pytest.mark.parametrize('system', [grad_leaky_cavity_8, grad_damped_tdqubit])
     @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    def test_autograd(self, normalize):
-        solver = Rouchon1(dt=1e-3, normalize=normalize)
-        self._test_gradient(
-            grad_leaky_cavity_8,
-            solver,
-            Autograd(),
-            num_tsave=11,
-            rtol=1e-4,
-            atol=1e-2,
-        )
+    def test_adjoint(self, system, normalize):
+        if system is grad_damped_tdqubit and normalize == 'sqrt':
+            pytest.skip('sqrt normalization broken for TD system gradient computation')
 
-    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    @pytest.mark.parametrize('normalize', [None, 'cholesky'])
-    def test_td_autograd(self, normalize):
         solver = Rouchon1(dt=1e-3, normalize=normalize)
+        gradient = Adjoint(params=system.params)
         self._test_gradient(
-            grad_damped_tdqubit, solver, Autograd(), num_tsave=11, rtol=1e-4, atol=1e-2
-        )
-
-    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    def test_adjoint(self, normalize):
-        solver = Rouchon1(dt=1e-3, normalize=normalize)
-        gradient = Adjoint(params=grad_leaky_cavity_8.params)
-        self._test_gradient(
-            grad_leaky_cavity_8,
-            solver,
-            gradient,
-            num_tsave=11,
-            rtol=1e-4,
-            atol=1e-2,
-        )
-
-    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    @pytest.mark.parametrize('normalize', [None, 'cholesky'])
-    def test_td_adjoint(self, normalize):
-        solver = Rouchon1(dt=1e-3, normalize=normalize)
-        gradient = Adjoint(params=grad_damped_tdqubit.params)
-        self._test_gradient(
-            grad_damped_tdqubit, solver, gradient, num_tsave=11, rtol=1e-4, atol=1e-2
+            system, solver, gradient, num_tsave=11, rtol=1e-4, atol=1e-2
         )
 
 
@@ -89,10 +61,11 @@ class TestMERouchon2(SolverTester):
         solver = Rouchon2(dt=1e-2)
         self._test_batching(leaky_cavity_8, solver)
 
-    def test_correctness(self):
+    @pytest.mark.parametrize('system', [leaky_cavity_8, damped_tdqubit])
+    def test_correctness(self, system):
         solver = Rouchon2(dt=1e-3)
         self._test_correctness(
-            leaky_cavity_8,
+            system,
             solver,
             num_tsave=11,
             ysave_norm_atol=1e-2,
@@ -100,46 +73,23 @@ class TestMERouchon2(SolverTester):
             exp_save_atol=1e-2,
         )
 
-    def test_td_correctness(self):
-        solver = Rouchon2(dt=1e-3)
-        self._test_correctness(
-            damped_tdqubit,
-            solver,
-            num_tsave=11,
-            ysave_norm_atol=1e-2,
-            exp_save_rtol=1e-2,
-            exp_save_atol=1e-2,
-        )
-
-    def test_autograd(self):
+    @pytest.mark.parametrize(
+        'system,rtol,atol',
+        [(grad_leaky_cavity_8, 1e-3, 1e-5), (grad_damped_tdqubit, 1e-2, 1e-3)],
+    )
+    def test_autograd(self, system, rtol, atol):
         solver = Rouchon2(dt=1e-3)
         self._test_gradient(
-            grad_leaky_cavity_8,
-            solver,
-            Autograd(),
-            num_tsave=11,
+            system, solver, Autograd(), num_tsave=11, rtol=rtol, atol=atol
         )
 
-    def test_td_autograd(self):
+    @pytest.mark.parametrize(
+        'system,rtol,atol',
+        [(grad_leaky_cavity_8, 1e-2, 1e-5), (grad_damped_tdqubit, 1e-2, 1e-3)],
+    )
+    def test_adjoint(self, system, rtol, atol):
         solver = Rouchon2(dt=1e-3)
+        gradient = Adjoint(params=system.params)
         self._test_gradient(
-            grad_damped_tdqubit, solver, Autograd(), num_tsave=11, rtol=1e-2, atol=1e-3
-        )
-
-    def test_adjoint(self):
-        solver = Rouchon2(dt=1e-3)
-        gradient = Adjoint(params=grad_leaky_cavity_8.params)
-        self._test_gradient(
-            grad_leaky_cavity_8,
-            solver,
-            gradient,
-            num_tsave=11,
-            atol=1e-4,
-        )
-
-    def test_td_adjoint(self):
-        solver = Rouchon2(dt=1e-3)
-        gradient = Adjoint(params=grad_damped_tdqubit.params)
-        self._test_gradient(
-            grad_damped_tdqubit, solver, gradient, num_tsave=11, rtol=1e-2, atol=1e-3
+            system, solver, gradient, num_tsave=11, rtol=rtol, atol=atol
         )
