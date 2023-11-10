@@ -1,6 +1,6 @@
 # GPU simulations
 
-This tutorial demonstrates how to leverage GPUs to accelerate the simulation of quantum systems with dynamiqs. By directing our simulations to run on the GPU, we can significantly enhance the computational efficiency, especially for large-dimensional quantum systems.
+This tutorial demonstrates how to leverage GPUs to accelerate the simulation of quantum systems with dynamiqs. By directing our simulations to run on the GPU, we can significantly enhance the computational efficiency, especially for large-dimensional or batched quantum systems.
 
 ```python
 import torch
