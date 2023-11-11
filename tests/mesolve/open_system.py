@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import cos, exp, pi, sin, sqrt
+from math import cos, exp, pi, sin
 from typing import Any
 
 import torch
@@ -83,7 +83,7 @@ class OCavity(OpenSystem):
         self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
         self.jump_ops = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
-        self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
+        self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent_dm(self.n, self.alpha0)
@@ -98,37 +98,34 @@ class OCavity(OpenSystem):
         return torch.linspace(0.0, self.t_end.item(), n)
 
     def _alpha(self, t: float) -> Tensor:
-        return (
-            self.alpha0
-            * torch.exp(-1j * self.delta * t)
-            * torch.exp(-0.5 * self.kappa * t)
-        )
+        return self.alpha0 * torch.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
 
     def state(self, t: float) -> Tensor:
         return dq.coherent_dm(self.n, self._alpha(t))
 
     def expect(self, t: float) -> Tensor:
         alpha_t = self._alpha(t)
-        exp_x = sqrt(2) * alpha_t.real
-        exp_p = sqrt(2) * alpha_t.imag
+        exp_x = alpha_t.real
+        exp_p = alpha_t.imag
         return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
 
     def grads_state(self, t: float) -> Tensor:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
-        grad_kappa = self.alpha0**2 * -t * exp(-self.kappa * t)
+        grad_kappa = -self.alpha0**2 * t * exp(-self.kappa * t)
         return torch.tensor([grad_delta, grad_alpha0, grad_kappa]).detach()
 
-    # flake8: noqa: E501 line too long
     def grads_expect(self, t: float) -> Tensor:
-        # fmt: off
-        grad_x_delta = sqrt(2) * self.alpha0 * -t * sin(-self.delta * t) * exp(-0.5 * self.kappa * t)
-        grad_p_delta = sqrt(2) * self.alpha0 * -t * cos(-self.delta * t) * exp(-0.5 * self.kappa * t)
-        grad_x_alpha0 = sqrt(2) * cos(-self.delta * t) * exp(-0.5 * self.kappa * t)
-        grad_p_alpha0 = sqrt(2) * sin(-self.delta * t) * exp(-0.5 * self.kappa * t)
-        grad_x_kappa = sqrt(2) * self.alpha0 * cos(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
-        grad_p_kappa = sqrt(2) * self.alpha0 * sin(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
-        # fmt: on
+        cdt = cos(self.delta * t)
+        sdt = sin(self.delta * t)
+        emkt = exp(-0.5 * self.kappa * t)
+
+        grad_x_delta = -self.alpha0 * t * sdt * emkt
+        grad_p_delta = -self.alpha0 * t * cdt * emkt
+        grad_x_alpha0 = cdt * emkt
+        grad_p_alpha0 = -sdt * emkt
+        grad_x_kappa = -0.5 * self.alpha0 * t * cdt * emkt
+        grad_p_kappa = 0.5 * self.alpha0 * t * sdt * emkt
 
         return torch.tensor([
             [grad_x_delta, grad_x_alpha0, grad_x_kappa],
@@ -240,9 +237,12 @@ class OTDQubit(OpenSystem):
         ]).detach()
 
 
-ocavity = OCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0)
+# we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
+# gradients
+Hz = 2 * pi
+ocavity = OCavity(n=8, kappa=1.0 * Hz, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
 gocavity = OCavity(
-    n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0, t_end=1.0, requires_grad=True
+    n=8, kappa=1.0 * Hz, delta=1.0 * Hz, alpha0=0.5, t_end=0.3, requires_grad=True
 )
 
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0)
