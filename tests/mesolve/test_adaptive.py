@@ -1,7 +1,6 @@
 import pytest
-from sympy import Adjoint
 
-from dynamiqs.gradient import Autograd
+from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Dopri5
 
 from ..solver_tester import SolverTester
