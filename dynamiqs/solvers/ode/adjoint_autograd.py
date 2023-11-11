@@ -66,7 +66,7 @@ class AdjointFixedAutograd(torch.autograd.Function):
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration.
             tstop_bwd = (-solver.tstop).flip(dims=(0,))
-            if tstop_bwd[-1] != 0.0:
+            if tstop_bwd[-1] != solver.t0:
                 tstop_bwd = torch.cat((tstop_bwd, torch.zeros(1).to(tstop_bwd)))
             t0 = tstop_bwd[0].item()
 
