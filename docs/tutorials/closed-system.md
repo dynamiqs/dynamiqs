@@ -2,8 +2,6 @@
 
 This tutorial introduces the quantum state for a closed quantum system, describes its evolution with the Schrödinger equation, and explains two common numerical methods to simulate the evolution: computing the propagator or solving the ODE iteratively.
 
-***
-
 ## The quantum state
 
 The quantum state that describes a closed quantum system is a **state vector** $\ket\psi$, i.e. a column vector of size $n$[^1]:
@@ -102,10 +100,10 @@ tsave = np.linspace(0, 1.0, 11)   # saving times
 res = dq.sesolve(H, psi0, tsave)  # run the simulation
 ```
 
-```python
+```pycon
 >>> res.states[-1]                # print the final state
 tensor([[0.540+0.841j],
         [0.000+0.000j]])
 ```
 
-If you want to know more about the available solvers or the different options, head to the [sesolve()](../python_api/solvers/sesolve.md) API documentation.
+If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`](../python_api/solvers/sesolve.md) API documentation.

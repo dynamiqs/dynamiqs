@@ -16,8 +16,6 @@ import matplotlib.pyplot as plt
 from math import sqrt
 ```
 
-***
-
 ## 1. Define the system
 
 After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using [NumPy](https://numpy.org/) arrays, [QuTiP](http://qutip.org/) objects, or [PyTorch](https://pytorch.org/) tensors.
@@ -54,7 +52,7 @@ We also need to specify the solver and options related to it, namely the method 
 ```python
 # define sampling times
 sim_time = 10.0  # total time of evolution
-num_save = 100  # number of time slots to save
+num_save = 101  # number of time slots to save
 tsave = torch.linspace(0.0, sim_time, num_save)  # (can also be a list or a numpy.array)
 
 # define list of observables
@@ -72,7 +70,7 @@ options = {
 
 ## 3. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve`](../python_api/solvers/sesolve.md) function, which returns an instance of the [`Result`](../python_api/index.md) class. This object contains the computed states, the observables, and various information about the solver. It also features utility methods to convert result Tensors to NumPy arrays or QuTiP objects.
+We can now run the simulation. This is done by calling the [`dq.sesolve()`](../python_api/solvers/sesolve.md) function, which returns an instance of the [`Result`](../python_api/index.md) class. This object contains the computed states, the observables, and various information about the solver. It also features utility methods to convert result Tensors to NumPy arrays or QuTiP objects.
 
 ```python
 # run simulation
@@ -120,9 +118,9 @@ plt.ylabel(r'$\langle \sigma_z \rangle$')
 plt.xlim(0, 10)
 plt.ylim(-1, 1)
 plt.legend(('Analytical', 'dynamiqs'))
-render('workflow')
+renderfig('workflow')
 ```
 
-![workflow](/figs-docs/workflow.png){.center .full-width}
+![workflow](/figs-docs/workflow.png){.fig}
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.
