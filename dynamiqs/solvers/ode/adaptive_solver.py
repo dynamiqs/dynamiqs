@@ -1,21 +1,20 @@
 from __future__ import annotations
 
 import functools
-import warnings
 from abc import abstractmethod
+from typing import Any
 
 import torch
 from torch import Tensor
-from tqdm.std import TqdmWarning
 
-from ..solver import AdjointSolver, AutogradSolver
-from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like, tqdm
+from ..solver import AdjointSolver
+from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like
 from .adjoint_autograd import AdjointAutograd
+from .ode_solver import ODESolver
 
 
-class AdaptiveSolver(AutogradSolver):
-    """Integrate an ODE of the form $dy / dt = f(y, t)$ in forward time with initial
-    condition $y(t_0)$ using an adaptive step-size integrator.
+class AdaptiveSolver(ODESolver):
+    """Adaptive step-size ODE integrator.
 
     For details about the integration method, see Chapter II.4 of [1].
 
@@ -26,11 +25,15 @@ class AdaptiveSolver(AutogradSolver):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # initialize the progress bar
-        self.pbar = tqdm(total=self.tstop[-1], disable=not self.options.verbose)
-
         # initialize the step counter
         self.step_counter = 0
+
+    def init_forward(self) -> tuple:
+        # initial values of the ODE routine
+        f0 = self.odefun(self.t0, self.y0)
+        dt0 = self.init_tstep(self.t0, self.y0, f0, self.odefun)
+        error0 = 1.0
+        return self.t0, self.y0, f0, dt0, error0
 
     @property
     @abstractmethod
@@ -54,33 +57,9 @@ class AdaptiveSolver(AutogradSolver):
         """Compute a single step of the ODE integration."""
         pass
 
-    def run_autograd(self):
-        """Integrates the ODE forward from time `self.t0` to time `self.tstop[-1]`
-        starting from initial state `self.y0`, and save the state for each time in
-        `self.tstop`."""
+    def integrate(self, t0: float, t1: float, y: Tensor, *args: Any) -> tuple:
+        ft, dt, error = args
 
-        # initialize the ODE routine
-        f0 = self.odefun(self.t0, self.y0)
-        dt = self.init_tstep(self.t0, self.y0, f0, self.odefun)
-        error = 1.0
-
-        # run the ODE routine
-        t, y, ft = self.t0, self.y0, f0
-        for tnext in self.tstop:
-            y, ft, dt, error = self.integrate(t, tnext, y, ft, dt, error)
-            self.save(y)
-            t = tnext
-
-        # close the progress bar
-        with warnings.catch_warnings():  # ignore tqdm precision overflow
-            warnings.simplefilter('ignore', TqdmWarning)
-            self.pbar.close()
-
-    def integrate(
-        self, t0: float, t1: float, y: Tensor, ft: Tensor, dt: float, error: float
-    ) -> tuple[Tensor, Tensor, float, float]:
-        """Integrates the ODE forward from time `t0` to time `t1` with initial state
-        `y`."""
         cache = (dt, error)
         t = t0
         while t < t1:

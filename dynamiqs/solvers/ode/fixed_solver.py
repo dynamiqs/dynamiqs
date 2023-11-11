@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import warnings
 from abc import abstractmethod
+from typing import Any
 
 import numpy as np
 import torch
 from torch import Tensor
-from tqdm.std import TqdmWarning
 
-from ..solver import AdjointSolver, AutogradSolver
-from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
+from ..solver import AdjointSolver
+from ..utils.utils import add_tuples, none_to_zeros_like
 from .adjoint_autograd import AdjointAutograd
+from .ode_solver import ODESolver
 
 
 def _assert_multiple_of_dt(dt: float, times: np.array, name: str):
@@ -25,9 +25,8 @@ def _assert_multiple_of_dt(dt: float, times: np.array, name: str):
         )
 
 
-class FixedSolver(AutogradSolver):
-    """Integrate an ODE of the form $dy / dt = f(y, t)$ in forward time with initial
-    condition $y(t_0)$ using a fixed step-size integrator."""
+class FixedSolver(ODESolver):
+    """Fixed step-size ODE integrator."""
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -38,36 +37,12 @@ class FixedSolver(AutogradSolver):
         _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
         _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
 
-        # initialize the progress bar
-        self.pbar = tqdm(total=self.tstop[-1], disable=not self.options.verbose)
-
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Returns $y(t+dt)$."""
         pass
 
-    def run_autograd(self):
-        """Integrates the ODE forward from time `self.t0` to time `self.tstop[-1]`
-        starting from initial state `self.y0`, and save the state for each time in
-        `self.tstop`."""
-
-        # initialize time and state
-        t, y = self.t0, self.y0
-
-        # run the ODE routine
-        for tnext in self.tstop:
-            y = self.integrate(t, tnext, y)
-            self.save(y)
-            t = tnext
-
-        # close the progress bar
-        with warnings.catch_warnings():  # ignore tqdm precision overflow
-            warnings.simplefilter('ignore', TqdmWarning)
-            self.pbar.close()
-
-    def integrate(self, t0: float, t1: float, y: Tensor) -> Tensor:
-        """Integrates the ODE forward from time `t0` to time `t1` with initial state
-        `y`."""
+    def integrate(self, t0: float, t1: float, y: Tensor, *args: Any) -> tuple:
         # define time values
         ntimes = int(round((t1 - t0) / self.dt)) + 1
         times = np.linspace(t0, t1, ntimes)
@@ -83,7 +58,7 @@ class FixedSolver(AutogradSolver):
             y = self.forward(t, y)
             self.pbar.update(self.dt)
 
-        return y
+        return (y,)
 
 
 class AdjointFixedSolver(FixedSolver, AdjointSolver):
