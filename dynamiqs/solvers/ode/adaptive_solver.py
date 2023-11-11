@@ -63,10 +63,10 @@ class AdaptiveSolver(AutogradSolver):
 
         # run the ODE routine
         t, y, ft = self.t0, self.y0, f0
-        for ts in self.tstop.cpu().numpy():
-            y, ft, dt, error = self.integrate(t, ts, y, ft, dt, error)
+        for tnext in self.tstop.cpu().numpy():
+            y, ft, dt, error = self.integrate(t, tnext, y, ft, dt, error)
             self.save(y)
-            t = ts
+            t = tnext
 
         # close the progress bar
         with warnings.catch_warnings():  # ignore tqdm precision overflow

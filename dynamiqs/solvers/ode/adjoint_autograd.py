@@ -82,8 +82,8 @@ class AdjointAutograd(torch.autograd.Function):
 
             # integrate the augmented equation backward between every saved state
             t = t0
-            for i, ts in enumerate(tstop_bwd.cpu().numpy()[1:]):
-                y, a, g, *args = solver.integrate_augmented(t, ts, y, a, g, *args)
+            for i, tnext in enumerate(tstop_bwd[1:]):
+                y, a, g, *args = solver.integrate_augmented(t, tnext, y, a, g, *args)
 
                 if solver.options.save_states and (i < len(tstop_bwd) - 2 or saved_ini):
                     # replace y with its checkpointed version
@@ -98,7 +98,7 @@ class AdjointAutograd(torch.autograd.Function):
                     ).sum(dim=-3)
 
                 # iterate time
-                t = ts
+                t = tnext
 
         # close progress bar
         with warnings.catch_warnings():  # ignore tqdm precision overflow

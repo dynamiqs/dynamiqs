@@ -66,10 +66,10 @@ class FixedSolver(AutogradSolver):
         t, y = self.t0, self.y0
 
         # run the ODE routine
-        for ts in self.tstop.cpu().numpy():
-            y = self.integrate(t, ts, y)
+        for tnext in self.tstop.cpu().numpy():
+            y = self.integrate(t, tnext, y)
             self.save(y)
-            t = ts
+            t = tnext
 
         # close the progress bar
         with warnings.catch_warnings():  # ignore tqdm precision overflow
