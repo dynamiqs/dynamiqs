@@ -106,7 +106,7 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
 
             with torch.enable_grad():
                 # compute y(t-dt) and a(t-dt)
-                y, a = self.backward_augmented(t, y, a)
+                y, a = self.backward_augmented(-t, y, a)
 
                 # compute g(t-dt)
                 dg = torch.autograd.grad(

@@ -175,8 +175,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
         self, t0: float, y: Tensor, a: Tensor
     ) -> tuple[Tensor, Tensor, float, float]:
         f0, l0 = self.odefun_augmented(t0, y, a)
-        dt_y = self.init_tstep(t0, y, f0, self.odefun_backward)
-        dt_a = self.init_tstep(t0, a, l0, self.odefun_adjoint)
+        dt_y = self.init_tstep(-t0, y, f0, self.odefun_backward)
+        dt_a = self.init_tstep(-t0, a, l0, self.odefun_adjoint)
         dt = min(dt_y, dt_a)
         error = 1.0
         return f0, l0, dt, error
@@ -208,8 +208,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                ft_new, y_new, y_err = self.step(t, y, ft, dt, self.odefun_backward)
-                lt_new, a_new, a_err = self.step(t, a, lt, dt, self.odefun_adjoint)
+                ft_new, y_new, y_err = self.step(-t, y, ft, dt, self.odefun_backward)
+                lt_new, a_new, a_err = self.step(-t, a, lt, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
                 error_a = self.get_error(a_err, a, a_new)
