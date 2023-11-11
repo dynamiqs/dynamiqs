@@ -41,6 +41,11 @@ $$
 $$
 \nabla_\theta l(t) =
 \begin{pmatrix}
+    \frac{\partial l(t)}{\partial \Delta} \\
+    \frac{\partial l(t)}{\partial \alpha_0} \\
+    \frac{\partial l(t)}{\partial \kappa}
+\end{pmatrix} =
+\begin{pmatrix}
   0.0 \\
   2 \alpha_0 e^{-\kappa t} \\
   -\alpha_0^2 t e^{-\kappa t}
@@ -53,11 +58,21 @@ $$
 \begin{aligned}
     \nabla_\theta \braket{O^{(1)}}(t) &=
     \begin{pmatrix}
+        \frac{\partial \braket{O^{(1)}}(t)}{\partial \Delta} \\
+        \frac{\partial \braket{O^{(1)}}(t)}{\partial \alpha_0} \\
+        \frac{\partial \braket{O^{(1)}}(t)}{\partial \kappa}
+    \end{pmatrix} =
+    \begin{pmatrix}
         -\alpha_0 t \sin(\Delta t) e^{-\kappa t/2} \\
         \cos(\Delta t) e^{-\kappa t/2} \\
         - \frac12 \alpha_0 t \cos(\Delta t) e^{-\kappa t/2}
     \end{pmatrix} \\
     \nabla_\theta \braket{O^{(2)}}(t) &=
+    \begin{pmatrix}
+        \frac{\partial \braket{O^{(2)}}(t)}{\partial \Delta} \\
+        \frac{\partial \braket{O^{(2)}}(t)}{\partial \alpha_0} \\
+        \frac{\partial \braket{O^{(2)}}(t)}{\partial \kappa}
+    \end{pmatrix} =
     \begin{pmatrix}
         -\alpha_0 t \cos(\Delta t) e^{-\kappa t/2} \\
         -\sin(\Delta t) e^{-\kappa t/2} \\
