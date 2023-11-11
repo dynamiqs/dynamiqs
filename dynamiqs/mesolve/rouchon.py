@@ -90,7 +90,7 @@ class MERouchon1(MERouchon):
         r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1.
 
         Args:
-            t: Time.
+            t: Time (negative-valued).
             rho: Density matrix of shape `(b_H, b_rho, n, n)`.
             phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
 
@@ -101,7 +101,8 @@ class MERouchon1(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        H = self.H(t)
+        # t is passed in as negative time
+        H = self.H(-t)
         Hnh = self.Hnh(H)
 
         # === reverse time
@@ -182,7 +183,7 @@ class MERouchon2(MERouchon):
             \dot{H}`.
 
         Args:
-            t: Time.
+            t: Time (negative-valued).
             rho: Density matrix of shape `(b_H, b_rho, n, n)`.
             phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
 
@@ -193,7 +194,8 @@ class MERouchon2(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        H = self.H(t)
+        # t is passed in as negative time
+        H = self.H(-t)
         Hnh = self.Hnh(H)
 
         # === reverse time

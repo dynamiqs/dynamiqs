@@ -22,7 +22,6 @@ class AdjointFixedAutograd(torch.autograd.Function):
         """Forward pass of the ODE integrator."""
         # save into context for backward pass
         ctx.solver = solver
-        ctx.tstop = solver.tstop
 
         # integrate the ODE forward without storing the graph of operations
         solver.run_nograd()
@@ -48,59 +47,57 @@ class AdjointFixedAutograd(torch.autograd.Function):
         """
         # unpack context
         solver = ctx.solver
-        tstop = ctx.tstop
         ysave = ctx.saved_tensors[0]
-
-        # initialize time list
-        tstop = tstop
-        if tstop[0] != 0.0:
-            tstop = torch.cat((torch.zeros(1), tstop))
 
         # locally disable gradient computation
         with torch.no_grad():
             # initialize state, adjoint and gradients
             if solver.options.save_states:
-                solver.y_bwd = ysave[..., -1, :, :]
-                solver.a_bwd = grad_y[0][..., -1, :, :]
+                y = ysave[..., -1, :, :]
+                a = grad_y[0][..., -1, :, :]
             else:
-                solver.y_bwd = ysave[..., :, :]
-                solver.a_bwd = grad_y[0][..., :, :]
+                y = ysave[..., :, :]
+                a = grad_y[0][..., :, :]
             if len(solver.exp_ops) > 0:
-                solver.a_bwd += (
-                    grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH
-                ).sum(dim=-3)
+                a += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH).sum(dim=-3)
 
-            solver.g_bwd = tuple(
-                torch.zeros_like(_p).to(solver.y_bwd) for _p in solver.options.params
-            )
+            g = tuple(torch.zeros_like(p).to(y) for p in solver.options.params)
 
-            # solve the augmented equation backward between every checkpoint
-            for i in tqdm(
-                range(len(tstop) - 1, 0, -1), disable=not solver.options.verbose
-            ):
-                # initialize time between both checkpoints
-                solver.tstop_bwd = tstop[i - 1 : i + 1]
+            # initialize time: time is negative-valued and sorted ascendingly during
+            # backward integration.
+            tstop_bwd = (-solver.tstop).flip(dims=(0,))
+            if tstop_bwd[-1] != 0.0:
+                tstop_bwd = torch.cat((tstop_bwd, torch.zeros(1).to(tstop_bwd)))
+            t0 = tstop_bwd[0].item()
 
-                # run odeint on augmented state
-                solver.run_augmented()
+            # initialize progress bar
+            solver.pbar = tqdm(total=-t0, disable=not solver.options.verbose)
+
+            # integrate the augmented equation backward between every saved state
+            t = t0
+            for i, ts in enumerate(tstop_bwd.cpu().numpy()[1:]):
+                y, a, g = solver.integrate_augmented(t, ts, y, a, g)
 
                 if solver.options.save_states:
                     # replace y with its checkpointed version
-                    solver.y_bwd = ysave[..., i - 1, :, :]
+                    y = ysave[..., -i - 2, :, :]
                     # update adjoint wrt this time point by adding dL / dy(t)
-                    solver.a_bwd += grad_y[0][..., i - 1, :, :]
+                    a += grad_y[0][..., -i - 2, :, :]
 
                 # update adjoint wrt this time point by adding dL / de(t)
                 if len(solver.exp_ops) > 0:
-                    solver.a_bwd += (
-                        grad_y[1][..., :, i - 1, None, None] * solver.exp_ops.mH
+                    a += (
+                        grad_y[1][..., :, -i - 2, None, None] * solver.exp_ops.mH
                     ).sum(dim=-3)
 
+                # iterate time
+                t = ts
+
         # convert gradients of real-valued parameters to real-valued gradients
-        solver.g_bwd = tuple(
+        g = tuple(
             _g.real if _p.is_floating_point() else _g
-            for (_g, _p) in zip(solver.g_bwd, solver.options.params)
+            for (_g, _p) in zip(g, solver.options.params)
         )
 
         # return the computed gradients w.r.t. each argument in `forward`
-        return None, solver.a_bwd, *solver.g_bwd
+        return None, a, *g
