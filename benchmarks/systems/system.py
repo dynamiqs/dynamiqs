@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from abc import ABC
 
+import torch
+
 
 class System(ABC):
     pass
@@ -22,6 +24,7 @@ class OpenSystem(ClosedSystem):
     def __init__(self):
         super().__init__()
         self.jump_ops = None
+        self.jump_ops_batched = None
 
     def to(self, dtype: torch.dtype, device: torch.device):
         super().to(dtype=dtype, device=device)

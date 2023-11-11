@@ -214,4 +214,4 @@ def slindbladian(H: Tensor, L: Tensor) -> Tensor:
     Returns:
         _(..., n^2, n^2)_ Lindbladian superoperator.
     """
-    return -1j * (spre(H) - spost(H)) + sdissipator(L).sum(-3)
+    return -1j * (spre(H) - spost(H)) + sdissipator(L).sum(0)

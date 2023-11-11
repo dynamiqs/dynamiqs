@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any
 
 import torch
 from torch import Tensor
 
 import dynamiqs as dq
-from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
-from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike
 
 
 class System(ABC):

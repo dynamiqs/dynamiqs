@@ -100,6 +100,10 @@ class LeakyCavity(OpenSystem):
         self.H = self.delta * adag @ a
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
         self.jump_ops = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
+        self.jump_ops_batched = [
+            L.repeat(4, 1, 1) * torch.linspace(1, 4, 4)[:, None, None]
+            for L in self.jump_ops
+        ]
         self.exp_ops = [(a + adag) / sqrt(2), 1j * (adag - a) / sqrt(2)]
 
         # prepare initial states
@@ -148,12 +152,10 @@ class LeakyCavity(OpenSystem):
         grad_p_kappa = sqrt(2) * self.alpha0 * sin(-self.delta * t) * -0.5 * t * exp(-0.5 * self.kappa * t)
         # fmt: on
 
-        return torch.tensor(
-            [
-                [grad_x_delta, grad_x_alpha0, grad_x_kappa],
-                [grad_p_delta, grad_p_alpha0, grad_p_kappa],
-            ]
-        ).detach()
+        return torch.tensor([
+            [grad_x_delta, grad_x_alpha0, grad_x_kappa],
+            [grad_p_delta, grad_p_alpha0, grad_p_kappa],
+        ]).detach()
 
 
 leaky_cavity_8 = LeakyCavity(n=8, kappa=2 * pi, delta=2 * pi, alpha0=1.0)

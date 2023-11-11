@@ -9,7 +9,7 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Rouchon1, Rouchon2, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_y0, to_td_tensor
+from ..solvers.utils import batch_H, batch_jump_ops, batch_y0, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import isket, todm
 from .adaptive import MEDormandPrince5
@@ -168,18 +168,19 @@ def mesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, n, n)
-    # rho0: (b_H, b_rho0, n, n)
+    # H: (b_H, 1, 1, n, n)
+    # jump_ops: (1, b_jump_ops, 1, n, n)
+    # rho0: (b_H, b_jump_ops, b_rho0, n, n)
     # exp_ops: (len(exp_ops), n, n)
-    # jump_ops: (len(jump_ops), n, n)
     H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
+    jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H)
-    rho0 = batch_y0(rho0, H)
+    jump_ops = batch_jump_ops(jump_ops)
+    rho0 = batch_y0(rho0, H, jump_ops)
     if isket(rho0):
         rho0 = todm(rho0)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
-    jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
     # convert tsave to a tensor
     tsave = to_tensor(tsave, dtype=options.rdtype, device=options.device)
@@ -194,8 +195,8 @@ def mesolve(
 
     # get saved tensors and restore correct batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1)
+        result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1)
+        result.exp_save = result.exp_save.squeeze(0, 1, 2)
 
     return result

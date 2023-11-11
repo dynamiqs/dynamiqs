@@ -138,6 +138,7 @@ class OpenSolverTester(SolverTester):
         m, n = system._state_shape
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)
+        b_jump_ops = system.jump_ops_batched[0].shape[0]
         b_y0 = len(system.y0_batched)
         num_tsave = 11
         tsave = system.tsave(num_tsave)
@@ -156,12 +157,31 @@ class OpenSolverTester(SolverTester):
         assert result.ysave.shape == (b_H, num_tsave, m, n)
         assert result.exp_save.shape == (b_H, n_exp_ops, num_tsave)
 
+        # batched jump_ops
+        result = run(system.H, system.jump_ops_batched, system.y0)
+        assert result.ysave.shape == (b_jump_ops, num_tsave, m, n)
+        assert result.exp_save.shape == (b_jump_ops, n_exp_ops, num_tsave)
+
         # batched y0
         result = run(system.H, system.jump_ops, system.y0_batched)
         assert result.ysave.shape == (b_y0, num_tsave, m, n)
         assert result.exp_save.shape == (b_y0, n_exp_ops, num_tsave)
 
+        # batched H and jump_ops
+        result = run(system.H_batched, system.jump_ops_batched, system.y0)
+        assert result.ysave.shape == (b_H, b_jump_ops, num_tsave, m, n)
+        assert result.exp_save.shape == (b_H, b_jump_ops, n_exp_ops, num_tsave)
+
         # batched H and y0
         result = run(system.H_batched, system.jump_ops, system.y0_batched)
         assert result.ysave.shape == (b_H, b_y0, num_tsave, m, n)
         assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, num_tsave)
+
+        # batched jump_ops and y0
+        result = run(system.H, system.jump_ops_batched, system.y0_batched)
+        assert result.ysave.shape == (b_jump_ops, b_y0, num_tsave, m, n)
+        assert result.exp_save.shape == (b_jump_ops, b_y0, n_exp_ops, num_tsave)
+
+        # batched H and jump_ops
+        result = run(system.H_batched, system.jump_ops_batched, system.y0_batched)
+        assert result.ysave.shape == (b_H, b_jump_ops, b_y0, num_tsave, m, n)

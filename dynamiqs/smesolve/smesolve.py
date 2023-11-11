@@ -217,10 +217,10 @@ def smesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, 1, n, n)
-    # rho0: (b_H, b_rho0, ntrajs, n, n)
+    # H: (b_H, 1, 1, 1, n, n)
+    # rho0: (b_H, b_jump_ops, b_rho0, ntrajs, n, n)
     # exp_ops: (len(exp_ops), n, n)
-    # jump_ops: (len(jump_ops), n, n)
+    # jump_ops: (len(jump_ops), b_jump_ops, n, n)
     H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H).unsqueeze(2)
@@ -277,10 +277,10 @@ def smesolve(
 
     # get saved tensors and restore correct batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1)
+        result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1)
+        result.exp_save = result.exp_save.squeeze(0, 1, 2)
     if result.meas_save is not None:
-        result.meas_save = result.meas_save.squeeze(0, 1)
+        result.meas_save = result.meas_save.squeeze(0, 1, 2)
 
     return result
