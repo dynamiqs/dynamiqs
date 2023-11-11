@@ -20,6 +20,14 @@ __all__ = [
 def operator_to_vector(x: Tensor) -> Tensor:
     r"""Returns the vectorized version of an operator.
 
+    The vectorized column vector $\kett{A}$ (shape $n^2\times 1$) is obtained by
+    stacking the columns of the matrix $A$ (shape $n\times n$) on top of one another:
+    $$
+        A = \begin{pmatrix} a & b \\\\ c & d \end{pmatrix}
+        \to
+        \kett{A} = \begin{pmatrix} a \\\\ c \\\\ b \\\\ d \end{pmatrix}.
+    $$
+
     Args:
         x _(..., n, n)_: Operator.
 
@@ -27,41 +35,62 @@ def operator_to_vector(x: Tensor) -> Tensor:
         _(..., n^2, 1)_ Vectorized operator.
 
     Examples:
-        >>> dq.destroy(3)
-        tensor([[0.000+0.j, 1.000+0.j, 0.000+0.j],
-                [0.000+0.j, 0.000+0.j, 1.414+0.j],
-                [0.000+0.j, 0.000+0.j, 0.000+0.j]])
-        >>> dq.operator_to_vector(dq.destroy(3))
-        tensor([[0.000+0.j],
-                [1.000+0.j],
-                [0.000+0.j],
-                [0.000+0.j],
-                [0.000+0.j],
-                [1.414+0.j],
-                [0.000+0.j],
-                [0.000+0.j],
-                [0.000+0.j]])
+        >>> A = torch.tensor([[1, 2], [3, 4]])
+        >>> A
+        tensor([[1, 2],
+                [3, 4]])
+        >>> dq.operator_to_vector(A)
+        tensor([[1],
+                [3],
+                [2],
+                [4]])
     """
     batch_sizes = x.shape[:-2]
-    return x.view(*batch_sizes, -1, 1)
+    return x.mT.reshape(*batch_sizes, -1, 1)
 
 
 def vector_to_operator(x: Tensor) -> Tensor:
     r"""Returns the operator version of a vectorized operator.
+
+    The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
+    each other each group of $n$ elements of the vectorized column vector $\kett{A}$
+    (shape $n^2\times 1$):
+    $$
+        \kett{A} = \begin{pmatrix} a \\\\ b \\\\ c \\\\ d \end{pmatrix}
+        \to
+        A = \begin{pmatrix} a & c \\\\ b & d \end{pmatrix}.
+    $$
 
     Args:
         x _(..., n^2, 1)_: Vectorized operator.
 
     Returns:
         _(..., n, n)_ Operator.
+
+    Examples:
+        >>> Avec = torch.tensor([[1], [2], [3], [4]])
+        >>> Avec
+        tensor([[1],
+                [2],
+                [3],
+                [4]])
+        >>> dq.vector_to_operator(Avec)
+        tensor([[1, 3],
+                [2, 4]])
     """
     batch_sizes = x.shape[:-2]
     n = int(sqrt(x.shape[-2]))
-    return x.view(*batch_sizes, n, n)
+    return x.reshape(*batch_sizes, n, n).mT
 
 
 def spre(x: Tensor) -> Tensor:
     r"""Returns the superoperator formed from pre-multiplication by an operator.
+
+    Pre-multiplication by matrix $A$ is defined by the superoperator
+    $I_n \otimes A$ in vectorized form:
+    $$
+        AX \to (I_n \otimes A) \kett{X}.
+    $$
 
     Args:
         x _(..., n, n)_: Operator.
@@ -80,6 +109,12 @@ def spre(x: Tensor) -> Tensor:
 
 def spost(x: Tensor) -> Tensor:
     r"""Returns the superoperator formed from post-multiplication by an operator.
+
+    Post-multiplication by matrix $A$ is defined by the superoperator
+    $A^\mathrm{T} \otimes I_n$ in vectorized form:
+    $$
+        XA \to (A^\mathrm{T} \otimes I_n) \kett{X}.
+    $$
 
     Args:
         x _(..., n, n)_: Operator.
@@ -101,6 +136,12 @@ def spost(x: Tensor) -> Tensor:
 
 def sprepost(x: Tensor, y: Tensor) -> Tensor:
     r"""Returns the superoperator formed from pre- and post-multiplication by operators.
+
+    Pre-multiplication by matrix $A$ and post-multiplication by matrix $B$ is defined
+    by the superoperator $B^\mathrm{T} \otimes A$ in vectorized form:
+    $$
+        AXB \to (B^\mathrm{T} \otimes A) \kett{X}.
+    $$
 
     Args:
         x _(..., n, n)_: Operator for pre-multiplication.
@@ -125,6 +166,13 @@ def sdissipator(L: Tensor) -> Tensor:
         - \frac{1}{2}\rho L^\dag L.
     $$
 
+    The vectorized form of this superoperator is:
+    $$
+        L^\* \otimes L
+        - \frac{1}{2} (I_n \otimes L^\dag L)
+        - \frac{1}{2} (L^\mathrm{T} L^\* \otimes I_n).
+    $$
+
     Args:
         L _(..., n, n)_: Jump operator (an arbitrary operator).
 
@@ -145,7 +193,16 @@ def slindbladian(H: Tensor, L: Tensor) -> Tensor:
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
-    (see [sdissipator()][dynamiqs.sdissipator]).
+    (see [`dq.sdissipator()`][dynamiqs.sdissipator]).
+
+    The vectorized form of this superoperator is:
+    $$
+        -i (I_n \otimes H) + i (H^\mathrm{T} \otimes I_n) + \sum_{k=1}^N \left(
+            L_k^\* \otimes L_k
+            - \frac{1}{2} (I_n \otimes L_k^\dag L_k)
+            - \frac{1}{2} (L_k^\mathrm{T} L_k^\* \otimes I_n)
+        \right).
+    $$
 
     Notes:
         This superoperator is also sometimes called *Liouvillian*.
@@ -157,4 +214,4 @@ def slindbladian(H: Tensor, L: Tensor) -> Tensor:
     Returns:
         _(..., n^2, n^2)_ Lindbladian superoperator.
     """
-    return 1j * (spre(H) - spost(H)) + sdissipator(L).sum(-3)
+    return -1j * (spre(H) - spost(H)) + sdissipator(L).sum(-3)

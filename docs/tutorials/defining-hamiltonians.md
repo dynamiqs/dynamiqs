@@ -2,8 +2,6 @@
 
 In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently three ways: using array-like objects for constant Hamiltonians, defining a function for time-dependent Hamiltonians, and using a custom list format for piecewise constant Hamiltonians.
 
-***
-
 ## Constant Hamiltonians
 
 A constant Hamiltonian can be defined using **array-like objects**, i.e. Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors. In all cases, the Hamiltonian is then converted internally into a PyTorch tensor for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common Hamiltonians.
@@ -38,7 +36,7 @@ H = dq.sigmaz()
     For example, to compute the **adjoint of an operator** you should use `H.mH` or `H.adjoint()` (PyTorch methods) instead of `H.dag()` (as in QuTiP). Alternatively, you can also use `dq.dag(H)`.
 
     Also, to compute the **product of quantum operators**, one should use the matrix multiplication operator `@` instead of the element-wise multiplication operator `*` (as in QuTiP). For instance:
-    ```python
+    ```pycon
     >>> dq.sigmax() @ dq.sigmax()  # correct
     tensor([[1.+0.j, 0.+0.j],
             [0.+0.j, 1.+0.j]])

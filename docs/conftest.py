@@ -4,7 +4,7 @@ import pytest
 import torch
 from matplotlib import pyplot as plt
 from sybil import Sybil
-from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser
+from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser, SkipParser
 
 import dynamiqs
 
@@ -23,7 +23,7 @@ def mplstyle():
 
 # doctest fixture
 @pytest.fixture()
-def render():
+def renderfig():
     def savefig_docs(figname):
         filename = f'docs/figs-docs/{figname}.png'
         plt.gcf().savefig(filename, bbox_inches='tight', dpi=300)
@@ -36,7 +36,8 @@ pytest_collect_file = Sybil(
     parsers=[
         DocTestDirectiveParser(optionflags=ELLIPSIS),
         PythonCodeBlockParser(),
+        SkipParser(),
     ],
     patterns=['*.md'],
-    fixtures=['render'],
+    fixtures=['renderfig'],
 ).pytest()

@@ -2,8 +2,6 @@
 
 This tutorial introduces the quantum state for an open quantum system, describes its evolution with the Lindblad master equation, and explains three common numerical methods to simulate the evolution: computing the propagator, solving the ODE iteratively or sampling trajectories.
 
-***
-
 ## The quantum state
 
 The quantum state that describes an open quantum system is a **density matrix** $\rho$. It is a positive semi-definite Hermitian matrix with unit trace, of size $n\times n$[^1].
@@ -114,10 +112,10 @@ tsave = np.linspace(0, 1.0, 11)             # saving times
 res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
 ```
 
-```python
+```pycon
 >>> res.states[-1]                          # print the final state
 tensor([[0.368+0.j, 0.000+0.j],
         [0.000+0.j, 0.632+0.j]])
 ```
 
-If you want to know more about the available solvers or the different options, head to the [mesolve()](../python_api/solvers/mesolve.md) API documentation.
+If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`](../python_api/solvers/mesolve.md) API documentation.

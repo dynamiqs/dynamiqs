@@ -16,6 +16,7 @@ class MEEuler(MESolver, AdjointFixedSolver):
     ) -> tuple[Tensor, Tensor]:
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        rho = rho - self.dt * self.lindbladian(t, rho)
-        phi = phi + self.dt * self.adjoint_lindbladian(t, phi)
+        # t is passed in as negative time
+        rho = rho - self.dt * self.lindbladian(-t, rho)
+        phi = phi + self.dt * self.adjoint_lindbladian(-t, phi)
         return rho, phi

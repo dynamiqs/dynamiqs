@@ -28,7 +28,7 @@ def mplstyle():
 
 # doctest fixture
 @pytest.fixture()
-def render():
+def renderfig():
     def savefig_code(figname):
         filename = f'docs/figs-code/{figname}.png'
         plt.gcf().savefig(filename, bbox_inches='tight', dpi=300)
@@ -43,5 +43,5 @@ pytest_collect_file = Sybil(
     ],
     patterns=['*.py'],
     setup=sybil_setup,
-    fixtures=['render'],
+    fixtures=['renderfig'],
 ).pytest()
