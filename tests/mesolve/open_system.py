@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import cos, exp, sin
+from math import cos, exp, pi, sin
 from typing import Any
 
 import torch
@@ -237,8 +237,13 @@ class OTDQubit(OpenSystem):
         ]).detach()
 
 
-ocavity = OCavity(n=8, kappa=1.0, delta=2.0, alpha0=0.5, t_end=1.0)
-gocavity = OCavity(n=8, kappa=1.0, delta=2.0, alpha0=0.5, t_end=1.0, requires_grad=True)
+# we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
+# gradients
+Hz = 2 * pi
+ocavity = OCavity(n=8, kappa=1.0 * Hz, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
+gocavity = OCavity(
+    n=8, kappa=1.0 * Hz, delta=1.0 * Hz, alpha0=0.5, t_end=0.3, requires_grad=True
+)
 
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0)
 gotdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0, requires_grad=True)

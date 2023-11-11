@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import cos, sin
+from math import cos, pi, sin
 from typing import Any
 
 import torch
@@ -197,8 +197,11 @@ class TDQubit(ClosedSystem):
         ]).detach()
 
 
-cavity = Cavity(n=8, delta=2.0, alpha0=0.5, t_end=1.0)
-gcavity = Cavity(n=8, delta=2.0, alpha0=0.5, t_end=1.0, requires_grad=True)
+# we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
+# gradients
+Hz = 2 * pi
+cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
+gcavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3, requires_grad=True)
 
 tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
 gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0, requires_grad=True)
