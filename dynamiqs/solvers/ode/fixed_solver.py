@@ -9,7 +9,7 @@ from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
-from .adjoint_autograd import AdjointFixedAutograd
+from .adjoint_autograd import AdjointAutograd
 
 
 def _assert_multiple_of_dt(dt: float, times: Tensor, name: str):
@@ -28,6 +28,13 @@ class FixedSolver(AutogradSolver):
     def __init__(self, *args):
         super().__init__(*args)
         self.dt = self.options.dt
+        if isinstance(self.dt, Tensor):
+            if self.dt.numel() == 1:
+                self.dt = self.dt.item()
+            else:
+                raise ValueError(
+                    f"`dt` should be a number or a 0-d tensor, but is {self.dt}."
+                )
 
     def run_autograd(self):
         """Integrate a quantum ODE with a fixed time step custom integrator.
@@ -80,7 +87,10 @@ class FixedSolver(AutogradSolver):
 
 class AdjointFixedSolver(FixedSolver, AdjointSolver):
     def run_adjoint(self):
-        AdjointFixedAutograd.apply(self, self.y0, *self.options.params)
+        AdjointAutograd.apply(self, self.y0, *self.options.params)
+
+    def init_augmented(self, t0: float, y: Tensor, a: Tensor) -> tuple:
+        return ()
 
     def integrate_augmented(
         self, t0: float, t1: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]
