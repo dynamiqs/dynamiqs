@@ -104,8 +104,6 @@ class SolverTester(ABC):
         logging.warning(f'grads_state       = {grads_state}')
         logging.warning(f'true_grads_state  = {true_grads_state}')
 
-        assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
-
         # === test gradients depending on final exp_save
         loss_expect = system.loss_expect(result.exp_save[:, -1])
         grads_expect = [
@@ -118,4 +116,5 @@ class SolverTester(ABC):
         logging.warning(f'grads_expect      = {grads_expect}')
         logging.warning(f'true_grads_expect = {true_grads_expect}')
 
+        assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
         assert torch.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)

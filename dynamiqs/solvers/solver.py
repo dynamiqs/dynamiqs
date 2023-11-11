@@ -33,6 +33,7 @@ class Solver(ABC):
             options:
         """
         self.H = H
+        self.t0 = 0.0
         self.y0 = y0
         self.tsave = tsave
         self.tmeas = tmeas
