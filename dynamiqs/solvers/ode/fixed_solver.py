@@ -31,14 +31,8 @@ class FixedSolver(AutogradSolver):
 
     def __init__(self, *args):
         super().__init__(*args)
+
         self.dt = self.options.dt
-        if isinstance(self.dt, Tensor):
-            if self.dt.numel() == 1:
-                self.dt = self.dt.item()
-            else:
-                raise ValueError(
-                    f'`dt` should be a number or a 0-d tensor, but is {self.dt}.'
-                )
 
         # assert that `tsave` and `tmeas` values are multiples of `dt`
         _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
