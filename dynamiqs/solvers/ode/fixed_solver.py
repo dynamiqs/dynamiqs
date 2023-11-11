@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 
 from ..utils.utils import add_tuples, none_to_zeros_like
+from .adjoint_autograd import new_leaf_tensor
 from .ode_solver import AdjointODESolver, ODESolver
 
 
@@ -82,23 +83,25 @@ class AdjointFixedSolver(FixedSolver, AdjointODESolver):
         num_times = round((t1 - t0) / self.dt) + 1
         times = np.linspace(t0, t1, num_times)
 
-        # run the ode routine
+        # run the ODE routine
         for t in times[:-1]:
-            y, a = y.requires_grad_(True), a.requires_grad_(True)
+            # the computation graph attached to `y` and `a` is automatically freed after
+            # next line, because there are no more references to the original tensors
+            # (the old `y` and `a` go out of scope)
+            y, a = new_leaf_tensor(y), new_leaf_tensor(a)
 
             with torch.enable_grad():
                 # compute y(t-dt) and a(t-dt)
                 y, a = self.backward_augmented(-t, y, a)
 
                 # compute g(t-dt)
+                # note: we set `retain_graph=True` to keep tracking operations on
+                # `self.options.params` in the graph
                 dg = torch.autograd.grad(
                     a, self.options.params, y, allow_unused=True, retain_graph=True
                 )
                 dg = none_to_zeros_like(dg, self.options.params)
                 g = add_tuples(g, dg)
-
-            # free the graph of y and a
-            y, a = y.data, a.data
 
             # update progress bar
             self.pbar.update(self.dt)

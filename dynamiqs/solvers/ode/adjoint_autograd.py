@@ -13,6 +13,17 @@ from ..solver import AdjointSolver
 from ..utils.utils import tqdm
 
 
+def new_leaf_tensor(x: Tensor) -> Tensor:
+    """Return a new leaf tensor sharing the same data as `x`."""
+    # create a new tensor `y` sharing the same data as `x` but detached from the graph
+    y = x.detach()
+
+    # start tracking operations on the new tensor `y` (i.e. make it a leaf tensor)
+    y.requires_grad_(True)
+
+    return y
+
+
 class AdjointAutograd(torch.autograd.Function):
     """Class for ODE integration with a custom adjoint method backward pass."""
 

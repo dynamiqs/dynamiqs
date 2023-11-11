@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 
 from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like
+from .adjoint_autograd import new_leaf_tensor
 from .ode_solver import AdjointODESolver, ODESolver
 
 
@@ -187,6 +188,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
         cache = (dt, error)
 
         t = t0
+
+        # run the ODE routine
         while t < t1:
             # update time step
             dt = self.update_tstep(dt, error)
@@ -195,6 +198,16 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
             if t + dt >= t1:
                 cache = (dt, error)
                 dt = t1 - t
+
+            # the computation graph attached to `y` and `a` is automatically freed after
+            # next line, because there are no more references to the original tensors
+            # (the old `y`, `a`, `ft` and `lt` go out of scope)
+            y, a, ft, lt = (
+                new_leaf_tensor(y),
+                new_leaf_tensor(a),
+                new_leaf_tensor(ft),
+                new_leaf_tensor(lt),
+            )
 
             with torch.enable_grad():
                 # perform a single step of size dt
@@ -211,6 +224,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
                     t, y, a, ft, lt = t + dt, y_new, a_new, ft_new, lt_new
 
                     # compute g(t-dt)
+                    # note: we set `retain_graph=True` to keep tracking operations on
+                    # `self.options.params` in the graph
                     dg = torch.autograd.grad(
                         a,
                         self.options.params,
@@ -223,9 +238,6 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
                     # update the progress bar
                     self.pbar.update(dt)
-
-            # free the graph of y and a
-            y, a, ft, lt = y.data, a.data, ft.data, lt.data
 
         dt, error = cache
         return y, a, g, ft, lt, dt, error
