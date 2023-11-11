@@ -8,8 +8,9 @@ import torch
 from torch import Tensor
 from tqdm.std import TqdmWarning
 
-from ..solver import AutogradSolver
-from ..utils.utils import hairer_norm, tqdm
+from ..solver import AdjointSolver, AutogradSolver
+from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like, tqdm
+from .adjoint_autograd import AdjointAdaptiveAutograd
 
 
 class AdaptiveSolver(AutogradSolver):
@@ -166,7 +167,75 @@ class AdaptiveSolver(AutogradSolver):
             )
 
 
-class DormandPrince5(AdaptiveSolver):
+class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
+    def run_adjoint(self):
+        AdjointAdaptiveAutograd.apply(self, self.y0, *self.options.params)
+
+    def integrate_augmented(
+        self,
+        t0: float,
+        t1: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        ft: Tensor,
+        lt: Tensor,
+        dt: float,
+        error: float,
+    ) -> tuple[Tensor, Tensor, tuple[Tensor, ...], Tensor, Tensor, float, float]:
+        """Integrate the augmented ODE from time `t0` to `t1`, with `t0` < `t1` < 0."""
+        cache = (dt, error)
+
+        t = t0
+        while t < t1:
+            # update time step
+            dt = self.update_tstep(dt, error)
+
+            # check for time overflow
+            if t + dt >= t1:
+                cache = (dt, error)
+                dt = t1 - t
+
+            with torch.enable_grad():
+                # perform a single step of size dt
+                ft_new, y_new, y_err = self.step(t, y, ft, dt, self.odefun_backward)
+                lt_new, a_new, a_err = self.step(t, a, lt, dt, self.odefun_adjoint)
+
+                # compute estimated error of this step
+                error_a = self.get_error(a_err, a, a_new)
+                error_y = self.get_error(y_err, y, y_new)
+                error = max(error_a, error_y)
+
+                # update if step is accepted
+                if error <= 1:
+                    t, y, a, ft, lt = t + dt, y_new, a_new, ft_new, lt_new
+
+                    # compute g(t-dt)
+                    dg = torch.autograd.grad(
+                        a,
+                        self.options.params,
+                        y,
+                        allow_unused=True,
+                        retain_graph=True,
+                    )
+                    dg = none_to_zeros_like(dg, self.options.params)
+                    g = add_tuples(g, dg)
+
+                    # update the progress bar
+                    self.pbar.update(dt)
+
+            # free the graph of y and a
+            y, a, ft, lt = y.data, a.data, ft.data, lt.data
+
+        dt, error = cache
+        return y, a, g, ft, lt, dt, error
+
+    @abstractmethod
+    def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
+        pass
+
+
+class DormandPrince5(AdjointAdaptiveSolver):
     """Dormand-Prince method for adaptive time step ODE integration.
 
     This is a fifth order solver that uses a fourth order solution to estimate the
