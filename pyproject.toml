@@ -19,7 +19,7 @@ build-backend = "flit_core.buildapi"
 dev = [
     "taskipy",
     "isort",
-    "black[jupyter]",
+    "black[jupyter]>=23.11",
     "codespell",
     "flake8",
     "pytest",
@@ -42,9 +42,10 @@ skip_gitignore = true
 
 [tool.black]
 preview = true
-target-version = ["py38"]
+target-version = ["py38", "py39", "py310", "py311"]
 skip-string-normalization = true
 jupyter = true
+required-version = "23.11.0"
 
 [tool.codespell]
 skip = ".git,*.ipynb"

@@ -152,7 +152,7 @@ def norm(x: Tensor) -> Tensor:
 def unit(x: Tensor) -> Tensor:
     r"""Normalize a ket, bra or density matrix to unit norm.
 
-    The returned object is divided by its norm (see [norm()][dynamiqs.norm]).
+    The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
 
     Args:
         x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
@@ -355,7 +355,7 @@ def lindbladian(H: Tensor, L: Tensor, rho: Tensor) -> Tensor:
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
-    (see [dissipator()][dynamiqs.dissipator]).
+    (see [`dq.dissipator()`][dynamiqs.dissipator]).
 
     Notes:
         This superoperator is also sometimes called *Liouvillian*.
