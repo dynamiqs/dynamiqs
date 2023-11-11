@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 
+import numpy as np
 import torch
 from torch import Tensor
 from tqdm.std import TqdmWarning
@@ -39,6 +40,13 @@ class FixedSolver(AutogradSolver):
                     f'`dt` should be a number or a 0-d tensor, but is {self.dt}.'
                 )
 
+        # assert that `tsave` and `tmeas` values are multiples of `dt`
+        _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
+        _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
+
+        # initialize the progress bar
+        self.pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
+
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
         """Returns $y(t+dt)$."""
@@ -48,19 +56,6 @@ class FixedSolver(AutogradSolver):
         """Integrates the ODE forward from time `self.t0` to time `self.tstop[-1]`
         starting from initial state `self.y0`, and save the state for each time in
         `self.tstop`."""
-
-        # TODO: The solver times are defined using `torch.linspace` which ensures that
-        # the overall solution is evolved from the user-defined time (up to an error of
-        # `rtol=1e-5`). However, this may induce a small mismatch between the time step
-        # inside `solver` and the time step inside the iteration loop. A small error
-        # can thus buildup throughout the ODE integration.
-
-        # assert that `tsave` and `tmeas` values are multiples of `dt`
-        _assert_multiple_of_dt(self.dt, self.tsave, 'tsave')
-        _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
-
-        # initialize the progress bar
-        self.pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
 
         # initialize time and state
         t, y = self.t0, self.y0
@@ -80,11 +75,17 @@ class FixedSolver(AutogradSolver):
         """Integrates the ODE forward from time `t0` to time `t1` with initial state
         `y`."""
         # define time values
-        num_times = round((t1 - t0) / self.dt) + 1
-        times = torch.linspace(t0, t1, num_times)
+        ntimes = int(round((t1 - t0) / self.dt)) + 1
+        times = np.linspace(t0, t1, ntimes)
+
+        # TODO: The solver times are defined using `torch.linspace` which ensures that
+        # the overall solution is evolved from the user-defined time (up to an error of
+        # `rtol=1e-5`). However, this may induce a small mismatch between the time step
+        # inside `solver` and the time step inside the iteration loop. A small error
+        # can thus buildup throughout the ODE integration.
 
         # run the ODE routine
-        for t in times[:-1].cpu().numpy():
+        for t in times[:-1]:
             y = self.forward(t, y)
             self.pbar.update(self.dt)
 
