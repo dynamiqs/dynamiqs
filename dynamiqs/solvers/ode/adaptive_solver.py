@@ -168,6 +168,17 @@ class AdaptiveSolver(AutogradSolver):
 
 
 class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
+    @abstractmethod
+    def odefun_backward(self, t: float, y: Tensor) -> Tensor:
+        pass
+
+    @abstractmethod
+    def odefun_adjoint(self, t: float, a: Tensor) -> Tensor:
+        pass
+
+    def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
+        return self.odefun_backward(t, y), self.odefun_adjoint(t, a)
+
     def run_adjoint(self):
         AdjointAutograd.apply(self, self.y0, *self.options.params)
 
@@ -239,10 +250,6 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
         dt, error = cache
         return y, a, g, ft, lt, dt, error
-
-    @abstractmethod
-    def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
-        pass
 
 
 class DormandPrince5(AdjointAdaptiveSolver):

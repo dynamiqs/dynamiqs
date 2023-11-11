@@ -19,13 +19,6 @@ class MEAdaptive(MESolver, AdaptiveSolver):
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         return self.adjoint_lindbladian(t, phi)
 
-    def odefun_augmented(
-        self, t: float, rho: Tensor, phi: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        return self.odefun_backward(t, rho), self.odefun_adjoint(t, phi)
-
 
 class MEDormandPrince5(MEAdaptive, DormandPrince5):
     pass
