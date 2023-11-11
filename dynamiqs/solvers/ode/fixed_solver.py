@@ -13,15 +13,15 @@ from ..utils.utils import add_tuples, none_to_zeros_like, tqdm
 from .adjoint_autograd import AdjointAutograd
 
 
-def _assert_multiple_of_dt(dt: float, times: Tensor, name: str):
+def _assert_multiple_of_dt(dt: float, times: np.array, name: str):
     # assert that `times` values are multiples of `dt`
-    is_multiple = torch.isclose(torch.round(times / dt), times / dt)
-    if not torch.all(is_multiple):
-        idx_diff = torch.where(~is_multiple)[0][0].item()
+    is_multiple = np.isclose(np.round(times / dt), times / dt)
+    if not np.all(is_multiple):
+        idx_diff = np.where(~is_multiple)[0][0]
         raise ValueError(
             f'For fixed time step solvers, every value of `{name}` must be a multiple'
             f' of the time step `dt`, but `dt={dt:.3e}` and'
-            f' `{name}[{idx_diff}]={times[idx_diff].item():.3e}`.'
+            f' `{name}[{idx_diff}]={times[idx_diff]:.3e}`.'
         )
 
 
@@ -39,7 +39,7 @@ class FixedSolver(AutogradSolver):
         _assert_multiple_of_dt(self.dt, self.tmeas, 'tmeas')
 
         # initialize the progress bar
-        self.pbar = tqdm(total=self.tstop[-1].item(), disable=not self.options.verbose)
+        self.pbar = tqdm(total=self.tstop[-1], disable=not self.options.verbose)
 
     @abstractmethod
     def forward(self, t: float, y: Tensor) -> Tensor:
@@ -55,7 +55,7 @@ class FixedSolver(AutogradSolver):
         t, y = self.t0, self.y0
 
         # run the ODE routine
-        for tnext in self.tstop.cpu().numpy():
+        for tnext in self.tstop:
             y = self.integrate(t, tnext, y)
             self.save(y)
             t = tnext
@@ -111,10 +111,10 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         `t0` < `t1` < 0) starting from initial state `(y, a)`."""
         # define time values
         num_times = round((t1 - t0) / self.dt) + 1
-        times = torch.linspace(t0, t1, num_times)
+        times = np.linspace(t0, t1, num_times)
 
         # run the ode routine
-        for t in times[:-1].cpu().numpy():
+        for t in times[:-1]:
             y, a = y.requires_grad_(True), a.requires_grad_(True)
 
             with torch.enable_grad():

@@ -231,11 +231,11 @@ def smesolve(
     jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
     # convert tsave to a tensor
-    tsave = to_tensor(tsave, dtype=options.rdtype, device=options.device)
+    tsave = to_tensor(tsave, dtype=options.rdtype, device='cpu')
     check_time_tensor(tsave, arg_name='tsave')
 
     # convert etas to a tensor and check
-    etas = to_tensor(etas, dtype=options.rdtype, device=options.device)
+    etas = to_tensor(etas, dtype=options.rdtype, device='cpu')
     if len(etas) != len(jump_ops):
         raise ValueError(
             'Argument `etas` must have the same length as `jump_ops` of length'

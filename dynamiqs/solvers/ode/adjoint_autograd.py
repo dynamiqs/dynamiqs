@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -68,11 +69,11 @@ class AdjointAutograd(torch.autograd.Function):
 
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration.
-            tstop_bwd = (-solver.tstop).flip(dims=(0,))
+            tstop_bwd = np.flip(-solver.tstop, axis=0)
             saved_ini = tstop_bwd[-1] == solver.t0
             if not saved_ini:
-                tstop_bwd = torch.cat((tstop_bwd, torch.zeros(1).to(tstop_bwd)))
-            t0 = tstop_bwd[0].item()
+                tstop_bwd = np.append(tstop_bwd, 0)
+            t0 = tstop_bwd[0]
 
             # initialize progress bar
             solver.pbar = tqdm(total=-t0, disable=not solver.options.verbose)
