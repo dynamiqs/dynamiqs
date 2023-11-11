@@ -23,6 +23,15 @@ class AdaptiveSolver(AutogradSolver):
         Series in Computational Mathematics.
     """
 
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # initialize the progress bar
+        self.pbar = tqdm(total=self.tstop[-1], disable=not self.options.verbose)
+
+        # initialize the step counter
+        self.step_counter = 0
+
     @property
     @abstractmethod
     def order(self) -> int:
@@ -49,12 +58,6 @@ class AdaptiveSolver(AutogradSolver):
         """Integrates the ODE forward from time `self.t0` to time `self.tstop[-1]`
         starting from initial state `self.y0`, and save the state for each time in
         `self.tstop`."""
-
-        # initialize the progress bar
-        self.pbar = tqdm(total=self.tstop[-1], disable=not self.options.verbose)
-
-        # initialize the step counter
-        self.step_counter = 0
 
         # initialize the ODE routine
         f0 = self.odefun(self.t0, self.y0)
