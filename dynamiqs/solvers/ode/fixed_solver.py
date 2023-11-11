@@ -33,7 +33,7 @@ class FixedSolver(AutogradSolver):
                 self.dt = self.dt.item()
             else:
                 raise ValueError(
-                    f"`dt` should be a number or a 0-d tensor, but is {self.dt}."
+                    f'`dt` should be a number or a 0-d tensor, but is {self.dt}.'
                 )
 
     def run_autograd(self):
