@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.autograd.function import FunctionCtx
+from torch.autograd.function import FunctionCtx, once_differentiable
 from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver
@@ -77,6 +77,7 @@ class AdjointAutograd(torch.autograd.Function):
         return solver.ysave, solver.exp_save
 
     @staticmethod
+    @once_differentiable
     def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:
         """Backward pass of the ODE integrator.
 
