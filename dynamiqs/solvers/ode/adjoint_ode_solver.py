@@ -18,7 +18,7 @@ from .ode_solver import ODESolver
 
 class AdjointODESolver(ODESolver, AdjointSolver):
     """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
-    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
+    $(2) da / dt = fa(a, t)$ in backward time with initial condition $y(t_0)$ using an
     ODE integrator."""
 
     def run_adjoint(self):
