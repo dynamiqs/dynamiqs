@@ -6,7 +6,6 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 from torch import Tensor
 from torch.autograd.function import FunctionCtx, once_differentiable
 from tqdm.std import TqdmWarning
@@ -61,7 +60,7 @@ class AdjointAutograd(torch.autograd.Function):
         ctx: FunctionCtx,
         solver: AdjointSolver,
         y0: Tensor,
-        *params: tuple[nn.Parameter, ...],
+        *params: Tensor,
     ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
         # integrate the ODE forward without storing the computation graph
