@@ -76,7 +76,7 @@ class AdjointAutograd(torch.autograd.Function):
 
     @staticmethod
     @once_differentiable
-    def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:
+    def backward(ctx: FunctionCtx, *grads: Tensor) -> tuple[None, Tensor, Tensor]:
         """Backward pass of the ODE integrator.
 
         An augmented ODE is integrated backwards starting from the final state computed
@@ -92,24 +92,27 @@ class AdjointAutograd(torch.autograd.Function):
         solver = ctx.solver
         ysave = ctx.saved_tensors[0]
 
+        # unpack gradients
+        grad_ysave, grad_exp_save = grads
+
         # locally disable gradient computation
         with torch.no_grad():
             # initialize state, adjoint and gradients
             if solver.options.save_states:
                 y0 = ysave[..., -1, :, :]
-                a0 = grad_y[0][..., -1, :, :]
+                a0 = grad_ysave[..., -1, :, :]
             else:
                 y0 = ysave[..., :, :]
-                a0 = grad_y[0][..., :, :]
+                a0 = grad_ysave[..., :, :]
             if len(solver.exp_ops) > 0:
-                a0 += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH).sum(
+                a0 += (grad_exp_save[..., :, -1, None, None] * solver.exp_ops.mH).sum(
                     dim=-3
                 )
 
             g = tuple(torch.zeros_like(p).to(y0) for p in solver.options.params)
 
             # initialize time: time is negative-valued and sorted ascendingly during
-            # backward integration.
+            # backward integration
             tstop_bwd = np.flip(-solver.tstop, axis=0)
             saved_ini = tstop_bwd[-1] == solver.t0
             if not saved_ini:
@@ -130,12 +133,12 @@ class AdjointAutograd(torch.autograd.Function):
                     # replace y with its checkpointed version
                     y = ysave[..., -i - 2, :, :]
                     # update adjoint wrt this time point by adding dL / dy(t)
-                    a += grad_y[0][..., -i - 2, :, :]
+                    a += grad_ysave[..., -i - 2, :, :]
 
                 # update adjoint wrt this time point by adding dL / de(t)
                 if len(solver.exp_ops) > 0 and (i < len(tstop_bwd) - 2 or saved_ini):
                     a += (
-                        grad_y[1][..., :, -i - 2, None, None] * solver.exp_ops.mH
+                        grad_exp_save[..., :, -i - 2, None, None] * solver.exp_ops.mH
                     ).sum(dim=-3)
 
                 # iterate time
