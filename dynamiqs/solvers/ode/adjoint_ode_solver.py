@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import warnings
+from abc import abstractmethod
+from typing import Any
 
 import numpy as np
 import torch
@@ -11,6 +13,33 @@ from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver
 from ..utils.utils import tqdm
+from .ode_solver import ODESolver
+
+
+class AdjointODESolver(ODESolver, AdjointSolver):
+    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
+    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
+    ODE integrator."""
+
+    def run_adjoint(self):
+        AdjointAutograd.apply(self, self.y0, *self.options.params)
+
+    def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
+        return t0, y0, a0
+
+    @abstractmethod
+    def integrate_augmented(
+        self,
+        t0: float,
+        t1: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        *args: Any,
+    ) -> tuple:
+        """Integrates the augmented ODE forward from time `t0` to `t1` (with
+        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
+        pass
 
 
 def new_leaf_tensor(x: Tensor) -> Tensor:

@@ -8,8 +8,8 @@ import torch
 from torch import Tensor
 
 from ..utils.utils import add_tuples, none_to_zeros_like
-from .adjoint_autograd import new_leaf_tensor
-from .ode_solver import AdjointODESolver, ODESolver
+from .adjoint_ode_solver import AdjointODESolver, new_leaf_tensor
+from .ode_solver import ODESolver
 
 
 def _assert_multiple_of_dt(dt: float, times: np.array, name: str):

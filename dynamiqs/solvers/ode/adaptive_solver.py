@@ -8,8 +8,8 @@ import torch
 from torch import Tensor
 
 from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like
-from .adjoint_autograd import new_leaf_tensor
-from .ode_solver import AdjointODESolver, ODESolver
+from .adjoint_ode_solver import AdjointODESolver, new_leaf_tensor
+from .ode_solver import ODESolver
 
 
 class AdaptiveSolver(ODESolver):
