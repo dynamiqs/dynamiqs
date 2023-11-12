@@ -101,8 +101,7 @@ class MERouchon1(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        # t is passed in as negative time
-        H = self.H(-t)
+        H = self.H(t)
         Hnh = self.Hnh(H)
 
         # === reverse time
@@ -194,8 +193,7 @@ class MERouchon2(MERouchon):
         # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
         # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
 
-        # t is passed in as negative time
-        H = self.H(-t)
+        H = self.H(t)
         Hnh = self.Hnh(H)
 
         # === reverse time

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -68,11 +69,11 @@ class AdjointAutograd(torch.autograd.Function):
 
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration.
-            tstop_bwd = (-solver.tstop).flip(dims=(0,))
+            tstop_bwd = np.flip(-solver.tstop, axis=0)
             saved_ini = tstop_bwd[-1] == solver.t0
             if not saved_ini:
-                tstop_bwd = torch.cat((tstop_bwd, torch.zeros(1).to(tstop_bwd)))
-            t0 = tstop_bwd[0].item()
+                tstop_bwd = np.append(tstop_bwd, 0)
+            t0 = tstop_bwd[0]
 
             # initialize progress bar
             solver.pbar = tqdm(total=-t0, disable=not solver.options.verbose)
@@ -82,8 +83,8 @@ class AdjointAutograd(torch.autograd.Function):
 
             # integrate the augmented equation backward between every saved state
             t = t0
-            for i, ts in enumerate(tstop_bwd.cpu().numpy()[1:]):
-                y, a, g, *args = solver.integrate_augmented(t, ts, y, a, g, *args)
+            for i, tnext in enumerate(tstop_bwd[1:]):
+                y, a, g, *args = solver.integrate_augmented(t, tnext, y, a, g, *args)
 
                 if solver.options.save_states and (i < len(tstop_bwd) - 2 or saved_ini):
                     # replace y with its checkpointed version
@@ -98,7 +99,7 @@ class AdjointAutograd(torch.autograd.Function):
                     ).sum(dim=-3)
 
                 # iterate time
-                t = ts
+                t = tnext
 
         # close progress bar
         with warnings.catch_warnings():  # ignore tqdm precision overflow
