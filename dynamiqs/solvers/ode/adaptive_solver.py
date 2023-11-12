@@ -164,19 +164,14 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
         """Returns $fa(a, t)$."""
         pass
 
-    def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
-        """Returns $fy(y, t)$ and $fa(a, t)$."""
-        return self.odefun_backward(t, y), self.odefun_adjoint(t, a)
-
-    def init_augmented(
-        self, t0: float, y: Tensor, a: Tensor
-    ) -> tuple[Tensor, Tensor, float, float]:
-        f0, l0 = self.odefun_augmented(t0, y, a)
-        dt_y = self.init_tstep(-t0, y, f0, self.odefun_backward)
-        dt_a = self.init_tstep(-t0, a, l0, self.odefun_adjoint)
-        dt = min(dt_y, dt_a)
-        error = 1.0
-        return f0, l0, dt, error
+    def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
+        f0 = self.odefun_backward(t0, y0)
+        l0 = self.odefun_adjoint(t0, a0)
+        dty0 = self.init_tstep(-t0, y0, f0, self.odefun_backward)
+        dta0 = self.init_tstep(-t0, a0, l0, self.odefun_adjoint)
+        dt0 = min(dty0, dta0)
+        error0 = 1.0
+        return t0, y0, a0, f0, l0, dt0, error0
 
     def integrate_augmented(
         self,

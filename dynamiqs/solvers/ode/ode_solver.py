@@ -61,8 +61,8 @@ class AdjointODESolver(ODESolver, AdjointSolver):
     def run_adjoint(self):
         AdjointAutograd.apply(self, self.y0, *self.options.params)
 
-    def init_augmented(self, t0: float, y: Tensor, a: Tensor) -> tuple:
-        return ()
+    def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
+        return t0, y0, a0
 
     @abstractmethod
     def integrate_augmented(
