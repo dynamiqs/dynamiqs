@@ -7,10 +7,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from ..solver import AdjointSolver
 from ..utils.utils import add_tuples, none_to_zeros_like
-from .adjoint_autograd import AdjointAutograd
-from .ode_solver import ODESolver
+from .ode_solver import AdjointODESolver, ODESolver
 
 
 def _assert_multiple_of_dt(dt: float, times: np.array, name: str):
@@ -61,10 +59,8 @@ class FixedSolver(ODESolver):
         return (y,)
 
 
-class AdjointFixedSolver(FixedSolver, AdjointSolver):
-    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
-    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using a
-    fixed step-size integrator."""
+class AdjointFixedSolver(FixedSolver, AdjointODESolver):
+    """Fixed step-size ODE integrator."""
 
     @abstractmethod
     def backward_augmented(
@@ -73,17 +69,15 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         """Returns $y(t-dt)$ and $a(t-dt)$."""
         pass
 
-    def run_adjoint(self):
-        AdjointAutograd.apply(self, self.y0, *self.options.params)
-
-    def init_augmented(self, t0: float, y: Tensor, a: Tensor) -> tuple:
-        return ()
-
     def integrate_augmented(
-        self, t0: float, t1: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]
-    ) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
-        """Integrates the augmented ODE forward from time `t0` to `t1` (with
-        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
+        self,
+        t0: float,
+        t1: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        *args: Any,
+    ) -> tuple:
         # define time values
         num_times = round((t1 - t0) / self.dt) + 1
         times = np.linspace(t0, t1, num_times)

@@ -5,8 +5,9 @@ from typing import Any
 from torch import Tensor
 from tqdm import TqdmWarning
 
-from ..solver import AutogradSolver
+from ..solver import AdjointSolver, AutogradSolver
 from ..utils.utils import tqdm
+from .adjoint_autograd import AdjointAutograd
 
 
 class ODESolver(AutogradSolver):
@@ -49,4 +50,30 @@ class ODESolver(AutogradSolver):
     def integrate(self, t0: float, t1: float, y: Tensor, *args: Any) -> tuple:
         """Integrates the ODE forward from time `t0` to time `t1` with initial state
         `y`."""
+        pass
+
+
+class AdjointODESolver(ODESolver, AdjointSolver):
+    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
+    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
+    ODE integrator."""
+
+    def run_adjoint(self):
+        AdjointAutograd.apply(self, self.y0, *self.options.params)
+
+    def init_augmented(self, t0: float, y: Tensor, a: Tensor) -> tuple:
+        return ()
+
+    @abstractmethod
+    def integrate_augmented(
+        self,
+        t0: float,
+        t1: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        *args: Any,
+    ) -> tuple:
+        """Integrates the augmented ODE forward from time `t0` to `t1` (with
+        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
         pass

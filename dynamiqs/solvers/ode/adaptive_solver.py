@@ -7,10 +7,8 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from ..solver import AdjointSolver
 from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like
-from .adjoint_autograd import AdjointAutograd
-from .ode_solver import ODESolver
+from .ode_solver import AdjointODESolver, ODESolver
 
 
 class AdaptiveSolver(ODESolver):
@@ -153,10 +151,8 @@ class AdaptiveSolver(ODESolver):
             )
 
 
-class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
-    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t),
-    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
-    adaptive step-size integrator."""
+class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
+    """Adaptive step-size ODE integrator."""
 
     @abstractmethod
     def odefun_backward(self, t: float, y: Tensor) -> Tensor:
@@ -171,9 +167,6 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
     def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
         """Returns $fy(y, t)$ and $fa(a, t)$."""
         return self.odefun_backward(t, y), self.odefun_adjoint(t, a)
-
-    def run_adjoint(self):
-        AdjointAutograd.apply(self, self.y0, *self.options.params)
 
     def init_augmented(
         self, t0: float, y: Tensor, a: Tensor
@@ -192,13 +185,10 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
         y: Tensor,
         a: Tensor,
         g: tuple[Tensor, ...],
-        ft: Tensor,
-        lt: Tensor,
-        dt: float,
-        error: float,
-    ) -> tuple[Tensor, Tensor, tuple[Tensor, ...], Tensor, Tensor, float, float]:
-        """Integrates the augmented ODE forward from time `t0` to `t1` (with
-        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
+        *args: Any,
+    ) -> tuple:
+        ft, lt, dt, error = args
+
         cache = (dt, error)
 
         t = t0
