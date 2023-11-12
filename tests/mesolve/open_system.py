@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import cos, exp, pi, sin, sqrt
+from math import cos, exp, pi, sin
 from typing import Any, List
 
 import torch
