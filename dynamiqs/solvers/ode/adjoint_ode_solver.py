@@ -6,9 +6,8 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 from torch import Tensor
-from torch.autograd.function import FunctionCtx
+from torch.autograd.function import FunctionCtx, once_differentiable
 from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver
@@ -18,7 +17,7 @@ from .ode_solver import ODESolver
 
 class AdjointODESolver(ODESolver, AdjointSolver):
     """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
-    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
+    $(2) da / dt = fa(a, t)$ in reverse time with initial condition $y(t_0)$ using an
     ODE integrator."""
 
     def run_adjoint(self):
@@ -61,23 +60,22 @@ class AdjointAutograd(torch.autograd.Function):
         ctx: FunctionCtx,
         solver: AdjointSolver,
         y0: Tensor,
-        *params: tuple[nn.Parameter, ...],
+        *params: Tensor,
     ) -> tuple[Tensor, Tensor]:
         """Forward pass of the ODE integrator."""
-        # save into context for backward pass
-        ctx.solver = solver
-
-        # integrate the ODE forward without storing the graph of operations
+        # integrate the ODE forward without storing the computation graph
         solver.run_nograd()
 
-        # save results and model parameters
+        # save `solver` into context for backward pass
+        ctx.solver = solver
+        # save `solver.ysave` into context for backward pass
         ctx.save_for_backward(solver.ysave)
 
-        # returning `ysave` is required for custom backward functions
         return solver.ysave, solver.exp_save
 
     @staticmethod
-    def backward(ctx: FunctionCtx, *grad_y: Tensor) -> tuple[None, Tensor, Tensor]:
+    @once_differentiable
+    def backward(ctx: FunctionCtx, *grads: Tensor) -> tuple[None, Tensor, Tensor]:
         """Backward pass of the ODE integrator.
 
         An augmented ODE is integrated backwards starting from the final state computed
@@ -93,24 +91,27 @@ class AdjointAutograd(torch.autograd.Function):
         solver = ctx.solver
         ysave = ctx.saved_tensors[0]
 
+        # unpack gradients
+        grad_ysave, grad_exp_save = grads
+
         # locally disable gradient computation
         with torch.no_grad():
             # initialize state, adjoint and gradients
             if solver.options.save_states:
                 y0 = ysave[..., -1, :, :]
-                a0 = grad_y[0][..., -1, :, :]
+                a0 = grad_ysave[..., -1, :, :]
             else:
                 y0 = ysave[..., :, :]
-                a0 = grad_y[0][..., :, :]
+                a0 = grad_ysave[..., :, :]
             if len(solver.exp_ops) > 0:
-                a0 += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH).sum(
+                a0 += (grad_exp_save[..., :, -1, None, None] * solver.exp_ops.mH).sum(
                     dim=-3
                 )
 
-            g = tuple(torch.zeros_like(p).to(y0) for p in solver.options.params)
+            g = tuple(torch.zeros_like(p) for p in solver.options.params)
 
             # initialize time: time is negative-valued and sorted ascendingly during
-            # backward integration.
+            # backward integration
             tstop_bwd = np.flip(-solver.tstop, axis=0)
             saved_ini = tstop_bwd[-1] == solver.t0
             if not saved_ini:
@@ -131,12 +132,12 @@ class AdjointAutograd(torch.autograd.Function):
                     # replace y with its checkpointed version
                     y = ysave[..., -i - 2, :, :]
                     # update adjoint wrt this time point by adding dL / dy(t)
-                    a += grad_y[0][..., -i - 2, :, :]
+                    a += grad_ysave[..., -i - 2, :, :]
 
                 # update adjoint wrt this time point by adding dL / de(t)
                 if len(solver.exp_ops) > 0 and (i < len(tstop_bwd) - 2 or saved_ini):
                     a += (
-                        grad_y[1][..., :, -i - 2, None, None] * solver.exp_ops.mH
+                        grad_exp_save[..., :, -i - 2, None, None] * solver.exp_ops.mH
                     ).sum(dim=-3)
 
                 # iterate time

@@ -166,13 +166,13 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
         pass
 
     def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
-        f0 = self.odefun_backward(t0, y0)
-        l0 = self.odefun_adjoint(t0, a0)
-        dty0 = self.init_tstep(-t0, y0, f0, self.odefun_backward)
-        dta0 = self.init_tstep(-t0, a0, l0, self.odefun_adjoint)
+        fy0 = self.odefun_backward(t0, y0)
+        fa0 = self.odefun_adjoint(t0, a0)
+        dty0 = self.init_tstep(-t0, y0, fy0, self.odefun_backward)
+        dta0 = self.init_tstep(-t0, a0, fa0, self.odefun_adjoint)
         dt0 = min(dty0, dta0)
         error0 = 1.0
-        return t0, y0, a0, f0, l0, dt0, error0
+        return t0, y0, a0, fy0, fa0, dt0, error0
 
     def integrate_augmented(
         self,
@@ -183,7 +183,7 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
         g: tuple[Tensor, ...],
         *args: Any,
     ) -> tuple:
-        ft, lt, dt, error = args
+        fyt, fat, dt, error = args
 
         cache = (dt, error)
 
@@ -201,18 +201,18 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
             # the computation graph attached to `y` and `a` is automatically freed after
             # next line, because there are no more references to the original tensors
-            # (the old `y`, `a`, `ft` and `lt` go out of scope)
-            y, a, ft, lt = (
+            # (the old `y`, `a`, `fyt` and `fat` go out of scope)
+            y, a, fyt, fat = (
                 new_leaf_tensor(y),
                 new_leaf_tensor(a),
-                new_leaf_tensor(ft),
-                new_leaf_tensor(lt),
+                new_leaf_tensor(fyt),
+                new_leaf_tensor(fat),
             )
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                ft_new, y_new, y_err = self.step(-t, y, ft, dt, self.odefun_backward)
-                lt_new, a_new, a_err = self.step(-t, a, lt, dt, self.odefun_adjoint)
+                fyt_new, y_new, y_err = self.step(-t, y, fyt, dt, self.odefun_backward)
+                fat_new, a_new, a_err = self.step(-t, a, fat, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
                 error_a = self.get_error(a_err, a, a_new)
@@ -221,7 +221,7 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
                 # update if step is accepted
                 if error <= 1:
-                    t, y, a, ft, lt = t + dt, y_new, a_new, ft_new, lt_new
+                    t, y, a, fyt, fat = t + dt, y_new, a_new, fyt_new, fat_new
 
                     # compute g(t-dt)
                     # note: we set `retain_graph=True` to keep tracking operations on
@@ -240,7 +240,7 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
                     self.pbar.update(dt)
 
         dt, error = cache
-        return y, a, g, ft, lt, dt, error
+        return y, a, g, fyt, fat, dt, error
 
 
 class DormandPrince5(AdjointAdaptiveSolver):
