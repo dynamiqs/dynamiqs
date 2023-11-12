@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import warnings
+from abc import abstractmethod
+from typing import Any
 
 import numpy as np
 import torch
@@ -11,6 +13,44 @@ from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver
 from ..utils.utils import tqdm
+from .ode_solver import ODESolver
+
+
+class AdjointODESolver(ODESolver, AdjointSolver):
+    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
+    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
+    ODE integrator."""
+
+    def run_adjoint(self):
+        AdjointAutograd.apply(self, self.y0, *self.options.params)
+
+    def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
+        return t0, y0, a0
+
+    @abstractmethod
+    def integrate_augmented(
+        self,
+        t0: float,
+        t1: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        *args: Any,
+    ) -> tuple:
+        """Integrates the augmented ODE forward from time `t0` to `t1` (with
+        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
+        pass
+
+
+def new_leaf_tensor(x: Tensor) -> Tensor:
+    """Return a new leaf tensor sharing the same data as `x`."""
+    # create a new tensor `y` sharing the same data as `x` but detached from the graph
+    y = x.detach()
+
+    # start tracking operations on the new tensor `y` (i.e. make it a leaf tensor)
+    y.requires_grad_(True)
+
+    return y
 
 
 class AdjointAutograd(torch.autograd.Function):
@@ -57,15 +97,17 @@ class AdjointAutograd(torch.autograd.Function):
         with torch.no_grad():
             # initialize state, adjoint and gradients
             if solver.options.save_states:
-                y = ysave[..., -1, :, :]
-                a = grad_y[0][..., -1, :, :]
+                y0 = ysave[..., -1, :, :]
+                a0 = grad_y[0][..., -1, :, :]
             else:
-                y = ysave[..., :, :]
-                a = grad_y[0][..., :, :]
+                y0 = ysave[..., :, :]
+                a0 = grad_y[0][..., :, :]
             if len(solver.exp_ops) > 0:
-                a += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH).sum(dim=-3)
+                a0 += (grad_y[1][..., :, -1, None, None] * solver.exp_ops.mH).sum(
+                    dim=-3
+                )
 
-            g = tuple(torch.zeros_like(p).to(y) for p in solver.options.params)
+            g = tuple(torch.zeros_like(p).to(y0) for p in solver.options.params)
 
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration.
@@ -79,10 +121,9 @@ class AdjointAutograd(torch.autograd.Function):
             solver.pbar = tqdm(total=-t0, disable=not solver.options.verbose)
 
             # initialize the ODE routine
-            (*args,) = solver.init_augmented(t0, y, a)
+            t, y, a, *args = solver.init_augmented(t0, y0, a0)
 
             # integrate the augmented equation backward between every saved state
-            t = t0
             for i, tnext in enumerate(tstop_bwd[1:]):
                 y, a, g, *args = solver.integrate_augmented(t, tnext, y, a, g, *args)
 

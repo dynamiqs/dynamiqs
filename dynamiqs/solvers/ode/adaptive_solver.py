@@ -7,9 +7,8 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from ..solver import AdjointSolver
 from ..utils.utils import add_tuples, hairer_norm, none_to_zeros_like
-from .adjoint_autograd import AdjointAutograd
+from .adjoint_ode_solver import AdjointODESolver, new_leaf_tensor
 from .ode_solver import ODESolver
 
 
@@ -153,10 +152,8 @@ class AdaptiveSolver(ODESolver):
             )
 
 
-class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
-    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t),
-    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using an
-    adaptive step-size integrator."""
+class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
+    """Adaptive step-size ODE integrator."""
 
     @abstractmethod
     def odefun_backward(self, t: float, y: Tensor) -> Tensor:
@@ -168,22 +165,14 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
         """Returns $fa(a, t)$."""
         pass
 
-    def odefun_augmented(self, t: float, y: Tensor, a: Tensor) -> tuple[Tensor, Tensor]:
-        """Returns $fy(y, t)$ and $fa(a, t)$."""
-        return self.odefun_backward(t, y), self.odefun_adjoint(t, a)
-
-    def run_adjoint(self):
-        AdjointAutograd.apply(self, self.y0, *self.options.params)
-
-    def init_augmented(
-        self, t0: float, y: Tensor, a: Tensor
-    ) -> tuple[Tensor, Tensor, float, float]:
-        f0, l0 = self.odefun_augmented(t0, y, a)
-        dt_y = self.init_tstep(-t0, y, f0, self.odefun_backward)
-        dt_a = self.init_tstep(-t0, a, l0, self.odefun_adjoint)
-        dt = min(dt_y, dt_a)
-        error = 1.0
-        return f0, l0, dt, error
+    def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
+        f0 = self.odefun_backward(t0, y0)
+        l0 = self.odefun_adjoint(t0, a0)
+        dty0 = self.init_tstep(-t0, y0, f0, self.odefun_backward)
+        dta0 = self.init_tstep(-t0, a0, l0, self.odefun_adjoint)
+        dt0 = min(dty0, dta0)
+        error0 = 1.0
+        return t0, y0, a0, f0, l0, dt0, error0
 
     def integrate_augmented(
         self,
@@ -192,16 +181,15 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
         y: Tensor,
         a: Tensor,
         g: tuple[Tensor, ...],
-        ft: Tensor,
-        lt: Tensor,
-        dt: float,
-        error: float,
-    ) -> tuple[Tensor, Tensor, tuple[Tensor, ...], Tensor, Tensor, float, float]:
-        """Integrates the augmented ODE forward from time `t0` to `t1` (with
-        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
+        *args: Any,
+    ) -> tuple:
+        ft, lt, dt, error = args
+
         cache = (dt, error)
 
         t = t0
+
+        # run the ODE routine
         while t < t1:
             # update time step
             dt = self.update_tstep(dt, error)
@@ -210,6 +198,16 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
             if t + dt >= t1:
                 cache = (dt, error)
                 dt = t1 - t
+
+            # the computation graph attached to `y` and `a` is automatically freed after
+            # next line, because there are no more references to the original tensors
+            # (the old `y`, `a`, `ft` and `lt` go out of scope)
+            y, a, ft, lt = (
+                new_leaf_tensor(y),
+                new_leaf_tensor(a),
+                new_leaf_tensor(ft),
+                new_leaf_tensor(lt),
+            )
 
             with torch.enable_grad():
                 # perform a single step of size dt
@@ -226,6 +224,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
                     t, y, a, ft, lt = t + dt, y_new, a_new, ft_new, lt_new
 
                     # compute g(t-dt)
+                    # note: we set `retain_graph=True` to keep tracking operations on
+                    # `self.options.params` in the graph
                     dg = torch.autograd.grad(
                         a,
                         self.options.params,
@@ -238,9 +238,6 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointSolver):
 
                     # update the progress bar
                     self.pbar.update(dt)
-
-            # free the graph of y and a
-            y, a, ft, lt = y.data, a.data, ft.data, lt.data
 
         dt, error = cache
         return y, a, g, ft, lt, dt, error

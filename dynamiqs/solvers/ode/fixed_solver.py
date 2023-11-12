@@ -7,9 +7,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from ..solver import AdjointSolver
 from ..utils.utils import add_tuples, none_to_zeros_like
-from .adjoint_autograd import AdjointAutograd
+from .adjoint_ode_solver import AdjointODESolver, new_leaf_tensor
 from .ode_solver import ODESolver
 
 
@@ -61,10 +60,8 @@ class FixedSolver(ODESolver):
         return (y,)
 
 
-class AdjointFixedSolver(FixedSolver, AdjointSolver):
-    """Integrate an augmented ODE of the form $(1) dy / dt = fy(y, t)$ and
-    $(2) da / dt = fa(a, y)$ in backward time with initial condition $y(t_0)$ using a
-    fixed step-size integrator."""
+class AdjointFixedSolver(FixedSolver, AdjointODESolver):
+    """Fixed step-size ODE integrator."""
 
     @abstractmethod
     def backward_augmented(
@@ -73,38 +70,38 @@ class AdjointFixedSolver(FixedSolver, AdjointSolver):
         """Returns $y(t-dt)$ and $a(t-dt)$."""
         pass
 
-    def run_adjoint(self):
-        AdjointAutograd.apply(self, self.y0, *self.options.params)
-
-    def init_augmented(self, t0: float, y: Tensor, a: Tensor) -> tuple:
-        return ()
-
     def integrate_augmented(
-        self, t0: float, t1: float, y: Tensor, a: Tensor, g: tuple[Tensor, ...]
-    ) -> tuple[Tensor, Tensor, tuple[Tensor, ...]]:
-        """Integrates the augmented ODE forward from time `t0` to `t1` (with
-        `t0` < `t1` < 0) starting from initial state `(y, a)`."""
+        self,
+        t0: float,
+        t1: float,
+        y: Tensor,
+        a: Tensor,
+        g: tuple[Tensor, ...],
+        *args: Any,
+    ) -> tuple:
         # define time values
         num_times = round((t1 - t0) / self.dt) + 1
         times = np.linspace(t0, t1, num_times)
 
-        # run the ode routine
+        # run the ODE routine
         for t in times[:-1]:
-            y, a = y.requires_grad_(True), a.requires_grad_(True)
+            # the computation graph attached to `y` and `a` is automatically freed after
+            # next line, because there are no more references to the original tensors
+            # (the old `y` and `a` go out of scope)
+            y, a = new_leaf_tensor(y), new_leaf_tensor(a)
 
             with torch.enable_grad():
                 # compute y(t-dt) and a(t-dt)
                 y, a = self.backward_augmented(-t, y, a)
 
                 # compute g(t-dt)
+                # note: we set `retain_graph=True` to keep tracking operations on
+                # `self.options.params` in the graph
                 dg = torch.autograd.grad(
                     a, self.options.params, y, allow_unused=True, retain_graph=True
                 )
                 dg = none_to_zeros_like(dg, self.options.params)
                 g = add_tuples(g, dg)
-
-            # free the graph of y and a
-            y, a = y.data, a.data
 
             # update progress bar
             self.pbar.update(self.dt)
