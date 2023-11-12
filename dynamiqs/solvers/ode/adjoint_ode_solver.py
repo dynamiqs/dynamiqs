@@ -108,7 +108,7 @@ class AdjointAutograd(torch.autograd.Function):
                     dim=-3
                 )
 
-            g = tuple(torch.zeros_like(p).to(y0) for p in solver.options.params)
+            g = tuple(torch.zeros_like(p) for p in solver.options.params)
 
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration
