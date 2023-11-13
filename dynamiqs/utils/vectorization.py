@@ -193,7 +193,7 @@ def slindbladian(H: Tensor, L: Tensor) -> Tensor:
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
-    (see [sdissipator()][dynamiqs.sdissipator]).
+    (see [`dq.sdissipator()`][dynamiqs.sdissipator]).
 
     The vectorized form of this superoperator is:
     $$

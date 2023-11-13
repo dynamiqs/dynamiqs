@@ -5,7 +5,7 @@ from typing import Any
 import torch
 
 from .._utils import to_device
-from ..gradient import Gradient
+from ..gradient import Adjoint, Gradient
 from ..solver import Solver
 from ..utils.tensor_types import dtype_complex_to_real, get_cdtype
 
@@ -30,6 +30,11 @@ class Options:
         self.solver = solver
         self.gradient = gradient
         self.options = SharedOptions(**options)
+
+        if isinstance(self.gradient, Adjoint):
+            # move gradient parameters to the appropriate device
+            for p in self.gradient.params:
+                p.to(self.options.device)
 
     def __getattr__(self, name: str) -> Any:
         if name in dir(self.solver):

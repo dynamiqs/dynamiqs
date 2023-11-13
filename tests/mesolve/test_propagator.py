@@ -2,15 +2,15 @@ from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Propagator
 
 from ..solver_tester import OpenSolverTester
-from .open_system import grad_leaky_cavity_8, leaky_cavity_8
+from .open_system import gocavity, ocavity
 
 
 class TestMEPropagator(OpenSolverTester):
     def test_batching(self):
-        self._test_batching(leaky_cavity_8, Propagator())
+        self._test_batching(ocavity, Propagator())
 
     def test_correctness(self):
-        self._test_correctness(leaky_cavity_8, Propagator(), num_tsave=11)
+        self._test_correctness(ocavity, Propagator())
 
     def test_autograd(self):
-        self._test_gradient(grad_leaky_cavity_8, Propagator(), Autograd(), num_tsave=11)
+        self._test_gradient(gocavity, Propagator(), Autograd())
