@@ -43,8 +43,8 @@ def wigner(
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
-    xvec = torch.linspace(-xmax, xmax, npixels)
-    yvec = torch.linspace(-ymax, ymax, npixels)
+    xvec = torch.linspace(-xmax, xmax, npixels).to(state)
+    yvec = torch.linspace(-ymax, ymax, npixels).to(state)
 
     if method == 'clenshaw':
         state = todm(state)
@@ -77,7 +77,7 @@ def _wigner_clenshaw(rho: Tensor, xvec: Tensor, yvec: Tensor, g: float):
     a2 = a.abs() ** 2
 
     w = 2 * rho[0, -1] * torch.ones_like(a)
-    rho = rho * (2 * torch.ones(n, n) - torch.diag(torch.ones(n)))
+    rho = rho * (2 * torch.ones(n, n) - torch.diag(torch.ones(n))).to(rho)
     for i in range(n - 2, -1, -1):
         w *= 2 * a * (i + 1) ** (-0.5)
         w += _laguerre_series(i, 4 * a2, torch.diag(rho, i))
