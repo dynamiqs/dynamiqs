@@ -19,6 +19,34 @@ def inv_kraus_matmul(A: Tensor, B: Tensor, upper: bool) -> Tensor:
     return B
 
 
+def batched_mult_left(x, y):
+    r"""Computes the batched matrix product of two tensors where the left tensor
+    has one more dimension than the right one.
+     Args:
+         x: Tensor of shape (N, ..., n, k)
+         y: Tensor of shape (..., k, m)
+
+     Returns:
+        The batched product of `x @ y`
+         `(N, ..., n, m)`.
+    """
+    return torch.einsum("n...ik,...kj->n...ij", x, y)
+
+
+def batched_mult_right(x, y):
+    r"""Computes the batched matrix product of two tensors where the right tensor
+    has one more dimension than the left one.
+     Args:
+         x: Tensor of shape (N, ..., n, k)
+         y: Tensor of shape (..., k, m)
+
+     Returns:
+        The batched product of `x @ y`
+         `(N, ..., n, m)`.
+    """
+    return torch.einsum("...ik,n...kj->n...ij", x, y)
+
+
 class MERouchon(MESolver, AdjointFixedSolver):
     pass
 
@@ -54,7 +82,7 @@ class MERouchon1(MERouchon):
     def T(self, R: Tensor) -> Tensor:
         # we normalize the map at each time step by inverting `R` using its Cholesky
         # decomposition `R = T @ T.mT`
-        # -> (b_H, 1, 1, n, n)
+        # -> (b_H, b_L, 1, n, n)
         return cholesky(R)[0]  # lower triangular
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
@@ -69,15 +97,14 @@ class MERouchon1(MERouchon):
             `(b_H, b_L, b_rho, n, n)`.
         """
         # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
-
         H = self.H(t)  # (b_H, 1, 1, n, n)
-        Hnh = self.Hnh(H)  # (b_H, 1, 1, n, n)
-        M0, M1s = self.Ms(Hnh)  # (b_H, 1, 1, n, n), (len(L), 1, b_L, 1, n, n)
+        Hnh = self.Hnh(H)  # (b_H, b_L, 1, n, n)
+        M0, M1s = self.Ms(Hnh)  # (b_H, b_L, 1, n, n), (len(L), 1, b_L, 1, n, n)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
-            R = self.R(M0)  # (b_H, 1, 1, n, n)
-            T = self.T(R)  # (b_H, 1, 1, n, n)
+            R = self.R(M0)  # (b_H, b_L, 1, n, n)
+            T = self.T(R)  # (b_H, b_L, 1, n, n)
             rho = inv_kraus_matmul(T.mH, rho, upper=True)  # T.mH^-1 @ rho @ T^-1
 
         # compute rho(t+dt)
@@ -136,12 +163,9 @@ class MERouchon2(MERouchon):
     @cache(maxsize=2)
     def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
-        # -> (b_H, 1, 1, n, n), (len(L), b_H, b_L, 1, n, n)
+        # -> (b_H, b_L, 1, n, n), (len(L), b_H, b_L, 1, n, n)
         dt = self.dt if fwd else -self.dt
-        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, 1, 1, n, n)
-
-        batched_mult_left = lambda x, y: torch.einsum("n...ik,...kj->n...ij", x, y)
-        batched_mult_right = lambda x, y: torch.einsum("...ik,n...kj->n...ij", x, y)
+        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, b_L, 1, n, n)
 
         M1s = (
             0.5
