@@ -163,7 +163,7 @@ class OpenSolverTester(SolverTester):
         result = run(system.H, system.jump_ops_batched, system.y0)
         assert result.ysave.shape == (b_jump_ops, ntsave, m, n)
         assert result.exp_save.shape == (b_jump_ops, n_exp_ops, ntsave)
-
+        
         # batched y0
         result = run(system.H, system.jump_ops, system.y0_batched)
         assert result.ysave.shape == (b_y0, ntsave, m, n)
