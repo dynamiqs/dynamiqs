@@ -3,11 +3,11 @@ import pytest
 from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Dopri5
 
-from ..solver_tester import SolverTester
+from ..solver_tester import OpenSolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
-class TestMEAdaptive(SolverTester):
+class TestMEAdaptive(OpenSolverTester):
     def test_batching(self):
         self._test_batching(ocavity, Dopri5())
 

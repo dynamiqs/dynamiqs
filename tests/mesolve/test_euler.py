@@ -3,11 +3,11 @@ import pytest
 from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Euler
 
-from ..solver_tester import SolverTester
+from ..solver_tester import OpenSolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
-class TestMEEuler(SolverTester):
+class TestMEEuler(OpenSolverTester):
     def test_batching(self):
         solver = Euler(dt=1e-2)
         self._test_batching(ocavity, solver)
