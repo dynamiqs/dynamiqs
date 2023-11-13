@@ -32,12 +32,12 @@ class Propagator(AutogradSolver):
             raise TypeError(
                 'Solver `Propagator` requires a time-independent Hamiltonian.'
             )
-        self.H = self.H(0.0)
+        self.H = self.H(self.t0)
 
     def run_autograd(self):
-        y, t1 = self.y0, 0.0
-        for t2 in tqdm(self.tstop.cpu().numpy(), disable=not self.options.verbose):
-            if t2 != 0.0:
+        t1, y = self.t0, self.y0
+        for t2 in tqdm(self.tstop, disable=not self.options.verbose):
+            if t2 != self.t0:
                 # round time difference to avoid numerical errors when comparing floats
                 delta_t = round_truncate(t2 - t1)
                 y = self.forward(t1, delta_t, y)

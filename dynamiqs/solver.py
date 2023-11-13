@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Literal
 
+from torch import Tensor
+
 from .gradient import Adjoint, Autograd, Gradient
 
 
@@ -22,11 +24,14 @@ class _ODEFixedStep(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
 
     def __init__(self, *, dt: float):
+        # convert `dt` in case a tensor was passed instead of a float
+        if isinstance(dt, Tensor):
+            dt = dt.item()
         self.dt = dt
 
 
 class _ODEAdaptiveStep(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
+    SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
     def __init__(
         self,

@@ -360,11 +360,14 @@ article.md-typeset h1 {
   font-weight: 600;
 }
 
-.center {
+.fig {
   display: block;
   margin: 0 auto;
+  width: 85%;
 }
 
-.full-width {
-  width: 85%;
+.fig-half {
+  display: block;
+  margin: 0 auto;
+  width: 50%;
 }
