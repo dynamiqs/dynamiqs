@@ -6,10 +6,11 @@ from typing import Any
 
 import torch
 
-from benchmarks.systems.system import ClosedSystem, OpenSystem
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 
+from .mesolve.open_system import OpenSystem
+from .sesolve.closed_system import ClosedSystem
 from .system import System
 
 
