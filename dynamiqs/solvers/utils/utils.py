@@ -28,8 +28,8 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     TODO Fix documentation
 
     Args:
-        rho: Density matrix of shape `(a, b, c, n, n)`.
-        operators: Kraus operators of shape `(x, a, b, c, n, n)`.
+        rho: Density matrix of shape `(..., n, n)`.
+        operators: Kraus operators of shape `(a, ..., n, n)`.
 
     Returns:
         Density matrix of shape `(x, a, b, c, n, n)` with the Kraus map applied.
