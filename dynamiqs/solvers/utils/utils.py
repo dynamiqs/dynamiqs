@@ -32,7 +32,7 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
         operators: Kraus operators of shape `(a, ..., n, n)`.
 
     Returns:
-        Density matrix of shape `(x, a, b, c, n, n)` with the Kraus map applied.
+        Density matrix of shape `(..., n, n)` with the Kraus map applied.
     """
 
     return torch.einsum('n...ik,...kl,n...lj->...ij', O, rho, O.mH)
