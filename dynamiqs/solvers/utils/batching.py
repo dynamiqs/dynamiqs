@@ -1,8 +1,9 @@
 from typing import List
 
+import torch
 from torch import Tensor
 
-from ...utils.tensor_types import ArrayLike
+from ...utils.tensor_types import ArrayLike, to_tensor
 from .td_tensor import TDTensor
 
 
@@ -16,11 +17,12 @@ def batch_H(H: TDTensor) -> TDTensor:
     return H
 
 
-def prepare_jump_ops_batching(jump_ops: List[ArrayLike]) -> List[ArrayLike]:
+def batch_jump_ops(jump_ops: List[ArrayLike], dtype=None, device=None) -> Tensor:
     # check all jump ops are batched in a similar way or not at all
     batched_jump_ops, not_batched_jump_ops = [], []
 
     for jump_op in jump_ops:
+        jump_op = to_tensor(jump_op, dtype=dtype, device=device)
         if jump_op.dim() == 3:
             if jump_op.shape[0] == 1:  # allow a jump operator of shape (1, n, n))
                 not_batched_jump_ops.append(jump_op.squeeze(0))
@@ -51,13 +53,7 @@ def prepare_jump_ops_batching(jump_ops: List[ArrayLike]) -> List[ArrayLike]:
             batched_jump_ops.append(jump_op)
         jump_ops = batched_jump_ops
 
-    return jump_ops
-
-
-def batch_jump_ops(jump_ops: Tensor) -> Tensor:
-    # handle jump_ops batching
-    # jump_ops: (n_jump_ops, b_jump_ops?, m, n) ->  (n_jump_ops, 1, b_jump_ops, 1, n, n)
-
+    jump_ops = torch.stack(jump_ops)
     if jump_ops.dim() == 3:  # (n_jump_ops, n, n)
         return jump_ops[:, None, None, None, ...]  # (n_jump_ops, 1, 1, 1, n, n)
     elif jump_ops.dim() == 4:  # (n_jump_ops, b_jump_ops, n, n)
