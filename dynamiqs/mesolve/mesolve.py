@@ -166,7 +166,10 @@ def mesolve(
 
     for jump_op in jump_ops:
         if jump_op.dim() == 3:
-            batched_jump_ops.append(jump_op)
+            if jump_op.shape[0] == 1:
+                not_batched_jump_ops.append(jump_op.squeeze(0))
+            else:
+                batched_jump_ops.append(jump_op)
         elif jump_op.dim() == 2:
             not_batched_jump_ops.append(jump_op)
         else:
