@@ -148,7 +148,7 @@ def plot_wigner(
     if not isclose(norm_state, 1.0, rel_tol=1e-4):
         warnings.warn(
             'The state has been normalized to compute the Wigner (expected norm to be'
-            f' 1.0 but norm is {norm_state:.3f}).'
+            f' 1.0 but norm is {norm_state:.4f}).'
         )
         state = unit(state)
 
