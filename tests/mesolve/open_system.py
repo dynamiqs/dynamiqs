@@ -19,6 +19,7 @@ class OpenSystem(System):
     def __init__(self):
         super().__init__()
         self.jump_ops = None
+        self.jump_ops_batched = None
 
     @property
     def _state_shape(self) -> tuple[int, int]:

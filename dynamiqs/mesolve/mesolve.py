@@ -160,6 +160,36 @@ def mesolve(
             'Argument `jump_ops` must be a non-empty list, otherwise consider using'
             ' `sesolve`.'
         )
+
+    # check all jump ops are batched in a similar way or not at all
+    batched_jump_ops, not_batched_jump_ops = [], []
+
+    for jump_op in jump_ops:
+        if jump_op.dim() == 3:
+            batched_jump_ops.append(jump_op)
+        elif jump_op.dim() == 2:
+            not_batched_jump_ops.append(jump_op)
+        else:
+            raise ValueError(
+                f"All jump operators must be of shape 2 or 3, got shape {jump_op.shape}"
+            )
+
+    # check all batching are the same for batched jump_ops
+    batched_jump_ops_shapes = set(map(lambda x: x.shape, batched_jump_ops))
+    if len(batched_jump_ops_shapes) > 1:
+        raise ValueError(
+            "All batched jump operators (of dimension 3) must have the same shape, but"
+            f" got shapes {batched_jump_ops_shapes}"
+        )
+
+    # batch all unbatched jump operators if necessary
+    if len(batched_jump_ops) > 0:
+        b = batched_jump_ops[0].shape[0]
+        for jump_op in not_batched_jump_ops:
+            jump_op = jump_op.repeat(b, 1, 1)
+            batched_jump_ops.append(jump_op)
+        jump_ops = batched_jump_ops
+
     # check exp_ops
     if exp_ops is not None and not isinstance(exp_ops, list):
         raise TypeError(
