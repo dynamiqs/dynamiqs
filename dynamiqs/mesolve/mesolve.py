@@ -171,7 +171,7 @@ def mesolve(
             not_batched_jump_ops.append(jump_op)
         else:
             raise ValueError(
-                f"All jump operators must be of shape 2 or 3, got shape {jump_op.shape}"
+                f"All jump operators must have 2 dimensions or 3 dimensions if batched, but a jump operator had {jump_op.ndim} dimensions with shape {jump_op.shape}."
             )
 
     # check all batching are the same for batched jump_ops
