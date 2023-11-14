@@ -45,7 +45,7 @@ def batch_jump_ops(jump_ops: List[ArrayLike], dtype=None, device=None) -> Tensor
             f" got shapes {batched_jump_ops_shapes}"
         )
 
-    # batch all unbatched jump operators if necessary
+    # batch all un-batched jump operators if necessary
     if len(batched_jump_ops) > 0:
         b = batched_jump_ops[0].shape[0]
         for jump_op in not_batched_jump_ops:
