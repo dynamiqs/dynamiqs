@@ -9,7 +9,13 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Rouchon1, Rouchon2, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_jump_ops, batch_y0, to_td_tensor
+from ..solvers.utils import (
+    batch_H,
+    batch_jump_ops,
+    batch_y0,
+    prepare_jump_ops_batching,
+    to_td_tensor,
+)
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import isket, todm
 from .adaptive import MEDormandPrince5
@@ -161,44 +167,14 @@ def mesolve(
             ' `sesolve`.'
         )
 
-    # check all jump ops are batched in a similar way or not at all
-    batched_jump_ops, not_batched_jump_ops = [], []
-
-    for jump_op in jump_ops:
-        if jump_op.dim() == 3:
-            if jump_op.shape[0] == 1:
-                not_batched_jump_ops.append(jump_op.squeeze(0))
-            else:
-                batched_jump_ops.append(jump_op)
-        elif jump_op.dim() == 2:
-            not_batched_jump_ops.append(jump_op)
-        else:
-            raise ValueError(
-                f"All jump operators must have 2 dimensions or 3 dimensions if batched, but a jump operator had {jump_op.ndim} dimensions with shape {jump_op.shape}."
-            )
-
-    # check all batching are the same for batched jump_ops
-    batched_jump_ops_shapes = set(map(lambda x: x.shape, batched_jump_ops))
-    if len(batched_jump_ops_shapes) > 1:
-        raise ValueError(
-            "All batched jump operators (of dimension 3) must have the same shape, but"
-            f" got shapes {batched_jump_ops_shapes}"
-        )
-
-    # batch all unbatched jump operators if necessary
-    if len(batched_jump_ops) > 0:
-        b = batched_jump_ops[0].shape[0]
-        for jump_op in not_batched_jump_ops:
-            jump_op = jump_op.repeat(b, 1, 1)
-            batched_jump_ops.append(jump_op)
-        jump_ops = batched_jump_ops
-
     # check exp_ops
     if exp_ops is not None and not isinstance(exp_ops, list):
         raise TypeError(
             'Argument `exp_ops` must be `None` or a list of array-like objects, but'
             f' has type {obj_type_str(exp_ops)}.'
         )
+
+    jump_ops = prepare_jump_ops_batching(jump_ops)
 
     # format and batch all tensors
     # H: (b_H, 1, 1, n, n)

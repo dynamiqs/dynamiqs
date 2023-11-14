@@ -108,7 +108,7 @@ class MERouchon1(MERouchon):
             rho = inv_kraus_matmul(T.mH, rho, upper=True)  # T.mH^-1 @ rho @ T^-1
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
+        rho = M0 @ rho @ M0.mH + kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
 
         return unit(rho)
 
@@ -142,13 +142,13 @@ class MERouchon1(MERouchon):
             rho = inv_kraus_matmul(Trev.mH, rho, upper=True)  # Tr.mH^-1 @ rho @ Tr^-1
 
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, M1srev)
+        rho = M0rev @ rho @ M0rev.mH - kraus_map(rho, M1srev)
 
         # === forward time
         M0, M1s = self.Ms(Hnh)
 
         # compute phi(t-dt)
-        phi = kraus_map(phi, M0.mH) + kraus_map(phi, M1s.mH)
+        phi = M0.mH @ phi @ M0 + kraus_map(phi, M1s.mH)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
@@ -201,7 +201,7 @@ class MERouchon2(MERouchon):
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
         rho = (
-            kraus_map(rho, M0) + tmp + 0.5 * kraus_map(tmp, M1s)
+            M0 @ rho @ M0.mH + tmp + 0.5 * kraus_map(tmp, M1s)
         )  # (b_H, b_L, b_rho, n, n)
         rho = unit(rho)  # (b_H, b_L, b_rho, n, n)
 
@@ -238,7 +238,7 @@ class MERouchon2(MERouchon):
 
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1srev)
-        rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1srev)
+        rho = M0rev @ rho @ M0rev.mH - tmp + 0.5 * kraus_map(tmp, M1srev)
         rho = unit(rho)
 
         # === forward time
@@ -246,6 +246,6 @@ class MERouchon2(MERouchon):
 
         # compute phi(t-dt)
         tmp = kraus_map(phi, M1s.mH)
-        phi = kraus_map(phi, M0.mH) + tmp + 0.5 * kraus_map(tmp, M1s.mH)
+        phi = M0.mH @ phi @ M0 + tmp + 0.5 * kraus_map(tmp, M1s.mH)
 
         return rho, phi

@@ -9,7 +9,7 @@ from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_y0, to_td_tensor
+from ..solvers.utils import batch_H, batch_y0, prepare_jump_ops_batching, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import isket, todm
 from .euler import SMEEuler
@@ -215,6 +215,8 @@ def smesolve(
             'Argument `exp_ops` must be `None` or a list of array-like objects, but'
             f' has type {obj_type_str(exp_ops)}.'
         )
+
+    jump_ops = prepare_jump_ops_batching(jump_ops)
 
     # format and batch all tensors
     # H: (b_H, 1, 1, 1, n, n)
