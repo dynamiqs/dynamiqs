@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from time import time
 
+import numpy as np
 import torch
 from torch import Tensor
 
@@ -33,9 +34,10 @@ class Solver(ABC):
             options:
         """
         self.H = H
+        self.t0 = 0.0
         self.y0 = y0
-        self.tsave = tsave
-        self.tmeas = tmeas
+        self.tsave = tsave.numpy()
+        self.tmeas = tmeas.numpy()
         self.exp_ops = exp_ops
         self.options = options
 
@@ -45,9 +47,9 @@ class Solver(ABC):
         self.device = self.options.device
 
         # initialize time logic
-        self.tstop = torch.cat((self.tsave, self.tmeas)).unique()
-        self.tsave_mask = torch.isin(self.tstop, self.tsave)
-        self.tmeas_mask = torch.isin(self.tstop, self.tmeas)
+        self.tstop = np.unique(np.concatenate((self.tsave, self.tmeas)))
+        self.tsave_mask = np.isin(self.tstop, self.tsave)
+        self.tmeas_mask = np.isin(self.tstop, self.tmeas)
         self.tstop_counter = 0
         self.tsave_counter = 0
         self.tmeas_counter = 0
@@ -96,7 +98,7 @@ class Solver(ABC):
         pass
 
     def next_tstop(self) -> float:
-        return self.tstop[self.tstop_counter].item()
+        return self.tstop[self.tstop_counter]
 
     def save(self, y: Tensor):
         if self.tsave_mask[self.tstop_counter]:

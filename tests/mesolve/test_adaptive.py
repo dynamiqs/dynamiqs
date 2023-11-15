@@ -1,16 +1,25 @@
-from dynamiqs.gradient import Autograd
+import pytest
+
+from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Dopri5
 
-from ..solver_tester import SolverTester
-from .open_system import grad_leaky_cavity_8, leaky_cavity_8
+from ..solver_tester import OpenSolverTester
+from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
-class TestMEAdaptive(SolverTester):
+class TestMEAdaptive(OpenSolverTester):
     def test_batching(self):
-        self._test_batching(leaky_cavity_8, Dopri5())
+        self._test_batching(ocavity, Dopri5())
 
-    def test_correctness(self):
-        self._test_correctness(leaky_cavity_8, Dopri5(), num_tsave=11)
+    @pytest.mark.parametrize('system', [ocavity, otdqubit])
+    def test_correctness(self, system):
+        self._test_correctness(system, Dopri5())
 
-    def test_autograd(self):
-        self._test_gradient(grad_leaky_cavity_8, Dopri5(), Autograd(), num_tsave=11)
+    @pytest.mark.parametrize('system', [gocavity, gotdqubit])
+    def test_autograd(self, system):
+        self._test_gradient(system, Dopri5(), Autograd())
+
+    @pytest.mark.parametrize('system', [gocavity, gotdqubit])
+    def test_adjoint(self, system):
+        gradient = Adjoint(params=system.params)
+        self._test_gradient(system, Dopri5(), gradient, rtol=1e-1, atol=1e-2)

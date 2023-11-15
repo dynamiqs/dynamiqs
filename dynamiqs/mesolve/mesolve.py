@@ -182,11 +182,11 @@ def mesolve(
     jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
     # convert tsave to a tensor
-    tsave = to_tensor(tsave, dtype=options.rdtype, device=options.device)
+    tsave = to_tensor(tsave, dtype=options.rdtype, device='cpu')
     check_time_tensor(tsave, arg_name='tsave')
 
     # define the solver
-    tmeas = torch.empty(0, dtype=options.rdtype, device=options.device)
+    tmeas = torch.empty(0, dtype=options.rdtype, device='cpu')
     solver = SOLVER_CLASS(H, rho0, tsave, tmeas, exp_ops, options, jump_ops=jump_ops)
 
     # compute the result
