@@ -104,7 +104,7 @@ def basis(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ):
-    """Alias for [`dq.fock()`](/python_api/utils/states/fock.html)."""
+    """Alias for [`dq.fock()`][dynamiqs.fock]."""
     return fock(dim, number, dtype=dtype, device=device)
 
 
@@ -115,7 +115,7 @@ def basis_dm(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ):
-    """Alias for [`dq.fock_dm()`](/python_api/utils/states/fock_dm.html)."""
+    """Alias for [`dq.fock_dm()`][dynamiqs.fock_dm]."""
     return fock_dm(dim, number, dtype=dtype, device=device)
 
 
