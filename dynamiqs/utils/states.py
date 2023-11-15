@@ -10,7 +10,7 @@ from .operators import displace
 from .tensor_types import ArrayLike, Number, get_cdtype, to_tensor
 from .utils import tensprod, todm
 
-__all__ = ['fock', 'fock_dm', 'coherent', 'coherent_dm']
+__all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
 
 def fock(
@@ -95,6 +95,28 @@ def fock_dm(
                 [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]])
     """
     return todm(fock(dim, number, dtype=dtype, device=device))
+
+
+def basis(
+    dim: int | tuple[int, ...],
+    number: int | tuple[int, ...],
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+):
+    """Alias for [`dq.fock()`](/python_api/utils/states/fock.html)."""
+    return fock(dim, number, dtype=dtype, device=device)
+
+
+def basis_dm(
+    dim: int | tuple[int, ...],
+    number: int | tuple[int, ...],
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+):
+    """Alias for [`dq.fock_dm()`](/python_api/utils/states/fock_dm.html)."""
+    return fock_dm(dim, number, dtype=dtype, device=device)
 
 
 def coherent(
