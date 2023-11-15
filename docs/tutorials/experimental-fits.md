@@ -78,6 +78,7 @@ def load(file):
 
 time = load("docs/data/experimental-fits-time.npy")
 data = load("docs/data/experimental-fits-data.npy")
+alpha2 = data[0]
 ```
 
 and plot them
@@ -91,7 +92,11 @@ plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
 renderfig('g2-real-data')
 ```
-[Loaded data](/figs-docs/g2-real-data.png)
+
+% invisible-code-block: python
+% exp_time, exp_data, exp_alpha2 = time, data, alpha2
+
+![Loaded data](/figs-docs/g2-real-data.png)
 
 #### Option 2: Synthetic data
 
@@ -127,16 +132,24 @@ data += (torch.rand_like(data) - 0.5) * 0.15 # add noise to the data
 ```
 and plot them
 ```python
+plt.figure(figsize=(10, 5))
+
 plt.plot(time.numpy(force=True), data.numpy(force=True), "+")
 plt.grid()
+plt.xlabel("Time [us]")
+plt.ylabel("Photon number")
 renderfig('g2-synthetic-data')
 ```
-[Loaded data](/figs-docs/g2-synthetic-data.png)
+![Synthetic data](/figs-docs/g2-synthetic-data.png)
 
 
 ### Perform the fit
 
+% invisible-code-block: python
+% time, data, alpha2 = exp_time, exp_data, exp_alpha2
+
 We define the simulation code
+
 ```python
 def simulate(g2, verbose=False):
     b0 = dq.unit(dq.fock(Nb, 0) + thermal_b ** 0.5 * dq.fock(Nb, 1))
@@ -154,7 +167,7 @@ def simulate(g2, verbose=False):
         H, [Lb_down, Lb_up, La_down, La_up],
         rho0, time, 
         exp_ops=[dq.dag(a) @ a],
-        gradient=dq.gradient.Adjoint(params=g2), 
+        gradient=dq.gradient.Adjoint(params=[g2]), 
         options=dict(device=device, save_states=True, verbose=verbose)
     )
 
@@ -177,6 +190,7 @@ plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
 renderfig('g2-initial-guess')
 ```
+![g2 initial guess](/figs-docs/g2-initial-guess.png)
 
 
 % skip: start
@@ -217,7 +231,7 @@ plt.grid()
 plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
 ```
-[Fit result](/figs-docs/g2-fit-result.png)
+![Fit result](/figs-docs/g2-fit-result.png)
 
 and we can plot the loss to ensure we converged correclty
 ```python
@@ -226,13 +240,22 @@ plt.yscale("log")
 plt.grid()
 ```
 
-[Loss plot](/figs-docs/g2-loss-plot.png)
+![Loss plot](/figs-docs/g2-loss-plot.png)
 
 We finally find $g_2$:
 ```pycon
 >>> g2 / MHz
 tensor(0.8646, device='cuda:0', grad_fn=<DivBackward0>)
 ```
+
+!!! example "Final note"
+    $g_2$ value differs from the one reported in
+    [arxiv:2307.06617](https://arxiv.org/pdf/2307.06617.pdf)
+    by approximately 15%. This discrepancy is attributed to the unavailability 
+    of Dynamiqs for performing fits at the time of writing the article. 
+    Consequently, the authors were unable to employ gradient descent for their
+    fit and had to resort to alternative methods.
+
 
 ## Full code
 
@@ -285,6 +308,7 @@ plt.plot(time.numpy(force=True), data.numpy(force=True), "+")
 plt.grid()
 plt.xlabel("Time [us]")
 plt.ylabel("Photon number")
+plt.show()
 
 
 # Define simulation code
