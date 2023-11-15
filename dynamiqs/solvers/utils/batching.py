@@ -52,6 +52,8 @@ def batch_jump_ops(jump_ops: List[ArrayLike], dtype=None, device=None) -> Tensor
             jump_op = jump_op.repeat(b, 1, 1)
             batched_jump_ops.append(jump_op)
         jump_ops = batched_jump_ops
+    else:
+        jump_ops = not_batched_jump_ops
 
     jump_ops = torch.stack(jump_ops)
     if jump_ops.dim() == 3:  # (n_jump_ops, n, n)
