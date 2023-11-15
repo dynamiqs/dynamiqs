@@ -21,16 +21,21 @@ def obj_type_str(x: Any) -> str:
 
 def to_device(device: str | torch.device | None) -> torch.device:
     if device is None:
-        return torch.ones(1).device  # default device
+        torch_device = torch.ones(1).device  # default device
     elif isinstance(device, str):
-        return torch.device(device)
+        torch_device = torch.device(device)
     elif isinstance(device, torch.device):
-        return device
+        torch_device = device
     else:
         raise TypeError(
             'Argument `device` must be a string, a `torch.device` or `None` but has'
             f' type {obj_type_str(device)}.'
         )
+
+    if torch_device.index:
+        return torch_device
+    else:
+        return torch.device(torch_device.type, 0)  # default device index to 0
 
 
 def hdim(x: Tensor) -> int:

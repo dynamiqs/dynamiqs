@@ -41,7 +41,6 @@ def check_callable(
     expected_device: torch.device,
 ):
     # check type, dtype and device match
-
     if not isinstance(x0, Tensor):
         raise TypeError(
             f'The time-dependent operator must be a {type_str(Tensor)}, but has type'
