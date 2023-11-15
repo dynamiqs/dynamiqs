@@ -33,4 +33,4 @@ site/
 docs/figs-code/**
 !docs/figs-code/.gitkeep
 docs/figs-docs/**
-!docs/figs-docs/.gitkeep
+!docs/figs-docs/.gitignore

@@ -86,7 +86,7 @@ cmd = "echo '\n>>> pytest -n=auto tests' && pytest -n=auto tests"
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = "echo '\n>>> pytest dynamiqs' && rm -f docs/figs-code/*.png && pytest dynamiqs"
+cmd = "echo '\n>>> pytest dynamiqs' && find . -name 'docs/figs-code/*.png' | grep -vFf <(sed -n 's/^!//p' docs/figs-code/.gitignore) | xargs rm && pytest dynamiqs"
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
