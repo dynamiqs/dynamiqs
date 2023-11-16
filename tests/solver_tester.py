@@ -140,7 +140,7 @@ class OpenSolverTester(SolverTester):
         m, n = system._state_shape
         n_exp_ops = len(system.exp_ops)
         b_H = len(system.H_batched)
-        b_jump_ops = system.jump_ops_batched[0].shape[0]
+        b_L = system.jump_ops_batched[0].shape[0]
         b_y0 = len(system.y0_batched)
         ntsave = 11
         tsave = system.tsave(ntsave)
