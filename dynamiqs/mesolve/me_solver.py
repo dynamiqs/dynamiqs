@@ -10,7 +10,7 @@ class MESolver(Solver):
         super().__init__(*args)
         self.L = jump_ops  # (len(L), 1, b_L, 1, n, n)
         # self.sum_LdagL = (self.L.mH @ self.L).squeeze(0).sum(dim=0)  # (n, n)
-        self.sum_LdagL = torch.einsum("l...ik,l...kj->...ij", self.L.mH, self.L)
+        self.sum_LdagL = torch.einsum('l...ik,l...kj->...ij', self.L.mH, self.L)
 
         # define cached operator
         # non-hermitian Hamiltonian
