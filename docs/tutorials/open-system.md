@@ -88,7 +88,7 @@ There are two main types of ODE solvers:
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
 - **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
 
-^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
+^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian and jump operators).
 
 ^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
 
