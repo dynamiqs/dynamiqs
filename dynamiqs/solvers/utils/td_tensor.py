@@ -88,13 +88,13 @@ class TDTensor(ABC):
 
     @property
     def ndim(self) -> int:
-        """Get the number of dimensions."""
+        """Number of dimensions."""
         return self.dim()
 
     @property
     @abstractmethod
     def shape(self) -> torch.Size:
-        """Get the shape."""
+        """Shape."""
         pass
 
     @abstractmethod
