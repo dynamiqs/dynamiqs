@@ -90,7 +90,7 @@ There are two main types of ODE solvers:
 
 ^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian and jump operators).
 
-^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
+^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-matrix product at each time step).
 
 ### Sampling trajectories
 
