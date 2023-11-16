@@ -33,7 +33,7 @@ def to_device(device: str | torch.device | None) -> torch.device:
         )
 
     if torch_device.type == 'cuda' and not torch_device.index:
-        return torch.device(torch_device.type, index=0)  # default cuda index to 0
+        return torch.device(torch_device.type, index=torch.cuda.current_device())
     else:
         return torch_device
 
