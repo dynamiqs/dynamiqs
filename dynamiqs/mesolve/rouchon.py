@@ -196,7 +196,7 @@ class MERouchon2(MERouchon):
 
         H = self.H(t)  # (b_H, 1, 1, n, n)
         Hnh = self.Hnh(H)  # (b_H, 1, 1, n, n)
-        M0, M1s = self.Ms(Hnh)  # (b_H, 1, 1, n, n), (len(L), b_H, b_L, 1, n, n)
+        M0, M1s = self.Ms(Hnh)  # (b_H, b_L, 1, n, n), (len(L), b_H, b_L, 1, n, n)
 
         # compute rho(t+dt)
         tmp = kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
