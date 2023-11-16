@@ -85,6 +85,17 @@ class TDTensor(ABC):
         """Get the number of dimensions."""
         pass
 
+    @property
+    def ndim(self) -> int:
+        """Number of dimensions."""
+        return self.dim()
+
+    @property
+    @abstractmethod
+    def shape(self) -> torch.Size:
+        """Shape."""
+        pass
+
     @abstractmethod
     def unsqueeze(self, dim: int) -> TDTensor:
         """Unsqueeze at position `dim`."""
@@ -109,6 +120,10 @@ class ConstantTDTensor(TDTensor):
 
     def dim(self) -> int:
         return self._tensor.dim()
+
+    @property
+    def shape(self) -> torch.Size:
+        return self._tensor.shape
 
     def unsqueeze(self, dim: int) -> ConstantTDTensor:
         return ConstantTDTensor(self._tensor.unsqueeze(dim))
@@ -140,6 +155,10 @@ class CallableTDTensor(TDTensor):
 
     def dim(self) -> int:
         return len(self._shape)
+
+    @property
+    def shape(self) -> torch.Size:
+        return self._shape
 
     def unsqueeze(self, dim: int) -> CallableTDTensor:
         new_shape = list(self._shape)
