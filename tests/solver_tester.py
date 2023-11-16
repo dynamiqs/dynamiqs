@@ -188,7 +188,7 @@ class OpenSolverTester(SolverTester):
         result = run(system.H_batched, system.jump_ops_batched, system.y0_batched)
         assert result.ysave.shape == (b_H, b_jump_ops, b_y0, ntsave, m, n)
 
-        # batched first jump op but not the second one
+        # batched second jump op but not the first one
         result = run(
             system.H_batched,
             [system.jump_ops_batched[0]] + system.jump_ops[1:],
