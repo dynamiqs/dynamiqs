@@ -19,34 +19,6 @@ def inv_kraus_matmul(A: Tensor, B: Tensor, upper: bool) -> Tensor:
     return B
 
 
-def batched_mult_left(x, y):
-    r"""Computes the batched matrix product of two tensors where the left tensor
-    has one more dimension than the right one.
-
-     Args:
-         x _(N, ..., n, k)_: Left tensor.
-         y _(..., k, m)_: Right tensor.
-
-     Returns:
-        _(N, ..., n, m)_ The batched product of `x @ y`.
-    """
-    return torch.einsum("n...ik,...kj->n...ij", x, y)
-
-
-def batched_mult_right(x, y):
-    r"""Computes the batched matrix product of two tensors where the right tensor
-    has one more dimension than the left one.
-
-     Args:
-         x _(N, ..., n, k)_: Left tensor.
-         y _(..., k, m)_: Right tensor.
-
-     Returns:
-        _(N, ..., n, m)_ The batched product of `x @ y`.
-    """
-    return torch.einsum("...ik,n...kj->n...ij", x, y)
-
-
 class MERouchon(MESolver, AdjointFixedSolver):
     pass
 
@@ -168,9 +140,7 @@ class MERouchon2(MERouchon):
         M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, b_L, 1, n, n)
 
         M1s = (
-            0.5
-            * sqrt(abs(dt))
-            * (batched_mult_left(self.L, M0) + batched_mult_right(M0, self.L))
+            0.5 * sqrt(abs(dt)) * (self.L @ M0 + M0 @ self.L)
         )  # (len(L), b_H, b_L, 1, n, n)
 
         return M0, M1s

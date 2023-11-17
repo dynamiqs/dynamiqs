@@ -3,32 +3,46 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from ...utils.tensor_types import ArrayLike, to_tensor
-from .td_tensor import TDTensor
+from ...utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
+from .td_tensor import TDTensor, to_td_tensor
 
 
-def batch_H(H: TDTensor) -> TDTensor:
+def batch_H(
+    H: TDArrayLike,
+    dtype: torch.dtype | None = None,
+    device: str | torch.device | None = None,
+) -> TDTensor:
+    # H: (b_H?, n, n) ->  (b_H, 1, 1, n, n)
+
+    # convert to TDTensor
+    H = to_td_tensor(H, dtype=dtype, device=device)
+
     # handle H batching
-    # x: (b_H?, n, n) ->  (b_H, 1, 1, n, n)
-    if H.dim() == 2:  # (n, n)
-        H = H.unsqueeze(0)  # (1, n, n)
-    H = H.unsqueeze(1)
-    H = H.unsqueeze(1)
+    if H.ndim == 2:  # (n, n)
+        H = H.unsqueeze(0)  # (b_H, n, n)
+    H = H.unsqueeze(1)  # (b_H, 1, n, n)
+    H = H.unsqueeze(1)  # (b_H, 1, 1, n, n)
     return H
 
 
-def batch_jump_ops(jump_ops: list[ArrayLike], dtype=None, device=None) -> Tensor:
+def batch_jump_ops(
+    jump_ops: list[ArrayLike],
+    dtype: torch.dtype | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    # L: [(b_L?, n, n)] ->  (len(L), 1, b_L, 1, n, n)
+
     # check all jump ops are batched in a similar way or not at all
     batched_jump_ops, not_batched_jump_ops = [], []
 
     for jump_op in jump_ops:
         jump_op = to_tensor(jump_op, dtype=dtype, device=device)
-        if jump_op.dim() == 3:
+        if jump_op.ndim == 3:
             if jump_op.shape[0] == 1:  # allow a jump operator of shape (1, n, n))
                 not_batched_jump_ops.append(jump_op.squeeze(0))
             else:
                 batched_jump_ops.append(jump_op)
-        elif jump_op.dim() == 2:
+        elif jump_op.ndim == 2:
             not_batched_jump_ops.append(jump_op)
         else:
             raise ValueError(
@@ -55,11 +69,11 @@ def batch_jump_ops(jump_ops: list[ArrayLike], dtype=None, device=None) -> Tensor
     else:
         jump_ops = not_batched_jump_ops
 
-    jump_ops = torch.stack(jump_ops)
-    if jump_ops.dim() == 3:  # (n_jump_ops, n, n)
-        return jump_ops[:, None, None, None, ...]  # (n_jump_ops, 1, 1, 1, n, n)
-    elif jump_ops.dim() == 4:  # (n_jump_ops, b_jump_ops, n, n)
-        return jump_ops[:, None, :, None, ...]  # (n_jump_ops, 1, b_jump_ops, 1, n, n)
+    jump_ops = torch.stack(jump_ops)  # (len(L), b_L?, n, n)
+    if jump_ops.ndim == 3:  # (len(L), n, n)
+        return jump_ops[:, None, None, None, ...]  # (len(L), 1, 1, 1, n, n)
+    elif jump_ops.ndim == 4:  # (len(L), b_L, n, n)
+        return jump_ops[:, None, :, None, ...]  # (len(L), 1, b_L, 1, n, n)
     else:
         raise ValueError(
             'Expected `jump_ops` of dimension 2 or dimension 3 if batched, got'
@@ -67,23 +81,27 @@ def batch_jump_ops(jump_ops: list[ArrayLike], dtype=None, device=None) -> Tensor
         )
 
 
-def batch_y0(y0: Tensor, H: TDTensor, jump_ops: Tensor = None) -> Tensor:
-    # handle y0 batching
-    # y0: (b_y0?, m, n) ->  (1, 1, b_y0, n, n)
+def batch_y0(
+    y0: ArrayLike,
+    b_H: int = 1,
+    b_L: int = 1,
+    dtype: torch.dtype | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    # y0: (b_y0?, m, n) ->  (b_H, b_L, b_y0, m, n)
 
-    if y0.dim() == 2:  # (n, n)
-        y0 = y0[None, None, None, ...]  # (1, 1, 1, n, n)
-    elif y0.dim() == 3:  # (b_y0, n, n)
-        y0 = y0[None, None, ...]  # (1, 1, b_y0, n, n)
+    # convert to Tensor
+    y0 = to_tensor(y0, dtype=dtype, device=device)
+
+    # handle batching
+    if y0.ndim == 2:  # (m, n)
+        y0 = y0[None, ...]  # (b_y0, m, n)
+    elif y0.ndim == 3:  # (b_y0, m, n)
+        pass
     else:
         raise ValueError(
             'Expected `y0` of dimension 2 or dimension 3 if batched, got'
             f' {y0.ndim} dimensions with shape {y0.shape}.'
         )
 
-    if jump_ops is None:
-        jump_ops_repeat = 1
-    else:
-        jump_ops_repeat = jump_ops.size(2)
-
-    return y0.repeat(H.size(0), jump_ops_repeat, 1, 1, 1)
+    return y0.repeat(b_H, b_L, 1, 1, 1)  # (b_H, b_L, b_y0, m, n)

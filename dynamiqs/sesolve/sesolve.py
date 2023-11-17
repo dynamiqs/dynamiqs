@@ -9,7 +9,7 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_y0, to_td_tensor
+from ..solvers.utils import batch_H, batch_y0
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -105,10 +105,6 @@ def sesolve(
             - **gradient** (Gradient) – Gradient used.
             - **options** _(dict)_  – Options used.
     """
-    # H: (b_H?, n, n), psi0: (b_psi0?, n, 1) -> (ysave, exp_save) with
-    #    - ysave: (b_H?, b_psi0?, len(tsave), n, 1)
-    #    - exp_save: (b_H?, b_psi0?, len(exp_ops), len(tsave))
-
     # TODO support density matrices too
     # TODO add test to check that psi0 has the correct shape
 
@@ -141,21 +137,21 @@ def sesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, n, n)
-    # psi0: (b_H, b_psi0, n, 1)
-    # exp_ops: (len(exp_ops), n, n)
-    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
-    psi0 = to_tensor(psi0, dtype=options.cdtype, device=options.device)
-    H = batch_H(H)
-    psi0 = batch_y0(psi0, H)
-    exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
+    # H: (b_H, 1, 1, n, n)
+    # psi0: (b_H, 1, b_psi, n, 1)
+    # exp_ops: (len(E), n, n)
+    ops_kwargs = dict(dtype=options.cdtype, device=options.device)
+    H = batch_H(H, **ops_kwargs)
+    psi0 = batch_y0(psi0, b_H=H.size(0), **ops_kwargs)
+    exp_ops = to_tensor(exp_ops, **ops_kwargs)
 
-    # convert tsave to tensor
-    tsave = to_tensor(tsave, dtype=options.rdtype, device='cpu')
+    # convert tsave to a tensor and init tmeas
+    time_kwargs = dict(dtype=options.rdtype, device='cpu')
+    tsave = to_tensor(tsave, **time_kwargs)
+    tmeas = torch.empty(0, **time_kwargs)
     check_time_tensor(tsave, arg_name='tsave')
 
     # define the solver
-    tmeas = torch.empty(0, dtype=options.rdtype, device='cpu')
     solver = SOLVER_CLASS(H, psi0, tsave, tmeas, exp_ops, options)
 
     # compute the result

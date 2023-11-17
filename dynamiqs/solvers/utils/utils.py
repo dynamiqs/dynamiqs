@@ -21,21 +21,14 @@ tqdm = partial(std_tqdm, bar_format=PBAR_FORMAT)
 def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     """Compute the application of a Kraus map on an input density matrix.
 
-    This is equivalent to `torch.sum(operators @ rho[None,...] @ operators.mH, dim=0)`.
-    The use of einsum yields better performances on large matrices, but may cause a
-    small overhead on smaller matrices (N <~ 50).
-
-    TODO Fix documentation
-
     Args:
         rho: Density matrix of shape `(..., n, n)`.
-        operators: Kraus operators of shape `(a, ..., n, n)`.
+        operators: Kraus operators of shape `(m, ..., n, n)`.
 
     Returns:
         Density matrix of shape `(..., n, n)` with the Kraus map applied.
     """
-
-    return torch.einsum('n...ik,...kl,n...lj->...ij', O, rho, O.mH)
+    return (O @ rho @ O.mH).sum(0)  # (..., n, n)
 
 
 def inv_sqrtm(mat: Tensor) -> Tensor:
