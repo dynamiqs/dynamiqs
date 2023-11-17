@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 
 import torch
 from torch import Tensor
@@ -17,7 +17,7 @@ def batch_H(H: TDTensor) -> TDTensor:
     return H
 
 
-def batch_jump_ops(jump_ops: List[ArrayLike], dtype=None, device=None) -> Tensor:
+def batch_jump_ops(jump_ops: list[ArrayLike], dtype=None, device=None) -> Tensor:
     # check all jump ops are batched in a similar way or not at all
     batched_jump_ops, not_batched_jump_ops = [], []
 
@@ -32,17 +32,17 @@ def batch_jump_ops(jump_ops: List[ArrayLike], dtype=None, device=None) -> Tensor
             not_batched_jump_ops.append(jump_op)
         else:
             raise ValueError(
-                "All jump operators must have 2 dimensions or 3 dimensions if batched,"
-                f" but a jump operator had {jump_op.ndim} dimensions with shape"
-                f" {jump_op.shape}."
+                'All jump operators must have 2 dimensions or 3 dimensions if batched,'
+                f' but a jump operator had {jump_op.ndim} dimensions with shape'
+                f' {jump_op.shape}.'
             )
 
     # check all batching are the same for batched jump_ops
     batched_jump_ops_shapes = set(map(lambda x: x.shape, batched_jump_ops))
     if len(batched_jump_ops_shapes) > 1:
         raise ValueError(
-            "All batched jump operators (of dimension 3) must have the same shape, but"
-            f" got shapes {batched_jump_ops_shapes}"
+            'All batched jump operators (of dimension 3) must have the same shape, but'
+            f' got shapes {batched_jump_ops_shapes}'
         )
 
     # batch all un-batched jump operators if necessary
@@ -62,8 +62,8 @@ def batch_jump_ops(jump_ops: List[ArrayLike], dtype=None, device=None) -> Tensor
         return jump_ops[:, None, :, None, ...]  # (n_jump_ops, 1, b_jump_ops, 1, n, n)
     else:
         raise ValueError(
-            "Expected `jump_ops` of dimension 2 or dimension 3 if batched, got"
-            f" {jump_ops.ndim} dimensions with shape {jump_ops.shape}."
+            'Expected `jump_ops` of dimension 2 or dimension 3 if batched, got'
+            f' {jump_ops.ndim} dimensions with shape {jump_ops.shape}.'
         )
 
 
@@ -77,8 +77,8 @@ def batch_y0(y0: Tensor, H: TDTensor, jump_ops: Tensor = None) -> Tensor:
         y0 = y0[None, None, ...]  # (1, 1, b_y0, n, n)
     else:
         raise ValueError(
-            "Expected `y0` of dimension 2 or dimension 3 if batched, got"
-            f" {y0.ndim} dimensions with shape {y0.shape}."
+            'Expected `y0` of dimension 2 or dimension 3 if batched, got'
+            f' {y0.ndim} dimensions with shape {y0.shape}.'
         )
 
     if jump_ops is None:

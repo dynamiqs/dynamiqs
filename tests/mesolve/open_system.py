@@ -69,6 +69,7 @@ class OpenSystem(System):
 class OCavity(OpenSystem):
     # `H_batched: (3, n, n)
     # `jump_ops`: (2, n, n)
+    # `jump_ops_batched`: (2, 5, n, n)
     # `y0_batched`: (4, n, n)
     # `exp_ops`: (2, n, n)
 
@@ -104,8 +105,7 @@ class OCavity(OpenSystem):
         self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
         self.jump_ops = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
         self.jump_ops_batched = [
-            L.repeat(4, 1, 1) * torch.linspace(1, 4, 4)[:, None, None]
-            for L in self.jump_ops
+            L * torch.arange(5).view(5, 1, 1) for L in self.jump_ops
         ]
         self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
 

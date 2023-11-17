@@ -48,7 +48,7 @@ class SMERouchon1(SMERouchon):
         dy = self.update_meas(dw, rho)
 
         # update state
-        # M0: (b_H, 1, ntrajs, n, n)
+        # M0: (b_H, b_L, 1, ntrajs, n, n)
         M0 = M0_tmp + ((self.etas.sqrt() * dy)[..., None, None] * self.Lm).sum(-3)
         rho = M0 @ rho @ M0.mH + kraus_map(rho, self.M1s)
         rho = unit(rho)

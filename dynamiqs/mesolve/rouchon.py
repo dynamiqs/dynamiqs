@@ -22,13 +22,13 @@ def inv_kraus_matmul(A: Tensor, B: Tensor, upper: bool) -> Tensor:
 def batched_mult_left(x, y):
     r"""Computes the batched matrix product of two tensors where the left tensor
     has one more dimension than the right one.
+
      Args:
-         x: Tensor of shape (N, ..., n, k)
-         y: Tensor of shape (..., k, m)
+         x _(N, ..., n, k)_: Left tensor.
+         y _(..., k, m)_: Right tensor.
 
      Returns:
-        The batched product of `x @ y`
-         `(N, ..., n, m)`.
+        _(N, ..., n, m)_ The batched product of `x @ y`.
     """
     return torch.einsum("n...ik,...kj->n...ij", x, y)
 
@@ -36,13 +36,13 @@ def batched_mult_left(x, y):
 def batched_mult_right(x, y):
     r"""Computes the batched matrix product of two tensors where the right tensor
     has one more dimension than the left one.
+
      Args:
-         x: Tensor of shape (N, ..., n, k)
-         y: Tensor of shape (..., k, m)
+         x _(N, ..., n, k)_: Left tensor.
+         y _(..., k, m)_: Right tensor.
 
      Returns:
-        The batched product of `x @ y`
-         `(N, ..., n, m)`.
+        _(N, ..., n, m)_ The batched product of `x @ y`.
     """
     return torch.einsum("...ik,n...kj->n...ij", x, y)
 

@@ -161,8 +161,8 @@ class OpenSolverTester(SolverTester):
 
         # batched jump_ops
         result = run(system.H, system.jump_ops_batched, system.y0)
-        assert result.ysave.shape == (b_jump_ops, ntsave, m, n)
-        assert result.exp_save.shape == (b_jump_ops, n_exp_ops, ntsave)
+        assert result.ysave.shape == (b_L, ntsave, m, n)
+        assert result.exp_save.shape == (b_L, n_exp_ops, ntsave)
 
         # batched y0
         result = run(system.H, system.jump_ops, system.y0_batched)
@@ -171,8 +171,8 @@ class OpenSolverTester(SolverTester):
 
         # batched H and jump_ops
         result = run(system.H_batched, system.jump_ops_batched, system.y0)
-        assert result.ysave.shape == (b_H, b_jump_ops, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, b_jump_ops, n_exp_ops, ntsave)
+        assert result.ysave.shape == (b_H, b_L, ntsave, m, n)
+        assert result.exp_save.shape == (b_H, b_L, n_exp_ops, ntsave)
 
         # batched H and y0
         result = run(system.H_batched, system.jump_ops, system.y0_batched)
@@ -181,12 +181,12 @@ class OpenSolverTester(SolverTester):
 
         # batched jump_ops and y0
         result = run(system.H, system.jump_ops_batched, system.y0_batched)
-        assert result.ysave.shape == (b_jump_ops, b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_jump_ops, b_y0, n_exp_ops, ntsave)
+        assert result.ysave.shape == (b_L, b_y0, ntsave, m, n)
+        assert result.exp_save.shape == (b_L, b_y0, n_exp_ops, ntsave)
 
-        # batched H and jump_ops
+        # batched H and jump_ops and y0
         result = run(system.H_batched, system.jump_ops_batched, system.y0_batched)
-        assert result.ysave.shape == (b_H, b_jump_ops, b_y0, ntsave, m, n)
+        assert result.ysave.shape == (b_H, b_L, b_y0, ntsave, m, n)
 
         # batched second jump op but not the first one
         result = run(
@@ -194,4 +194,4 @@ class OpenSolverTester(SolverTester):
             [system.jump_ops_batched[0]] + system.jump_ops[1:],
             system.y0_batched,
         )
-        assert result.ysave.shape == (b_H, b_jump_ops, b_y0, ntsave, m, n)
+        assert result.ysave.shape == (b_H, b_L, b_y0, ntsave, m, n)

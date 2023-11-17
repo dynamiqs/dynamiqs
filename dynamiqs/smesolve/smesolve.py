@@ -218,9 +218,9 @@ def smesolve(
 
     # format and batch all tensors
     # H: (b_H, 1, 1, 1, n, n)
-    # rho0: (b_H, b_jump_ops, b_rho0, ntrajs, n, n)
+    # rho0: (b_H, b_L, b_rho0, ntrajs, n, n)
     # exp_ops: (len(exp_ops), n, n)
-    # jump_ops: (len(jump_ops), b_jump_ops, n, n)
+    # jump_ops: (len(jump_ops), b_L, n, n)
     H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H).unsqueeze(2)
