@@ -78,7 +78,8 @@ The Lindblad master equation is an ODE, for which a wide variety of solvers have
 $$
     \begin{aligned}
         \rho(t+\dt) &= \rho(t)+\dt\frac{\dd\rho(t)}{\dt}+\mathcal{O}(\dt^2) \\\\
-        &\approx \rho(t)+\dt\mathcal{L}(\rho(t)),
+        &\approx \rho(t)+\dt\mathcal{L}(\rho(t)) \\\\
+        &\approx \rho(t)+\dt\left(-i[H(t), \rho(t)] + \sum_{k=1}^N \left(L_k \rho(t) L_k^\dag - \frac{1}{2} L_k^\dag L_k \rho(t) - \frac{1}{2} \rho(t) L_k^\dag L_k\right)\right),
     \end{aligned}
 $$
 where we used the Lindblad master equation to replace the time derivative of the state. By choosing a sufficiently small step size $\dt$ and starting from $\rho(0)$, the state is then iteratively evolved to a final time using the previous equation.
@@ -88,9 +89,9 @@ There are two main types of ODE solvers:
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
 - **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
 
-^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
+^^Space complexity^^: $O(n^2)$ (storing the Hamiltonian and jump operators).
 
-^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
+^^Time complexity^^: $O(n^3\times\text{number of time steps})$ (complexity of the matrix-matrix product at each time step).
 
 ### Sampling trajectories
 

@@ -149,6 +149,8 @@ nav:
           - States:
               - fock: python_api/utils/states/fock.md
               - fock_dm: python_api/utils/states/fock_dm.md
+              - basis: python_api/utils/states/basis.md
+              - basis_dm: python_api/utils/states/basis_dm.md
               - coherent: python_api/utils/states/coherent.md
               - coherent_dm: python_api/utils/states/coherent_dm.md
           - Quantum utilities:

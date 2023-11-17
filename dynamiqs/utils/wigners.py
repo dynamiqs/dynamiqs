@@ -6,7 +6,8 @@ from typing import Literal
 import torch
 from torch import Tensor
 
-from .tensor_types import dtype_real_to_complex
+from .operators import eye
+from .tensor_types import dtype_complex_to_real, dtype_real_to_complex
 from .utils import isdm, isket, todm
 
 __all__ = ['wigner']
@@ -43,8 +44,9 @@ def wigner(
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
-    xvec = torch.linspace(-xmax, xmax, npixels)
-    yvec = torch.linspace(-ymax, ymax, npixels)
+    rdtype = dtype_complex_to_real(state.dtype)
+    xvec = torch.linspace(-xmax, xmax, npixels, dtype=rdtype, device=state.device)
+    yvec = torch.linspace(-ymax, ymax, npixels, dtype=rdtype, device=state.device)
 
     if method == 'clenshaw':
         state = todm(state)
@@ -77,7 +79,10 @@ def _wigner_clenshaw(rho: Tensor, xvec: Tensor, yvec: Tensor, g: float):
     a2 = a.abs() ** 2
 
     w = 2 * rho[0, -1] * torch.ones_like(a)
-    rho = rho * (2 * torch.ones(n, n) - torch.diag(torch.ones(n)))
+    rho = rho * (
+        2 * torch.ones(n, n, dtype=rho.dtype, device=rho.device)
+        - eye(n, dtype=rho.dtype, device=rho.device)
+    )
     for i in range(n - 2, -1, -1):
         w *= 2 * a * (i + 1) ** (-0.5)
         w += _laguerre_series(i, 4 * a2, torch.diag(rho, i))

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import cos, exp, pi, sin
-from typing import Any, List
+from typing import Any
 
 import torch
 from torch import Tensor
@@ -45,7 +45,7 @@ class OpenSystem(System):
     def _run(
         self,
         H: Tensor,
-        jump_ops: List[ArrayLike] | None,
+        jump_ops: list[ArrayLike] | None,
         y0: Tensor,
         tsave: ArrayLike,
         solver: Solver,
