@@ -32,10 +32,12 @@ def to_device(device: str | torch.device | None) -> torch.device:
             f' type {obj_type_str(device)}.'
         )
 
-    if torch_device.type == 'cuda' and not torch_device.index:
-        return torch.device(torch_device.type, index=torch.cuda.current_device())
-    else:
-        return torch_device
+    if torch_device.type == 'cuda' and torch_device.index is None:
+        torch_device = torch.device(
+            torch_device.type, index=torch.cuda.current_device()
+        )
+
+    return torch_device
 
 
 def hdim(x: Tensor) -> int:
