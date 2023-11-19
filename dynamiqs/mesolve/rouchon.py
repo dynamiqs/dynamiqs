@@ -19,6 +19,34 @@ def inv_kraus_matmul(A: Tensor, B: Tensor, upper: bool) -> Tensor:
     return B
 
 
+def batched_mult_left(x, y):
+    r"""Computes the batched matrix product of two tensors where the left tensor
+    has one more dimension than the right one.
+
+     Args:
+         x _(N, ..., n, k)_: Left tensor.
+         y _(..., k, m)_: Right tensor.
+
+     Returns:
+        _(N, ..., n, m)_ The batched product of `x @ y`.
+    """
+    return torch.einsum("n...ik,...kj->n...ij", x, y)
+
+
+def batched_mult_right(x, y):
+    r"""Computes the batched matrix product of two tensors where the right tensor
+    has one more dimension than the left one.
+
+     Args:
+         x _(N, ..., n, k)_: Left tensor.
+         y _(..., k, m)_: Right tensor.
+
+     Returns:
+        _(N, ..., n, m)_ The batched product of `x @ y`.
+    """
+    return torch.einsum("...ik,n...kj->n...ij", x, y)
+
+
 class MERouchon(MESolver, AdjointFixedSolver):
     pass
 
@@ -28,17 +56,17 @@ class MERouchon1(MERouchon):
     def R(self, M0: Tensor, fwd: bool = True) -> Tensor:
         # `R` is close to identity but not exactly, we inverse it to normalize the
         # Kraus map in order to have a trace-preserving scheme
-        # -> (b_H, 1, n, n)
+        # -> (b_H, b_L, 1, n, n)
         dt = self.dt if fwd else -self.dt
         return M0.mH @ M0 + dt * self.sum_LdagL
 
     @cache(maxsize=2)
     def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
-        # -> (b_H, 1, n, n), (1, len(L), n, n)
+        # -> (b_H, b_L, 1, n, n), (len(L), 1, b_L, 1, n, n)
         dt = self.dt if fwd else -self.dt
-        M0 = self.I - 1j * dt * Hnh  # (b_H, 1, n, n)
-        M1s = sqrt(abs(dt)) * self.L  # (1, len(L), n, n)
+        M0 = self.I - 1j * dt * Hnh  # (b_H, b_L, 1, n, n)
+        M1s = sqrt(abs(dt)) * self.L  # (len(L), 1, b_L, 1, n, n)
 
         if self.options.normalize == 'sqrt':
             R = self.R(M0, fwd=fwd)
@@ -54,7 +82,7 @@ class MERouchon1(MERouchon):
     def T(self, R: Tensor) -> Tensor:
         # we normalize the map at each time step by inverting `R` using its Cholesky
         # decomposition `R = T @ T.mT`
-        # -> (b_H, 1, n, n)
+        # -> (b_H, b_L, 1, n, n)
         return cholesky(R)[0]  # lower triangular
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
@@ -62,25 +90,25 @@ class MERouchon1(MERouchon):
 
         Args:
             t: Time.
-            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
+            rho: Density matrix of shape `(b_H, b_L, b_rho, n, n)`.
 
         Returns:
-            Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
+            Density matrix at next time step, as tensor of shape
+            `(b_H, b_L, b_rho, n, n)`.
         """
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-
-        H = self.H(t)  # (b_H, 1, n, n)
-        Hnh = self.Hnh(H)  # (b_H, 1, n, n)
-        M0, M1s = self.Ms(Hnh)  # (b_H, 1, n, n), (1, len(L), n, n)
+        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        H = self.H(t)  # (b_H, 1, 1, n, n)
+        Hnh = self.Hnh(H)  # (b_H, b_L, 1, n, n)
+        M0, M1s = self.Ms(Hnh)  # (b_H, b_L, 1, n, n), (len(L), 1, b_L, 1, n, n)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
-            R = self.R(M0)  # (b_H, 1, n, n)
-            T = self.T(R)  # (b_H, 1, n, n)
+            R = self.R(M0)  # (b_H, b_L, 1, n, n)
+            T = self.T(R)  # (b_H, b_L, 1, n, n)
             rho = inv_kraus_matmul(T.mH, rho, upper=True)  # T.mH^-1 @ rho @ T^-1
 
         # compute rho(t+dt)
-        rho = kraus_map(rho, M0) + kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
+        rho = M0 @ rho @ M0.mH + kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
 
         return unit(rho)
 
@@ -91,15 +119,15 @@ class MERouchon1(MERouchon):
 
         Args:
             t: Time (negative-valued).
-            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
-            phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
+            rho: Density matrix of shape `(b_H, b_L, b_rho, n, n)`.
+            phi: Adjoint state matrix of shape `(b_H, b_L, b_rho, n, n)`.
 
         Returns:
             Density matrix and adjoint state matrix at previous time step, as tensors of
-            shape `(b_H, b_rho, n, n)`.
+            shape `(b_H, b_L, b_rho, n, n)`.
         """
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # phi: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
 
         H = self.H(t)
         Hnh = self.Hnh(H)
@@ -114,13 +142,13 @@ class MERouchon1(MERouchon):
             rho = inv_kraus_matmul(Trev.mH, rho, upper=True)  # Tr.mH^-1 @ rho @ Tr^-1
 
         # compute rho(t-dt)
-        rho = kraus_map(rho, M0rev) - kraus_map(rho, M1srev)
+        rho = M0rev @ rho @ M0rev.mH - kraus_map(rho, M1srev)
 
         # === forward time
         M0, M1s = self.Ms(Hnh)
 
         # compute phi(t-dt)
-        phi = kraus_map(phi, M0.mH) + kraus_map(phi, M1s.mH)
+        phi = M0.mH @ phi @ M0 + kraus_map(phi, M1s.mH)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
@@ -135,10 +163,16 @@ class MERouchon2(MERouchon):
     @cache(maxsize=2)
     def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
-        # -> (b_H, 1, n, n), (b_H, len(L), n, n)
+        # -> (b_H, b_L, 1, n, n), (len(L), b_H, b_L, 1, n, n)
         dt = self.dt if fwd else -self.dt
-        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, 1, n, n)
-        M1s = 0.5 * sqrt(abs(dt)) * (self.L @ M0 + M0 @ self.L)  # (b_H, len(L), n, n)
+        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, b_L, 1, n, n)
+
+        M1s = (
+            0.5
+            * sqrt(abs(dt))
+            * (batched_mult_left(self.L, M0) + batched_mult_right(M0, self.L))
+        )  # (len(L), b_H, b_L, 1, n, n)
+
         return M0, M1s
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
@@ -152,21 +186,24 @@ class MERouchon2(MERouchon):
 
         Args:
             t: Time.
-            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
+            rho: Density matrix of shape `(b_H, b_L, b_rho, n, n)`.
 
         Returns:
-            Density matrix at next time step, as tensor of shape `(b_H, b_rho, n, n)`.
+            Density matrix at next time step, as tensor of shape
+            `(b_H, b_L, b_rho, n, n)`.
         """
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
 
-        H = self.H(t)  # (b_H, 1, n, n)
-        Hnh = self.Hnh(H)  # (b_H, 1, n, n)
-        M0, M1s = self.Ms(Hnh)  # (b_H, 1, n, n), (b_H, len(L), n, n)
+        H = self.H(t)  # (b_H, 1, 1, n, n)
+        Hnh = self.Hnh(H)  # (b_H, 1, 1, n, n)
+        M0, M1s = self.Ms(Hnh)  # (b_H, b_L, 1, n, n), (len(L), b_H, b_L, 1, n, n)
 
         # compute rho(t+dt)
-        tmp = kraus_map(rho, M1s)  # (b_H, b_rho, n, n)
-        rho = kraus_map(rho, M0) + tmp + 0.5 * kraus_map(tmp, M1s)  # (b_H, b_rho, n, n)
-        rho = unit(rho)  # (b_H, b_rho, n, n)
+        tmp = kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
+        rho = (
+            M0 @ rho @ M0.mH + tmp + 0.5 * kraus_map(tmp, M1s)
+        )  # (b_H, b_L, b_rho, n, n)
+        rho = unit(rho)  # (b_H, b_L, b_rho, n, n)
 
         return rho
 
@@ -183,15 +220,15 @@ class MERouchon2(MERouchon):
 
         Args:
             t: Time (negative-valued).
-            rho: Density matrix of shape `(b_H, b_rho, n, n)`.
-            phi: Adjoint state matrix of shape `(b_H, b_rho, n, n)`.
+            rho: Density matrix of shape `(b_H, b_L, b_rho, n, n)`.
+            phi: Adjoint state matrix of shape `(b_H, b_L, b_rho, n, n)`.
 
         Returns:
             Density matrix and adjoint state matrix at previous time step, as tensors
-            of shape `(b_H, b_rho, n, n)`.
+            of shape `(b_H, b_L, b_rho, n, n)`.
         """
-        # rho: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
-        # phi: (b_H, b_rho, n, n) -> (b_H, b_rho, n, n)
+        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # phi: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
 
         H = self.H(t)
         Hnh = self.Hnh(H)
@@ -201,7 +238,7 @@ class MERouchon2(MERouchon):
 
         # compute rho(t-dt)
         tmp = kraus_map(rho, M1srev)
-        rho = kraus_map(rho, M0rev) - tmp + 0.5 * kraus_map(tmp, M1srev)
+        rho = M0rev @ rho @ M0rev.mH - tmp + 0.5 * kraus_map(tmp, M1srev)
         rho = unit(rho)
 
         # === forward time
@@ -209,6 +246,6 @@ class MERouchon2(MERouchon):
 
         # compute phi(t-dt)
         tmp = kraus_map(phi, M1s.mH)
-        phi = kraus_map(phi, M0.mH) + tmp + 0.5 * kraus_map(tmp, M1s.mH)
+        phi = M0.mH @ phi @ M0 + tmp + 0.5 * kraus_map(tmp, M1s.mH)
 
         return rho, phi

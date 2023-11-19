@@ -6,7 +6,7 @@ from .sme_solver import SMESolver
 
 class SMEEuler(SMESolver, FixedSolver):
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
+        # rho: (b_H, b_L, b_rho, ntrajs, n, n) -> (b_H, b_L, b_rho, ntrajs, n, n)
 
         # sample Wiener process
         dw = self.sample_wiener(self.dt)

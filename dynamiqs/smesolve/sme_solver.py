@@ -64,7 +64,7 @@ class SMESolver(MESolver):
             self.bin_meas = torch.zeros_like(self.bin_meas)
 
     def sample_wiener(self, dt: float) -> Tensor:
-        # -> (b_H, b_rho, ntrajs)
+        # -> (b_H, b_L, b_rho, ntrajs)
         return torch.normal(
             torch.zeros(self.meas_shape, device=self.device),
             sqrt(dt),
@@ -73,7 +73,8 @@ class SMESolver(MESolver):
 
     @cache
     def Lmp(self, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, len(Lm), n, n)
+        # rho: (b_H, b_L, b_rho, ntrajs, n, n) ->
+        #   (b_H, b_L, b_rho, ntrajs, len(Lm), n, n)
         # Lm @ rho + rho @ Lmdag
         Lm_rho = torch.einsum('bij,...jk->...bik', self.Lm, rho)
         return Lm_rho + Lm_rho.mH
@@ -89,7 +90,7 @@ class SMESolver(MESolver):
         # $$ \mathcal{M}[Lm](\rho) = Lm \rho + \rho Lm^\dag -
         # \mathrm{Tr}\left[(Lm + Lm^\dag) \rho\right] \rho $$
 
-        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
+        # rho: (b_H, b_L, b_rho, ntrajs, n, n) -> (b_H, b_L, b_rho, ntrajs, n, n)
 
         # Lm @ rho + rho @ Lmdag
         Lmp_rho = self.Lmp(rho)  # (..., len(Lm), n, n)

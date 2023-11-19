@@ -28,13 +28,14 @@ def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
     TODO Fix documentation
 
     Args:
-        rho: Density matrix of shape `(a, ..., n, n)`.
-        operators: Kraus operators of shape `(a, b, n, n)`.
+        rho: Density matrix of shape `(..., n, n)`.
+        operators: Kraus operators of shape `(a, ..., n, n)`.
 
     Returns:
-        Density matrix of shape `(a, ..., n, n)` with the Kraus map applied.
+        Density matrix of shape `(..., n, n)` with the Kraus map applied.
     """
-    return torch.einsum('abij,a...jk,abkl->a...il', O, rho, O.mH)
+
+    return torch.einsum('n...ik,...kl,n...lj->...ij', O, rho, O.mH)
 
 
 def inv_sqrtm(mat: Tensor) -> Tensor:

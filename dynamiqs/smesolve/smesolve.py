@@ -9,7 +9,7 @@ from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_y0, to_td_tensor
+from ..solvers.utils import batch_H, batch_jump_ops, batch_y0, to_td_tensor
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import isket, todm
 from .euler import SMEEuler
@@ -217,18 +217,18 @@ def smesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, 1, n, n)
-    # rho0: (b_H, b_rho0, ntrajs, n, n)
+    # H: (b_H, 1, 1, 1, n, n)
+    # rho0: (b_H, b_L, b_rho0, ntrajs, n, n)
     # exp_ops: (len(exp_ops), n, n)
-    # jump_ops: (len(jump_ops), n, n)
+    # jump_ops: (len(jump_ops), b_L, n, n)
     H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
     rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
     H = batch_H(H).unsqueeze(2)
-    rho0 = batch_y0(rho0, H).unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)
+    jump_ops = batch_jump_ops(jump_ops, dtype=options.cdtype, device=options.device)
+    rho0 = batch_y0(rho0, H, jump_ops).unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)
     if isket(rho0):
         rho0 = todm(rho0)
     exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
-    jump_ops = to_tensor(jump_ops, dtype=options.cdtype, device=options.device)
 
     # convert tsave to a tensor
     tsave = to_tensor(tsave, dtype=options.rdtype, device='cpu')
@@ -277,10 +277,10 @@ def smesolve(
 
     # get saved tensors and restore correct batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1)
+        result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1)
+        result.exp_save = result.exp_save.squeeze(0, 1, 2)
     if result.meas_save is not None:
-        result.meas_save = result.meas_save.squeeze(0, 1)
+        result.meas_save = result.meas_save.squeeze(0, 1, 2)
 
     return result

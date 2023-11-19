@@ -20,11 +20,11 @@ class SMERouchon1(SMERouchon):
         super().__init__(*args, **kwargs)
 
         # define cached operators
-        # self.M0 (b_H, 1, n, n)
+        # self.M0 (b_H, b_L, 1, n, n)
         self.M0_tmp = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)
 
         # define M1s
-        # self.M1s: # (1, len(L), n, n)
+        # self.M1s: # (len(L), 1, b_L, 1, n, n)
         self.M1s = torch.cat(
             [
                 sqrt(self.dt) * self.Lc,
@@ -33,10 +33,10 @@ class SMERouchon1(SMERouchon):
         )[None, ...]
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_rho, ntrajs, n, n) -> (b_H, b_rho, ntrajs, n, n)
+        # rho: (b_H, b_L, b_rho, ntrajs, n, n) -> (b_H, b_L, b_rho, ntrajs, n, n)
 
         # compute cached operators
-        # H, Hnh, M0_tmp: (b_H, 1, ntrajs, n, n)
+        # H, Hnh, M0_tmp: (b_H, b_L, 1, ntrajs, n, n)
         H = self.H(t)
         Hnh = self.Hnh(H)
         M0_tmp = self.M0_tmp(Hnh)
@@ -48,7 +48,7 @@ class SMERouchon1(SMERouchon):
         dy = self.update_meas(dw, rho)
 
         # update state
-        # M0: (b_H, 1, ntrajs, n, n)
+        # M0: (b_H, b_L, 1, ntrajs, n, n)
         M0 = M0_tmp + ((self.etas.sqrt() * dy)[..., None, None] * self.Lm).sum(-3)
         rho = M0 @ rho @ M0.mH + kraus_map(rho, self.M1s)
         rho = unit(rho)
