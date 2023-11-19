@@ -14,6 +14,8 @@ Here's a short summary of the different sections for the fast-paced reader:
 
 ## Main differences with QuTiP
 
+<!-- If modifications are made in this section, ensure to also update the tutorials/defining-hamiltonians.md document to reflect these changes in the "Differences with QuTiP" warning admonition at the top of the file. -->
+
 The syntax in dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.
 
 ### Adding a scalar to an operator
@@ -85,7 +87,7 @@ This error is raised when you try to compute gradients with respect to a tensor 
 - You forgot to set `requires_grad=True` on the parameters with respect to which you want to compute the gradients.
 - You converted a tensor to a NumPy array at some point in the computation (see the previous section [Use a NumPy function](#use-a-numpy-function)).
 
-See the [Computing gradients](/tutorials/computing_gradients.html) tutorial for more details.
+See the [Computing gradients](/tutorials/computing-gradients.html) tutorial for more details.
 
 ## Using a for loop
 
