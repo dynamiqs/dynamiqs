@@ -4,16 +4,6 @@ This page highlight common pitfalls that users may encounter when learning to us
 
 In dynamiqs we use PyTorch tensors to represent quantum states and operators. A PyTorch tensor is very similar to a NumPy array, and most NumPy functions have a PyTorch equivalent. However, PyTorch tensors can be stored on GPU, and can be attached to a *computation graph* to compute gradients. This makes them very powerful, but also introduces some subtleties that you should be aware of.
 
-Here's a short summary of the different sections for the fast-paced reader:
-
-- [**Main differences with QuTiP**](#main-differences-with-qutip)
-    - [**Adding a scalar to an operator**](#adding-a-scalar-to-an-operator) &nbsp; Use `A + 2 * dq.eye(n)` instead of `A + 2`.
-    - [**Multiplying two operators**](#multiplying-two-operators): use `A @ B` instead of `A * B`, and `torch.linalg.matrix_power(A, 4)` instead of `A**4`.
-    - [**Computing the adjoint**](#computing-the-adjoint): use `dq.dag(x)`, `x.mH` or `x.adjoint()` instead of `x.dag()`.
-- [**Use a NumPy function**](#use-a-numpy-function): use `x.numpy()` to convert your tensor to a NumPy array (don't do this if you use a GPU or compute gradients).
-- [**RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn**](#runtimeerror-element-0-of-tensors-does-not-require-grad-and-does-not-have-a-grad_fn): the tensor on which you want to compute the gradient is not attached to the computation graph.
-- [**Using a for loop**](#using-a-for-loop): use batching rather than a `for` loop to simulate multiple Hamiltonians or initial states.
-
 ```python
 import dynamiqs as dq
 import torch
