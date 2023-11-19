@@ -9,8 +9,8 @@ from .td_tensor import TDTensor, to_td_tensor
 
 def batch_H(
     H: TDArrayLike,
-    dtype: torch.dtype | None = None,
-    device: str | torch.device | None = None,
+    dtype: torch.complex64 | torch.complex128,
+    device: torch.device,
 ) -> TDTensor:
     # H: (b_H?, n, n) ->  (b_H, 1, 1, n, n)
 
@@ -27,8 +27,8 @@ def batch_H(
 
 def batch_jump_ops(
     jump_ops: list[ArrayLike],
-    dtype: torch.dtype | None = None,
-    device: str | torch.device | None = None,
+    dtype: torch.complex64 | torch.complex128,
+    device: torch.device,
 ) -> Tensor:
     # L: [(b_L?, n, n)] ->  (len(L), 1, b_L, 1, n, n)
 
@@ -83,10 +83,10 @@ def batch_jump_ops(
 
 def batch_y0(
     y0: ArrayLike,
+    dtype: torch.complex64 | torch.complex128,
+    device: torch.device,
     b_H: int = 1,
     b_L: int = 1,
-    dtype: torch.dtype | None = None,
-    device: str | torch.device | None = None,
 ) -> Tensor:
     # y0: (b_y0?, m, n) ->  (b_H, b_L, b_y0, m, n)
 

@@ -7,7 +7,7 @@ from torch import Tensor
 from torch.linalg import cholesky_ex as cholesky
 
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..solvers.utils import cache, inv_sqrtm, kraus_map
+from ..solvers.utils import cache, inv_sqrtm
 from ..utils.utils import unit
 from .me_solver import MESolver
 
@@ -80,7 +80,7 @@ class MERouchon1(MERouchon):
             rho = inv_kraus_matmul(T.mH, rho, upper=True)  # T.mH^-1 @ rho @ T^-1
 
         # compute rho(t+dt)
-        rho = M0 @ rho @ M0.mH + kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
+        rho = M0 @ rho @ M0.mH + (M1s @ rho @ M1s.mH).sum(0)  # (b_H, b_L, b_rho, n, n)
 
         return unit(rho)
 
@@ -114,13 +114,13 @@ class MERouchon1(MERouchon):
             rho = inv_kraus_matmul(Trev.mH, rho, upper=True)  # Tr.mH^-1 @ rho @ Tr^-1
 
         # compute rho(t-dt)
-        rho = M0rev @ rho @ M0rev.mH - kraus_map(rho, M1srev)
+        rho = M0rev @ rho @ M0rev.mH - (M1srev @ rho @ M1srev.mH).sum(0)
 
         # === forward time
         M0, M1s = self.Ms(Hnh)
 
         # compute phi(t-dt)
-        phi = M0.mH @ phi @ M0 + kraus_map(phi, M1s.mH)
+        phi = M0.mH @ phi @ M0 + (M1s.mH @ phi @ M1s).sum(0)
 
         # normalize the Kraus Map
         if self.options.normalize == 'cholesky':
@@ -135,13 +135,11 @@ class MERouchon2(MERouchon):
     @cache(maxsize=2)
     def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
-        # -> (b_H, b_L, 1, n, n), (len(L), b_H, b_L, 1, n, n)
+        # M0: (b_H, b_L, 1, n, n)
+        # M1s: (len(L), b_H, b_L, 1, n, n)
         dt = self.dt if fwd else -self.dt
-        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh  # (b_H, b_L, 1, n, n)
-
-        M1s = (
-            0.5 * sqrt(abs(dt)) * (self.L @ M0 + M0 @ self.L)
-        )  # (len(L), b_H, b_L, 1, n, n)
+        M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh
+        M1s = 0.5 * sqrt(abs(dt)) * (self.L @ M0 + M0 @ self.L)
 
         return M0, M1s
 
@@ -169,10 +167,8 @@ class MERouchon2(MERouchon):
         M0, M1s = self.Ms(Hnh)  # (b_H, b_L, 1, n, n), (len(L), b_H, b_L, 1, n, n)
 
         # compute rho(t+dt)
-        tmp = kraus_map(rho, M1s)  # (b_H, b_L, b_rho, n, n)
-        rho = (
-            M0 @ rho @ M0.mH + tmp + 0.5 * kraus_map(tmp, M1s)
-        )  # (b_H, b_L, b_rho, n, n)
+        tmp = (M1s @ rho @ M1s.mH).sum(0)  # (b_H, b_L, b_rho, n, n)
+        rho = M0 @ rho @ M0.mH + tmp + 0.5 * (M1s @ tmp @ M1s.mH).sum(0)
         rho = unit(rho)  # (b_H, b_L, b_rho, n, n)
 
         return rho
@@ -207,15 +203,15 @@ class MERouchon2(MERouchon):
         M0rev, M1srev = self.Ms(Hnh, fwd=False)
 
         # compute rho(t-dt)
-        tmp = kraus_map(rho, M1srev)
-        rho = M0rev @ rho @ M0rev.mH - tmp + 0.5 * kraus_map(tmp, M1srev)
+        tmp = (M1srev @ rho @ M1srev.mH).sum(0)
+        rho = M0rev @ rho @ M0rev.mH - tmp + 0.5 * (M1srev @ tmp @ M1srev.mH).sum(0)
         rho = unit(rho)
 
         # === forward time
         M0, M1s = self.Ms(Hnh)
 
         # compute phi(t-dt)
-        tmp = kraus_map(phi, M1s.mH)
-        phi = M0.mH @ phi @ M0 + tmp + 0.5 * kraus_map(tmp, M1s.mH)
+        tmp = (M1s.mH @ phi @ M1s).sum(0)
+        phi = M0.mH @ phi @ M0 + tmp + 0.5 * (M1s.mH @ tmp @ M1s).sum(0)
 
         return rho, phi

@@ -276,7 +276,7 @@ def smesolve(
     # compute the result
     result = solver.run()
 
-    # get saved tensors and restore correct batching
+    # get saved tensors and restore initial batching
     if result.ysave is not None:
         result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:

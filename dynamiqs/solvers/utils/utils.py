@@ -18,19 +18,6 @@ PBAR_FORMAT = '|{bar}| {percentage:4.1f}% - time {elapsed}/{remaining}'
 tqdm = partial(std_tqdm, bar_format=PBAR_FORMAT)
 
 
-def kraus_map(rho: Tensor, O: Tensor) -> Tensor:
-    """Compute the application of a Kraus map on an input density matrix.
-
-    Args:
-        rho: Density matrix of shape `(..., n, n)`.
-        operators: Kraus operators of shape `(m, ..., n, n)`.
-
-    Returns:
-        Density matrix of shape `(..., n, n)` with the Kraus map applied.
-    """
-    return (O @ rho @ O.mH).sum(0)  # (..., n, n)
-
-
 def inv_sqrtm(mat: Tensor) -> Tensor:
     """Compute the inverse square root of a complex Hermitian or real symmetric matrix
     using its eigendecomposition.

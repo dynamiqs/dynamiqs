@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from ..solvers.ode.fixed_solver import FixedSolver
-from ..solvers.utils import cache, kraus_map
+from ..solvers.utils import cache
 from ..utils.utils import unit
 from .sme_solver import SMESolver
 
@@ -53,6 +53,6 @@ class SMERouchon1(SMERouchon):
         M0 = M0_tmp + (seta_dy[..., None, None] * self.Lm).sum(0)
 
         # update state
-        rho = M0 @ rho @ M0.mH + kraus_map(rho, self.M1s)
+        rho = M0 @ rho @ M0.mH + (self.M1s @ rho @ self.M1s.mH).sum(0)
 
         return unit(rho)
