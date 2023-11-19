@@ -1,6 +1,8 @@
 # The sharp bits 🔪
 
-In dynamiqs we use PyTorch tensors to represent quantum states and operators. A PyTorch tensor is very similar to a NumPy array, and most NumPy functions have a PyTorch equivalent. However, PyTorch tensors can be stored and GPU, and can be attached to a so-called *computation graph* to compute gradients. This makes them very powerful, but also introduces some subtleties that you should be aware of. Below, we highlight several common pitfalls that users may encounter when learning to use dynamiqs.
+This page highlight common pitfalls that users may encounter when learning to use dynamiqs.
+
+In dynamiqs we use PyTorch tensors to represent quantum states and operators. A PyTorch tensor is very similar to a NumPy array, and most NumPy functions have a PyTorch equivalent. However, PyTorch tensors can be stored on GPU, and can be attached to a *computation graph* to compute gradients. This makes them very powerful, but also introduces some subtleties that you should be aware of.
 
 Here's a short summary of the different sections for the fast-paced reader:
 
@@ -67,10 +69,10 @@ Use `dq.dag(x)`, `x.mH` or `x.adjoint()` instead of `x.dag()` to get the hermiti
 
 ## Use a NumPy function
 
-A PyTorch tensor bears a strong resemblance to a NumPy array, and both support similar methods, but they are not interchangeable. If you need to apply a NumPy function to a tensor, you must first convert it to a NumPy array using `x.numpy()`.
+A PyTorch tensor bears a strong resemblance to a NumPy array, and they support similar methods, but they are not interchangeable. If you need to apply a NumPy function to a tensor, you must first convert it to a NumPy array using `x.numpy()`.
 
-!!! Warning "Don't use NumPy functions if you use a GPU or compute gradients"
-    There are two situations when you should not use convert a tensor to a NumPy array:
+!!! Warning
+    There are two situations when you should not convert a tensor to a NumPy array:
 
     - **If you run the simulation on a GPU**: the conversion will move the tensor to the CPU, which might heavily slow down your computation.
     - **If you need to compute gradients**: the conversion will detach the tensor from the computation graph, which will prevent you from computing gradients.
@@ -81,14 +83,14 @@ A PyTorch tensor bears a strong resemblance to a NumPy array, and both support s
 
 ## RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn
 
-This error is raised when you try to compute gradients with respect to a tensor that is not attached to the computation graph. There are two common situations when you can encounter this error:
+This error is raised when you try to compute gradients with respect to a tensor that is not attached to the computation graph. There are a few common situations when you can encounter this error:
 
-- You forgot to specify the gradient algorithm, it must be explicitely specified to [`dq.sesolve()`](../python_api/solvers/sesolve.md), [`dq.mesolve()`](../python_api/solvers/mesolve.md) or [`dq.smesolve()`](../python_api/solvers/smesolve.md) using the `gradient` argument, for example `gradient=dq.gradient.Autograd()` to use PyTorch autograd library.
-- You forgot to set `requires_grad=True` on the parameters with respect to which you want to compute the gradients.
+- You forgot to specify the gradient algorithm, it must be explicitely specified in [`dq.sesolve()`](../python_api/solvers/sesolve.md), [`dq.mesolve()`](../python_api/solvers/mesolve.md) or [`dq.smesolve()`](../python_api/solvers/smesolve.md) using the `gradient` argument, for example with `gradient=dq.gradient.Autograd()` to use PyTorch autograd library.
+- You forgot to set `requires_grad=True` on the parameters with respect to which you want to compute the gradient.
 - You converted a tensor to a NumPy array at some point in the computation (see the previous section [Use a NumPy function](#use-a-numpy-function)).
 
-See the [Computing gradients](/tutorials/computing-gradients.html) tutorial for more details.
+See the [Computing gradients](/tutorials/computing-gradients.html) tutorial for more details on how to compute gradients with dynamiqs.
 
 ## Using a for loop
 
-If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](/tutorials/batching-simulations.html) tutorial, and show the performance gain.
+If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](/tutorials/batching-simulations.html) tutorial, and the associated gain in performance.
