@@ -306,8 +306,9 @@ def plot_pwc_pulse(
     ax.legend(loc='lower right')
 
     if ycenter:
-        ymax = max(ax.get_ylim(), key=abs)
-        ax.set_ylim(ymin=-ymax, ymax=ymax)
+        ymin, ymax = ax.get_ylim()
+        ymax_abs = max(abs(ymin), abs(ymax))
+        ax.set_ylim(ymin=-ymax_abs, ymax=ymax_abs)
 
     ax.set(xlim=(0, times[-1]))
 
