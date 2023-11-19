@@ -25,6 +25,7 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'mpow',
 ]
 
 
@@ -713,3 +714,24 @@ def _sqrtm(x: Tensor) -> Tensor:
     threshold = L.max(-1).values * L.size(-1) * torch.finfo(L.dtype).eps
     L = L.where(L > threshold.unsqueeze(-1), zero)  # zero out small components
     return (Q * L.sqrt().unsqueeze(-2)) @ Q.mH
+
+
+def mpow(x: Tensor, n: int) -> Tensor:
+    """Returns the $n$-th matrix power of a tensor.
+
+    Notes:
+        This function is equivalent to `torch.linalg.matrix_power(x, n)`.
+
+    Args:
+        x _(..., n, n)_: Square matrix.
+        n: Integer exponent.
+
+    Returns:
+        _(..., n, n)_ Matrix power of `x`.
+
+    Examples:
+        >>> dq.mpow(dq.sigmax(), 2)
+        tensor([[1.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j]])
+    """
+    return torch.linalg.matrix_power(x, n)
