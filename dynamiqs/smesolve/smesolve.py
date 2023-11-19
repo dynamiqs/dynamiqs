@@ -9,9 +9,9 @@ from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_jump_ops, batch_y0, to_td_tensor
+from ..solvers.utils import batch_H, batch_jump_ops, batch_y0
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
-from ..utils.utils import isket, todm
+from ..utils.utils import todm
 from .euler import SMEEuler
 from .rouchon import SMERouchon1
 
@@ -170,11 +170,6 @@ def smesolve(
         feature, we would be glad to discuss it, please
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
-    # H: (b_H?, n, n), rho0: (b_rho0?, n, n) -> (ysave, exp_save, meas_save) with
-    #    - ysave: (b_H?, b_rho0?, ntrajs, len(tsave), n, n)
-    #    - exp_save: (b_H?, b_rho0?, ntrajs, len(exp_ops), len(tsave))
-    #    - meas_save: (b_H?, b_rho0?, ntrajs, len(meas_ops), len(tmeas) - 1)
-
     # default solver
     if solver is None:
         raise ValueError(
@@ -218,24 +213,30 @@ def smesolve(
 
     # format and batch all tensors
     # H: (b_H, 1, 1, 1, n, n)
+    # jump_ops: (len(L), 1, b_L, 1, 1, n, n)
     # rho0: (b_H, b_L, b_rho0, ntrajs, n, n)
-    # exp_ops: (len(exp_ops), n, n)
-    # jump_ops: (len(jump_ops), b_L, n, n)
-    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
-    rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
-    H = batch_H(H).unsqueeze(2)
-    jump_ops = batch_jump_ops(jump_ops, dtype=options.cdtype, device=options.device)
-    rho0 = batch_y0(rho0, H, jump_ops).unsqueeze(2).repeat(1, 1, ntrajs, 1, 1)
-    if isket(rho0):
-        rho0 = todm(rho0)
-    exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
+    # exp_ops: (len(E), n, n)
+    ops_kwargs = dict(dtype=options.cdtype, device=options.device)
+    H = batch_H(H, **ops_kwargs)
+    H = H.unsqueeze(3)
+    jump_ops = batch_jump_ops(jump_ops, **ops_kwargs)
+    jump_ops = jump_ops.unsqueeze(4)
+    rho0 = batch_y0(rho0, b_H=H.size(0), b_L=jump_ops.size(2), **ops_kwargs)
+    rho0 = rho0.unsqueeze(3).repeat(1, 1, 1, ntrajs, 1, 1)
+    exp_ops = to_tensor(exp_ops, **ops_kwargs)
+
+    # convert rho0 to a density matrix
+    rho0 = todm(rho0)
 
     # convert tsave to a tensor
-    tsave = to_tensor(tsave, dtype=options.rdtype, device='cpu')
+    time_kwargs = dict(dtype=options.rdtype, device='cpu')
+    tsave = to_tensor(tsave, **time_kwargs)
     check_time_tensor(tsave, arg_name='tsave')
 
     # convert etas to a tensor and check
-    etas = to_tensor(etas, dtype=options.rdtype, device='cpu')
+    # etas: (len(L), 1, 1, 1, 1)
+    etas = to_tensor(etas, **time_kwargs)
+    etas = etas[..., None, None, None, None]
     if len(etas) != len(jump_ops):
         raise ValueError(
             'Argument `etas` must have the same length as `jump_ops` of length'
@@ -275,12 +276,13 @@ def smesolve(
     # compute the result
     result = solver.run()
 
-    # get saved tensors and restore correct batching
+    # get saved tensors and restore initial batching
     if result.ysave is not None:
         result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:
         result.exp_save = result.exp_save.squeeze(0, 1, 2)
     if result.meas_save is not None:
+        result.meas_save = result.meas_save.permute(1, 2, 3, 4, 0, 5)
         result.meas_save = result.meas_save.squeeze(0, 1, 2)
 
     return result

@@ -9,9 +9,9 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Rouchon1, Rouchon2, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_jump_ops, batch_y0, to_td_tensor
+from ..solvers.utils import batch_H, batch_jump_ops, batch_y0
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
-from ..utils.utils import isket, todm
+from ..utils.utils import todm
 from .adaptive import MEDormandPrince5
 from .euler import MEEuler
 from .propagator import MEPropagator
@@ -125,7 +125,6 @@ def mesolve(
         feature, we would be glad to discuss it, please
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """
-
     # default solver
     if solver is None:
         solver = Dopri5()
@@ -170,30 +169,31 @@ def mesolve(
 
     # format and batch all tensors
     # H: (b_H, 1, 1, n, n)
-    # jump_ops: (1, b_L, 1, n, n)
-    # rho0: (b_H, b_L, b_rho0, n, n)
-    # exp_ops: (len(exp_ops), n, n)
-    H = to_td_tensor(H, dtype=options.cdtype, device=options.device)
-    rho0 = to_tensor(rho0, dtype=options.cdtype, device=options.device)
-    H = batch_H(H)
-    jump_ops = batch_jump_ops(jump_ops, dtype=options.cdtype, device=options.device)
-    rho0 = batch_y0(rho0, H, jump_ops)
-    if isket(rho0):
-        rho0 = todm(rho0)
-    exp_ops = to_tensor(exp_ops, dtype=options.cdtype, device=options.device)
+    # jump_ops: (len(L), 1, b_L, 1, n, n)
+    # rho0: (b_H, b_L, b_rho, n, n)
+    # exp_ops: (len(E), n, n)
+    ops_kwargs = dict(dtype=options.cdtype, device=options.device)
+    H = batch_H(H, **ops_kwargs)
+    jump_ops = batch_jump_ops(jump_ops, **ops_kwargs)
+    rho0 = batch_y0(rho0, b_H=H.size(0), b_L=jump_ops.size(2), **ops_kwargs)
+    exp_ops = to_tensor(exp_ops, **ops_kwargs)
 
-    # convert tsave to a tensor
-    tsave = to_tensor(tsave, dtype=options.rdtype, device='cpu')
+    # convert rho0 to a density matrix
+    rho0 = todm(rho0)
+
+    # convert tsave to a tensor and init tmeas
+    time_kwargs = dict(dtype=options.rdtype, device='cpu')
+    tsave = to_tensor(tsave, **time_kwargs)
+    tmeas = torch.empty(0, **time_kwargs)
     check_time_tensor(tsave, arg_name='tsave')
 
     # define the solver
-    tmeas = torch.empty(0, dtype=options.rdtype, device='cpu')
     solver = SOLVER_CLASS(H, rho0, tsave, tmeas, exp_ops, options, jump_ops=jump_ops)
 
     # compute the result
     result = solver.run()
 
-    # get saved tensors and restore correct batching
+    # get saved tensors and restore initial batching
     if result.ysave is not None:
         result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:
