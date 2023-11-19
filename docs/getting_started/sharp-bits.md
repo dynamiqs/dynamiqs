@@ -44,10 +44,10 @@ tensor([[0.+0.j, 1.+0.j],
         [1.+0.j, 0.+0.j]])
 ```
 
-Likewise, you should use `torch.linalg.matrix_power` instead of `**` (element-wise power) to compute the power of a matrix:
+Likewise, you should use `dq.mpow()` instead of `**` (element-wise power) to compute the power of a matrix:
 
 ```pycon
->>> torch.linalg.matrix_power(sx, 4)  # correct
+>>> dq.mpow(sx, 4)  # correct
 tensor([[1.+0.j, 0.+0.j],
         [0.+0.j, 1.+0.j]])
 >>> sx**4  # incorrect
