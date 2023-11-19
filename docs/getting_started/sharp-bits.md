@@ -14,6 +14,11 @@ Here's a short summary of the different sections for the fast-paced reader:
 - [**RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn**](#runtimeerror-element-0-of-tensors-does-not-require-grad-and-does-not-have-a-grad_fn): the tensor on which you want to compute the gradient is not attached to the computation graph.
 - [**Using a for loop**](#using-a-for-loop): use batching rather than a `for` loop to simulate multiple Hamiltonians or initial states.
 
+```python
+import dynamiqs as dq
+import torch
+```
+
 ## Main differences with QuTiP
 
 <!-- If modifications are made in this section, ensure to also update the tutorials/defining-hamiltonians.md document to reflect these changes in the "Differences with QuTiP" warning admonition at the top of the file. -->
