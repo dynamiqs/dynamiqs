@@ -4,7 +4,12 @@ import pytest
 import torch
 from matplotlib import pyplot as plt
 from sybil import Sybil
-from sybil.parsers.myst import DocTestDirectiveParser, PythonCodeBlockParser, SkipParser
+from sybil.parsers.myst import (
+    CodeBlockParser,
+    DocTestDirectiveParser,
+    PythonCodeBlockParser,
+    SkipParser,
+)
 
 import dynamiqs
 
@@ -31,11 +36,16 @@ def renderfig():
     return savefig_docs
 
 
+class PyconCodeBlockParser(PythonCodeBlockParser):
+    language = 'pycon'
+
+
 # sybil configuration
 pytest_collect_file = Sybil(
     parsers=[
         DocTestDirectiveParser(optionflags=ELLIPSIS),
         PythonCodeBlockParser(),
+        PyconCodeBlockParser(),
         SkipParser(),
     ],
     patterns=['*.md'],
