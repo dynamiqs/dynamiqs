@@ -199,3 +199,4 @@ nav:
               - plot_pwc_pulse: python_api/plots/namespace/plot_pwc_pulse.md
               - plot_fock: python_api/plots/namespace/plot_fock.md
               - plot_fock_evolution: python_api/plots/namespace/plot_fock_evolution.md
+              - plot_hinton: python_api/plots/namespace/plot_hinton.md
