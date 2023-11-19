@@ -6,7 +6,7 @@ In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There
     dynamiqs manipulates PyTorch tensors, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.html) page the main differences, briefly:
 
     - use `A + 2 * dq.eye(n)` instead of `A + 2`
-    - use `A @ B` instead of `A * B`, and `torch.linalg.matrix_power(A, 4)` instead of `A**4`
+    - use `A @ B` instead of `A * B`, and `torch.linalg.matrix_power(A, 2)` instead of `A**2`
     - use `dq.dag(x)`, `x.mH` or `x.adjoint()` instead of `x.dag()`
 
 ## Constant Hamiltonians
