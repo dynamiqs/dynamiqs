@@ -8,15 +8,15 @@ from ..solvers.ode.adaptive_solver import AdaptiveSolver, DormandPrince5
 class SEAdaptive(AdaptiveSolver):
     def odefun(self, t: float, psi: Tensor) -> Tensor:
         """Compute dpsi / dt = -1j * H(psi) at time t."""
-        # psi: (b_H, b_psi, n, 1) -> (b_H, b_psi, n, 1)
+        # psi: (b_H, 1, b_psi, n, 1) -> (b_H, 1, b_psi, n, 1)
         return -1j * self.H(t) @ psi
 
     def odefun_backward(self, t: float, psi: Tensor) -> Tensor:
-        # psi: (b_H, b_psi, n, 1) -> (b_H, b_psi, n, 1)
+        # psi: (b_H, 1, b_psi, n, 1) -> (b_H, 1, b_psi, n, 1)
         raise NotImplementedError
 
     def odefun_adjoint(self, t: float, phi: Tensor) -> Tensor:
-        # phi: (b_H, b_psi, n, 1) -> (b_H, b_psi, n, 1)
+        # phi: (b_H, 1, b_psi, n, 1) -> (b_H, 1, b_psi, n, 1)
         raise NotImplementedError
 
 
