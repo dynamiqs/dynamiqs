@@ -24,7 +24,7 @@ class SMESolver(MESolver):
 
         # split jump operators between purely dissipative (eta = 0) and
         # monitored (eta != 0)
-        mask = etas == 0.0
+        mask = etas.squeeze() == 0.0
         self.Lc = jump_ops[mask]  # (len(Lc), 1, b_L, 1, 1, n, n) purely dissipative
         self.Lm = jump_ops[~mask]  # (len(Lm), 1, b_L, 1, 1, n, n) monitored
         self.etas = etas[~mask]  # (len(Lm), 1, 1, 1, 1)

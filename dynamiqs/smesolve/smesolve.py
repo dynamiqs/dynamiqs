@@ -282,6 +282,7 @@ def smesolve(
     if result.exp_save is not None:
         result.exp_save = result.exp_save.squeeze(0, 1, 2)
     if result.meas_save is not None:
+        result.meas_save = result.meas_save.permute(1, 2, 3, 4, 0, 5)
         result.meas_save = result.meas_save.squeeze(0, 1, 2)
 
     return result
