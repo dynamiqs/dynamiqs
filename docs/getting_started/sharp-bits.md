@@ -89,4 +89,4 @@ See the [Computing gradients](/tutorials/computing_gradients.html) tutorial for 
 
 ## Using a for loop
 
-If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](/tutorials/batching.html) tutorial, and show the performance gain.
+If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](/tutorials/batching-simulations.html) tutorial, and show the performance gain.
