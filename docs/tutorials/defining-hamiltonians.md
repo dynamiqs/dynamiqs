@@ -2,7 +2,6 @@
 
 In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently three ways: using array-like objects for constant Hamiltonians, defining a function for time-dependent Hamiltonians, and using a custom list format for piecewise constant Hamiltonians.
 
-
 !!! Warning "Differences with QuTiP"
     dynamiqs manipulates PyTorch tensors, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.html) page the main differences, briefly:
 
