@@ -168,8 +168,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
     def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
         fy0 = self.odefun_backward(t0, y0)
         fa0 = self.odefun_adjoint(t0, a0)
-        dty0 = self.init_tstep(-t0, y0, fy0, self.odefun_backward)
-        dta0 = self.init_tstep(-t0, a0, fa0, self.odefun_adjoint)
+        dty0 = self.init_tstep(t0, y0, fy0, self.odefun_backward)
+        dta0 = self.init_tstep(t0, a0, fa0, self.odefun_adjoint)
         dt0 = min(dty0, dta0)
         error0 = 1.0
         return t0, y0, a0, fy0, fa0, dt0, error0
@@ -201,18 +201,13 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
             # the computation graph attached to `y` and `a` is automatically freed after
             # next line, because there are no more references to the original tensors
-            # (the old `y`, `a`, `fyt` and `fat` go out of scope)
-            y, a, fyt, fat = (
-                new_leaf_tensor(y),
-                new_leaf_tensor(a),
-                new_leaf_tensor(fyt),
-                new_leaf_tensor(fat),
-            )
+            # (the old `y` and `a` go out of scope)
+            y, a = new_leaf_tensor(y), new_leaf_tensor(a)
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                fyt_new, y_new, y_err = self.step(-t, y, fyt, dt, self.odefun_backward)
-                fat_new, a_new, a_err = self.step(-t, a, fat, dt, self.odefun_adjoint)
+                fyt_new, y_new, y_err = self.step(t, y, fyt, dt, self.odefun_backward)
+                fat_new, a_new, a_err = self.step(t, a, fat, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
                 error_a = self.get_error(a_err, a, a_new)
