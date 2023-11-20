@@ -14,7 +14,7 @@ PATHS_TO_PARSE = [
     'dynamiqs/utils/wigners.py',
     'dynamiqs/utils/vectorization.py',
     'dynamiqs/utils/optimal_control.py',
-    'dynamiqs/plots/misc.py',
+    'dynamiqs/plots/namespace.py',
 ]
 
 
