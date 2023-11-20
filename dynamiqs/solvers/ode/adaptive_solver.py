@@ -205,9 +205,12 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
             y, a = new_leaf_tensor(y), new_leaf_tensor(a)
 
             with torch.enable_grad():
+                # compute derivatives
+                fyt, fat = self.odefun_backward(t, y), self.odefun_adjoint(t, a)
+
                 # perform a single step of size dt
-                fyt_new, y_new, y_err = self.step(t, y, fyt, dt, self.odefun_backward)
-                fat_new, a_new, a_err = self.step(t, a, fat, dt, self.odefun_adjoint)
+                _, y_new, y_err = self.step(t, y, fyt, dt, self.odefun_backward)
+                _, a_new, a_err = self.step(t, a, fat, dt, self.odefun_adjoint)
 
                 # compute estimated error of this step
                 error_a = self.get_error(a_err, a, a_new)
@@ -216,25 +219,20 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
                 # update if step is accepted
                 if error <= 1:
+                    t, y, a = t + dt, y_new, a_new
 
                     # compute g(t-dt)
                     # note: we set `retain_graph=True` to keep tracking operations on
                     # `self.options.params` in the graph
                     dg = torch.autograd.grad(
-                        a_new,
+                        a,
                         self.options.params,
-                        y_new,
+                        y,
                         allow_unused=True,
                         retain_graph=True,
                     )
                     dg = none_to_zeros_like(dg, self.options.params)
                     g = add_tuples(g, dg)
-
-                    # detach derivatives
-                    fyt, fat = new_leaf_tensor(fyt), new_leaf_tensor(fat)
-
-                    # update state
-                    t, y, a, fyt, fat = t + dt, y_new, a_new, fyt_new, fat_new
 
                     # update the progress bar
                     self.pbar.update(dt)
