@@ -172,6 +172,7 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
+              - mpow: python_api/utils/utils/mpow.md
           - Tensor conversion:
               - to_tensor: python_api/utils/tensor_types/to_tensor.md
               - to_qutip: python_api/utils/tensor_types/to_qutip.md
