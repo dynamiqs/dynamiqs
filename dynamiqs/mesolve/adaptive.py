@@ -13,11 +13,13 @@ class MEAdaptive(MESolver, AdaptiveSolver):
 
     def odefun_backward(self, t: float, rho: Tensor) -> Tensor:
         # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
-        return -self.lindbladian(t, rho)
+        # t is passed in as negative time
+        return -self.lindbladian(-t, rho)
 
     def odefun_adjoint(self, t: float, phi: Tensor) -> Tensor:
         # phi: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
-        return self.adjoint_lindbladian(t, phi)
+        # t is passed in as negative time
+        return self.adjoint_lindbladian(-t, phi)
 
 
 class MEDormandPrince5(MEAdaptive, DormandPrince5):

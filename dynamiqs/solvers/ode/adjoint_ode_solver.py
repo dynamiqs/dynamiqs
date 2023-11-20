@@ -128,17 +128,19 @@ class AdjointAutograd(torch.autograd.Function):
             for i, tnext in enumerate(tstop_bwd[1:]):
                 y, a, g, *args = solver.integrate_augmented(t, tnext, y, a, g, *args)
 
-                if solver.options.save_states and (i < len(tstop_bwd) - 2 or saved_ini):
-                    # replace y with its checkpointed version
-                    y = ysave[..., -i - 2, :, :]
-                    # update adjoint wrt this time point by adding dL / dy(t)
-                    a += grad_ysave[..., -i - 2, :, :]
+                if i < len(tstop_bwd) - 2 or saved_ini:
+                    if solver.options.save_states:
+                        # replace y with its checkpointed version
+                        y = ysave[..., -i - 2, :, :]
+                        # update adjoint wrt this time point by adding dL / dy(t)
+                        a += grad_ysave[..., -i - 2, :, :]
 
-                # update adjoint wrt this time point by adding dL / de(t)
-                if len(solver.exp_ops) > 0 and (i < len(tstop_bwd) - 2 or saved_ini):
-                    a += (
-                        grad_exp_save[..., :, -i - 2, None, None] * solver.exp_ops.mH
-                    ).sum(dim=-3)
+                    # update adjoint wrt this time point by adding dL / de(t)
+                    if len(solver.exp_ops) > 0:
+                        a += (
+                            grad_exp_save[..., :, -i - 2, None, None]
+                            * solver.exp_ops.mH
+                        ).sum(dim=-3)
 
                 # iterate time
                 t = tnext
