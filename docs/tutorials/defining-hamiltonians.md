@@ -2,6 +2,13 @@
 
 In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently three ways: using array-like objects for constant Hamiltonians, defining a function for time-dependent Hamiltonians, and using a custom list format for piecewise constant Hamiltonians.
 
+!!! Warning "Differences with QuTiP"
+    dynamiqs manipulates PyTorch tensors, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.html) page the main differences, briefly:
+
+    - use `A + 2 * dq.eye(n)` instead of `A + 2`
+    - use `A @ B` instead of `A * B`, and `torch.linalg.matrix_power(A, 2)` instead of `A**2`
+    - use `dq.dag(x)`, `x.mH` or `x.adjoint()` instead of `x.dag()`
+
 ## Constant Hamiltonians
 
 A constant Hamiltonian can be defined using **array-like objects**, i.e. Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors. In all cases, the Hamiltonian is then converted internally into a PyTorch tensor for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common Hamiltonians.
@@ -29,21 +36,6 @@ H = torch.tensor([[1, 0], [0, -1]])
 import dynamiqs as dq
 H = dq.sigmaz()
 ```
-
-!!! Warning "Computing operators adjoint and products"
-    dynamiqs functions return PyTorch `Tensor` objects, which only support PyTorch tensor methods.
-
-    For example, to compute the **adjoint of an operator** you should use `H.mH` or `H.adjoint()` (PyTorch methods) instead of `H.dag()` (as in QuTiP). Alternatively, you can also use `dq.dag(H)`.
-
-    Also, to compute the **product of quantum operators**, one should use the matrix multiplication operator `@` instead of the element-wise multiplication operator `*` (as in QuTiP). For instance:
-    ```pycon
-    >>> dq.sigmax() @ dq.sigmax()  # correct
-    tensor([[1.+0.j, 0.+0.j],
-            [0.+0.j, 1.+0.j]])
-    >>> dq.sigmax() * dq.sigmax()  # incorrect
-    tensor([[0.+0.j, 1.+0.j],
-            [1.+0.j, 0.+0.j]])
-    ```
 
 ## Time-dependent Hamiltonians
 

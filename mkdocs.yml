@@ -119,7 +119,8 @@ nav:
           - tutorials/defining-hamiltonians.md
           - tutorials/closed-system.md
           - tutorials/open-system.md
-          - tutorials/batching.md
+          - tutorials/batching-simulations.md
+          - tutorials/computing-gradients.md
   - Python API:
       - python_api/index.md
       - Solvers:
