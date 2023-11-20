@@ -19,17 +19,12 @@ def to_td_tensor(
     """Convert a `TDArrayLike` object to a `TDTensor` object."""
     device = to_device(device)
 
-    if isinstance(x, get_args(ArrayLike)):
-        # convert to tensor
+    if isinstance(x, get_args(ArrayLike)):  # constant tensor
         x = to_tensor(x, dtype=dtype, device=device)
         return ConstantTDTensor(x)
-    elif callable(x):
+    elif callable(x):  # time-dependent tensor
         dtype = get_rdtype(dtype) if dtype is None else dtype  # assume real by default
-
-        # compute initial value of the callable
         x0 = x(0.0)
-
-        # check callable
         check_callable(x0, dtype, device)
 
         return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
@@ -41,7 +36,6 @@ def check_callable(
     expected_device: torch.device,
 ):
     # check type, dtype and device match
-
     if not isinstance(x0, Tensor):
         raise TypeError(
             f'The time-dependent operator must be a {type_str(Tensor)}, but has type'

@@ -33,6 +33,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: List installed dependencies
+        run: python -m pip list
+
       - name: Run doctest
         run: task doctest
 
