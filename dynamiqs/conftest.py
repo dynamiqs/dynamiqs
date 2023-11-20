@@ -1,5 +1,6 @@
 from doctest import ELLIPSIS
 
+import numpy as np
 import pytest
 import torch
 from matplotlib import pyplot as plt
@@ -11,6 +12,7 @@ import dynamiqs
 
 def sybil_setup(namespace):
     namespace['dq'] = dynamiqs
+    namespace['np'] = np
     namespace['plt'] = plt
 
 
