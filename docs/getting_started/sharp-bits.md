@@ -47,7 +47,7 @@ tensor([[0.+0.j, 1.+0.j],
 Likewise, you should use `dq.mpow()` instead of `**` (element-wise power) to compute the power of a matrix:
 
 ```pycon
->>> dq.mpow(sx, 4)  # correct
+>>> dq.mpow(sx, 2)  # correct
 tensor([[1.+0.j, 0.+0.j],
         [0.+0.j, 1.+0.j]])
 >>> sx**2  # incorrect
