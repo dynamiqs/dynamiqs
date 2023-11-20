@@ -1,7 +1,7 @@
 import matplotlib
 from matplotlib.colors import LinearSegmentedColormap
 
-from .misc import *
+from .namespace import *
 from .utils import *
 
 cmap_colors = [
