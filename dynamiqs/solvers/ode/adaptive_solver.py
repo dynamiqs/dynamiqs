@@ -216,20 +216,25 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
                 # update if step is accepted
                 if error <= 1:
-                    t, y, a, fyt, fat = t + dt, y_new, a_new, fyt_new, fat_new
 
                     # compute g(t-dt)
                     # note: we set `retain_graph=True` to keep tracking operations on
                     # `self.options.params` in the graph
                     dg = torch.autograd.grad(
-                        a,
+                        a_new,
                         self.options.params,
-                        y,
+                        y_new,
                         allow_unused=True,
                         retain_graph=True,
                     )
                     dg = none_to_zeros_like(dg, self.options.params)
                     g = add_tuples(g, dg)
+
+                    # detach derivatives
+                    fyt, fat = new_leaf_tensor(fyt), new_leaf_tensor(fat)
+
+                    # update state
+                    t, y, a, fyt, fat = t + dt, y_new, a_new, fyt_new, fat_new
 
                     # update the progress bar
                     self.pbar.update(dt)
