@@ -25,7 +25,8 @@ __all__ = [
     'integer_ticks',
     'sample_cmap',
     'minorticks_off',
-    'fock_ticks',
+    'ket_ticks',
+    'bra_ticks',
     'add_colorbar',
 ]
 
@@ -180,24 +181,27 @@ def mplstyle(*, latex: bool = True):
         })
 
 
-def integer_ticks(axis: Axis):
-    # let maptlotlib choose major ticks position but restrict to integers
-    axis.get_major_locator().set_params(integer=True)
-
-    # format major ticks as integer
-    axis.set_major_formatter(lambda x, _: f'{int(x)}')
-
-    # fix minor ticks to integer positions only
-    axis.set_minor_locator(MultipleLocator(1))
-
-
-def fock_ticks(axis: Axis, n: int, all: bool = True):
+def integer_ticks(axis: Axis, n: int, all: bool = True):
     if all:
         axis.set_ticks(range(n))
         minorticks_off(axis)
     else:
-        integer_ticks(axis)
+        # let maptlotlib choose major ticks position but restrict to integers
+        axis.get_major_locator().set_params(integer=True)
+
+        # format major ticks as integer
+        axis.set_major_formatter(lambda x, _: f'{int(x)}')
+
+        # fix minor ticks to integer positions only
+        axis.set_minor_locator(MultipleLocator(1))
+
+
+def ket_ticks(axis: Axis):
     axis.set_major_formatter(lambda x, _: fr'$|{{{int(x)}}}\rangle$')
+
+
+def bra_ticks(axis: Axis):
+    axis.set_major_formatter(lambda x, _: fr'$\langle{{{int(x)}}}|$')
 
 
 def sample_cmap(name: str, n: int, alpha: float = 1.0) -> np.ndarray:
