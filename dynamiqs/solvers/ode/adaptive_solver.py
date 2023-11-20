@@ -165,11 +165,19 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
         """Returns $fa(a, t)$."""
         pass
 
+    def _odefun_backward(self, t: float, y: Tensor) -> Tensor:
+        # t is passed in as negative time
+        return self.odefun_backward(-t, y)
+
+    def _odefun_adjoint(self, t: float, y: Tensor) -> Tensor:
+        # t is passed in as negative time
+        return self.odefun_adjoint(-t, y)
+
     def init_augmented(self, t0: float, y0: Tensor, a0: Tensor) -> tuple:
-        fy0 = self.odefun_backward(t0, y0)
-        fa0 = self.odefun_adjoint(t0, a0)
-        dty0 = self.init_tstep(t0, y0, fy0, self.odefun_backward)
-        dta0 = self.init_tstep(t0, a0, fa0, self.odefun_adjoint)
+        fy0 = self._odefun_backward(t0, y0)
+        fa0 = self._odefun_adjoint(t0, a0)
+        dty0 = self.init_tstep(t0, y0, fy0, self._odefun_backward)
+        dta0 = self.init_tstep(t0, a0, fa0, self._odefun_adjoint)
         dt0 = min(dty0, dta0)
         error0 = 1.0
         return t0, y0, a0, fy0, fa0, dt0, error0
@@ -206,8 +214,8 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
 
             with torch.enable_grad():
                 # perform a single step of size dt
-                fyt_new, y_new, y_err = self.step(t, y, fyt, dt, self.odefun_backward)
-                fat_new, a_new, a_err = self.step(t, a, fat, dt, self.odefun_adjoint)
+                fyt_new, y_new, y_err = self.step(t, y, fyt, dt, self._odefun_backward)
+                fat_new, a_new, a_err = self.step(t, a, fat, dt, self._odefun_adjoint)
 
                 # compute estimated error of this step
                 error_a = self.get_error(a_err, a, a_new)
