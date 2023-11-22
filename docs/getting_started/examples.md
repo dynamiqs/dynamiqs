@@ -10,6 +10,7 @@ This first example shows simulation of a lossy harmonic oscillator with Hamilton
 import dynamiqs as dq
 import numpy as np
 import qutip as qt
+import torch
 
 # parameters
 n = 128       # Hilbert space dimension
@@ -23,6 +24,9 @@ H = omega * a.dag() * a
 jump_ops = [np.sqrt(kappa) * a]
 rho0 = qt.coherent_dm(n, alpha0)
 tsave = np.linspace(0, 1.0, 101)
+
+# uncomment the next line to run the simulation on GPU
+# torch.set_default_device('cuda')
 
 # simulation
 result = dq.mesolve(H, jump_ops, rho0, tsave)
