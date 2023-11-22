@@ -22,4 +22,4 @@ class TestMEAdaptive(OpenSolverTester):
     @pytest.mark.parametrize('system', [gocavity, gotdqubit])
     def test_adjoint(self, system):
         gradient = Adjoint(params=system.params)
-        self._test_gradient(system, Dopri5(), gradient, rtol=1e-1, atol=1e-2)
+        self._test_gradient(system, Dopri5(), gradient)
