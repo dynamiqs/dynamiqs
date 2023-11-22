@@ -62,7 +62,6 @@ Description: Color theme of the dynamiqs documentation
   --md-quote-bg-color: #9e9e9e1a;
 
   /* Home page */
-  --homepage-gradient: linear-gradient(to right top, #da5039, #de5741, #e25f49, #e56651, #e96d59, #eb735f, #ed7966, #ef7f6c, #f08572, #f18a78, #f1907f, #f29585);
   --homepage-button-hover-color: #ed9487;
   --homepage-button-font-color: #cf6656;
 }
@@ -109,7 +108,6 @@ Description: Color theme of the dynamiqs documentation
   --md-quote-bg-color: #9e9e9e1a;
 
   /* Home page */
-  --homepage-gradient: linear-gradient(to right top, #85382b, #9c4030, #b34834, #cb5039, #e3583d);
   --homepage-button-hover-color: #743020;
   --homepage-button-font-color: #943e2b;
 }

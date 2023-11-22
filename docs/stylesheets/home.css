@@ -13,25 +13,50 @@ Description: CSS for the homepage
 
 /* Background */
 .home-background {
-    background-color: var(--md-primary-fg-color);
-    background-image: var(--homepage-gradient);
-    transition: 0.5s;
-    background-size: 200% auto;
     z-index: -1;
     position: absolute;
     width: 100%;
-    height: 570px;
-}
+    height: 620px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: var(--md-default-bg-color);
+    overflow: hidden;
 
-.tx-container:hover+.home-background {
-    background-position: right center;
-    background-size: 100% auto;
-}
-
-@media screen and (max-width:60em) {
-    .home-background {
-        height: 620px;
+    &:before,
+    &:after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      min-width: 500vw;
+      min-height: 500vw;
+      background-color: var(--md-primary-fg-color);
+      animation-name: rotate;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
     }
+
+    &:before {
+      bottom: 15vh;
+      border-radius: 46%;
+      animation-duration: 25s;
+    }
+
+    &:after {
+      bottom: 5vh;
+      opacity: .5;
+      border-radius: 48.5%;
+      animation-duration: 25s;
+    }
+}
+
+@keyframes rotate {
+    0% {transform: translate(-50%, 0%) rotateZ(0deg);}
+    25% {transform: translate(-56%, -0.5%) rotateZ(90deg);}
+    50% {transform: translate(-50%, -1%) rotateZ(180deg);}
+    75% {transform: translate(-44%, -0.5%) rotateZ(270deg);}
+    100% {transform: translate(-50%, 0%) rotateZ(360deg);}
 }
 
 /* Hero text and image */
