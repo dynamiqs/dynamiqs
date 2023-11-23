@@ -4,6 +4,7 @@ import pytest
 import torch
 from matplotlib import pyplot as plt
 from sybil import Sybil
+from sybil.evaluators.python import PythonEvaluator
 from sybil.parsers.myst import (
     CodeBlockParser,
     DocTestDirectiveParser,
@@ -36,8 +37,11 @@ def renderfig():
     return savefig_docs
 
 
+# pycon code blocks parser
 class PyconCodeBlockParser(PythonCodeBlockParser):
-    language = 'pycon'
+    def __init__(self):
+        super().__init__()
+        self.codeblock_parser = CodeBlockParser('pycon', PythonEvaluator())
 
 
 # sybil configuration
