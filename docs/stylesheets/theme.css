@@ -77,8 +77,8 @@ Description: Color theme of the dynamiqs documentation
   /* Background */
   --md-default-bg-color-base: 50, 52, 57;
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));
-  --md-code-bg-color: hsl(215, 8%, 29%);
   --md-default-bg-header-color: #444950;
+  --md-code-bg-color: var(--md-default-bg-header-color);
 
   /* Code highlight */
   --md-code-hl-constant-color: #ed7764;

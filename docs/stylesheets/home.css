@@ -21,14 +21,6 @@ Description: CSS for the homepage
     background: var(--homepage-gradient);
 }
 
-.flex {
-    /*Flexbox for containers*/
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
 .waves {
     position: absolute;
     bottom: 0;
