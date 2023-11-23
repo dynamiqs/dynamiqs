@@ -16,47 +16,64 @@ Description: CSS for the homepage
     z-index: -1;
     position: absolute;
     width: 100%;
-    height: 620px;
+    height: 520px;
+    text-align: center;
+    background: var(--homepage-gradient);
+}
+
+.flex {
+    /*Flexbox for containers*/
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
-    background-color: var(--md-default-bg-color);
-    overflow: hidden;
-
-    &:before,
-    &:after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      min-width: 500vw;
-      min-height: 500vw;
-      background-color: var(--md-primary-fg-color);
-      animation-name: rotate;
-      animation-iteration-count: infinite;
-      animation-timing-function: linear;
-    }
-
-    &:before {
-      bottom: 15vh;
-      border-radius: 46%;
-      animation-duration: 25s;
-    }
-
-    &:after {
-      bottom: 5vh;
-      opacity: .5;
-      border-radius: 48.5%;
-      animation-duration: 25s;
-    }
+    text-align: center;
 }
 
-@keyframes rotate {
-    0% {transform: translate(-50%, 0%) rotateZ(0deg);}
-    25% {transform: translate(-56%, -0.5%) rotateZ(90deg);}
-    50% {transform: translate(-50%, -1%) rotateZ(180deg);}
-    75% {transform: translate(-44%, -0.5%) rotateZ(270deg);}
-    100% {transform: translate(-50%, 0%) rotateZ(360deg);}
+.waves {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 120px;
+}
+
+/* Animation */
+.parallax>use {
+    animation: move-forever 25s cubic-bezier(.55, .5, .45, .5) infinite;
+}
+
+.parallax>use:nth-child(1) {
+    animation-delay: -2s;
+    animation-duration: 7s;
+    fill: rgba(var(--md-default-bg-color-base), 0.7);
+}
+
+.parallax>use:nth-child(2) {
+    animation-delay: -3s;
+    animation-duration: 10s;
+    fill: rgba(var(--md-default-bg-color-base), 0.5);
+}
+
+.parallax>use:nth-child(3) {
+    animation-delay: -4s;
+    animation-duration: 13s;
+    fill: rgba(var(--md-default-bg-color-base), 0.3);
+}
+
+.parallax>use:nth-child(4) {
+    animation-delay: -5s;
+    animation-duration: 20s;
+    fill: rgba(var(--md-default-bg-color-base), 1.0);
+}
+
+@keyframes move-forever {
+    0% {
+        transform: translate3d(-90px, 0, 0);
+    }
+
+    100% {
+        transform: translate3d(85px, 0, 0);
+    }
 }
 
 /* Hero text and image */
