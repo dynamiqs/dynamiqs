@@ -187,7 +187,9 @@ def plot_hinton(
         colors_vmin, colors_vmax = vmin, vmax
     elif np.iscomplexobj(x):
         # x: 2D array with complex data
-        cmap = 'twilight' if cmap is None else cmap
+
+        # cyclic colormap for the phase
+        cmap = 'dq_cyclic' if cmap is None else cmap
 
         # areas: magnitude of x
         magnitude = np.abs(x)
