@@ -120,7 +120,7 @@ def run_batched(device):
 So we want to run a total of `11 * 11 = 121` simulations. Let's compare how long it takes to run them unbatched vs batched on CPU[^1]:
 [^1]: Apple M1 chip with 8-core CPU.
 
-% skip: start
+<!-- skip: start -->
 
 ```pycon
 >>> %timeit run_unbatched('cpu')
@@ -143,4 +143,4 @@ The result is even more striking on GPU[^2]:
 
 On the GPU, because we save costly data transfers with the CPU and do N-D matrices multiplications, we gain a **factor x75** in speedup!
 
-% skip: end
+<!-- skip: end -->

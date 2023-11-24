@@ -40,9 +40,7 @@ def renderfig():
 
 # sybil configuration
 pytest_collect_file = Sybil(
-    parsers=[
-        DocTestParser(optionflags=ELLIPSIS),
-    ],
+    parsers=[DocTestParser(optionflags=ELLIPSIS)],
     patterns=['*.py'],
     setup=sybil_setup,
     fixtures=['renderfig'],
