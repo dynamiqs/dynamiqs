@@ -30,6 +30,7 @@ Description: Color theme of the dynamiqs documentation
   --md-default-bg-header-color: #f5f5f5;
 
   /* Code highlight */
+  --md-code-fg-color: #39464b;
   --md-code-hl-constant-color: #ed7764;
   --md-code-hl-number-color: #cf5e89;
   --md-code-hl-color: #0b4f6c;
@@ -81,6 +82,7 @@ Description: Color theme of the dynamiqs documentation
   --md-code-bg-color: var(--md-default-bg-header-color);
 
   /* Code highlight */
+  --md-code-fg-color: #d5d7e2;
   --md-code-hl-constant-color: #ed7764;
   --md-code-hl-number-color: #e56395;
   --md-code-hl-color: #0b4f6c;
