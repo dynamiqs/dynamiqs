@@ -621,12 +621,17 @@ def hadamard(
 ) -> Tensor:
     r"""Returns the Hadamard transform on `n` qubits.
 
-    It is defined by $H_0=1$ and
+    For a single qubit, it is defined by
     $$
-        H_m = \frac{1}{\sqrt2} \begin{pmatrix}
-            H_{m-1} & H_{m-1} \\
-            H_{m-1} & -H_{m-1}
+        H = \frac{1}{\sqrt2} \begin{pmatrix}
+            1 & 1 \\
+            1 & -1
         \end{pmatrix}
+    $$
+    
+    For `n` qubits, it is defined by the tensor product of Hadamard matrices: 
+    $$
+        H_n = \bigotimes_{k=1}^n H
     $$
 
     Args:
