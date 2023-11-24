@@ -28,6 +28,7 @@ __all__ = [
     'sigmaz',
     'sigmap',
     'sigmam',
+    'hadamard',
 ]
 
 
@@ -610,3 +611,43 @@ def sigmam(
     return torch.tensor(
         [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
     )
+
+
+def hadamard(
+    n: int = 1,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Hadamard transform on `n` qubits
+
+    It is defined by $H_0=1$ and
+    $$
+        H_m = \frac{1}{\sqrt2} \begin{pmatrix}
+            H_{m-1} & H_{m-1} \\
+            H_{m-1} & -H_{m-1}
+        \end{pmatrix}
+    $$
+
+    Args:
+        n: integer number of qubits to act on
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2^n, 2^n)_ Hadamard transform operator.
+
+    Examples:
+        >>> dq.hadamard()
+        tensor([[ 0.707,  0.707],
+                [ 0.707, -0.707]])
+
+    """
+    if n == 0:
+        return torch.Tensor([1.0], dtype=dtype, device=device)
+
+    H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=dtype, device=device) * (2**-0.5)
+    if n == 1:
+        return H1
+
+    return tensprod(hadamard(n - 1, dtype=dtype, device=device), H1)
