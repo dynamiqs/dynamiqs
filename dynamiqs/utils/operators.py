@@ -619,7 +619,7 @@ def hadamard(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the Hadamard transform on `n` qubits
+    r"""Returns the Hadamard transform on `n` qubits.
 
     It is defined by $H_0=1$ and
     $$
