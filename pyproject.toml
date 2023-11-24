@@ -32,7 +32,7 @@ dev = [
     "mkdocs-section-index",
     "mkdocs-simple-hooks",
     "mkdocs-glightbox",
-    "sybil",
+    "sybil>=6",
 ]
 
 [tool.isort]

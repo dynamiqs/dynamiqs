@@ -1,15 +1,11 @@
-from doctest import ELLIPSIS
+from typing import Sequence
 
 import pytest
 import torch
 from matplotlib import pyplot as plt
 from sybil import Sybil
-from sybil.parsers.myst import (
-    CodeBlockParser,
-    DocTestDirectiveParser,
-    PythonCodeBlockParser,
-    SkipParser,
-)
+from sybil.evaluators.python import PythonEvaluator
+from sybil.parsers.markdown import PythonCodeBlockParser, SkipParser
 
 import dynamiqs
 
@@ -36,14 +32,24 @@ def renderfig():
     return savefig_docs
 
 
+# pycon code blocks parser
 class PyconCodeBlockParser(PythonCodeBlockParser):
-    language = 'pycon'
+    def __init__(
+        self, future_imports: Sequence[str] = (), doctest_optionflags: int = 0
+    ) -> None:
+        super().__init__(
+            future_imports=future_imports, doctest_optionflags=doctest_optionflags
+        )
+
+        # override self.codeblock_parser
+        self.codeblock_parser = self.codeblock_parser_class(
+            'pycon', PythonEvaluator(future_imports)
+        )
 
 
 # sybil configuration
 pytest_collect_file = Sybil(
     parsers=[
-        DocTestDirectiveParser(optionflags=ELLIPSIS),
         PythonCodeBlockParser(),
         PyconCodeBlockParser(),
         SkipParser(),
