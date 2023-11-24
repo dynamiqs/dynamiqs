@@ -628,8 +628,7 @@ def hadamard(
             1 & -1
         \end{pmatrix}
     $$
-    
-    For `n` qubits, it is defined by the tensor product of Hadamard matrices: 
+    For `n` qubits, it is defined by the tensor product of Hadamard matrices:
     $$
         H_n = \bigotimes_{k=1}^n H
     $$
