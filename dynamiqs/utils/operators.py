@@ -635,7 +635,7 @@ def hadamard(
     $$
 
     Args:
-        n: integer number of qubits to act on
+        n: Number of qubits to act on.
         dtype: Complex data type of the returned tensor.
         device: Device of the returned tensor.
 
