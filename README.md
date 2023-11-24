@@ -57,10 +57,10 @@ jump_ops = [np.sqrt(kappa) * a]
 rho0 = qt.coherent_dm(n, alpha0)
 tsave = np.linspace(0, 1.0, 101)
 
-# uncomment the next line to run the simulation on GPU
-# torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
+# run on GPU if available, otherwise on CPU
+torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# simulation
+# run simulation
 result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
 ```
@@ -96,10 +96,10 @@ jump_ops = [torch.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
 tsave = torch.linspace(0, 1.0, 101)
 
-# uncomment the next line to run the simulation on GPU
-# torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
+# run on GPU if available, otherwise on CPU
+torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# simulation
+# run simulation
 result = dq.mesolve(
     H, jump_ops, psi0, tsave,
     gradient=dq.gradient.Autograd(),
