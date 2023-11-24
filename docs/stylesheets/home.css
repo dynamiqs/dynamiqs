@@ -16,7 +16,7 @@ Description: CSS for the homepage
     z-index: -1;
     position: absolute;
     width: 100%;
-    height: 640px;
+    height: 660px;
     text-align: center;
     background: var(--homepage-gradient);
 }
@@ -31,7 +31,7 @@ Description: CSS for the homepage
 
 /* Animation */
 .parallax>use {
-    animation: move-background 60s cubic-bezier(.5,0,.5,1) infinite;
+    animation: move-infinite 60s cubic-bezier(.15,.1,.85,.9) infinite;
 }
 
 .parallax>use:nth-child(1) {
@@ -50,35 +50,23 @@ Description: CSS for the homepage
 }
 
 .parallax>use:nth-child(4) {
-    animation: move-foreground 60s cubic-bezier(.5,0,.5,1) infinite;
     animation-delay: 0s;
     fill: rgba(var(--md-default-bg-color-base), 1.0);
 }
 
-@keyframes move-background {
-    0% {transform: translate3d(0, 50px, 0);}
-    12% {transform: translate3d(200px, 0px, 0);}
-    25% {transform: translate3d(400px, 50px, 0);}
-    38% {transform: translate3d(600px, 100px, 0);}
-    50% {transform: translate3d(800px, 50px, 0);}
-    62% {transform: translate3d(600px, 0px, 0);}
-    75% {transform: translate3d(400px, 50px, 0);}
-    88% {transform: translate3d(200px, 100px, 0);}
-    100% {transform: translate3d(0, 50px, 0);}
+@keyframes move-infinite {
+    0% {transform: translate3d(0, 0px, 0);}
+    10% {transform: translate3d(144px, 100px, 0);}
+    20% {transform: translate3d(288px, 20px, 0);}
+    30% {transform: translate3d(432px, 80px, 0);}
+    40% {transform: translate3d(576px, 0px, 0);}
+    50% {transform: translate3d(720px, 120px, 0);}
+    60% {transform: translate3d(864px, 40px, 0);}
+    70% {transform: translate3d(1008px, 80px, 0);}
+    80% {transform: translate3d(1152px, 20px, 0);}
+    90% {transform: translate3d(1296px, 100px, 0);}
+    100% {transform: translate3d(1440px, 0px, 0);}
 }
-
-@keyframes move-foreground {
-    0% {transform: translate3d(0, 50px, 0) scale(1.0, 0.7);}
-    12% {transform: translate3d(200px, 0px, 0) scale(1.0, 0.7);}
-    25% {transform: translate3d(400px, 50px, 0) scale(1.0, 0.7);}
-    38% {transform: translate3d(600px, 100px, 0) scale(1.0, 0.7);}
-    50% {transform: translate3d(800px, 50px, 0) scale(1.0, 0.7);}
-    62% {transform: translate3d(600px, 0px, 0) scale(1.0, 0.7);}
-    75% {transform: translate3d(400px, 50px, 0) scale(1.0, 0.7);}
-    88% {transform: translate3d(200px, 100px, 0) scale(1.0, 0.7);}
-    100% {transform: translate3d(0, 50px, 0) scale(1.0, 0.7);}
-}
-
 
 /* Hero text and image */
 .tx-hero {
@@ -167,6 +155,12 @@ Description: CSS for the homepage
     .feature-item {
         flex: 1;
         min-width: 0;
+    }
+}
+
+@media screen and (min-width:60em) and (max-width:76.25em) {
+    .home-background {
+        height: 580px;
     }
 }
 
