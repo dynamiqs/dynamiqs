@@ -7,9 +7,66 @@ from .._utils import check_time_tensor
 from ..utils.operators import displace
 from ..utils.states import fock
 from ..utils.utils import tensprod, tobra
-from .tensor_types import dtype_complex_to_real, get_cdtype, to_device
+from .tensor_types import dtype_complex_to_real, get_cdtype, get_rdtype, to_device
 
-__all__ = ['rand_complex', 'pwc_pulse', 'snap_gate', 'cd_gate']
+__all__ = ['rand_real', 'rand_complex', 'pwc_pulse', 'snap_gate', 'cd_gate']
+
+
+def rand_real(
+    size: int | tuple[int, ...],
+    *,
+    max: float = 1.0,
+    requires_grad: bool = False,
+    seed: int | None = None,
+    dtype: torch.float32 | torch.float64 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns a tensor filled with uniformly distributed random real numbers.
+
+    Each element of the returned tensor has a random value in the interval
+    $[-\texttt{max}, \texttt{max})$. Formally, each element is defined by
+    $$
+        x = \texttt{max} \cdot (2 \cdot \texttt{rand(0,1)} - 1),
+    $$
+    where $\texttt{rand(0,1)}$ is a random number uniformly distributed between 0 and 1.
+
+    Args:
+        size _(int or tuple of ints)_: Size of the returned tensor.
+        max: Maximum absolute value of the random real numbers.
+        requires_grad: Whether gradients need to be computed with respect to the
+            returned tensor.
+        seed: Seed for the random number generator.
+        dtype: Real data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(*size)_ Tensor filled with random real numbers.
+
+    Examples:
+        >>> x = dq.rand_real((2, 5), max=5.0, seed=42)
+        >>> x
+        tensor([[ 3.823,  4.150, -1.171,  4.593, -1.096],
+                [ 1.009, -2.434,  2.936,  4.408, -3.668]])
+    """
+    # Note: We need to manually fetch the default device, because if `device` is `None`
+    # `torch.Generator` picks "cpu" as the default device, and not the device set by
+    # `torch.set_default_device`.
+    device = to_device(device)
+
+    # define random number generator from seed
+    generator = torch.Generator(device=device)
+    generator.seed() if seed is None else generator.manual_seed(seed)
+
+    rdtype = get_rdtype(dtype)
+
+    # generate random real with values in [-max, max[
+    rand_01 = torch.rand(size, generator=generator, dtype=rdtype, device=device)
+    x = max * (rand_01 * 2 - 1)
+
+    # start tracking operations on the tensor if requires_grad is True
+    x.requires_grad_(requires_grad)
+
+    return x
 
 
 def rand_complex(
@@ -104,7 +161,8 @@ def rand_complex(
     theta = 2 * torch.pi * rand()
     x = r * torch.exp(1j * theta)
 
-    x.requires_grad = requires_grad
+    # start tracking operations on the tensor if requires_grad is True
+    x.requires_grad_(requires_grad)
 
     return x
 
@@ -153,7 +211,7 @@ def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
             return torch.zeros(batch_sizes, dtype=values.dtype, device=values.device)
         else:
             # find the index $k$ such that $t \in [t_k, t_{k+1})$
-            idx = torch.searchsorted(times, t)
+            idx = torch.searchsorted(times, t, side='right') - 1
             return values[..., idx]
 
     return pulse
