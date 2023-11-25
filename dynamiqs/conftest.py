@@ -6,6 +6,7 @@ import torch
 from matplotlib import pyplot as plt
 from sybil import Sybil
 from sybil.parsers.doctest import DocTestParser
+from sybil.parsers.markdown import PythonCodeBlockParser
 
 import dynamiqs
 
@@ -40,7 +41,7 @@ def renderfig():
 
 # sybil configuration
 pytest_collect_file = Sybil(
-    parsers=[DocTestParser(optionflags=ELLIPSIS)],
+    parsers=[DocTestParser(optionflags=ELLIPSIS), PythonCodeBlockParser()],
     patterns=['*.py'],
     setup=sybil_setup,
     fixtures=['renderfig'],
