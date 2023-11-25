@@ -194,10 +194,10 @@ def mesolve(
     exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
 
     # === convert tsave and init tmeas
-    time_kwargs = dict(dtype=options.rdtype, device='cpu')
-    tsave = to_tensor(tsave, **time_kwargs)
-    tmeas = torch.empty(0, **time_kwargs)
+    kw = dict(dtype=options.rdtype, device='cpu')
+    tsave = to_tensor(tsave, **kw)
     check_time_tensor(tsave, arg_name='tsave')
+    tmeas = torch.empty(0, **kw)
 
     # === define the solver
     solver = SOLVER_CLASS(H, y0, tsave, tmeas, exp_ops, options, L=L)

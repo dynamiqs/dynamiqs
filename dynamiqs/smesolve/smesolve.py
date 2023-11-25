@@ -239,14 +239,18 @@ def smesolve(
     # convert exp_ops
     exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
 
-    # === convert tsave
-    time_kwargs = dict(dtype=options.rdtype, device='cpu')
-    tsave = to_tensor(tsave, **time_kwargs)
+    # === convert tsave init tmeas
+    kw = dict(dtype=options.rdtype, device='cpu')
+    tsave = to_tensor(tsave, **kw)
     check_time_tensor(tsave, arg_name='tsave')
+    if tmeas is None:
+        tmeas = tsave
+    tmeas = to_tensor(tmeas, **kw)
+    check_time_tensor(tmeas, arg_name='tmeas', allow_empty=True)
 
     # === convert and check etas
     # etas: (nL, ...)
-    etas = to_tensor(etas, **time_kwargs)
+    etas = to_tensor(etas, dtype=options.rdtype, device=options.device)
     etas = etas[..., None, None, None, None]
     if len(etas) != len(jump_ops):
         raise ValueError(
@@ -260,12 +264,6 @@ def smesolve(
         )
     if torch.any(etas < 0.0) or torch.any(etas > 1.0):
         raise ValueError('Argument `etas` must contain values between 0 and 1.')
-
-    # === convert tmeas (default to `tsave` if None)
-    if tmeas is None:
-        tmeas = tsave
-    tmeas = to_tensor(tmeas, dtype=options.rdtype, device=options.device)
-    check_time_tensor(tmeas, arg_name='tmeas', allow_empty=True)
 
     # === define random number generator from seed
     generator = torch.Generator(device=options.device)
