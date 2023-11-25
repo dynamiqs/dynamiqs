@@ -36,10 +36,33 @@ def rand_complex(
     $$
     where $\texttt{rand(0,1)}$ is a random number uniformly distributed between 0 and 1.
 
-    Notes:
+    Notes-: Why using a square root in the definition of the magnitude?
         The square root in the definition of the magnitude $r$ ensures that the
         resulting complex numbers are uniformly distributed in the disc of the complex
-        plane with a radius of `rmax`.
+        plane with a radius of `rmax`. Here are three common options to generate random
+        complex numbers, dynamiqs choice is the third one:
+
+        ```python
+        _, (ax0, ax1, ax2) = dq.gridplot(3, sharex=True, sharey=True)
+        ax0.set(xlim=(-1.1, 1.1), ylim=(-1.1, 1.1))
+
+        n = 10_000
+
+        # option 1: uniformly distributed real and imaginary part
+        x = torch.rand(n) * 2 - 1 + 1j * (torch.rand(n) * 2 - 1)
+        ax0.scatter(x.real, x.imag, s=1.0)
+
+        # option 2: uniformly distributed magnitude and phase
+        x = torch.rand(n) * torch.exp(1j * 2 * torch.pi * torch.rand(n))
+        ax1.scatter(x.real, x.imag, s=1.0)
+
+        # option 3: uniformly distributed on the unit disk (dynamiqs choice)
+        x = dq.rand_complex(n)
+        ax2.scatter(x.real, x.imag, s=1.0)
+        renderfig('rand_complex')
+        ```
+
+        ![rand_complex](/figs-code/rand_complex.png){.fig}
 
     Args:
         size _(int or tuple of ints)_: Size of the returned tensor.
