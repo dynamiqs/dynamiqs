@@ -130,7 +130,7 @@ def pwc_pulse(times: Tensor, values: Tensor) -> callable[[float], Tensor]:
             return torch.zeros(batch_sizes, dtype=values.dtype, device=values.device)
         else:
             # find the index $k$ such that $t \in [t_k, t_{k+1})$
-            idx = torch.searchsorted(times, t)
+            idx = torch.searchsorted(times, t, side='right') - 1
             return values[..., idx]
 
     return pulse
