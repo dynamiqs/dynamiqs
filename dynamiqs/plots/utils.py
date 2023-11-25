@@ -168,7 +168,7 @@ def mplstyle(*, latex: bool = True):
         # other
         'savefig.facecolor': 'white',
         'font.size': 12,
-        'scatter.marker': 'x',
+        'scatter.marker': 'o',
         'lines.linewidth': 2.0,
     })
     if latex:
