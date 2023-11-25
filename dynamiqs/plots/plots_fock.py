@@ -34,6 +34,13 @@ def plot_fock(
         >>> renderfig('plot_fock')
 
         ![plot_fock](/figs-code/plot_fock.png){.fig}
+
+        >>> # the even cat state has only even photon number components
+        >>> psi = dq.unit(dq.coherent(32, 3.0) + dq.coherent(32, -3.0))
+        >>> dq.plot_fock(psi, xticksall=False, ymax=None)
+        >>> renderfig('plot_fock_even_cat')
+
+        ![plot_fock_even_cat](/figs-code/plot_fock_even_cat.png){.fig}
     """
     state = to_numpy(state)
     n = state.shape[0]
