@@ -58,15 +58,6 @@ class MERouchon1(MERouchon):
         return cholesky(R)[0]  # lower triangular
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 1.
-
-        Args:
-            t: Time.
-            rho: Density matrix of shape `(..., n, n)`.
-
-        Returns:
-            Density matrix at next time step, as tensor of shape `(..., n, n)`.
-        """
         # rho: (..., n, n) -> (..., n, n)
         H = self.H(t)  # (..., n, n)
         Hnh = self.Hnh(H)  # (..., n, n)
@@ -86,17 +77,6 @@ class MERouchon1(MERouchon):
     def backward_augmented(
         self, t: float, rho: Tensor, phi: Tensor
     ) -> tuple[Tensor, Tensor]:
-        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 1.
-
-        Args:
-            t: Time (negative-valued).
-            rho: Density matrix of shape `(..., n, n)`.
-            phi: Adjoint state matrix of shape `(..., n, n)`.
-
-        Returns:
-            Density matrix and adjoint state matrix at previous time step, as tensors of
-            shape `(..., n, n)`.
-        """
         # rho: (..., n, n) -> (..., n, n)
         # phi: (..., n, n) -> (..., n, n)
 
@@ -134,8 +114,7 @@ class MERouchon2(MERouchon):
     @cache(maxsize=2)
     def Ms(self, Hnh: Tensor, fwd: bool = True) -> tuple(Tensor, Tensor):
         # Kraus operators
-        # M0: (..., n, n)
-        # M1s: (nL, ..., n, n)
+        # -> (..., n, n), (nL, ..., n, n)
         dt = self.dt if fwd else -self.dt
         M0 = self.I - 1j * dt * Hnh - 0.5 * dt**2 * Hnh @ Hnh
         M1s = 0.5 * sqrt(abs(dt)) * (self.L @ M0 + M0 @ self.L)
@@ -143,22 +122,12 @@ class MERouchon2(MERouchon):
         return M0, M1s
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        r"""Compute $\rho(t+dt)$ using a Rouchon method of order 2.
-
-        Notes:
-            For fast time-varying Hamiltonians, this method is not order 2 because the
-            second-order time derivative term is neglected. This term could be added in
-            the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
-            \dot{H}`.
-
-        Args:
-            t: Time.
-            rho: Density matrix of shape `(..., n, n)`.
-
-        Returns:
-            Density matrix at next time step, as tensor of shape `(..., n, n)`.
-        """
         # rho: (..., n, n) -> (..., n, n)
+
+        # Note: for fast time-varying Hamiltonians, this method is not order 2 because
+        # the  second-order time derivative term is neglected. This term could be added
+        # in the zero-th order Kraus operator if needed, as
+        # `M0 += -0.5j * dt**2 * \dot{H}`.
 
         H = self.H(t)  # (..., n, n)
         Hnh = self.Hnh(H)  # (..., n, n)
@@ -174,25 +143,13 @@ class MERouchon2(MERouchon):
     def backward_augmented(
         self, t: float, rho: Tensor, phi: Tensor
     ) -> tuple[Tensor, Tensor]:
-        r"""Compute $\rho(t-dt)$ and $\phi(t-dt)$ using a Rouchon method of order 2.
-
-        Notes:
-            For fast time-varying Hamiltonians, this method is not order 2 because the
-            second-order time derivative term is neglected. This term could be added in
-            the zero-th order Kraus operator if needed, as `M0 += -0.5j * dt**2 *
-            \dot{H}`.
-
-        Args:
-            t: Time (negative-valued).
-            rho: Density matrix of shape `(..., n, n)`.
-            phi: Adjoint state matrix of shape `(..., n, n)`.
-
-        Returns:
-            Density matrix and adjoint state matrix at previous time step, as tensors
-            of shape `(..., n, n)`.
-        """
         # rho: (..., n, n) -> (..., n, n)
         # phi: (..., n, n) -> (..., n, n)
+
+        # Note: for fast time-varying Hamiltonians, this method is not order 2 because
+        # the  second-order time derivative term is neglected. This term could be added
+        # in the zero-th order Kraus operator if needed, as
+        # `M0 += -0.5j * dt**2 * \dot{H}`.
 
         H = self.H(t)
         Hnh = self.Hnh(H)
