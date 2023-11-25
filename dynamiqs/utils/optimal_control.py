@@ -81,7 +81,8 @@ def rand_complex(
     theta = 2 * torch.pi * rand()
     x = r * torch.exp(1j * theta)
 
-    x.requires_grad = requires_grad
+    # start tracking operations on the tensor if requires_grad is True
+    x.requires_grad_(requires_grad)
 
     return x
 
