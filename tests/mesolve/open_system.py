@@ -21,10 +21,6 @@ class OpenSystem(System):
         self.jump_ops = None
         self.jump_ops_batched = None
 
-    @property
-    def _state_shape(self) -> tuple[int, int]:
-        return self.n, self.n
-
     def run(
         self,
         tsave: ArrayLike,
@@ -167,6 +163,8 @@ class OTDQubit(OpenSystem):
         t_end: float,
         requires_grad: bool = False,
     ):
+        self.n = 2
+
         # store parameters
         self.eps = torch.as_tensor(eps).requires_grad_(requires_grad)
         self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)

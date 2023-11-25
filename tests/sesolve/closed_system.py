@@ -16,10 +16,6 @@ from ..system import System
 
 
 class ClosedSystem(System):
-    @property
-    def _state_shape(self) -> tuple[int, int]:
-        return self.n, 1
-
     def run(
         self,
         tsave: ArrayLike,
@@ -136,6 +132,8 @@ class TDQubit(ClosedSystem):
     def __init__(
         self, *, eps: float, omega: float, t_end: float, requires_grad: bool = False
     ):
+        self.n = 2
+
         # store parameters
         self.eps = torch.as_tensor(eps).requires_grad_(requires_grad)
         self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)
