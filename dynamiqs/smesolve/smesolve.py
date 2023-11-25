@@ -279,7 +279,7 @@ def smesolve(
         tmeas,
         exp_ops,
         options,
-        jump_ops=jump_ops,
+        L=L,
         etas=etas,
         generator=generator,
     )

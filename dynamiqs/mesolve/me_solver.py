@@ -6,9 +6,9 @@ from ..solvers.utils import cache
 
 
 class MESolver(Solver):
-    def __init__(self, *args, jump_ops: Tensor):
+    def __init__(self, *args, L: Tensor):
         super().__init__(*args)
-        self.L = jump_ops  # (nL, ..., n, n)
+        self.L = L  # (nL, ..., n, n)
         self.sum_LdagL = (self.L.mH @ self.L).sum(dim=0)  # (..., n, n)
 
         # define identity operator

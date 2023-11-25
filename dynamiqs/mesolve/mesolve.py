@@ -200,7 +200,7 @@ def mesolve(
     check_time_tensor(tsave, arg_name='tsave')
 
     # === define the solver
-    solver = SOLVER_CLASS(H, y0, tsave, tmeas, exp_ops, options, jump_ops=L)
+    solver = SOLVER_CLASS(H, y0, tsave, tmeas, exp_ops, options, L=L)
 
     # === compute the result
     result = solver.run()

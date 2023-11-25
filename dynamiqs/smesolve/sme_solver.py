@@ -16,17 +16,17 @@ class SMESolver(MESolver):
     def __init__(
         self,
         *args,
-        jump_ops: Tensor,
+        L: Tensor,
         etas: Tensor,
         generator: torch.Generator,
     ):
-        super().__init__(*args, jump_ops=jump_ops)
+        super().__init__(*args, L=L)
 
         # split jump operators between purely dissipative (eta = 0) and
         # monitored (eta != 0)
         mask = etas.squeeze() == 0.0
-        self.Lc = jump_ops[mask]  # (nLc, ..., n, n) purely dissipative
-        self.Lm = jump_ops[~mask]  # (nLm, ..., n, n) monitored
+        self.Lc = L[mask]  # (nLc, ..., n, n) purely dissipative
+        self.Lm = L[~mask]  # (nLm, ..., n, n) monitored
         self.etas = etas[~mask]  # (nLm, ...)
         self.generator = generator
 
