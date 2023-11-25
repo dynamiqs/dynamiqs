@@ -9,7 +9,8 @@ from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_jump_ops, batch_y0
+from ..solvers.utils.td_tensor import to_td_tensor
+from ..solvers.utils.utils import format_L
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from ..utils.utils import todm
 from .euler import SMEEuler
@@ -170,16 +171,16 @@ def smesolve(
         feature, we would be glad to discuss it, please
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
-    # default solver
+    # === default solver
     if solver is None:
         raise ValueError(
             'No default solver yet, please specify one using the `solver` argument.'
         )
 
-    # options
+    # === options
     options = Options(solver=solver, gradient=gradient, options=options)
 
-    # solver class
+    # === solver class
     solvers = {
         Euler: SMEEuler,
         Rouchon1: SMERouchon1,
@@ -192,7 +193,7 @@ def smesolve(
         )
     SOLVER_CLASS = solvers[type(solver)]
 
-    # check jump_ops
+    # === check jump_ops
     if not isinstance(jump_ops, list):
         raise TypeError(
             'Argument `jump_ops` must be a list of array-like objects, but has type'
@@ -204,36 +205,46 @@ def smesolve(
             ' `ssesolve`.'
         )
 
-    # check exp_ops
+    # === check exp_ops
     if exp_ops is not None and not isinstance(exp_ops, list):
         raise TypeError(
             'Argument `exp_ops` must be `None` or a list of array-like objects, but'
             f' has type {obj_type_str(exp_ops)}.'
         )
 
-    # format and batch all tensors
-    # H: (..., n, n)
-    # jump_ops: (nL, ..., n, n)
-    # rho0: (..., n, n)
-    # exp_ops: (nE, n, n)
-    ops_kwargs = dict(dtype=options.cdtype, device=options.device)
-    H = batch_H(H, **ops_kwargs)
-    H = H.unsqueeze(3)
-    jump_ops = batch_jump_ops(jump_ops, **ops_kwargs)
-    jump_ops = jump_ops.unsqueeze(4)
-    rho0 = batch_y0(rho0, b_H=H.size(0), b_L=jump_ops.size(2), **ops_kwargs)
-    rho0 = rho0.unsqueeze(3).repeat(1, 1, 1, ntrajs, 1, 1)
-    exp_ops = to_tensor(exp_ops, **ops_kwargs)
+    # === convert and batch H, y0, exp_ops
+    kw = dict(dtype=options.cdtype, device=options.device)
 
-    # convert rho0 to a density matrix
-    rho0 = todm(rho0)
+    # convert and batch H
+    H = to_td_tensor(H, **kw)  # (bH?, n, n)
+    n = H.size(-1)
+    H = H.view(-1, 1, 1, 1, n, n)  # (bH, 1, 1, 1, n, n) with bH = 1 if not batched
+    bH = H.size(0)
 
-    # convert tsave to a tensor
+    # convert and batch L
+    L = [to_tensor(x, **kw) for x in jump_ops]  # [(??, n, n)]
+    L = format_L(L)  # (nL, bL, n, n)
+    nL = L.size(0)
+    L = L.view(
+        nL, 1, -1, 1, 1, n, n
+    )  # (nL, 1, bL, 1, 1, n, n) with bL = 1 if not batched
+    bL = L.size(2)
+
+    # convert and batch y0
+    y0 = to_tensor(rho0, **kw)  # (by?, n, n)
+    y0 = todm(y0)  # convert y0 to a density matrix
+    y0 = y0.view(1, 1, -1, 1, n, n)  # (1, 1, by, 1, n, n) with by = 1 if not batched
+    y0 = y0.repeat(bH, bL, 1, ntrajs, 1, 1)  # (bH, bL, by, ntrajs, n, n)
+
+    # convert exp_ops
+    exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
+
+    # === convert tsave
     time_kwargs = dict(dtype=options.rdtype, device='cpu')
     tsave = to_tensor(tsave, **time_kwargs)
     check_time_tensor(tsave, arg_name='tsave')
 
-    # convert etas to a tensor and check
+    # === convert and check etas
     # etas: (nL, ...)
     etas = to_tensor(etas, **time_kwargs)
     etas = etas[..., None, None, None, None]
@@ -250,17 +261,17 @@ def smesolve(
     if torch.any(etas < 0.0) or torch.any(etas > 1.0):
         raise ValueError('Argument `etas` must contain values between 0 and 1.')
 
-    # convert tmeas to a tensor (default to `tsave` if None)
+    # === convert tmeas (default to `tsave` if None)
     if tmeas is None:
         tmeas = tsave
     tmeas = to_tensor(tmeas, dtype=options.rdtype, device=options.device)
     check_time_tensor(tmeas, arg_name='tmeas', allow_empty=True)
 
-    # define random number generator from seed
+    # === define random number generator from seed
     generator = torch.Generator(device=options.device)
     generator.seed() if seed is None else generator.manual_seed(seed)
 
-    # define the solver
+    # === define the solver
     solver = SOLVER_CLASS(
         H,
         rho0,
@@ -273,10 +284,10 @@ def smesolve(
         generator=generator,
     )
 
-    # compute the result
+    # === compute the result
     result = solver.run()
 
-    # get saved tensors and restore initial batching
+    # === get saved tensors and restore initial batching
     if result.ysave is not None:
         result.ysave = result.ysave.squeeze(0, 1, 2)
     if result.exp_save is not None:
