@@ -24,38 +24,7 @@ def to_td_tensor(
         return ConstantTDTensor(x)
     elif callable(x):  # time-dependent tensor
         dtype = get_rdtype(dtype) if dtype is None else dtype  # assume real by default
-        x0 = x(0.0)
-        check_callable(x0, dtype, device)
-
-        return CallableTDTensor(x, shape=x0.shape, dtype=dtype, device=device)
-
-
-def check_callable(
-    x0: Tensor,
-    expected_dtype: torch.dtype,
-    expected_device: torch.device,
-):
-    # check type, dtype and device match
-    if not isinstance(x0, Tensor):
-        raise TypeError(
-            f'The time-dependent operator must be a {type_str(Tensor)}, but has type'
-            f' {obj_type_str(x0)}. The provided callable must return a tensor, to avoid'
-            ' costly type conversion at each time solver step.'
-        )
-    elif x0.dtype != expected_dtype:
-        raise TypeError(
-            f'The time-dependent operator must have dtype `{expected_dtype}`, but has'
-            f' dtype `{x0.dtype}`. The provided callable must return a tensor with the'
-            ' same `dtype` as provided to the solver, to avoid costly dtype conversion'
-            ' at each solver time step.'
-        )
-    elif x0.device != expected_device:
-        raise TypeError(
-            f'The time-dependent operator must be on device `{expected_device}`, but is'
-            f' on device `{x0.device}`. The provided callable must return a tensor on'
-            ' the same device as provided to the solver, to avoid costly device'
-            ' transfer at each solver time step.'
-        )
+        return CallableTDTensor(x, f0=x(0.0), dtype=dtype, device=device)
 
 
 class TDTensor(ABC):
@@ -92,8 +61,8 @@ class TDTensor(ABC):
         pass
 
     @abstractmethod
-    def unsqueeze(self, dim: int) -> TDTensor:
-        """Unsqueeze at position `dim`."""
+    def view(self, *shape: int) -> TDTensor:
+        """Returns a new tensor with the same data but of a different shape."""
         pass
 
 
@@ -120,20 +89,43 @@ class ConstantTDTensor(TDTensor):
     def shape(self) -> torch.Size:
         return self._tensor.shape
 
-    def unsqueeze(self, dim: int) -> ConstantTDTensor:
-        return ConstantTDTensor(self._tensor.unsqueeze(dim))
+    def view(self, *shape: int) -> TDTensor:
+        return ConstantTDTensor(self._tensor.view(*shape))
 
 
 class CallableTDTensor(TDTensor):
     def __init__(
         self,
         f: callable[[float], Tensor],
-        shape: torch.Size,
+        f0: Tensor,
         dtype: torch.dtype,
         device: torch.device,
     ):
+        # check type, dtype and device match
+        if not isinstance(f0, Tensor):
+            raise TypeError(
+                f'The time-dependent operator must be a {type_str(Tensor)}, but has'
+                f' type {obj_type_str(f0)}. The provided callable must return a tensor,'
+                ' to avoid costly type conversion at each time solver step.'
+            )
+        elif f0.dtype != dtype:
+            raise TypeError(
+                f'The time-dependent operator must have dtype `{dtype}`, but has dtype'
+                f' `{f0.dtype}`. The provided callable must return a tensor with the'
+                ' same `dtype` as provided to the solver, to avoid costly dtype'
+                ' conversion at each solver time step.'
+            )
+        elif f0.device != device:
+            raise TypeError(
+                f'The time-dependent operator must be on device `{device}`, but is on'
+                f' device `{f0.device}`. The provided callable must return a tensor on'
+                ' the same device as provided to the solver, to avoid costly device'
+                ' transfer at each solver time step.'
+            )
+
         self._callable = f
-        self._shape = shape
+        self._f0 = f0
+        self._shape = f0.shape
         self.dtype = dtype
         self.device = device
 
@@ -155,10 +147,8 @@ class CallableTDTensor(TDTensor):
     def shape(self) -> torch.Size:
         return self._shape
 
-    def unsqueeze(self, dim: int) -> CallableTDTensor:
-        new_shape = list(self._shape)
-        new_shape.insert(dim, 1)
-        new_shape = torch.Size(new_shape)
+    def view(self, *shape: int) -> TDTensor:
+        f0 = self._f0.view(*shape)
         return CallableTDTensor(
-            f=self._callable, shape=new_shape, dtype=self.dtype, device=self.device
+            f=self._callable, f0=f0, dtype=self.dtype, device=self.device
         )
