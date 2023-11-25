@@ -212,10 +212,10 @@ def smesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, 1, 1, n, n)
-    # jump_ops: (len(L), 1, b_L, 1, 1, n, n)
-    # rho0: (b_H, b_L, b_rho0, ntrajs, n, n)
-    # exp_ops: (len(E), n, n)
+    # H: (..., n, n)
+    # jump_ops: (nL, ..., n, n)
+    # rho0: (..., n, n)
+    # exp_ops: (nE, n, n)
     ops_kwargs = dict(dtype=options.cdtype, device=options.device)
     H = batch_H(H, **ops_kwargs)
     H = H.unsqueeze(3)
@@ -234,7 +234,7 @@ def smesolve(
     check_time_tensor(tsave, arg_name='tsave')
 
     # convert etas to a tensor and check
-    # etas: (len(L), 1, 1, 1, 1)
+    # etas: (nL, ...)
     etas = to_tensor(etas, **time_kwargs)
     etas = etas[..., None, None, None, None]
     if len(etas) != len(jump_ops):

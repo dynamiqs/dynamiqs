@@ -168,10 +168,10 @@ def mesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, 1, n, n)
-    # jump_ops: (len(L), 1, b_L, 1, n, n)
-    # rho0: (b_H, b_L, b_rho, n, n)
-    # exp_ops: (len(E), n, n)
+    # H: (..., n, n)
+    # jump_ops: (nL, ..., n, n)
+    # rho0: (..., n, n)
+    # exp_ops: (nE, n, n)
     ops_kwargs = dict(dtype=options.cdtype, device=options.device)
     H = batch_H(H, **ops_kwargs)
     jump_ops = batch_jump_ops(jump_ops, **ops_kwargs)

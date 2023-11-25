@@ -137,9 +137,9 @@ def sesolve(
         )
 
     # format and batch all tensors
-    # H: (b_H, 1, 1, n, n)
-    # psi0: (b_H, 1, b_psi, n, 1)
-    # exp_ops: (len(E), n, n)
+    # H: (..., n, n)
+    # psi0: (..., n, 1)
+    # exp_ops: (nE, n, n)
     ops_kwargs = dict(dtype=options.cdtype, device=options.device)
     H = batch_H(H, **ops_kwargs)
     psi0 = batch_y0(psi0, b_H=H.size(0), **ops_kwargs)
