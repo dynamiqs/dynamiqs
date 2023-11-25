@@ -19,10 +19,11 @@ class MEPropagator(MESolver, Propagator):
         return torch.matrix_exp(self.lindbladian * delta_t)
 
     def forward(self, t: float, delta_t: float, rho_vec: Tensor) -> Tensor:
-        # rho: (..., n^2, 1) -> (..., n^2, 1)
-        return self.propagator(delta_t) @ rho_vec  # (..., n^2, 1)
+        # rho_vec: (..., n^2, 1) -> (..., n^2, 1)
+        return self.propagator(delta_t) @ rho_vec
 
     def save(self, y: Tensor):
         # override `save` method to convert `y` from vector to operator
+        # y: (..., n^2, 1)
         y = vector_to_operator(y)  # (..., n, n)
         super().save(y)
