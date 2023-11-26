@@ -624,7 +624,7 @@ def hadamard(
     For a single qubit, it is defined by
     $$
         H = \frac{1}{\sqrt2} \begin{pmatrix}
-            1 & 1 \\
+            1 & 1 \\\\
             1 & -1
         \end{pmatrix}
     $$
