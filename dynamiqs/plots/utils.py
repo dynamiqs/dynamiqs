@@ -13,7 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
-from matplotlib.ticker import MultipleLocator, NullLocator
+from matplotlib.ticker import FixedLocator, MultipleLocator, NullLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __all__ = [
@@ -186,22 +186,32 @@ def integer_ticks(axis: Axis, n: int, all: bool = True):
         axis.set_ticks(range(n))
         minorticks_off(axis)
     else:
-        # let maptlotlib choose major ticks position but restrict to integers
+        # let maptlotlib choose major ticks location but restrict to integers
         axis.get_major_locator().set_params(integer=True)
 
         # format major ticks as integer
         axis.set_major_formatter(lambda x, _: f'{int(x)}')
 
-        # fix minor ticks to integer positions only
+        # fix minor ticks to integer locations only
         axis.set_minor_locator(MultipleLocator(1))
 
 
 def ket_ticks(axis: Axis):
-    axis.set_major_formatter(lambda x, _: fr'$|{{{int(x)}}}\rangle$')
+    # fix ticks location
+    axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
+
+    # format ticks as ket
+    new_labels = [fr'$| {label.get_text()} \rangle$' for label in axis.get_ticklabels()]
+    axis.set_ticklabels(new_labels)
 
 
 def bra_ticks(axis: Axis):
-    axis.set_major_formatter(lambda x, _: fr'$\langle{{{int(x)}}}|$')
+    # fix ticks location
+    axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
+
+    # format ticks as ket
+    new_labels = [fr'$\langle {label.get_text()} |$' for label in axis.get_ticklabels()]
+    axis.set_ticklabels(new_labels)
 
 
 def sample_cmap(name: str, n: int, alpha: float = 1.0) -> np.ndarray:
