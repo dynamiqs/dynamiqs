@@ -32,24 +32,20 @@ class SMESolver(MESolver):
 
         # initialize additional save tensors
         batch_sizes = self.y0.shape[:-2]
-
         self.meas_shape = (self.Lm.size(0), *batch_sizes)
+        kw = dict(dtype=self.cdtype, device=self.device)
 
         # meas_save: (nLm, ..., len(tmeas) - 1)
         if len(self.tmeas) > 0:
-            self.meas_save = torch.zeros(
-                *self.meas_shape,
-                len(self.tmeas) - 1,
-                dtype=self.rdtype,
-                device=self.device,
-            )
+            self.meas_save = torch.zeros(*self.meas_shape, len(self.tmeas) - 1, **kw)
             self.meas_save_iter = iteraxis(self.meas_save, axis=-1)
         else:
             self.meas_save = None
 
         # tensor to hold the sum of measurement results on a time bin
         # self.bin_meas: (nLm, ...)
-        self.bin_meas = torch.zeros(self.meas_shape, device=self.device)
+        kw = dict(dtype=self.rdtype, device=self.device)
+        self.bin_meas = torch.zeros(self.meas_shape, **kw)
 
     def run(self) -> Result:
         result = super().run()
