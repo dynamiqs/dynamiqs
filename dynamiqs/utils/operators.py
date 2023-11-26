@@ -619,7 +619,7 @@ def hadamard(
     dtype: torch.complex64 | torch.complex128 | None = None,
     device: str | torch.device | None = None,
 ) -> Tensor:
-    r"""Returns the Hadamard transform on `n` qubits.
+    r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
     $$
@@ -628,7 +628,7 @@ def hadamard(
             1 & -1
         \end{pmatrix}
     $$
-    For `n` qubits, it is defined by the tensor product of Hadamard matrices:
+    For $n$ qubits, it is defined by the tensor product of Hadamard matrices:
     $$
         H_n = \bigotimes_{k=1}^n H
     $$
