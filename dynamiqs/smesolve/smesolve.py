@@ -249,9 +249,8 @@ def smesolve(
     check_time_tensor(tmeas, arg_name='tmeas', allow_empty=True)
 
     # === convert and check etas
-    # etas: (nL, ...)
     etas = to_tensor(etas, dtype=options.rdtype, device=options.device)
-    etas = etas[..., None, None, None, None]
+    etas = etas.view(-1, 1, 1, 1, 1)  # (nL, 1, 1, 1, 1)
     if len(etas) != len(jump_ops):
         raise ValueError(
             'Argument `etas` must have the same length as `jump_ops` of length'
