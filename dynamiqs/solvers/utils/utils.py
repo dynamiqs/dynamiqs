@@ -181,9 +181,9 @@ def format_L(L: list[Tensor]) -> Tensor:
 
     n = L[0].size(-1)
     L = [x.view(-1, n, n) for x in L]  # [(?, n, n)] with ? = 1 if not batched
-    bs = torch.tensor([x.size(0) for x in L])  # list of batch sizes (the ?)
 
     # get the unique batch size or raise an error if batched dimensions are not the same
+    bs = torch.tensor([x.size(0) for x in L])  # list of batch sizes
     bs_unique = torch.unique(bs)
     bs_unique_not_one = bs_unique[bs_unique != 1]
     if len(bs_unique_not_one) > 1:
@@ -198,5 +198,5 @@ def format_L(L: list[Tensor]) -> Tensor:
     else:
         bL = 1
 
-    L = [x.repeat((bL if s == 1 else 1), 1, 1) for x, s in zip(L, bs)]
+    L = [x.expand(bL, -1, -1) for x in L]  # [(bL, n, n)]
     return torch.stack(L)
