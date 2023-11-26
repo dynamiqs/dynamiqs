@@ -130,6 +130,17 @@ def plot_hinton(
 
         ![plot_hinton_hamiltonian](/figs-code/plot_hinton_hamiltonian.png){.fig-half}
 
+        >>> cnot = torch.tensor(
+        ...     [[1, 0, 0, 0],
+        ...      [0, 1, 0, 0],
+        ...      [0, 0, 0, 1],
+        ...      [0, 0, 1, 0]],
+        ...  )
+        >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
+        >>> renderfig('plot_hinton_cnot')
+
+        ![plot_hinton_cnot](/figs-code/plot_hinton_cnot.png){.fig-half}
+
         >>> x = dq.rand_complex((16, 16))
         >>> dq.plot_hinton(x)
         >>> renderfig('plot_hinton_rand_complex')
@@ -208,6 +219,7 @@ def plot_hinton(
 
     if tickslabel is not None:
         allticks = True
+
     _plot_hinton(
         areas,
         colors,
