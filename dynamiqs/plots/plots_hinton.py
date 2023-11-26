@@ -70,7 +70,7 @@ def _plot_hinton(
 
     # === set axes
     ax.set_aspect('equal', adjustable='box')
-    ax.tick_params(axis='both', direction='out')
+    ax.tick_params(axis='both', which='both', direction='out')
     n = areas.shape[0]
     ax.set(xlim=(-0.5, n - 1 + 0.5), ylim=(-0.5, n - 1 + 0.5))
     ax.invert_yaxis()
