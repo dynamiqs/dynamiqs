@@ -14,6 +14,7 @@ def sybil_setup(namespace):
     namespace['dq'] = dynamiqs
     namespace['np'] = np
     namespace['plt'] = plt
+    namespace['torch'] = torch
 
 
 # doctest fixture
