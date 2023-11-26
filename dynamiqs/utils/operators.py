@@ -643,15 +643,18 @@ def hadamard(
 
     Examples:
         >>> dq.hadamard()
-        tensor([[ 0.707,  0.707],
-                [ 0.707, -0.707]])
 
+        tensor([[ 0.707+0.j,  0.707+0.j],
+                [ 0.707+0.j, -0.707+0.j]])
     """
+    cdtype = get_cdtype(dtype)
     if n == 0:
-        return torch.Tensor([1.0], dtype=dtype, device=device)
+        return torch.Tensor([1.0], dtype=cdtype, device=device)
 
-    H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=dtype, device=device) * (2**-0.5)
+    H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype, device=device) * (
+        2**-0.5
+    )
     if n == 1:
         return H1
 
-    return tensprod(hadamard(n - 1, dtype=dtype, device=device), H1)
+    return tensprod(hadamard(n - 1, dtype=cdtype, device=device), H1)
