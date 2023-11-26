@@ -643,7 +643,6 @@ def hadamard(
 
     Examples:
         >>> dq.hadamard()
-
         tensor([[ 0.707+0.j,  0.707+0.j],
                 [ 0.707+0.j, -0.707+0.j]])
     """
