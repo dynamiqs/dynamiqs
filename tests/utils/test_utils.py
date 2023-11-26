@@ -74,24 +74,37 @@ def test_ket_dm_fidelity_batching():
     assert dq.fidelity(psi, rho).shape == (b1, b2)
 
 
-def test_hadamard_correctness():
-    H2 = 0.5 * torch.Tensor([
-        [1.0, 1.0, 1.0, 1.0],
-        [1.0, -1.0, 1.0, -1.0],
-        [1.0, 1.0, -1.0, -1.0],
-        [1.0, -1.0, -1.0, 1.0],
-    ])
+def test_hadamard():
+    c64 = torch.complex64
 
-    assert torch.allclose(dq.hadamard(2), H2, atol=1e-6)
+    # one qubit
+    H1 = 2 ** (-1 / 2) * torch.tensor([[1, 1], [1, -1]], dtype=c64)
+    assert torch.allclose(dq.hadamard(1), H1)
 
-    H3 = 2 ** (-3 / 2) * torch.Tensor([
-        [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        [1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0],
-        [1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0],
-        [1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0],
-        [1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
-        [1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0],
-        [1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0],
-        [1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0],
-    ])
-    assert torch.allclose(dq.hadamard(3), H3, atol=1e-6)
+    # two qubits
+    H2 = 0.5 * torch.tensor(
+        [
+            [1, 1, 1, 1],
+            [1, -1, 1, -1],
+            [1, 1, -1, -1],
+            [1, -1, -1, 1],
+        ],
+        dtype=c64,
+    )
+    assert torch.allclose(dq.hadamard(2), H2)
+
+    # three qubits
+    H3 = 2 ** (-3 / 2) * torch.tensor(
+        [
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, -1, 1, -1, 1, -1, 1, -1],
+            [1, 1, -1, -1, 1, 1, -1, -1],
+            [1, -1, -1, 1, 1, -1, -1, 1],
+            [1, 1, 1, 1, -1, -1, -1, -1],
+            [1, -1, 1, -1, -1, 1, -1, 1],
+            [1, 1, -1, -1, -1, -1, 1, 1],
+            [1, -1, -1, 1, -1, 1, 1, -1],
+        ],
+        dtype=c64,
+    )
+    assert torch.allclose(dq.hadamard(3), H3)
