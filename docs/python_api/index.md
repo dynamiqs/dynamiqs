@@ -109,6 +109,13 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Plotting
 
-<!-- ::: dynamiqs.plots.namespace
+::: dynamiqs.plots.namespace
     options:
-        table: true -->
+        table: true
+        members:
+        - plot_wigner
+        - plot_wigner_mosaic
+        - plot_pwc_pulse
+        - plot_fock
+        - plot_fock_evolution
+        - plot_hinton

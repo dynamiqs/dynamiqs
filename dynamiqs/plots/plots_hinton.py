@@ -110,7 +110,8 @@ def plot_hinton(
     ewidth: float = 0.5,
     clear: bool = False,
 ):
-    """
+    """Plot a Hinton diagram.
+
     Warning:
         Documentation redaction in progress.
 
