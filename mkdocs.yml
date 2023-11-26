@@ -190,6 +190,7 @@ nav:
               - sdissipator: python_api/utils/vectorization/sdissipator.md
               - slindbladian: python_api/utils/vectorization/slindbladian.md
           - Quantum optimal control:
+              - rand_real: python_api/utils/optimal_control/rand_real.md
               - rand_complex: python_api/utils/optimal_control/rand_complex.md
               - pwc_pulse: python_api/utils/optimal_control/pwc_pulse.md
               - snap_gate: python_api/utils/optimal_control/snap_gate.md

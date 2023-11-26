@@ -14,10 +14,10 @@ The **dynamiqs** library enables GPU simulation of large quantum systems, and co
 
 Some exciting features of dynamiqs include:
 
-- Running simulations on GPUs, with a significant speedup for large Hilbert space dimensions.
-- Batching many simulations of different Hamiltonians or initial states to run them concurrently.
-- Exploring quantum-specific solvers that preserve the properties of the state, such as trace and positivity.
-- Computing gradients of any function of the evolved quantum state with respect to any parameter of the Hamiltonian, jump operators, or initial state.
+- Running simulations on **GPUs**, with a significant speedup for large Hilbert space dimensions.
+- **Batching** many simulations of different Hamiltonians, jump operators or initial states to run them concurrently.
+- Exploring solvers **tailored to quantum** simulations that preserve the properties of the state, such as trace and positivity.
+- Computing **gradients** of any function of the evolved quantum state with respect to any parameter of the Hamiltonian, jump operators, or initial state.
 - Using the library as a drop-in replacement for [QuTiP](https://qutip.org/) by directly passing QuTiP-defined quantum objects to our solvers.
 - Implementing your own solvers with ease by subclassing our base solver class and focusing directly on the solver logic.
 - Enjoy reading our carefully crafted documentation on our website: <https://www.dynamiqs.org>.
@@ -57,10 +57,10 @@ jump_ops = [np.sqrt(kappa) * a]
 rho0 = qt.coherent_dm(n, alpha0)
 tsave = np.linspace(0, 1.0, 101)
 
-# uncomment the next line to run the simulation on GPU
-# torch.set_default_device('gpu')
+# run on GPU if available, otherwise on CPU
+torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# simulation
+# run simulation
 result = dq.mesolve(H, jump_ops, rho0, tsave)
 print(result)
 ```
@@ -81,7 +81,6 @@ Suppose that in the above example, we want to compute the gradient of the number
 
 ```python
 import dynamiqs as dq
-import numpy as np
 import torch
 
 # parameters
@@ -92,33 +91,31 @@ alpha0 = torch.tensor([1.0], requires_grad=True)
 
 # dynamiqs operators, initial state and saving times
 a = dq.destroy(n)
-H = omega * a.mH @ a
+H = omega * dq.dag(a) @ a
 jump_ops = [torch.sqrt(kappa) * a]
-rho0 = dq.coherent_dm(n, alpha0)
-tsave = np.linspace(0, 1.0, 101)
+psi0 = dq.coherent(n, alpha0)
+tsave = torch.linspace(0, 1.0, 101)
 
-# uncomment the next line to run the simulation on GPU
-# torch.set_default_device('gpu')
+# run on GPU if available, otherwise on CPU
+torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# simulation
+# run simulation
 result = dq.mesolve(
-    H, jump_ops, rho0, tsave,
+    H, jump_ops, psi0, tsave,
     gradient=dq.gradient.Autograd(),
     options=dict(verbose=False),
 )
 
 # gradient computation
-loss = dq.expect(a.mH @ a, result.states[-1]).real  # Tr[a^dag a rho]
-grads = torch.autograd.grad(loss, (kappa, alpha0))
-print(
-    f'gradient wrt to kappa  : {grads[0]}\n'
-    f'gradient wrt to alpha0 : {grads[1]}'
-)
+loss = dq.expect(dq.dag(a) @ a, result.states[-1]).real
+loss.backward()
+print(kappa.grad)
+print(alpha0.grad)
 ```
 
 ```text
-gradient wrt to kappa  : tensor([-0.9048])
-gradient wrt to alpha0 : tensor([1.8097])
+tensor([-0.9048])
+tensor([1.8097])
 ```
 
 ## Let's talk!
