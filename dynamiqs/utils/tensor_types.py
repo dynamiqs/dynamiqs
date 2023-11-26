@@ -12,9 +12,9 @@ from .utils import isbra, isket, isop
 
 __all__ = [
     'to_tensor',
-    'from_qutip',
-    'to_qutip',
     'to_numpy',
+    'to_qutip',
+    'from_qutip',
 ]
 
 Number = Union[int, float, complex]
@@ -25,6 +25,54 @@ ArrayLike = Union[tuple, list, np.ndarray, Tensor, Qobj]
 # TODO add typing for Hamiltonian with piecewise-constant factor
 # type for time-dependent objects
 TDArrayLike = Union[ArrayLike, Callable[[float], Tensor]]
+
+# data type conversion dictionaries
+DTYPE_TO_REAL = {torch.complex64: torch.float32, torch.complex128: torch.float64}
+DTYPE_TO_COMPLEX = {torch.float32: torch.complex64, torch.float64: torch.complex128}
+
+
+def get_cdtype(
+    dtype: torch.complex64 | torch.complex128 | None = None,
+) -> torch.complex64 | torch.complex128:
+    if dtype is None:
+        # the default dtype for complex tensors is determined by the default
+        # floating point dtype (torch.complex128 if default is torch.float64,
+        # otherwise torch.complex64)
+        if torch.get_default_dtype() is torch.float64:
+            return torch.complex128
+        else:
+            return torch.complex64
+    elif dtype not in (torch.complex64, torch.complex128):
+        raise TypeError(
+            'Argument `dtype` must be `torch.complex64`, `torch.complex128` or `None`'
+            f' for a complex tensor, but is `{dtype}`.'
+        )
+    return dtype
+
+
+def get_rdtype(
+    dtype: torch.float32 | torch.float64 | None = None,
+) -> torch.float32 | torch.float64:
+    if dtype is None:
+        return torch.get_default_dtype()
+    elif dtype not in (torch.float32, torch.float64):
+        raise TypeError(
+            'Argument `dtype` must be `torch.float32`, `torch.float64` or `None` for'
+            f' a real-valued tensor, but is `{dtype}`.'
+        )
+    return dtype
+
+
+def dtype_complex_to_real(
+    dtype: torch.complex64 | torch.complex128,
+) -> torch.float32 | torch.float64:
+    return DTYPE_TO_REAL[dtype]
+
+
+def dtype_real_to_complex(
+    dtype: torch.float32 | torch.float64,
+) -> torch.complex64 | torch.complex128:
+    return DTYPE_TO_COMPLEX[dtype]
 
 
 def to_tensor(
@@ -89,89 +137,53 @@ def to_tensor(
         )
 
 
-def get_cdtype(
-    dtype: torch.complex64 | torch.complex128 | None = None,
-) -> torch.complex64 | torch.complex128:
-    if dtype is None:
-        # the default dtype for complex tensors is determined by the default
-        # floating point dtype (torch.complex128 if default is torch.float64,
-        # otherwise torch.complex64)
-        if torch.get_default_dtype() is torch.float64:
-            return torch.complex128
-        else:
-            return torch.complex64
-    elif dtype not in (torch.complex64, torch.complex128):
-        raise TypeError(
-            'Argument `dtype` must be `torch.complex64`, `torch.complex128` or `None`'
-            f' for a complex tensor, but is `{dtype}`.'
-        )
-    return dtype
-
-
-def get_rdtype(
-    dtype: torch.float32 | torch.float64 | None = None,
-) -> torch.float32 | torch.float64:
-    if dtype is None:
-        return torch.get_default_dtype()
-    elif dtype not in (torch.float32, torch.float64):
-        raise TypeError(
-            'Argument `dtype` must be `torch.float32`, `torch.float64` or `None` for'
-            f' a real-valued tensor, but is `{dtype}`.'
-        )
-    return dtype
-
-
-DTYPE_TO_REAL = {torch.complex64: torch.float32, torch.complex128: torch.float64}
-DTYPE_TO_COMPLEX = {torch.float32: torch.complex64, torch.float64: torch.complex128}
-
-
-def dtype_complex_to_real(
-    dtype: torch.complex64 | torch.complex128,
-) -> torch.float32 | torch.float64:
-    return DTYPE_TO_REAL[dtype]
-
-
-def dtype_real_to_complex(
-    dtype: torch.float32 | torch.float64,
-) -> torch.complex64 | torch.complex128:
-    return DTYPE_TO_COMPLEX[dtype]
-
-
-def from_qutip(
-    x: Qobj,
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
-    r"""Convert a QuTiP quantum object to a PyTorch tensor.
+def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
+    """Convert an array-like object or a list of array-like objects to a NumPy array.
 
     Args:
-        x _(QuTiP quantum object)_: Input quantum object.
-        dtype: Complex data type of the returned tensor.
-        device: Device on which the returned tensor is stored.
+        x: QuTiP quantum object or NumPy array or Python list or Python tuple or
+            PyTorch tensor or list of these types.
 
     Returns:
-        Output tensor.
+        Output NumPy array.
 
     Examples:
         >>> import qutip as qt
-        >>> omega = 2.0
-        >>> a = qt.destroy(4)
-        >>> H = omega * a.dag() * a
-        >>> H
-        Quantum object: dims = [[4], [4]], shape = (4, 4), type = oper, isherm = True
-        Qobj data =
-        [[0. 0. 0. 0.]
-         [0. 2. 0. 0.]
-         [0. 0. 4. 0.]
-         [0. 0. 0. 6.]]
-        >>> dq.from_qutip(H)
-        tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 2.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 4.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j, 6.+0.j]])
+        >>> dq.to_numpy(dq.fock(3, 1))
+        array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_numpy([qt.fock(3, 1), qt.fock(3, 2)])
+        array([[[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]],
+        <BLANKLINE>
+               [[0.+0.j],
+                [0.+0.j],
+                [1.+0.j]]])
     """
-    return torch.from_numpy(x.full()).to(dtype=get_cdtype(dtype), device=device)
+    if isinstance(x, tuple):
+        if len(x) == 0:
+            return np.array([])
+        else:
+            return np.array(x)
+    elif isinstance(x, list):
+        if len(x) == 0:
+            return np.array([])
+        if not isinstance(x[0], get_args(ArrayLike)):
+            return np.array(x)
+        else:
+            return np.array([to_numpy(el) for el in x])
+    elif isinstance(x, np.ndarray):
+        return x
+    elif isinstance(x, Tensor):
+        return x.numpy(force=True)
+    elif isinstance(x, Qobj):
+        return x.full()
+    else:
+        raise TypeError(
+            f'Argument `x` must be an array-like object but has type {obj_type_str(x)}.'
+        )
 
 
 def to_qutip(x: Tensor, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
@@ -258,50 +270,38 @@ def to_device(device: str | torch.device | None) -> torch.device:
         )
 
 
-def to_numpy(x: ArrayLike | list[ArrayLike]) -> np.ndarray:
-    """Convert an array-like object or a list of array-like objects to a NumPy array.
+def from_qutip(
+    x: Qobj,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Convert a QuTiP quantum object to a PyTorch tensor.
 
     Args:
-        x: QuTiP quantum object or NumPy array or Python list or Python tuple or
-            PyTorch tensor or list of these types.
+        x _(QuTiP quantum object)_: Input quantum object.
+        dtype: Complex data type of the returned tensor.
+        device: Device on which the returned tensor is stored.
 
     Returns:
-        Output NumPy array.
+        Output tensor.
 
     Examples:
         >>> import qutip as qt
-        >>> dq.to_numpy(dq.fock(3, 1))
-        array([[0.+0.j],
-               [1.+0.j],
-               [0.+0.j]], dtype=complex64)
-        >>> dq.to_numpy([qt.fock(3, 1), qt.fock(3, 2)])
-        array([[[0.+0.j],
-                [1.+0.j],
-                [0.+0.j]],
-        <BLANKLINE>
-               [[0.+0.j],
-                [0.+0.j],
-                [1.+0.j]]])
+        >>> omega = 2.0
+        >>> a = qt.destroy(4)
+        >>> H = omega * a.dag() * a
+        >>> H
+        Quantum object: dims = [[4], [4]], shape = (4, 4), type = oper, isherm = True
+        Qobj data =
+        [[0. 0. 0. 0.]
+         [0. 2. 0. 0.]
+         [0. 0. 4. 0.]
+         [0. 0. 0. 6.]]
+        >>> dq.from_qutip(H)
+        tensor([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 2.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 4.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j, 6.+0.j]])
     """
-    if isinstance(x, tuple):
-        if len(x) == 0:
-            return np.array([])
-        else:
-            return np.array(x)
-    elif isinstance(x, list):
-        if len(x) == 0:
-            return np.array([])
-        if not isinstance(x[0], get_args(ArrayLike)):
-            return np.array(x)
-        else:
-            return np.array([to_numpy(el) for el in x])
-    elif isinstance(x, np.ndarray):
-        return x
-    elif isinstance(x, Tensor):
-        return x.numpy(force=True)
-    elif isinstance(x, Qobj):
-        return x.full()
-    else:
-        raise TypeError(
-            f'Argument `x` must be an array-like object but has type {obj_type_str(x)}.'
-        )
+    return torch.from_numpy(x.full()).to(dtype=get_cdtype(dtype), device=device)

@@ -154,6 +154,7 @@ nav:
               - coherent_dm: python_api/utils/states/coherent_dm.md
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
+              - mpow: python_api/utils/utils/mpow.md
               - trace: python_api/utils/utils/trace.md
               - ptrace: python_api/utils/utils/ptrace.md
               - tensprod: python_api/utils/utils/tensprod.md
@@ -172,11 +173,10 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-              - mpow: python_api/utils/utils/mpow.md
           - Tensor conversion:
               - to_tensor: python_api/utils/tensor_types/to_tensor.md
-              - to_qutip: python_api/utils/tensor_types/to_qutip.md
               - to_numpy: python_api/utils/tensor_types/to_numpy.md
+              - to_qutip: python_api/utils/tensor_types/to_qutip.md
               - from_qutip: python_api/utils/tensor_types/from_qutip.md
           - Wigner distribution:
               - wigner: python_api/utils/wigners/wigner.md
