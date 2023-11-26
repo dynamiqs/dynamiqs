@@ -652,9 +652,6 @@ def hadamard(
                 [ 0.500+0.j, -0.500+0.j, -0.500+0.j,  0.500-0.j]])
     """
     cdtype = get_cdtype(dtype)
-
     H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype, device=device) / sqrt(2)
-    if n == 1:
-        return H1
-
-    return tensprod(hadamard(n - 1, dtype=cdtype, device=device), H1)
+    Hs = H1.expand(n, -1, -1)  # (n, 2, 2)
+    return tensprod(*Hs)
