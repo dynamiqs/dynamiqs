@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from cmath import exp as cexp
-from math import prod
+from math import prod, sqrt
 from typing import get_args
 
 import torch
@@ -655,9 +655,7 @@ def hadamard(
     if n == 0:
         return torch.Tensor([1.0], dtype=cdtype, device=device)
 
-    H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype, device=device) * (
-        2**-0.5
-    )
+    H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype, device=device) / sqrt(2)
     if n == 1:
         return H1
 
