@@ -106,6 +106,7 @@ def plot_hinton(
     vmax: float | None = None,
     colorbar: 'bool' = True,
     allticks: bool = False,
+    tickslabel: list[str] | None = None,
     ecolor: str = 'white',
     ewidth: float = 0.5,
     clear: bool = False,
@@ -205,6 +206,8 @@ def plot_hinton(
     if clear:
         colorbar = False
 
+    if tickslabel is not None:
+        allticks = True
     _plot_hinton(
         areas,
         colors,
@@ -219,6 +222,10 @@ def plot_hinton(
     )
 
     # set ticks label format
+    if tickslabel is not None:
+        ax.xaxis.set_ticklabels(tickslabel)
+        ax.yaxis.set_ticklabels(tickslabel)
+
     ket_ticks(ax.xaxis)
     bra_ticks(ax.yaxis)
 
