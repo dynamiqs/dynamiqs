@@ -56,25 +56,18 @@ class Solver(ABC):
 
         # initialize save tensors
         batch_sizes, (m, n) = y0.shape[:-2], y0.shape[-2:]
+        kw = dict(dtype=self.cdtype, device=self.device)
 
         if self.options.save_states:
             # ysave: (..., len(tsave), m, n)
-            self.ysave = torch.zeros(
-                *batch_sizes, len(tsave), m, n, dtype=self.cdtype, device=self.device
-            )
+            self.ysave = torch.zeros(*batch_sizes, len(tsave), m, n, **kw)
             self.ysave_iter = iteraxis(self.ysave, axis=-3)
         else:
             self.ysave = None
 
         if len(self.exp_ops) > 0:
             # exp_save: (..., len(exp_ops), len(tsave))
-            self.exp_save = torch.zeros(
-                *batch_sizes,
-                len(exp_ops),
-                len(tsave),
-                dtype=self.cdtype,
-                device=self.device,
-            )
+            self.exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(tsave), **kw)
             self.exp_save_iter = iteraxis(self.exp_save, axis=-1)
         else:
             self.exp_save = None
