@@ -178,8 +178,15 @@ def mesolve(
     bH = H.size(0)
 
     # convert and batch L
-    L = [to_tensor(x, **kw) for x in jump_ops]  # [(??, n, n)]
-    L = format_L(L)  # (nL, bL, n, n)
+    if any(callable(x) for x in jump_ops):
+        Lt = [to_td_tensor(x, **kw) for x in jump_ops]  # [(n, n)]
+        L = to_td_tensor(lambda t: torch.stack([x(t) for x in Lt]), **kw)  # (nL, n, n)
+        from .adaptive_t import METDormandPrince5
+
+        SOLVER_CLASS = METDormandPrince5
+    else:
+        L = [to_tensor(x, **kw) for x in jump_ops]  # [(??, n, n)]
+        L = format_L(L)  # (nL, bL, n, n)
     nL = L.size(0)
     L = L.view(nL, 1, -1, 1, n, n)  # (nL, 1, bL, 1, n, n) with bL = 1 if not batched
     bL = L.size(2)
