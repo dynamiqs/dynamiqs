@@ -8,14 +8,14 @@ from .me_solver import MESolver
 
 class MEEuler(MESolver, AdjointFixedSolver):
     def forward(self, t: float, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # rho: (..., n, n) -> (..., n, n)
         return rho + self.dt * self.lindbladian(t, rho)
 
     def backward_augmented(
         self, t: float, rho: Tensor, phi: Tensor
     ) -> tuple[Tensor, Tensor]:
-        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
-        # phi: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # rho: (..., n, n) -> (..., n, n)
+        # phi: (..., n, n) -> (..., n, n)
         rho = rho - self.dt * self.lindbladian(t, rho)
         phi = phi + self.dt * self.adjoint_lindbladian(t, phi)
         return rho, phi

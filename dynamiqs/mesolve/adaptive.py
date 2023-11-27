@@ -8,16 +8,16 @@ from .me_solver import MESolver
 
 class MEAdaptive(MESolver, AdjointAdaptiveSolver):
     def odefun(self, t: float, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # rho: (..., n, n) -> (..., n, n)
         return self.lindbladian(t, rho)
 
     def odefun_backward(self, t: float, rho: Tensor) -> Tensor:
-        # rho: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # rho: (..., n, n) -> (..., n, n)
         # t is passed in as negative time
         return -self.lindbladian(-t, rho)
 
     def odefun_adjoint(self, t: float, phi: Tensor) -> Tensor:
-        # phi: (b_H, b_L, b_rho, n, n) -> (b_H, b_L, b_rho, n, n)
+        # phi: (..., n, n) -> (..., n, n)
         # t is passed in as negative time
         return self.adjoint_lindbladian(-t, phi)
 
