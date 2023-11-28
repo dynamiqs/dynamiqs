@@ -118,3 +118,4 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - plot_pwc_pulse
         - plot_fock
         - plot_fock_evolution
+        - plot_hinton

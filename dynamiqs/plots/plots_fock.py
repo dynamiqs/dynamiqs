@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from ..utils.tensor_types import ArrayLike, to_numpy
-from .utils import add_colorbar, colors, fock_ticks, optax, sample_cmap
+from .utils import add_colorbar, colors, integer_ticks, ket_ticks, optax, sample_cmap
 
 __all__ = ['plot_fock', 'plot_fock_evolution']
 
@@ -19,7 +19,7 @@ def plot_fock(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
-    xticksall: bool = True,
+    allxticks: bool = True,
     ymax: float | None = 1.0,
     color: str = colors['blue'],
 ):
@@ -37,7 +37,7 @@ def plot_fock(
 
         >>> # the even cat state has only even photon number components
         >>> psi = dq.unit(dq.coherent(32, 3.0) + dq.coherent(32, -3.0))
-        >>> dq.plot_fock(psi, xticksall=False, ymax=None)
+        >>> dq.plot_fock(psi, allxticks=False, ymax=None)
         >>> renderfig('plot_fock_even_cat')
 
         ![plot_fock_even_cat](/figs-code/plot_fock_even_cat.png){.fig}
@@ -54,7 +54,8 @@ def plot_fock(
     ax.set(xlim=(0 - 0.5, n - 0.5))
 
     # set x ticks
-    fock_ticks(ax.xaxis, n, all=xticksall)
+    integer_ticks(ax.xaxis, n, all=allxticks)
+    ket_ticks(ax.xaxis)
 
 
 @optax
@@ -67,7 +68,7 @@ def plot_fock_evolution(
     logscale: bool = False,
     logvmin: float = 1e-4,
     colorbar: bool = True,
-    yticksall: bool = True,
+    allyticks: bool = True,
 ):
     """Plot the photon number population of state as a function of time.
 
@@ -114,7 +115,8 @@ def plot_fock_evolution(
     ax.grid(False)
 
     # set y ticks
-    fock_ticks(ax.yaxis, n, all=yticksall)
+    integer_ticks(ax.yaxis, n, all=allyticks)
+    ket_ticks(ax.yaxis)
 
     if colorbar:
         add_colorbar(ax, cmap, norm, size='2%', pad='2%')

@@ -9,6 +9,7 @@ dependencies = [
     "tqdm",
     "torch>=2.0",
     "methodtools",
+    "cmasher",
 ]
 
 [build-system]
