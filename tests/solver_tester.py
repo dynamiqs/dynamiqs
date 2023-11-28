@@ -98,10 +98,10 @@ class ClosedSolverTester(SolverTester):
         options: dict[str, Any] | None = None,
     ):
         """Test the batching of `H` and `y0`, and the returned object sizes."""
-        m, n = system._state_shape
+        n = system.n
         n_exp_ops = len(system.exp_ops)
-        b_H = len(system.H_batched)
-        b_y0 = len(system.y0_batched)
+        bH = len(system.H_batched)
+        by = len(system.y0_batched)
         ntsave = 11
         tsave = system.tsave(ntsave)
 
@@ -109,23 +109,23 @@ class ClosedSolverTester(SolverTester):
 
         # no batching
         result = run(system.H, system.y0)
-        assert result.ysave.shape == (ntsave, m, n)
+        assert result.ysave.shape == (ntsave, n, 1)
         assert result.exp_save.shape == (n_exp_ops, ntsave)
 
         # batched H
         result = run(system.H_batched, system.y0)
-        assert result.ysave.shape == (b_H, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bH, ntsave, n, 1)
+        assert result.exp_save.shape == (bH, n_exp_ops, ntsave)
 
         # batched y0
         result = run(system.H, system.y0_batched)
-        assert result.ysave.shape == (b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_y0, n_exp_ops, ntsave)
+        assert result.ysave.shape == (by, ntsave, n, 1)
+        assert result.exp_save.shape == (by, n_exp_ops, ntsave)
 
         # batched H and y0
         result = run(system.H_batched, system.y0_batched)
-        assert result.ysave.shape == (b_H, b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bH, by, ntsave, n, 1)
+        assert result.exp_save.shape == (bH, by, n_exp_ops, ntsave)
 
 
 class OpenSolverTester(SolverTester):
@@ -137,11 +137,11 @@ class OpenSolverTester(SolverTester):
         options: dict[str, Any] | None = None,
     ):
         """Test the batching of `H` and `y0`, and the returned object sizes."""
-        m, n = system._state_shape
+        n = system.n
         n_exp_ops = len(system.exp_ops)
-        b_H = len(system.H_batched)
-        b_L = system.jump_ops_batched[0].shape[0]
-        b_y0 = len(system.y0_batched)
+        bH = len(system.H_batched)
+        bL = system.jump_ops_batched[0].shape[0]
+        by = len(system.y0_batched)
         ntsave = 11
         tsave = system.tsave(ntsave)
 
@@ -151,42 +151,42 @@ class OpenSolverTester(SolverTester):
 
         # no batching
         result = run(system.H, system.jump_ops, system.y0)
-        assert result.ysave.shape == (ntsave, m, n)
+        assert result.ysave.shape == (ntsave, n, n)
         assert result.exp_save.shape == (n_exp_ops, ntsave)
 
         # batched H
         result = run(system.H_batched, system.jump_ops, system.y0)
-        assert result.ysave.shape == (b_H, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bH, ntsave, n, n)
+        assert result.exp_save.shape == (bH, n_exp_ops, ntsave)
 
         # batched jump_ops
         result = run(system.H, system.jump_ops_batched, system.y0)
-        assert result.ysave.shape == (b_L, ntsave, m, n)
-        assert result.exp_save.shape == (b_L, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bL, ntsave, n, n)
+        assert result.exp_save.shape == (bL, n_exp_ops, ntsave)
 
         # batched y0
         result = run(system.H, system.jump_ops, system.y0_batched)
-        assert result.ysave.shape == (b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_y0, n_exp_ops, ntsave)
+        assert result.ysave.shape == (by, ntsave, n, n)
+        assert result.exp_save.shape == (by, n_exp_ops, ntsave)
 
         # batched H and jump_ops
         result = run(system.H_batched, system.jump_ops_batched, system.y0)
-        assert result.ysave.shape == (b_H, b_L, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, b_L, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bH, bL, ntsave, n, n)
+        assert result.exp_save.shape == (bH, bL, n_exp_ops, ntsave)
 
         # batched H and y0
         result = run(system.H_batched, system.jump_ops, system.y0_batched)
-        assert result.ysave.shape == (b_H, b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_H, b_y0, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bH, by, ntsave, n, n)
+        assert result.exp_save.shape == (bH, by, n_exp_ops, ntsave)
 
         # batched jump_ops and y0
         result = run(system.H, system.jump_ops_batched, system.y0_batched)
-        assert result.ysave.shape == (b_L, b_y0, ntsave, m, n)
-        assert result.exp_save.shape == (b_L, b_y0, n_exp_ops, ntsave)
+        assert result.ysave.shape == (bL, by, ntsave, n, n)
+        assert result.exp_save.shape == (bL, by, n_exp_ops, ntsave)
 
         # batched H and jump_ops and y0
         result = run(system.H_batched, system.jump_ops_batched, system.y0_batched)
-        assert result.ysave.shape == (b_H, b_L, b_y0, ntsave, m, n)
+        assert result.ysave.shape == (bH, bL, by, ntsave, n, n)
 
         # batched second jump op but not the first one
         result = run(
@@ -194,4 +194,4 @@ class OpenSolverTester(SolverTester):
             [system.jump_ops_batched[0]] + system.jump_ops[1:],
             system.y0_batched,
         )
-        assert result.ysave.shape == (b_H, b_L, b_y0, ntsave, m, n)
+        assert result.ysave.shape == (bH, bL, by, ntsave, n, n)

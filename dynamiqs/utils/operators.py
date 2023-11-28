@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from cmath import exp as cexp
-from math import prod
+from math import prod, sqrt
 from typing import get_args
 
 import torch
@@ -28,6 +28,7 @@ __all__ = [
     'sigmaz',
     'sigmap',
     'sigmam',
+    'hadamard',
 ]
 
 
@@ -610,3 +611,47 @@ def sigmam(
     return torch.tensor(
         [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
     )
+
+
+def hadamard(
+    n: int = 1,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the Hadamard transform on $n$ qubits.
+
+    For a single qubit, it is defined by
+    $$
+        H = \frac{1}{\sqrt2} \begin{pmatrix}
+            1 & 1 \\\\
+            1 & -1
+        \end{pmatrix}
+    $$
+    For $n$ qubits, it is defined by the tensor product of Hadamard matrices:
+    $$
+        H_n = \bigotimes_{k=1}^n H
+    $$
+
+    Args:
+        n: Number of qubits to act on.
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(2^n, 2^n)_ Hadamard transform operator.
+
+    Examples:
+        >>> dq.hadamard()
+        tensor([[ 0.707+0.j,  0.707+0.j],
+                [ 0.707+0.j, -0.707+0.j]])
+        >>> dq.hadamard(2)
+        tensor([[ 0.500+0.j,  0.500+0.j,  0.500+0.j,  0.500+0.j],
+                [ 0.500+0.j, -0.500+0.j,  0.500+0.j, -0.500+0.j],
+                [ 0.500+0.j,  0.500+0.j, -0.500+0.j, -0.500+0.j],
+                [ 0.500+0.j, -0.500+0.j, -0.500+0.j,  0.500-0.j]])
+    """
+    cdtype = get_cdtype(dtype)
+    H1 = torch.tensor([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype, device=device) / sqrt(2)
+    Hs = H1.expand(n, -1, -1)  # (n, 2, 2)
+    return tensprod(*Hs)
