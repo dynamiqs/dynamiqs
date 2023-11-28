@@ -25,3 +25,13 @@ cmap_colors = [
 ]
 cmap = LinearSegmentedColormap.from_list('dq_cyclic', cmap_colors)
 matplotlib.colormaps.register(cmap)
+
+# cyclic copper colormap
+import warnings  # noqa: E402
+
+warnings.filterwarnings(action='ignore', category=DeprecationWarning, module='cmasher')
+from cmasher import copper  # noqa: E402
+
+cmap = copper
+cmap.name = 'cmr_copper'
+matplotlib.colormaps.register(cmap)
