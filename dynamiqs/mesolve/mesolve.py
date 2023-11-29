@@ -203,7 +203,7 @@ def mesolve(
         y0 = y0.view(-1, n, n)  # (by, n, n)
         by = y0.size(0)
 
-        if len({batch_dim for batch_dim in [bH, bL, by] if batch_dim > 1}) != 1:
+        if len({batch_dim for batch_dim in [bH, bL, by] if batch_dim > 1}) > 1:
             raise ValueError(
                 f"Expected all batch dimensions the same or 1, got bH={bH}, bL={bL},"
                 f" by={by}"
