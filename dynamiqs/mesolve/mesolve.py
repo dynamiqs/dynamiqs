@@ -195,19 +195,15 @@ def mesolve(
         y0 = y0.view(1, 1, -1, n, n)  # (1, 1, by, n, n) with by = 1 if not batched
         y0 = y0.repeat(bH, bL, 1, 1, 1)  # (bH, bL, by, n, n)
     else:
-        if H.dim() == 3:
-            bH = H.size(0)
-        else:
-            bH = 1
-            H = H.view(-1, n, n)
-        bL = L.size(1)  # (nL, bL, n, n) at this point
-        if y0.dim() == 3:
-            by = y0.size(0)
-        else:
-            by = 1
-            y0 = y0.view(-1, n, n)
+        H = H.view(-1, n, n)  # (bH, n, n)
+        bH = H.size(0)
 
-        if len({batch_dim for batch_dim in [bH, bL, by] if batch_dim > 1}) > 1:
+        bL = L.size(1)  # (nL, bL, n, n) at this point
+
+        y0 = y0.view(-1, n, n)  # (by, n, n)
+        by = y0.size(0)
+
+        if len({batch_dim for batch_dim in [bH, bL, by] if batch_dim > 1}) != 1:
             raise ValueError(
                 f"Expected all batch dimensions the same or 1, got bH={bH}, bL={bL},"
                 f" by={by}"
