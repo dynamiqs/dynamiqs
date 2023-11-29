@@ -10,6 +10,7 @@ from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 class TestMEAdaptive(OpenSolverTester):
     def test_batching(self):
         self._test_batching(ocavity, Dopri5())
+        self._test_flat_batching(ocavity, Dopri5())
 
     @pytest.mark.parametrize('system', [ocavity, otdqubit])
     def test_correctness(self, system):

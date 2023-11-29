@@ -4,6 +4,7 @@ import logging
 from abc import ABC
 from typing import Any
 
+import pytest
 import torch
 
 from dynamiqs.gradient import Gradient
@@ -145,6 +146,8 @@ class OpenSolverTester(SolverTester):
         ntsave = 11
         tsave = system.tsave(ntsave)
 
+        options = options or {}
+        options["flat_batching"] = False
         run = lambda H, jump_ops, y0: system._run(
             H, jump_ops, y0, tsave, solver, options=options
         )
@@ -187,6 +190,7 @@ class OpenSolverTester(SolverTester):
         # batched H and jump_ops and y0
         result = run(system.H_batched, system.jump_ops_batched, system.y0_batched)
         assert result.ysave.shape == (bH, bL, by, ntsave, n, n)
+        assert result.exp_save.shape == (bH, bL, by, n_exp_ops, ntsave)
 
         # batched second jump op but not the first one
         result = run(
@@ -195,3 +199,98 @@ class OpenSolverTester(SolverTester):
             system.y0_batched,
         )
         assert result.ysave.shape == (bH, bL, by, ntsave, n, n)
+        assert result.exp_save.shape == (bH, bL, by, n_exp_ops, ntsave)
+
+    def _test_flat_batching(
+        self,
+        system: OpenSystem,
+        solver: Solver,
+        *,
+        options: dict[str, Any] | None = None,
+    ):
+        # === non cartesian product batching
+        n = system.n
+        n_exp_ops = len(system.exp_ops)
+
+        b = min(
+            len(system.H_batched),
+            system.jump_ops_batched[0].shape[0],
+            len(system.y0_batched),
+        )
+
+        H_batched = system.H_batched[:b]
+        jump_ops_batched = [jump_op[:b] for jump_op in system.jump_ops_batched]
+        y0_batched = system.y0_batched[:b]
+
+        ntsave = 11
+        tsave = system.tsave(ntsave)
+
+        options = options or {}
+        options["flat_batching"] = True
+        run = lambda H, jump_ops, y0: system._run(
+            H, jump_ops, y0, tsave, solver, options=options
+        )
+
+        # === Passing cases
+
+        # no batching
+        result = run(system.H, system.jump_ops, system.y0)
+        assert result.ysave.shape == (ntsave, n, n)
+        assert result.exp_save.shape == (n_exp_ops, ntsave)
+
+        # batched H
+        result = run(H_batched, system.jump_ops, system.y0)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # batched jump_ops
+        result = run(system.H, jump_ops_batched, system.y0)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # batched y0
+        result = run(system.H, system.jump_ops, y0_batched)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # batched H and jump_ops
+        result = run(H_batched, jump_ops_batched, system.y0)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # batched H and y0
+        result = run(H_batched, system.jump_ops, y0_batched)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # batched jump_ops and y0
+        result = run(system.H, jump_ops_batched, y0_batched)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # batched H and jump_ops and y0
+        result = run(H_batched, jump_ops_batched, y0_batched)
+        assert result.ysave.shape == (b, ntsave, n, n)
+        assert result.exp_save.shape == (b, n_exp_ops, ntsave)
+
+        # === crashing cases (e.g. different batching sizes)
+
+        H_batched = [system.H for _ in range(3)]
+        jump_ops_batched = [system.jump_ops for _ in range(7)]
+        y0_batched = [system.y0 for _ in range(13)]
+
+        # batched H and jump_ops
+        with pytest.raises(Exception):
+            run(H_batched, jump_ops_batched, system.y0)
+
+        # batched H and y0
+        with pytest.raises(Exception):
+            run(H_batched, system.jump_ops, y0_batched)
+
+        # batched jump_ops and y0
+        with pytest.raises(Exception):
+            run(system.H, jump_ops_batched, y0_batched)
+
+        # batched H and jump_ops and y0
+        with pytest.raises(Exception):
+            run(H_batched, jump_ops_batched, y0_batched)

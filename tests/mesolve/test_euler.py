@@ -11,6 +11,7 @@ class TestMEEuler(OpenSolverTester):
     def test_batching(self):
         solver = Euler(dt=1e-2)
         self._test_batching(ocavity, solver)
+        self._test_flat_batching(ocavity, solver)
 
     @pytest.mark.parametrize('system', [ocavity, otdqubit])
     def test_correctness(self, system):
