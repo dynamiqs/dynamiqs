@@ -735,3 +735,24 @@ def mpow(x: Tensor, n: int) -> Tensor:
                 [0.+0.j, 1.+0.j]])
     """
     return torch.linalg.matrix_power(x, n)
+
+def entropy_vn(x: Tensor):
+    """Von-Neumann entropy of density matrix
+    
+    Args:
+        x _(..., n, n)_: Square matrix.
+        
+    Returns:
+        _(...)_ Von_Neumann entropy of x
+    
+    Examples:
+        >>> rho = 0.5*dq.fock_dm(2,0) + 0.5*dq.fock_dm(2,1)
+        entropy_vn(rho) 
+        ln(2)
+    """
+    if isket(x):
+        x = todm(x)
+    vals = torch.linalg.eigvalsh(x)
+    nzvals = vals[vals != 0]
+    logvals = nzvals.log()
+    return (torch.real(-torch.sum(nzvals*logvals))).item()
