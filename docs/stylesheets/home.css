@@ -16,56 +16,41 @@ Description: CSS for the homepage
     z-index: -1;
     position: absolute;
     width: 100%;
-    height: 660px;
-    text-align: center;
-    background: var(--homepage-gradient);
+    height: 580px;
+    background-color: var(--md-primary-fg-color);
+    background-image: var(--homepage-gradient);
+    transition: 0.5s;
+    background-size: 200% auto;
+}
+
+.tx-container:hover+.home-background {
+    background-position: right center;
+    background-size: 100% auto;
 }
 
 .waves {
     position: absolute;
     bottom: 0;
-    left: 0;
+    margin-left: auto;
+    margin-right: auto;
     width: 100%;
-    height: 280px;
+    min-width: 60em;
 }
 
-/* Animation */
-.parallax>use {
-    animation: move-infinite 60s cubic-bezier(.15,.1,.85,.9) infinite;
-}
-
-.parallax>use:nth-child(1) {
-    animation-delay: -13s;
-    fill: rgba(var(--md-default-bg-color-base), 0.7);
-}
-
-.parallax>use:nth-child(2) {
-    animation-delay: -7s;
-    fill: rgba(var(--md-default-bg-color-base), 0.5);
-}
-
-.parallax>use:nth-child(3) {
-    animation-delay: -4s;
-    fill: rgba(var(--md-default-bg-color-base), 0.3);
-}
-
-.parallax>use:nth-child(4) {
-    animation-delay: 0s;
+.waves.waves-front {
+    height: 100px;
     fill: rgba(var(--md-default-bg-color-base), 1.0);
 }
 
-@keyframes move-infinite {
-    0% {transform: translate3d(0, 0px, 0);}
-    10% {transform: translate3d(144px, 100px, 0);}
-    20% {transform: translate3d(288px, 20px, 0);}
-    30% {transform: translate3d(432px, 80px, 0);}
-    40% {transform: translate3d(576px, 0px, 0);}
-    50% {transform: translate3d(720px, 120px, 0);}
-    60% {transform: translate3d(864px, 40px, 0);}
-    70% {transform: translate3d(1008px, 80px, 0);}
-    80% {transform: translate3d(1152px, 20px, 0);}
-    90% {transform: translate3d(1296px, 100px, 0);}
-    100% {transform: translate3d(1440px, 0px, 0);}
+.waves-back {
+    height: 140px;
+    fill: rgba(var(--md-default-bg-color-base), 0.5);
+}
+
+@media screen and (min-width:60em) and (max-width:76.25em) {
+    .home-background {
+        height: 480px;
+    }
 }
 
 /* Hero text and image */
@@ -160,12 +145,6 @@ Description: CSS for the homepage
     .feature-item {
         flex: 1;
         min-width: 0;
-    }
-}
-
-@media screen and (min-width:60em) and (max-width:76.25em) {
-    .home-background {
-        height: 580px;
     }
 }
 
