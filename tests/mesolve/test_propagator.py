@@ -8,6 +8,7 @@ from .open_system import gocavity, ocavity
 class TestMEPropagator(OpenSolverTester):
     def test_batching(self):
         self._test_batching(ocavity, Propagator())
+        self._test_flat_batching(ocavity, Propagator())
 
     def test_correctness(self):
         self._test_correctness(ocavity, Propagator())
