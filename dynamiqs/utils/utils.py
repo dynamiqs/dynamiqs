@@ -749,7 +749,7 @@ def entropy_vn(x: Tensor) -> Tensor:
     Examples:
         >>> rho = 0.5*dq.fock_dm(2,0) + 0.5*dq.fock_dm(2,1)
         >>> entropy_vn(rho) 
-        tensor(0,6931)
+        tensor(0,6931471806)
     """
     if isket(x):
         x = todm(x)
