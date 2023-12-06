@@ -98,10 +98,9 @@ class SolverTester(ABC):
         y0b = system.y0b[:b]
 
         if isinstance(system, ClosedSystem):
-            # result = system.run(tsave, solver, options=options, H=Hb, y0=y0b)
-            # assert result.ysave.shape == (b, nt, n, 1)
-            # assert result.exp_save.shape == (b, nE, nt)
-            pass
+            result = system.run(tsave, solver, options=options, H=Hb, y0=y0b)
+            assert result.ysave.shape == (b, nt, n, 1)
+            assert result.exp_save.shape == (b, nE, nt)
         elif isinstance(system, OpenSystem):
             Lb = [L[:b] for L in system.Lb]
             result = system.run(tsave, solver, options=options, H=Hb, L=Lb, y0=y0b)

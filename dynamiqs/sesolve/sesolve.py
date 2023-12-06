@@ -10,6 +10,7 @@ from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
 from ..solvers.utils.td_tensor import to_td_tensor
+from ..solvers.utils.utils import common_batch_size
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -139,13 +140,30 @@ def sesolve(
     # convert and batch H
     H = to_td_tensor(H, **kw)  # (bH?, n, n)
     n = H.size(-1)
-    H = H.view(-1, 1, n, n)  # (bH, 1, n, n) with bH = 1 if not batched
+    H = H.view(-1, n, n)  # (bH, n, n)
     bH = H.size(0)
 
     # convert and batch y0
     y0 = to_tensor(psi0, **kw)  # (by?, n, 1)
-    y0 = y0.view(1, -1, n, 1)  # (1, by, n, 1) with by = 1 if not batched
-    y0 = y0.repeat(bH, 1, 1, 1)  # (bH, by, n, 1)
+    y0 = y0.view(-1, n, 1)  # (by, n, 1)
+    by = y0.size(0)
+
+    if not options.flat_batching:
+        # cartesian product batching
+        H = H.view(bH, 1, n, n)  # (bH, 1, n, n)
+        y0 = y0.view(1, by, n, 1)  # (1, by, n, 1)
+        y0 = y0.repeat(bH, 1, 1, 1)  # (bH, by, n, 1)
+        dim_squeeze = (0, 1)
+    else:
+        b = common_batch_size([bH, by])
+        if b is None:
+            raise ValueError(
+                'Expected all batch dimensions to be the same, but got `H` batch size'
+                f' {bH}, and `psi0` batch size {by}.'
+            )
+        if by == 1:
+            y0 = y0.repeat(b, 1, 1)
+        dim_squeeze = (0,)
 
     # convert exp_ops
     exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
@@ -164,8 +182,8 @@ def sesolve(
 
     # === get saved tensors and restore initial batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1)
+        result.ysave = result.ysave.squeeze(*dim_squeeze)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1)
+        result.exp_save = result.exp_save.squeeze(*dim_squeeze)
 
     return result
