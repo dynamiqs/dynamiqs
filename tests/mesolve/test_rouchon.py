@@ -3,11 +3,11 @@ import pytest
 from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Rouchon1, Rouchon2
 
-from ..solver_tester import OpenSolverTester
+from ..solver_tester import SolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
-class TestMERouchon1(OpenSolverTester):
+class TestMERouchon1(SolverTester):
     def test_batching(self):
         solver = Rouchon1(dt=1e-2)
         self._test_batching(ocavity, solver)
@@ -40,7 +40,7 @@ class TestMERouchon1(OpenSolverTester):
         self._test_gradient(system, solver, gradient, rtol=1e-4, atol=1e-2)
 
 
-class TestMERouchon2(OpenSolverTester):
+class TestMERouchon2(SolverTester):
     def test_batching(self):
         solver = Rouchon2(dt=1e-2)
         self._test_batching(ocavity, solver)

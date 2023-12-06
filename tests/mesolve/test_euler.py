@@ -3,15 +3,14 @@ import pytest
 from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Euler
 
-from ..solver_tester import OpenSolverTester
+from ..solver_tester import SolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
-class TestMEEuler(OpenSolverTester):
+class TestMEEuler(SolverTester):
     def test_batching(self):
         solver = Euler(dt=1e-2)
         self._test_batching(ocavity, solver)
-        self._test_flat_batching(ocavity, solver)
 
     @pytest.mark.parametrize('system', [ocavity, otdqubit])
     def test_correctness(self, system):

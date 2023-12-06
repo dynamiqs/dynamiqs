@@ -3,14 +3,13 @@ import pytest
 from dynamiqs.gradient import Adjoint, Autograd
 from dynamiqs.solver import Dopri5
 
-from ..solver_tester import OpenSolverTester
+from ..solver_tester import SolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
-class TestMEAdaptive(OpenSolverTester):
+class TestMEAdaptive(SolverTester):
     def test_batching(self):
         self._test_batching(ocavity, Dopri5())
-        self._test_flat_batching(ocavity, Dopri5())
 
     @pytest.mark.parametrize('system', [ocavity, otdqubit])
     def test_correctness(self, system):
