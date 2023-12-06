@@ -26,6 +26,7 @@ __all__ = [
     'overlap',
     'fidelity',
     'mpow',
+    'entropy_vn'
 ]
 
 
@@ -736,7 +737,7 @@ def mpow(x: Tensor, n: int) -> Tensor:
     """
     return torch.linalg.matrix_power(x, n)
 
-def entropy_vn(x: Tensor):
+def entropy_vn(x: Tensor) -> Tensor:
     """Von-Neumann entropy of density matrix
     
     Args:
@@ -747,12 +748,12 @@ def entropy_vn(x: Tensor):
     
     Examples:
         >>> rho = 0.5*dq.fock_dm(2,0) + 0.5*dq.fock_dm(2,1)
-        entropy_vn(rho) 
-        ln(2)
+        >>> entropy_vn(rho) 
+        tensor(0,6931)
     """
     if isket(x):
         x = todm(x)
     vals = torch.linalg.eigvalsh(x)
     nzvals = vals[vals != 0]
     logvals = nzvals.log()
-    return (torch.real(-torch.sum(nzvals*logvals))).item()
+    return -(nzvals @ logvals).real
