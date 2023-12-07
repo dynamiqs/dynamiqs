@@ -71,7 +71,7 @@ class AdjointAutograd(torch.autograd.Function):
         # save `solver.ysave` into context for backward pass
         ctx.save_for_backward(solver.ysave)
 
-        return solver.ysave, solver.exp_save
+        return solver.ysave, solver.Esave
 
     @staticmethod
     @once_differentiable
@@ -92,7 +92,7 @@ class AdjointAutograd(torch.autograd.Function):
         ysave = ctx.saved_tensors[0]
 
         # unpack gradients
-        grad_ysave, grad_exp_save = grads
+        grad_ysave, grad_Esave = grads
 
         # locally disable gradient computation
         with torch.no_grad():
@@ -103,10 +103,8 @@ class AdjointAutograd(torch.autograd.Function):
             else:
                 y0 = ysave[..., :, :]
                 a0 = grad_ysave[..., :, :]
-            if len(solver.exp_ops) > 0:
-                a0 += (grad_exp_save[..., :, -1, None, None] * solver.exp_ops.mH).sum(
-                    dim=-3
-                )
+            if len(solver.E) > 0:
+                a0 += (grad_Esave[..., :, -1, None, None] * solver.E.mH).sum(dim=-3)
 
             g = tuple(torch.zeros_like(p) for p in solver.options.params)
 
@@ -136,11 +134,10 @@ class AdjointAutograd(torch.autograd.Function):
                         a += grad_ysave[..., -i - 2, :, :]
 
                     # update adjoint wrt this time point by adding dL / de(t)
-                    if len(solver.exp_ops) > 0:
-                        a += (
-                            grad_exp_save[..., :, -i - 2, None, None]
-                            * solver.exp_ops.mH
-                        ).sum(dim=-3)
+                    if len(solver.E) > 0:
+                        a += (grad_Esave[..., :, -i - 2, None, None] * solver.E.mH).sum(
+                            dim=-3
+                        )
 
                 # iterate time
                 t = tnext

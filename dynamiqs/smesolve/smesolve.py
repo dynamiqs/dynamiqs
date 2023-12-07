@@ -212,7 +212,7 @@ def smesolve(
             f' has type {obj_type_str(exp_ops)}.'
         )
 
-    # === convert and batch H, y0, exp_ops
+    # === convert and batch H, y0, E
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
@@ -260,8 +260,8 @@ def smesolve(
     else:
         y0 = y0.repeat(1, ntrajs, 1, 1)  # (b, ntrajs, n, n)
 
-    # convert exp_ops
-    exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
+    # convert E
+    E = to_tensor(exp_ops, **kw)  # (nE, n, n)
 
     # === convert tsave init tmeas
     kw = dict(dtype=options.rdtype, device='cpu')
@@ -301,7 +301,7 @@ def smesolve(
         rho0,
         tsave,
         tmeas,
-        exp_ops,
+        E,
         options,
         L=L,
         etas=etas,
@@ -314,8 +314,8 @@ def smesolve(
     # === get saved tensors and restore initial batching
     if result.ysave is not None:
         result.ysave = result.ysave.squeeze(*dim_squeeze)
-    if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(*dim_squeeze)
+    if result.Esave is not None:
+        result.Esave = result.Esave.squeeze(*dim_squeeze)
     if result.meas_save is not None:
         # todo: fix
         # result.meas_save = result.meas_save.permute(1, 2, 3, 4, 0, 5)

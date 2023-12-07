@@ -34,14 +34,14 @@ class Result:
         options: Options,
         ysave: Tensor,
         tsave: Tensor,
-        exp_save: Tensor | None,
+        Esave: Tensor | None,
         meas_save: Tensor | None = None,
         tmeas: Tensor | None = None,
     ):
         self._options = options
         self.ysave = ysave
         self.tsave = tsave
-        self.exp_save = exp_save
+        self.Esave = Esave
         self.meas_save = meas_save
         self.tmeas = tmeas
         self.start_time: float | None = None
@@ -71,8 +71,8 @@ class Result:
 
     @property
     def expects(self) -> Tensor | None:
-        # alias for exp_save
-        return self.exp_save
+        # alias for Esave
+        return self.Esave
 
     @property
     def measurements(self) -> Tensor | None:

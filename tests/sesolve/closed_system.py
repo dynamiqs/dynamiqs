@@ -32,7 +32,7 @@ class ClosedSystem(System):
             H,
             y0,
             tsave,
-            exp_ops=self.exp_ops,
+            exp_ops=self.E,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -42,7 +42,7 @@ class ClosedSystem(System):
 class Cavity(ClosedSystem):
     # `Hb: (3, n, n)
     # `y0b`: (4, n, n)
-    # `exp_ops`: (2, n, n)
+    # `E`: (2, n, n)
 
     def __init__(
         self,
@@ -72,7 +72,7 @@ class Cavity(ClosedSystem):
         # prepare quantum operators
         self.H = self.delta * adag @ a
         self.Hb = [0.5 * self.H, self.H, 2 * self.H]
-        self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
+        self.E = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent(self.n, self.alpha0)
@@ -137,7 +137,7 @@ class TDQubit(ClosedSystem):
 
         # prepare quantum operators
         self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
-        self.exp_ops = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+        self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)

@@ -21,7 +21,7 @@ class Solver(ABC):
         y0: Tensor,
         tsave: Tensor,
         tmeas: Tensor,
-        exp_ops: Tensor,
+        E: Tensor,
         options: Options,
     ):
         """
@@ -30,7 +30,7 @@ class Solver(ABC):
             H:
             y0: Initial quantum state, of shape `(..., m, n)`.
             tsave: Times for which results are saved.
-            exp_ops:
+            E:
             options:
         """
         self.H = H
@@ -38,7 +38,7 @@ class Solver(ABC):
         self.y0 = y0
         self.tsave = tsave.numpy()
         self.tmeas = tmeas.numpy()
-        self.exp_ops = exp_ops
+        self.E = E
         self.options = options
 
         # aliases
@@ -65,19 +65,19 @@ class Solver(ABC):
         else:
             self.ysave = None
 
-        if len(self.exp_ops) > 0:
-            # exp_save: (..., len(exp_ops), len(tsave))
-            self.exp_save = torch.zeros(*batch_sizes, len(exp_ops), len(tsave), **kw)
-            self.exp_save_iter = iteraxis(self.exp_save, axis=-1)
+        if len(self.E) > 0:
+            # Esave: (..., len(E), len(tsave))
+            self.Esave = torch.zeros(*batch_sizes, len(E), len(tsave), **kw)
+            self.Esave_iter = iteraxis(self.Esave, axis=-1)
         else:
-            self.exp_save = None
+            self.Esave = None
 
     def run(self) -> Result:
         start_time = time()
         self._run()
         end_time = time()
 
-        result = Result(self.options, self.ysave, self.tsave, self.exp_save)
+        result = Result(self.options, self.ysave, self.tsave, self.Esave)
         result.start_time = start_time
         result.end_time = end_time
         return result
@@ -96,7 +96,7 @@ class Solver(ABC):
     def save(self, y: Tensor):
         if self.tsave_mask[self.tstop_counter]:
             self._save_y(y)
-            self._save_exp_ops(y)
+            self._save_E(y)
             self.tsave_counter += 1
         if self.tmeas_mask[self.tstop_counter]:
             self._save_meas()
@@ -110,9 +110,9 @@ class Solver(ABC):
         elif self.tsave_counter == len(self.tsave) - 1:
             self.ysave = y
 
-    def _save_exp_ops(self, y: Tensor):
-        if len(self.exp_ops) > 0:
-            next(self.exp_save_iter)[:] = bexpect(self.exp_ops, y)
+    def _save_E(self, y: Tensor):
+        if len(self.E) > 0:
+            next(self.Esave_iter)[:] = bexpect(self.E, y)
 
     def _save_meas(self):
         pass
