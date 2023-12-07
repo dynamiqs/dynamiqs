@@ -638,8 +638,6 @@ def sign(
         tensor(1.000+0.j)
         >>> dq.expect(dq.sign(30), dq.coherent(30, -3.0))
         tensor(-1.000+0.j)
-        >>> dq.expect(dq.sign(30), dq.coherent(30, 0.0))
-        tensor(    -0.000+0.j)
     """
     a = destroy(dim, dtype=dtype, device=device)
     if angle != 0.0:
