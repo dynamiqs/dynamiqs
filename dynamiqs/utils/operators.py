@@ -28,6 +28,7 @@ __all__ = [
     'sigmaz',
     'sigmap',
     'sigmam',
+    'sign',
     'hadamard',
 ]
 
@@ -611,6 +612,43 @@ def sigmam(
     return torch.tensor(
         [[0.0, 0.0], [1.0, 0.0]], dtype=get_cdtype(dtype), device=device
     )
+
+
+def sign(
+    dim: int,
+    angle: float = 0,
+    *,
+    dtype: torch.complex64 | torch.complex128 | None = None,
+    device: str | torch.device | None = None,
+) -> Tensor:
+    r"""Returns the $\exp(i\alpha)$ quadrature sign operator
+
+    It is defined by
+    $ sign(X) =\frac{a.e^{i\alpha} + h.c}{|a.e^{i\alpha} + h.c|} $
+
+    Args:
+        dtype: Complex data type of the returned tensor.
+        device: Device of the returned tensor.
+
+    Returns:
+        _(dim, dim)_ Sign operator.
+
+    Examples:
+        >>> dq.expect(dq.sign(30), dq.coherent(30, 3.0))
+        tensor(1.000+0.j)
+        >>> dq.expect(dq.sign(30), dq.coherent(30, -3.0))
+        tensor(-1.000+0.j)
+        >>> dq.expect(dq.sign(30), dq.coherent(30, 0.0))
+        tensor(    -0.000+0.j)
+    """
+    a = destroy(dim, dtype=dtype, device=device)
+    if angle != 0.0:
+        a *= cexp(1j * angle)
+
+    eigvals, eigvects = torch.linalg.eigh(a + a.H)
+    eigvals = torch.sign(eigvals).to(eigvects.dtype)
+    eigvals = torch.diag(eigvals)
+    return eigvects @ eigvals @ eigvects.H
 
 
 def hadamard(
