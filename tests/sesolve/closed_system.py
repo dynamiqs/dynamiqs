@@ -10,16 +10,12 @@ import dynamiqs as dq
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
+from dynamiqs.utils.tensor_types import ArrayLike, TDArrayLike, dtype_real_to_complex
 
 from ..system import System
 
 
 class ClosedSystem(System):
-    @property
-    def _state_shape(self) -> tuple[int, int]:
-        return self.n, 1
-
     def run(
         self,
         tsave: ArrayLike,
@@ -27,21 +23,11 @@ class ClosedSystem(System):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
+        H: TDArrayLike | None = None,
+        y0: ArrayLike | None = None,
     ) -> Result:
-        return self._run(
-            self.H, self.y0, tsave, solver, gradient=gradient, options=options
-        )
-
-    def _run(
-        self,
-        H: Tensor,
-        y0: Tensor,
-        tsave: ArrayLike,
-        solver: Solver,
-        *,
-        gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
-    ) -> Result:
+        H = self.H if H is None else H
+        y0 = self.y0 if y0 is None else y0
         return dq.sesolve(
             H,
             y0,
@@ -54,8 +40,8 @@ class ClosedSystem(System):
 
 
 class Cavity(ClosedSystem):
-    # `H_batched: (3, n, n)
-    # `y0_batched`: (4, n, n)
+    # `Hb: (3, n, n)
+    # `y0b`: (4, n, n)
     # `exp_ops`: (2, n, n)
 
     def __init__(
@@ -85,12 +71,12 @@ class Cavity(ClosedSystem):
 
         # prepare quantum operators
         self.H = self.delta * adag @ a
-        self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
+        self.Hb = [0.5 * self.H, self.H, 2 * self.H]
         self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent(self.n, self.alpha0)
-        self.y0_batched = [
+        self.y0b = [
             dq.coherent(self.n, self.alpha0),
             dq.coherent(self.n, 1j * self.alpha0),
             dq.coherent(self.n, -self.alpha0),
@@ -136,6 +122,8 @@ class TDQubit(ClosedSystem):
     def __init__(
         self, *, eps: float, omega: float, t_end: float, requires_grad: bool = False
     ):
+        self.n = 2
+
         # store parameters
         self.eps = torch.as_tensor(eps).requires_grad_(requires_grad)
         self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)

@@ -9,7 +9,8 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils import batch_H, batch_y0
+from ..solvers.utils.td_tensor import to_td_tensor
+from ..solvers.utils.utils import common_batch_size
 from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -105,17 +106,14 @@ def sesolve(
             - **gradient** (Gradient) – Gradient used.
             - **options** _(dict)_  – Options used.
     """
-    # TODO support density matrices too
-    # TODO add test to check that psi0 has the correct shape
-
-    # default solver
+    # === default solver
     if solver is None:
         solver = Dopri5()
 
-    # options
+    # === options
     options = Options(solver=solver, gradient=gradient, options=options)
 
-    # solver class
+    # === solver class
     solvers = {
         Propagator: SEPropagator,
         Euler: SEEuler,
@@ -129,38 +127,63 @@ def sesolve(
         )
     SOLVER_CLASS = solvers[type(solver)]
 
-    # check exp_ops
+    # === check exp_ops
     if exp_ops is not None and not isinstance(exp_ops, list):
         raise TypeError(
             'Argument `exp_ops` must be `None` or a list of array-like objects, but has'
             f' type {obj_type_str(exp_ops)}.'
         )
 
-    # format and batch all tensors
-    # H: (b_H, 1, 1, n, n)
-    # psi0: (b_H, 1, b_psi, n, 1)
-    # exp_ops: (len(E), n, n)
-    ops_kwargs = dict(dtype=options.cdtype, device=options.device)
-    H = batch_H(H, **ops_kwargs)
-    psi0 = batch_y0(psi0, b_H=H.size(0), **ops_kwargs)
-    exp_ops = to_tensor(exp_ops, **ops_kwargs)
+    # === convert and batch H, y0, exp_ops
+    kw = dict(dtype=options.cdtype, device=options.device)
 
-    # convert tsave to a tensor and init tmeas
-    time_kwargs = dict(dtype=options.rdtype, device='cpu')
-    tsave = to_tensor(tsave, **time_kwargs)
-    tmeas = torch.empty(0, **time_kwargs)
+    # convert and batch H
+    H = to_td_tensor(H, **kw)  # (bH?, n, n)
+    n = H.size(-1)
+    H = H.view(-1, n, n)  # (bH, n, n)
+    bH = H.size(0)
+
+    # convert and batch y0
+    y0 = to_tensor(psi0, **kw)  # (by?, n, 1)
+    y0 = y0.view(-1, n, 1)  # (by, n, 1)
+    by = y0.size(0)
+
+    if options.cartesian_batching:
+        # cartesian product batching
+        H = H.view(bH, 1, n, n)  # (bH, 1, n, n)
+        y0 = y0.view(1, by, n, 1)  # (1, by, n, 1)
+        y0 = y0.repeat(bH, 1, 1, 1)  # (bH, by, n, 1)
+        dim_squeeze = (0, 1)
+    else:
+        b = common_batch_size([bH, by])
+        if b is None:
+            raise ValueError(
+                'Expected all batch dimensions to be the same, but got `H` batch size'
+                f' {bH}, and `psi0` batch size {by}.'
+            )
+        if by == 1:
+            y0 = y0.repeat(b, 1, 1)
+        dim_squeeze = (0,)
+
+    # convert exp_ops
+    exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
+
+    # === convert tsave and init tmeas
+    kw = dict(dtype=options.rdtype, device='cpu')
+    tsave = to_tensor(tsave, **kw)
     check_time_tensor(tsave, arg_name='tsave')
+    tmeas = torch.empty(0, **kw)
 
-    # define the solver
-    solver = SOLVER_CLASS(H, psi0, tsave, tmeas, exp_ops, options)
+    # === define the solver
+    solver = SOLVER_CLASS(H, y0, tsave, tmeas, exp_ops, options)
 
-    # compute the result
+    # === compute the result
     result = solver.run()
 
-    # get saved tensors and restore initial batching
+    # === get saved tensors and restore initial batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1, 2)
+        result.ysave = result.ysave.squeeze(*dim_squeeze)
     if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1, 2)
+        result.exp_save = result.exp_save.squeeze(*dim_squeeze)
 
     return result

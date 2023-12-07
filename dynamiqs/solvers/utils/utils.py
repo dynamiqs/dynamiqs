@@ -172,3 +172,33 @@ def cache(func=None, *, maxsize: int = 1):
 def iteraxis(x: Tensor, axis: int = 0) -> Iterator[Tensor]:
     for i in range(x.size(axis)):
         yield x.select(axis, i)
+
+
+def format_L(L: list[Tensor]) -> Tensor:
+    # Format a list of tensors of individual shape (n, n) or (?, n, n) into a single
+    # batched tensor of shape (nL, bL, n, n). An error is raised if all batched
+    # dimensions `?` are not the same.
+
+    n = L[0].size(-1)
+    L = [x.view(-1, n, n) for x in L]  # [(?, n, n)] with ? = 1 if not batched
+
+    bL = common_batch_size([x.size(0) for x in L])
+    if bL is None:
+        L_shapes = [tuple(x.shape) for x in L]
+        raise ValueError(
+            'Argument `jump_ops` should be a list of 2D arrays or 3D arrays with the'
+            ' same batch size, but got a list of arrays with incompatible shapes'
+            f' {L_shapes}.'
+        )
+
+    L = [x.expand(bL, -1, -1) for x in L]  # [(bL, n, n)]
+    return torch.stack(L)
+
+
+def common_batch_size(dims: list[int]) -> int | None:
+    # If `dims` is a list with two values 1 and x, returns x. If it contains only
+    # 1, returns 1. Otherwise, returns `None`.
+    bs = torch.tensor(dims).unique()
+    if (1 not in bs and len(bs) > 1) or len(bs) > 2:
+        return None
+    return bs.max().item()

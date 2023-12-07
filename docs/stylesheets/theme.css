@@ -26,8 +26,7 @@ Description: Color theme of the dynamiqs documentation
 [data-md-color-scheme="default"] {
   /* Background */
   --md-default-bg-color-base: 255, 255, 255;
-  --md-default-bg-color: rgb(var(--md-default-bg-color-base));
-  --md-default-bg-header-color: #f5f5f5;
+  --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #f5f5f5;
 
   /* Code highlight */
   --md-code-fg-color: #39464b;
@@ -77,8 +76,7 @@ Description: Color theme of the dynamiqs documentation
 [data-md-color-scheme="slate"] {
   /* Background */
   --md-default-bg-color-base: 50, 52, 57;
-  --md-default-bg-color: rgb(var(--md-default-bg-color-base));
-  --md-default-bg-header-color: #444950;
+  --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #444950;
   --md-code-bg-color: var(--md-default-bg-header-color);
 
   /* Code highlight */

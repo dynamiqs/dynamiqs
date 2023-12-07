@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Any
 
 import torch
@@ -17,14 +17,10 @@ class System(ABC):
     def __init__(self):
         self.n = None
         self.H = None
-        self.H_batched = None
+        self.Hb = None
         self.y0 = None
-        self.y0_batched = None
+        self.y0b = None
         self.exp_ops = None
-
-    @abstractproperty
-    def _state_shape(self) -> tuple[int, int]:
-        pass
 
     @abstractmethod
     def tsave(self, n: int) -> Tensor:
