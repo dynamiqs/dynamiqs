@@ -54,14 +54,14 @@ alpha0 = 1.0  # initial coherent state amplitude
 a = qt.destroy(n)
 H = omega * a.dag() * a
 jump_ops = [np.sqrt(kappa) * a]
-rho0 = qt.coherent_dm(n, alpha0)
+psi0 = qt.coherent(n, alpha0)
 tsave = np.linspace(0, 1.0, 101)
 
 # run on GPU if available, otherwise on CPU
 torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # run simulation
-result = dq.mesolve(H, jump_ops, rho0, tsave)
+result = dq.mesolve(H, jump_ops, psi0, tsave)
 print(result)
 ```
 
@@ -69,9 +69,9 @@ print(result)
 |██████████| 100.0% - time 00:00/00:00
 ==== Result ====
 Method       : Dopri5
-Start        : 2023-07-07 10:26:13
-End          : 2023-07-07 10:26:13
-Total time   : 0.53 s
+Start        : 2023-09-10 16:57:34
+End          : 2023-09-10 16:57:35
+Total time   : 0.48 s
 states       : Tensor (101, 128, 128) | 12.62 Mb
 ```
 

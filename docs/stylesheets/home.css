@@ -37,7 +37,7 @@ Description: CSS for the homepage
     min-width: 60em;
 }
 
-.waves.waves-front {
+.waves-front {
     height: 100px;
     fill: rgba(var(--md-default-bg-color-base), 1.0);
 }
