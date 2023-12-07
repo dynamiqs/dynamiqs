@@ -8,7 +8,14 @@ from torch import Tensor
 
 from ._utils import obj_type_str, type_str
 from .solvers.utils.utils import cache
-from .utils.tensor_types import ArrayLike, Number, get_cdtype, to_device, to_tensor
+from .utils.tensor_types import (
+    ArrayLike,
+    Number,
+    dtype_complex_to_real,
+    get_cdtype,
+    to_device,
+    to_tensor,
+)
 
 __all__ = ['totime']
 
@@ -22,6 +29,18 @@ def totime(
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
     device = to_device(device)
 
+    # pwc time tensor
+    if isinstance(x, tuple) and len(x) == 3:
+        times, values, tensor = x
+        if dtype in (torch.complex64, torch.complex128):
+            rdtype = dtype_complex_to_real(dtype)
+        else:
+            rdtype = dtype
+        times = to_tensor(times, dtype=rdtype, device=device)
+        values = to_tensor(values, dtype=dtype, device=device)
+        tensor = to_tensor(tensor, dtype=dtype, device=device)
+        pwc = _PWCTimeTensor(times, values, tensor)
+        return PWCTimeTensor([pwc])
     # constant time tensor
     if isinstance(x, get_args(ArrayLike)):
         x = to_tensor(x, dtype=dtype, device=device)
@@ -246,5 +265,131 @@ class CallableTimeTensor(TimeTensor):
             f = lambda t: self.f(t) + other.f(t)
             f0 = self.f0 + other.f0
             return CallableTimeTensor(f, f0)
+        else:
+            return NotImplemented
+
+
+class _PWCTimeTensor(TimeTensor):
+    # Crucially, this implementation of a PWC tensor doesn't handle addition with a
+    # constant tensor or another PWC tensor. To support this we need additional
+    # structure, which is achieved by the `PWCTimeTensor` class below. This class is
+    # just an intermediate helper class.
+
+    # Supports batching on `values`:
+    # >>> times = torch.linspace(0, 1.0, 11)  # (nt+1) with nt = 10
+    # >>> nseeds = 30
+    # >>> eps = dq.rand_complex((10, nseeds))  # (nt, 30)
+    # >>> a = dq.destroy(3)  #  (3, 3)
+    # >>> H = PWCTimeTensor(times, values, tensor)
+    # >>> H(0.0)  # (30, 3, 3)
+
+    def __init__(self, times: Tensor, values: Tensor, tensor: Tensor) -> None:
+        # values carries all the transformation on the shape
+        self.times = times  # (nt+1)
+        self.values = values  # (nt, ...v)
+        self.tensor = tensor  # (n, n)
+
+        self.nt = self.values.shape[0]
+        self.n = tensor.shape[-1]
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.tensor.dtype
+
+    @property
+    def device(self) -> torch.device:
+        return self.tensor.device
+
+    @property
+    def shape(self) -> torch.Size:
+        return torch.Size((*self.values.shape[1:], self.n, self.n))  # (...v, n, n)
+
+    def __call__(self, t: float) -> Tensor:
+        if t < self.times[0] or t >= self.times[-1]:
+            return torch.zeros(self.shape, dtype=self.dtype, device=self.device)
+        else:
+            # find the index $k$ such that $t \in [t_k, t_{k+1})$
+            idx = torch.searchsorted(self.times, t, side='right') - 1
+            v = self.values[idx, ...]  # (...v)
+            v = v.view(*v.shape, 1, 1)  # (...v, n, n)
+            return v * self.tensor  # (...v, n, n)
+
+    def view(self, *shape: int) -> TimeTensor:
+        values = self.values.view(self.nt, *shape[:-2])
+        return _PWCTimeTensor(self.times, values, self.tensor)
+
+    def adjoint(self) -> TimeTensor:
+        return _PWCTimeTensor(self.times, self.values.conj(), self.tensor.mH)
+
+    def __neg__(self) -> TimeTensor:
+        return _PWCTimeTensor(self.times, self.values, -self.tensor)
+
+    def __mul__(self, other: Number | Tensor) -> TimeTensor:
+        return _PWCTimeTensor(self.times, self.values, self.tensor * other)
+
+    def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
+        return NotImplemented
+
+
+class PWCTimeTensor(TimeTensor):
+    def __init__(
+        self,
+        pwc: list[_PWCTimeTensor],
+        static: Tensor | None = None,  # constant part
+    ):
+        # argument pwc must be a non-empty list of compatible shapes values and tensor
+        self.pwc = pwc
+        self.static = torch.zeros_like(self.pwc[0].tensor) if static is None else static
+
+        # merge times tensors
+        times = [x.times for x in pwc]
+        self.times = torch.cat(times).unique().sort()[0]
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.pwc[0].dtype
+
+    @property
+    def device(self) -> torch.device:
+        return self.pwc[0].device
+
+    @property
+    def shape(self) -> torch.Size:
+        return self.pwc[0].shape
+
+    def __call__(self, t: float) -> Tensor:
+        static_part = self.static.expand(*self.shape)
+        pwc_part = torch.stack([pwc(t) for pwc in self.pwc]).sum(0)
+        return static_part + pwc_part
+
+    def view(self, *shape: int) -> TimeTensor:
+        pwc = [p.view(*shape) for p in self.pwc]
+        return PWCTimeTensor(pwc, static=self.static)
+
+    def adjoint(self) -> TimeTensor:
+        static = self.static.mH
+        pwc = [p.adjoint() for p in self.pwc]
+        return PWCTimeTensor(pwc, static=static)
+
+    def __neg__(self) -> TimeTensor:
+        static = -self.static
+        pwc = [-p for p in self.pwc]
+        return PWCTimeTensor(pwc, static=static)
+
+    def __mul__(self, other: Number | Tensor) -> TimeTensor:
+        static = self.static * other
+        pwc = [p * other for p in self.pwc]
+        return PWCTimeTensor(pwc, static=static)
+
+    def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
+        if isinstance(other, Tensor):
+            static = self.static + other
+            return PWCTimeTensor(self.pwc, static=static)
+        elif isinstance(other, ConstantTimeTensor):
+            return self + other.tensor
+        elif isinstance(other, PWCTimeTensor):
+            static = self.static + other.static
+            pwc = [*self.pwc, *other.pwc]
+            return PWCTimeTensor(pwc, static=static)
         else:
             return NotImplemented
