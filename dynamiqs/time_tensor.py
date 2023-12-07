@@ -62,10 +62,10 @@ def totime(
 class TimeTensor:
     # Subclasses should implement:
     # - the properties: dtype, device, shape
-    # - the methods: __call__, view, adjoint, __neg__, __mul__
-    # - adapt `time_tensor_add` to support their type (no need to support addition
-    #   with all the time tensor types, just support addition with `Tensor`,
-    #   `ConstantTimeTensor` and the subclass type itself)
+    # - the methods: __call__, view, adjoint, __neg__, __mul__, __add__
+
+    # Note that a subclass implementation of `__add__` only need to support addition
+    # with `Tensor`, `ConstantTimeTensor` and the subclass type itself.
 
     @abstractproperty
     def dtype(self) -> torch.dtype:
@@ -106,30 +106,22 @@ class TimeTensor:
 
     @abstractmethod
     def __mul__(self, other: Number | Tensor) -> TimeTensor:
-        if not isinstance(other, get_args(Number) + (Tensor,)):
-            return NotImplemented
+        pass
 
     def __rmul__(self, other: Number | Tensor) -> TimeTensor:
         return self * other
 
+    @abstractmethod
     def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
-        if not isinstance(other, (Tensor, TimeTensor)):
-            return NotImplemented
-        return time_tensor_add(self, other)
+        pass
 
     def __radd__(self, other: Tensor | TimeTensor) -> TimeTensor:
-        if not isinstance(other, (Tensor, TimeTensor)):
-            return NotImplemented
         return self + other
 
     def __sub__(self, other: Tensor | TimeTensor) -> TimeTensor:
-        if not isinstance(other, (Tensor, TimeTensor)):
-            return NotImplemented
         return self + (-other)
 
     def __rsub__(self, other: Tensor | TimeTensor) -> TimeTensor:
-        if not isinstance(other, (Tensor, TimeTensor)):
-            return NotImplemented
         return other + (-self)
 
     def __repr__(self) -> str:
@@ -181,8 +173,15 @@ class ConstantTimeTensor(TimeTensor):
         return ConstantTimeTensor(-self.tensor)
 
     def __mul__(self, other: Number | Tensor) -> TimeTensor:
-        super().__mul__(other)
         return ConstantTimeTensor(self.tensor * other)
+
+    def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
+        if isinstance(other, Tensor):
+            return ConstantTimeTensor(self.tensor + other)
+        elif isinstance(other, ConstantTimeTensor):
+            return self + other.tensor
+        else:
+            return NotImplemented
 
 
 class CallableTimeTensor(TimeTensor):
@@ -223,36 +222,20 @@ class CallableTimeTensor(TimeTensor):
         return CallableTimeTensor(f, f0)
 
     def __mul__(self, other: Number | Tensor) -> TimeTensor:
-        super().__mul__(other)
         f = lambda t: self.f(t) * other
         f0 = self.f0 * other
         return CallableTimeTensor(f, f0)
 
-
-def time_tensor_add(x: TimeTensor, y: Tensor | TimeTensor) -> TimeTensor:
-    if isinstance(x, ConstantTimeTensor):
-        if isinstance(y, Tensor):
-            return ConstantTimeTensor(x.tensor + y)
-        elif isinstance(y, ConstantTimeTensor):
-            return ConstantTimeTensor(x.tensor + y.tensor)
-        elif isinstance(y, CallableTimeTensor):
-            f = lambda t: y.f(t) + x.tensor
-            f0 = y.f0 + x.tensor
+    def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
+        if isinstance(other, Tensor):
+            f = lambda t: self.f(t) + other
+            f0 = self.f0 + other
             return CallableTimeTensor(f, f0)
-    elif isinstance(x, CallableTimeTensor):
-        if isinstance(y, Tensor):
-            f = lambda t: x.f(t) + y
-            f0 = x.f0 + y
+        elif isinstance(other, ConstantTimeTensor):
+            return self + other.tensor
+        elif isinstance(other, CallableTimeTensor):
+            f = lambda t: self.f(t) + other.f(t)
+            f0 = self.f0 + other.f0
             return CallableTimeTensor(f, f0)
-        elif isinstance(y, ConstantTimeTensor):
-            f = lambda t: x.f(t) + y.tensor
-            f0 = x.f0 + y.tensor
-            return CallableTimeTensor(f, f0)
-        elif isinstance(y, CallableTimeTensor):
-            f = lambda t: x.f(t) + y.f(t)
-            f0 = x.f0 + y.f0
-            return CallableTimeTensor(f, f0)
-
-    raise TypeError(
-        f'Unsupported operand type(s) for +: {obj_type_str(x)} and {obj_type_str(y)}.'
-    )
+        else:
+            return NotImplemented

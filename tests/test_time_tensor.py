@@ -13,7 +13,6 @@ class TestConstantTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.x = ConstantTimeTensor(torch.tensor([1, 2]))
-        self.tensor = torch.tensor([0, 1])
 
     def test_call(self):
         assert_equal(self.x(0.0), [1, 2])
@@ -39,7 +38,7 @@ class TestConstantTimeTensor:
         assert_equal(x(0.0), [2, 4])
 
         # test type `Tensor`
-        x = self.x * self.tensor
+        x = self.x * torch.tensor([0, 1])
         assert_equal(x(0.0), [0, 2])
 
     def test_rmul(self):
@@ -48,8 +47,25 @@ class TestConstantTimeTensor:
         assert_equal(x(0.0), [2, 4])
 
         # test type `Tensor`
-        x = self.tensor * self.x
+        x = torch.tensor([0, 1]) * self.x
         assert_equal(x(0.0), [0, 2])
+
+    def test_add(self):
+        # test type `Tensor`
+        x = self.x + torch.tensor([0, 1])
+        assert isinstance(x, ConstantTimeTensor)
+        assert_equal(x(0.0), [1, 3])
+
+        # test type `ConstantTimeTensor`
+        x = self.x + self.x
+        assert isinstance(x, ConstantTimeTensor)
+        assert_equal(x(0.0), [2, 4])
+
+    def test_radd(self):
+        # test type `Tensor`
+        x = torch.tensor([0, 1]) + self.x
+        assert isinstance(x, ConstantTimeTensor)
+        assert_equal(x(0.0), [1, 3])
 
 
 class TestCallableTimeTensor:
@@ -57,7 +73,6 @@ class TestCallableTimeTensor:
     def setup(self):
         f = lambda t: t * torch.tensor([1, 2])
         self.x = CallableTimeTensor(f, f(0.0))
-        self.tensor = torch.tensor([0, 1])
 
     def test_call(self):
         assert_equal(self.x(0.0), [0, 0])
@@ -87,7 +102,7 @@ class TestCallableTimeTensor:
         assert_equal(x(1.0), [2, 4])
 
         # test type `Tensor`
-        x = self.x * self.tensor
+        x = self.x * torch.tensor([0, 1])
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [0, 2])
 
@@ -98,64 +113,26 @@ class TestCallableTimeTensor:
         assert_equal(x(1.0), [2, 4])
 
         # test type `Tensor`
-        x = self.tensor * self.x
+        x = torch.tensor([0, 1]) * self.x
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [0, 2])
 
-
-class TestAddTimeTensor:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.xc = ConstantTimeTensor(torch.tensor([1, 2]))
-        f = lambda t: t * torch.tensor([1, 2])
-        self.xf = CallableTimeTensor(f, f(0.0))
-        self.tensor = torch.tensor([0, 1])
-
     def test_add(self):
-        # === `ConstantTimeTensor`
         # test type `Tensor`
-        x = self.xc + self.tensor
-        assert isinstance(x, ConstantTimeTensor)
-        assert_equal(x(0.0), [1, 3])
-
-        # test type `ConstantTimeTensor`
-        x = self.xc + self.xc
-        assert isinstance(x, ConstantTimeTensor)
-        assert_equal(x(0.0), [2, 4])
-
-        # test type `CallableTimeTensor`
-        x = self.xc + self.xf
-        assert isinstance(x, CallableTimeTensor)
-        assert_equal(x(0.0), [1, 2])
-        assert_equal(x(1.0), [2, 4])
-
-        # === `CallableTimeTensor`
-        # test type `Tensor`
-        x = self.xf + self.tensor
+        x = self.x + torch.tensor([0, 1])
         assert isinstance(x, CallableTimeTensor)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
 
-        # test type `ConstantTimeTensor`
-        x = self.xf + self.xc
-        assert isinstance(x, CallableTimeTensor)
-        assert_equal(x(0.0), [1, 2])
-        assert_equal(x(1.0), [2, 4])
-
         # test type `CallableTimeTensor`
-        x = self.xf + self.xf
+        x = self.x + self.x
         assert isinstance(x, CallableTimeTensor)
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [2, 4])
 
     def test_radd(self):
-        # === `ConstantTimeTensor`
         # test type `Tensor`
-        x = self.tensor + self.xc
-        assert_equal(x(0.0), [1, 3])
-
-        # === `CallableTimeTensor`
-        # test type `Tensor`
-        x = self.tensor + self.xf
+        x = torch.tensor([0, 1]) + self.x
+        assert isinstance(x, CallableTimeTensor)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
