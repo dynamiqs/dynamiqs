@@ -18,7 +18,7 @@ def to_time_tensor(
     dtype: torch.dtype | None = None,
     device: str | torch.device | None = None,
 ) -> TimeTensor:
-    dtype = get_cdtype(dtype) if dtype is None else dtype  # assume complex by default
+    dtype = dtype or get_cdtype(dtype)  # assume complex by default
     device = to_device(device)
 
     # constant time tensor
@@ -255,3 +255,6 @@ def time_tensor_add(x: TimeTensor, y: Tensor | TimeTensor) -> TimeTensor:
             f = lambda t: x.f(t) + y.f(t)
             f0 = x.f0 + y.f0
             return CallableTimeTensor(f, f0)
+    raise TypeError(
+        f'Unsupported operand type(s) for +: {obj_type_str(x)} and {obj_type_str(y)}.'
+    )
