@@ -2,18 +2,18 @@ import pytest
 import torch
 from torch import Tensor
 
-from dynamiqs.time_tensor import CallableTimeTensor, ConstantTimeTensor, totime
+from dynamiqs.time_tensor import CallableTimeTensor, ConstantTimeTensor
 
 
 def assert_equal(xt: Tensor, y: list):
-    assert torch.equal(xt, torch.tensor(y, dtype=torch.float32))
+    assert torch.equal(xt, torch.tensor(y))
 
 
 class TestConstantTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.x = totime(torch.tensor([1, 2], dtype=torch.float32))
-        self.tensor = torch.tensor([0, 1], dtype=torch.float32)
+        self.x = ConstantTimeTensor(torch.tensor([1, 2]))
+        self.tensor = torch.tensor([0, 1])
 
     def test_call(self):
         assert_equal(self.x(0.0), [1, 2])
@@ -24,9 +24,7 @@ class TestConstantTimeTensor:
         assert_equal(x(0.0), [[1, 2]])
 
     def test_adjoint(self):
-        x = totime(
-            torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]), dtype=torch.complex64
-        )
+        x = ConstantTimeTensor(torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
         x = x.adjoint()
         res = torch.tensor([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
         assert torch.equal(x(0.0), res)
@@ -57,8 +55,9 @@ class TestConstantTimeTensor:
 class TestCallableTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.x = totime(lambda t: t * torch.tensor([1, 2]), dtype=torch.float32)
-        self.tensor = torch.tensor([0, 1], dtype=torch.float32)
+        f = lambda t: t * torch.tensor([1, 2])
+        self.x = CallableTimeTensor(f, f(0.0))
+        self.tensor = torch.tensor([0, 1])
 
     def test_call(self):
         assert_equal(self.x(0.0), [0, 0])
@@ -70,10 +69,8 @@ class TestCallableTimeTensor:
         assert_equal(x(1.0), [[1, 2]])
 
     def test_adjoint(self):
-        x = totime(
-            lambda t: t * torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]),
-            dtype=torch.complex64,
-        )
+        f = lambda t: t * torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
+        x = CallableTimeTensor(f, f(0.0))
         x = x.adjoint()
         res = torch.tensor([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
         assert torch.equal(x(1.0), res)
@@ -109,9 +106,10 @@ class TestCallableTimeTensor:
 class TestAddTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.xc = totime(torch.tensor([1, 2], dtype=torch.float32))
-        self.xf = totime(lambda t: t * torch.tensor([1, 2]), dtype=torch.float32)
-        self.tensor = torch.tensor([0, 1], dtype=torch.float32)
+        self.xc = ConstantTimeTensor(torch.tensor([1, 2]))
+        f = lambda t: t * torch.tensor([1, 2])
+        self.xf = CallableTimeTensor(f, f(0.0))
+        self.tensor = torch.tensor([0, 1])
 
     def test_add(self):
         # === `ConstantTimeTensor`
