@@ -29,7 +29,7 @@ class SolverTester(ABC):
         m = 1 if isinstance(system, ClosedSystem) else n
         bH = len(system.Hb)
         by = len(system.y0b)
-        nE = len(system.exp_ops)
+        nE = len(system.E)
         nt = 11
         tsave = system.tsave(nt)
 
@@ -43,17 +43,17 @@ class SolverTester(ABC):
         # no batching
         result = run(Hb=False, yb=False)
         assert result.ysave.shape == (nt, n, m)
-        assert result.exp_save.shape == (nE, nt)
+        assert result.Esave.shape == (nE, nt)
 
         # batched H
         result = run(Hb=True, yb=False)
         assert result.ysave.shape == (bH, nt, n, m)
-        assert result.exp_save.shape == (bH, nE, nt)
+        assert result.Esave.shape == (bH, nE, nt)
 
         # batched y0
         result = run(Hb=False, yb=True)
         assert result.ysave.shape == (by, nt, n, m)
-        assert result.exp_save.shape == (by, nE, nt)
+        assert result.Esave.shape == (by, nE, nt)
 
         # batched H and y0
         result = run(Hb=True, yb=True)
@@ -72,22 +72,22 @@ class SolverTester(ABC):
             # batched L
             result = run(Hb=False, Lb=True, yb=False)
             assert result.ysave.shape == (bL, nt, n, n)
-            assert result.exp_save.shape == (bL, nE, nt)
+            assert result.Esave.shape == (bL, nE, nt)
 
             # batched H and L
             result = run(Hb=True, Lb=True, yb=False)
             assert result.ysave.shape == (bH, bL, nt, n, n)
-            assert result.exp_save.shape == (bH, bL, nE, nt)
+            assert result.Esave.shape == (bH, bL, nE, nt)
 
             # batched L and y0
             result = run(Hb=False, Lb=True, yb=True)
             assert result.ysave.shape == (bL, by, nt, n, n)
-            assert result.exp_save.shape == (bL, by, nE, nt)
+            assert result.Esave.shape == (bL, by, nE, nt)
 
             # batched H and L and y0
             result = run(Hb=True, Lb=True, yb=True)
             assert result.ysave.shape == (bH, bL, by, nt, n, n)
-            assert result.exp_save.shape == (bH, bL, by, nE, nt)
+            assert result.Esave.shape == (bH, bL, by, nE, nt)
 
         # === test non cartesian batching
         options = {} if options is None else options
@@ -100,12 +100,12 @@ class SolverTester(ABC):
         if isinstance(system, ClosedSystem):
             result = system.run(tsave, solver, options=options, H=Hb, y0=y0b)
             assert result.ysave.shape == (b, nt, n, 1)
-            assert result.exp_save.shape == (b, nE, nt)
+            assert result.Esave.shape == (b, nE, nt)
         elif isinstance(system, OpenSystem):
             Lb = [L[:b] for L in system.Lb]
             result = system.run(tsave, solver, options=options, H=Hb, L=Lb, y0=y0b)
             assert result.ysave.shape == (b, nt, n, n)
-            assert result.exp_save.shape == (b, nE, nt)
+            assert result.Esave.shape == (b, nE, nt)
 
     def _test_correctness(
         self,
@@ -126,12 +126,12 @@ class SolverTester(ABC):
         logging.warning(f'errs = {errs}')
         assert torch.all(errs <= ysave_atol)
 
-        # === test exp_save
-        true_exp_save = system.expects(tsave)
-        logging.warning(f'exp_save      = {result.exp_save}')
-        logging.warning(f'true_exp_save = {true_exp_save}')
+        # === test Esave
+        true_Esave = system.expects(tsave)
+        logging.warning(f'Esave      = {result.Esave}')
+        logging.warning(f'true_Esave = {true_Esave}')
         assert torch.allclose(
-            result.exp_save, true_exp_save, rtol=esave_rtol, atol=esave_atol
+            result.Esave, true_Esave, rtol=esave_rtol, atol=esave_atol
         )
 
     def test_correctness(self):
@@ -162,8 +162,8 @@ class SolverTester(ABC):
         logging.warning(f'grads_state       = {grads_state}')
         logging.warning(f'true_grads_state  = {true_grads_state}')
 
-        # === test gradients depending on final exp_save
-        loss_expect = system.loss_expect(result.exp_save[:, -1])
+        # === test gradients depending on final Esave
+        loss_expect = system.loss_expect(result.Esave[:, -1])
         grads_expect = [
             torch.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
             for loss in loss_expect

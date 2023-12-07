@@ -20,7 +20,7 @@ class System(ABC):
         self.Hb = None
         self.y0 = None
         self.y0b = None
-        self.exp_ops = None
+        self.E = None
 
     @abstractmethod
     def tsave(self, n: int) -> Tensor:
@@ -61,7 +61,7 @@ class System(ABC):
         """Compute the exact gradients of the example expectation values loss functions
         with respect to the system parameters.
 
-        The returned tensor has shape _(num_exp_ops, num_params)_.
+        The returned tensor has shape _(nE, num_params)_.
         """
         raise NotImplementedError
 

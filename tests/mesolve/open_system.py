@@ -40,7 +40,7 @@ class OpenSystem(System):
             L,
             y0,
             tsave,
-            exp_ops=self.exp_ops,
+            exp_ops=self.E,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -52,7 +52,7 @@ class OCavity(OpenSystem):
     # `L`: (2, n, n)
     # `Lb`: (2, 5, n, n)
     # `y0b`: (4, n, n)
-    # `exp_ops`: (2, n, n)
+    # `E`: (2, n, n)
 
     def __init__(
         self,
@@ -86,7 +86,7 @@ class OCavity(OpenSystem):
         self.Hb = [0.5 * self.H, self.H, 2 * self.H]
         self.L = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
         self.Lb = [L * torch.arange(5).view(5, 1, 1) for L in self.L]
-        self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
+        self.E = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent_dm(self.n, self.alpha0)
@@ -163,7 +163,7 @@ class OTDQubit(OpenSystem):
         # prepare quantum operators
         self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
         self.L = [torch.sqrt(self.gamma) * dq.sigmax()]
-        self.exp_ops = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+        self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)
