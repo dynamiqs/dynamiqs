@@ -316,9 +316,9 @@ def smesolve(
         result.ysave = result.ysave.squeeze(*dim_squeeze)
     if result.Esave is not None:
         result.Esave = result.Esave.squeeze(*dim_squeeze)
-    if result.meas_save is not None:
+    if result.Lmsave is not None:
         # todo: fix
-        # result.meas_save = result.meas_save.permute(1, 2, 3, 4, 0, 5)
-        result.meas_save = result.meas_save.squeeze(*dim_squeeze)
+        # result.Lmsave = result.Lmsave.permute(1, 2, 3, 4, 0, 5)
+        result.Lmsave = result.Lmsave.squeeze(*dim_squeeze)
 
     return result

@@ -87,7 +87,7 @@ print(result)
 |██████████| 100.0% - time 00:00/00:00
 `result` is of type <class 'dynamiqs.solvers.result.Result'>.
 `result` has the following attributes:
-['_options', 'end_datetime', 'end_time', 'Esave', 'expects', 'gradient', 'load', 'meas_save', 'measurements', 'options', 'save', 'solver', 'start_datetime', 'start_time', 'states', 'times', 'tmeas', 'to_numpy', 'to_qutip', 'total_time', 'tsave', 'ysave']
+['_options', 'end_datetime', 'end_time', 'Esave', 'expects', 'gradient', 'load', 'Lmsave', 'measurements', 'options', 'save', 'solver', 'start_datetime', 'start_time', 'states', 'times', 'tmeas', 'to_numpy', 'to_qutip', 'total_time', 'tsave', 'ysave']
 
 ==== Result ====
 Solver     : Dopri5

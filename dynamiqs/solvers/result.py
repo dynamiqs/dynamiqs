@@ -35,14 +35,14 @@ class Result:
         ysave: Tensor,
         tsave: Tensor,
         Esave: Tensor | None,
-        meas_save: Tensor | None = None,
+        Lmsave: Tensor | None = None,
         tmeas: Tensor | None = None,
     ):
         self._options = options
         self.ysave = ysave
         self.tsave = tsave
         self.Esave = Esave
-        self.meas_save = meas_save
+        self.Lmsave = Lmsave
         self.tmeas = tmeas
         self.start_time: float | None = None
         self.end_time: float | None = None
@@ -76,8 +76,8 @@ class Result:
 
     @property
     def measurements(self) -> Tensor | None:
-        # alias for meas_save
-        return self.meas_save
+        # alias for Lmsave
+        return self.Lmsave
 
     @property
     def start_datetime(self) -> datetime | None:
