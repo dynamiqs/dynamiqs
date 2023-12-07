@@ -134,7 +134,7 @@ def sesolve(
             f' type {obj_type_str(exp_ops)}.'
         )
 
-    # === convert and batch H, y0, exp_ops
+    # === convert and batch H, y0, E
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
@@ -165,8 +165,8 @@ def sesolve(
             y0 = y0.repeat(b, 1, 1)
         dim_squeeze = (0,)
 
-    # convert exp_ops
-    exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
+    # convert E
+    E = to_tensor(exp_ops, **kw)  # (nE, n, n)
 
     # === convert tsave and init tmeas
     kw = dict(dtype=options.rdtype, device='cpu')
@@ -175,7 +175,7 @@ def sesolve(
     tmeas = torch.empty(0, **kw)
 
     # === define the solver
-    solver = SOLVER_CLASS(H, y0, tsave, tmeas, exp_ops, options)
+    solver = SOLVER_CLASS(H, y0, tsave, tmeas, E, options)
 
     # === compute the result
     result = solver.run()
@@ -183,7 +183,7 @@ def sesolve(
     # === get saved tensors and restore initial batching
     if result.ysave is not None:
         result.ysave = result.ysave.squeeze(*dim_squeeze)
-    if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(*dim_squeeze)
+    if result.Esave is not None:
+        result.Esave = result.Esave.squeeze(*dim_squeeze)
 
     return result
