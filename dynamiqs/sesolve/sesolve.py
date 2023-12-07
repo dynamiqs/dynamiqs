@@ -148,7 +148,7 @@ def sesolve(
     y0 = y0.view(-1, n, 1)  # (by, n, 1)
     by = y0.size(0)
 
-    if not options.flat_batching:
+    if options.cartesian_batching:
         # cartesian product batching
         H = H.view(bH, 1, n, n)  # (bH, 1, n, n)
         y0 = y0.view(1, by, n, 1)  # (1, by, n, 1)

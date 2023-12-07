@@ -57,7 +57,7 @@ class SharedOptions:
         verbose: bool = True,
         dtype: torch.complex64 | torch.complex128 | None = None,
         device: str | torch.device | None = None,
-        flat_batching: bool = False,
+        cartesian_batching: bool = True,
     ):
         # save_states (bool, optional): If `True`, the state is saved at every
         #     time value. If `False`, only the final state is stored and returned.
@@ -72,4 +72,4 @@ class SharedOptions:
         self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)
         self.device = to_device(device)
-        self.flat_batching = flat_batching
+        self.cartesian_batching = cartesian_batching
