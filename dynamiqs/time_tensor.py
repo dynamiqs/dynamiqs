@@ -136,7 +136,7 @@ class TimeTensor:
         return other + (-self)
 
     def __repr__(self) -> str:
-        return f'<{obj_type_str(self)}>'
+        return str(type(self).__name__)
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -255,6 +255,7 @@ def time_tensor_add(x: TimeTensor, y: Tensor | TimeTensor) -> TimeTensor:
             f = lambda t: x.f(t) + y.f(t)
             f0 = x.f0 + y.f0
             return CallableTimeTensor(f, f0)
+
     raise TypeError(
         f'Unsupported operand type(s) for +: {obj_type_str(x)} and {obj_type_str(y)}.'
     )
