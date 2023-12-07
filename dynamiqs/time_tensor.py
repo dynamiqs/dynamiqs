@@ -9,10 +9,10 @@ from torch import Tensor
 from ._utils import obj_type_str, type_str
 from .utils.tensor_types import ArrayLike, Number, get_cdtype, to_device, to_tensor
 
-__all__ = ['tt']
+__all__ = ['totime']
 
 
-def to_time_tensor(
+def totime(
     x: ArrayLike | callable[[float], Tensor],
     *,
     dtype: torch.dtype | None = None,
@@ -57,9 +57,6 @@ def to_time_tensor(
             'Argument `x` must be an array-like object or a callable with signature'
             f' (t: float) -> Tensor, but has type {obj_type_str(x)}.'
         )
-
-
-tt = to_time_tensor
 
 
 class TimeTensor:

@@ -5,7 +5,7 @@ from .mesolve import mesolve
 from .plots import *
 from .sesolve import sesolve
 from .smesolve import smesolve
-from .time_tensor import tt
+from .time_tensor import totime
 from .utils import *
 
 # get version from pyproject.toml
