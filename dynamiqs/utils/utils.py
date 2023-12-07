@@ -25,8 +25,7 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
-    'mpow',
-    'entropy_vn'
+    'mpow'
 ]
 
 
@@ -739,16 +738,16 @@ def mpow(x: Tensor, n: int) -> Tensor:
 
 def entropy_vn(x: Tensor) -> Tensor:
     """Von-Neumann entropy of density matrix
-    
+
     Args:
         x _(..., n, n)_: Square matrix.
-        
+
     Returns:
         _(...)_ Von_Neumann entropy of x
-    
+
     Examples:
         >>> rho = 0.5*dq.fock_dm(2,0) + 0.5*dq.fock_dm(2,1)
-        >>> entropy_vn(rho) 
+        >>> entropy_vn(rho)
         tensor(0,6931471806)
     """
     if isket(x):
