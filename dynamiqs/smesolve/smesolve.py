@@ -233,7 +233,7 @@ def smesolve(
     y0 = y0.view(-1, n, n)  # (by, n, n)
     by = y0.size(0)
 
-    if not options.flat_batching:
+    if options.cartesian_batching:
         # cartesian product batching
         H = H.view(bH, 1, 1, n, n)  # (bH, 1, 1, n, n)
         L = L.view(nL, 1, bL, 1, n, n)  # (nL, 1, bL, 1, n, n)
@@ -255,7 +255,7 @@ def smesolve(
     H = ConstantTDTensor(H._tensor.unsqueeze(-2))  # (..., 1, n, n)
     L = L.unsqueeze(-2)  # (..., 1, n, n)
     y0 = y0.unsqueeze(-2)  # (..., 1, n, n)
-    if not options.flat_batching:
+    if options.cartesian_batching:
         y0 = y0.repeat(1, 1, 1, ntrajs, 1, 1)  # (bH, bL, by, ntrajs, n, n)
     else:
         y0 = y0.repeat(1, ntrajs, 1, 1)  # (b, ntrajs, n, n)
@@ -274,7 +274,7 @@ def smesolve(
 
     # === convert and check etas
     etas = to_tensor(etas, dtype=options.rdtype, device=options.device)
-    if not options.flat_batching:
+    if options.cartesian_batching:
         etas = etas.view(nL, 1, 1, 1, 1)  # (nL, 1, 1, 1, 1)
     else:
         etas = etas.view(nL, 1)  # (nL, 1)

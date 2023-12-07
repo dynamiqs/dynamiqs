@@ -89,9 +89,9 @@ class SolverTester(ABC):
             assert result.ysave.shape == (bH, bL, by, nt, n, n)
             assert result.exp_save.shape == (bH, bL, by, nE, nt)
 
-        # === test flat_batching
+        # === test non cartesian batching
         options = {} if options is None else options
-        options['flat_batching'] = True
+        options['cartesian_batching'] = False
         b = 2
 
         Hb = system.Hb[:b]
