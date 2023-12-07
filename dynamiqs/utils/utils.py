@@ -6,14 +6,13 @@ import torch
 from torch import Tensor
 
 __all__ = [
-    'dag',
-    'mpow',
     'trace',
-    'ptrace',
-    'tensprod',
     'expect',
+    'dag',
     'norm',
     'unit',
+    'tensprod',
+    'ptrace',
     'dissipator',
     'lindbladian',
     'isket',
@@ -26,7 +25,68 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'mpow',
 ]
+
+
+def trace(x: Tensor) -> Tensor:
+    r"""Returns the trace of a tensor along its last two dimensions.
+
+    Args:
+        x _(..., n, n)_: Tensor.
+
+    Returns:
+        _(...)_ Trace of `x`.
+
+    Examples:
+        >>> x = torch.ones(3, 3)
+        >>> dq.trace(x)
+        tensor(3.)
+    """
+    return x.diagonal(dim1=-1, dim2=-2).sum(-1)
+
+
+def expect(O: Tensor, x: Tensor) -> Tensor:
+    r"""Returns the expectation value of an operator on a ket, bra or density matrix.
+
+    The expectation value $\braket{O}$ of an operator $O$ is computed
+
+    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$ or bra $\bra\psi$,
+    - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
+
+    Warning:
+        The returned tensor is complex-valued. If the operator $O$ corresponds to a
+        physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
+        is real. One can then keep only the real values of the returned tensor using
+        `dq.expect(O, x).real`.
+
+    Args:
+        O _(n, n)_: Arbitrary operator.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
+
+    Returns:
+        _(...)_ Complex-valued expectation value.
+
+    Raises:
+        ValueError: If `x` is not a ket, bra or density matrix.
+
+    Examples:
+        >>> a = dq.destroy(16)
+        >>> psi = dq.coherent(16, 2.0)
+        >>> dq.expect(a.mH @ a, psi)
+        tensor(4.000+0.j)
+    """
+    if isket(x):
+        return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
+    elif isbra(x):
+        return torch.einsum('...ij,jk,...kl->...', x, O, x.mH)
+    elif isdm(x):
+        return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
+    else:
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
 
 
 def dag(x: Tensor) -> Tensor:
@@ -53,42 +113,124 @@ def dag(x: Tensor) -> Tensor:
     return x.mH
 
 
-def mpow(x: Tensor, n: int) -> Tensor:
-    """Returns the $n$-th matrix power of a tensor.
+def norm(x: Tensor) -> Tensor:
+    r"""Returns the norm of a ket, bra or density matrix.
 
-    Notes:
-        This function is equivalent to `torch.linalg.matrix_power(x, n)`.
-
-    Args:
-        x _(..., n, n)_: Square matrix.
-        n: Integer exponent.
-
-    Returns:
-        _(..., n, n)_ Matrix power of `x`.
-
-    Examples:
-        >>> dq.mpow(dq.sigmax(), 2)
-        tensor([[1.+0.j, 0.+0.j],
-                [0.+0.j, 1.+0.j]])
-    """
-    return torch.linalg.matrix_power(x, n)
-
-
-def trace(x: Tensor) -> Tensor:
-    r"""Returns the trace of a tensor along its last two dimensions.
+    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
+    matrix, it is $\tr{\rho}$.
 
     Args:
-        x _(..., n, n)_: Tensor.
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
 
     Returns:
-        _(...)_ Trace of `x`.
+        _(...)_ Real-valued norm of `x`.
+
+    Raises:
+        ValueError: If `x` is not a ket, bra or density matrix.
 
     Examples:
-        >>> x = torch.ones(3, 3)
-        >>> dq.trace(x)
+        For a ket:
+        >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
+        >>> dq.norm(psi)
+        tensor(1.414)
+
+        For a density matrix:
+        >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
+        >>> dq.norm(rho)
         tensor(3.)
     """
-    return x.diagonal(dim1=-1, dim2=-2).sum(-1)
+    if isket(x) or isbra(x):
+        return torch.linalg.norm(x, dim=(-2, -1)).real
+    elif isdm(x):
+        return trace(x).real
+    else:
+        raise ValueError(
+            'Argument `x` must be a ket, bra or density matrix, but has shape'
+            f' {tuple(x.shape)}.'
+        )
+
+
+def unit(x: Tensor) -> Tensor:
+    r"""Normalize a ket, bra or density matrix to unit norm.
+
+    The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
+
+    Args:
+        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
+
+    Returns:
+        _(..., n, 1) or (..., 1, n) or (..., n, n)_ Normalized ket, bra or density
+            matrix.
+
+    Examples:
+        >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
+        >>> dq.norm(psi)
+        tensor(1.414)
+        >>> psi = dq.unit(psi)
+        >>> dq.norm(psi)
+        tensor(1.000)
+    """
+    return x / norm(x)[..., None, None]
+
+
+def tensprod(*args: Tensor) -> Tensor:
+    r"""Returns the tensor product of multiple kets, bras, density matrices or
+    operators.
+
+    The returned tensor shape is:
+
+    - $(..., n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape
+      $(..., n_k, 1)$,
+    - $(..., 1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape
+      $(..., 1, n_k)$,
+    - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
+      operators vectors with shape $(..., n_k, n_k)$.
+
+    Notes:
+        This function is the equivalent of `qutip.tensor()`.
+
+    Args:
+        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Variable length
+            argument list of kets, density matrices or operators.
+
+    Returns:
+        _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
+
+    Examples:
+        >>> psi = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
+        >>> psi.shape
+        torch.Size([60, 1])
+    """
+    return reduce(_bkron, args)
+
+
+def _bkron(x: Tensor, y: Tensor) -> Tensor:
+    """Returns the batched Kronecker product of two matrices."""
+    x_type = _quantum_type(x)
+    y_type = _quantum_type(y)
+    if x_type != y_type:
+        raise ValueError(
+            'Arguments `x` and `y` have incompatible quantum types for tensor product:'
+            f' `x` is a {x_type} with shape {tuple(x.shape)}, but  `y` is a {y_type}'
+            f' with shape {tuple(y.shape)}.'
+        )
+
+    # x: (..., x1, x2)
+    # y: (..., y1, y2)
+
+    batch_dims = x.shape[:-2]
+    x1, x2 = x.shape[-2:]
+    y1, y2 = y.shape[-2:]
+    kron_dims = torch.Size((x1 * y1, x2 * y2))
+
+    # perform element-wise multiplication of appropriately unsqueezed tensors to
+    # simulate the Kronecker product
+    x_tmp = x.unsqueeze(-1).unsqueeze(-3)  # (..., x1, 1, x2, 1)
+    y_tmp = y.unsqueeze(-2).unsqueeze(-4)  # (..., 1, y1, 1, y2)
+    out = x_tmp * y_tmp  # (..., x1, y1, x2, y2)
+
+    # reshape the output
+    return out.reshape(batch_dims + kron_dims)  # (..., x1 * y1, x2 * y2)
 
 
 def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Tensor:
@@ -174,169 +316,6 @@ def ptrace(x: Tensor, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Ten
     # reshape to final dimension
     nkeep = torch.prod(dims[keep])  # e.g. 10
     return x.reshape(*batch_dims, nkeep, nkeep)  # e.g. (..., 10, 10)
-
-
-def tensprod(*args: Tensor) -> Tensor:
-    r"""Returns the tensor product of multiple kets, bras, density matrices or
-    operators.
-
-    The returned tensor shape is:
-
-    - $(..., n, 1)$ with $n=\prod_k n_k$ if all input tensors are kets with shape
-      $(..., n_k, 1)$,
-    - $(..., 1, n)$ with $n=\prod_k n_k$ if all input tensors are bras with shape
-      $(..., 1, n_k)$,
-    - $(..., n, n)$ with $n=\prod_k n_k$ if all input tensors are density matrices or
-      operators vectors with shape $(..., n_k, n_k)$.
-
-    Notes:
-        This function is the equivalent of `qutip.tensor()`.
-
-    Args:
-        *args _(..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k)_: Variable length
-            argument list of kets, density matrices or operators.
-
-    Returns:
-        _(..., n, 1) or (..., 1, n) or (..., n, n)_ Tensor product of the input tensors.
-
-    Examples:
-        >>> psi = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
-        >>> psi.shape
-        torch.Size([60, 1])
-    """
-    return reduce(_bkron, args)
-
-
-def _bkron(x: Tensor, y: Tensor) -> Tensor:
-    """Returns the batched Kronecker product of two matrices."""
-    x_type = _quantum_type(x)
-    y_type = _quantum_type(y)
-    if x_type != y_type:
-        raise ValueError(
-            'Arguments `x` and `y` have incompatible quantum types for tensor product:'
-            f' `x` is a {x_type} with shape {tuple(x.shape)}, but  `y` is a {y_type}'
-            f' with shape {tuple(y.shape)}.'
-        )
-
-    # x: (..., x1, x2)
-    # y: (..., y1, y2)
-
-    batch_dims = x.shape[:-2]
-    x1, x2 = x.shape[-2:]
-    y1, y2 = y.shape[-2:]
-    kron_dims = torch.Size((x1 * y1, x2 * y2))
-
-    # perform element-wise multiplication of appropriately unsqueezed tensors to
-    # simulate the Kronecker product
-    x_tmp = x.unsqueeze(-1).unsqueeze(-3)  # (..., x1, 1, x2, 1)
-    y_tmp = y.unsqueeze(-2).unsqueeze(-4)  # (..., 1, y1, 1, y2)
-    out = x_tmp * y_tmp  # (..., x1, y1, x2, y2)
-
-    # reshape the output
-    return out.reshape(batch_dims + kron_dims)  # (..., x1 * y1, x2 * y2)
-
-
-def expect(O: Tensor, x: Tensor) -> Tensor:
-    r"""Returns the expectation value of an operator on a ket, bra or density matrix.
-
-    The expectation value $\braket{O}$ of an operator $O$ is computed
-
-    - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$ or bra $\bra\psi$,
-    - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
-
-    Warning:
-        The returned tensor is complex-valued. If the operator $O$ corresponds to a
-        physical observable, it is Hermitian: $O^\dag=O$, and the expectation value
-        is real. One can then keep only the real values of the returned tensor using
-        `dq.expect(O, x).real`.
-
-    Args:
-        O _(n, n)_: Arbitrary operator.
-        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
-
-    Returns:
-        _(...)_ Complex-valued expectation value.
-
-    Raises:
-        ValueError: If `x` is not a ket, bra or density matrix.
-
-    Examples:
-        >>> a = dq.destroy(16)
-        >>> psi = dq.coherent(16, 2.0)
-        >>> dq.expect(a.mH @ a, psi)
-        tensor(4.000+0.j)
-    """
-    if isket(x):
-        return torch.einsum('...ij,jk,...kl->...', x.mH, O, x)  # <x|O|x>
-    elif isbra(x):
-        return torch.einsum('...ij,jk,...kl->...', x, O, x.mH)
-    elif isdm(x):
-        return torch.einsum('ij,...ji->...', O, x)  # tr(Ox)
-    else:
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {tuple(x.shape)}.'
-        )
-
-
-def norm(x: Tensor) -> Tensor:
-    r"""Returns the norm of a ket, bra or density matrix.
-
-    For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
-    matrix, it is $\tr{\rho}$.
-
-    Args:
-        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
-
-    Returns:
-        _(...)_ Real-valued norm of `x`.
-
-    Raises:
-        ValueError: If `x` is not a ket, bra or density matrix.
-
-    Examples:
-        For a ket:
-        >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
-        >>> dq.norm(psi)
-        tensor(1.414)
-
-        For a density matrix:
-        >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
-        >>> dq.norm(rho)
-        tensor(3.)
-    """
-    if isket(x) or isbra(x):
-        return torch.linalg.norm(x, dim=(-2, -1)).real
-    elif isdm(x):
-        return trace(x).real
-    else:
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {tuple(x.shape)}.'
-        )
-
-
-def unit(x: Tensor) -> Tensor:
-    r"""Normalize a ket, bra or density matrix to unit norm.
-
-    The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
-
-    Args:
-        x _(..., n, 1) or (..., 1, n) or (..., n, n)_: Ket, bra or density matrix.
-
-    Returns:
-        _(..., n, 1) or (..., 1, n) or (..., n, n)_ Normalized ket, bra or density
-            matrix.
-
-    Examples:
-        >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
-        >>> dq.norm(psi)
-        tensor(1.414)
-        >>> psi = dq.unit(psi)
-        >>> dq.norm(psi)
-        tensor(1.000)
-    """
-    return x / norm(x)[..., None, None]
 
 
 def dissipator(L: Tensor, rho: Tensor) -> Tensor:
@@ -735,3 +714,24 @@ def _sqrtm(x: Tensor) -> Tensor:
     threshold = L.max(-1).values * L.size(-1) * torch.finfo(L.dtype).eps
     L = L.where(L > threshold.unsqueeze(-1), zero)  # zero out small components
     return (Q * L.sqrt().unsqueeze(-2)) @ Q.mH
+
+
+def mpow(x: Tensor, n: int) -> Tensor:
+    """Returns the $n$-th matrix power of a tensor.
+
+    Notes:
+        This function is equivalent to `torch.linalg.matrix_power(x, n)`.
+
+    Args:
+        x _(..., n, n)_: Square matrix.
+        n: Integer exponent.
+
+    Returns:
+        _(..., n, n)_ Matrix power of `x`.
+
+    Examples:
+        >>> dq.mpow(dq.sigmax(), 2)
+        tensor([[1.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j]])
+    """
+    return torch.linalg.matrix_power(x, n)
