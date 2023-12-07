@@ -17,9 +17,9 @@ class System(ABC):
     def __init__(self):
         self.n = None
         self.H = None
-        self.H_batched = None
+        self.Hb = None
         self.y0 = None
-        self.y0_batched = None
+        self.y0b = None
         self.exp_ops = None
 
     @abstractmethod
