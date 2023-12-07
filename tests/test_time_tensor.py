@@ -2,7 +2,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from dynamiqs.time_tensor import CallableTimeTensor, ConstantTimeTensor, time_tensor
+from dynamiqs.time_tensor import CallableTimeTensor, ConstantTimeTensor, to_time_tensor
 
 
 def assert_equal(xt: Tensor, y: list):
@@ -12,7 +12,7 @@ def assert_equal(xt: Tensor, y: list):
 class TestConstantTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.x = time_tensor(torch.tensor([1, 2], dtype=torch.float32))
+        self.x = to_time_tensor(torch.tensor([1, 2], dtype=torch.float32))
         self.tensor = torch.tensor([0, 1], dtype=torch.float32)
 
     def test_call(self):
@@ -24,7 +24,7 @@ class TestConstantTimeTensor:
         assert_equal(x(0.0), [[1, 2]])
 
     def test_adjoint(self):
-        x = time_tensor(
+        x = to_time_tensor(
             torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]), dtype=torch.complex64
         )
         x = x.adjoint()
@@ -57,7 +57,7 @@ class TestConstantTimeTensor:
 class TestCallableTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.x = time_tensor(lambda t: t * torch.tensor([1, 2]))
+        self.x = to_time_tensor(lambda t: t * torch.tensor([1, 2]), dtype=torch.float32)
         self.tensor = torch.tensor([0, 1], dtype=torch.float32)
 
     def test_call(self):
@@ -70,7 +70,7 @@ class TestCallableTimeTensor:
         assert_equal(x(1.0), [[1, 2]])
 
     def test_adjoint(self):
-        x = time_tensor(
+        x = to_time_tensor(
             lambda t: t * torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]),
             dtype=torch.complex64,
         )
@@ -109,8 +109,10 @@ class TestCallableTimeTensor:
 class TestAddTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.xc = time_tensor(torch.tensor([1, 2], dtype=torch.float32))
-        self.xf = time_tensor(lambda t: t * torch.tensor([1, 2]))
+        self.xc = to_time_tensor(torch.tensor([1, 2], dtype=torch.float32))
+        self.xf = to_time_tensor(
+            lambda t: t * torch.tensor([1, 2]), dtype=torch.float32
+        )
         self.tensor = torch.tensor([0, 1], dtype=torch.float32)
 
     def test_add(self):

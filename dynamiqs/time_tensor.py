@@ -55,7 +55,7 @@ def to_time_tensor(
     else:
         raise TypeError(
             'Argument `x` must be an array-like object or a callable with signature'
-            f'(t: float) -> Tensor, but has type {obj_type_str(x)}.'
+            f' (t: float) -> Tensor, but has type {obj_type_str(x)}.'
         )
 
 

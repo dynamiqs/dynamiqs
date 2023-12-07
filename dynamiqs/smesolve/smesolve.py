@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args
 
 import torch
 
@@ -9,16 +9,16 @@ from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils.td_tensor import ConstantTDTensor, to_td_tensor
 from ..solvers.utils.utils import common_batch_size, format_L
-from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
+from ..time_tensor import TimeTensor, to_time_tensor
+from ..utils.tensor_types import ArrayLike, to_tensor
 from ..utils.utils import todm
 from .euler import SMEEuler
 from .rouchon import SMERouchon1
 
 
 def smesolve(
-    H: TDArrayLike,
+    H: ArrayLike | TimeTensor,
     jump_ops: list[ArrayLike],
     etas: ArrayLike,
     rho0: ArrayLike,
@@ -216,7 +216,12 @@ def smesolve(
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
-    H = to_td_tensor(H, **kw)  # (bH?, n, n)
+    if not isinstance(H, (*get_args(ArrayLike), TimeTensor)):
+        raise TypeError(
+            'Argument `H` must be an array-like object or a `TimeTensor`, but has type'
+            f' {obj_type_str(H)}.'
+        )
+    H = to_time_tensor(H, **kw)  # (bH?, n, n)
     n = H.size(-1)
     H = H.view(-1, n, n)  # (bH, n, n)
     bH = H.size(0)
@@ -252,7 +257,7 @@ def smesolve(
         dim_squeeze = (0,)
 
     # unsqueeze for ntrajs
-    H = ConstantTDTensor(H._tensor.unsqueeze(-2))  # (..., 1, n, n)
+    H = H.unsqueeze(-2)  # (..., 1, n, n)
     L = L.unsqueeze(-2)  # (..., 1, n, n)
     y0 = y0.unsqueeze(-2)  # (..., 1, n, n)
     if options.cartesian_batching:

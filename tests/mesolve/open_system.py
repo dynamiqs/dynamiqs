@@ -161,7 +161,7 @@ class OTDQubit(OpenSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
+        self.H = dq.tt(lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax())
         self.L = [torch.sqrt(self.gamma) * dq.sigmax()]
         self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 

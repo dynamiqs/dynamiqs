@@ -5,8 +5,8 @@ from abc import abstractmethod
 import numpy as np
 from torch import Tensor
 
+from ..time_tensor import ConstantTimeTensor
 from .solver import AutogradSolver
-from .utils.td_tensor import ConstantTDTensor
 from .utils.utils import tqdm
 
 
@@ -28,7 +28,7 @@ class Propagator(AutogradSolver):
         super().__init__(*args, **kwargs)
 
         # check that Hamiltonian is time-independent
-        if not isinstance(self.H, ConstantTDTensor):
+        if not isinstance(self.H, ConstantTimeTensor):
             raise TypeError(
                 'Solver `Propagator` requires a time-independent Hamiltonian.'
             )
