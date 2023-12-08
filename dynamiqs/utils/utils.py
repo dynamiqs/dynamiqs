@@ -747,7 +747,7 @@ def entropy_vn(x: Tensor) -> Tensor:
 
     Examples:
         >>> rho = dq.unit(dq.fock_dm(2,0) + dq.fock_dm(2,1))
-        >>> entropy_vn(rho)
+        >>> dq.entropy_vn(rho)
         tensor(0.693)
     """
     if isket(x):
