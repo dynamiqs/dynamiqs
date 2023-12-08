@@ -746,7 +746,7 @@ def entropy_vn(x: Tensor) -> Tensor:
         _(...)_ Real-valued Von_Neumann entropy.
 
     Examples:
-        >>> rho = 0.5*dq.fock_dm(2,0) + 0.5*dq.fock_dm(2,1)
+        >>> rho = dq.unit(dq.fock_dm(2,0) + dq.fock_dm(2,1))
         >>> entropy_vn(rho)
         tensor(0,6931471806)
     """
