@@ -740,7 +740,7 @@ def entropy_vn(x: Tensor) -> Tensor:
     """Returns the Von-Neumann entropy of a ket or density matrix.
 
     Args:
-        x _(..., n, n)_: Square matrix.
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
 
     Returns:
         _(...)_ Von_Neumann entropy of x
