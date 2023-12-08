@@ -743,7 +743,7 @@ def entropy_vn(x: Tensor) -> Tensor:
         x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
 
     Returns:
-        _(...)_ Von_Neumann entropy of x
+        _(...)_ Real-valued Von_Neumann entropy.
 
     Examples:
         >>> rho = 0.5*dq.fock_dm(2,0) + 0.5*dq.fock_dm(2,1)
