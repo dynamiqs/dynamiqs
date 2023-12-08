@@ -750,8 +750,7 @@ def entropy_vn(x: Tensor) -> Tensor:
         >>> dq.entropy_vn(rho)
         tensor(0.693)
     """
-    if isket(x):
-        x = todm(x)
+    x = todm(x)
     vals = torch.linalg.eigvalsh(x)
     nzvals = vals[vals != 0]
     logvals = nzvals.log()
