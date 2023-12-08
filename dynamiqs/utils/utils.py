@@ -737,7 +737,7 @@ def mpow(x: Tensor, n: int) -> Tensor:
     return torch.linalg.matrix_power(x, n)
 
 def entropy_vn(x: Tensor) -> Tensor:
-    """Von-Neumann entropy of density matrix
+    """Returns the Von-Neumann entropy of a ket or density matrix.
 
     Args:
         x _(..., n, n)_: Square matrix.
