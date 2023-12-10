@@ -21,7 +21,7 @@ __all__ = ['totime']
 
 
 def totime(
-    x: ArrayLike | callable[[float], Tensor],
+    x: ArrayLike | callable[[float], Tensor] | tuple[ArrayLike, ArrayLike, ArrayLike],
     *,
     dtype: torch.dtype | None = None,
     device: str | torch.device | None = None,
@@ -39,8 +39,9 @@ def totime(
         times = to_tensor(times, dtype=rdtype, device=device)
         values = to_tensor(values, dtype=dtype, device=device)
         tensor = to_tensor(tensor, dtype=dtype, device=device)
-        pwc = _PWCTimeTensor(times, values, tensor)
-        return PWCTimeTensor([pwc])
+        values = values.unsqueeze(0)  # npwc = 1
+        tensor = tensor.unsqueeze(0)  # npwc = 1
+        return PWCTimeTensor(times, values, tensor)
     # constant time tensor
     if isinstance(x, get_args(ArrayLike)):
         x = to_tensor(x, dtype=dtype, device=device)
@@ -269,127 +270,168 @@ class CallableTimeTensor(TimeTensor):
             return NotImplemented
 
 
-class _PWCTimeTensor(TimeTensor):
-    # Crucially, this implementation of a PWC tensor doesn't handle addition with a
-    # constant tensor or another PWC tensor. To support this we need additional
-    # structure, which is achieved by the `PWCTimeTensor` class below. This class is
-    # just an intermediate helper class.
+class PWCTimeTensor(TimeTensor):
+    # Arbitrary sum of PWC tensors.
+    #
+    # A single PWC tensor is defined by a tuple of 3 tensors (times, values, tensor),
+    # where
+    # - times: (nv+1) are the time points between which the PWC tensor take constant
+    #          values, where nv is the number of time intervals
+    # - values: (nv, ...) are the constant complex values for each time interval, where
+    #           (...) is an arbitrary batching size
+    # - tensor: (n, n) is the tensor value
+    #
+    # To support additions of PWC tensors with non-aligned `times` values we augment
+    # the `values` and `tensor` objects with one dimension `npwc`, which is the number
+    # of summed PWC tensors. Upon addition between two PWC tensors, we merge the
+    # `times` and `values` tensors appropriately, and concatenate the `tensor` objects.
+    # In addition, we keep track of a `static` tensor for addition with a constant
+    # tensor.
 
-    # Supports batching on `values`:
-    # >>> times = torch.linspace(0, 1.0, 11)  # (nt+1) with nt = 10
-    # >>> nseeds = 30
-    # >>> eps = dq.rand_complex((10, nseeds))  # (nt, 30)
-    # >>> a = dq.destroy(3)  #  (3, 3)
-    # >>> H = PWCTimeTensor(times, values, tensor)
-    # >>> H(0.0)  # (30, 3, 3)
+    def __init__(
+        self,
+        times: Tensor,
+        values: Tensor,
+        tensors: Tensor,
+        static: Tensor | None = None,  # constant part
+    ):
+        # Dimensions:
+        # - nv: number of time intervals
+        # - ...: values batching (`self.values` carries all the shape transformation)
+        # - npwc: number of piecewise constant tensors
+        # - n: Hilbert space dimension
 
-    def __init__(self, times: Tensor, values: Tensor, tensor: Tensor) -> None:
-        # values carries all the transformation on the shape
-        self.times = times  # (nt+1)
-        self.values = values  # (nt, ...v)
-        self.tensor = tensor  # (n, n)
+        self.times = times  # (nv+1)
 
-        self.nt = self.values.shape[0]
-        self.n = tensor.shape[-1]
+        self.values = values  # (npwc, nv, ...)
+        self.npwc = values.shape[0]
+        self.nv = values.shape[1]
+        self.dots = values.shape[2:]  # (...)
+
+        self.tensors = tensors  # (npwc, n, n)
+        self.n = tensors.shape[-1]
+
+        if static is None:
+            self.static = torch.zeros(
+                self.n, self.n, dtype=self.dtype, device=self.device
+            )
+        else:
+            self.static = static
 
     @property
     def dtype(self) -> torch.dtype:
-        return self.tensor.dtype
+        return self.tensors.dtype
 
     @property
     def device(self) -> torch.device:
-        return self.tensor.device
+        return self.tensors.device
 
     @property
     def shape(self) -> torch.Size:
-        return torch.Size((*self.values.shape[1:], self.n, self.n))  # (...v, n, n)
+        return torch.Size((*self.dots, self.n, self.n))  # (..., n, n)
 
     def __call__(self, t: float) -> Tensor:
+        static = self.static.expand(*self.shape)  # (..., n, n)
+
         if t < self.times[0] or t >= self.times[-1]:
-            return torch.zeros(self.shape, dtype=self.dtype, device=self.device)
+            return static  # (..., n, n)
         else:
             # find the index $k$ such that $t \in [t_k, t_{k+1})$
             idx = torch.searchsorted(self.times, t, side='right') - 1
-            v = self.values[idx, ...]  # (...v)
-            v = v.view(*v.shape, 1, 1)  # (...v, n, n)
-            return v * self.tensor  # (...v, n, n)
+            v = self.values[:, idx, ...]  # (npwc, ...)
+            v = v.permute(*range(1, v.ndim), 0)  # (..., npwc)
+            v = v.view(*v.shape, 1, 1)  # (..., npwc, n, n)
+            return (v * self.tensors).sum(-3) + static  # (..., n, n)
 
     def view(self, *shape: int) -> TimeTensor:
-        values = self.values.view(self.nt, *shape[:-2])
-        return _PWCTimeTensor(self.times, values, self.tensor)
+        # shape: (..., n, n)
+        values = self.values.view(self.npwc, self.nv, *shape[:-2])
+        return PWCTimeTensor(self.times, values, self.tensors, static=self.static)
 
     def adjoint(self) -> TimeTensor:
-        return _PWCTimeTensor(self.times, self.values.conj(), self.tensor.mH)
+        return PWCTimeTensor(
+            self.times, self.values.conj(), self.tensors.mH, static=self.static.mH
+        )
 
     def __neg__(self) -> TimeTensor:
-        return _PWCTimeTensor(self.times, self.values, -self.tensor)
+        return PWCTimeTensor(
+            self.times, self.values, -self.tensors, static=-self.static
+        )
 
     def __mul__(self, other: Number | Tensor) -> TimeTensor:
-        return _PWCTimeTensor(self.times, self.values, self.tensor * other)
-
-    def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
-        return NotImplemented
-
-
-class PWCTimeTensor(TimeTensor):
-    def __init__(
-        self,
-        pwc: list[_PWCTimeTensor],
-        static: Tensor | None = None,  # constant part
-    ):
-        # argument pwc must be a non-empty list of compatible shapes values and tensor
-        self.pwc = pwc
-        self.static = torch.zeros_like(self.pwc[0].tensor) if static is None else static
-
-        # merge times tensors
-        times = [x.times for x in pwc]
-        self.times = torch.cat(times).unique().sort()[0]
-
-    @property
-    def dtype(self) -> torch.dtype:
-        return self.pwc[0].dtype
-
-    @property
-    def device(self) -> torch.device:
-        return self.pwc[0].device
-
-    @property
-    def shape(self) -> torch.Size:
-        return self.pwc[0].shape
-
-    def __call__(self, t: float) -> Tensor:
-        static_part = self.static.expand(*self.shape)
-        pwc_part = torch.stack([pwc(t) for pwc in self.pwc]).sum(0)
-        return static_part + pwc_part
-
-    def view(self, *shape: int) -> TimeTensor:
-        pwc = [p.view(*shape) for p in self.pwc]
-        return PWCTimeTensor(pwc, static=self.static)
-
-    def adjoint(self) -> TimeTensor:
-        static = self.static.mH
-        pwc = [p.adjoint() for p in self.pwc]
-        return PWCTimeTensor(pwc, static=static)
-
-    def __neg__(self) -> TimeTensor:
-        static = -self.static
-        pwc = [-p for p in self.pwc]
-        return PWCTimeTensor(pwc, static=static)
-
-    def __mul__(self, other: Number | Tensor) -> TimeTensor:
-        static = self.static * other
-        pwc = [p * other for p in self.pwc]
-        return PWCTimeTensor(pwc, static=static)
+        return PWCTimeTensor(
+            self.times, self.values, self.tensors * other, static=self.static * other
+        )
 
     def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
         if isinstance(other, Tensor):
             static = self.static + other
-            return PWCTimeTensor(self.pwc, static=static)
+            return PWCTimeTensor(self.times, self.values, self.tensors, static=static)
         elif isinstance(other, ConstantTimeTensor):
             return self + other.tensor
         elif isinstance(other, PWCTimeTensor):
+            # merge times and values -> times: (nv+1), values: (npwc1 + npwc2, nv, ...)
+            t1, t2 = self.times, other.times
+            v1, v2 = self.values, other.values
+            times, values = _merge_pwc_times_values(t1, t2, v1, v2)
+
+            # merge tensors -> tensors: (npwc1 + npwc2, n, n)
+            tensors = torch.cat((self.tensors, other.tensors))
+
+            # merge static part -> static: (n, n)
             static = self.static + other.static
-            pwc = [*self.pwc, *other.pwc]
-            return PWCTimeTensor(pwc, static=static)
+
+            return PWCTimeTensor(times, values, tensors, static=static)
         else:
             return NotImplemented
+
+
+def _merge_pwc_times_values(t1, t2, v1, v2):
+    # t1: (nv1+1)
+    # t2: (nv2+1)
+    # v1: (npwc1, nv1, ...)
+    # v2: (npwc1, nv2, ...)
+    # --> (nv+1), (npwc1 + npwc2, nv, ...)
+
+    # Example with (...) = () and npwc1 = npwc2 = 1:
+    # t1 = [0, 10, 20]
+    # v1 = [[1, 2]]
+    # t2 = [0, 5, 10, 30]
+    # v2 = [[1, 2, 3]]
+    # times: 0     5     10        20        30 = [0, 5, 10, 20, 30]
+    #        |-----|-----|---------|---------|
+    # v1n:   |  1  |  1  |    2    |    0    |  = [1, 1, 2, 0]
+    # v2n:   |  1  |  2  |    3    |    3    |  = [1, 2, 3, 3]
+    # t = [0, 5, 10, 20, 30]
+    # v = [[1, 1, 2, 0], [1, 2, 3, 3]]
+
+    # merge times
+    t = torch.cat((t1, t2)).sort()[0].unique(sorted=True)  # (nv+1)
+
+    # shapes
+    nv1 = len(t1) - 1
+    nv2 = len(t2) - 1
+    nv = len(t) - 1
+    dots = v1.shape[2:]  # (...)
+
+    # format v1 and v2 for broadcasting
+    v1 = v1[:, :, None, ...]  # (npwc1, nv1, 1, ...)
+    v2 = v2[:, :, None, ...]  # (npwc2, nv2, 1, ...)
+
+    # for each interval of t1, find whether it overlaps with each interval of t
+    mask1 = (t1[:-1, None] <= t[:-1]) & (t1[1:, None] > t[:-1])  # (nv1, nv)
+    mask1 = mask1.view(1, nv1, nv, *[1 for _ in dots])  # (1, nv1, nv, ...)
+
+    # for each interval of t2, find whether it overlaps with each interval of t
+    mask2 = (t2[:-1, None] <= t[:-1]) & (t2[1:, None] > t[:-1])  # (nv2, nv)
+    mask2 = mask2.view(1, nv2, nv, *[1 for _ in dots])  # (1, nv2, nv, ...)
+
+    # apply masks
+    zero = torch.tensor(0.0)
+    v1n = torch.where(mask1, v1, zero).sum(dim=1)  # (npwc1, nv, ...)
+    v2n = torch.where(mask2, v2, zero).sum(dim=1)  # (npwc2, nv, ...)
+
+    # concatenate results
+    v = torch.cat((v1n, v2n))  # (npwc1 + npwc2, nv, ...)
+
+    return t, v
