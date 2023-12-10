@@ -6,8 +6,8 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from ._utils import obj_type_str, type_str
 from .solvers.utils.utils import cache
+from ._utils import check_time_tensor, obj_type_str, type_str
 from .utils.tensor_types import (
     ArrayLike,
     Number,
@@ -36,11 +36,30 @@ def totime(
             rdtype = dtype_complex_to_real(dtype)
         else:
             rdtype = dtype
+
+        # times
         times = to_tensor(times, dtype=rdtype, device=device)
+        check_time_tensor(times, arg_name='times')
+
+        # values
         values = to_tensor(values, dtype=dtype, device=device)
-        tensor = to_tensor(tensor, dtype=dtype, device=device)
+        if values.shape[0] != len(times) - 1:
+            raise TypeError(
+                'For a PWC tensor `(times, values, tensor)`, argument `values` must'
+                ' have shape `(len(times)-1, ...)`, but has shape'
+                f' {tuple(values.shape)}.'
+            )
         values = values.unsqueeze(0)  # npwc = 1
+
+        # tensor
+        tensor = to_tensor(tensor, dtype=dtype, device=device)
+        if tensor.ndim != 2 or tensor.shape[-1] != tensor.shape[-2]:
+            raise TypeError(
+                'For a PWC tensor `(times, values, tensor)`, argument `tensor` must be'
+                f' a square matrix, but has shape {tuple(tensor.shape)}.'
+            )
         tensor = tensor.unsqueeze(0)  # npwc = 1
+
         return PWCTimeTensor(times, values, tensor)
     # constant time tensor
     if isinstance(x, get_args(ArrayLike)):
