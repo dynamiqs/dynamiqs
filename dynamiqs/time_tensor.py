@@ -293,31 +293,31 @@ class _PWCTensor:
     # Defined by a tuple of 2 tensors (times, values), where
     # - times: (nv+1) are the time points between which the PWC tensor take constant
     #          values, where nv is the number of time intervals
-    # - values: (nv, ...) are the constant values for each time interval, where
+    # - values: (..., nv) are the constant values for each time interval, where
     #           (...) is an arbitrary batching size
 
     def __init__(self, times: Tensor, values: Tensor):
         self.times = times  # (nv+1)
-        self.values = values  # (nv, ...)
+        self.values = values  # (..., nv)
         self.nv = len(self.values)
 
     @property
     def shape(self) -> torch.Size:
-        return self.values.shape[1:]  # (...)
+        return self.values.shape[:-1]  # (...)
 
     def conj(self) -> _PWCTensor:
         return _PWCTensor(self.times, self.values.conj())
 
     def __call__(self, t: float) -> Tensor:
         if t < self.times[0] or t >= self.times[-1]:
-            return torch.zeros_like(self.values[0])  # (...)
+            return torch.zeros_like(self.values[..., 0])  # (...)
         else:
             # find the index $k$ such that $t \in [t_k, t_{k+1})$
             idx = torch.searchsorted(self.times, t, side='right') - 1
-            return self.values[idx, ...]  # (...)
+            return self.values[..., idx]  # (...)
 
     def view(self, *shape: int) -> _PWCTensor:
-        return _PWCTensor(self.times, self.values.view(self.nv, *shape))
+        return _PWCTensor(self.times, self.values.view(*shape, self.nv))
 
 
 class PWCTimeTensor(TimeTensor):
