@@ -6,7 +6,7 @@ from dynamiqs.time_tensor import (
     CallableTimeTensor,
     ConstantTimeTensor,
     PWCTimeTensor,
-    _merge_pwc_times_values,
+    _PWCTensor,
 )
 
 
@@ -154,14 +154,21 @@ class TestCallableTimeTensor:
 class TestPWCTimeTensor:
     @pytest.fixture(autouse=True)
     def setup(self):
-        times = torch.tensor([0, 1, 2, 3])
-        v1 = [1, 10, 0]
-        v2 = [0, 1, 1]
-        values = torch.tensor([v1, v2])  # (2, 3)
-        pwc1 = [[1, 2], [3, 4]]
-        pwc2 = [[1j, 1j], [1j, 1j]]
-        tensor = torch.tensor([pwc1, pwc2])  # (2, 2, 2)
-        self.x = PWCTimeTensor(times, values, tensor)  # shape at t: (2, 2)
+        # PWC factor 1
+        t1 = torch.tensor([0, 1, 2, 3])
+        v1 = torch.tensor([1, 10, 100])
+        f1 = _PWCTensor(t1, v1)
+        tensor1 = torch.tensor([[1, 2], [3, 4]])
+
+        # PWC factor 2
+        t2 = torch.tensor([1, 3, 5])
+        v2 = torch.tensor([1, 1])
+        f2 = _PWCTensor(t2, v2)
+        tensor2 = torch.tensor([[1j, 1j], [1j, 1j]])
+
+        factors = [f1, f2]
+        tensors = torch.stack([tensor1, tensor2])
+        self.x = PWCTimeTensor(factors, tensors)  # shape at t: (2, 2)
 
     def test_call(self):
         assert_equal(self.x(-0.1), [[0, 0], [0, 0]])
@@ -170,8 +177,7 @@ class TestPWCTimeTensor:
         assert_equal(self.x(0.999), [[1, 2], [3, 4]])
         assert_equal(self.x(1.0), [[10 + 1j, 20 + 1j], [30 + 1j, 40 + 1j]])
         assert_equal(self.x(1.999), [[10 + 1j, 20 + 1j], [30 + 1j, 40 + 1j]])
-        assert_equal(self.x(2.0), [[1j, 1j], [1j, 1j]])
-        assert_equal(self.x(3.0), [[0, 0], [0, 0]])
+        assert_equal(self.x(3.0), [[1j, 1j], [1j, 1j]])
         assert_equal(self.x(5.0), [[0, 0], [0, 0]])
 
     def test_view(self):
@@ -227,26 +233,3 @@ class TestPWCTimeTensor:
         assert isinstance(x, PWCTimeTensor)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
-
-
-def test_merge_pwc_times_values():
-    # test merge
-    t1 = torch.tensor([0, 10, 20])
-    t2 = torch.tensor([0, 5, 10, 30])
-    v1 = torch.tensor([[1, 2], [3, 4]])  # (2, 2)
-    v2 = torch.tensor([[1, 2, 3]])  # (1, 3)
-    t, v = _merge_pwc_times_values(t1, t2, v1, v2)
-    assert torch.equal(t, torch.tensor([0, 5, 10, 20, 30]))
-    assert v.shape == (3, 4)
-    assert torch.equal(v, torch.tensor([[1, 1, 2, 0], [3, 3, 4, 0], [1, 2, 3, 3]]))
-
-    # test batching (...) = (7, 8)
-    v1 = v1.view(2, 2, 1, 1).expand(2, 2, 7, 8)  # (2, 2, 7, 8)
-    print(v1.shape)
-    v2 = v2.view(1, 3, 1, 1).expand(1, 3, 7, 8)  # (1, 3, 7, 8)
-    print(v2.shape)
-    t, v = _merge_pwc_times_values(t1, t2, v1, v2)
-    assert torch.equal(t, torch.tensor([0, 5, 10, 20, 30]))
-    assert v.shape == (3, 4, 7, 8)
-    v11 = v[:, :, 1, 1]
-    assert torch.equal(v11, torch.tensor([[1, 1, 2, 0], [3, 3, 4, 0], [1, 2, 3, 3]]))
