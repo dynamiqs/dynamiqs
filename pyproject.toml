@@ -20,7 +20,7 @@ build-backend = "flit_core.buildapi"
 dev = [
     "taskipy",
     "isort",
-    "black[jupyter]>=23.11",
+    "black[jupyter]==23.11.0",
     "codespell",
     "flake8",
     "pytest",
