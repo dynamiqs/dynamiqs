@@ -58,7 +58,7 @@ def totime(
                 f' a square matrix, but has shape {tuple(tensor.shape)}.'
             )
 
-        factors = [_PWCTensor(times, values)]
+        factors = [_PWCFactor(times, values)]
         tensors = tensor.unsqueeze(0)  # (1, n, n)
         return PWCTimeTensor(factors, tensors)
     # constant time tensor
@@ -289,7 +289,7 @@ class CallableTimeTensor(TimeTensor):
             return NotImplemented
 
 
-class _PWCTensor:
+class _PWCFactor:
     # Defined by a tuple of 2 tensors (times, values), where
     # - times: (nv+1) are the time points between which the PWC tensor take constant
     #          values, where nv is the number of time intervals
@@ -305,8 +305,8 @@ class _PWCTensor:
     def shape(self) -> torch.Size:
         return self.values.shape[:-1]  # (...)
 
-    def conj(self) -> _PWCTensor:
-        return _PWCTensor(self.times, self.values.conj())
+    def conj(self) -> _PWCFactor:
+        return _PWCFactor(self.times, self.values.conj())
 
     def __call__(self, t: float) -> Tensor:
         if t < self.times[0] or t >= self.times[-1]:
@@ -316,15 +316,15 @@ class _PWCTensor:
             idx = torch.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
-    def view(self, *shape: int) -> _PWCTensor:
-        return _PWCTensor(self.times, self.values.view(*shape, self.nv))
+    def view(self, *shape: int) -> _PWCFactor:
+        return _PWCFactor(self.times, self.values.view(*shape, self.nv))
 
 
 class PWCTimeTensor(TimeTensor):
     # Arbitrary sum of tensors with PWC factors.
 
     def __init__(
-        self, factors: list[_PWCTensor], tensors: Tensor, static: Tensor | None = None
+        self, factors: list[_PWCFactor], tensors: Tensor, static: Tensor | None = None
     ):
         # factors must be non-empty
         self.factors = factors  # list of length (nf)

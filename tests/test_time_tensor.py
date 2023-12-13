@@ -6,7 +6,7 @@ from dynamiqs.time_tensor import (
     CallableTimeTensor,
     ConstantTimeTensor,
     PWCTimeTensor,
-    _PWCTensor,
+    _PWCFactor,
 )
 
 
@@ -157,13 +157,13 @@ class TestPWCTimeTensor:
         # PWC factor 1
         t1 = torch.tensor([0, 1, 2, 3])
         v1 = torch.tensor([1, 10, 100])
-        f1 = _PWCTensor(t1, v1)
+        f1 = _PWCFactor(t1, v1)
         tensor1 = torch.tensor([[1, 2], [3, 4]])
 
         # PWC factor 2
         t2 = torch.tensor([1, 3, 5])
         v2 = torch.tensor([1, 1])
-        f2 = _PWCTensor(t2, v2)
+        f2 = _PWCFactor(t2, v2)
         tensor2 = torch.tensor([[1j, 1j], [1j, 1j]])
 
         factors = [f1, f2]
