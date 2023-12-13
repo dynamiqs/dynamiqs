@@ -299,7 +299,7 @@ class _PWCFactor:
     def __init__(self, times: Tensor, values: Tensor):
         self.times = times  # (nv+1)
         self.values = values  # (..., nv)
-        self.nv = len(self.values)
+        self.nv = self.values.shape[-1]
 
     @property
     def shape(self) -> torch.Size:
@@ -348,14 +348,13 @@ class PWCTimeTensor(TimeTensor):
         return torch.Size((*self.factors[0].shape, self.n, self.n))  # (..., n, n)
 
     def __call__(self, t: float) -> Tensor:
-        static = self.static.expand(*self.shape)  # (..., n, n)
-
         if t < self.times[0] or t >= self.times[-1]:
+            static = self.static.expand(*self.shape)  # (..., n, n)
             return static  # (..., n, n)
         else:
             values = torch.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
             values = values.view(*values.shape, 1, 1)  # (..., nf, n, n)
-            return (values * self.tensors).sum(-3) + static  # (..., n, n)
+            return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
 
     def view(self, *shape: int) -> TimeTensor:
         # shape: (..., n, n)
