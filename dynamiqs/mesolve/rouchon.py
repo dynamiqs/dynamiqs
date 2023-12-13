@@ -6,8 +6,9 @@ import torch
 from torch import Tensor
 from torch.linalg import cholesky_ex as cholesky
 
+from .._utils import cache
 from ..solvers.ode.fixed_solver import AdjointFixedSolver
-from ..solvers.utils import cache, inv_sqrtm
+from ..solvers.utils import inv_sqrtm
 from ..utils.utils import unit
 from .me_solver import MESolver
 

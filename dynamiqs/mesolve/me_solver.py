@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
 
+from .._utils import cache
 from ..solvers.solver import Solver
-from ..solvers.utils import cache
 
 
 class MESolver(Solver):

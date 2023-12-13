@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
 
+from .._utils import cache
 from ..solvers.propagator import Propagator
-from ..solvers.utils import cache
 from ..utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 from .me_solver import MESolver
 

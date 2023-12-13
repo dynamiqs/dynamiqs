@@ -6,8 +6,7 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from ._utils import check_time_tensor, obj_type_str, type_str
-from .solvers.utils.utils import cache
+from ._utils import cache, check_time_tensor, obj_type_str, type_str
 from .utils.tensor_types import (
     ArrayLike,
     Number,
