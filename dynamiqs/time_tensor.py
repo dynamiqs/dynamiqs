@@ -6,8 +6,8 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from .solvers.utils.utils import cache
 from ._utils import check_time_tensor, obj_type_str, type_str
+from .solvers.utils.utils import cache
 from .utils.tensor_types import (
     ArrayLike,
     Number,
@@ -347,14 +347,24 @@ class PWCTimeTensor(TimeTensor):
     def shape(self) -> torch.Size:
         return torch.Size((*self.factors[0].shape, self.n, self.n))  # (..., n, n)
 
-    def __call__(self, t: float) -> Tensor:
-        if t < self.times[0] or t >= self.times[-1]:
+    @cache
+    def _call(self, idx: int) -> Tensor:
+        # cache on the index in self.times
+
+        if idx < 0 or idx >= len(self.times) - 1:
             static = self.static.expand(*self.shape)  # (..., n, n)
             return static  # (..., n, n)
         else:
+            t = self.times[idx]
             values = torch.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
             values = values.view(*values.shape, 1, 1)  # (..., nf, n, n)
             return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
+
+    def __call__(self, t: float) -> Tensor:
+        # find the index $k$ such that $t \in [t_k, t_{k+1})$, `idx = -1` if
+        # `t < times[0]` and `idx = len(times) - 1` if `t >= times[-1]`
+        idx = torch.searchsorted(self.times, t, side='right') - 1
+        return self._call(idx.item())
 
     def view(self, *shape: int) -> TimeTensor:
         # shape: (..., n, n)

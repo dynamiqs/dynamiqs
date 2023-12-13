@@ -180,6 +180,12 @@ class TestPWCTimeTensor:
         assert_equal(self.x(3.0), [[1j, 1j], [1j, 1j]])
         assert_equal(self.x(5.0), [[0, 0], [0, 0]])
 
+    def test_call_caching(self):
+        assert hash(self.x(-0.1)) == hash(self.x(-0.1)) == hash(self.x(-0.2))
+        assert hash(self.x(0.0)) == hash(self.x(0.0)) == hash(self.x(0.5))
+        assert hash(self.x(1.0)) == hash(self.x(1.0)) == hash(self.x(1.999))
+        assert hash(self.x(5.0)) == hash(self.x(5.0)) == hash(self.x(6.0))
+
     def test_view(self):
         x = self.x.view(1, 2, 2)
         assert_equal(x(-0.1), [[[0, 0], [0, 0]]])
