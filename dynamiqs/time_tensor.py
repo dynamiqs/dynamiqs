@@ -396,3 +396,91 @@ class PWCTimeTensor(TimeTensor):
             return PWCTimeTensor(factors, tensors, static=static)
         else:
             return NotImplemented
+
+
+class _ModulatedFactor:
+    # Defined by 2 tensors (factor, factor0), where
+    # - factor: (...,) is a callable that takes a time and returns a tensor
+    # - factor0: (...,) is the tensor returned by factor(0.0)
+    # factor0 holds information about the shape of the tensor returned by factor(t).
+
+    def __init__(self, factor: callable[[float], Tensor], factor0: Tensor):
+        self.factor = factor  # (...)
+        self.factor0 = factor0  # (...)
+
+    @property
+    def shape(self) -> torch.Size:
+        return self.factor0.shape
+
+    def conj(self) -> _ModulatedFactor:
+        return _ModulatedFactor(lambda t: self.factor(t).conj(), self.factor0.conj())
+
+    def __call__(self, t: float) -> Tensor:
+        return self.factor(t).view(self.factor0.shape)
+
+    def view(self, *shape: int) -> _ModulatedFactor:
+        return _ModulatedFactor(self.factor, self.factor0.view(*shape))
+
+
+class ModulatedTimeTensor(TimeTensor):
+    # Sum of tensors with callable factors.
+
+    def __init__(
+        self,
+        factors: list[_ModulatedFactor],
+        tensors: Tensor,
+        static: Tensor | None = None,
+    ):
+        # factors must be non-empty
+        self.factors = factors  # list of length (nf)
+        self.tensors = tensors  # (nf, n, n)
+        self.n = tensors.shape[-1]
+        self.static = torch.zeros_like(self.tensors[0]) if static is None else static
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.tensors.dtype
+
+    @property
+    def device(self) -> torch.device:
+        return self.tensors.device
+
+    @property
+    def shape(self) -> torch.Size:
+        return torch.Size((*self.factors[0].shape, self.n, self.n))  # (..., n, n)
+
+    def __call__(self, t: float) -> Tensor:
+        values = torch.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
+        values = values.view(*values.shape, 1, 1)  # (..., nf, n, n)
+        return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
+
+    def view(self, *shape: int) -> TimeTensor:
+        # shape: (..., n, n)
+        factors = [x.view(*shape[:-2]) for x in self.factors]
+        return ModulatedTimeTensor(factors, self.tensors, static=self.static)
+
+    def adjoint(self) -> TimeTensor:
+        factors = [x.conj() for x in self.factors]
+        return ModulatedTimeTensor(factors, self.tensors.mH, static=self.static.mH)
+
+    def __neg__(self) -> TimeTensor:
+        return ModulatedTimeTensor(self.factors, -self.tensors, static=-self.static)
+
+    def __mul__(self, other: Number | Tensor) -> TimeTensor:
+        return ModulatedTimeTensor(
+            self.factors, self.tensors * other, static=self.static * other
+        )
+
+    def __add__(self, other: Tensor | TimeTensor) -> TimeTensor:
+        if isinstance(other, Tensor):
+            static = self.static + other
+            return ModulatedTimeTensor(self.factors, self.tensors, static=static)
+        elif isinstance(other, ConstantTimeTensor):
+            return self + other.tensor
+        elif isinstance(other, ModulatedTimeTensor):
+            factors = self.factors + other.factors  # list of length (nf1 + nf2)
+            tensors = torch.cat((self.tensors, other.tensors))  # (nf1 + nf2, n, n)
+            static = self.static + other.static  # (n, n)
+            return ModulatedTimeTensor(factors, tensors, static=static)
+        else:
+            return NotImplemented
