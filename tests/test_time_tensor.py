@@ -18,6 +18,10 @@ class TestConstantTimeTensor:
         assert_equal(self.x(0.0), [1, 2])
         assert_equal(self.x(1.0), [1, 2])
 
+    def test_call_caching(self):
+        assert hash(self.x(0.0)) == hash(self.x(0.0))
+        assert hash(self.x(1.0)) == hash(self.x(1.0))
+
     def test_view(self):
         x = self.x.view(1, 2)
         assert_equal(x(0.0), [[1, 2]])
@@ -77,6 +81,10 @@ class TestCallableTimeTensor:
     def test_call(self):
         assert_equal(self.x(0.0), [0, 0])
         assert_equal(self.x(1.0), [1, 2])
+
+    def test_call_caching(self):
+        assert hash(self.x(0.0)) == hash(self.x(0.0))
+        assert hash(self.x(1.0)) == hash(self.x(1.0))
 
     def test_view(self):
         x = self.x.view(1, 2)

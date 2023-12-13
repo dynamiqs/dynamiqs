@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 
 from ._utils import obj_type_str, type_str
+from .solvers.utils.utils import cache
 from .utils.tensor_types import ArrayLike, Number, get_cdtype, to_device, to_tensor
 
 __all__ = ['totime']
@@ -63,6 +64,12 @@ class TimeTensor:
     # Subclasses should implement:
     # - the properties: dtype, device, shape
     # - the methods: __call__, view, adjoint, __neg__, __mul__, __add__
+
+    # Special care should be taken when implementing `__call__` for caching to work
+    # properly. The `@cache` decorator checks the tensor `__hash__`, which is
+    # implemented as its address in memory. Thus, when two consecutive calls to a
+    # `TimeTensor` should return a tensor with the same values, these two tensors must
+    # not only be equal, they should be the same object in memory.
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Tensor`, `ConstantTimeTensor` and the subclass type itself.
@@ -202,7 +209,9 @@ class CallableTimeTensor(TimeTensor):
     def shape(self) -> torch.Size:
         return self.f0.shape
 
+    @cache
     def __call__(self, t: float) -> Tensor:
+        # cached if called twice with the same time, otherwise we recompute `f(t)`
         return self.f(t).view(self.shape)
 
     def view(self, *shape: int) -> TimeTensor:
