@@ -9,8 +9,8 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils.utils import common_batch_size
-from ..time_tensor import TimeTensor, totime
+from ..solvers.utils.utils import common_batch_size, to_time_operator
+from ..time_tensor import TimeTensor
 from ..utils.tensor_types import ArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
@@ -143,7 +143,7 @@ def sesolve(
             'Argument `H` must be an array-like object or a `TimeTensor`, but has type'
             f' {obj_type_str(H)}.'
         )
-    H = totime(H, **kw)  # (bH?, n, n)
+    H = to_time_operator(H, 'H', **kw)  # (bH?, n, n)
     n = H.size(-1)
     H = H.view(-1, n, n)  # (bH, n, n)
     bH = H.size(0)

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from functools import partial
 from math import sqrt
-from typing import Iterator
+from typing import Iterator, get_args
 
 import torch
 from torch import Tensor
 from tqdm import tqdm as std_tqdm
 
+from ..._utils import obj_type_str
+from ...time_tensor import TimeTensor, _factory_constant
+from ...utils.tensor_types import ArrayLike
 from ...utils.utils import isket
 
 # define a default progress bar format
@@ -119,3 +122,18 @@ def common_batch_size(dims: list[int]) -> int | None:
     if (1 not in bs and len(bs) > 1) or len(bs) > 2:
         return None
     return bs.max().item()
+
+
+def to_time_operator(
+    x: ArrayLike | TimeTensor, arg_name: str, dtype: torch.dtype, device: torch.device
+) -> TimeTensor:
+    if isinstance(x, get_args(ArrayLike)):
+        return _factory_constant(x, dtype=dtype, device=device)
+    elif isinstance(x, TimeTensor):
+        # todo: convert time tensor dtype/device if possible, raise error otherwise
+        return x
+    else:
+        raise TypeError(
+            f'Argument `{arg_name}` must be an array-like object or a `TimeTensor`, but'
+            f' has type {obj_type_str(x)}.'
+        )
