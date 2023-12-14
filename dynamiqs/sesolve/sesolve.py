@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args
 
 import torch
 
@@ -9,16 +9,16 @@ from ..gradient import Gradient
 from ..solver import Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils.td_tensor import to_td_tensor
 from ..solvers.utils.utils import common_batch_size
-from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
+from ..time_tensor import TimeTensor, totime
+from ..utils.tensor_types import ArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
 from .euler import SEEuler
 from .propagator import SEPropagator
 
 
 def sesolve(
-    H: TDArrayLike,
+    H: ArrayLike | TimeTensor,
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
@@ -138,7 +138,12 @@ def sesolve(
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
-    H = to_td_tensor(H, **kw)  # (bH?, n, n)
+    if not isinstance(H, (*get_args(ArrayLike), TimeTensor)):
+        raise TypeError(
+            'Argument `H` must be an array-like object or a `TimeTensor`, but has type'
+            f' {obj_type_str(H)}.'
+        )
+    H = totime(H, **kw)  # (bH?, n, n)
     n = H.size(-1)
     H = H.view(-1, n, n)  # (bH, n, n)
     bH = H.size(0)

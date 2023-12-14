@@ -8,16 +8,16 @@ import torch
 from torch import Tensor
 
 from ..gradient import Adjoint, Autograd
+from ..time_tensor import TimeTensor
 from .options import Options
 from .result import Result
-from .utils.td_tensor import TDTensor
 from .utils.utils import bexpect, iteraxis
 
 
 class Solver(ABC):
     def __init__(
         self,
-        H: TDTensor,
+        H: TimeTensor,
         y0: Tensor,
         tsave: Tensor,
         tmeas: Tensor,

@@ -136,7 +136,7 @@ class TDQubit(ClosedSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
+        self.H = dq.totime(lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax())
         self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
