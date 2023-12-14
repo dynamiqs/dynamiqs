@@ -5,8 +5,8 @@ from math import sqrt
 import torch
 from torch import Tensor
 
+from .._utils import cache
 from ..solvers.ode.fixed_solver import FixedSolver
-from ..solvers.utils import cache
 from ..utils.utils import unit
 from .sme_solver import SMESolver
 

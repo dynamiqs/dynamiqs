@@ -5,9 +5,9 @@ from math import sqrt
 import torch
 from torch import Tensor
 
+from .._utils import cache
 from ..mesolve.me_solver import MESolver
 from ..solvers.result import Result
-from ..solvers.utils import cache
 from ..solvers.utils.utils import iteraxis
 from ..utils.utils import trace
 

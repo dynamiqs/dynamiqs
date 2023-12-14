@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
 
+from .._utils import cache
 from ..solvers.propagator import Propagator
-from ..solvers.utils import cache
 
 
 class SEPropagator(Propagator):
