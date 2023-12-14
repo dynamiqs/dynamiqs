@@ -21,7 +21,12 @@ __all__ = ['totime']
 
 
 def totime(
-    x: ArrayLike | callable[[float], Tensor] | tuple[ArrayLike, ArrayLike, ArrayLike],
+    x: (
+        ArrayLike
+        | callable[[float], Tensor]
+        | tuple[ArrayLike, ArrayLike, ArrayLike]
+        | tuple[callable[[float], Tensor], ArrayLike]
+    ),
     *,
     dtype: torch.dtype | None = None,
     device: str | torch.device | None = None,
@@ -29,7 +34,44 @@ def totime(
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
     device = to_device(device)
 
-    # pwc time tensor
+    # get real-valued dtype
+    if dtype in (torch.complex64, torch.complex128):
+        rdtype = dtype_complex_to_real(dtype)
+    else:
+        rdtype = dtype
+
+    # === constant time tensor
+    if isinstance(x, get_args(ArrayLike)):
+        x = to_tensor(x, dtype=dtype, device=device)
+        return ConstantTimeTensor(x)
+    # === callable time tensor
+    elif callable(x):
+        f0 = x(0.0)
+
+        # check type, dtype and device match
+        if not isinstance(f0, Tensor):
+            raise TypeError(
+                f'The time-dependent operator must be a {type_str(Tensor)}, but has'
+                f' type {obj_type_str(f0)}. The provided function must return a tensor,'
+                ' to avoid costly type conversion at each time solver step.'
+            )
+        elif f0.dtype != dtype:
+            raise TypeError(
+                f'The time-dependent operator must have dtype `{dtype}`, but has dtype'
+                f' `{f0.dtype}`. The provided function must return a tensor with the'
+                ' same `dtype` as provided to the solver, to avoid costly dtype'
+                ' conversion at each solver time step.'
+            )
+        elif f0.device != device:
+            raise TypeError(
+                f'The time-dependent operator must be on device `{device}`, but is on'
+                f' device `{f0.device}`. The provided function must return a tensor on'
+                ' the same device as provided to the solver, to avoid costly device'
+                ' transfer at each solver time step.'
+            )
+
+        return CallableTimeTensor(x, f0)
+    # === PWC time tensor
     if isinstance(x, tuple) and len(x) == 3:
         times, values, tensor = x
         if dtype in (torch.complex64, torch.complex128):
@@ -61,41 +103,54 @@ def totime(
         factors = [_PWCFactor(times, values)]
         tensors = tensor.unsqueeze(0)  # (1, n, n)
         return PWCTimeTensor(factors, tensors)
-    # constant time tensor
-    if isinstance(x, get_args(ArrayLike)):
-        x = to_tensor(x, dtype=dtype, device=device)
-        return ConstantTimeTensor(x)
-    # callable time tensor
-    elif callable(x):
-        f0 = x(0.0)
+    # === modulated time tensor
+    if isinstance(x, tuple) and len(x) == 2:
+        f, tensor = x
 
-        # check type, dtype and device match
+        # check f
+        if not callable(f):
+            raise TypeError(
+                'For a modulated time tensor `(f, tensor)`, argument `f` must'
+                f' be a function, but has type {obj_type_str(f)}.'
+            )
+        f0 = f(0.0)
         if not isinstance(f0, Tensor):
             raise TypeError(
-                f'The time-dependent operator must be a {type_str(Tensor)}, but has'
-                f' type {obj_type_str(f0)}. The provided callable must return a tensor,'
-                ' to avoid costly type conversion at each time solver step.'
+                'For a modulated time tensor `(f, tensor)`, argument `f` must'
+                f' return a tensor, but returns type {obj_type_str(f0)}.'
             )
-        elif f0.dtype != dtype:
+        if f0.device != device:
             raise TypeError(
-                f'The time-dependent operator must have dtype `{dtype}`, but has dtype'
-                f' `{f0.dtype}`. The provided callable must return a tensor with the'
-                ' same `dtype` as provided to the solver, to avoid costly dtype'
-                ' conversion at each solver time step.'
+                'For a modulated time tensor, the tensor returned by the function must'
+                f' be on device `{device}`, but is on device `{f0.device}`. This is'
+                ' necessary to avoid costly device transfer at each solver time step.'
             )
-        elif f0.device != device:
+        elif f0.dtype not in [dtype, rdtype]:
+            dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
             raise TypeError(
-                f'The time-dependent operator must be on device `{device}`, but is on'
-                f' device `{f0.device}`. The provided callable must return a tensor on'
-                ' the same device as provided to the solver, to avoid costly device'
-                ' transfer at each solver time step.'
+                'For a modulated time tensor, the tensor returned by the function must'
+                f' have dtype `{dtypes}`, but has dtype `{f0.dtype}`. This is necessary'
+                ' to avoid costly dtype conversion at each solver time step.'
             )
 
-        return CallableTimeTensor(x, f0)
+        # tensor
+        tensor = to_tensor(tensor, dtype=dtype, device=device)
+        if tensor.ndim != 2 or tensor.shape[-1] != tensor.shape[-2]:
+            raise TypeError(
+                'For a modulated time tensor `(f, tensor)`, argument `tensor` must'
+                f' be a square matrix, but has shape {tuple(tensor.shape)}.'
+            )
+
+        factors = [_ModulatedFactor(f, f0)]
+        tensors = tensor.unsqueeze(0)  # (1, n, n)
+        return ModulatedTimeTensor(factors, tensors)
     else:
         raise TypeError(
-            'Argument `x` must be an array-like object or a callable with signature'
-            f' (t: float) -> Tensor, but has type {obj_type_str(x)}.'
+            'For time-dependent tensors, argument `x` must be one of 4 types: (1)'
+            ' ArrayLike; (2) 2-tuple with type (function, ArrayLike) where function'
+            ' has signature (t: float) -> Tensor; (3) 3-tuple with type (ArrayLike,'
+            ' ArrayLike, ArrayLike); (4) function with signature (t: float) -> Tensor.'
+            f' The provided `x` has type {obj_type_str(x)}.'
         )
 
 
@@ -399,27 +454,31 @@ class PWCTimeTensor(TimeTensor):
 
 
 class _ModulatedFactor:
-    # Defined by 2 tensors (factor, factor0), where
-    # - factor: (...,) is a callable that takes a time and returns a tensor
-    # - factor0: (...,) is the tensor returned by factor(0.0)
-    # factor0 holds information about the shape of the tensor returned by factor(t).
+    # Defined by two objects (f, f0), where
+    # - f is a callable that takes a time and returns a tensor of shape (...)
+    # - f0 is the tensor of shape (...) returned by f(0.0)
+    # f0 holds information about the shape of the tensor returned by f(t).
 
-    def __init__(self, factor: callable[[float], Tensor], factor0: Tensor):
-        self.factor = factor  # (...)
-        self.factor0 = factor0  # (...)
+    def __init__(self, f: callable[[float], Tensor], f0: Tensor):
+        self.f = f  # (float) -> (...)
+        self.f0 = f0  # (...)
 
     @property
     def shape(self) -> torch.Size:
-        return self.factor0.shape
+        return self.f0.shape
 
     def conj(self) -> _ModulatedFactor:
-        return _ModulatedFactor(lambda t: self.factor(t).conj(), self.factor0.conj())
+        f = lambda t: self.f(t).conj()
+        f0 = self.f0.conj()
+        return _ModulatedFactor(f, f0)
 
     def __call__(self, t: float) -> Tensor:
-        return self.factor(t).view(self.factor0.shape)
+        return self.f(t).view(self.shape)
 
     def view(self, *shape: int) -> _ModulatedFactor:
-        return _ModulatedFactor(self.factor, self.factor0.view(*shape))
+        f = self.f
+        f0 = self.f0.view(*shape)
+        return _ModulatedFactor(f, f0)
 
 
 class ModulatedTimeTensor(TimeTensor):
