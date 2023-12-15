@@ -131,7 +131,7 @@ colors = {
 }
 
 
-def mplstyle(*, latex: bool = True):
+def mplstyle(*, usetex: bool = False):
     """Set custom Matplotlib style."""
     plt.rcParams.update({
         # xtick
@@ -171,14 +171,15 @@ def mplstyle(*, latex: bool = True):
         'font.size': 12,
         'scatter.marker': 'o',
         'lines.linewidth': 2.0,
+        # fonts
+        'text.usetex': usetex,
+        'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
+        'font.family': 'serif',
+        'font.serif': 'Times New Roman',
+        # if usetex=False, matplotlib uses mathtext, for which we choose the STIX font
+        # which is designed to blend well with Times
+        'mathtext.fontset': 'stix',
     })
-    if latex:
-        plt.rcParams.update({
-            'text.usetex': latex,
-            'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
-            'font.family': 'serif',
-            'font.serif': 'Computer Modern Roman',
-        })
 
 
 def integer_ticks(axis: Axis, n: int, all: bool = True):
