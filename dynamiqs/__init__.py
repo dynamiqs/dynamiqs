@@ -7,6 +7,7 @@ from .sesolve import sesolve
 from .smesolve import smesolve
 from .time_tensor import totime
 from .utils import *
+from .solvers.result import Result
 
 # get version from pyproject.toml
 __version__ = version(__package__)
