@@ -6,13 +6,14 @@ import torch
 
 from .._utils import check_time_tensor, obj_type_str
 from ..gradient import Gradient
-from ..solver import Dopri5, Euler, Propagator, Solver
+from ..solver import BackwardEuler, Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
 from ..solvers.utils.utils import common_batch_size, to_time_operator
 from ..time_tensor import TimeTensor
 from ..utils.tensor_types import ArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
+from .backward_euler import SEBackwardEuler
 from .euler import SEEuler
 from .propagator import SEPropagator
 
@@ -117,6 +118,7 @@ def sesolve(
     solvers = {
         Propagator: SEPropagator,
         Euler: SEEuler,
+        BackwardEuler: SEBackwardEuler,
         Dopri5: SEDormandPrince5,
     }
     if not isinstance(solver, tuple(solvers.keys())):
