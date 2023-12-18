@@ -19,7 +19,7 @@ def torch_set_printoptions():
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
 def mplstyle():
-    dynamiqs.plots.utils.mplstyle(latex=False)
+    dynamiqs.plots.utils.mplstyle()
 
 
 # doctest fixture
