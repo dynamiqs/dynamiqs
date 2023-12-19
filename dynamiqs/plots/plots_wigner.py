@@ -172,6 +172,7 @@ def plot_wigner_mosaic(
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
     cross: bool = False,
+    normalize: bool = True,
 ):
     r"""Plot the Wigner function of multiple states in a mosaic arrangement.
 
@@ -240,6 +241,7 @@ def plot_wigner_mosaic(
         colorbar=False,
         cross=cross,
         clear=False,
+        normalize=normalize,
     )
 
     # plot individual wigner
