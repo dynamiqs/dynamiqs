@@ -80,6 +80,7 @@ def plot_wigner(
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
+    normalize: bool = True,
 ):
     r"""Plot the Wigner function of a state.
 
@@ -130,13 +131,14 @@ def plot_wigner(
     state = to_tensor(state)
 
     # normalize state
-    norm_state = norm(state).item()
-    if not isclose(norm_state, 1.0, rel_tol=1e-4):
-        warnings.warn(
-            'The state has been normalized to compute the Wigner (expected norm to be'
-            f' 1.0 but norm is {norm_state:.4f}).'
-        )
-        state = unit(state)
+    if normalize:
+        norm_state = norm(state).item()
+        if not isclose(norm_state, 1.0, rel_tol=1e-4):
+            warnings.warn(
+                'The state has been normalized to compute the Wigner (expected norm to'
+                f' be 1.0 but norm is {norm_state:.4f}).'
+            )
+            state = unit(state)
 
     ymax = xmax if ymax is None else ymax
 
