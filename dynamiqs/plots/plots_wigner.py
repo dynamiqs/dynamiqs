@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-import warnings
-from math import isclose
-
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
 from ..utils.tensor_types import ArrayLike, to_numpy, to_tensor
-from ..utils.utils import norm, unit
 from ..utils.wigners import wigner
 from .utils import add_colorbar, colors, gridplot, linmap, optax
 
@@ -94,14 +90,6 @@ def plot_wigner(
         coordinates $(x,y)=(\mathrm{Re}(\alpha),\mathrm{Im}(\alpha))$, which is
         different from the default behaviour of `qutip.plot_wigner()`.
 
-    Warning-: Non-normalized state
-        If the given state is not normalized, it will be normalized before plotting
-        and a warning will be issued. If you want to ignore the warning, use
-        ```python
-        import warnings
-        warnings.filterwarnings('ignore', module='dynamiqs')
-        ```
-
     Examples:
         >>> psi = dq.coherent(16, 2.0)
         >>> dq.plot_wigner(psi)
@@ -128,18 +116,7 @@ def plot_wigner(
         ![plot_wigner_4legged](/figs-code/plot_wigner_4legged.png){.fig-half}
     """
     state = to_tensor(state)
-
-    # normalize state
-    norm_state = norm(state).item()
-    if not isclose(norm_state, 1.0, rel_tol=1e-4):
-        warnings.warn(
-            'The state has been normalized to compute the Wigner (expected norm to be'
-            f' 1.0 but norm is {norm_state:.4f}).'
-        )
-        state = unit(state)
-
     ymax = xmax if ymax is None else ymax
-
     _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
 
     plot_wigner_data(
