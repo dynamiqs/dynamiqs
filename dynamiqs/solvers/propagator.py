@@ -5,7 +5,8 @@ from abc import abstractmethod
 import numpy as np
 from torch import Tensor
 
-from ..time_tensor import ConstantTimeTensor
+from .._utils import obj_type_str
+from ..time_tensor import ConstantTimeTensor, PWCTimeTensor
 from .solver import AutogradSolver
 from .utils.utils import tqdm
 
@@ -28,20 +29,38 @@ class Propagator(AutogradSolver):
         super().__init__(*args, **kwargs)
 
         # check that Hamiltonian is time-independent
-        if not isinstance(self.H, ConstantTimeTensor):
+        if not isinstance(self.H, (ConstantTimeTensor, PWCTimeTensor)):
             raise TypeError(
-                'Solver `Propagator` requires a time-independent Hamiltonian.'
+                f'Solver {obj_type_str(self.options.solver)} requires a'
+                ' time-independent or piecewise-constant Hamiltonian (types'
+                ' `ArrayLike`, `ConstantTimeTensor` or `PWCTimeTensor`), but the'
+                f' passed Hamiltonian has type {obj_type_str(self.H)}.'
             )
-        self.H = self.H(self.t0)
+        if isinstance(self.H, PWCTimeTensor):
+            # We build a custom times array `tstop_new` gathering `self.tstop` and
+            # `self.H.times`. This ensures that each PWC part of the Hamiltonian is
+            # taken into account during the evolution.
+
+            # keep only `H.times` values in the interval [t0, tsave[-1])
+            mask = (self.t0 <= self.H.times) & (self.H.times < self.tsave[-1])
+            extra_tstop = self.H.times[mask]
+            extra_tstop = extra_tstop.numpy(force=True)
+
+            # build new times to stop
+            self.tstop_new = np.unique(np.concatenate((self.tstop, extra_tstop)))
+        else:
+            self.tstop_new = self.tstop
 
     def run_autograd(self):
         t1, y = self.t0, self.y0
-        for t2 in tqdm(self.tstop, disable=not self.options.verbose):
+        for t2 in tqdm(self.tstop_new, disable=not self.options.verbose):
             if t2 != self.t0:
                 # round time difference to avoid numerical errors when comparing floats
                 delta_t = round_truncate(t2 - t1)
                 y = self.forward(t1, delta_t, y)
-            self.save(y)
+            # if the time is in the original `self.tstop` times, save the result
+            if t2 in self.tstop:
+                self.save(y)
             t1 = t2
 
     @abstractmethod
