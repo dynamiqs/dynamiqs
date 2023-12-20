@@ -16,23 +16,24 @@ class SMERouchon(SMESolver, FixedSolver):
 
 
 class SMERouchon1(SMERouchon):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @cache
+    def Ms(self, Hnh: Tensor) -> tuple(Tensor, Tensor):
+        # Kraus operators
+        # -> (..., n, n), (nL, ..., n, n)
+        M0d = self.I - 1j * self.dt * Hnh  # (..., n, n)
 
-        self.M0_tmp = cache(lambda Hnh: self.I - 1j * self.dt * Hnh)  # (..., n, n)
-        self.M1s = torch.cat(
-            [
-                sqrt(self.dt) * self.Lc,
-                torch.sqrt(self.dt * (1 - self.etas))[..., None, None] * self.Lm,
-            ],
-        )  # (nL, ..., n, n)
+        M1cs = sqrt(self.dt) * self.Lc  # (nLc, ..., n, n)
+        # M1ms: (nLm, ..., n, n)
+        M1ms = torch.sqrt(self.dt * (1 - self.etas[..., None, None])) * self.Lm
+        M1s = torch.cat([M1cs, M1ms])  # (nL, ..., n, n)
+
+        return M0d, M1s
 
     def forward(self, t: float, rho: Tensor) -> Tensor:
         # rho: (..., n, n) -> (..., n, n)
-
         H = self.H(t)  # (..., n, n)
         Hnh = self.Hnh(H)  # (..., n, n)
-        M0_tmp = self.M0_tmp(Hnh)  # (..., n, n)
+        M0d, M1s = self.Ms(Hnh)  # (..., n, n), (nL, ..., n, n)
 
         # sample Wiener process
         dw = self.sample_wiener(self.dt)  # (nLm, ...)
@@ -42,9 +43,9 @@ class SMERouchon1(SMERouchon):
 
         # compute M0
         seta_dy = self.etas.sqrt() * dy  # (nLm, ...)
-        M0 = M0_tmp + (seta_dy[..., None, None] * self.Lm).sum(0)  # (..., n, n)
+        M0 = M0d + (seta_dy[..., None, None] * self.Lm).sum(0)  # (..., n, n)
 
         # compute rho(t+dt)
-        rho = M0 @ rho @ M0.mH + (self.M1s @ rho @ self.M1s.mH).sum(0)  # (..., n, n)
+        rho = M0 @ rho @ M0.mH + (M1s @ rho @ M1s.mH).sum(0)  # (..., n, n)
 
         return unit(rho)
