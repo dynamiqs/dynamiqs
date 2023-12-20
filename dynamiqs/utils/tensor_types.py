@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Union, get_args
+from typing import Union, get_args
 
 import numpy as np
 import torch
@@ -16,10 +16,6 @@ Number = Union[int, float, complex]
 
 # type for objects convertible to a torch.Tensor using `to_tensor`
 ArrayLike = Union[tuple, list, np.ndarray, Tensor, Qobj]
-
-# TODO add typing for Hamiltonian with piecewise-constant factor
-# type for time-dependent objects
-TDArrayLike = Union[ArrayLike, Callable[[float], Tensor]]
 
 # data type conversion dictionaries
 DTYPE_TO_REAL = {torch.complex64: torch.float32, torch.complex128: torch.float64}
