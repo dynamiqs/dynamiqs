@@ -36,8 +36,8 @@ class Solver(ABC):
         self.H = H
         self.t0 = 0.0
         self.y0 = y0
-        self.tsave = tsave.numpy()
-        self.tmeas = tmeas.numpy()
+        self.tsave = tsave.numpy(force=True)
+        self.tmeas = tmeas.numpy(force=True)
         self.E = E
         self.options = options
 
