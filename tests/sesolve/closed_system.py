@@ -7,10 +7,11 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs import TimeTensor
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike, TDArrayLike, dtype_real_to_complex
+from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
 
 from ..system import System
 
@@ -23,7 +24,7 @@ class ClosedSystem(System):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
-        H: TDArrayLike | None = None,
+        H: ArrayLike | TimeTensor | None = None,
         y0: ArrayLike | None = None,
     ) -> Result:
         H = self.H if H is None else H
