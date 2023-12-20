@@ -146,3 +146,7 @@ def cache(func=None, *, maxsize: int = 1):
         return grad_cached_func(*args, grad_enabled=torch.is_grad_enabled(), **kwargs)
 
     return wrapper
+
+
+def merge_tensors(*x: Tensor) -> Tensor:
+    return torch.cat(x).unique(sorted=True)

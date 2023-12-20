@@ -6,7 +6,7 @@ from typing import get_args
 import torch
 from torch import Tensor
 
-from ._utils import cache, check_time_tensor, obj_type_str, type_str
+from ._utils import cache, check_time_tensor, merge_tensors, obj_type_str, type_str
 from .utils.tensor_types import (
     ArrayLike,
     Number,
@@ -419,7 +419,7 @@ class PWCTimeTensor(TimeTensor):
         self.static = torch.zeros_like(self.tensors[0]) if static is None else static
 
         # merge all times
-        self.times = torch.cat([x.times for x in self.factors]).unique(sorted=True)
+        self.times = merge_tensors(*(x.times for x in self.factors))
 
     @property
     def dtype(self) -> torch.dtype:
