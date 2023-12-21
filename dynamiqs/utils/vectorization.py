@@ -185,7 +185,7 @@ def sdissipator(L: Tensor) -> Tensor:
     return sprepost(L, L.mH) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: Tensor, jump_ops: list[Tensor]) -> Tensor:
+def slindbladian(H: Tensor, jump_ops: list[Tensor] | Tensor) -> Tensor:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -216,5 +216,5 @@ def slindbladian(H: Tensor, jump_ops: list[Tensor]) -> Tensor:
     Returns:
         _(..., n^2, n^2)_ Lindbladian superoperator.
     """
-    Ls = torch.stack(jump_ops)
+    Ls = torch.stack(jump_ops) if isinstance(jump_ops, list) else jump_ops
     return -1j * (spre(H) - spost(H)) + sdissipator(Ls).sum(0)
