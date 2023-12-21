@@ -24,7 +24,8 @@ class SMESolver(MESolver):
 
         # split jump operators between purely dissipative (eta = 0) and
         # monitored (eta != 0)
-        mask = etas.squeeze() == 0.0
+        nL = len(L)
+        mask = etas.view(nL) == 0.0  # (nL)
         self.Lc = L[mask]  # (nLc, ..., n, n) purely dissipative
         self.Lm = L[~mask]  # (nLm, ..., n, n) monitored
         self.etas = etas[~mask]  # (nLm, ...)
@@ -33,7 +34,7 @@ class SMESolver(MESolver):
         # initialize additional save tensors
         batch_sizes = self.y0.shape[:-2]
         self.meas_shape = (self.Lm.size(0), *batch_sizes)
-        kw = dict(dtype=self.cdtype, device=self.device)
+        kw = dict(dtype=self.rdtype, device=self.device)
 
         # Lmsave: (nLm, ..., len(tmeas) - 1)
         if len(self.tmeas) > 0:
@@ -43,9 +44,7 @@ class SMESolver(MESolver):
             self.Lmsave = None
 
         # tensor to hold the sum of measurement results on a time bin
-        # self.bin_meas: (nLm, ...)
-        kw = dict(dtype=self.rdtype, device=self.device)
-        self.bin_meas = torch.zeros(self.meas_shape, **kw)
+        self.bin_meas = torch.zeros(self.meas_shape, **kw)  # (nLm, ...)
 
     def run(self) -> Result:
         result = super().run()
@@ -76,6 +75,7 @@ class SMESolver(MESolver):
 
     @cache
     def exp_val(self, Lmp_rho: Tensor) -> Tensor:
+        # Lmp_rho: (nLm, ..., n, n) -> (nLm, ...)
         return trace(Lmp_rho).real
 
     def diff_backaction(self, dw: Tensor, rho: Tensor) -> Tensor:
@@ -100,6 +100,7 @@ class SMESolver(MESolver):
         return (prefactor[..., None, None] * tmp).sum(0)
 
     def update_meas(self, dw: Tensor, rho: Tensor) -> Tensor:
+        # dw: (nLm, ...), rho: (..., n, n) -> (nLm, ...)
         Lmp_rho = self.Lmp(rho)  # (nLm, ..., n, n)
         exp_val = self.exp_val(Lmp_rho)  # (nLm, ...)
         dy = self.dt * self.etas.sqrt() * exp_val + dw

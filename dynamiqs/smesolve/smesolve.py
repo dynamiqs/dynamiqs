@@ -240,12 +240,16 @@ def smesolve(
 
     if options.cartesian_batching:
         # cartesian product batching
-        H = H.view(bH, 1, 1, n, n)  # (bH, 1, 1, n, n)
-        L = L.view(nL, 1, bL, 1, n, n)  # (nL, 1, bL, 1, n, n)
-        y0 = y0.view(1, 1, by, n, n)  # (1, 1, by, n, n)
-        y0 = y0.repeat(bH, bL, 1, 1, 1)  # (bH, bL, by, n, n)
+        H = H.view(bH, 1, 1, 1, n, n)  # (bH, 1, 1, 1, n, n)
+        L = L.view(nL, 1, bL, 1, 1, n, n)  # (nL, 1, bL, 1, 1, n, n)
+        y0 = y0.view(1, 1, by, 1, n, n)  # (1, 1, by, 1, n, n)
+        y0 = y0.repeat(bH, bL, 1, ntrajs, 1, 1)  # (bH, bL, by, ntrajs, n, n)
         dim_squeeze = (0, 1, 2)
     else:
+        H = H.view(bH, 1, n, n)  # (bH, 1, n, n)
+        L = L.view(nL, bL, 1, n, n)  # (nL, bL, 1, n, n)
+        y0 = y0.view(by, 1, n, n)  # (by, 1, n, n)
+
         b = common_batch_size([bH, bL, by])
         if b is None:
             raise ValueError(
@@ -253,17 +257,9 @@ def smesolve(
                 f' {bH}, `jump_ops` batch size {bL} and `rho0` batch size {by}.'
             )
         if by == 1:
-            y0 = y0.repeat(b, 1, 1)
-        dim_squeeze = (0,)
-
-    # unsqueeze for ntrajs
-    H = H.unsqueeze(-2)  # (..., 1, n, n)
-    L = L.unsqueeze(-2)  # (..., 1, n, n)
-    y0 = y0.unsqueeze(-2)  # (..., 1, n, n)
-    if options.cartesian_batching:
-        y0 = y0.repeat(1, 1, 1, ntrajs, 1, 1)  # (bH, bL, by, ntrajs, n, n)
-    else:
+            y0 = y0.repeat(b, 1, 1, 1)
         y0 = y0.repeat(1, ntrajs, 1, 1)  # (b, ntrajs, n, n)
+        dim_squeeze = (0,)
 
     # convert E
     E = to_tensor(exp_ops, **kw)  # (nE, n, n)
@@ -282,7 +278,7 @@ def smesolve(
     if options.cartesian_batching:
         etas = etas.view(nL, 1, 1, 1, 1)  # (nL, 1, 1, 1, 1)
     else:
-        etas = etas.view(nL, 1)  # (nL, 1)
+        etas = etas.view(nL, 1, 1)  # (nL, 1, 1)
     if len(etas) != len(jump_ops):
         raise ValueError(
             'Argument `etas` must have the same length as `jump_ops` of length'
@@ -303,7 +299,7 @@ def smesolve(
     # === define the solver
     solver = SOLVER_CLASS(
         H,
-        rho0,
+        y0,
         tsave,
         tmeas,
         E,
@@ -322,8 +318,12 @@ def smesolve(
     if result.Esave is not None:
         result.Esave = result.Esave.squeeze(*dim_squeeze)
     if result.Lmsave is not None:
-        # todo: fix
-        # result.Lmsave = result.Lmsave.permute(1, 2, 3, 4, 0, 5)
+        # permute `Lmsave` shape:
+        # (nLm, ..., len(tmeas) - 1) -> (..., nLm, len(tmeas) - 1)
+        if options.cartesian_batching:
+            result.Lmsave = result.Lmsave.permute(1, 2, 3, 4, 0, 5)
+        else:
+            result.Lmsave = result.Lmsave.permute(1, 2, 0, 3)
         result.Lmsave = result.Lmsave.squeeze(*dim_squeeze)
 
     return result
