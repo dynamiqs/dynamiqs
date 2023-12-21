@@ -211,7 +211,8 @@ def slindbladian(H: Tensor, jump_ops: list[Tensor] | Tensor) -> Tensor:
 
     Args:
         H _(..., n, n)_: Hamiltonian.
-        jump_ops _(list of tensors of shape (..., n, n))_: List of jump operators.
+        jump_ops _(list of tensors of shape (..., n, n), or tensor of shape (N, ..., n,
+            n))_: List of jump operators.
 
     Returns:
         _(..., n^2, n^2)_ Lindbladian superoperator.
