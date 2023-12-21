@@ -353,7 +353,7 @@ def dissipator(L: Tensor, rho: Tensor) -> Tensor:
         rho _(..., n, n)_: Density matrix.
 
     Returns:
-        _(..., n, n)_ Density matrix.
+        _(..., n, n)_ Resulting operator (it is not a density matrix).
 
     Examples:
         >>> L = dq.destroy(4)
