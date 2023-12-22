@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, get_args
+from typing import Any
 
 import torch
 
@@ -172,11 +172,6 @@ def mesolve(
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
-    if not isinstance(H, (*get_args(ArrayLike), TimeTensor)):
-        raise TypeError(
-            'Argument `H` must be an array-like object or a `TimeTensor`, but has type'
-            f' {obj_type_str(H)}.'
-        )
     H = to_time_operator(H, 'H', **kw)  # (bH?, n, n)
     n = H.size(-1)
     H = H.view(-1, n, n)  # (bH, n, n)
