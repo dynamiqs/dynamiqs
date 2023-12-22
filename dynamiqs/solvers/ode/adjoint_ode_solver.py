@@ -4,7 +4,6 @@ import warnings
 from abc import abstractmethod
 from typing import Any
 
-import numpy as np
 import torch
 from torch import Tensor
 from torch.autograd.function import FunctionCtx, once_differentiable
@@ -110,14 +109,14 @@ class AdjointAutograd(torch.autograd.Function):
 
             # initialize time: time is negative-valued and sorted ascendingly during
             # backward integration
-            tstop_bwd = np.flip(-solver.tstop, axis=0)
+            tstop_bwd = torch.flip(-solver.tstop, dims=(0,))
             saved_ini = tstop_bwd[-1] == solver.t0
             if not saved_ini:
-                tstop_bwd = np.append(tstop_bwd, 0)
+                tstop_bwd = torch.cat([tstop_bwd, torch.tensor([0.0])])
             t0 = tstop_bwd[0]
 
             # initialize progress bar
-            solver.pbar = tqdm(total=-t0, disable=not solver.options.verbose)
+            solver.pbar = tqdm(total=float(-t0), disable=not solver.options.verbose)
 
             # initialize the ODE routine
             t, y, a, *args = solver.init_augmented(t0, y0, a0)

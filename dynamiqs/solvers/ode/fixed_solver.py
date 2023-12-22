@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any
 
-import numpy as np
 import torch
 from torch import Tensor
 
@@ -12,11 +11,11 @@ from .adjoint_ode_solver import AdjointODESolver, new_leaf_tensor
 from .ode_solver import ODESolver
 
 
-def _assert_multiple_of_dt(dt: float, times: np.array, name: str):
+def _assert_multiple_of_dt(dt: float, times: torch.Tensor, name: str):
     # assert that `times` values are multiples of `dt`
-    is_multiple = np.isclose(np.round(times / dt), times / dt)
-    if not np.all(is_multiple):
-        idx_diff = np.where(~is_multiple)[0][0]
+    is_multiple = torch.isclose(torch.round(times / dt), times / dt)
+    if not torch.all(is_multiple):
+        idx_diff = torch.where(~is_multiple)[0][0]
         raise ValueError(
             f'For fixed time step solvers, every value of `{name}` must be a multiple'
             f' of the time step `dt`, but `dt={dt:.3e}` and'
@@ -43,8 +42,8 @@ class FixedSolver(ODESolver):
 
     def integrate(self, t0: float, t1: float, y: Tensor, *args: Any) -> tuple:
         # define time values
-        ntimes = int(round((t1 - t0) / self.dt)) + 1
-        times = np.linspace(t0, t1, ntimes)
+        ntimes = int(torch.round((t1 - t0) / self.dt)) + 1
+        times = torch.linspace(t0, t1, ntimes)
 
         # TODO: The solver times are defined using `torch.linspace` which ensures that
         # the overall solution is evolved from the user-defined time (up to an error of
@@ -55,7 +54,7 @@ class FixedSolver(ODESolver):
         # run the ODE routine
         for t in times[:-1]:
             y = self.forward(t, y)
-            self.pbar.update(self.dt)
+            self.pbar.update(float(self.dt))
 
         return (y,)
 
@@ -80,8 +79,8 @@ class AdjointFixedSolver(FixedSolver, AdjointODESolver):
         *args: Any,
     ) -> tuple:
         # define time values
-        num_times = round((t1 - t0) / self.dt) + 1
-        times = np.linspace(t0, t1, num_times)
+        num_times = int(torch.round((t1 - t0) / self.dt)) + 1
+        times = torch.linspace(t0, t1, num_times)
 
         # run the ODE routine
         for t in times[:-1]:
@@ -104,7 +103,7 @@ class AdjointFixedSolver(FixedSolver, AdjointODESolver):
                 g = add_tuples(g, dg)
 
             # update progress bar
-            self.pbar.update(self.dt)
+            self.pbar.update(float(self.dt))
 
         # save final augmented state to the solver
         return y, a, g

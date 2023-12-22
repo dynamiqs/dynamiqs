@@ -7,6 +7,8 @@ In dynamiqs we use PyTorch tensors to represent quantum states and operators. A 
 ```python
 import dynamiqs as dq
 import torch
+
+torch.set_default_device("cpu")
 ```
 
 ## Main differences with QuTiP

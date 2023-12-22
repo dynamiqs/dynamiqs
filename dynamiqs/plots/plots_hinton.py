@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import matplotlib as mpl
-import matplotlib.patches as patches
 import numpy as np
+from matplotlib import patches
 from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize

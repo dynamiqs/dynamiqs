@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from math import sqrt
 
 import torch
@@ -176,16 +174,16 @@ def sdissipator(L: Tensor) -> Tensor:
     $$
 
     Args:
-        L _(..., n, n)_: Jump operator.
+        L _(..., n, n)_: Jump operator (an arbitrary operator).
 
     Returns:
-        _(..., n^2, n^2)_ Dissipation superoperator.
+        _(..., n^2, n^2)_ Dissipator superoperator.
     """
     LdagL = L.mH @ L
     return sprepost(L, L.mH) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: Tensor, jump_ops: list[Tensor] | Tensor) -> Tensor:
+def slindbladian(H: Tensor, L: Tensor) -> Tensor:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -211,11 +209,9 @@ def slindbladian(H: Tensor, jump_ops: list[Tensor] | Tensor) -> Tensor:
 
     Args:
         H _(..., n, n)_: Hamiltonian.
-        jump_ops _(list of tensor (..., n, n), or tensor (N, ..., n, n))_: Sequence of
-            jump operators.
+        L _(..., N, n, n)_: Sequence of jump operators (arbitrary operators).
 
     Returns:
         _(..., n^2, n^2)_ Lindbladian superoperator.
     """
-    Ls = torch.stack(jump_ops) if isinstance(jump_ops, list) else jump_ops
-    return -1j * (spre(H) - spost(H)) + sdissipator(Ls).sum(0)
+    return -1j * (spre(H) - spost(H)) + sdissipator(L).sum(0)

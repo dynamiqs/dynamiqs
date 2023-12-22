@@ -70,11 +70,18 @@ class AdaptiveSolver(ODESolver):
                 dt = t1 - t
 
             # compute the next step
+            # print("t:", t)
+            # print("y:", y)
+            # print("ft:", ft)
+            # print("dt:", dt)
+            # print(self.odefun)
+
             ft_new, y_new, y_err = self.step(t, y, ft, dt, self.odefun)
+
             error = self.get_error(y_err, y, y_new)
             if error <= 1:
                 t, y, ft = t + dt, y_new, ft_new
-                self.pbar.update(dt)
+                self.pbar.update(float(dt))
 
             # check max steps are not reached
             self.increment_step_counter(t)
@@ -235,7 +242,7 @@ class AdjointAdaptiveSolver(AdaptiveSolver, AdjointODESolver):
                     g = add_tuples(g, dg)
 
                     # update the progress bar
-                    self.pbar.update(dt)
+                    self.pbar.update(float(dt))
 
         dt, error = cache
         return y, a, g, fyt, fat, dt, error
@@ -296,7 +303,7 @@ class DormandPrince5(AdjointAdaptiveSolver):
         k = torch.empty(7, *f.shape, dtype=self.cdtype, device=self.device)
         k[0] = f
         for i in range(1, 7):
-            dy = torch.tensordot(dt * beta[i - 1, :i], k[:i], dims=([0], [0]))
+            dy = torch.tensordot(dt * beta[i - 1, :i], k[:i].clone(), dims=([0], [0]))
             k[i] = fun(t + dt * alpha[i - 1].item(), y + dy)
 
         # compute results

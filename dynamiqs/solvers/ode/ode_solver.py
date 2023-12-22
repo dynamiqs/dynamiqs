@@ -17,7 +17,7 @@ class ODESolver(AutogradSolver):
         super().__init__(*args)
 
         # initialize the progress bar
-        self.pbar = tqdm(total=self.tstop[-1], disable=not self.options.verbose)
+        self.pbar = tqdm(total=float(self.tstop[-1]), disable=not self.options.verbose)
 
     def init_forward(self) -> tuple:
         # initial values of the ODE routine
