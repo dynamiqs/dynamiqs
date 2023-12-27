@@ -175,10 +175,7 @@ nav:
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
           - Tensor conversion:
-              - to_tensor: python_api/utils/tensor_types/to_tensor.md
-              - to_numpy: python_api/utils/tensor_types/to_numpy.md
               - to_qutip: python_api/utils/tensor_types/to_qutip.md
-              - from_qutip: python_api/utils/tensor_types/from_qutip.md
           - Wigner distribution:
               - wigner: python_api/utils/wigners/wigner.md
           - Vectorization:
@@ -192,7 +189,6 @@ nav:
           - Quantum optimal control:
               - rand_real: python_api/utils/optimal_control/rand_real.md
               - rand_complex: python_api/utils/optimal_control/rand_complex.md
-              - pwc_pulse: python_api/utils/optimal_control/pwc_pulse.md
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
           - Plotting:
