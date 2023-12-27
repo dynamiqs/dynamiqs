@@ -3,7 +3,10 @@ from __future__ import annotations
 from math import pi, sqrt
 from typing import Literal
 
+import jax.numpy as jnp
 import torch
+from jax import Array
+from jaxtyping import ArrayLike
 from torch import Tensor
 
 from .operators import eye
@@ -14,17 +17,17 @@ __all__ = ['wigner']
 
 
 def wigner(
-    state: Tensor,
+    state: ArrayLike,
     xmax: float = 6.2832,
     ymax: float = 6.2832,
     npixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
     g: float = 2.0,
-) -> tuple[Tensor, Tensor, Tensor]:
+) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
 
     Args:
-        state _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+        state _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
         xmax: Maximum value of x.
         ymax: Maximum value of p. Ignored if the Wigner distribution is computed
             with the `fft` method, in which case `ymax` is given by `2 * pi / xmax`.
@@ -36,17 +39,19 @@ def wigner(
     Returns:
         A tuple `(xvec, yvec, w)` where
 
-            - xvec: Tensor of shape _(npixels)_ containing x values
-            - yvec: Tensor of shape _(npixels)_ containing p values
-            - w: Tensor of shape _(npixels, npixels)_ containing the wigner
+            - xvec: Array of shape _(npixels)_ containing x values
+            - yvec: Array of shape _(npixels)_ containing p values
+            - w: Array of shape _(npixels, npixels)_ containing the wigner
                 distribution at all (x, p) points.
     """
+    state = jnp.asarray(state)
+
     if state.ndim > 2:
         raise NotImplementedError('Batching is not yet implemented for `wigner`.')
 
     rdtype = dtype_complex_to_real(state.dtype)
-    xvec = torch.linspace(-xmax, xmax, npixels, dtype=rdtype, device=state.device)
-    yvec = torch.linspace(-ymax, ymax, npixels, dtype=rdtype, device=state.device)
+    xvec = jnp.linspace(-xmax, xmax, npixels, dtype=rdtype)
+    yvec = jnp.linspace(-ymax, ymax, npixels, dtype=rdtype)
 
     if method == 'clenshaw':
         state = todm(state)
@@ -58,7 +63,7 @@ def wigner(
             w, yvec = _wigner_fft_dm(state, xvec, g)
         else:
             raise ValueError(
-                'Input state must be a ket or density matrix, but got shape'
+                'Argument `state` must be a ket or density matrix, but has shape'
                 f' {state.shape}.'
             )
     else:
@@ -69,25 +74,22 @@ def wigner(
     return xvec, yvec, w
 
 
-def _wigner_clenshaw(rho: Tensor, xvec: Tensor, yvec: Tensor, g: float):
+def _wigner_clenshaw(rho: Array, xvec: Array, yvec: Array, g: float) -> Array:
     """Compute the wigner distribution of a density matrix using the iterative method
     of QuTiP based on the Clenshaw summation algorithm."""
-    n = rho.size(-1)
+    n = rho.shape[-1]
 
-    x, p = torch.meshgrid(xvec, yvec, indexing='ij')
+    x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
     a = 0.5 * g * (x + 1.0j * p)
-    a2 = a.abs() ** 2
+    a2 = jnp.abs(a) ** 2
 
-    w = 2 * rho[0, -1] * torch.ones_like(a)
-    rho = rho * (
-        2 * torch.ones(n, n, dtype=rho.dtype, device=rho.device)
-        - eye(n, dtype=rho.dtype, device=rho.device)
-    )
+    w = 2 * rho[0, -1] * jnp.ones_like(a)
+    rho = rho * (2 * jnp.ones((n, n), dtype=rho.dtype) - eye(n, dtype=rho.dtype))
     for i in range(n - 2, -1, -1):
         w *= 2 * a * (i + 1) ** (-0.5)
-        w += _laguerre_series(i, 4 * a2, torch.diag(rho, i))
+        w += _laguerre_series(i, 4 * a2, jnp.diag(rho, k=i))
 
-    return (w.real * torch.exp(-2 * a2) * 0.5 * g**2 / pi).T
+    return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / pi).T
 
 
 def _laguerre_series(i, x, c):

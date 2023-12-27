@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from math import sqrt
 
-import torch
-from torch import Tensor
+import jax.numpy as jnp
+from jax import Array
+from jaxtyping import ArrayLike
 
 from .operators import eye
-from .utils import _bkron
+from .utils import _bkron, dag
 
 __all__ = [
     'operator_to_vector',
@@ -19,7 +20,7 @@ __all__ = [
 ]
 
 
-def operator_to_vector(x: Tensor) -> Tensor:
+def operator_to_vector(x: ArrayLike) -> Array:
     r"""Returns the vectorized version of an operator.
 
     The vectorized column vector $\kett{A}$ (shape $n^2\times 1$) is obtained by
@@ -31,27 +32,28 @@ def operator_to_vector(x: Tensor) -> Tensor:
     $$
 
     Args:
-        x _(..., n, n)_: Operator.
+        x _(array_like of shape (..., n, n))_: Operator.
 
     Returns:
-        _(..., n^2, 1)_ Vectorized operator.
+        _(array of shape (..., n^2, 1))_ Vectorized operator.
 
     Examples:
-        >>> A = torch.tensor([[1, 2], [3, 4]])
+        >>> A = jnp.array([[1, 2], [3, 4]])
         >>> A
-        tensor([[1, 2],
-                [3, 4]])
+        Array([[1, 2],
+               [3, 4]], dtype=int32)
         >>> dq.operator_to_vector(A)
-        tensor([[1],
-                [3],
-                [2],
-                [4]])
+        Array([[1],
+               [3],
+               [2],
+               [4]], dtype=int32)
     """
-    batch_sizes = x.shape[:-2]
-    return x.mT.reshape(*batch_sizes, -1, 1)
+    x = jnp.asarray(x)
+    bshape = x.shape[:-2]
+    return dag(x).reshape(*bshape, -1, 1)
 
 
-def vector_to_operator(x: Tensor) -> Tensor:
+def vector_to_operator(x: ArrayLike) -> Array:
     r"""Returns the operator version of a vectorized operator.
 
     The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
@@ -64,28 +66,29 @@ def vector_to_operator(x: Tensor) -> Tensor:
     $$
 
     Args:
-        x _(..., n^2, 1)_: Vectorized operator.
+        x _(array_like of shape (..., n^2, 1))_: Vectorized operator.
 
     Returns:
-        _(..., n, n)_ Operator.
+        _(array of shape (..., n, n))_ Operator.
 
     Examples:
-        >>> Avec = torch.tensor([[1], [2], [3], [4]])
+        >>> Avec = jnp.array([[1], [2], [3], [4]])
         >>> Avec
-        tensor([[1],
-                [2],
-                [3],
-                [4]])
+        Array([[1],
+               [2],
+               [3],
+               [4]], dtype=int32)
         >>> dq.vector_to_operator(Avec)
-        tensor([[1, 3],
-                [2, 4]])
+        Array([[1, 3],
+               [2, 4]], dtype=int32)
     """
+    x = jnp.asarray(x)
     batch_sizes = x.shape[:-2]
     n = int(sqrt(x.shape[-2]))
     return x.reshape(*batch_sizes, n, n).mT
 
 
-def spre(x: Tensor) -> Tensor:
+def spre(x: ArrayLike) -> Array:
     r"""Returns the superoperator formed from pre-multiplication by an operator.
 
     Pre-multiplication by matrix $A$ is defined by the superoperator
@@ -95,21 +98,22 @@ def spre(x: Tensor) -> Tensor:
     $$
 
     Args:
-        x _(..., n, n)_: Operator.
+        x _(array_like of shape (..., n, n))_: Operator.
 
     Returns:
-        _(..., n^2, n^2)_ Pre-multiplication superoperator.
+        _(array of shape (..., n^2, n^2))_ Pre-multiplication superoperator.
 
     Examples:
         >>> dq.spre(dq.destroy(3)).shape
-        torch.Size([9, 9])
+        (9, 9)
     """
-    n = x.size(-1)
+    x = jnp.asarray(x)
+    n = x.shape[-1]
     I = eye(n)
-    return torch.kron(I, x)
+    return _bkron(I, x)
 
 
-def spost(x: Tensor) -> Tensor:
+def spost(x: ArrayLike) -> Array:
     r"""Returns the superoperator formed from post-multiplication by an operator.
 
     Post-multiplication by matrix $A$ is defined by the superoperator
@@ -119,24 +123,22 @@ def spost(x: Tensor) -> Tensor:
     $$
 
     Args:
-        x _(..., n, n)_: Operator.
+        x _(array_like of shape (..., n, n))_: Operator.
 
     Returns:
-        _(..., n^2, n^2)_ Post-multiplication superoperator.
+        _(array of shape (..., n^2, n^2))_ Post-multiplication superoperator.
 
     Examples:
         >>> dq.spost(dq.destroy(3)).shape
-        torch.Size([9, 9])
+        (9, 9)
     """
-    n = x.size(-1)
+    x = jnp.asarray(x)
+    n = x.shape[-1]
     I = eye(n)
-    # torch.kron has undocumented dependence on memory layout, so we need to use
-    # contiguous() here, see e.g. https://github.com/pytorch/pytorch/issues/74442
-    # and https://github.com/pytorch/pytorch/issues/54135
-    return torch.kron(x.mT.contiguous(), I)
+    return _bkron(dag(x), I)
 
 
-def sprepost(x: Tensor, y: Tensor) -> Tensor:
+def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
     r"""Returns the superoperator formed from pre- and post-multiplication by operators.
 
     Pre-multiplication by matrix $A$ and post-multiplication by matrix $B$ is defined
@@ -146,20 +148,22 @@ def sprepost(x: Tensor, y: Tensor) -> Tensor:
     $$
 
     Args:
-        x _(..., n, n)_: Operator for pre-multiplication.
-        y _(..., n, n)_: Operator for post-multiplication.
+        x _(array_like of shape (..., n, n))_: Operator for pre-multiplication.
+        y _(array_like of shape (..., n, n))_: Operator for post-multiplication.
 
     Returns:
-        _(..., n^2, n^2)_ Pre- and post-multiplication superoperator.
+        _(array of shape (..., n^2, n^2))_ Pre- and post-multiplication superoperator.
 
     Examples:
         >>> dq.sprepost(dq.destroy(3), dq.create(3)).shape
-        torch.Size([9, 9])
+        (9, 9)
     """
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
     return _bkron(y.mT, x)
 
 
-def sdissipator(L: Tensor) -> Tensor:
+def sdissipator(L: ArrayLike) -> Array:
     r"""Returns the Lindblad dissipation superoperator (in matrix form).
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
@@ -176,16 +180,18 @@ def sdissipator(L: Tensor) -> Tensor:
     $$
 
     Args:
-        L _(..., n, n)_: Jump operator.
+        L _(array_like of shape (..., n, n))_: Jump operator.
 
     Returns:
-        _(..., n^2, n^2)_ Dissipation superoperator.
+        _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
     """
-    LdagL = L.mH @ L
-    return sprepost(L, L.mH) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
+    L = jnp.asarray(L)
+    Ldag = dag(L)
+    LdagL = Ldag @ L
+    return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: Tensor, jump_ops: list[Tensor] | Tensor) -> Tensor:
+def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -210,12 +216,12 @@ def slindbladian(H: Tensor, jump_ops: list[Tensor] | Tensor) -> Tensor:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(..., n, n)_: Hamiltonian.
-        jump_ops _(list of tensor (..., n, n), or tensor (N, ..., n, n))_: Sequence of
-            jump operators.
+        H _(array_like of shape (..., n, n))_: Hamiltonian.
+        jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
 
     Returns:
-        _(..., n^2, n^2)_ Lindbladian superoperator.
-    """
-    Ls = torch.stack(jump_ops) if isinstance(jump_ops, list) else jump_ops
-    return -1j * (spre(H) - spost(H)) + sdissipator(Ls).sum(0)
+        _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
+    """  # noqa: E501
+    H = jnp.asarray(H)
+    jump_ops = jnp.asarray(jump_ops)
+    return -1j * (spre(H) - spost(H)) + sdissipator(jump_ops).sum(0)

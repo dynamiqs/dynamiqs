@@ -135,10 +135,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - to_tensor
-        - to_numpy
         - to_qutip
-        - from_qutip
 
 ### Wigner distribution
 
