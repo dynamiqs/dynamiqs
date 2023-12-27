@@ -1,17 +1,25 @@
 from __future__ import annotations
 
-import numpy as np
+import jax.numpy as jnp
+from jax import Array
+from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
-from ..utils.tensor_types import ArrayLike, to_numpy
+from ..utils.utils import isdm, isket
 from .utils import add_colorbar, colors, integer_ticks, ket_ticks, optax, sample_cmap
 
 __all__ = ['plot_fock', 'plot_fock_evolution']
 
 
-def populations(s: np.ndarray) -> np.ndarray:
-    return np.abs(s.squeeze()) ** 2 if s.shape[1] == 1 else np.real(np.diag(s))
+def _populations(x: ArrayLike) -> Array:
+    x = jnp.asarray(x)
+    if isket(x):
+        return jnp.abs(x.squeeze(-1)) ** 2
+    elif isdm(x):
+        # batched extract diagonal
+        bdiag = jnp.vectorize(jnp.diag, signature='(a,b)->(c)')
+        return bdiag(x).real
 
 
 @optax
@@ -42,10 +50,11 @@ def plot_fock(
 
         ![plot_fock_even_cat](/figs-code/plot_fock_even_cat.png){.fig}
     """
-    state = to_numpy(state)
+    state = jnp.asarray(state)
+
     n = state.shape[0]
     x = range(n)
-    y = populations(state)
+    y = _populations(state)
 
     # plot
     ax.bar(x, y, color=color)
@@ -60,10 +69,10 @@ def plot_fock(
 
 @optax
 def plot_fock_evolution(
-    states: list[ArrayLike],
+    states: ArrayLike,
     *,
     ax: Axes | None = None,
-    times: np.ndarray | None = None,
+    times: ArrayLike | None = None,
     cmap: str = 'Blues',
     logscale: bool = False,
     logvmin: float = 1e-4,
@@ -79,7 +88,7 @@ def plot_fock_evolution(
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> psi0 = dq.coherent(16, 0.0)
-        >>> H = 2.0 * (a + a.mH)
+        >>> H = 2.0 * (a + dq.dag(a))
         >>> tsave = np.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_fock_evolution(result.states)
@@ -93,18 +102,19 @@ def plot_fock_evolution(
 
         ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.fig}
     """
-    states = to_numpy(states)
+    states = jnp.asarray(states)
+    times = jnp.asarray(times) if times is not None else None
 
-    x = np.arange(len(states)) if times is None else times
+    x = jnp.arange(len(states)) if times is None else times
     n = states[0].shape[0]
     y = range(n)
-    z = np.array([populations(s) for s in states]).T
+    z = _populations(states).T
 
     # set norm and colormap
     if logscale:
         norm = LogNorm(vmin=logvmin, vmax=1.0, clip=True)
         # stepped cmap
-        ncolors = int(np.log10(1 / logvmin))
+        ncolors = int(jnp.log10(1 / logvmin))
         clist = sample_cmap(cmap, ncolors + 2)[1:-1]  # remove extremal colors
         cmap = ListedColormap(clist)
     else:
