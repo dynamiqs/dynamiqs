@@ -1,35 +1,31 @@
 from __future__ import annotations
 
-import torch
-from torch import Tensor
+import jax.numpy as jnp
+from jax import Array
 
 from ..utils.operators import quadrature
+from ..utils.utils import dag
 
 __all__ = ['quadrature_sign']
 
 
 def quadrature_sign(
-    dim: int,
-    phi: float,
-    *,
-    dtype: torch.complex64 | torch.complex128 | None = None,
-    device: str | torch.device | None = None,
-) -> Tensor:
+    dim: int, phi: float, *, dtype: jnp.complex64 | jnp.complex128 | None = None
+) -> Array:
     r"""Returns the quadrature sign operator of phase angle $\phi$.
 
-    It is defined by $s(\phi) = \mathrm{sign}(e^{i\phi} a^\dag + e^{-i\phi} a)$, where
+    It is defined by $s_\phi = \mathrm{sign}(e^{i\phi} a^\dag + e^{-i\phi} a)$, where
     $a$ and $a^\dag$ are the annihilation and creation operators respectively.
 
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
-        dtype: Complex data type of the returned tensor.
-        device: Device of the returned tensor.
+        dtype: Complex data type of the returned array.
 
     Returns:
-        _(dim, dim)_ Quadrature sign operator.
+        _(array of shape (dim, dim))_ Quadrature sign operator.
     """
-    quad = quadrature(dim, phi, dtype=dtype, device=device)
-    L, Q = torch.linalg.eigh(quad)
-    sign_L = torch.diag(torch.sign(L)).to(Q.dtype)
-    return Q @ sign_L @ Q.mH
+    quad = quadrature(dim, phi, dtype=dtype)
+    L, Q = jnp.linalg.eigh(quad)
+    sign_L = jnp.diag(jnp.sign(L))
+    return Q @ sign_L @ dag(Q)
