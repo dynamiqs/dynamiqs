@@ -107,7 +107,7 @@ def to_tensor(
                 [0.+0.j]])
         >>> dq.to_tensor(np.array([[1, 2, 3], [4, 5, 6]]))
         tensor([[1, 2, 3],
-                [4, 5, 6]], dtype=torch.int32)
+                [4, 5, 6]])
         >>> dq.to_tensor([qt.fock(3, 1), qt.fock(3, 2)])
         tensor([[[0.+0.j],
                  [1.+0.j],
