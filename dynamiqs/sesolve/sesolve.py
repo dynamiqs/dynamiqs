@@ -1,23 +1,25 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args
 
 import torch
 
 from .._utils import check_time_tensor, obj_type_str
 from ..gradient import Gradient
-from ..solver import Dopri5, Euler, Propagator, Solver
+from ..solver import BackwardEuler, Dopri5, Euler, Propagator, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils.td_tensor import to_td_tensor
-from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
+from ..solvers.utils.utils import common_batch_size, to_time_operator
+from ..time_tensor import TimeTensor
+from ..utils.tensor_types import ArrayLike, to_tensor
 from .adaptive import SEDormandPrince5
+from .backward_euler import SEBackwardEuler
 from .euler import SEEuler
 from .propagator import SEPropagator
 
 
 def sesolve(
-    H: TDArrayLike,
+    H: ArrayLike | TimeTensor,
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
@@ -116,6 +118,7 @@ def sesolve(
     solvers = {
         Propagator: SEPropagator,
         Euler: SEEuler,
+        BackwardEuler: SEBackwardEuler,
         Dopri5: SEDormandPrince5,
     }
     if not isinstance(solver, tuple(solvers.keys())):
@@ -133,22 +136,44 @@ def sesolve(
             f' type {obj_type_str(exp_ops)}.'
         )
 
-    # === convert and batch H, y0, exp_ops
+    # === convert and batch H, y0, E
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
-    H = to_td_tensor(H, **kw)  # (bH?, n, n)
+    if not isinstance(H, (*get_args(ArrayLike), TimeTensor)):
+        raise TypeError(
+            'Argument `H` must be an array-like object or a `TimeTensor`, but has type'
+            f' {obj_type_str(H)}.'
+        )
+    H = to_time_operator(H, 'H', **kw)  # (bH?, n, n)
     n = H.size(-1)
-    H = H.view(-1, 1, n, n)  # (bH, 1, n, n) with bH = 1 if not batched
+    H = H.view(-1, n, n)  # (bH, n, n)
     bH = H.size(0)
 
     # convert and batch y0
     y0 = to_tensor(psi0, **kw)  # (by?, n, 1)
-    y0 = y0.view(1, -1, n, 1)  # (1, by, n, 1) with by = 1 if not batched
-    y0 = y0.repeat(bH, 1, 1, 1)  # (bH, by, n, 1)
+    y0 = y0.view(-1, n, 1)  # (by, n, 1)
+    by = y0.size(0)
 
-    # convert exp_ops
-    exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
+    if options.cartesian_batching:
+        # cartesian product batching
+        H = H.view(bH, 1, n, n)  # (bH, 1, n, n)
+        y0 = y0.view(1, by, n, 1)  # (1, by, n, 1)
+        y0 = y0.repeat(bH, 1, 1, 1)  # (bH, by, n, 1)
+        dim_squeeze = (0, 1)
+    else:
+        b = common_batch_size([bH, by])
+        if b is None:
+            raise ValueError(
+                'Expected all batch dimensions to be the same, but got `H` batch size'
+                f' {bH}, and `psi0` batch size {by}.'
+            )
+        if by == 1:
+            y0 = y0.repeat(b, 1, 1)
+        dim_squeeze = (0,)
+
+    # convert E
+    E = to_tensor(exp_ops, **kw)  # (nE, n, n)
 
     # === convert tsave and init tmeas
     kw = dict(dtype=options.rdtype, device='cpu')
@@ -157,15 +182,15 @@ def sesolve(
     tmeas = torch.empty(0, **kw)
 
     # === define the solver
-    solver = SOLVER_CLASS(H, y0, tsave, tmeas, exp_ops, options)
+    solver = SOLVER_CLASS(H, y0, tsave, tmeas, E, options)
 
     # === compute the result
     result = solver.run()
 
     # === get saved tensors and restore initial batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1)
-    if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1)
+        result.ysave = result.ysave.squeeze(*dim_squeeze)
+    if result.Esave is not None:
+        result.Esave = result.Esave.squeeze(*dim_squeeze)
 
     return result

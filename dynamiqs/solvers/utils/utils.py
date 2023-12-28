@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from functools import partial, wraps
+from functools import partial
 from math import sqrt
-from typing import Iterator
+from typing import Iterator, get_args
 
 import torch
-from methodtools import lru_cache
 from torch import Tensor
 from tqdm import tqdm as std_tqdm
 
+from ..._utils import obj_type_str
+from ...time_tensor import TimeTensor, _factory_constant
+from ...utils.tensor_types import ArrayLike
 from ...utils.utils import isket
 
 # define a default progress bar format
@@ -87,88 +89,6 @@ def hairer_norm(x: Tensor) -> Tensor:
     return torch.linalg.matrix_norm(x) / sqrt(x.size(-1) * x.size(-2))
 
 
-def cache(func=None, *, maxsize: int = 1):
-    """Cache a function returning a tensor by memoizing its most recent calls.
-
-    This decorator extends `methodtools.lru_cache` to also cache a function on
-    PyTorch grad mode status (enabled or disabled). This prevents cached tensors
-    detached from the graph (for example computed within a `with torch.no_grad()`
-    block) from being used by mistake by later code which requires tensors attached
-    to the graph.
-
-    By default, the cache size is `1`, which means that only the most recent call is
-    cached. Use the `maxsize` keyword argument to change the maximum cache size.
-
-    Warning:
-        This decorator should only be used for PyTorch tensors.
-
-    Example:
-        >>> @cache
-        ... def square(x: Tensor) -> Tensor:
-        ...     print('compute square')
-        ...     return x**2
-        ...
-        >>> x = torch.tensor([1, 2, 3])
-        >>> square(x)
-        compute square
-        tensor([1, 4, 9])
-        >>> square(x)
-        tensor([1, 4, 9])
-        >>> with torch.no_grad():
-        ...     print(square(x))
-        ...     print(square(x))
-        ...
-        compute square
-        tensor([1, 4, 9])
-        tensor([1, 4, 9])
-
-        Increasing the maximum cache size:
-        >>> @cache(maxsize=2)
-        ... def square(x):
-        ...     print('compute square')
-        ...     return x**2
-        ...
-        >>> square(1)
-        compute square
-        1
-        >>> square(2)
-        compute square
-        4
-        >>> square(1)
-        1
-        >>> square(2)
-        4
-        >>> square(3)
-        compute square
-        9
-        >>> square(2)
-        4
-        >>> square(1)
-        compute square
-        1
-
-    Args:
-        func: Function returning a tensor, can take any number of arguments.
-
-    Returns:
-        Cached function.
-    """
-    if func is None:
-        return partial(cache, maxsize=maxsize)
-
-    # define a function cached on its arguments and also on PyTorch grad mode status
-    @lru_cache(maxsize=maxsize)
-    def grad_cached_func(*args, grad_enabled, **kwargs):
-        return func(*args, **kwargs)
-
-    # wrap `func` to call its modified cached version
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        return grad_cached_func(*args, grad_enabled=torch.is_grad_enabled(), **kwargs)
-
-    return wrapper
-
-
 def iteraxis(x: Tensor, axis: int = 0) -> Iterator[Tensor]:
     for i in range(x.size(axis)):
         yield x.select(axis, i)
@@ -182,21 +102,38 @@ def format_L(L: list[Tensor]) -> Tensor:
     n = L[0].size(-1)
     L = [x.view(-1, n, n) for x in L]  # [(?, n, n)] with ? = 1 if not batched
 
-    # get the unique batch size or raise an error if batched dimensions are not the same
-    bs = torch.tensor([x.size(0) for x in L])  # list of batch sizes
-    bs_unique = torch.unique(bs)
-    bs_unique_not_one = bs_unique[bs_unique != 1]
-    if len(bs_unique_not_one) > 1:
+    bL = common_batch_size([x.size(0) for x in L])
+    if bL is None:
         L_shapes = [tuple(x.shape) for x in L]
         raise ValueError(
             'Argument `jump_ops` should be a list of 2D arrays or 3D arrays with the'
             ' same batch size, but got a list of arrays with incompatible shapes'
             f' {L_shapes}.'
         )
-    elif len(bs_unique_not_one) == 1:
-        bL = bs_unique_not_one.item()
-    else:
-        bL = 1
 
     L = [x.expand(bL, -1, -1) for x in L]  # [(bL, n, n)]
     return torch.stack(L)
+
+
+def common_batch_size(dims: list[int]) -> int | None:
+    # If `dims` is a list with two values 1 and x, returns x. If it contains only
+    # 1, returns 1. Otherwise, returns `None`.
+    bs = torch.tensor(dims).unique()
+    if (1 not in bs and len(bs) > 1) or len(bs) > 2:
+        return None
+    return bs.max().item()
+
+
+def to_time_operator(
+    x: ArrayLike | TimeTensor, arg_name: str, dtype: torch.dtype, device: torch.device
+) -> TimeTensor:
+    if isinstance(x, get_args(ArrayLike)):
+        return _factory_constant(x, dtype=dtype, device=device)
+    elif isinstance(x, TimeTensor):
+        # todo: convert time tensor dtype/device if possible, raise error otherwise
+        return x
+    else:
+        raise TypeError(
+            f'Argument `{arg_name}` must be an array-like object or a `TimeTensor`, but'
+            f' has type {obj_type_str(x)}.'
+        )

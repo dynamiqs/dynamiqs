@@ -9,16 +9,16 @@ from ..gradient import Gradient
 from ..solver import Euler, Rouchon1, Solver
 from ..solvers.options import Options
 from ..solvers.result import Result
-from ..solvers.utils.td_tensor import to_td_tensor
-from ..solvers.utils.utils import format_L
-from ..utils.tensor_types import ArrayLike, TDArrayLike, to_tensor
+from ..solvers.utils.utils import common_batch_size, format_L, to_time_operator
+from ..time_tensor import TimeTensor
+from ..utils.tensor_types import ArrayLike, to_tensor
 from ..utils.utils import todm
 from .euler import SMEEuler
 from .rouchon import SMERouchon1
 
 
 def smesolve(
-    H: TDArrayLike,
+    H: ArrayLike | TimeTensor,
     jump_ops: list[ArrayLike],
     etas: ArrayLike,
     rho0: ArrayLike,
@@ -212,32 +212,52 @@ def smesolve(
             f' has type {obj_type_str(exp_ops)}.'
         )
 
-    # === convert and batch H, y0, exp_ops
+    # === convert and batch H, y0, E
     kw = dict(dtype=options.cdtype, device=options.device)
 
     # convert and batch H
-    H = to_td_tensor(H, **kw)  # (bH?, n, n)
+    H = to_time_operator(H, 'H', **kw)  # (bH?, n, n)
     n = H.size(-1)
-    H = H.view(-1, 1, 1, 1, n, n)  # (bH, 1, 1, 1, n, n) with bH = 1 if not batched
+    H = H.view(-1, n, n)  # (bH, n, n)
     bH = H.size(0)
 
     # convert and batch L
     L = [to_tensor(x, **kw) for x in jump_ops]  # [(??, n, n)]
     L = format_L(L)  # (nL, bL, n, n)
     nL = L.size(0)
-    L = L.view(
-        nL, 1, -1, 1, 1, n, n
-    )  # (nL, 1, bL, 1, 1, n, n) with bL = 1 if not batched
-    bL = L.size(2)
+    bL = L.size(1)
 
     # convert and batch y0
     y0 = to_tensor(rho0, **kw)  # (by?, n, n)
     y0 = todm(y0)  # convert y0 to a density matrix
-    y0 = y0.view(1, 1, -1, 1, n, n)  # (1, 1, by, 1, n, n) with by = 1 if not batched
-    y0 = y0.repeat(bH, bL, 1, ntrajs, 1, 1)  # (bH, bL, by, ntrajs, n, n)
+    y0 = y0.view(-1, n, n)  # (by, n, n)
+    by = y0.size(0)
 
-    # convert exp_ops
-    exp_ops = to_tensor(exp_ops, **kw)  # (nE, n, n)
+    if options.cartesian_batching:
+        # cartesian product batching
+        H = H.view(bH, 1, 1, 1, n, n)  # (bH, 1, 1, 1, n, n)
+        L = L.view(nL, 1, bL, 1, 1, n, n)  # (nL, 1, bL, 1, 1, n, n)
+        y0 = y0.view(1, 1, by, 1, n, n)  # (1, 1, by, 1, n, n)
+        y0 = y0.repeat(bH, bL, 1, ntrajs, 1, 1)  # (bH, bL, by, ntrajs, n, n)
+        dim_squeeze = (0, 1, 2)
+    else:
+        H = H.view(bH, 1, n, n)  # (bH, 1, n, n)
+        L = L.view(nL, bL, 1, n, n)  # (nL, bL, 1, n, n)
+        y0 = y0.view(by, 1, n, n)  # (by, 1, n, n)
+
+        b = common_batch_size([bH, bL, by])
+        if b is None:
+            raise ValueError(
+                'Expected all batch dimensions to be the same, but got `H` batch size'
+                f' {bH}, `jump_ops` batch size {bL} and `rho0` batch size {by}.'
+            )
+        if by == 1:
+            y0 = y0.repeat(b, 1, 1, 1)
+        y0 = y0.repeat(1, ntrajs, 1, 1)  # (b, ntrajs, n, n)
+        dim_squeeze = (0,)
+
+    # convert E
+    E = to_tensor(exp_ops, **kw)  # (nE, n, n)
 
     # === convert tsave init tmeas
     kw = dict(dtype=options.rdtype, device='cpu')
@@ -250,7 +270,10 @@ def smesolve(
 
     # === convert and check etas
     etas = to_tensor(etas, dtype=options.rdtype, device=options.device)
-    etas = etas.view(-1, 1, 1, 1, 1)  # (nL, 1, 1, 1, 1)
+    if options.cartesian_batching:
+        etas = etas.view(nL, 1, 1, 1, 1)  # (nL, 1, 1, 1, 1)
+    else:
+        etas = etas.view(nL, 1, 1)  # (nL, 1, 1)
     if len(etas) != len(jump_ops):
         raise ValueError(
             'Argument `etas` must have the same length as `jump_ops` of length'
@@ -271,10 +294,10 @@ def smesolve(
     # === define the solver
     solver = SOLVER_CLASS(
         H,
-        rho0,
+        y0,
         tsave,
         tmeas,
-        exp_ops,
+        E,
         options,
         L=L,
         etas=etas,
@@ -286,11 +309,16 @@ def smesolve(
 
     # === get saved tensors and restore initial batching
     if result.ysave is not None:
-        result.ysave = result.ysave.squeeze(0, 1, 2)
-    if result.exp_save is not None:
-        result.exp_save = result.exp_save.squeeze(0, 1, 2)
-    if result.meas_save is not None:
-        result.meas_save = result.meas_save.permute(1, 2, 3, 4, 0, 5)
-        result.meas_save = result.meas_save.squeeze(0, 1, 2)
+        result.ysave = result.ysave.squeeze(*dim_squeeze)
+    if result.Esave is not None:
+        result.Esave = result.Esave.squeeze(*dim_squeeze)
+    if result.Lmsave is not None:
+        # permute `Lmsave` shape:
+        # (nLm, ..., len(tmeas) - 1) -> (..., nLm, len(tmeas) - 1)
+        if options.cartesian_batching:
+            result.Lmsave = result.Lmsave.permute(1, 2, 3, 4, 0, 5)
+        else:
+            result.Lmsave = result.Lmsave.permute(1, 2, 0, 3)
+        result.Lmsave = result.Lmsave.squeeze(*dim_squeeze)
 
     return result

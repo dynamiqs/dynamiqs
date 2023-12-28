@@ -59,6 +59,10 @@ class Euler(_ODEFixedStep):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
 
+class BackwardEuler(_ODEFixedStep):
+    SUPPORTED_GRADIENT = (Autograd,)
+
+
 class Rouchon1(_ODEFixedStep):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 

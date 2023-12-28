@@ -1,11 +1,11 @@
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Propagator
 
-from ..solver_tester import OpenSolverTester
+from ..solver_tester import SolverTester
 from .open_system import gocavity, ocavity
 
 
-class TestMEPropagator(OpenSolverTester):
+class TestMEPropagator(SolverTester):
     def test_batching(self):
         self._test_batching(ocavity, Propagator())
 

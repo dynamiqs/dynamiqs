@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from abc import abstractmethod
 from typing import Any
 
@@ -8,7 +7,6 @@ import numpy as np
 import torch
 from torch import Tensor
 from torch.autograd.function import FunctionCtx, once_differentiable
-from tqdm.std import TqdmWarning
 
 from ..solver import AdjointSolver
 from ..utils.utils import tqdm
@@ -71,7 +69,7 @@ class AdjointAutograd(torch.autograd.Function):
         # save `solver.ysave` into context for backward pass
         ctx.save_for_backward(solver.ysave)
 
-        return solver.ysave, solver.exp_save
+        return solver.ysave, solver.Esave
 
     @staticmethod
     @once_differentiable
@@ -92,7 +90,7 @@ class AdjointAutograd(torch.autograd.Function):
         ysave = ctx.saved_tensors[0]
 
         # unpack gradients
-        grad_ysave, grad_exp_save = grads
+        grad_ysave, grad_Esave = grads
 
         # locally disable gradient computation
         with torch.no_grad():
@@ -103,10 +101,8 @@ class AdjointAutograd(torch.autograd.Function):
             else:
                 y0 = ysave[..., :, :]
                 a0 = grad_ysave[..., :, :]
-            if len(solver.exp_ops) > 0:
-                a0 += (grad_exp_save[..., :, -1, None, None] * solver.exp_ops.mH).sum(
-                    dim=-3
-                )
+            if len(solver.E) > 0:
+                a0 += (grad_Esave[..., :, -1, None, None] * solver.E.mH).sum(dim=-3)
 
             g = tuple(torch.zeros_like(p) for p in solver.options.params)
 
@@ -121,34 +117,37 @@ class AdjointAutograd(torch.autograd.Function):
             # initialize progress bar
             solver.pbar = tqdm(total=-t0, disable=not solver.options.verbose)
 
-            # initialize the ODE routine
-            t, y, a, *args = solver.init_augmented(t0, y0, a0)
+            try:
+                # initialize the ODE routine
+                t, y, a, *args = solver.init_augmented(t0, y0, a0)
 
-            # integrate the augmented equation backward between every saved state
-            for i, tnext in enumerate(tstop_bwd[1:]):
-                y, a, g, *args = solver.integrate_augmented(t, tnext, y, a, g, *args)
+                # integrate the augmented equation backward between every saved state
+                for i, tnext in enumerate(tstop_bwd[1:]):
+                    y, a, g, *args = solver.integrate_augmented(
+                        t, tnext, y, a, g, *args
+                    )
 
-                if i < len(tstop_bwd) - 2 or saved_ini:
-                    if solver.options.save_states:
-                        # replace y with its checkpointed version
-                        y = ysave[..., -i - 2, :, :]
-                        # update adjoint wrt this time point by adding dL / dy(t)
-                        a += grad_ysave[..., -i - 2, :, :]
+                    if i < len(tstop_bwd) - 2 or saved_ini:
+                        if solver.options.save_states:
+                            # replace y with its checkpointed version
+                            y = ysave[..., -i - 2, :, :]
+                            # update adjoint wrt this time point by adding dL / dy(t)
+                            a += grad_ysave[..., -i - 2, :, :]
 
-                    # update adjoint wrt this time point by adding dL / de(t)
-                    if len(solver.exp_ops) > 0:
-                        a += (
-                            grad_exp_save[..., :, -i - 2, None, None]
-                            * solver.exp_ops.mH
-                        ).sum(dim=-3)
+                        # update adjoint wrt this time point by adding dL / de(t)
+                        if len(solver.E) > 0:
+                            a += (
+                                grad_Esave[..., :, -i - 2, None, None] * solver.E.mH
+                            ).sum(dim=-3)
 
-                # iterate time
-                t = tnext
-
-        # close progress bar
-        with warnings.catch_warnings():  # ignore tqdm precision overflow
-            warnings.simplefilter('ignore', TqdmWarning)
-            solver.pbar.close()
+                    # iterate time
+                    t = tnext
+            finally:
+                # fix possible precision overflow
+                if solver.pbar.n > -t0:
+                    solver.pbar.n = -t0
+                # close the progress bar
+                solver.pbar.close()
 
         # convert gradients of real-valued parameters to real-valued gradients
         g = tuple(

@@ -70,42 +70,109 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.utils.operators
     options:
         table: true
+        members:
+        - eye
+        - zero
+        - destroy
+        - create
+        - number
+        - parity
+        - displace
+        - squeeze
+        - quadrature
+        - position
+        - momentum
+        - sigmax
+        - sigmay
+        - sigmaz
+        - sigmap
+        - sigmam
+        - hadamard
 
 ### States
 
 ::: dynamiqs.utils.states
     options:
         table: true
+        members:
+        - fock
+        - fock_dm
+        - basis
+        - basis_dm
+        - coherent
+        - coherent_dm
 
 ### Quantum utilities
 
 ::: dynamiqs.utils.utils
     options:
         table: true
+        members:
+        - dag
+        - mpow
+        - trace
+        - ptrace
+        - tensprod
+        - expect
+        - norm
+        - unit
+        - dissipator
+        - lindbladian
+        - isket
+        - isbra
+        - isdm
+        - isop
+        - toket
+        - tobra
+        - todm
+        - braket
+        - overlap
+        - fidelity
 
 ### Tensor conversion
 
 ::: dynamiqs.utils.tensor_types
     options:
         table: true
+        members:
+        - to_tensor
+        - to_numpy
+        - to_qutip
+        - from_qutip
 
 ### Wigner distribution
 
 ::: dynamiqs.utils.wigners
     options:
         table: true
+        members:
+        - wigner
 
 ### Vectorization
 
 ::: dynamiqs.utils.vectorization
     options:
         table: true
+        members:
+        - operator_to_vector
+        - vector_to_operator
+        - spre
+        - spost
+        - sprepost
+        - sdissipator
+        - slindbladian
 
 ### Quantum optimal control
 
 ::: dynamiqs.utils.optimal_control
     options:
         table: true
+        members:
+        - rand_real
+        - rand_complex
+        - pwc_pulse
+        - snap_gate
+        - cd_gate
 
 ### Plotting
 

@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs import TimeTensor
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
@@ -18,8 +19,8 @@ from ..system import System
 class OpenSystem(System):
     def __init__(self):
         super().__init__()
-        self.jump_ops = None
-        self.jump_ops_batched = None
+        self.L = None
+        self.Lb = None
 
     def run(
         self,
@@ -28,34 +29,19 @@ class OpenSystem(System):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
+        H: ArrayLike | TimeTensor | None = None,
+        L: list[ArrayLike] | None = None,
+        y0: ArrayLike | None = None,
     ) -> Result:
-        return self._run(
-            self.H,
-            self.jump_ops,
-            self.y0,
-            tsave,
-            solver,
-            gradient=gradient,
-            options=options,
-        )
-
-    def _run(
-        self,
-        H: Tensor,
-        jump_ops: list[ArrayLike] | None,
-        y0: Tensor,
-        tsave: ArrayLike,
-        solver: Solver,
-        *,
-        gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
-    ) -> Result:
+        H = self.H if H is None else H
+        L = self.L if L is None else L
+        y0 = self.y0 if y0 is None else y0
         return dq.mesolve(
             H,
-            jump_ops,
+            L,
             y0,
             tsave,
-            exp_ops=self.exp_ops,
+            exp_ops=self.E,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -63,11 +49,11 @@ class OpenSystem(System):
 
 
 class OCavity(OpenSystem):
-    # `H_batched: (3, n, n)
-    # `jump_ops`: (2, n, n)
-    # `jump_ops_batched`: (2, 5, n, n)
-    # `y0_batched`: (4, n, n)
-    # `exp_ops`: (2, n, n)
+    # `Hb: (3, n, n)
+    # `L`: (2, n, n)
+    # `Lb`: (2, 5, n, n)
+    # `y0b`: (4, n, n)
+    # `E`: (2, n, n)
 
     def __init__(
         self,
@@ -98,16 +84,14 @@ class OCavity(OpenSystem):
 
         # prepare quantum operators
         self.H = self.delta * adag @ a
-        self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.jump_ops = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
-        self.jump_ops_batched = [
-            L * torch.arange(5).view(5, 1, 1) for L in self.jump_ops
-        ]
-        self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
+        self.Hb = [0.5 * self.H, self.H, 2 * self.H]
+        self.L = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
+        self.Lb = [L * torch.arange(5).view(5, 1, 1) for L in self.L]
+        self.E = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent_dm(self.n, self.alpha0)
-        self.y0_batched = [
+        self.y0b = [
             dq.coherent_dm(self.n, self.alpha0),
             dq.coherent_dm(self.n, 1j * self.alpha0),
             dq.coherent_dm(self.n, -self.alpha0),
@@ -178,9 +162,9 @@ class OTDQubit(OpenSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
-        self.jump_ops = [torch.sqrt(self.gamma) * dq.sigmax()]
-        self.exp_ops = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+        self.H = dq.totime(lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax())
+        self.L = [torch.sqrt(self.gamma) * dq.sigmax()]
+        self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)

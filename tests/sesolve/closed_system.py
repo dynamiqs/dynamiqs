@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
+from dynamiqs import TimeTensor
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 from dynamiqs.solvers.result import Result
@@ -23,26 +24,16 @@ class ClosedSystem(System):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
+        H: ArrayLike | TimeTensor | None = None,
+        y0: ArrayLike | None = None,
     ) -> Result:
-        return self._run(
-            self.H, self.y0, tsave, solver, gradient=gradient, options=options
-        )
-
-    def _run(
-        self,
-        H: Tensor,
-        y0: Tensor,
-        tsave: ArrayLike,
-        solver: Solver,
-        *,
-        gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
-    ) -> Result:
+        H = self.H if H is None else H
+        y0 = self.y0 if y0 is None else y0
         return dq.sesolve(
             H,
             y0,
             tsave,
-            exp_ops=self.exp_ops,
+            exp_ops=self.E,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -50,9 +41,9 @@ class ClosedSystem(System):
 
 
 class Cavity(ClosedSystem):
-    # `H_batched: (3, n, n)
-    # `y0_batched`: (4, n, n)
-    # `exp_ops`: (2, n, n)
+    # `Hb: (3, n, n)
+    # `y0b`: (4, n, n)
+    # `E`: (2, n, n)
 
     def __init__(
         self,
@@ -81,12 +72,12 @@ class Cavity(ClosedSystem):
 
         # prepare quantum operators
         self.H = self.delta * adag @ a
-        self.H_batched = [0.5 * self.H, self.H, 2 * self.H]
-        self.exp_ops = [dq.position(self.n), dq.momentum(self.n)]
+        self.Hb = [0.5 * self.H, self.H, 2 * self.H]
+        self.E = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
         self.y0 = dq.coherent(self.n, self.alpha0)
-        self.y0_batched = [
+        self.y0b = [
             dq.coherent(self.n, self.alpha0),
             dq.coherent(self.n, 1j * self.alpha0),
             dq.coherent(self.n, -self.alpha0),
@@ -146,8 +137,8 @@ class TDQubit(ClosedSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax()
-        self.exp_ops = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+        self.H = dq.totime(lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax())
+        self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)

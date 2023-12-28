@@ -20,7 +20,7 @@ build-backend = "flit_core.buildapi"
 dev = [
     "taskipy",
     "isort",
-    "black[jupyter]>=23.11",
+    "black[jupyter]==23.11.0",
     "codespell",
     "flake8",
     "pytest",
@@ -55,67 +55,67 @@ ignore-words-list = "ket, braket"
 # === taskipy tasks definition ===
 
 [tool.taskipy.tasks.isort]
-cmd = "echo '\n>>> isort' && isort ."
+cmd = 'echo "\n>>> isort" && isort .'
 help = "sort the imports (isort)"
 
 [tool.taskipy.tasks.black]
-cmd = "echo '\n>>> black' && black ."
+cmd = 'echo "\n>>> black" && black .'
 help = "auto-format the code (black)"
 
 [tool.taskipy.tasks.codespell]
-cmd = "echo '\n>>> codespell' && codespell tests dynamiqs"
+cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs'
 help = "check for misspellings (codespell)"
 
 [tool.taskipy.tasks.flake8]
-cmd = "echo '\n>>> flake8' && flake8 tests dynamiqs"
+cmd = 'echo "\n>>> flake8" && flake8 tests dynamiqs'
 help = "check code style (flake8)"
 
 [tool.taskipy.tasks.lint]
-cmd = "task isort && task black && task codespell && task flake8"
+cmd = 'task isort && task black && task codespell && task flake8'
 help = "lint the code and check style (isort + black + codespell + flake8)"
 
 [tool.taskipy.tasks.test]
-cmd = "echo '\n>>> pytest -n=auto -m \"not long\" tests' && pytest -n=auto -m \"not long\" tests"
+cmd = 'echo "\n>>> pytest -n=auto -m \"not long\" tests" && pytest -n=auto -m "not long" tests'
 help = "run the unit tests suite excluding long tests (pytest)"
 
 [tool.taskipy.tasks.test-long]
-cmd = "echo '\n>>> pytest -n=auto -m \"long\" tests' && pytest -n=auto -m \"long\" tests"
+cmd = 'echo "\n>>> pytest -n=auto -m \"long\" tests" && pytest -n=auto -m "long" tests'
 help = "run the unit tests suite including only long tests (pytest)"
 
 [tool.taskipy.tasks.test-all]
-cmd = "echo '\n>>> pytest -n=auto tests' && pytest -n=auto tests"
+cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the complete unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = "echo '\n>>> pytest dynamiqs' && rm -f docs/figs-code/*.png && pytest dynamiqs"
+cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs-code/*.png && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = "echo '\n>>> pytest docs' && rm -f docs/figs-docs/*.png && pytest docs"
+cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs-docs/*.png && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
-cmd = "task doctest-code && task doctest-docs"
+cmd = 'task doctest-code && task doctest-docs'
 help = "check all examples (doctest)"
 
 [tool.taskipy.tasks.docbuild]
-cmd = "mkdocs build"
+cmd = 'mkdocs build'
 help = "build the documentation website"
 
 [tool.taskipy.tasks.docserve]
-cmd = "mkdocs serve"
+cmd = 'mkdocs serve'
 help = "preview documentation website with hot-reloading"
 
 [tool.taskipy.tasks.all]
-cmd = "task lint && task test && task doctest"
+cmd = 'task lint && task test && task doctest'
 help = "run all tasks before a commit (isort + black + codespell + flake8 + pytest + doctest)"
 
 [tool.taskipy.tasks.ci]
-cmd = """echo '\n>>> isort' && isort --check . &&
-         echo '\n>>> black' && black --check . &&
+cmd = '''echo "\n>>> isort" && isort --check . &&
+         echo "\n>>> black" && black --check . &&
          task codespell &&
          task flake8 &&
          task test &&
          task doctest &&
-         task docbuild"""
+         task docbuild'''
 help = "run all the CI checks"
