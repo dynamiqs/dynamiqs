@@ -50,7 +50,7 @@ required-version = "23.11.0"
 
 [tool.codespell]
 skip = ".git,*.ipynb"
-ignore-words-list = "ket, braket"
+ignore-words-list = "ket,braket,tyE"
 
 # === taskipy tasks definition ===
 
