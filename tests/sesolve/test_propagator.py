@@ -1,5 +1,5 @@
 from dynamiqs.gradient import Autograd
-from dynamiqs.solver import Propagator
+from dynamiqs.solvers import Propagator
 
 from ..solver_tester import SolverTester
 from .closed_system import cavity, gcavity

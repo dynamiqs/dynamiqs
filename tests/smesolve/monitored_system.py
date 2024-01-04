@@ -9,7 +9,7 @@ from torch import Tensor
 import dynamiqs as dq
 from dynamiqs import TimeTensor
 from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
+from dynamiqs.solvers import Solver
 from dynamiqs.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike
 

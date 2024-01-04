@@ -3,13 +3,13 @@ from __future__ import annotations
 from math import cos, pi, sin
 from typing import Any
 
-import torch
-from torch import Tensor
-
 import dynamiqs as dq
-from dynamiqs import TimeTensor
+from dynamiqs import TimeTensor, dag
+from jax import numpy as jnp, Array
+import numpy as np
+
 from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
+from dynamiqs.solvers import Solver
 from dynamiqs.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
 
@@ -52,20 +52,19 @@ class Cavity(ClosedSystem):
         delta: float,
         alpha0: float,
         t_end: float,
-        requires_grad: bool = False,
     ):
         # store parameters
         self.n = n
-        self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
-        self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
-        self.t_end = torch.as_tensor(t_end)
+        self.delta = jnp.asarray(delta)
+        self.alpha0 = jnp.asarray(alpha0)
+        self.t_end = jnp.asarray(t_end)
 
         # define gradient parameters
         self.params = (self.delta, self.alpha0)
 
         # bosonic operators
         a = dq.destroy(self.n)
-        adag = a.mH
+        adag = dag(a)
 
         # loss operator
         self.loss_op = adag @ a
@@ -84,27 +83,27 @@ class Cavity(ClosedSystem):
             dq.coherent(self.n, -1j * self.alpha0),
         ]
 
-    def tsave(self, n: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), n)
+    def tsave(self, n: int) -> ArrayLike:
+        return np.linspace(0.0, self.t_end.item(), n)
 
-    def _alpha(self, t: float) -> Tensor:
-        return self.alpha0 * torch.exp(-1j * self.delta * t)
+    def _alpha(self, t: float) -> Array:
+        return self.alpha0 * jnp.exp(-1j * self.delta * t)
 
-    def state(self, t: float) -> Tensor:
+    def state(self, t: float) -> Array:
         return dq.coherent(self.n, self._alpha(t))
 
-    def expect(self, t: float) -> Tensor:
+    def expect(self, t: float) -> Array:
         alpha_t = self._alpha(t)
         exp_x = alpha_t.real
         exp_p = alpha_t.imag
-        return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
+        return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_state(self, t: float) -> Tensor:
+    def grads_state(self, t: float) -> Array:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0
-        return torch.tensor([grad_delta, grad_alpha0]).detach()
+        return jnp.array([grad_delta, grad_alpha0])
 
-    def grads_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Array:
         cdt = cos(self.delta * t)
         sdt = sin(self.delta * t)
 
@@ -113,10 +112,10 @@ class Cavity(ClosedSystem):
         grad_x_alpha0 = cdt
         grad_p_alpha0 = -sdt
 
-        return torch.tensor([
+        return jnp.array([
             [grad_x_delta, grad_x_alpha0],
             [grad_p_delta, grad_p_alpha0],
-        ]).detach()
+        ])
 
 
 class TDQubit(ClosedSystem):
@@ -126,9 +125,9 @@ class TDQubit(ClosedSystem):
         self.n = 2
 
         # store parameters
-        self.eps = torch.as_tensor(eps).requires_grad_(requires_grad)
-        self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)
-        self.t_end = torch.as_tensor(t_end)
+        self.eps = jnp.asarray(eps)
+        self.omega = jnp.asarray(omega)
+        self.t_end = jnp.asarray(t_end)
 
         # define gradient parameters
         self.params = (self.eps, self.omega)
@@ -137,33 +136,33 @@ class TDQubit(ClosedSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = dq.totime(lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax())
+        self.H = dq.totime(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
         self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)
 
-    def tsave(self, n: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), n)
+    def tsave(self, n: int) -> Array:
+        return jnp.linspace(0.0, self.t_end.item(), n)
 
     def _theta(self, t: float) -> float:
         return self.eps / self.omega * sin(self.omega * t)
 
-    def state(self, t: float) -> Tensor:
+    def state(self, t: float) -> Array:
         theta = self._theta(t)
         return cos(theta) * dq.fock(2, 0) - 1j * sin(theta) * dq.fock(2, 1)
 
-    def expect(self, t: float) -> Tensor:
+    def expect(self, t: float) -> Array:
         theta = self._theta(t)
         exp_x = 0
         exp_y = -sin(2 * theta)
         exp_z = cos(2 * theta)
-        return torch.tensor(
+        return jnp.array(
             [exp_x, exp_y, exp_z],
             dtype=dtype_real_to_complex(theta.dtype),
         )
 
-    def grads_state(self, t: float) -> Tensor:
+    def grads_state(self, t: float) -> Array:
         theta = self._theta(t)
         # gradients of theta
         dtheta_deps = sin(self.omega * t) / self.omega
@@ -173,9 +172,9 @@ class TDQubit(ClosedSystem):
         # gradients of sigma_z
         grad_eps = -2 * dtheta_deps * sin(2 * theta)
         grad_omega = -2 * dtheta_domega * sin(2 * theta)
-        return torch.tensor([grad_eps, grad_omega]).detach()
+        return jnp.array([grad_eps, grad_omega])
 
-    def grads_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Array:
         theta = self._theta(t)
         # gradients of theta
         dtheta_deps = sin(self.omega * t) / self.omega
@@ -191,18 +190,18 @@ class TDQubit(ClosedSystem):
         # gradients of sigma_x
         grad_x_eps = 0
         grad_x_omega = 0
-        return torch.tensor([
+        return jnp.array([
             [grad_x_eps, grad_x_omega],
             [grad_y_eps, grad_y_omega],
             [grad_z_eps, grad_z_omega],
-        ]).detach()
+        ])
 
 
 # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # gradients
 Hz = 2 * pi
 cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
-gcavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3, requires_grad=True)
+gcavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
 
 tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
 gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0, requires_grad=True)

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import Any
-from jax import numpy as jnp, Array
+from jax import numpy as jnp
+from jaxtyping import Array
 
-# TODO: remove (keep name to avoid ImportError while transitioning from PyTorch to JAX)
-to_device = None
+from .utils import isket, dag
 
 
 def type_str(type: Any) -> str:
@@ -18,11 +18,11 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def toreal(x: Array) -> Array:
+def split_complex(x: Array) -> Array:
     return jnp.stack((x.real, x.imag), axis=-1)
 
 
-def tocomplex(x: Array) -> Array:
+def merge_complex(x: Array) -> Array:
     return x[..., 0] + 1j * x[..., 1]
 
 
@@ -41,3 +41,9 @@ def check_time_tensor(x: Array, arg_name: str, allow_empty=False):
         )
     if not jnp.all(x >= 0):
         raise ValueError(f'Argument `{arg_name}` must contain positive values only.')
+
+
+def bexpect(O: Array, x: Array) -> Array:
+    if isket(x):
+        return jnp.einsum('...ij,bjk,...kl->...b', dag(x), O, x)  # <x|O|x>
+    return jnp.einsum('bij,...ji->...b', O, x)  # tr(Ox)
