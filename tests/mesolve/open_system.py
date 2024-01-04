@@ -10,7 +10,7 @@ import dynamiqs as dq
 from dynamiqs import TimeTensor
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
-from dynamiqs.solvers.result import Result
+from dynamiqs.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
 
 from ..system import System
