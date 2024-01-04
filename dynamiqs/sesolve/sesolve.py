@@ -24,7 +24,8 @@ def sesolve(
     options: dict[str, Any] | None = None,
 ) -> Result:
     # === default solver
-    solver = Dopri5()
+    if solver is None:
+        solver = Dopri5()
 
     # === options
     options = Options(solver=solver, gradient=gradient, options=options)
@@ -52,6 +53,7 @@ def sesolve(
             res["states"] = psi
 
         psi = merge_complex(psi)
+        # TODO : use vmap ?
         res["expects"] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
         return res
 
@@ -60,7 +62,7 @@ def sesolve(
         solver_class(),
         t0=tsave[0],
         t1=tsave[-1],
-        dt0=tsave[1],
+        dt0=tsave[1],  # TODO: there is probably a smarter choice
         y0=split_complex(psi0),
         saveat=diffrax.SaveAt(ts=tsave, fn=save),
     )
