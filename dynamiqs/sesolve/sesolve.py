@@ -5,8 +5,8 @@ from typing import Any
 import diffrax
 from diffrax import diffeqsolve
 from jaxtyping import ArrayLike
-
-from .._utils import split_complex, merge_complex
+from jax import numpy as jnp
+from .._utils import split_complex, merge_complex, bexpect
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
@@ -40,19 +40,20 @@ def sesolve(
     solver_class = solvers[type(solver)]
 
     # === solve differential equation with diffrax
-    def f(t, psi, args):
+    def f(_t, psi, _args):
         psi = merge_complex(psi)
         res = -1j * H @ psi
         res = split_complex(res)
         return res
 
-    def save(t, psi, args):
-        res = tuple()
-        psi = merge_complex(psi)
+    def save(_t, psi, _args):
+        res = {}
         if options.save_states:
-            res += (psi,)
-        for exp_op in exp_ops:
-            res += bexpect(exp_op, psi)
+            res["states"] = psi
+
+        psi = merge_complex(psi)
+        res["expects"] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
+        return res
 
     solution = diffeqsolve(
         diffrax.ODETerm(f),
@@ -61,12 +62,23 @@ def sesolve(
         t1=tsave[-1],
         dt0=tsave[1],
         y0=split_complex(psi0),
-        saveat=diffrax.SaveAt(ts=tsave),
+        saveat=diffrax.SaveAt(ts=tsave, fn=save),
     )
+
+    ysave = None
+    if options.save_states:
+        ysave = solution.ys["states"]
+        ysave = merge_complex(ysave)
+
+    Esave = None
+    if len(exp_ops) > 0:
+        Esave = solution.ys["expects"]
+        Esave = jnp.stack(Esave, axis=0)
+        Esave = merge_complex(Esave)
 
     return Result(
         options,
-        ysave=merge_complex(solution.ys),
+        ysave=ysave,
+        Esave=Esave,
         tsave=solution.ts,
-        Esave=None,
     )

@@ -45,5 +45,5 @@ def check_time_tensor(x: Array, arg_name: str, allow_empty=False):
 
 def bexpect(O: Array, x: Array) -> Array:
     if isket(x):
-        return jnp.einsum('...ij,bjk,...kl->...b', dag(x), O, x)  # <x|O|x>
-    return jnp.einsum('bij,...ji->...b', O, x)  # tr(Ox)
+        return jnp.einsum('...ij,jk,...kl->...', dag(x), O, x)  # <x|O|x>
+    return jnp.einsum('ij,bji->b', O, x)  # tr(Ox)

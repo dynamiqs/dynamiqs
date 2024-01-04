@@ -4,7 +4,6 @@ from typing import Any
 
 import torch
 
-from ._utils import to_device
 from .gradient import Adjoint, Gradient
 from .solvers import Solver
 from .utils.tensor_types import dtype_complex_to_real, get_cdtype
@@ -71,5 +70,4 @@ class SharedOptions:
         self.verbose = verbose
         self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)
-        self.device = to_device(device)
         self.cartesian_batching = cartesian_batching
