@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from typing import Any
+
 from jax import numpy as jnp
 from jaxtyping import Array
 
-from .utils import isket, dag
+from .utils import dag, isket
 
 
 def type_str(type: Any) -> str:
@@ -26,12 +27,12 @@ def merge_complex(x: Array) -> Array:
     return x[..., 0] + 1j * x[..., 1]
 
 
-def check_time_tensor(x: Array, arg_name: str, allow_empty=False):
-    # check that a time tensor is valid (it must be a 1D tensor sorted in strictly
+def check_time_array(x: Array, arg_name: str, allow_empty=False):
+    # check that a time array is valid (it must be a 1D array sorted in strictly
     # ascending order and containing only positive values)
     if x.ndim != 1:
         raise ValueError(
-            f'Argument `{arg_name}` must be a 1D tensor, but is a {x.ndim}D tensor.'
+            f'Argument `{arg_name}` must be a 1D array, but is a {x.ndim}D array.'
         )
     if not allow_empty and len(x) == 0:
         raise ValueError(f'Argument `{arg_name}` must contain at least one element.')

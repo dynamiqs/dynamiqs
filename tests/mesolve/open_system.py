@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from math import cos, exp, pi, sin
 from typing import Any
-from jax import numpy as jnp, Array
+
+from jax import Array
+from jax import numpy as jnp
 
 import dynamiqs as dq
-from dynamiqs import TimeTensor, dag
+from dynamiqs import TimeArray, dag
 from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
 from dynamiqs.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
+from dynamiqs.solver import Solver
+from dynamiqs.utils.array_types import ArrayLike, dtype_real_to_complex
 
 from ..system import System
 
@@ -27,7 +29,7 @@ class OpenSystem(System):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
-        H: ArrayLike | TimeTensor | None = None,
+        H: ArrayLike | TimeArray | None = None,
         L: list[ArrayLike] | None = None,
         y0: ArrayLike | None = None,
     ) -> Result:

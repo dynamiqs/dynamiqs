@@ -2,11 +2,11 @@ import pytest
 import torch
 from torch import Tensor
 
-from dynamiqs.time_tensor import (
-    CallableTimeTensor,
-    ConstantTimeTensor,
-    ModulatedTimeTensor,
-    PWCTimeTensor,
+from dynamiqs.time_array import (
+    CallableTimeArray,
+    ConstantTimeArray,
+    ModulatedTimeArray,
+    PWCTimeArray,
     _ModulatedFactor,
     _PWCFactor,
 )
@@ -16,10 +16,10 @@ def assert_equal(xt: Tensor, y: list):
     assert torch.equal(xt, torch.tensor(y))
 
 
-class TestConstantTimeTensor:
+class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.x = ConstantTimeTensor(torch.tensor([1, 2]))
+        self.x = ConstantTimeArray(torch.tensor([1, 2]))
 
     def test_call(self):
         assert_equal(self.x(0.0), [1, 2])
@@ -34,7 +34,7 @@ class TestConstantTimeTensor:
         assert_equal(x(0.0), [[1, 2]])
 
     def test_adjoint(self):
-        x = ConstantTimeTensor(torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
+        x = ConstantTimeArray(torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
         x = x.adjoint()
         res = torch.tensor([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
         assert torch.equal(x(0.0), res)
@@ -64,26 +64,26 @@ class TestConstantTimeTensor:
     def test_add(self):
         # test type `Tensor`
         x = self.x + torch.tensor([0, 1])
-        assert isinstance(x, ConstantTimeTensor)
+        assert isinstance(x, ConstantTimeArray)
         assert_equal(x(0.0), [1, 3])
 
-        # test type `ConstantTimeTensor`
+        # test type `ConstantTimeArray`
         x = self.x + self.x
-        assert isinstance(x, ConstantTimeTensor)
+        assert isinstance(x, ConstantTimeArray)
         assert_equal(x(0.0), [2, 4])
 
     def test_radd(self):
         # test type `Tensor`
         x = torch.tensor([0, 1]) + self.x
-        assert isinstance(x, ConstantTimeTensor)
+        assert isinstance(x, ConstantTimeArray)
         assert_equal(x(0.0), [1, 3])
 
 
-class TestCallableTimeTensor:
+class TestCallableTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
         f = lambda t: t * torch.tensor([1, 2])
-        self.x = CallableTimeTensor(f, f(0.0))
+        self.x = CallableTimeArray(f, f(0.0))
 
     def test_call(self):
         assert_equal(self.x(0.0), [0, 0])
@@ -100,7 +100,7 @@ class TestCallableTimeTensor:
 
     def test_adjoint(self):
         f = lambda t: t * torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
-        x = CallableTimeTensor(f, f(0.0))
+        x = CallableTimeArray(f, f(0.0))
         x = x.adjoint()
         res = torch.tensor([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
         assert torch.equal(x(1.0), res)
@@ -135,25 +135,25 @@ class TestCallableTimeTensor:
     def test_add(self):
         # test type `Tensor`
         x = self.x + torch.tensor([0, 1])
-        assert isinstance(x, CallableTimeTensor)
+        assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
 
-        # test type `CallableTimeTensor`
+        # test type `CallableTimeArray`
         x = self.x + self.x
-        assert isinstance(x, CallableTimeTensor)
+        assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [2, 4])
 
     def test_radd(self):
         # test type `Tensor`
         x = torch.tensor([0, 1]) + self.x
-        assert isinstance(x, CallableTimeTensor)
+        assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
 
 
-class TestPWCTimeTensor:
+class TestPWCTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
         # PWC factor 1
@@ -170,7 +170,7 @@ class TestPWCTimeTensor:
 
         factors = [f1, f2]
         tensors = torch.stack([tensor1, tensor2])
-        self.x = PWCTimeTensor(factors, tensors)  # shape at t: (2, 2)
+        self.x = PWCTimeArray(factors, tensors)  # shape at t: (2, 2)
 
     def test_call(self):
         assert_equal(self.x(-0.1), [[0, 0], [0, 0]])
@@ -224,13 +224,13 @@ class TestPWCTimeTensor:
 
         # test type `Tensor`
         x = self.x + tensor
-        assert isinstance(x, PWCTimeTensor)
+        assert isinstance(x, PWCTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
-        # test type `PWCTimeTensor`
+        # test type `PWCTimeArray`
         x = self.x + self.x
-        assert isinstance(x, PWCTimeTensor)
+        assert isinstance(x, PWCTimeArray)
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_radd(self):
@@ -238,12 +238,12 @@ class TestPWCTimeTensor:
 
         # test type `Tensor`
         x = tensor + self.x
-        assert isinstance(x, PWCTimeTensor)
+        assert isinstance(x, PWCTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
 
-class TestModulatedTimeTensor:
+class TestModulatedTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
         one = torch.tensor(1.0)
@@ -262,7 +262,7 @@ class TestModulatedTimeTensor:
 
         factors = [f1, f2]
         tensors = torch.stack([tensor1, tensor2])
-        self.x = ModulatedTimeTensor(factors, tensors)
+        self.x = ModulatedTimeArray(factors, tensors)
 
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
@@ -304,12 +304,12 @@ class TestModulatedTimeTensor:
 
         # test type `Tensor`
         x = self.x + tensor
-        assert isinstance(x, ModulatedTimeTensor)
+        assert isinstance(x, ModulatedTimeArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
-        # test type `ModulatedTimeTensor`
+        # test type `ModulatedTimeArray`
         x = self.x + self.x
-        assert isinstance(x, ModulatedTimeTensor)
+        assert isinstance(x, ModulatedTimeArray)
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_radd(self):
@@ -317,5 +317,5 @@ class TestModulatedTimeTensor:
 
         # test type `Tensor`
         x = tensor + self.x
-        assert isinstance(x, ModulatedTimeTensor)
+        assert isinstance(x, ModulatedTimeArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])

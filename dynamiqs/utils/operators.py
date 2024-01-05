@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 
-from .tensor_types import get_cdtype
+from .array_types import get_cdtype
 from .utils import dag, tensprod
 
 __all__ = [

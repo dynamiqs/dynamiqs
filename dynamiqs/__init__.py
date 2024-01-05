@@ -1,15 +1,14 @@
 from importlib.metadata import version
 
-from . import dark
+from . import dark, solver
+from ._utils import *  # todo: remove, dev purpose only
 from .mesolve import mesolve
+from .plots import *
+from .result import Result
 from .sesolve import sesolve
 from .smesolve import smesolve
-from .result import Result
-from .plots import *
-from .time_tensor import TimeTensor, totime
+from .time_array import TimeArray, totime
 from .utils import *
-from ._utils import *  # todo: remove, dev purpose only
-from . import solver
 
 # get version from pyproject.toml
 __version__ = version(__package__)

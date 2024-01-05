@@ -3,13 +3,14 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from jax import numpy as jnp, Array
+from jax import Array
+from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
 import dynamiqs as dq
 from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
 from dynamiqs.result import Result
+from dynamiqs.solver import Solver
 
 
 class System(ABC):
@@ -23,7 +24,7 @@ class System(ABC):
 
     @abstractmethod
     def tsave(self, n: int) -> Array:
-        """Compute the save time tensor."""
+        """Compute the save time array."""
         pass
 
     def state(self, t: float) -> Array:
@@ -48,7 +49,7 @@ class System(ABC):
         """Compute the exact gradients of the example state loss function with respect
         to the system parameters.
 
-        The returned tensor has shape _(num_params)_.
+        The returned array has shape _(num_params)_.
         """
         raise NotImplementedError
 
@@ -60,7 +61,7 @@ class System(ABC):
         """Compute the exact gradients of the example expectation values loss functions
         with respect to the system parameters.
 
-        The returned tensor has shape _(nE, num_params)_.
+        The returned array has shape _(nE, num_params)_.
         """
         raise NotImplementedError
 

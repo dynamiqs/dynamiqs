@@ -8,8 +8,8 @@ from jax import Array
 from jaxtyping import ArrayLike
 from torch import Tensor
 
+from .array_types import dtype_complex_to_real, dtype_real_to_complex
 from .operators import eye
-from .tensor_types import dtype_complex_to_real, dtype_real_to_complex
 from .utils import isdm, isket, todm
 
 __all__ = ['wigner']

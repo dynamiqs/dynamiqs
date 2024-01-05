@@ -4,7 +4,7 @@ from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Dopri5
 
 from ..solver_tester import SolverTester
-from .closed_system import cavity, gcavity, gtdqubit, tdqubit
+from .closed_system import cavity, gcavity, tdqubit
 
 
 class TestSEAdaptive(SolverTester):
