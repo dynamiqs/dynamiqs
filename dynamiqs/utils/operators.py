@@ -7,8 +7,8 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 
-from .tensor_types import get_cdtype
-from .utils import dag, tensprod
+from .array_types import get_cdtype
+from .utils import dag, tensor
 
 __all__ = [
     'eye',
@@ -150,7 +150,7 @@ def destroy(
     a = [_destroy_single(dim, dtype=dtype) for dim in dims]
     I = [eye(dim, dtype=dtype) for dim in dims]
     return tuple(
-        tensprod(*[a[j] if i == j else I[j] for j in range(len(dims))])
+        tensor(*[a[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
@@ -209,7 +209,7 @@ def create(
     adag = [_create_single(dim, dtype=dtype) for dim in dims]
     I = [eye(dim, dtype=dtype) for dim in dims]
     return tuple(
-        tensprod(*[adag[j] if i == j else I[j] for j in range(len(dims))])
+        tensor(*[adag[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
@@ -554,4 +554,4 @@ def hadamard(
     dtype = get_cdtype(dtype)
     H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=dtype) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
-    return tensprod(*Hs)
+    return tensor(*Hs)

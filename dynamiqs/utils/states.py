@@ -6,9 +6,9 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 
+from .array_types import get_cdtype
 from .operators import displace
-from .tensor_types import get_cdtype
-from .utils import tensprod, todm
+from .utils import tensor, todm
 
 __all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
@@ -171,7 +171,7 @@ def coherent(
         displace(d, a, dtype=dtype) @ fock(d, 0, dtype=dtype)
         for d, a in zip(dim, alpha)
     ]
-    return tensprod(*kets)
+    return tensor(*kets)
 
 
 def coherent_dm(

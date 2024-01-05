@@ -3,15 +3,16 @@ from __future__ import annotations
 from math import cos, pi, sin
 from typing import Any
 
-import dynamiqs as dq
-from dynamiqs import TimeTensor, dag
-from jax import numpy as jnp, Array
 import numpy as np
+from jax import Array
+from jax import numpy as jnp
 
+import dynamiqs as dq
+from dynamiqs import dag
 from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
 from dynamiqs.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
+from dynamiqs.solver import Solver
+from dynamiqs.utils.array_types import ArrayLike, dtype_real_to_complex
 
 from ..system import System
 

@@ -3,19 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 import diffrax as dx
-from jaxtyping import ArrayLike
 from jax import numpy as jnp
+from jaxtyping import ArrayLike
 
-from ..time_tensor import totime
-from .._utils import split_complex, merge_complex, bexpect
-from ..gradient import Gradient, Autograd, Adjoint
+from .._utils import bexpect, merge_complex, split_complex
+from ..gradient import Adjoint, Autograd, Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import (
-    Dopri5,
-    Solver,
-    _stepsize_controller,
-)
+from ..solver import Dopri5, Solver, _stepsize_controller
+from ..time_array import totime
 
 
 def sesolve(
@@ -85,11 +81,11 @@ def sesolve(
     def save(_t, psi, _args):
         res = {}
         if options.save_states:
-            res["states"] = psi
+            res['states'] = psi
 
         psi = merge_complex(psi)
         # TODO : use vmap ?
-        res["expects"] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
+        res['expects'] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
         return res
 
     solution = dx.diffeqsolve(
@@ -110,12 +106,12 @@ def sesolve(
 
     ysave = None
     if options.save_states:
-        ysave = solution.ys["states"]
+        ysave = solution.ys['states']
         ysave = merge_complex(ysave)
 
     Esave = None
     if len(exp_ops) > 0:
-        Esave = solution.ys["expects"]
+        Esave = solution.ys['expects']
         Esave = jnp.stack(Esave, axis=0)
         Esave = merge_complex(Esave)
 

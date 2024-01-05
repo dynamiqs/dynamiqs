@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 from abc import abstractmethod, abstractproperty
-from typing import get_args, Tuple
+from typing import Tuple, get_args
 
-from jax import Array, numpy as jnp
+from jax import Array
+from jax import numpy as jnp
 
-from ._utils import check_time_tensor, obj_type_str, type_str
-from .utils.tensor_types import (
-    ArrayLike,
-    Number,
-    dtype_complex_to_real,
-    get_cdtype,
-)
+from ._utils import check_time_array, obj_type_str, type_str
+from .utils.array_types import ArrayLike, Number, dtype_complex_to_real, get_cdtype
 
 __all__ = ['totime']
 
@@ -25,24 +21,24 @@ def totime(
     ),
     *,
     dtype: jnp.dtype | None = None,
-) -> TimeTensor:
+) -> TimeArray:
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
 
-    # PWC time tensor
+    # PWC time array
     if isinstance(x, tuple) and len(x) == 3:
         return _factory_pwc(x, dtype=dtype)
-    # modulated time tensor
+    # modulated time array
     if isinstance(x, tuple) and len(x) == 2:
         return _factory_modulated(x, dtype=dtype)
-    # constant time tensor
+    # constant time array
     if isinstance(x, get_args(ArrayLike)):
         return _factory_constant(x, dtype=dtype)
-    # callable time tensor
+    # callable time array
     elif callable(x):
         return _factory_callable(x, dtype=dtype)
     else:
         raise TypeError(
-            'For time-dependent tensors, argument `x` must be one of 4 types: (1)'
+            'For time-dependent arrays, argument `x` must be one of 4 types: (1)'
             ' ArrayLike; (2) 2-tuple with type (function, ArrayLike) where function'
             ' has signature (t: float) -> Array; (3) 3-tuple with type (ArrayLike,'
             ' ArrayLike, ArrayLike); (4) function with signature (t: float) -> Array.'
@@ -50,40 +46,40 @@ def totime(
         )
 
 
-def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeTensor:
+def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeArray:
     x = jnp.asarray(x, dtype=dtype)
-    return ConstantTimeTensor(x)
+    return ConstantTimeArray(x)
 
 
 def _factory_callable(
     x: callable[[float], Array], *, dtype: jnp.dtype
-) -> CallableTimeTensor:
+) -> CallableTimeArray:
     f0 = x(0.0)
 
     # check type, dtype and device match
     if not isinstance(f0, Array):
         raise TypeError(
             f'The time-dependent operator must be a {type_str(Array)}, but has'
-            f' type {obj_type_str(f0)}. The provided function must return a tensor,'
+            f' type {obj_type_str(f0)}. The provided function must return an array,'
             ' to avoid costly type conversion at each time solver step.'
         )
     elif f0.dtype != dtype:
         raise TypeError(
             f'The time-dependent operator must have dtype `{dtype}`, but has dtype'
-            f' `{f0.dtype}`. The provided function must return a tensor with the'
+            f' `{f0.dtype}`. The provided function must return an array with the'
             ' same `dtype` as provided to the solver, to avoid costly dtype'
             ' conversion at each solver time step.'
         )
 
-    return CallableTimeTensor(x, f0)
+    return CallableTimeArray(x, f0)
 
 
 def _factory_pwc(
     x: tuple[ArrayLike, ArrayLike, ArrayLike],
     *,
     dtype: jnp.dtype,
-) -> PWCTimeTensor:
-    times, values, tensor = x
+) -> PWCTimeArray:
+    times, values, array = x
 
     # get real-valued dtype
     if dtype in (jnp.complex64, jnp.complex128):
@@ -93,36 +89,36 @@ def _factory_pwc(
 
     # times
     times = jnp.asarray(times, dtype=rdtype)
-    check_time_tensor(times, arg_name='times')
+    check_time_array(times, arg_name='times')
 
     # values
     values = jnp.asarray(values, dtype=dtype)
     if values.shape[0] != len(times) - 1:
         raise TypeError(
-            'For a PWC tensor `(times, values, tensor)`, argument `values` must'
+            'For a PWC array `(times, values, array)`, argument `values` must'
             ' have shape `(len(times)-1, ...)`, but has shape'
             f' {tuple(values.shape)}.'
         )
 
-    # tensor
-    tensor = jnp.asarray(tensor, dtype=dtype)
-    if tensor.ndim != 2 or tensor.shape[-1] != tensor.shape[-2]:
+    # array
+    array = jnp.asarray(array, dtype=dtype)
+    if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a PWC tensor `(times, values, tensor)`, argument `tensor` must be'
-            f' a square matrix, but has shape {tuple(tensor.shape)}.'
+            'For a PWC array `(times, values, array)`, argument `array` must be'
+            f' a square matrix, but has shape {tuple(array.shape)}.'
         )
 
     factors = [_PWCFactor(times, values)]
-    tensors = tensor.unsqueeze(0)  # (1, n, n)
-    return PWCTimeTensor(factors, tensors)
+    arrays = array.unsqueeze(0)  # (1, n, n)
+    return PWCTimeArray(factors, arrays)
 
 
 def _factory_modulated(
     x: tuple[callable[[float], Array], Array],
     *,
     dtype: jnp.dtype,
-) -> ModulatedTimeTensor:
-    f, tensor = x
+) -> ModulatedTimeArray:
+    f, array = x
 
     # get real-valued dtype
     if dtype in (jnp.complex64, jnp.complex128):
@@ -133,49 +129,49 @@ def _factory_modulated(
     # check f
     if not callable(f):
         raise TypeError(
-            'For a modulated time tensor `(f, tensor)`, argument `f` must'
+            'For a modulated time array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
     f0 = f(0.0)
     if not isinstance(f0, Array):
         raise TypeError(
-            'For a modulated time tensor `(f, tensor)`, argument `f` must'
-            f' return a tensor, but returns type {obj_type_str(f0)}.'
+            'For a modulated time array `(f, array)`, argument `f` must'
+            f' return an array, but returns type {obj_type_str(f0)}.'
         )
     if f0.dtype not in [dtype, rdtype]:
         dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
         raise TypeError(
-            'For a modulated time tensor, the tensor returned by the function must'
+            'For a modulated time array, the array returned by the function must'
             f' have dtype `{dtypes}`, but has dtype `{f0.dtype}`. This is necessary'
             ' to avoid costly dtype conversion at each solver time step.'
         )
 
-    # tensor
-    tensor = jnp.asarray(tensor, dtype=dtype)
-    if tensor.ndim != 2 or tensor.shape[-1] != tensor.shape[-2]:
+    # array
+    array = jnp.asarray(array, dtype=dtype)
+    if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a modulated time tensor `(f, tensor)`, argument `tensor` must'
-            f' be a square matrix, but has shape {tuple(tensor.shape)}.'
+            'For a modulated time array `(f, array)`, argument `array` must'
+            f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
     factors = [_ModulatedFactor(f, f0)]
-    tensors = tensor.unsqueeze(0)  # (1, n, n)
-    return ModulatedTimeTensor(factors, tensors)
+    arrays = array.unsqueeze(0)  # (1, n, n)
+    return ModulatedTimeArray(factors, arrays)
 
 
-class TimeTensor:
+class TimeArray:
     # Subclasses should implement:
     # - the properties: dtype, device, shape
     # - the methods: __call__, reshape, adjoint, __neg__, __mul__, __add__
 
     # Special care should be taken when implementing `__call__` for caching to work
-    # properly. The `@cache` decorator checks the tensor `__hash__`, which is
+    # properly. The `@cache` decorator checks the array `__hash__`, which is
     # implemented as its address in memory. Thus, when two consecutive calls to a
-    # `TimeTensor` should return a tensor with the same values, these two tensors must
+    # `TimeArray` should return an array with the same values, these two arrays must
     # not only be equal, they should be the same object in memory.
 
     # Note that a subclass implementation of `__add__` only need to support addition
-    # with `Array`, `ConstantTimeTensor` and the subclass type itself.
+    # with `Array`, `ConstantTimeArray` and the subclass type itself.
 
     @abstractproperty
     def dtype(self) -> jnp.dtype:
@@ -193,40 +189,40 @@ class TimeTensor:
         pass
 
     @abstractmethod
-    def reshape(self, *shape: int) -> TimeTensor:
-        """Returns a new tensor with the same data but of a different shape."""
+    def reshape(self, *shape: int) -> TimeArray:
+        """Returns a new array with the same data but of a different shape."""
         pass
 
     @abstractmethod
-    def adjoint(self) -> TimeTensor:
+    def adjoint(self) -> TimeArray:
         pass
 
     @property
-    def mH(self) -> TimeTensor:
+    def mH(self) -> TimeArray:
         return self.adjoint()
 
     @abstractmethod
-    def __neg__(self) -> TimeTensor:
+    def __neg__(self) -> TimeArray:
         pass
 
     @abstractmethod
-    def __mul__(self, other: Number | Array) -> TimeTensor:
+    def __mul__(self, other: Number | Array) -> TimeArray:
         pass
 
-    def __rmul__(self, other: Number | Array) -> TimeTensor:
+    def __rmul__(self, other: Number | Array) -> TimeArray:
         return self * other
 
     @abstractmethod
-    def __add__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __add__(self, other: Array | TimeArray) -> TimeArray:
         pass
 
-    def __radd__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __radd__(self, other: Array | TimeArray) -> TimeArray:
         return self + other
 
-    def __sub__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __sub__(self, other: Array | TimeArray) -> TimeArray:
         return self + (-other)
 
-    def __rsub__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __rsub__(self, other: Array | TimeArray) -> TimeArray:
         return other + (-self)
 
     def __repr__(self) -> str:
@@ -249,43 +245,43 @@ class TimeTensor:
         return self.dim()
 
 
-class ConstantTimeTensor(TimeTensor):
-    def __init__(self, tensor: Array):
-        self.tensor = tensor
+class ConstantTimeArray(TimeArray):
+    def __init__(self, array: Array):
+        self.array = array
 
     @property
     def dtype(self) -> jnp.dtype:
-        return self.tensor.dtype
+        return self.array.dtype
 
     @property
     def shape(self) -> Tuple[int, ...]:
-        return self.tensor.shape
+        return self.array.shape
 
     def __call__(self, t: float) -> Array:
-        return self.tensor
+        return self.array
 
-    def reshape(self, *shape: int) -> TimeTensor:
-        return ConstantTimeTensor(self.tensor.reshape(*shape))
+    def reshape(self, *shape: int) -> TimeArray:
+        return ConstantTimeArray(self.array.reshape(*shape))
 
-    def adjoint(self) -> TimeTensor:
-        return ConstantTimeTensor(self.tensor.adjoint())
+    def adjoint(self) -> TimeArray:
+        return ConstantTimeArray(self.array.adjoint())
 
-    def __neg__(self) -> TimeTensor:
-        return ConstantTimeTensor(-self.tensor)
+    def __neg__(self) -> TimeArray:
+        return ConstantTimeArray(-self.array)
 
-    def __mul__(self, other: Number | Array) -> TimeTensor:
-        return ConstantTimeTensor(self.tensor * other)
+    def __mul__(self, other: Number | Array) -> TimeArray:
+        return ConstantTimeArray(self.array * other)
 
-    def __add__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __add__(self, other: Array | TimeArray) -> TimeArray:
         if isinstance(other, Array):
-            return ConstantTimeTensor(self.tensor + other)
-        elif isinstance(other, ConstantTimeTensor):
-            return self + other.tensor
+            return ConstantTimeArray(self.array + other)
+        elif isinstance(other, ConstantTimeArray):
+            return self + other.array
         else:
             return NotImplemented
 
 
-class CallableTimeTensor(TimeTensor):
+class CallableTimeArray(TimeArray):
     def __init__(self, f: callable[[float], Array], f0: Array):
         # f0 carries all the transformation on the shape
         self.f = f
@@ -303,45 +299,45 @@ class CallableTimeTensor(TimeTensor):
         # cached if called twice with the same time, otherwise we recompute `f(t)`
         return self.f(t).reshape(self.shape)
 
-    def reshape(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeArray:
         f = self.f
         f0 = self.f0.reshape(*shape)
-        return CallableTimeTensor(f, f0)
+        return CallableTimeArray(f, f0)
 
     @abstractmethod
-    def adjoint(self) -> TimeTensor:
+    def adjoint(self) -> TimeArray:
         f = lambda t: self.f(t).adjoint()
         f0 = self.f0.adjoint()
-        return CallableTimeTensor(f, f0)
+        return CallableTimeArray(f, f0)
 
-    def __neg__(self) -> TimeTensor:
+    def __neg__(self) -> TimeArray:
         f = lambda t: -self.f(t)
         f0 = -self.f0
-        return CallableTimeTensor(f, f0)
+        return CallableTimeArray(f, f0)
 
-    def __mul__(self, other: Number | Array) -> TimeTensor:
+    def __mul__(self, other: Number | Array) -> TimeArray:
         f = lambda t: self.f(t) * other
         f0 = self.f0 * other
-        return CallableTimeTensor(f, f0)
+        return CallableTimeArray(f, f0)
 
-    def __add__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __add__(self, other: Array | TimeArray) -> TimeArray:
         if isinstance(other, Array):
             f = lambda t: self.f(t) + other
             f0 = self.f0 + other
-            return CallableTimeTensor(f, f0)
-        elif isinstance(other, ConstantTimeTensor):
-            return self + other.tensor
-        elif isinstance(other, CallableTimeTensor):
+            return CallableTimeArray(f, f0)
+        elif isinstance(other, ConstantTimeArray):
+            return self + other.array
+        elif isinstance(other, CallableTimeArray):
             f = lambda t: self.f(t) + other.f(t)
             f0 = self.f0 + other.f0
-            return CallableTimeTensor(f, f0)
+            return CallableTimeArray(f, f0)
         else:
             return NotImplemented
 
 
 class _PWCFactor:
-    # Defined by a tuple of 2 tensors (times, values), where
-    # - times: (nv+1) are the time points between which the PWC tensor take constant
+    # Defined by a tuple of 2 arrays (times, values), where
+    # - times: (nv+1) are the time points between which the PWC array take constant
     #          values, where nv is the number of time intervals
     # - values: (..., nv) are the constant values for each time interval, where
     #           (...) is an arbitrary batching size
@@ -370,24 +366,24 @@ class _PWCFactor:
         return _PWCFactor(self.times, self.values.reshape(*shape, self.nv))
 
 
-class PWCTimeTensor(TimeTensor):
-    # Arbitrary sum of tensors with PWC factors.
+class PWCTimeArray(TimeArray):
+    # Arbitrary sum of arrays with PWC factors.
 
     def __init__(
-        self, factors: list[_PWCFactor], tensors: Array, static: Array | None = None
+        self, factors: list[_PWCFactor], arrays: Array, static: Array | None = None
     ):
         # factors must be non-empty
         self.factors = factors  # list of length (nf)
-        self.tensors = tensors  # (nf, n, n)
-        self.n = tensors.shape[-1]
-        self.static = jnp.zeros_like(self.tensors[0]) if static is None else static
+        self.arrays = arrays  # (nf, n, n)
+        self.n = arrays.shape[-1]
+        self.static = jnp.zeros_like(self.arrays[0]) if static is None else static
 
         # merge all times
         self.times = jnp.cat([x.times for x in self.factors]).unique(sorted=True)
 
     @property
     def dtype(self) -> jnp.dtype:
-        return self.tensors.dtype
+        return self.arrays.dtype
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -403,7 +399,7 @@ class PWCTimeTensor(TimeTensor):
             t = self.times[idx]
             values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
             values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
-            return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
+            return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
 
     def __call__(self, t: float) -> Array:
         # find the index $k$ such that $t \in [t_k, t_{k+1})$, `idx = -1` if
@@ -411,43 +407,43 @@ class PWCTimeTensor(TimeTensor):
         idx = jnp.searchsorted(self.times, t, side='right') - 1
         return self._call(idx.item())
 
-    def reshape(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeArray:
         # shape: (..., n, n)
         factors = [x.reshape(*shape[:-2]) for x in self.factors]
-        return PWCTimeTensor(factors, self.tensors, static=self.static)
+        return PWCTimeArray(factors, self.arrays, static=self.static)
 
-    def adjoint(self) -> TimeTensor:
+    def adjoint(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]
-        return PWCTimeTensor(factors, self.tensors.mH, static=self.static.mH)
+        return PWCTimeArray(factors, self.arrays.mH, static=self.static.mH)
 
-    def __neg__(self) -> TimeTensor:
-        return PWCTimeTensor(self.factors, -self.tensors, static=-self.static)
+    def __neg__(self) -> TimeArray:
+        return PWCTimeArray(self.factors, -self.arrays, static=-self.static)
 
-    def __mul__(self, other: Number | Array) -> TimeTensor:
-        return PWCTimeTensor(
-            self.factors, self.tensors * other, static=self.static * other
+    def __mul__(self, other: Number | Array) -> TimeArray:
+        return PWCTimeArray(
+            self.factors, self.arrays * other, static=self.static * other
         )
 
-    def __add__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __add__(self, other: Array | TimeArray) -> TimeArray:
         if isinstance(other, Array):
             static = self.static + other
-            return PWCTimeTensor(self.factors, self.tensors, static=static)
-        elif isinstance(other, ConstantTimeTensor):
-            return self + other.tensor
-        elif isinstance(other, PWCTimeTensor):
+            return PWCTimeArray(self.factors, self.arrays, static=static)
+        elif isinstance(other, ConstantTimeArray):
+            return self + other.array
+        elif isinstance(other, PWCTimeArray):
             factors = self.factors + other.factors  # list of length (nf1 + nf2)
-            tensors = jnp.cat((self.tensors, other.tensors))  # (nf1 + nf2, n, n)
+            arrays = jnp.cat((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
             static = self.static + other.static  # (n, n)
-            return PWCTimeTensor(factors, tensors, static=static)
+            return PWCTimeArray(factors, arrays, static=static)
         else:
             return NotImplemented
 
 
 class _ModulatedFactor:
     # Defined by two objects (f, f0), where
-    # - f is a callable that takes a time and returns a tensor of shape (...)
-    # - f0 is the tensor of shape (...) returned by f(0.0)
-    # f0 holds information about the shape of the tensor returned by f(t).
+    # - f is a callable that takes a time and returns an array of shape (...)
+    # - f0 is the array of shape (...) returned by f(0.0)
+    # f0 holds information about the shape of the array returned by f(t).
 
     def __init__(self, f: callable[[float], Array], f0: Array):
         self.f = f  # (float) -> (...)
@@ -471,24 +467,24 @@ class _ModulatedFactor:
         return _ModulatedFactor(f, f0)
 
 
-class ModulatedTimeTensor(TimeTensor):
-    # Sum of tensors with callable factors.
+class ModulatedTimeArray(TimeArray):
+    # Sum of arrays with callable factors.
 
     def __init__(
         self,
         factors: list[_ModulatedFactor],
-        tensors: Array,
+        arrays: Array,
         static: Array | None = None,
     ):
         # factors must be non-empty
         self.factors = factors  # list of length (nf)
-        self.tensors = tensors  # (nf, n, n)
-        self.n = tensors.shape[-1]
-        self.static = jnp.zeros_like(self.tensors[0]) if static is None else static
+        self.arrays = arrays  # (nf, n, n)
+        self.n = arrays.shape[-1]
+        self.static = jnp.zeros_like(self.arrays[0]) if static is None else static
 
     @property
     def dtype(self) -> jnp.dtype:
-        return self.tensors.dtype
+        return self.arrays.dtype
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -497,35 +493,35 @@ class ModulatedTimeTensor(TimeTensor):
     def __call__(self, t: float) -> Array:
         values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
         values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
-        return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
+        return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
 
-    def reshape(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeArray:
         # shape: (..., n, n)
         factors = [x.reshape(*shape[:-2]) for x in self.factors]
-        return ModulatedTimeTensor(factors, self.tensors, static=self.static)
+        return ModulatedTimeArray(factors, self.arrays, static=self.static)
 
-    def adjoint(self) -> TimeTensor:
+    def adjoint(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]
-        return ModulatedTimeTensor(factors, self.tensors.mH, static=self.static.mH)
+        return ModulatedTimeArray(factors, self.arrays.mH, static=self.static.mH)
 
-    def __neg__(self) -> TimeTensor:
-        return ModulatedTimeTensor(self.factors, -self.tensors, static=-self.static)
+    def __neg__(self) -> TimeArray:
+        return ModulatedTimeArray(self.factors, -self.arrays, static=-self.static)
 
-    def __mul__(self, other: Number | Array) -> TimeTensor:
-        return ModulatedTimeTensor(
-            self.factors, self.tensors * other, static=self.static * other
+    def __mul__(self, other: Number | Array) -> TimeArray:
+        return ModulatedTimeArray(
+            self.factors, self.arrays * other, static=self.static * other
         )
 
-    def __add__(self, other: Array | TimeTensor) -> TimeTensor:
+    def __add__(self, other: Array | TimeArray) -> TimeArray:
         if isinstance(other, Array):
             static = self.static + other
-            return ModulatedTimeTensor(self.factors, self.tensors, static=static)
-        elif isinstance(other, ConstantTimeTensor):
-            return self + other.tensor
-        elif isinstance(other, ModulatedTimeTensor):
+            return ModulatedTimeArray(self.factors, self.arrays, static=static)
+        elif isinstance(other, ConstantTimeArray):
+            return self + other.array
+        elif isinstance(other, ModulatedTimeArray):
             factors = self.factors + other.factors  # list of length (nf1 + nf2)
-            tensors = jnp.cat((self.tensors, other.tensors))  # (nf1 + nf2, n, n)
+            arrays = jnp.cat((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
             static = self.static + other.static  # (n, n)
-            return ModulatedTimeTensor(factors, tensors, static=static)
+            return ModulatedTimeArray(factors, arrays, static=static)
         else:
             return NotImplemented

@@ -158,7 +158,7 @@ nav:
               - mpow: python_api/utils/utils/mpow.md
               - trace: python_api/utils/utils/trace.md
               - ptrace: python_api/utils/utils/ptrace.md
-              - tensprod: python_api/utils/utils/tensprod.md
+              - tensor: python_api/utils/utils/tensor.md
               - expect: python_api/utils/utils/expect.md
               - norm: python_api/utils/utils/norm.md
               - unit: python_api/utils/utils/unit.md
@@ -174,8 +174,8 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-          - Tensor conversion:
-              - to_qutip: python_api/utils/tensor_types/to_qutip.md
+          - Array conversion:
+              - to_qutip: python_api/utils/array_types/to_qutip.md
           - Wigner distribution:
               - wigner: python_api/utils/wigners/wigner.md
           - Vectorization:

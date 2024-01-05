@@ -4,8 +4,8 @@ import logging
 from abc import ABC
 from typing import Any
 
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver

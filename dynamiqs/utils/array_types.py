@@ -93,7 +93,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
          [1.]
          [0.]]
 
-        For a batched tensor:
+        For a batched array:
         >>> rhos = jnp.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         (5, 16, 16)

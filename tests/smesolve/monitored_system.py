@@ -7,11 +7,11 @@ import torch
 from torch import Tensor
 
 import dynamiqs as dq
-from dynamiqs import TimeTensor
+from dynamiqs import TimeArray
 from dynamiqs.gradient import Gradient
-from dynamiqs.solver import Solver
 from dynamiqs.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike
+from dynamiqs.solver import Solver
+from dynamiqs.utils.array_types import ArrayLike
 
 from ..mesolve.open_system import OpenSystem
 
@@ -28,7 +28,7 @@ class MonitoredSystem(OpenSystem):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
-        H: ArrayLike | TimeTensor | None = None,
+        H: ArrayLike | TimeArray | None = None,
         L: list[ArrayLike] | None = None,
         y0: ArrayLike | None = None,
         ntrajs: int = 10,

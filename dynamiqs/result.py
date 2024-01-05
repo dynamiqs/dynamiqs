@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from jax import numpy as jnp, Array
+from jax import Array
 
 from .gradient import Gradient
 from .options import Options
@@ -24,8 +24,8 @@ def memory_str(x: Array) -> str:
         return f'{mem / 1024**3:.2f} Gb'
 
 
-def tensor_str(x: Array) -> str:
-    return f'Tensor {tuple(x.shape)} | {memory_str(x)}'
+def array_str(x: Array) -> str:
+    return f'Array {tuple(x.shape)} | {memory_str(x)}'
 
 
 class Result:
@@ -104,10 +104,10 @@ class Result:
             'Start': self.start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
             'End': self.end_datetime.strftime('%Y-%m-%d %H:%M:%S'),
             'Total time': f'{self.total_time.total_seconds():.2f} s',
-            'States': tensor_str(self.states),
-            'Expects': tensor_str(self.expects) if self.expects is not None else None,
+            'States': array_str(self.states),
+            'Expects': array_str(self.expects) if self.expects is not None else None,
             'Measurements': (
-                tensor_str(self.measurements) if self.measurements is not None else None
+                array_str(self.measurements) if self.measurements is not None else None
             ),
         }
         parts = {k: v for k, v in parts.items() if v is not None}

@@ -1,7 +1,7 @@
+import diffrax as dx
 from jax import Array
 
-from .gradient import Gradient, Autograd, Adjoint
-import diffrax as dx
+from .gradient import Adjoint, Autograd, Gradient
 
 
 class Solver:
@@ -17,7 +17,7 @@ class _ODEFixedStep(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
 
     def __init__(self, *, dt: float):
-        # convert `dt` in case a tensor was passed instead of a float
+        # convert `dt` in case an array was passed instead of a float
         if isinstance(dt, Array):
             dt = dt.item()
         self.dt = dt
