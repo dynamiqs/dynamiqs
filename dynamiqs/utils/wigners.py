@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Literal
 
+import jax.lax as lax
 import jax.numpy as jnp
-import torch
 from jax import Array
+from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
-from torch import Tensor
 
 from .array_types import dtype_complex_to_real, dtype_real_to_complex
 from .operators import eye
@@ -118,7 +118,7 @@ def _laguerre_series(i, x, c):
     return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
 
-def _wigner_fft_psi(psi: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor]:
+def _wigner_fft_psi(psi: Array, xvec: Array, g: float) -> tuple[Array, Array]:
     """Compute the wigner distribution of a ket with the FFT."""
     n = psi.size(0)
 
@@ -132,10 +132,10 @@ def _wigner_fft_psi(psi: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor
     return 0.5 * g**2 * w.T.real, yvec * jnp.sqrt(2) / g
 
 
-def _wigner_fft_dm(rho: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor]:
+def _wigner_fft_dm(rho: Array, xvec: Array, g: float) -> tuple[Array, Array]:
     """Compute the wigner distribution of a density matrix with the FFT."""
     # diagonalize rho
-    eig_vals, eig_vecs = torch.linalg.eigh(rho)
+    eig_vals, eig_vecs = lax.linalg.eigh(rho)
 
     # compute the wigner distribution of each eigenstate
     W = 0
@@ -147,14 +147,14 @@ def _wigner_fft_dm(rho: Tensor, xvec: Tensor, g: float) -> tuple[Tensor, Tensor]
     return W, yvec
 
 
-def _fock_to_position(n: int, positions: Tensor) -> Tensor:
+def _fock_to_position(n: int, positions: Array) -> Array:
     """
     Compute the change-of-basis matrix from the Fock basis to the position basis of an
     oscillator of dimension n, as evaluated at the specific position values provided.
     """
     n_positions = positions.shape[0]
-    U = torch.zeros(n, n_positions, dtype=dtype_real_to_complex(positions.dtype))
-    U[0, :] = jnp.pi ** (-0.25) * torch.exp(-0.5 * positions**2)
+    U = jnp.zeros(n, n_positions, dtype=dtype_real_to_complex(positions.dtype))
+    U[0, :] = pi ** (-0.25) * jnp.exp(-0.5 * positions**2)
 
     if n == 1:
         return U
@@ -166,7 +166,7 @@ def _fock_to_position(n: int, positions: Tensor) -> Tensor:
     return U
 
 
-def _wigner_fft(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
+def _wigner_fft(psi: Array, xvec: Array) -> tuple[Array, Array]:
     """Wigner distribution of a given ket using the fast Fourier transform.
 
     Args:
@@ -179,30 +179,17 @@ def _wigner_fft(psi: Tensor, xvec: Tensor) -> tuple[Tensor, Tensor]:
     n = len(psi)
 
     # compute the fourier transform of psi
-    r1 = torch.cat((torch.tensor([0]), psi.conj().flip(-1), torch.zeros(n - 1)))
-    r2 = torch.cat((torch.tensor([0]), psi, torch.zeros(n - 1)))
-    w = _toeplitz(torch.zeros(n), r1) * _toeplitz(torch.zeros(n), r2).flipud()
-    w = torch.cat((w[:, n : 2 * n], w[:, 0:n]), dim=1)
-    w = torch.fft.fft(w)
-    w = torch.cat((w[:, 3 * n // 2 : 2 * n + 1], w[:, 0 : n // 2]), axis=1).real
+    r1 = lax.concatenate((jnp.array([0.0]), psi.conj().flip(-1), jnp.zeros(n - 1)))
+    r2 = lax.concatenate((jnp.array([0.0]), psi, jnp.zeros(n - 1)))
+    w = toeplitz(jnp.zeros(n), r=r1) * jnp.flipud(toeplitz(jnp.zeros(n), r=r2))
+    w = lax.concatenate((w[:, n : 2 * n], w[:, 0:n]), dim=1)
+    w = jnp.fft.fft(w)
+    w = lax.concatenate((w[:, 3 * n // 2 : 2 * n + 1], w[:, 0 : n // 2]), axis=1).real
 
     # compute the fourier transform of xvec
-    p = torch.arange(-n / 2, n / 2) * jnp.pi / (2 * n * (xvec[1] - xvec[0]))
+    p = jnp.arange(-n / 2, n / 2) * pi / (2 * n * (xvec[1] - xvec[0]))
 
     # normalize wigner distribution
     w = w / (p[1] - p[0]) / (2 * n)
 
     return w, p
-
-
-def _toeplitz(c: Tensor, r: Tensor = None) -> Tensor:
-    """Construct a Toeplitz matrix.
-
-    Code copied from https://stackoverflow.com/a/68899386/9099342.
-    """
-    c = torch.ravel(c)
-    r = torch.ravel(r) if r is not None else c.conj()
-    vals = torch.cat((r, c[1:].flip(0)))
-    shape = len(c), len(r)
-    i, j = torch.ones(*shape).nonzero().T
-    return vals[j - i].reshape(*shape)

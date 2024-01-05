@@ -174,7 +174,7 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-          - Tensor conversion:
+          - Array conversion:
               - to_qutip: python_api/utils/array_types/to_qutip.md
           - Wigner distribution:
               - wigner: python_api/utils/wigners/wigner.md

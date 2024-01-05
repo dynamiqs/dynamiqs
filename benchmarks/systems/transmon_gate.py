@@ -3,11 +3,11 @@ from __future__ import annotations
 from math import cos, exp, pi, sqrt
 
 import torch
+from jax import Array
 from scipy.special import erf
-from torch import Tensor
 
 import dynamiqs as dq
-from dynamiqs.utils.tensor_types import get_cdtype
+from dynamiqs.utils.array_types import get_cdtype
 
 from .system import ClosedSystem, OpenSystem
 
@@ -82,15 +82,15 @@ class TransmonGate(ClosedSystem):
     def eps(self, t: float) -> float:
         return self.eps_0 * (self.gaussian(t) - self.gaussian(0))
 
-    def H(self, t: float) -> Tensor:
+    def H(self, t: float) -> Array:
         return self.H0 + self.eps(t) * cos(self.omega_t * t) * self.charge
 
     @property
-    def y0(self) -> Tensor:
+    def y0(self) -> Array:
         return dq.fock(self.N, 0)
 
     @property
-    def tsave(self) -> Tensor:
+    def tsave(self) -> Array:
         return torch.linspace(0, self.T, self.num_tslots + 1)
 
     def to(self, dtype: torch.dtype, device: torch.device):
@@ -101,5 +101,5 @@ class TransmonGate(ClosedSystem):
 
 class OpenTransmonGate(TransmonGate, OpenSystem):
     @property
-    def jump_ops(self) -> list[Tensor]:
+    def jump_ops(self) -> list[Array]:
         return [sqrt(self.kappa) * torch.triu(self.charge)]

@@ -10,7 +10,7 @@ PATHS_TO_PARSE = [
     'dynamiqs/utils/operators.py',
     'dynamiqs/utils/states.py',
     'dynamiqs/utils/utils.py',
-    'dynamiqs/utils/tensor_types.py',
+    'dynamiqs/utils/array_types.py',
     'dynamiqs/utils/wigners.py',
     'dynamiqs/utils/vectorization.py',
     'dynamiqs/utils/optimal_control.py',

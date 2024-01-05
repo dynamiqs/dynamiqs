@@ -1,6 +1,7 @@
+import jax.numpy as jnp
 import pytest
 import torch
-from torch import Tensor
+from jax import Array
 
 from dynamiqs.time_array import (
     CallableTimeArray,
@@ -12,14 +13,14 @@ from dynamiqs.time_array import (
 )
 
 
-def assert_equal(xt: Tensor, y: list):
-    assert torch.equal(xt, torch.tensor(y))
+def assert_equal(xt: Array, y: list):
+    assert torch.equal(xt, jnp.array(y))
 
 
 class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.x = ConstantTimeArray(torch.tensor([1, 2]))
+        self.x = ConstantTimeArray(jnp.array([1, 2]))
 
     def test_call(self):
         assert_equal(self.x(0.0), [1, 2])
@@ -34,9 +35,9 @@ class TestConstantTimeArray:
         assert_equal(x(0.0), [[1, 2]])
 
     def test_adjoint(self):
-        x = ConstantTimeArray(torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
+        x = ConstantTimeArray(jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
         x = x.adjoint()
-        res = torch.tensor([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
+        res = jnp.array([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
         assert torch.equal(x(0.0), res)
 
     def test_neg(self):
@@ -48,8 +49,8 @@ class TestConstantTimeArray:
         x = self.x * 2
         assert_equal(x(0.0), [2, 4])
 
-        # test type `Tensor`
-        x = self.x * torch.tensor([0, 1])
+        # test type `Array`
+        x = self.x * jnp.array([0, 1])
         assert_equal(x(0.0), [0, 2])
 
     def test_rmul(self):
@@ -57,13 +58,13 @@ class TestConstantTimeArray:
         x = 2 * self.x
         assert_equal(x(0.0), [2, 4])
 
-        # test type `Tensor`
-        x = torch.tensor([0, 1]) * self.x
+        # test type `Array`
+        x = jnp.array([0, 1]) * self.x
         assert_equal(x(0.0), [0, 2])
 
     def test_add(self):
-        # test type `Tensor`
-        x = self.x + torch.tensor([0, 1])
+        # test type `Array`
+        x = self.x + jnp.array([0, 1])
         assert isinstance(x, ConstantTimeArray)
         assert_equal(x(0.0), [1, 3])
 
@@ -73,8 +74,8 @@ class TestConstantTimeArray:
         assert_equal(x(0.0), [2, 4])
 
     def test_radd(self):
-        # test type `Tensor`
-        x = torch.tensor([0, 1]) + self.x
+        # test type `Array`
+        x = jnp.array([0, 1]) + self.x
         assert isinstance(x, ConstantTimeArray)
         assert_equal(x(0.0), [1, 3])
 
@@ -82,7 +83,7 @@ class TestConstantTimeArray:
 class TestCallableTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
-        f = lambda t: t * torch.tensor([1, 2])
+        f = lambda t: t * jnp.array([1, 2])
         self.x = CallableTimeArray(f, f(0.0))
 
     def test_call(self):
@@ -99,10 +100,10 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [[1, 2]])
 
     def test_adjoint(self):
-        f = lambda t: t * torch.tensor([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
+        f = lambda t: t * jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
         x = CallableTimeArray(f, f(0.0))
         x = x.adjoint()
-        res = torch.tensor([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
+        res = jnp.array([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
         assert torch.equal(x(1.0), res)
 
     def test_neg(self):
@@ -116,8 +117,8 @@ class TestCallableTimeArray:
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [2, 4])
 
-        # test type `Tensor`
-        x = self.x * torch.tensor([0, 1])
+        # test type `Array`
+        x = self.x * jnp.array([0, 1])
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [0, 2])
 
@@ -127,14 +128,14 @@ class TestCallableTimeArray:
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [2, 4])
 
-        # test type `Tensor`
-        x = torch.tensor([0, 1]) * self.x
+        # test type `Array`
+        x = jnp.array([0, 1]) * self.x
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [0, 2])
 
     def test_add(self):
-        # test type `Tensor`
-        x = self.x + torch.tensor([0, 1])
+        # test type `Array`
+        x = self.x + jnp.array([0, 1])
         assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
@@ -146,8 +147,8 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [2, 4])
 
     def test_radd(self):
-        # test type `Tensor`
-        x = torch.tensor([0, 1]) + self.x
+        # test type `Array`
+        x = jnp.array([0, 1]) + self.x
         assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
@@ -157,20 +158,20 @@ class TestPWCTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
         # PWC factor 1
-        t1 = torch.tensor([0, 1, 2, 3])
-        v1 = torch.tensor([1, 10, 100])
+        t1 = jnp.array([0, 1, 2, 3])
+        v1 = jnp.array([1, 10, 100])
         f1 = _PWCFactor(t1, v1)
-        tensor1 = torch.tensor([[1, 2], [3, 4]])
+        array1 = jnp.array([[1, 2], [3, 4]])
 
         # PWC factor 2
-        t2 = torch.tensor([1, 3, 5])
-        v2 = torch.tensor([1, 1])
+        t2 = jnp.array([1, 3, 5])
+        v2 = jnp.array([1, 1])
         f2 = _PWCFactor(t2, v2)
-        tensor2 = torch.tensor([[1j, 1j], [1j, 1j]])
+        array2 = jnp.array([[1j, 1j], [1j, 1j]])
 
         factors = [f1, f2]
-        tensors = torch.stack([tensor1, tensor2])
-        self.x = PWCTimeArray(factors, tensors)  # shape at t: (2, 2)
+        arrays = torch.stack([array1, array2])
+        self.x = PWCTimeArray(factors, arrays)  # shape at t: (2, 2)
 
     def test_call(self):
         assert_equal(self.x(-0.1), [[0, 0], [0, 0]])
@@ -206,8 +207,8 @@ class TestPWCTimeArray:
         x = self.x * 2
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
-        # test type `Tensor`
-        x = self.x * torch.tensor([2])
+        # test type `Array`
+        x = self.x * jnp.array([2])
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_rmul(self):
@@ -215,15 +216,15 @@ class TestPWCTimeArray:
         x = 2 * self.x
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
-        # test type `Tensor`
-        x = torch.tensor([2]) * self.x
+        # test type `Array`
+        x = jnp.array([2]) * self.x
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_add(self):
-        tensor = torch.tensor([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
 
-        # test type `Tensor`
-        x = self.x + tensor
+        # test type `Array`
+        x = self.x + array
         assert isinstance(x, PWCTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
@@ -234,10 +235,10 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_radd(self):
-        tensor = torch.tensor([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
 
-        # test type `Tensor`
-        x = tensor + self.x
+        # test type `Array`
+        x = array + self.x
         assert isinstance(x, PWCTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
@@ -246,23 +247,23 @@ class TestPWCTimeArray:
 class TestModulatedTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
-        one = torch.tensor(1.0)
+        one = jnp.array(1.0)
 
         # modulated factor 1
         eps1 = lambda t: (0.5 * t + 1.0j) * one
         eps1_0 = eps1(0.0)
         f1 = _ModulatedFactor(eps1, eps1_0)
-        tensor1 = torch.tensor([[1, 2], [3, 4]])
+        array1 = jnp.array([[1, 2], [3, 4]])
 
         # modulated factor 2
         eps2 = lambda t: t**2 * one
         eps2_0 = eps2(0.0)
         f2 = _ModulatedFactor(eps2, eps2_0)
-        tensor2 = torch.tensor([[1j, 1j], [1j, 1j]])
+        array2 = jnp.array([[1j, 1j], [1j, 1j]])
 
         factors = [f1, f2]
-        tensors = torch.stack([tensor1, tensor2])
-        self.x = ModulatedTimeArray(factors, tensors)
+        arrays = torch.stack([array1, array2])
+        self.x = ModulatedTimeArray(factors, arrays)
 
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
@@ -286,8 +287,8 @@ class TestModulatedTimeArray:
         x = self.x * 2
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
-        # test type `Tensor`
-        x = self.x * torch.tensor([2])
+        # test type `Array`
+        x = self.x * jnp.array([2])
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_rmul(self):
@@ -295,15 +296,15 @@ class TestModulatedTimeArray:
         x = 2 * self.x
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
-        # test type `Tensor`
-        x = torch.tensor([2]) * self.x
+        # test type `Array`
+        x = jnp.array([2]) * self.x
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_add(self):
-        tensor = torch.tensor([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
 
-        # test type `Tensor`
-        x = self.x + tensor
+        # test type `Array`
+        x = self.x + array
         assert isinstance(x, ModulatedTimeArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
@@ -313,9 +314,9 @@ class TestModulatedTimeArray:
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_radd(self):
-        tensor = torch.tensor([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
 
-        # test type `Tensor`
-        x = tensor + self.x
+        # test type `Array`
+        x = array + self.x
         assert isinstance(x, ModulatedTimeArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
