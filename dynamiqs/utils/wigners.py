@@ -120,7 +120,7 @@ def _laguerre_series(i, x, c):
 
 def _wigner_fft_psi(psi: Array, xvec: Array, g: float) -> tuple[Array, Array]:
     """Compute the wigner distribution of a ket with the FFT."""
-    n = psi.size(0)
+    n = psi.shape[0]
 
     # compute psi in position basis
     U = _fock_to_position(n, xvec * g / jnp.sqrt(2))
@@ -153,16 +153,17 @@ def _fock_to_position(n: int, positions: Array) -> Array:
     oscillator of dimension n, as evaluated at the specific position values provided.
     """
     n_positions = positions.shape[0]
-    U = jnp.zeros(n, n_positions, dtype=dtype_real_to_complex(positions.dtype))
-    U[0, :] = pi ** (-0.25) * jnp.exp(-0.5 * positions**2)
+    U = jnp.zeros((n, n_positions), dtype=dtype_real_to_complex(positions.dtype))
+    U = U.at[0].set(pi ** (-0.25) * jnp.exp(-0.5 * positions**2))
 
     if n == 1:
         return U
 
-    U[1, :] = jnp.sqrt(2) * positions * U[0, :]
+    U = U.at[1].set(sqrt(2.0) * positions * U[0, :])
     for k in range(2, n):
-        U[k, :] = jnp.sqrt(2.0 / k) * positions * U[k - 1, :]
-        U[k, :] -= jnp.sqrt(1.0 - 1.0 / k) * U[k - 2, :]
+        U = U.at[k].set(
+            sqrt(2.0 / k) * positions * U[k - 1, :] - sqrt(1.0 - 1.0 / k) * U[k - 2, :]
+        )
     return U
 
 
@@ -179,12 +180,14 @@ def _wigner_fft(psi: Array, xvec: Array) -> tuple[Array, Array]:
     n = len(psi)
 
     # compute the fourier transform of psi
-    r1 = lax.concatenate((jnp.array([0.0]), psi.conj().flip(-1), jnp.zeros(n - 1)))
-    r2 = lax.concatenate((jnp.array([0.0]), psi, jnp.zeros(n - 1)))
+    r1 = jnp.concatenate(
+        (jnp.array([0.0]), jnp.flip(psi.conj(), axis=-1), jnp.zeros(n - 1)), axis=0
+    )
+    r2 = jnp.concatenate((jnp.array([0.0]), psi, jnp.zeros(n - 1)), axis=0)
     w = toeplitz(jnp.zeros(n), r=r1) * jnp.flipud(toeplitz(jnp.zeros(n), r=r2))
-    w = lax.concatenate((w[:, n : 2 * n], w[:, 0:n]), dim=1)
+    w = jnp.concatenate((w[:, n : 2 * n], w[:, 0:n]), axis=1)
     w = jnp.fft.fft(w)
-    w = lax.concatenate((w[:, 3 * n // 2 : 2 * n + 1], w[:, 0 : n // 2]), axis=1).real
+    w = jnp.concatenate((w[:, 3 * n // 2 : 2 * n + 1], w[:, 0 : n // 2]), axis=1).real
 
     # compute the fourier transform of xvec
     p = jnp.arange(-n / 2, n / 2) * pi / (2 * n * (xvec[1] - xvec[0]))
