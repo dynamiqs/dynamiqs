@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
+import jax.numpy as jnp
+from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
-from ..utils.tensor_types import ArrayLike, to_numpy, to_tensor
 from ..utils.wigners import wigner
 from .utils import add_colorbar, colors, gridplot, linmap, optax
 
@@ -18,21 +18,21 @@ def plot_wigner_data(
     ymax: float,
     *,
     ax: Axes | None = None,
-    vmax: float = 2 / np.pi,
+    vmax: float = 2 / jnp.pi,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
 ):
-    w = to_numpy(wigner)
+    w = jnp.asarray(wigner)
 
     # set plot norm
     vmin = -vmax
     norm = Normalize(vmin=vmin, vmax=vmax, clip=True)
 
     # clip to avoid rounding errors
-    w = np.clip(w, vmin, vmax)
+    w = w.clip(vmin, vmax)
 
     # plot
     ax.imshow(
@@ -50,7 +50,7 @@ def plot_wigner_data(
 
     if colorbar and not clear:
         cax = add_colorbar(ax, cmap, norm)
-        if vmax == 2 / np.pi:
+        if vmax == 2 / jnp.pi:
             cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
 
     if cross:
@@ -69,7 +69,7 @@ def plot_wigner(
     ax: Axes | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / np.pi,
+    vmax: float = 2 / jnp.pi,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -115,7 +115,8 @@ def plot_wigner(
 
         ![plot_wigner_4legged](/figs-code/plot_wigner_4legged.png){.fig-half}
     """
-    state = to_tensor(state)
+    state = jnp.asarray(state)
+
     ymax = xmax if ymax is None else ymax
     _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
 
@@ -142,7 +143,7 @@ def plot_wigner_mosaic(
     h: float | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / np.pi,
+    vmax: float = 2 / jnp.pi,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -176,7 +177,7 @@ def plot_wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = a.mH @ a.mH @ a @ a  # Kerr Hamiltonian
+        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = np.linspace(0, np.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -185,7 +186,7 @@ def plot_wigner_mosaic(
 
         ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
     """
-    states = to_tensor(states)
+    states = jnp.asarray(states)
 
     nstates = len(states)
     if nstates < n:
