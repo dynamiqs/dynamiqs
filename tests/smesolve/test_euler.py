@@ -1,5 +1,5 @@
 from dynamiqs.gradient import Autograd
-from dynamiqs.solvers import Euler
+from dynamiqs.solver import Euler
 
 from .monitored_system import gmcavity, mcavity
 from .sme_solver_tester import SMESolverTester

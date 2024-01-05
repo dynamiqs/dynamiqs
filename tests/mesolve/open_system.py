@@ -7,7 +7,7 @@ from jax import numpy as jnp, Array
 import dynamiqs as dq
 from dynamiqs import TimeTensor, dag
 from dynamiqs.gradient import Gradient
-from dynamiqs.solvers import Solver
+from dynamiqs.solver import Solver
 from dynamiqs.result import Result
 from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
 

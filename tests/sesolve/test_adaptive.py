@@ -1,7 +1,7 @@
 import pytest
 
 from dynamiqs.gradient import Autograd
-from dynamiqs.solvers import Dopri5
+from dynamiqs.solver import Dopri5
 
 from ..solver_tester import SolverTester
 from .closed_system import cavity, gcavity, gtdqubit, tdqubit

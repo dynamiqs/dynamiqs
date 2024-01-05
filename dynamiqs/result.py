@@ -7,7 +7,7 @@ from jax import numpy as jnp, Array
 
 from .gradient import Gradient
 from .options import Options
-from .solvers import Solver
+from .solver import Solver
 
 
 def memory_bytes(x: Array) -> int:

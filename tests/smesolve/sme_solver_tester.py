@@ -7,7 +7,7 @@ from typing import Any
 import torch
 
 from dynamiqs.gradient import Gradient
-from dynamiqs.solvers import Solver
+from dynamiqs.solver import Solver
 
 # from .mesolve.open_system import OpenSystem
 # from .sesolve.closed_system import ClosedSystem

@@ -1,5 +1,5 @@
 from dynamiqs.gradient import Autograd
-from dynamiqs.solvers import Propagator
+from dynamiqs.solver import Propagator
 
 from ..solver_tester import SolverTester
 from .open_system import gocavity, ocavity

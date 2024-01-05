@@ -1,7 +1,7 @@
 import pytest
 
 from dynamiqs.gradient import Adjoint, Autograd
-from dynamiqs.solvers import Rouchon1, Rouchon2
+from dynamiqs.solver import Rouchon1, Rouchon2
 
 from ..solver_tester import SolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit

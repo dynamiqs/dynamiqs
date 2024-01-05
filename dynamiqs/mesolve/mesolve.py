@@ -5,7 +5,7 @@ from typing import Any
 from jaxtyping import ArrayLike
 
 from dynamiqs.gradient import Gradient
-from dynamiqs.solvers import Solver
+from dynamiqs.solver import Solver
 
 
 def mesolve(

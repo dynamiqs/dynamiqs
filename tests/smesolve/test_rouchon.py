@@ -1,5 +1,5 @@
 from dynamiqs.gradient import Autograd
-from dynamiqs.solvers import Rouchon1
+from dynamiqs.solver import Rouchon1
 
 from .monitored_system import gmcavity, mcavity
 from .sme_solver_tester import SMESolverTester

@@ -10,7 +10,7 @@ from .._utils import split_complex, merge_complex, bexpect
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
-from ..solvers import Dopri5, Solver
+from ..solver import Dopri5, Solver
 
 
 def sesolve(

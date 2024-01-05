@@ -8,7 +8,7 @@ from jaxtyping import ArrayLike
 
 import dynamiqs as dq
 from dynamiqs.gradient import Gradient
-from dynamiqs.solvers import Solver
+from dynamiqs.solver import Solver
 from dynamiqs.result import Result
 
 
