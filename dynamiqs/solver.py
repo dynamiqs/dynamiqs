@@ -50,9 +50,13 @@ class Euler(_ODEFixedStep):
     pass
 
 
+class Rouchon1(_ODEFixedStep):
+    pass
+
+
 def _stepsize_controller(solver):
     if isinstance(solver, _ODEFixedStep):
-        stepsize_controller = dx.ConstantStepSize
+        stepsize_controller = dx.ConstantStepSize()
         dt = solver.dt
     elif isinstance(solver, _ODEAdaptiveStep):
         stepsize_controller = dx.PIDController(
