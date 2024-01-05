@@ -45,6 +45,17 @@ def check_time_array(x: Array, arg_name: str, allow_empty=False):
 
 
 def bexpect(O: Array, x: Array) -> Array:
+    # batched over O
     if isket(x):
-        return jnp.einsum('...ij,jk,...kl->...', dag(x), O, x)  # <x|O|x>
-    return jnp.einsum('ij,bji->b', O, x)  # tr(Ox)
+        return jnp.einsum('ij,...jk,kl->...', dag(x), O, x)  # <x|O|x>
+    return jnp.einsum('...ij,ji->...', O, x)  # tr(Ox)
+
+
+def save_fn(_t, y, args):
+    options, exp_ops = args
+    res = {}
+    if options.save_states:
+        res['states'] = y
+    if options.save_expects:
+        res['expects'] = bexpect(exp_ops, y)
+    return res

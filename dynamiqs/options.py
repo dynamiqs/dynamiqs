@@ -53,9 +53,9 @@ class SharedOptions:
         self,
         *,
         save_states: bool = True,
+        save_expects: bool = False,
         verbose: bool = True,
         dtype: torch.complex64 | torch.complex128 | None = None,
-        device: str | torch.device | None = None,
         cartesian_batching: bool = True,
     ):
         # save_states (bool, optional): If `True`, the state is saved at every
@@ -64,9 +64,8 @@ class SharedOptions:
         # dtype (torch.dtype, optional): Complex data type to which all complex-valued
         #     arrays are converted. `tsave` is also converted to a real data type of
         #     the corresponding precision.
-        # device (string or torch.device, optional): Device on which the arrays are
-        #     stored.
         self.save_states = save_states
+        self.save_expects = save_expects
         self.verbose = verbose
         self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)

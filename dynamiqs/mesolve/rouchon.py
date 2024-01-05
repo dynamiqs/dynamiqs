@@ -20,8 +20,8 @@ class Rouchon1Solver(dx.AbstractSolver):
 
         # compute y1
         dt = terms.contr(t0, t1)
-        M0 = terms.term.Id - 1j * dt * terms.term.Hnh  # (n, n)
-        M1s = jnp.sqrt(jnp.abs(dt)) * terms.term.Ls  # (nL, n, n)
+        M0 = terms.term.Id - 1j * dt * terms.term.Hnh(t0)  # (n, n)
+        M1s = jnp.sqrt(jnp.abs(dt)) * terms.term.Ls(t0)  # (nL, n, n)
         y1 = M0 @ y0 @ dag(M0) + jnp.sum(M1s @ y0 @ dag(M1s), axis=0)
 
         # return
