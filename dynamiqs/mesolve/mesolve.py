@@ -6,7 +6,7 @@ import diffrax as dx
 import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
-from .._utils import bexpect
+from .._utils import bexpect, _get_gradient_class, _get_solver_class
 from ..gradient import Adjoint, Autograd, Gradient
 from ..options import Options
 from ..result import Result
@@ -35,38 +35,10 @@ def mesolve(
 
     # === solver class
     solvers = {Rouchon1: Rouchon1Solver}
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
-        )
-    solver_class = solvers[type(solver)]
+    solver_class = _get_solver_class(solver, solvers)
 
     # === gradient class
-    gradients = {
-        Autograd: dx.RecursiveCheckpointAdjoint,
-        Adjoint: dx.BacksolveAdjoint,
-    }
-    if gradient is None:
-        pass
-    elif not isinstance(gradient, tuple(gradients.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in gradients.keys())
-        raise ValueError(
-            f'Gradient of type `{type(gradient).__name__}` is not supported'
-            f' (supported gradient types: {supported_str}).'
-        )
-    elif not solver.supports_gradient(gradient):
-        support_str = ', '.join(f'`{x.__name__}`' for x in solver.SUPPORTED_GRADIENT)
-        raise ValueError(
-            f'Solver `{type(solver).__name__}` does not support gradient'
-            f' `{type(gradient).__name__}` (supported gradient types: {support_str}).'
-        )
-
-    if gradient is not None:
-        gradient_class = gradients[type(gradient)]
-    else:
-        gradient_class = None
+    gradient_class = _get_gradient_class(gradient, solver)
 
     # === stepsize controller
     stepsize_controller, dt = _stepsize_controller(solver)
