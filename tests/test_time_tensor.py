@@ -30,7 +30,7 @@ class TestConstantTimeTensor:
         assert hash(self.x(1.0)) == hash(self.x(1.0))
 
     def test_view(self):
-        x = self.x.view(1, 2)
+        x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[1, 2]])
 
     def test_adjoint(self):
@@ -94,7 +94,7 @@ class TestCallableTimeTensor:
         assert hash(self.x(1.0)) == hash(self.x(1.0))
 
     def test_view(self):
-        x = self.x.view(1, 2)
+        x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[0, 0]])
         assert_equal(x(1.0), [[1, 2]])
 
@@ -189,7 +189,7 @@ class TestPWCTimeTensor:
         assert hash(self.x(5.0)) == hash(self.x(5.0)) == hash(self.x(6.0))
 
     def test_view(self):
-        x = self.x.view(1, 2, 2)
+        x = self.x.reshape(1, 2, 2)
         assert_equal(x(-0.1), [[[0, 0], [0, 0]]])
         assert_equal(x(0.0), [[[1, 2], [3, 4]]])
 
@@ -269,7 +269,7 @@ class TestModulatedTimeTensor:
         assert_equal(self.x(2.0), [[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]])
 
     def test_view(self):
-        x = self.x.view(1, 2, 2)
+        x = self.x.reshape(1, 2, 2)
         assert_equal(x(0.0), [[[1.0j, 2.0j], [3.0j, 4.0j]]])
         assert_equal(x(2.0), [[[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]]])
 

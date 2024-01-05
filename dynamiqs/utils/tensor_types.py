@@ -11,8 +11,6 @@ from .utils import _hdim, isbra, isket, isop
 __all__ = ['to_qutip']
 
 # TODO: remove (keep name to avoid ImportError while transitioning from PyTorch to JAX)
-to_tensor = None
-to_numpy = None
 Number = None
 
 

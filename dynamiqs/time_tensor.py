@@ -11,7 +11,6 @@ from .utils.tensor_types import (
     Number,
     dtype_complex_to_real,
     get_cdtype,
-    to_tensor,
 )
 
 __all__ = ['totime']
@@ -52,7 +51,7 @@ def totime(
 
 
 def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeTensor:
-    x = to_tensor(x, dtype=dtype)
+    x = jnp.asarray(x, dtype=dtype)
     return ConstantTimeTensor(x)
 
 
@@ -93,11 +92,11 @@ def _factory_pwc(
         rdtype = dtype
 
     # times
-    times = to_tensor(times, dtype=rdtype)
+    times = jnp.asarray(times, dtype=rdtype)
     check_time_tensor(times, arg_name='times')
 
     # values
-    values = to_tensor(values, dtype=dtype)
+    values = jnp.asarray(values, dtype=dtype)
     if values.shape[0] != len(times) - 1:
         raise TypeError(
             'For a PWC tensor `(times, values, tensor)`, argument `values` must'
@@ -106,7 +105,7 @@ def _factory_pwc(
         )
 
     # tensor
-    tensor = to_tensor(tensor, dtype=dtype)
+    tensor = jnp.asarray(tensor, dtype=dtype)
     if tensor.ndim != 2 or tensor.shape[-1] != tensor.shape[-2]:
         raise TypeError(
             'For a PWC tensor `(times, values, tensor)`, argument `tensor` must be'
@@ -152,7 +151,7 @@ def _factory_modulated(
         )
 
     # tensor
-    tensor = to_tensor(tensor, dtype=dtype)
+    tensor = jnp.asarray(tensor, dtype=dtype)
     if tensor.ndim != 2 or tensor.shape[-1] != tensor.shape[-2]:
         raise TypeError(
             'For a modulated time tensor `(f, tensor)`, argument `tensor` must'
@@ -167,7 +166,7 @@ def _factory_modulated(
 class TimeTensor:
     # Subclasses should implement:
     # - the properties: dtype, device, shape
-    # - the methods: __call__, view, adjoint, __neg__, __mul__, __add__
+    # - the methods: __call__, reshape, adjoint, __neg__, __mul__, __add__
 
     # Special care should be taken when implementing `__call__` for caching to work
     # properly. The `@cache` decorator checks the tensor `__hash__`, which is
@@ -194,7 +193,7 @@ class TimeTensor:
         pass
 
     @abstractmethod
-    def view(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeTensor:
         """Returns a new tensor with the same data but of a different shape."""
         pass
 
@@ -265,8 +264,8 @@ class ConstantTimeTensor(TimeTensor):
     def __call__(self, t: float) -> Array:
         return self.tensor
 
-    def view(self, *shape: int) -> TimeTensor:
-        return ConstantTimeTensor(self.tensor.view(*shape))
+    def reshape(self, *shape: int) -> TimeTensor:
+        return ConstantTimeTensor(self.tensor.reshape(*shape))
 
     def adjoint(self) -> TimeTensor:
         return ConstantTimeTensor(self.tensor.adjoint())
@@ -302,11 +301,11 @@ class CallableTimeTensor(TimeTensor):
 
     def __call__(self, t: float) -> Array:
         # cached if called twice with the same time, otherwise we recompute `f(t)`
-        return self.f(t).view(self.shape)
+        return self.f(t).reshape(self.shape)
 
-    def view(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeTensor:
         f = self.f
-        f0 = self.f0.view(*shape)
+        f0 = self.f0.reshape(*shape)
         return CallableTimeTensor(f, f0)
 
     @abstractmethod
@@ -367,8 +366,8 @@ class _PWCFactor:
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
-    def view(self, *shape: int) -> _PWCFactor:
-        return _PWCFactor(self.times, self.values.view(*shape, self.nv))
+    def reshape(self, *shape: int) -> _PWCFactor:
+        return _PWCFactor(self.times, self.values.reshape(*shape, self.nv))
 
 
 class PWCTimeTensor(TimeTensor):
@@ -403,7 +402,7 @@ class PWCTimeTensor(TimeTensor):
         else:
             t = self.times[idx]
             values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
-            values = values.view(*values.shape, 1, 1)  # (..., nf, n, n)
+            values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
             return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
 
     def __call__(self, t: float) -> Array:
@@ -412,9 +411,9 @@ class PWCTimeTensor(TimeTensor):
         idx = jnp.searchsorted(self.times, t, side='right') - 1
         return self._call(idx.item())
 
-    def view(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeTensor:
         # shape: (..., n, n)
-        factors = [x.view(*shape[:-2]) for x in self.factors]
+        factors = [x.reshape(*shape[:-2]) for x in self.factors]
         return PWCTimeTensor(factors, self.tensors, static=self.static)
 
     def adjoint(self) -> TimeTensor:
@@ -464,11 +463,11 @@ class _ModulatedFactor:
         return _ModulatedFactor(f, f0)
 
     def __call__(self, t: float) -> Array:
-        return self.f(t).view(self.shape)
+        return self.f(t).reshape(self.shape)
 
-    def view(self, *shape: int) -> _ModulatedFactor:
+    def reshape(self, *shape: int) -> _ModulatedFactor:
         f = self.f
-        f0 = self.f0.view(*shape)
+        f0 = self.f0.reshape(*shape)
         return _ModulatedFactor(f, f0)
 
 
@@ -497,12 +496,12 @@ class ModulatedTimeTensor(TimeTensor):
 
     def __call__(self, t: float) -> Array:
         values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
-        values = values.view(*values.shape, 1, 1)  # (..., nf, n, n)
+        values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
         return (values * self.tensors).sum(-3) + self.static  # (..., n, n)
 
-    def view(self, *shape: int) -> TimeTensor:
+    def reshape(self, *shape: int) -> TimeTensor:
         # shape: (..., n, n)
-        factors = [x.view(*shape[:-2]) for x in self.factors]
+        factors = [x.reshape(*shape[:-2]) for x in self.factors]
         return ModulatedTimeTensor(factors, self.tensors, static=self.static)
 
     def adjoint(self) -> TimeTensor:

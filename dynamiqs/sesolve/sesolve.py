@@ -74,10 +74,11 @@ def sesolve(
     stepsize_controller, dt = _stepsize_controller(solver)
 
     # === solve differential equation with diffrax
+    H = totime(H)
 
-    def f(_t, psi, _args):
+    def f(t, psi, _args):
         psi = merge_complex(psi)
-        res = -1j * H @ psi
+        res = -1j * H(t) @ psi
         res = split_complex(res)
         return res
 
