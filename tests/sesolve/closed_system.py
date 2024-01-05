@@ -24,10 +24,10 @@ class ClosedSystem(System):
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
-        H: ArrayLike | TimeTensor | None = None,
+        params: ArrayLike | None = None,
         y0: ArrayLike | None = None,
     ) -> Result:
-        H = self.H if H is None else H
+        H = self.H(params)
         y0 = self.y0 if y0 is None else y0
         return dq.sesolve(
             H,
@@ -70,8 +70,6 @@ class Cavity(ClosedSystem):
         self.loss_op = adag @ a
 
         # prepare quantum operators
-        self.H = self.delta * adag @ a
-        self.Hb = [0.5 * self.H, self.H, 2 * self.H]
         self.E = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
@@ -82,6 +80,16 @@ class Cavity(ClosedSystem):
             dq.coherent(self.n, -self.alpha0),
             dq.coherent(self.n, -1j * self.alpha0),
         ]
+
+    def H(self, params: Array):
+        delta, alpha0 = params
+        return delta * dq.number(self.n) + alpha0 * (
+            dq.destroy(self.n) + dag(dq.destroy(self.n))
+        )
+
+    def Hb(self, params: Array):
+        H = self.H(params)
+        return [0.5 * H, H, 2 * H]
 
     def tsave(self, n: int) -> ArrayLike:
         return np.linspace(0.0, self.t_end.item(), n)
@@ -119,9 +127,7 @@ class Cavity(ClosedSystem):
 
 
 class TDQubit(ClosedSystem):
-    def __init__(
-        self, *, eps: float, omega: float, t_end: float, requires_grad: bool = False
-    ):
+    def __init__(self, *, eps: float, omega: float, t_end: float):
         self.n = 2
 
         # store parameters
@@ -136,11 +142,14 @@ class TDQubit(ClosedSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = dq.totime(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
         self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
         # prepare initial states
         self.y0 = dq.fock(2, 0)
+
+    def H(self, params: Array):
+        eps, omega = params
+        return dq.totime(lambda t: eps * jnp.cos(omega * t) * dq.sigmax())
 
     def tsave(self, n: int) -> Array:
         return jnp.linspace(0.0, self.t_end.item(), n)
@@ -204,4 +213,4 @@ cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
 gcavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
 
 tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
-gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0, requires_grad=True)
+gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)

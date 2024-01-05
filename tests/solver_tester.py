@@ -5,6 +5,7 @@ from abc import ABC
 from typing import Any
 
 import jax.numpy as jnp
+import jax
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
@@ -147,13 +148,26 @@ class SolverTester(ABC):
         atol: float = 1e-5,
     ):
         tsave = system.tsave(ntsave)
-        result = system.run(tsave, solver, gradient=gradient, options=options)
+        # result = system.run(tsave, solver, gradient=gradient, options=options)
 
         # === test gradients depending on final ysave
-        loss_state = system.loss_state(result.ysave[-1])
-        grads_state = torch.autograd.grad(
-            loss_state, system.params, retain_graph=True, allow_unused=True
-        )
+
+        def loss_states(params):
+            result = system.run(
+                tsave,
+                solver,
+                options=options,
+                y0=system.y0,
+                params=params,
+            )
+            l = system.loss_state(result.ysave[-1])
+            return l
+
+        # loss_state = system.loss_state(result.ysave[-1])
+        # grads_state = torch.autograd.grad(
+        #     loss_state, system.params, retain_graph=True, allow_unused=True
+        # )
+        grads_state = jax.grad(loss_states, 0)(system.params)
         grads_state = jnp.stack(grads_state)
         true_grads_state = system.grads_state(tsave[-1])
 
@@ -161,11 +175,24 @@ class SolverTester(ABC):
         logging.warning(f'true_grads_state  = {true_grads_state}')
 
         # === test gradients depending on final Esave
-        loss_expect = system.loss_expect(result.Esave[:, -1])
-        grads_expect = [
-            jnp.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
-            for loss in loss_expect
-        ]
+        # todo: this part does not pass (yet)
+        # loss_expect = system.loss_expect(result.Esave[:, -1])
+        def loss_expect(params):
+            result = system.run(
+                tsave,
+                solver,
+                options=options,
+                y0=system.y0,
+                params=params,
+            )
+            l = system.loss_expect(result.Esave[:, -1])
+            return l
+
+        # grads_expect = [
+        #     jnp.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
+        #     for loss in loss_expect
+        # ]
+        grads_expect = jax.jacrev(loss_expect, 0)(system.params)
         grads_expect = jnp.stack(grads_expect)
         true_grads_expect = system.grads_expect(tsave[-1])
 
