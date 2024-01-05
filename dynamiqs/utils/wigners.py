@@ -154,15 +154,16 @@ def _fock_to_position(n: int, positions: Array) -> Array:
     """
     n_positions = positions.shape[0]
     U = jnp.zeros((n, n_positions), dtype=dtype_real_to_complex(positions.dtype))
-    U = U.at[0].set(pi ** (-0.25) * jnp.exp(-0.5 * positions**2))
+    U = U.at[0].set(jnp.pi ** (-0.25) * jnp.exp(-0.5 * positions**2))
 
     if n == 1:
         return U
 
-    U = U.at[1].set(sqrt(2.0) * positions * U[0, :])
+    U = U.at[1].set(jnp.sqrt(2.0) * positions * U[0, :])
     for k in range(2, n):
         U = U.at[k].set(
-            sqrt(2.0 / k) * positions * U[k - 1, :] - sqrt(1.0 - 1.0 / k) * U[k - 2, :]
+            jnp.sqrt(2.0 / k) * positions * U[k - 1, :]
+            - jnp.sqrt(1.0 - 1.0 / k) * U[k - 2, :]
         )
     return U
 
@@ -190,7 +191,7 @@ def _wigner_fft(psi: Array, xvec: Array) -> tuple[Array, Array]:
     w = jnp.concatenate((w[:, 3 * n // 2 : 2 * n + 1], w[:, 0 : n // 2]), axis=1).real
 
     # compute the fourier transform of xvec
-    p = jnp.arange(-n / 2, n / 2) * pi / (2 * n * (xvec[1] - xvec[0]))
+    p = jnp.arange(-n / 2, n / 2) * jnp.pi / (2 * n * (xvec[1] - xvec[0]))
 
     # normalize wigner distribution
     w = w / (p[1] - p[0]) / (2 * n)
