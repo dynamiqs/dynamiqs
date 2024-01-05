@@ -4,7 +4,7 @@ from typing import Any
 
 import diffrax as dx
 import jax.numpy as jnp
-from jax.typing import ArrayLike
+from jaxtyping import ArrayLike
 
 from .._utils import save_fn
 from ..gradient import Adjoint, Autograd, Gradient
@@ -12,6 +12,7 @@ from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Rouchon1, Solver, _stepsize_controller
 from ..time_array import totime
+from ..utils.utils import todm
 from .lindblad_term import LindbladTerm
 from .rouchon import Rouchon1Solver
 
@@ -28,8 +29,10 @@ def mesolve(
     options: dict[str, Any] | None = None,
 ):
     # === options
-    options['save_expects'] = exp_ops is not None and len(exp_ops) > 0
-    options = Options(solver=solver, gradient=gradient, options=options)
+    save_expects = exp_ops is not None and len(exp_ops) > 0
+    options = Options(
+        solver=solver, gradient=gradient, options=options, save_expects=save_expects
+    )
 
     # === solver class
     solvers = {Dopri5: dx.Dopri5, Rouchon1: Rouchon1Solver}
@@ -74,7 +77,7 @@ def mesolve(
         t0=tsave[0],
         t1=tsave[-1],
         dt0=dt,
-        y0=rho0,
+        y0=todm(rho0),
         args=(options, exp_ops),
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,

@@ -11,7 +11,11 @@ from .utils.array_types import dtype_complex_to_real, get_cdtype
 
 class Options:
     def __init__(
-        self, solver: Solver, gradient: Gradient | None, options: dict[str, Any] | None
+        self,
+        solver: Solver,
+        gradient: Gradient | None,
+        options: dict[str, Any] | None,
+        save_expects: bool = False,
     ):
         if gradient is not None and not solver.supports_gradient(gradient):
             supported_str = ', '.join(
@@ -28,7 +32,7 @@ class Options:
 
         self.solver = solver
         self.gradient = gradient
-        self.options = SharedOptions(**options)
+        self.options = SharedOptions(save_expects=save_expects, **options)
 
         if isinstance(self.gradient, Adjoint):
             # move gradient parameters to the appropriate device

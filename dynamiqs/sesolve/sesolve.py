@@ -4,7 +4,7 @@ from typing import Any
 
 import diffrax as dx
 from jax import numpy as jnp
-from jax.typing import ArrayLike
+from jaxtyping import ArrayLike
 
 from .._utils import save_fn
 from ..gradient import Adjoint, Autograd, Gradient
@@ -26,8 +26,10 @@ def sesolve(
     options: dict[str, Any] | None = None,
 ) -> Result:
     # === options
-    options['save_expects'] = exp_ops is not None and len(exp_ops) > 0
-    options = Options(solver=solver, gradient=gradient, options=options)
+    save_expects = exp_ops is not None and len(exp_ops) > 0
+    options = Options(
+        solver=solver, gradient=gradient, options=options, save_expects=save_expects
+    )
 
     # === solver class
     solvers = {Dopri5: dx.Dopri5}
@@ -63,7 +65,7 @@ def sesolve(
 
     # === solve differential equation with diffrax
     H = totime(H)
-    term = SchrodingerTerm(H)
+    term = SchrodingerTerm(H=H)
 
     solution = dx.diffeqsolve(
         term,
