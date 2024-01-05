@@ -1,8 +1,8 @@
 from doctest import ELLIPSIS
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
-import torch
 from matplotlib import pyplot as plt
 from sybil import Sybil
 from sybil.parsers.doctest import DocTestParser
@@ -15,13 +15,13 @@ def sybil_setup(namespace):
     namespace['dq'] = dynamiqs
     namespace['np'] = np
     namespace['plt'] = plt
-    namespace['torch'] = torch
+    namespace['jnp'] = jnp
 
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def torch_set_printoptions():
-    torch.set_printoptions(precision=3, sci_mode=False)
+def jax_set_printoptions():
+    jnp.set_printoptions(precision=3, suppress=True)
 
 
 # doctest fixture
