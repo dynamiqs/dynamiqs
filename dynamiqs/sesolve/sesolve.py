@@ -85,7 +85,8 @@ def sesolve(
 
         psi = merge_complex(psi)
         # TODO : use vmap ?
-        res['expects'] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
+        if exp_ops is not None:
+            res['expects'] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
         return res
 
     solution = dx.diffeqsolve(
@@ -110,7 +111,7 @@ def sesolve(
         ysave = merge_complex(ysave)
 
     Esave = None
-    if len(exp_ops) > 0:
+    if exp_ops is not None and len(exp_ops) > 0:
         Esave = solution.ys['expects']
         Esave = jnp.stack(Esave, axis=0)
         Esave = merge_complex(Esave)
