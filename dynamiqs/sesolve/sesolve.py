@@ -18,8 +18,7 @@ from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Solver, _stepsize_controller
-from ..time_array import totime
-
+from ..time_array import totime, ConstantTimeArray, CallableTimeArray
 
 Cache = namedtuple('Cache', ['H'])
 
@@ -57,12 +56,32 @@ def sesolve(
     def f(cache: Cache, psi):
         return -1j * cache.H @ psi
 
-    def f_time(t, psi, _args):
-        psi = merge_complex(psi)
-        cache = Cache(H=H(t))
-        res = f(cache, psi)
-        res = split_complex(res)
-        return res
+    if isinstance(H, ConstantTimeArray):
+        cache = Cache(H=H(tsave[0]))
+
+        def f_constant(_t, psi, _args):
+            psi = merge_complex(psi)
+            res = f(cache, psi)
+            res = split_complex(res)
+            return res
+
+        ode_term = dx.ODETerm(f_constant)
+
+    elif isinstance(H, CallableTimeArray):
+
+        def f_time_dependent(t, psi, _args):
+            psi = merge_complex(psi)
+            cache = Cache(H=H(t))
+            res = f(cache, psi)
+            res = split_complex(res)
+            return res
+
+        ode_term = dx.ODETerm(f_time_dependent)
+
+    else:
+        raise NotImplementedError(
+            "H must be either a ConstantTimeArray or a CallableTimeArray"
+        )
 
     def save(_t, psi, _args):
         res = {}
@@ -76,7 +95,7 @@ def sesolve(
         return res
 
     solution = dx.diffeqsolve(
-        dx.ODETerm(f_time),
+        ode_term,
         solver_class(),
         t0=tsave[0],
         t1=tsave[-1],
