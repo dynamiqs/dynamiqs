@@ -29,7 +29,8 @@ class ClosedSystem(System):
         y0: ArrayLike | None = None,
     ) -> Result:
         H = self.H()
-        y0 = y0 or self.y0
+        if y0 is None:
+            y0 = self.y0
         return dq.sesolve(
             H,
             y0,
@@ -83,7 +84,7 @@ class Cavity(ClosedSystem):
         ]
 
     def H(self, params: Array = None):
-        delta, alpha0 = params or self.params
+        delta, alpha0 = params if params is not None else self.params
         return delta * dq.number(self.n)
 
     def Hb(self, params: Array):
@@ -147,7 +148,7 @@ class TDQubit(ClosedSystem):
         self.y0 = dq.fock(2, 0)
 
     def H(self, params: Array = None):
-        eps, omega = params or self.params
+        eps, omega = params if params is not None else self.params
         return dq.totime(lambda t: eps * jnp.cos(omega * t) * dq.sigmax())
 
     def tsave(self, n: int) -> Array:
