@@ -12,7 +12,7 @@ __all__ = [
     'mpow',
     'trace',
     'ptrace',
-    'tensprod',
+    'tensor',
     'expect',
     'norm',
     'unit',
@@ -124,7 +124,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         bra.
 
     Examples:
-        >>> psi_abc = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
+        >>> psi_abc = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi_abc.shape
         (60, 1)
         >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
@@ -188,7 +188,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
-def tensprod(*args: ArrayLike) -> Array:
+def tensor(*args: ArrayLike) -> Array:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
@@ -213,7 +213,7 @@ def tensprod(*args: ArrayLike) -> Array:
             the input arrays.
 
     Examples:
-        >>> psi = dq.tensprod(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
+        >>> psi = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi.shape
         (60, 1)
     """

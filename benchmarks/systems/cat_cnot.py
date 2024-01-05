@@ -29,9 +29,9 @@ class CatCNOT(OpenSystem):
         self.g = pi / (4 * alpha * T)
 
         # Hamiltonian
-        ac = dq.tensprod(dq.destroy(N), dq.eye(N))
-        at = dq.tensprod(dq.eye(N), dq.destroy(N))
-        i = dq.tensprod(dq.eye(N), dq.eye(N))
+        ac = dq.tensor(dq.destroy(N), dq.eye(N))
+        at = dq.tensor(dq.eye(N), dq.destroy(N))
+        i = dq.tensor(dq.eye(N), dq.eye(N))
         self.H = self.g * (ac + ac.mH) @ (at.mH @ at - alpha**2 * i)
 
         # jump operator
@@ -39,7 +39,7 @@ class CatCNOT(OpenSystem):
 
         # initial state
         plus = dq.unit(dq.coherent(N, alpha) + dq.coherent(N, -alpha))
-        self.y0 = dq.tensprod(plus, plus)
+        self.y0 = dq.tensor(plus, plus)
 
         # tsave
         self.tsave = torch.linspace(0, self.T, self.num_tslots + 1)

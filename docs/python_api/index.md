@@ -112,7 +112,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - mpow
         - trace
         - ptrace
-        - tensprod
+        - tensor
         - expect
         - norm
         - unit
