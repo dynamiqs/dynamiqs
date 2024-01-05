@@ -3,14 +3,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-import torch
-from torch import Tensor
+from jax import numpy as jnp, Array
+from jaxtyping import ArrayLike
 
 import dynamiqs as dq
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
-from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike
+from dynamiqs.result import Result
 
 
 class System(ABC):
@@ -23,29 +22,29 @@ class System(ABC):
         self.E = None
 
     @abstractmethod
-    def tsave(self, n: int) -> Tensor:
+    def tsave(self, n: int) -> Array:
         """Compute the save time tensor."""
         pass
 
-    def state(self, t: float) -> Tensor:
+    def state(self, t: float) -> Array:
         """Compute the exact state at a given time."""
         raise NotImplementedError
 
-    def states(self, t: Tensor) -> Tensor:
-        return torch.stack([self.state(t_.item()) for t_ in t])
+    def states(self, t: Array) -> Array:
+        return jnp.stack([self.state(t_.item()) for t_ in t])
 
-    def expect(self, t: float) -> Tensor:
+    def expect(self, t: float) -> Array:
         """Compute the exact (complex) expectation values at a given time."""
         raise NotImplementedError
 
-    def expects(self, t: Tensor) -> Tensor:
-        return torch.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
+    def expects(self, t: Array) -> Array:
+        return jnp.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
 
-    def loss_state(self, state: Tensor) -> Tensor:
+    def loss_state(self, state: Array) -> Array:
         """Compute an example loss function from a given state."""
         return dq.expect(self.loss_op, state).real
 
-    def grads_states(self, t: float) -> Tensor:
+    def grads_states(self, t: float) -> Array:
         """Compute the exact gradients of the example state loss function with respect
         to the system parameters.
 
@@ -53,11 +52,11 @@ class System(ABC):
         """
         raise NotImplementedError
 
-    def loss_expect(self, expect: Tensor) -> Tensor:
+    def loss_expect(self, expect: Array) -> Array:
         """Compute example loss functions for each expectation values."""
-        return torch.stack(tuple(x.real for x in expect))
+        return jnp.stack(tuple(x.real for x in expect))
 
-    def grads_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Array:
         """Compute the exact gradients of the example expectation values loss functions
         with respect to the system parameters.
 

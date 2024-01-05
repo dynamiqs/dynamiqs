@@ -4,7 +4,8 @@ import logging
 from abc import ABC
 from typing import Any
 
-import torch
+import jax.numpy as jnp
+import jax
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
@@ -122,17 +123,15 @@ class SolverTester(ABC):
         result = system.run(tsave, solver, options=options)
 
         # === test ysave
-        errs = torch.linalg.norm(result.ysave - system.states(tsave), dim=(-2, -1))
+        errs = jnp.linalg.norm(result.ysave - system.states(tsave), axis=(-2, -1))
         logging.warning(f'errs = {errs}')
-        assert torch.all(errs <= ysave_atol)
+        assert jnp.all(errs <= ysave_atol)
 
         # === test Esave
         true_Esave = system.expects(tsave)
         logging.warning(f'Esave      = {result.Esave}')
         logging.warning(f'true_Esave = {true_Esave}')
-        assert torch.allclose(
-            result.Esave, true_Esave, rtol=esave_rtol, atol=esave_atol
-        )
+        assert jnp.allclose(result.Esave, true_Esave, rtol=esave_rtol, atol=esave_atol)
 
     def test_correctness(self):
         pass
@@ -149,30 +148,56 @@ class SolverTester(ABC):
         atol: float = 1e-5,
     ):
         tsave = system.tsave(ntsave)
-        result = system.run(tsave, solver, gradient=gradient, options=options)
+        # result = system.run(tsave, solver, gradient=gradient, options=options)
 
         # === test gradients depending on final ysave
-        loss_state = system.loss_state(result.ysave[-1])
-        grads_state = torch.autograd.grad(
-            loss_state, system.params, retain_graph=True, allow_unused=True
-        )
-        grads_state = torch.stack(grads_state)
+
+        def loss_states(params):
+            result = system.run(
+                tsave,
+                solver,
+                options=options,
+                y0=system.y0,
+                params=params,
+            )
+            l = system.loss_state(result.ysave[-1])
+            return l
+
+        # loss_state = system.loss_state(result.ysave[-1])
+        # grads_state = torch.autograd.grad(
+        #     loss_state, system.params, retain_graph=True, allow_unused=True
+        # )
+        grads_state = jax.grad(loss_states, 0)(system.params)
+        grads_state = jnp.stack(grads_state)
         true_grads_state = system.grads_state(tsave[-1])
 
         logging.warning(f'grads_state       = {grads_state}')
         logging.warning(f'true_grads_state  = {true_grads_state}')
 
         # === test gradients depending on final Esave
-        loss_expect = system.loss_expect(result.Esave[:, -1])
-        grads_expect = [
-            torch.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
-            for loss in loss_expect
-        ]
-        grads_expect = torch.stack(grads_expect)
+        # todo: this part does not pass (yet)
+        # loss_expect = system.loss_expect(result.Esave[:, -1])
+        def loss_expect(params):
+            result = system.run(
+                tsave,
+                solver,
+                options=options,
+                y0=system.y0,
+                params=params,
+            )
+            l = system.loss_expect(result.Esave[:, -1])
+            return l
+
+        # grads_expect = [
+        #     jnp.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
+        #     for loss in loss_expect
+        # ]
+        grads_expect = jax.jacrev(loss_expect, 0)(system.params)
+        grads_expect = jnp.stack(grads_expect)
         true_grads_expect = system.grads_expect(tsave[-1])
 
         logging.warning(f'grads_expect      = {grads_expect}')
         logging.warning(f'true_grads_expect = {true_grads_expect}')
 
-        assert torch.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
-        assert torch.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)
+        assert jnp.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
+        assert jnp.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)

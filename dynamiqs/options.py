@@ -4,9 +4,9 @@ from typing import Any
 
 import torch
 
-from ..gradient import Adjoint, Gradient
-from ..solver import Solver
-from ..utils.tensor_types import dtype_complex_to_real, get_cdtype
+from .gradient import Adjoint, Gradient
+from .solver import Solver
+from .utils.tensor_types import dtype_complex_to_real, get_cdtype
 
 
 class Options:
