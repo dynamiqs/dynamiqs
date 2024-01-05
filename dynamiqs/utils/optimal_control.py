@@ -61,7 +61,7 @@ def rand_complex(
     r"""Returns an array filled with random complex numbers uniformly distributed in
     the complex plane.
 
-    Each element of the returned array is sampled uniformly in the disc of radius
+    Each element of the returned array is sampled uniformly in the disk of radius
     $\text{rmax}$.
 
     Notes-: Uniform sampling in the complex plane

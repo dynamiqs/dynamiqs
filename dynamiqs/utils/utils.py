@@ -219,9 +219,8 @@ def tensprod(*args: ArrayLike) -> Array:
     """
     args = [jnp.asarray(arg) for arg in args]
 
+    # todo: use jax.lax.reduce
     return reduce(_bkron, args)
-    # JAXDO: jax.lax.reduce?
-    # JAXDO: ok if not all fully batched as long as batch-compatible
 
 
 # batched Kronecker product of two arrays
