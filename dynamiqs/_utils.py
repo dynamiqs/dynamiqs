@@ -7,7 +7,8 @@ import torch
 from methodtools import lru_cache
 from torch import Tensor
 
-from .utils.utils import isket
+# TODO: remove (keep name to avoid ImportError while transitioning from PyTorch to JAX)
+to_device = None
 
 
 def type_str(type: Any) -> str:
@@ -19,34 +20,6 @@ def type_str(type: Any) -> str:
 
 def obj_type_str(x: Any) -> str:
     return type_str(type(x))
-
-
-def to_device(device: str | torch.device | None) -> torch.device:
-    if device is None:
-        torch_device = torch.ones(1).device  # default device
-    elif isinstance(device, str):
-        torch_device = torch.device(device)
-    elif isinstance(device, torch.device):
-        torch_device = device
-    else:
-        raise TypeError(
-            'Argument `device` must be a string, a `torch.device` or `None` but has'
-            f' type {obj_type_str(device)}.'
-        )
-
-    if torch_device.type == 'cuda' and torch_device.index is None:
-        torch_device = torch.device(
-            torch_device.type, index=torch.cuda.current_device()
-        )
-
-    return torch_device
-
-
-def hdim(x: Tensor) -> int:
-    if isket(x):
-        return x.size(-2)
-    else:
-        return x.size(-1)
 
 
 def check_time_tensor(x: Tensor, arg_name: str, allow_empty=False):
