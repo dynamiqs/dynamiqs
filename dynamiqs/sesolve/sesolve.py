@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import namedtuple
 from typing import Any
 
 import diffrax as dx
@@ -18,6 +19,9 @@ from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Solver, _stepsize_controller
 from ..time_array import totime
+
+
+Cache = namedtuple('Cache', ['H'])
 
 
 def sesolve(
@@ -50,9 +54,13 @@ def sesolve(
     # === solve differential equation with diffrax
     H = totime(H)
 
-    def f(t, psi, _args):
+    def f(cache: Cache, psi):
+        return -1j * cache.H @ psi
+
+    def f_time(t, psi, _args):
         psi = merge_complex(psi)
-        res = -1j * H(t) @ psi
+        cache = Cache(H=H(t))
+        res = f(cache, psi)
         res = split_complex(res)
         return res
 
@@ -68,7 +76,7 @@ def sesolve(
         return res
 
     solution = dx.diffeqsolve(
-        dx.ODETerm(f),
+        dx.ODETerm(f_time),
         solver_class(),
         t0=tsave[0],
         t1=tsave[-1],
