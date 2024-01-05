@@ -28,8 +28,9 @@ class ClosedSystem(System):
         params: ArrayLike | None = None,
         y0: ArrayLike | None = None,
     ) -> Result:
-        H = self.H(params)
-        y0 = self.y0 if y0 is None else y0
+        H = self.H()
+        if y0 is None:
+            y0 = self.y0
         return dq.sesolve(
             H,
             y0,
@@ -82,11 +83,9 @@ class Cavity(ClosedSystem):
             dq.coherent(self.n, -1j * self.alpha0),
         ]
 
-    def H(self, params: Array):
-        delta, alpha0 = params
-        return delta * dq.number(self.n) + alpha0 * (
-            dq.destroy(self.n) + dag(dq.destroy(self.n))
-        )
+    def H(self, params: Array = None):
+        delta, alpha0 = params if params is not None else self.params
+        return delta * dq.number(self.n)
 
     def Hb(self, params: Array):
         H = self.H(params)
@@ -148,8 +147,8 @@ class TDQubit(ClosedSystem):
         # prepare initial states
         self.y0 = dq.fock(2, 0)
 
-    def H(self, params: Array):
-        eps, omega = params
+    def H(self, params: Array = None):
+        eps, omega = params if params is not None else self.params
         return dq.totime(lambda t: eps * jnp.cos(omega * t) * dq.sigmax())
 
     def tsave(self, n: int) -> Array:
