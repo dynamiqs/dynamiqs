@@ -6,6 +6,7 @@ from typing import Tuple, get_args
 from jax import Array
 from jax import numpy as jnp
 
+from dynamiqs import dag
 from ._utils import check_time_array, obj_type_str, type_str
 from .utils.array_types import ArrayLike, Number, dtype_complex_to_real, get_cdtype
 
@@ -264,7 +265,7 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.array.reshape(*shape))
 
     def adjoint(self) -> TimeArray:
-        return ConstantTimeArray(self.array.adjoint())
+        return ConstantTimeArray(dag(self.array))
 
     def __neg__(self) -> TimeArray:
         return ConstantTimeArray(-self.array)
@@ -306,8 +307,8 @@ class CallableTimeArray(TimeArray):
 
     @abstractmethod
     def adjoint(self) -> TimeArray:
-        f = lambda t: self.f(t).adjoint()
-        f0 = self.f0.adjoint()
+        f = lambda t: self.f(t).conjugate().T
+        f0 = self.f0.conjugate().T
         return CallableTimeArray(f, f0)
 
     def __neg__(self) -> TimeArray:
@@ -379,7 +380,7 @@ class PWCTimeArray(TimeArray):
         self.static = jnp.zeros_like(self.arrays[0]) if static is None else static
 
         # merge all times
-        self.times = jnp.cat([x.times for x in self.factors]).unique(sorted=True)
+        self.times = jnp.unique(jnp.concatenate([x.times for x in self.factors]))
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -393,11 +394,11 @@ class PWCTimeArray(TimeArray):
         # cache on the index in self.times
 
         if idx < 0 or idx >= len(self.times) - 1:
-            static = self.static.expand(*self.shape)  # (..., n, n)
+            static = self.static.reshape(*self.shape)  # (..., n, n)
             return static  # (..., n, n)
         else:
             t = self.times[idx]
-            values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
+            values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
             values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
             return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
 
@@ -414,7 +415,7 @@ class PWCTimeArray(TimeArray):
 
     def adjoint(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]
-        return PWCTimeArray(factors, self.arrays.mH, static=self.static.mH)
+        return PWCTimeArray(factors, dag(self.arrays), static=dag(self.static))
 
     def __neg__(self) -> TimeArray:
         return PWCTimeArray(self.factors, -self.arrays, static=-self.static)
@@ -432,7 +433,7 @@ class PWCTimeArray(TimeArray):
             return self + other.array
         elif isinstance(other, PWCTimeArray):
             factors = self.factors + other.factors  # list of length (nf1 + nf2)
-            arrays = jnp.cat((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
+            arrays = jnp.concatenate((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
             static = self.static + other.static  # (n, n)
             return PWCTimeArray(factors, arrays, static=static)
         else:
@@ -491,7 +492,7 @@ class ModulatedTimeArray(TimeArray):
         return jnp.Size((*self.factors[0].shape, self.n, self.n))  # (..., n, n)
 
     def __call__(self, t: float) -> Array:
-        values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
+        values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
         values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
         return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
 
@@ -502,7 +503,7 @@ class ModulatedTimeArray(TimeArray):
 
     def adjoint(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]
-        return ModulatedTimeArray(factors, self.arrays.mH, static=self.static.mH)
+        return ModulatedTimeArray(factors, dag(self.arrays), static=dag(self.static))
 
     def __neg__(self) -> TimeArray:
         return ModulatedTimeArray(self.factors, -self.arrays, static=-self.static)
@@ -520,7 +521,7 @@ class ModulatedTimeArray(TimeArray):
             return self + other.array
         elif isinstance(other, ModulatedTimeArray):
             factors = self.factors + other.factors  # list of length (nf1 + nf2)
-            arrays = jnp.cat((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
+            arrays = jnp.concatenate((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
             static = self.static + other.static  # (n, n)
             return ModulatedTimeArray(factors, arrays, static=static)
         else:

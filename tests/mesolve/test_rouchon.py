@@ -1,10 +1,12 @@
 import pytest
 
 from dynamiqs.gradient import Adjoint, Autograd
-from dynamiqs.solver import Rouchon1, Rouchon2
+from dynamiqs.solver import Rouchon1
 
 from ..solver_tester import SolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
+
+Rouchon2 = None
 
 
 class TestMERouchon1(SolverTester):
@@ -40,6 +42,7 @@ class TestMERouchon1(SolverTester):
         self._test_gradient(system, solver, gradient, rtol=1e-4, atol=1e-2)
 
 
+@pytest.mark.skip(reason='Rouchon2 is not implemented yet')
 class TestMERouchon2(SolverTester):
     def test_batching(self):
         solver = Rouchon2(dt=1e-2)

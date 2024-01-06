@@ -121,7 +121,7 @@ class SMESolverTester(ABC):
         result = system.run(tsave, solver, options=options, ntrajs=1)
 
         # === test ysave
-        errs = torch.linalg.norm(result.ysave[0] - system.states(tsave), dim=(-2, -1))
+        errs = torch.linalg.norm(result.ysave[0] - system.states(tsave), axis=(-2, -1))
         logging.warning(f'errs = {errs}')
         assert torch.all(errs <= ysave_atol)
 
