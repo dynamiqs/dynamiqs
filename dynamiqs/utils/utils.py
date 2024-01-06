@@ -201,9 +201,6 @@ def tensor(*args: ArrayLike) -> Array:
     - $(..., n, n)$ with $n=\prod_k n_k$ if all input arrays are density matrices or
       operators with shape $(..., n_k, n_k)$.
 
-    Notes:
-        This function is the equivalent of `qutip.tensor()`.
-
     Args:
         *args _(array_like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k))_:
             Variable length argument list of kets, bras, density matrices or operators.

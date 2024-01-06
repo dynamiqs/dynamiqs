@@ -129,9 +129,9 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - overlap
         - fidelity
 
-### Tensor conversion
+### Array conversion
 
-::: dynamiqs.utils.tensor_types
+::: dynamiqs.utils.array_types
     options:
         table: true
         members:

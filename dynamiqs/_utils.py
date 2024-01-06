@@ -27,7 +27,7 @@ def merge_complex(x: Array) -> Array:
     return x[..., 0] + 1j * x[..., 1]
 
 
-def check_time_array(x: Array, arg_name: str, allow_empty=False):
+def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
     # check that a time array is valid (it must be a 1D array sorted in strictly
     # ascending order and containing only positive values)
     if x.ndim != 1:

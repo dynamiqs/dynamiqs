@@ -7,8 +7,8 @@ from jaxtyping import ArrayLike
 
 from ..utils.operators import displace
 from ..utils.states import fock
-from ..utils.utils import tensprod, tobra
-from .tensor_types import dtype_complex_to_real, get_cdtype, get_rdtype
+from ..utils.utils import tensor, tobra
+from .array_types import dtype_complex_to_real, get_cdtype, get_rdtype
 
 __all__ = ['rand_real', 'rand_complex', 'snap_gate', 'cd_gate']
 
@@ -189,4 +189,4 @@ def cd_gate(
     e = fock(2, 1, dtype=dtype)  # (2, 1)
     disp_plus = displace(dim, alpha / 2, dtype=dtype)  # (..., dim, dim)
     disp_minus = displace(dim, -alpha / 2, dtype=dtype)  # (..., dim, dim)
-    return tensprod(disp_plus, g @ tobra(g)) + tensprod(disp_minus, e @ tobra(e))
+    return tensor(disp_plus, g @ tobra(g)) + tensor(disp_minus, e @ tobra(e))
