@@ -53,7 +53,7 @@ def dag(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    return x.mT.conj()
+    return jnp.conjugate(x.mT)
 
 
 def mpow(x: ArrayLike, n: int) -> Array:

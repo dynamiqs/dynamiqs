@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from collections import namedtuple
 from typing import Any
 
 from jax import numpy as jnp
 from jaxtyping import Array
+import diffrax as dx
 
+from gradient import Autograd, Adjoint
 from .utils import dag, isket
 
 
@@ -48,14 +51,54 @@ def bexpect(O: Array, x: Array) -> Array:
     # batched over O
     if isket(x):
         return jnp.einsum('ij,...jk,kl->...', dag(x), O, x)  # <x|O|x>
-    return jnp.einsum('...ij,ji->...', O, x)  # tr(Ox)
+    return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
 
 
-def save_fn(_t, y, args):
-    options, exp_ops = args
+SolverArgs = namedtuple('SolverArgs', ['save_states', 'exp_ops'])
+
+
+def save_fn(_t, y, args: SolverArgs):
     res = {}
-    if options.save_states:
+    if args.save_states:
         res['states'] = y
-    if options.save_expects:
-        res['expects'] = bexpect(exp_ops, y)
+    if args.exp_ops is not None and len(args.exp_ops) > 0:
+        y = merge_complex(y)
+        exp = bexpect(args.exp_ops, y)
+        res['expects'] = split_complex(exp)
     return res
+
+
+def _get_solver_class(solver, solvers):
+    if not isinstance(solver, tuple(solvers.keys())):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
+        raise ValueError(
+            f'Solver of type `{type(solver).__name__}` is not supported (supported'
+            f' solver types: {supported_str}).'
+        )
+    solver_class = solvers[type(solver)]
+    return solver_class
+
+
+def _get_adjoint_class(gradient, solver):
+    if gradient is None:
+        return dx.RecursiveCheckpointAdjoint
+
+    adjoints = {
+        Autograd: dx.RecursiveCheckpointAdjoint,
+        Adjoint: dx.BacksolveAdjoint,
+    }
+    if not isinstance(gradient, tuple(adjoints.keys())):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in adjoints.keys())
+        raise ValueError(
+            f'Gradient of type `{type(gradient).__name__}` is not supported'
+            f' (supported gradient types: {supported_str}).'
+        )
+    elif not solver.supports_gradient(gradient):
+        support_str = ', '.join(f'`{x.__name__}`' for x in solver.SUPPORTED_GRADIENT)
+        raise ValueError(
+            f'Solver `{type(solver).__name__}` does not support gradient'
+            f' `{type(gradient).__name__}` (supported gradient types: {support_str}).'
+        )
+
+    gradient_class = adjoints[type(gradient)]
+    return gradient_class

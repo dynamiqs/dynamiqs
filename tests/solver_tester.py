@@ -7,6 +7,7 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 
+from dynamiqs import plot_wigner_mosaic
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 
@@ -123,6 +124,12 @@ class SolverTester(ABC):
         result = system.run(tsave, solver, options=options)
 
         # === test ysave
+        import matplotlib.pyplot as plt
+
+        # print("before wigner mosaic")
+        # print(result.ysave.dtype)
+        # plot_wigner_mosaic(result.ysave)
+        # plt.show()
         errs = jnp.linalg.norm(result.ysave - system.states(tsave), axis=(-2, -1))
         logging.warning(f'errs = {errs}')
         assert jnp.all(errs <= ysave_atol)
