@@ -18,7 +18,13 @@ from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Solver, _stepsize_controller
-from ..time_array import totime, ConstantTimeArray, CallableTimeArray
+from ..time_array import (
+    totime,
+    ConstantTimeArray,
+    CallableTimeArray,
+    PWCTimeArray,
+    ModulatedTimeArray,
+)
 
 Cache = namedtuple('Cache', ['H'])
 
@@ -53,6 +59,17 @@ def sesolve(
     # === solve differential equation with diffrax
     H = totime(H)
 
+    def save(_t, psi, _args):
+        res = {}
+        if options.save_states:
+            res['states'] = psi
+
+        psi = merge_complex(psi)
+        # TODO : use vmap ?
+        if exp_ops is not None:
+            res['expects'] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
+        return res
+
     def f(cache: Cache, psi):
         return -1j * cache.H @ psi
 
@@ -67,7 +84,7 @@ def sesolve(
 
         ode_term = dx.ODETerm(f_constant)
 
-    elif isinstance(H, CallableTimeArray):
+    elif isinstance(H, (CallableTimeArray, ModulatedTimeArray)):
 
         def f_time_dependent(t, psi, _args):
             psi = merge_complex(psi)
@@ -77,38 +94,32 @@ def sesolve(
             return res
 
         ode_term = dx.ODETerm(f_time_dependent)
-
+    elif isinstance(H, PWCTimeArray):
+        pass
     else:
         raise NotImplementedError(
-            "H must be either a ConstantTimeArray or a CallableTimeArray"
+            "H must be either a ConstantTimeArray, a PWCTimeArray, a ModulatedTimeArray"
+            " or a CallableTimeArray"
         )
 
-    def save(_t, psi, _args):
-        res = {}
-        if options.save_states:
-            res['states'] = psi
-
-        psi = merge_complex(psi)
-        # TODO : use vmap ?
-        if exp_ops is not None:
-            res['expects'] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
-        return res
-
-    solution = dx.diffeqsolve(
-        ode_term,
-        solver_class(),
-        t0=tsave[0],
-        t1=tsave[-1],
-        dt0=dt,
-        y0=split_complex(psi0),
-        saveat=dx.SaveAt(ts=tsave, fn=save),
-        stepsize_controller=stepsize_controller,
-        adjoint=(
-            gradient_class()
-            if gradient_class is not None
-            else dx.RecursiveCheckpointAdjoint()
-        ),
-    )
+    if isinstance(H, (CallableTimeArray, ModulatedTimeArray, ConstantTimeArray)):
+        solution = dx.diffeqsolve(
+            ode_term,
+            solver_class(),
+            t0=tsave[0],
+            t1=tsave[-1],
+            dt0=dt,
+            y0=split_complex(psi0),
+            saveat=dx.SaveAt(ts=tsave, fn=save),
+            stepsize_controller=stepsize_controller,
+            adjoint=(
+                gradient_class()
+                if gradient_class is not None
+                else dx.RecursiveCheckpointAdjoint()
+            ),
+        )
+    else:
+        raise NotImplementedError
 
     ysave = None
     if options.save_states:
