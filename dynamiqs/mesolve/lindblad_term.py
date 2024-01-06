@@ -1,29 +1,30 @@
+from typing import Callable
+
 import diffrax as dx
 import jax.numpy as jnp
-import jax.tree_util as jtu
 from jaxtyping import Array, PyTree, Scalar
 
+from ..time_array import TimeArray
 from ..utils.utils import dag
 
 
-class LindbladTerm(dx.AbstractTerm):
-    H: Array  # (n, n)
-    Ls: Array  # (nL, n, n)
+class LindbladTerm(dx.ODETerm):
+    H: TimeArray  # (n, n)
+    Ls: TimeArray  # (nL, n, n)
+    vector_field: Callable[[Scalar, PyTree, PyTree], PyTree]
 
-    def vf(self, t: Scalar, y: PyTree, args: PyTree) -> PyTree:
-        pass
+    def __init__(self, H: TimeArray, Ls: TimeArray):
+        self.H = H
+        self.Ls = Ls
 
-    @staticmethod
-    def contr(t0: Scalar, t1: Scalar) -> Scalar:
-        return t1 - t0
+    def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree):
+        Ls_t = self.Ls(t)
+        out = -1j * self.Hnh(t) @ rho + 0.5 * jnp.sum(Ls_t @ rho @ dag(Ls_t), axis=0)
+        return out + dag(out)
 
-    @staticmethod
-    def prod(vf: PyTree, control: Scalar) -> PyTree:
-        return jtu.tree_map(lambda v: control * v, vf)
-
-    @property
-    def Hnh(self) -> Array:
-        return self.H - 0.5j * jnp.sum(dag(self.Ls) @ self.Ls, axis=0)
+    def Hnh(self, t: Scalar) -> Array:
+        Ls_t = self.Ls(t)
+        return self.H(t) - 0.5j * jnp.sum(dag(Ls_t) @ Ls_t, axis=0)
 
     @property
     def Id(self) -> Array:

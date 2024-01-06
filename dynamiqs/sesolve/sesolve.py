@@ -6,12 +6,13 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from .._utils import bexpect, merge_complex, split_complex
+from .._utils import save_fn
 from ..gradient import Adjoint, Autograd, Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Solver, _stepsize_controller
 from ..time_array import totime
+from .schrodinger_term import SchrodingerTerm
 
 
 def sesolve(
@@ -19,17 +20,16 @@ def sesolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver | None = None,
-    gradient: Gradient | None = None,
+    exp_ops: ArrayLike | None = None,
+    solver: Solver = Dopri5(),
+    gradient: Gradient = Autograd(),
     options: dict[str, Any] | None = None,
 ) -> Result:
-    # === default solver
-    if solver is None:
-        solver = Dopri5()
-
     # === options
-    options = Options(solver=solver, gradient=gradient, options=options)
+    save_expects = exp_ops is not None and len(exp_ops) > 0
+    options = Options(
+        solver=solver, gradient=gradient, options=options, save_expects=save_expects
+    )
 
     # === solver class
     solvers = {Dopri5: dx.Dopri5}
@@ -41,14 +41,12 @@ def sesolve(
         )
     solver_class = solvers[type(solver)]
 
-    # === gradient class
+    # === adjoint class
     gradients = {
         Autograd: dx.RecursiveCheckpointAdjoint,
         Adjoint: dx.BacksolveAdjoint,
     }
-    if gradient is None:
-        pass
-    elif not isinstance(gradient, tuple(gradients.keys())):
+    if not isinstance(gradient, tuple(gradients.keys())):
         supported_str = ', '.join(f'`{x.__name__}`' for x in gradients.keys())
         raise ValueError(
             f'Gradient of type `{type(gradient).__name__}` is not supported'
@@ -60,61 +58,37 @@ def sesolve(
             f'Solver `{type(solver).__name__}` does not support gradient'
             f' `{type(gradient).__name__}` (supported gradient types: {support_str}).'
         )
-
-    if gradient is not None:
-        gradient_class = gradients[type(gradient)]
-    else:
-        gradient_class = None
+    adjoint_class = gradients[type(gradient)]
 
     # === stepsize controller
     stepsize_controller, dt = _stepsize_controller(solver)
 
     # === solve differential equation with diffrax
     H = totime(H)
-
-    def f(t, psi, _args):
-        psi = merge_complex(psi)
-        res = -1j * H(t) @ psi
-        res = split_complex(res)
-        return res
-
-    def save(_t, psi, _args):
-        res = {}
-        if options.save_states:
-            res['states'] = psi
-
-        psi = merge_complex(psi)
-        # TODO : use vmap ?
-        if exp_ops is not None:
-            res['expects'] = tuple([split_complex(bexpect(op, psi)) for op in exp_ops])
-        return res
+    term = SchrodingerTerm(H=H)
 
     solution = dx.diffeqsolve(
-        dx.ODETerm(f),
+        term,
         solver_class(),
         t0=tsave[0],
         t1=tsave[-1],
         dt0=dt,
-        y0=split_complex(psi0),
-        saveat=dx.SaveAt(ts=tsave, fn=save),
+        y0=psi0,
+        args=(options, exp_ops),
+        saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
-        adjoint=(
-            gradient_class()
-            if gradient_class is not None
-            else dx.RecursiveCheckpointAdjoint()
-        ),
+        adjoint=adjoint_class(),
     )
 
+    # === get results
     ysave = None
     if options.save_states:
         ysave = solution.ys['states']
-        ysave = merge_complex(ysave)
 
     Esave = None
-    if exp_ops is not None and len(exp_ops) > 0:
+    if options.save_expects:
         Esave = solution.ys['expects']
         Esave = jnp.stack(Esave, axis=0)
-        Esave = merge_complex(Esave)
 
     return Result(
         options,
