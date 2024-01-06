@@ -24,7 +24,7 @@ class _ODEFixedStep(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
 
     def __init__(self, *, dt: float):
-        # convert `dt` in case a tensor was passed instead of a float
+        # convert `dt` in case an Array was passed instead of a float
         if isinstance(dt, Tensor):
             dt = dt.item()
         self.dt = dt
