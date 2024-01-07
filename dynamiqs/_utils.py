@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections import namedtuple
 from typing import Any
 
+import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import Array
-import diffrax as dx
 
 from .gradient import Autograd, Adjoint
 from .utils import dag, isket

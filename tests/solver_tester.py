@@ -124,12 +124,6 @@ class SolverTester(ABC):
         result = system.run(tsave, solver, options=options)
 
         # === test ysave
-        import matplotlib.pyplot as plt
-
-        # print("before wigner mosaic")
-        # print(result.ysave.dtype)
-        # plot_wigner_mosaic(result.ysave)
-        # plt.show()
         errs = jnp.linalg.norm(result.ysave - system.states(tsave), axis=(-2, -1))
         logging.warning(f'errs = {errs}')
         assert jnp.all(errs <= ysave_atol)
@@ -203,6 +197,11 @@ class SolverTester(ABC):
         grads_expect = jnp.stack(grads_expect)
         true_grads_expect = system.grads_expect(tsave[-1])
 
+        print()
+        print(f'grads_expect      =')
+        print(grads_expect)
+        print(f'true_grads_expect = ')
+        print(true_grads_expect)
         logging.warning(f'grads_expect      = {grads_expect}')
         logging.warning(f'true_grads_expect = {true_grads_expect}')
 

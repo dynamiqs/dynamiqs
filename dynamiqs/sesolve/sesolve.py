@@ -18,7 +18,7 @@ from .._utils import (
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Solver, _stepsize_controller
+from ..solver import Dopri5, Solver, _stepsize_controller, Euler, _ODEAdaptiveStep
 from ..time_array import totime
 
 
@@ -36,7 +36,7 @@ def sesolve(
     options = Options(solver=solver, gradient=gradient, options=options)
 
     # === solver class
-    solvers = {Dopri5: dx.Dopri5}
+    solvers = {Dopri5: dx.Dopri5, Euler: dx.Euler}
     solver_class = _get_solver_class(solver, solvers)
 
     # === adjoint class
@@ -62,6 +62,7 @@ def sesolve(
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
         adjoint=adjoint_class(),
+        max_steps=options.max_steps if isinstance(options, _ODEAdaptiveStep) else None,
     )
 
     # === get results

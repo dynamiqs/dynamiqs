@@ -6,7 +6,7 @@ from typing import Tuple, get_args
 from jax import Array
 from jax import numpy as jnp
 
-from dynamiqs import dag
+from .utils.utils import dag
 from ._utils import check_time_array, obj_type_str, type_str
 from .utils.array_types import ArrayLike, Number, dtype_complex_to_real, get_cdtype
 
@@ -195,6 +195,11 @@ class TimeArray:
         pass
 
     @abstractmethod
+    def repeat(self, n: int, axis: int) -> TimeArray:
+        """Returns a new array with the same data but repeated `n` times along `axis`."""
+        pass
+
+    @abstractmethod
     def adjoint(self) -> TimeArray:
         pass
 
@@ -264,6 +269,9 @@ class ConstantTimeArray(TimeArray):
     def reshape(self, *shape: int) -> TimeArray:
         return ConstantTimeArray(self.array.reshape(*shape))
 
+    def repeat(self, n: int, axis: int) -> TimeArray:
+        return ConstantTimeArray(self.array.repeat(n, axis))
+
     def adjoint(self) -> TimeArray:
         return ConstantTimeArray(dag(self.array))
 
@@ -303,6 +311,11 @@ class CallableTimeArray(TimeArray):
     def reshape(self, *shape: int) -> TimeArray:
         f = self.f
         f0 = self.f0.reshape(*shape)
+        return CallableTimeArray(f, f0)
+
+    def repeat(self, n: int, axis: int) -> TimeArray:
+        f = lambda t: self.f(t).repeat(n, axis)
+        f0 = self.f0.repeat(n, axis)
         return CallableTimeArray(f, f0)
 
     @abstractmethod
@@ -350,6 +363,7 @@ class _PWCFactor:
 
     @property
     def shape(self) -> Tuple[int, ...]:
+        print(self.values.shape)
         return self.values.shape[:-1]  # (...)
 
     def conj(self) -> _PWCFactor:
@@ -365,6 +379,9 @@ class _PWCFactor:
 
     def reshape(self, *shape: int) -> _PWCFactor:
         return _PWCFactor(self.times, self.values.reshape(*shape, self.nv))
+
+    def repeat(self, n: int, axis: int) -> _PWCFactor:
+        return _PWCFactor(self.times, self.values.repeat(n, axis))
 
 
 class PWCTimeArray(TimeArray):
@@ -410,8 +427,16 @@ class PWCTimeArray(TimeArray):
 
     def reshape(self, *shape: int) -> TimeArray:
         # shape: (..., n, n)
+        # TODO: @pierreguilmin : I think this implementation is incorrect and we want to reshape
+        # self.arrays instead of factors, but I'm not sure
         factors = [x.reshape(*shape[:-2]) for x in self.factors]
         return PWCTimeArray(factors, self.arrays, static=self.static)
+
+    def repeat(self, n: int, axis: int) -> TimeArray:
+        # TODO: this doesn't work
+        arrays = self.arrays.repeat(n, axis)
+        static = self.static.repeat(n, axis)
+        return PWCTimeArray(self.factors, arrays, static=static)
 
     def adjoint(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]
@@ -467,6 +492,11 @@ class _ModulatedFactor:
         f0 = self.f0.reshape(*shape)
         return _ModulatedFactor(f, f0)
 
+    def repeat(self, n: int, axis: int) -> _ModulatedFactor:
+        f = self.f
+        f0 = self.f0.repeat(n, axis)
+        return _ModulatedFactor(f, f0)
+
 
 class ModulatedTimeArray(TimeArray):
     # Sum of arrays with callable factors.
@@ -494,12 +524,18 @@ class ModulatedTimeArray(TimeArray):
     def __call__(self, t: float) -> Array:
         values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
         values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
+        print(values.shape, self.arrays.shape, self.static.shape)
         return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
 
     def reshape(self, *shape: int) -> TimeArray:
         # shape: (..., n, n)
         factors = [x.reshape(*shape[:-2]) for x in self.factors]
         return ModulatedTimeArray(factors, self.arrays, static=self.static)
+
+    def repeat(self, n: int, axis: int) -> TimeArray:
+        arrays = self.arrays.repeat(n, axis + 1)
+        static = self.static.repeat(n, axis)
+        return ModulatedTimeArray(self.factors, arrays, static=static)
 
     def adjoint(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]

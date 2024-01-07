@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import jax.numpy as jnp
 from typing import Any
 
-import torch
-
-from .gradient import Adjoint, Gradient
+from .gradient import Gradient
 from .solver import Solver
 from .utils.array_types import dtype_complex_to_real, get_cdtype
 
@@ -43,7 +41,7 @@ class SharedOptions:
         *,
         save_states: bool = True,
         verbose: bool = True,
-        dtype: torch.complex64 | torch.complex128 | None = None,
+        dtype: jnp.complex64 | jnp.complex128 | None = None,
         cartesian_batching: bool = True,
     ):
         # save_states (bool, optional): If `True`, the state is saved at every

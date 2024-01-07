@@ -3,7 +3,7 @@ from typing import Callable
 import diffrax as dx
 from jaxtyping import PyTree, Scalar
 
-from dynamiqs import merge_complex, split_complex
+from .._utils import merge_complex, split_complex
 from ..time_array import TimeArray, ConstantTimeArray
 
 

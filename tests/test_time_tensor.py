@@ -29,9 +29,13 @@ class TestConstantTimeArray:
         assert self.x(0.0) is self.x(0.0)
         assert self.x(1.0) is self.x(1.0)
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[1, 2]])
+
+    def test_repeat(self):
+        x = self.x.repeat(2, 0)
+        assert_equal(x(0.0), [1, 1, 2, 2])
 
     def test_adjoint(self):
         x = ConstantTimeArray(jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
@@ -93,10 +97,15 @@ class TestCallableTimeArray:
         assert self.x(0.0) is self.x(0.0)
         assert self.x(1.0) is self.x(1.0)
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[0, 0]])
         assert_equal(x(1.0), [[1, 2]])
+
+    def test_repeat(self):
+        x = self.x.repeat(2, 0)
+        assert_equal(x(0.0), [0, 0, 0, 0])
+        assert_equal(x(1.0), [1, 1, 2, 2])
 
     def test_adjoint(self):
         f = lambda t: t * jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
@@ -188,10 +197,19 @@ class TestPWCTimeArray:
         assert hash(self.x(1.0)) == hash(self.x(1.0)) == hash(self.x(1.999))
         assert hash(self.x(5.0)) == hash(self.x(5.0)) == hash(self.x(6.0))
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(-0.1), [[[0, 0], [0, 0]]])
         assert_equal(x(0.0), [[[1, 2], [3, 4]]])
+
+    def test_repeat(self):
+        print(self.x(-0.1))
+        x = self.x.repeat(2, 0)
+        print()
+        print((x(-0.1)))
+        print((x(0.0)))
+        assert_equal(x(-0.1), [[0, 0], [0, 0], [0, 0], [0, 0]])
+        assert_equal(x(0.0), [[1, 2], [1, 2], [3, 4], [3, 4]])
 
     def test_adjoint(self):
         x = self.x.adjoint()
@@ -268,10 +286,23 @@ class TestModulatedTimeArray:
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
         assert_equal(self.x(2.0), [[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]])
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(0.0), [[[1.0j, 2.0j], [3.0j, 4.0j]]])
         assert_equal(x(2.0), [[[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]]])
+
+    def test_repeat(self):
+        x = self.x.repeat(2, 0)
+        assert_equal(x(0.0), [[1.0j, 2.0j], [1.0j, 2.0j], [3.0j, 4.0j], [3.0j, 4.0j]])
+        assert_equal(
+            x(2.0),
+            [
+                [1.0 + 5.0j, 2.0 + 6.0j],
+                [1.0 + 5.0j, 2.0 + 6.0j],
+                [3.0 + 7.0j, 4.0 + 8.0j],
+                [3.0 + 7.0j, 4.0 + 8.0j],
+            ],
+        )
 
     def test_adjoint(self):
         x = self.x.adjoint()
