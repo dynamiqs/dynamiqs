@@ -7,7 +7,7 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import Array
 
-from .gradient import Autograd, Adjoint
+from .gradient import Adjoint, Autograd
 from .utils import dag, isket
 
 
@@ -50,7 +50,7 @@ def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
 def bexpect(O: Array, x: Array) -> Array:
     # batched over O
     if isket(x):
-        return jnp.einsum('ij,...jk,kl->...', dag(x), O, x)  # <x|O|x>
+        return jnp.einsum('ij,bjk,kl->b', dag(x), O, x)  # <x|O|x>
     return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
 
 
