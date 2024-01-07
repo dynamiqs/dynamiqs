@@ -9,22 +9,19 @@ from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 Rouchon2 = None
 
 
-@pytest.mark.skip(reason='Rouchon1 has not been tested yet')
 class TestMERouchon1(SolverTester):
     def test_batching(self):
         solver = Rouchon1(dt=1e-2)
         self._test_batching(ocavity, solver)
 
-    @pytest.mark.parametrize('system, esave_rtol', [(ocavity, 1e-4), (otdqubit, 1e-2)])
-    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
-    def test_correctness(self, system, esave_rtol, normalize):
-        solver = Rouchon1(dt=1e-3, normalize=normalize)
-        self._test_correctness(
-            system, solver, ysave_atol=1e-2, esave_rtol=esave_rtol, esave_atol=1e-2
-        )
+    @pytest.mark.parametrize('system', [gocavity, gotdqubit])
+    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    def test_correctness(self, system):
+        solver = Rouchon1(dt=1e-3)
+        self._test_correctness(system, solver, ysave_atol=1e-2, esave_atol=1e-2)
 
     @pytest.mark.parametrize('system', [gocavity, gotdqubit])
-    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
     def test_autograd(self, system, normalize):
         if system is gotdqubit and normalize == 'sqrt':
             pytest.skip('sqrt normalization broken for TD system gradient computation')
@@ -33,7 +30,7 @@ class TestMERouchon1(SolverTester):
         self._test_gradient(system, solver, Autograd(), rtol=1e-4, atol=1e-2)
 
     @pytest.mark.parametrize('system', [gocavity, gotdqubit])
-    @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
+    # @pytest.mark.parametrize('normalize', [None, 'sqrt', 'cholesky'])
     def test_adjoint(self, system, normalize):
         if system is gotdqubit and normalize == 'sqrt':
             pytest.skip('sqrt normalization broken for TD system gradient computation')
