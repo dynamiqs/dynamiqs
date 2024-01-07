@@ -75,11 +75,7 @@ def mesolve(
 
     Esave = None
     if 'expects' in solution.ys:
-<<<<<<< HEAD
         Esave = merge_complex(solution.ys['expects']).T
-=======
-        Esave = solution.ys['expects']
->>>>>>> 6cd21cb (Refactor jump_ops formatting)
         Esave = jnp.stack(Esave, axis=0)
 
     return Result(
@@ -109,15 +105,9 @@ def format_L(Ls: list[TimeArray]) -> list[TimeArray]:
     Ls_formatted = []
     for L in Ls:
         if L.ndim == 3:
-<<<<<<< HEAD
             Ls_formatted.append(L if bL > 1 else L.reshape(n, n))
         elif L.ndim == 2:
             Ls_formatted.append(L.repeat(bL, 0) if bL > 1 else L)
-=======
-            Ls_formatted.append(L)
-        elif L.ndim == 2:
-            Ls_formatted.append(L.repeat(bL, 0))
->>>>>>> 6cd21cb (Refactor jump_ops formatting)
         else:
             raise Exception(f'Unexpected dimension {L.ndim}.')
 
