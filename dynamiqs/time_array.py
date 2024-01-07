@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from abc import abstractmethod, abstractproperty
-from typing import Tuple, get_args
+from abc import abstractmethod
+from typing import get_args
 
+import numpy as np
 from jax import Array
 from jax import numpy as jnp
 
 from ._utils import check_time_array, obj_type_str, type_str
-from .utils.array_types import ArrayLike, Number, dtype_complex_to_real, get_cdtype
+from .types import Scalar
+from .utils.array_types import ArrayLike, dtype_complex_to_real, get_cdtype
 
 __all__ = ['totime']
 
@@ -109,7 +111,7 @@ def _factory_pwc(
         )
 
     factors = [_PWCFactor(times, values)]
-    arrays = array.unsqueeze(0)  # (1, n, n)
+    arrays = array[None, ...]  # (1, n, n)
     return PWCTimeArray(factors, arrays)
 
 
@@ -155,128 +157,122 @@ def _factory_modulated(
         )
 
     factors = [_ModulatedFactor(f, f0)]
-    arrays = array.unsqueeze(0)  # (1, n, n)
+    arrays = array[None, ...]  # (1, n, n)
     return ModulatedTimeArray(factors, arrays)
 
 
 class TimeArray:
     # Subclasses should implement:
-    # - the properties: dtype, device, shape
-    # - the methods: __call__, reshape, adjoint, __neg__, __mul__, __add__
-
-    # Special care should be taken when implementing `__call__` for caching to work
-    # properly. The `@cache` decorator checks the array `__hash__`, which is
-    # implemented as its address in memory. Thus, when two consecutive calls to a
-    # `TimeArray` should return an array with the same values, these two arrays must
-    # not only be equal, they should be the same object in memory.
+    # - the properties: dtype, shape, mT
+    # - the methods: __call__, reshape, conj, __neg__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Array`, `ConstantTimeArray` and the subclass type itself.
 
-    @abstractproperty
-    def dtype(self) -> jnp.dtype:
-        """Data type."""
-        pass
-
-    @abstractproperty
-    def shape(self) -> Tuple[int, ...]:
-        """Shape."""
-        pass
-
+    @property
     @abstractmethod
-    def __call__(self, t: float) -> Array:
-        """Evaluate at a given time"""
-        pass
-
-    @abstractmethod
-    def reshape(self, *shape: int) -> TimeArray:
-        """Returns a new array with the same data but of a different shape."""
-        pass
-
-    @abstractmethod
-    def adjoint(self) -> TimeArray:
+    def dtype(self) -> np.dtype:
+        """The data type (numpy.dtype) of the array."""
         pass
 
     @property
-    def mH(self) -> TimeArray:
-        return self.adjoint()
+    @abstractmethod
+    def shape(self) -> tuple[int, ...]:
+        """The shape of the array."""
+        pass
+
+    @property
+    @abstractmethod
+    def mT(self) -> TimeArray:
+        """Transposes the last two dimensions of x."""
+
+    @property
+    def ndim(self) -> int:
+        """The number of dimensions in the array."""
+        return len(self.shape)
+
+    @abstractmethod
+    def __call__(self, t: Scalar) -> Array:
+        """Evaluate at a given time."""
+        pass
+
+    @abstractmethod
+    def reshape(self, *args: int) -> TimeArray:
+        """Returns an array containing the same data with a new shape."""
+        pass
+
+    @abstractmethod
+    def conj(self) -> TimeArray:
+        """Return the complex conjugate, element-wise."""
+        pass
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
         pass
 
     @abstractmethod
-    def __mul__(self, other: Number | Array) -> TimeArray:
+    def __mul__(self, y: ArrayLike) -> TimeArray:
         pass
 
-    def __rmul__(self, other: Number | Array) -> TimeArray:
-        return self * other
+    def __rmul__(self, y: ArrayLike) -> TimeArray:
+        return self * y
 
     @abstractmethod
-    def __add__(self, other: Array | TimeArray) -> TimeArray:
+    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
         pass
 
-    def __radd__(self, other: Array | TimeArray) -> TimeArray:
-        return self + other
+    def __radd__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        return self + y
 
-    def __sub__(self, other: Array | TimeArray) -> TimeArray:
-        return self + (-other)
+    def __sub__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        return self + (-y)
 
-    def __rsub__(self, other: Array | TimeArray) -> TimeArray:
-        return other + (-self)
+    def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        return y + (-self)
 
     def __repr__(self) -> str:
-        return str(type(self).__name__)
+        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
     def __str__(self) -> str:
         return self.__repr__()
 
-    def size(self, dim: int) -> int:
-        """Size along a given dimension."""
-        return self.shape[dim]
-
-    def dim(self) -> int:
-        """Get the number of dimensions."""
-        return len(self.shape)
-
-    @property
-    def ndim(self) -> int:
-        """Number of dimensions."""
-        return self.dim()
-
 
 class ConstantTimeArray(TimeArray):
-    def __init__(self, array: Array):
-        self.array = array
+    def __init__(self, x: Array):
+        self.x = x
 
     @property
-    def dtype(self) -> jnp.dtype:
-        return self.array.dtype
+    def dtype(self) -> np.dtype:
+        return self.x.dtype
 
     @property
-    def shape(self) -> Tuple[int, ...]:
-        return self.array.shape
+    def shape(self) -> tuple[int, ...]:
+        return self.x.shape
 
-    def __call__(self, t: float) -> Array:
-        return self.array
+    @property
+    def mT(self) -> TimeArray:
+        return ConstantTimeArray(self.x.mT)
 
-    def reshape(self, *shape: int) -> TimeArray:
-        return ConstantTimeArray(self.array.reshape(*shape))
+    def __call__(self, t: Scalar) -> Array:
+        return self.x
 
-    def adjoint(self) -> TimeArray:
-        return ConstantTimeArray(self.array.adjoint())
+    def reshape(self, *args: int) -> TimeArray:
+        return ConstantTimeArray(self.x.reshape(*args))
+
+    def conj(self) -> TimeArray:
+        return ConstantTimeArray(self.x.conj())
 
     def __neg__(self) -> TimeArray:
-        return ConstantTimeArray(-self.array)
+        return ConstantTimeArray(-self.x)
 
-    def __mul__(self, other: Number | Array) -> TimeArray:
-        return ConstantTimeArray(self.array * other)
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return ConstantTimeArray(self.x * y)
 
-    def __add__(self, other: Array | TimeArray) -> TimeArray:
-        if isinstance(other, Array):
-            return ConstantTimeArray(self.array + other)
-        elif isinstance(other, ConstantTimeArray):
-            return self + other.array
+    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(y, get_args(ArrayLike)):
+            return ConstantTimeArray(self.x + y)
+        elif isinstance(y, ConstantTimeArray):
+            return ConstantTimeArray(self.x + y.x)
         else:
             return NotImplemented
 
@@ -288,26 +284,30 @@ class CallableTimeArray(TimeArray):
         self.f0 = f0
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.f0.dtype
 
     @property
-    def shape(self) -> Tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         return self.f0.shape
 
-    def __call__(self, t: float) -> Array:
-        # cached if called twice with the same time, otherwise we recompute `f(t)`
-        return self.f(t).reshape(self.shape)
-
-    def reshape(self, *shape: int) -> TimeArray:
-        f = self.f
-        f0 = self.f0.reshape(*shape)
+    @property
+    def mT(self) -> TimeArray:
+        f = lambda t: self.f(t).mT
+        f0 = self.f0.mT
         return CallableTimeArray(f, f0)
 
-    @abstractmethod
-    def adjoint(self) -> TimeArray:
-        f = lambda t: self.f(t).adjoint()
-        f0 = self.f0.adjoint()
+    def __call__(self, t: float) -> Array:
+        return self.f(t).reshape(*self.shape)
+
+    def reshape(self, *args: int) -> TimeArray:
+        f = self.f
+        f0 = self.f0.reshape(*args)
+        return CallableTimeArray(f, f0)
+
+    def conj(self) -> TimeArray:
+        f = lambda t: self.f(t).conj()
+        f0 = self.f0.conj()
         return CallableTimeArray(f, f0)
 
     def __neg__(self) -> TimeArray:
@@ -315,32 +315,53 @@ class CallableTimeArray(TimeArray):
         f0 = -self.f0
         return CallableTimeArray(f, f0)
 
-    def __mul__(self, other: Number | Array) -> TimeArray:
-        f = lambda t: self.f(t) * other
-        f0 = self.f0 * other
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        f = lambda t: self.f(t) * y
+        f0 = self.f0 * y
         return CallableTimeArray(f, f0)
 
-    def __add__(self, other: Array | TimeArray) -> TimeArray:
-        if isinstance(other, Array):
-            f = lambda t: self.f(t) + other
-            f0 = self.f0 + other
+    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(y, get_args(ArrayLike)):
+            f = lambda t: self.f(t) + y
+            f0 = self.f0 + y
             return CallableTimeArray(f, f0)
-        elif isinstance(other, ConstantTimeArray):
-            return self + other.array
-        elif isinstance(other, CallableTimeArray):
-            f = lambda t: self.f(t) + other.f(t)
-            f0 = self.f0 + other.f0
+        elif isinstance(y, ConstantTimeArray):
+            f = lambda t: self.f(t) + y.x
+            f0 = self.f0 + y.x
+            return CallableTimeArray(f, f0)
+        elif isinstance(y, CallableTimeArray):
+            f = lambda t: self.f(t) + y.f(t)
+            f0 = self.f0 + y.f0
             return CallableTimeArray(f, f0)
         else:
             return NotImplemented
 
 
-class _PWCFactor:
+class _Factor:
+    @property
+    @abstractmethod
+    def shape(self) -> tuple[int, ...]:
+        pass
+
+    @abstractmethod
+    def conj(self) -> _Factor:
+        pass
+
+    @abstractmethod
+    def __call__(self, t: Scalar) -> Array:
+        pass
+
+    @abstractmethod
+    def reshape(self, *args: int) -> _Factor:
+        pass
+
+
+class _PWCFactor(_Factor):
     # Defined by a tuple of 2 arrays (times, values), where
-    # - times: (nv+1) are the time points between which the PWC array take constant
+    # - times: (nv+1) are the time points between which the PWC factor takes constant
     #          values, where nv is the number of time intervals
-    # - values: (..., nv) are the constant values for each time interval, where
-    #           (...) is an arbitrary batching size
+    # - values: (..., nv) are the constant values for each time interval, where (...)
+    #           is an arbitrary batching size
 
     def __init__(self, times: Array, values: Array):
         self.times = times  # (nv+1)
@@ -348,13 +369,13 @@ class _PWCFactor:
         self.nv = self.values.shape[-1]
 
     @property
-    def shape(self) -> Tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         return self.values.shape[:-1]  # (...)
 
-    def conj(self) -> _PWCFactor:
+    def conj(self) -> _Factor:
         return _PWCFactor(self.times, self.values.conj())
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: Scalar) -> Array:
         if t < self.times[0] or t >= self.times[-1]:
             return jnp.zeros_like(self.values[..., 0])  # (...)
         else:
@@ -362,84 +383,11 @@ class _PWCFactor:
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
-    def reshape(self, *shape: int) -> _PWCFactor:
-        return _PWCFactor(self.times, self.values.reshape(*shape, self.nv))
+    def reshape(self, *args: int) -> _Factor:
+        return _PWCFactor(self.times, self.values.reshape(*args, self.nv))
 
 
-class PWCTimeArray(TimeArray):
-    # Arbitrary sum of arrays with PWC factors.
-
-    def __init__(
-        self, factors: list[_PWCFactor], arrays: Array, static: Array | None = None
-    ):
-        # factors must be non-empty
-        self.factors = factors  # list of length (nf)
-        self.arrays = arrays  # (nf, n, n)
-        self.n = arrays.shape[-1]
-        self.static = jnp.zeros_like(self.arrays[0]) if static is None else static
-
-        # merge all times
-        self.times = jnp.cat([x.times for x in self.factors]).unique(sorted=True)
-
-    @property
-    def dtype(self) -> jnp.dtype:
-        return self.arrays.dtype
-
-    @property
-    def shape(self) -> Tuple[int, ...]:
-        return *self.factors[0].shape, self.n, self.n  # (..., n, n)
-
-    def _call(self, idx: int) -> Array:
-        # cache on the index in self.times
-
-        if idx < 0 or idx >= len(self.times) - 1:
-            static = self.static.expand(*self.shape)  # (..., n, n)
-            return static  # (..., n, n)
-        else:
-            t = self.times[idx]
-            values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
-            values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
-            return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
-
-    def __call__(self, t: float) -> Array:
-        # find the index $k$ such that $t \in [t_k, t_{k+1})$, `idx = -1` if
-        # `t < times[0]` and `idx = len(times) - 1` if `t >= times[-1]`
-        idx = jnp.searchsorted(self.times, t, side='right') - 1
-        return self._call(idx.item())
-
-    def reshape(self, *shape: int) -> TimeArray:
-        # shape: (..., n, n)
-        factors = [x.reshape(*shape[:-2]) for x in self.factors]
-        return PWCTimeArray(factors, self.arrays, static=self.static)
-
-    def adjoint(self) -> TimeArray:
-        factors = [x.conj() for x in self.factors]
-        return PWCTimeArray(factors, self.arrays.mH, static=self.static.mH)
-
-    def __neg__(self) -> TimeArray:
-        return PWCTimeArray(self.factors, -self.arrays, static=-self.static)
-
-    def __mul__(self, other: Number | Array) -> TimeArray:
-        return PWCTimeArray(
-            self.factors, self.arrays * other, static=self.static * other
-        )
-
-    def __add__(self, other: Array | TimeArray) -> TimeArray:
-        if isinstance(other, Array):
-            static = self.static + other
-            return PWCTimeArray(self.factors, self.arrays, static=static)
-        elif isinstance(other, ConstantTimeArray):
-            return self + other.array
-        elif isinstance(other, PWCTimeArray):
-            factors = self.factors + other.factors  # list of length (nf1 + nf2)
-            arrays = jnp.cat((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
-            static = self.static + other.static  # (n, n)
-            return PWCTimeArray(factors, arrays, static=static)
-        else:
-            return NotImplemented
-
-
-class _ModulatedFactor:
+class _ModulatedFactor(_Factor):
     # Defined by two objects (f, f0), where
     # - f is a callable that takes a time and returns an array of shape (...)
     # - f0 is the array of shape (...) returned by f(0.0)
@@ -450,31 +398,26 @@ class _ModulatedFactor:
         self.f0 = f0  # (...)
 
     @property
-    def shape(self) -> Tuple[int, ...]:
+    def shape(self) -> tuple[int, ...]:
         return self.f0.shape
 
-    def conj(self) -> _ModulatedFactor:
+    def conj(self) -> _Factor:
         f = lambda t: self.f(t).conj()
         f0 = self.f0.conj()
         return _ModulatedFactor(f, f0)
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: Scalar) -> Array:
         return self.f(t).reshape(self.shape)
 
-    def reshape(self, *shape: int) -> _ModulatedFactor:
+    def reshape(self, *args: int) -> _Factor:
         f = self.f
-        f0 = self.f0.reshape(*shape)
+        f0 = self.f0.reshape(*args)
         return _ModulatedFactor(f, f0)
 
 
-class ModulatedTimeArray(TimeArray):
-    # Sum of arrays with callable factors.
-
+class FactorTimeArray(TimeArray):
     def __init__(
-        self,
-        factors: list[_ModulatedFactor],
-        arrays: Array,
-        static: Array | None = None,
+        self, factors: list[_Factor], arrays: Array, static: Array | None = None
     ):
         # factors must be non-empty
         self.factors = factors  # list of length (nf)
@@ -483,45 +426,59 @@ class ModulatedTimeArray(TimeArray):
         self.static = jnp.zeros_like(self.arrays[0]) if static is None else static
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.arrays.dtype
 
     @property
-    def shape(self) -> Tuple[int, ...]:
-        return jnp.Size((*self.factors[0].shape, self.n, self.n))  # (..., n, n)
+    def shape(self) -> tuple[int, ...]:
+        return tuple(self.factors[0].shape, self.n, self.n)  # (..., n, n)
 
     def __call__(self, t: float) -> Array:
-        values = jnp.stack([x(t) for x in self.factors], dim=-1)  # (..., nf)
+        values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
         values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
         return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
 
-    def reshape(self, *shape: int) -> TimeArray:
+    def reshape(self, *args: int) -> TimeArray:
         # shape: (..., n, n)
-        factors = [x.reshape(*shape[:-2]) for x in self.factors]
-        return ModulatedTimeArray(factors, self.arrays, static=self.static)
+        factors = [x.reshape(*args[:-2]) for x in self.factors]
+        return self.__class__(factors, self.arrays, static=self.static)
 
-    def adjoint(self) -> TimeArray:
+    def conj(self) -> TimeArray:
         factors = [x.conj() for x in self.factors]
-        return ModulatedTimeArray(factors, self.arrays.mH, static=self.static.mH)
+        return self.__class__(factors, self.arrays.conj(), static=self.static.conj())
 
     def __neg__(self) -> TimeArray:
-        return ModulatedTimeArray(self.factors, -self.arrays, static=-self.static)
+        return self.__class__(self.factors, -self.arrays, static=-self.static)
 
-    def __mul__(self, other: Number | Array) -> TimeArray:
-        return ModulatedTimeArray(
-            self.factors, self.arrays * other, static=self.static * other
-        )
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return self.__class__(self.factors, self.arrays * y, static=self.static * y)
 
-    def __add__(self, other: Array | TimeArray) -> TimeArray:
-        if isinstance(other, Array):
-            static = self.static + other
-            return ModulatedTimeArray(self.factors, self.arrays, static=static)
-        elif isinstance(other, ConstantTimeArray):
-            return self + other.array
-        elif isinstance(other, ModulatedTimeArray):
-            factors = self.factors + other.factors  # list of length (nf1 + nf2)
-            arrays = jnp.cat((self.arrays, other.arrays))  # (nf1 + nf2, n, n)
-            static = self.static + other.static  # (n, n)
-            return ModulatedTimeArray(factors, arrays, static=static)
+    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(y, get_args(ArrayLike)):
+            static = self.static + y
+            return self.__class__(self.factors, self.arrays, static=static)
+        elif isinstance(y, ConstantTimeArray):
+            static = self.static + y.x
+            return self.__class__(self.factors, self.arrays, static=static)
+        elif isinstance(y, self.__class__):
+            factors = self.factors + y.factors  # list of length (nf1 + nf2)
+            arrays = jnp.concatenate((self.arrays, y.arrays))  # (nf1 + nf2, n, n)
+            static = self.static + y.static  # (n, n)
+            return self.__class__(factors, arrays, static=static)
         else:
             return NotImplemented
+
+
+class PWCTimeArray(FactorTimeArray):
+    # Arbitrary sum of arrays with PWC factors.
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # merge all times
+        self.times = jnp.unique(jnp.concatenate([x.times for x in self.factors]))
+
+
+class ModulatedTimeArray(FactorTimeArray):
+    # Sum of arrays with callable factors.
+    pass

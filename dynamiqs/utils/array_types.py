@@ -10,9 +10,6 @@ from .utils import _hdim, isbra, isket, isop
 
 __all__ = ['to_qutip']
 
-# TODO: remove (keep name to avoid ImportError while transitioning from PyTorch to JAX)
-Number = None
-
 
 def _get_default_dtype() -> jnp.float32 | jnp.float64:
     default_dtype = jnp.array(0.0).dtype

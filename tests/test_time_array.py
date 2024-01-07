@@ -1,6 +1,5 @@
 import jax.numpy as jnp
 import pytest
-from jax import Array
 
 from dynamiqs.time_array import (
     CallableTimeArray,
@@ -12,8 +11,8 @@ from dynamiqs.time_array import (
 )
 
 
-def assert_equal(xt: Array, y: list):
-    assert jnp.array_equal(xt, jnp.array(y))
+def assert_equal(x, y):
+    return jnp.array_equal(x, y)
 
 
 class TestConstantTimeArray:
@@ -25,51 +24,32 @@ class TestConstantTimeArray:
         assert_equal(self.x(0.0), [1, 2])
         assert_equal(self.x(1.0), [1, 2])
 
-    def test_call_caching(self):
-        assert self.x(0.0) is self.x(0.0)
-        assert self.x(1.0) is self.x(1.0)
-
     def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[1, 2]])
 
-    def test_repeat(self):
-        x = self.x.repeat(2, 0)
-        assert_equal(x(0.0), [1, 1, 2, 2])
-
-    def test_adjoint(self):
-        x = ConstantTimeArray(jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
-        x = x.adjoint()
-        res = jnp.array([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
-        assert jnp.array_equal(x(0.0), res)
+    def test_conj(self):
+        x = ConstantTimeArray(jnp.array([1 + 1j, 2 + 2j]))
+        x = x.conj()
+        assert_equal(x(0.0), [1 - 1j, 2 - 2j])
 
     def test_neg(self):
         x = -self.x
         assert_equal(x(0.0), [-1, -2])
 
     def test_mul(self):
-        # test type `Number`
         x = self.x * 2
         assert_equal(x(0.0), [2, 4])
 
-        # test type `Array`
-        x = self.x * jnp.array([0, 1])
-        assert_equal(x(0.0), [0, 2])
-
     def test_rmul(self):
-        # test type `Number`
         x = 2 * self.x
         assert_equal(x(0.0), [2, 4])
 
-        # test type `Array`
-        x = jnp.array([0, 1]) * self.x
-        assert_equal(x(0.0), [0, 2])
-
     def test_add(self):
-        # test type `Array`
-        x = self.x + jnp.array([0, 1])
+        # test type `ArrayLike`
+        x = self.x + 1
         assert isinstance(x, ConstantTimeArray)
-        assert_equal(x(0.0), [1, 3])
+        assert_equal(x(0.0), [2, 3])
 
         # test type `ConstantTimeArray`
         x = self.x + self.x
@@ -77,10 +57,10 @@ class TestConstantTimeArray:
         assert_equal(x(0.0), [2, 4])
 
     def test_radd(self):
-        # test type `Array`
-        x = jnp.array([0, 1]) + self.x
+        # test type `ArrayLike`
+        x = 1 + self.x
         assert isinstance(x, ConstantTimeArray)
-        assert_equal(x(0.0), [1, 3])
+        assert_equal(x(0.0), [2, 3])
 
 
 class TestCallableTimeArray:
@@ -93,26 +73,16 @@ class TestCallableTimeArray:
         assert_equal(self.x(0.0), [0, 0])
         assert_equal(self.x(1.0), [1, 2])
 
-    def test_call_caching(self):
-        assert self.x(0.0) is self.x(0.0)
-        assert self.x(1.0) is self.x(1.0)
-
     def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[0, 0]])
         assert_equal(x(1.0), [[1, 2]])
 
-    def test_repeat(self):
-        x = self.x.repeat(2, 0)
-        assert_equal(x(0.0), [0, 0, 0, 0])
-        assert_equal(x(1.0), [1, 1, 2, 2])
-
-    def test_adjoint(self):
-        f = lambda t: t * jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
+    def test_conj(self):
+        f = lambda t: t * jnp.array([1 + 1j, 2 + 2j])
         x = CallableTimeArray(f, f(0.0))
-        x = x.adjoint()
-        res = jnp.array([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
-        assert jnp.array_equal(x(1.0), res)
+        x = x.conj()
+        assert_equal(x(1.0), [1 - 1j, 2 - 2j])
 
     def test_neg(self):
         x = -self.x
@@ -120,30 +90,25 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [-1, -2])
 
     def test_mul(self):
-        # test type `Number`
         x = self.x * 2
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [2, 4])
 
-        # test type `Array`
-        x = self.x * jnp.array([0, 1])
-        assert_equal(x(0.0), [0, 0])
-        assert_equal(x(1.0), [0, 2])
-
     def test_rmul(self):
-        # test type `Number`
         x = 2 * self.x
         assert_equal(x(0.0), [0, 0])
         assert_equal(x(1.0), [2, 4])
 
-        # test type `Array`
-        x = jnp.array([0, 1]) * self.x
-        assert_equal(x(0.0), [0, 0])
-        assert_equal(x(1.0), [0, 2])
-
     def test_add(self):
-        # test type `Array`
-        x = self.x + jnp.array([0, 1])
+        # test type `ArrayLike`
+        x = self.x + 1
+        assert isinstance(x, CallableTimeArray)
+        assert_equal(x(0.0), [2, 3])
+        assert_equal(x(1.0), [3, 4])
+
+        # test type `ConstantTimeArray`
+        y = ConstantTimeArray(jnp.array([0, 1]))
+        x = self.x + y
         assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
@@ -155,8 +120,15 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [2, 4])
 
     def test_radd(self):
-        # test type `Array`
-        x = jnp.array([0, 1]) + self.x
+        # test type `ArrayLike`
+        x = 1 + self.x
+        assert isinstance(x, CallableTimeArray)
+        assert_equal(x(0.0), [2, 3])
+        assert_equal(x(1.0), [3, 4])
+
+        # test type `ConstantTimeArray`
+        y = ConstantTimeArray(jnp.array([0, 1]))
+        x = y + self.x
         assert isinstance(x, CallableTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
@@ -191,57 +163,36 @@ class TestPWCTimeArray:
         assert_equal(self.x(3.0), [[1j, 1j], [1j, 1j]])
         assert_equal(self.x(5.0), [[0, 0], [0, 0]])
 
-    def test_call_caching(self):
-        assert hash(self.x(-0.1)) == hash(self.x(-0.1)) == hash(self.x(-0.2))
-        assert hash(self.x(0.0)) == hash(self.x(0.0)) == hash(self.x(0.5))
-        assert hash(self.x(1.0)) == hash(self.x(1.0)) == hash(self.x(1.999))
-        assert hash(self.x(5.0)) == hash(self.x(5.0)) == hash(self.x(6.0))
-
     def test_reshape(self):
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(-0.1), [[[0, 0], [0, 0]]])
         assert_equal(x(0.0), [[[1, 2], [3, 4]]])
 
-    def test_repeat(self):
-        print(self.x(-0.1))
-        x = self.x.repeat(2, 0)
-        print()
-        print((x(-0.1)))
-        print((x(0.0)))
-        assert_equal(x(-0.1), [[0, 0], [0, 0], [0, 0], [0, 0]])
-        assert_equal(x(0.0), [[1, 2], [1, 2], [3, 4], [3, 4]])
-
-    def test_adjoint(self):
-        x = self.x.adjoint()
-        assert_equal(x(1.0), [[10 - 1j, 30 - 1j], [20 - 1j, 40 - 1j]])
+    def test_conj(self):
+        x = self.x.conj()
+        assert_equal(x(1.0), [[10 - 1j, 20 - 1j], [30 - 1j, 40 - 1j]])
 
     def test_neg(self):
         x = -self.x
         assert_equal(x(0.0), [[-1, -2], [-3, -4]])
 
     def test_mul(self):
-        # test type `Number`
         x = self.x * 2
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
-        # test type `Array`
-        x = self.x * jnp.array([2])
-        assert_equal(x(0.0), [[2, 4], [6, 8]])
-
     def test_rmul(self):
-        # test type `Number`
         x = 2 * self.x
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
-        # test type `Array`
-        x = jnp.array([2]) * self.x
-        assert_equal(x(0.0), [[2, 4], [6, 8]])
-
     def test_add(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
+        # test type `ArrayLike`
+        x = self.x + 2
+        assert isinstance(x, PWCTimeArray)
+        assert_equal(x(0.0), [[3, 5], [5, 6]])
 
-        # test type `Array`
-        x = self.x + array
+        # test type `ConstantTimeArray`
+        y = ConstantTimeArray(jnp.array([[1, 1], [1, 1]]))
+        x = self.x + y
         assert isinstance(x, PWCTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
@@ -252,10 +203,14 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_radd(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
+        # test type `ArrayLike`
+        x = 2 + self.x
+        assert isinstance(x, PWCTimeArray)
+        assert_equal(x(0.0), [[3, 5], [5, 6]])
 
-        # test type `Array`
-        x = array + self.x
+        # test type `ConstantTimeArray`
+        y = ConstantTimeArray(jnp.array([[1, 1], [1, 1]]))
+        x = y + self.x
         assert isinstance(x, PWCTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
@@ -291,62 +246,50 @@ class TestModulatedTimeArray:
         assert_equal(x(0.0), [[[1.0j, 2.0j], [3.0j, 4.0j]]])
         assert_equal(x(2.0), [[[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]]])
 
-    def test_repeat(self):
-        x = self.x.repeat(2, 0)
-        assert_equal(x(0.0), [[1.0j, 2.0j], [1.0j, 2.0j], [3.0j, 4.0j], [3.0j, 4.0j]])
-        assert_equal(
-            x(2.0),
-            [
-                [1.0 + 5.0j, 2.0 + 6.0j],
-                [1.0 + 5.0j, 2.0 + 6.0j],
-                [3.0 + 7.0j, 4.0 + 8.0j],
-                [3.0 + 7.0j, 4.0 + 8.0j],
-            ],
-        )
-
-    def test_adjoint(self):
-        x = self.x.adjoint()
-        assert_equal(x(0.0), [[-1.0j, -3.0j], [-2.0j, -4.0j]])
+    def test_conj(self):
+        x = self.x.conj()
+        assert_equal(x(0.0), [[-1.0j, -2.0j], [-3.0j, -4.0j]])
 
     def test_neg(self):
         x = -self.x
         assert_equal(x(0.0), [[-1.0j, -2.0j], [-3.0j, -4.0j]])
 
     def test_mul(self):
-        # test type `Number`
         x = self.x * 2
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
-        # test type `Array`
-        x = self.x * jnp.array([2])
-        assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
-
     def test_rmul(self):
-        # test type `Number`
         x = 2 * self.x
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
-        # test type `Array`
-        x = jnp.array([2]) * self.x
-        assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
-
     def test_add(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
-
-        # test type `Array`
-        x = self.x + array
+        # test type `ArrayLike`
+        x = self.x + 2
         assert isinstance(x, ModulatedTimeArray)
-        assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
+        assert_equal(x(0.0), [[3.0j, 4.0j], [5.0j, 6.0j]])
+
+        # test type `ConstantTimeArray`
+        y = ConstantTimeArray(jnp.array([[1, 1], [1, 1]]))
+        x = self.x + y
+        assert isinstance(x, ModulatedTimeArray)
+        assert_equal(x(-0.1), [[3.0j, 4.0j], [5.0j, 6.0j]])
+        assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ModulatedTimeArray`
         x = self.x + self.x
         assert isinstance(x, ModulatedTimeArray)
+        assert isinstance(x, ModulatedTimeArray)
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_radd(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
-
-        # test type `Array`
-        x = array + self.x
+        # test type `ArrayLike`
+        x = 2 + self.x
         assert isinstance(x, ModulatedTimeArray)
-        assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
+        assert_equal(x(0.0), [[3.0j, 4.0j], [5.0j, 6.0j]])
+
+        # test type `ConstantTimeArray`
+        y = ConstantTimeArray(jnp.array([[1, 1], [1, 1]]))
+        x = y + self.x
+        assert isinstance(x, ModulatedTimeArray)
+        assert_equal(x(-0.1), [[1, 1], [1, 1]])
+        assert_equal(x(0.0), [[2, 3], [4, 5]])
