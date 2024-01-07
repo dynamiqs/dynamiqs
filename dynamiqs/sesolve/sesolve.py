@@ -46,10 +46,9 @@ def sesolve(
     stepsize_controller, dt = _stepsize_controller(solver)
 
     # === solve differential equation with diffrax
-    exp_ops = jnp.array(exp_ops)
     H = totime(H)
-
     term = SchrodingerTerm(H=H)
+    exp_ops = jnp.asarray(exp_ops)
 
     solution = dx.diffeqsolve(
         term,

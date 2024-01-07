@@ -7,7 +7,14 @@ import jax.numpy as jnp
 import numpy as np
 from jaxtyping import ArrayLike
 
-from .._utils import _get_adjoint_class, _get_solver_class, save_fn
+from .._utils import (
+    SolverArgs,
+    _get_adjoint_class,
+    _get_solver_class,
+    merge_complex,
+    save_fn,
+    split_complex,
+)
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
@@ -47,6 +54,7 @@ def mesolve(
     Ls = [totime(L) for L in jump_ops]
     Ls = format_L(Ls)
     term = LindbladTerm(H=H, Ls=Ls)
+    exp_ops = jnp.asarray(exp_ops)
 
     solution = dx.diffeqsolve(
         term,
@@ -54,8 +62,8 @@ def mesolve(
         t0=tsave[0],
         t1=tsave[-1],
         dt0=dt,
-        y0=todm(rho0),
-        args=(options, exp_ops),
+        y0=split_complex(todm(rho0)),
+        args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
         adjoint=adjoint_class(),
@@ -63,11 +71,11 @@ def mesolve(
 
     ysave = None
     if options.save_states:
-        ysave = solution.ys['states']
+        ysave = merge_complex(solution.ys['states'])
 
     Esave = None
     if 'expects' in solution.ys:
-        Esave = solution.ys['expects']
+        Esave = merge_complex(solution.ys['expects']).T
         Esave = jnp.stack(Esave, axis=0)
 
     return Result(
@@ -97,9 +105,9 @@ def format_L(Ls: list[TimeArray]) -> list[TimeArray]:
     Ls_formatted = []
     for L in Ls:
         if L.ndim == 3:
-            Ls_formatted.append(L)
+            Ls_formatted.append(L if bL > 1 else L.reshape(n, n))
         elif L.ndim == 2:
-            Ls_formatted.append(L.repeat(bL, 0))
+            Ls_formatted.append(L.repeat(bL, 0) if bL > 1 else L)
         else:
             raise Exception(f'Unexpected dimension {L.ndim}.')
 
