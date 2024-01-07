@@ -6,13 +6,20 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from .._utils import save_fn
-from ..gradient import Adjoint, Autograd, Gradient
+from .schrodinger_term import SchrodingerTerm
+from .._utils import (
+    save_fn,
+    _get_adjoint_class,
+    _get_solver_class,
+    SolverArgs,
+    merge_complex,
+    split_complex,
+)
+from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Solver, _stepsize_controller
+from ..solver import Dopri5, Solver, _stepsize_controller, Euler, _ODEAdaptiveStep
 from ..time_array import totime
-from .schrodinger_term import SchrodingerTerm
 
 
 def sesolve(
@@ -26,45 +33,22 @@ def sesolve(
     options: dict[str, Any] | None = None,
 ) -> Result:
     # === options
-    save_expects = exp_ops is not None and len(exp_ops) > 0
-    options = Options(
-        solver=solver, gradient=gradient, options=options, save_expects=save_expects
-    )
+    options = Options(solver=solver, gradient=gradient, options=options)
 
     # === solver class
-    solvers = {Dopri5: dx.Dopri5}
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
-        )
-    solver_class = solvers[type(solver)]
+    solvers = {Dopri5: dx.Dopri5, Euler: dx.Euler}
+    solver_class = _get_solver_class(solver, solvers)
 
     # === adjoint class
-    gradients = {
-        Autograd: dx.RecursiveCheckpointAdjoint,
-        Adjoint: dx.BacksolveAdjoint,
-    }
-    if not isinstance(gradient, tuple(gradients.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in gradients.keys())
-        raise ValueError(
-            f'Gradient of type `{type(gradient).__name__}` is not supported'
-            f' (supported gradient types: {supported_str}).'
-        )
-    elif not solver.supports_gradient(gradient):
-        support_str = ', '.join(f'`{x.__name__}`' for x in solver.SUPPORTED_GRADIENT)
-        raise ValueError(
-            f'Solver `{type(solver).__name__}` does not support gradient'
-            f' `{type(gradient).__name__}` (supported gradient types: {support_str}).'
-        )
-    adjoint_class = gradients[type(gradient)]
+    adjoint_class = _get_adjoint_class(gradient, solver)
 
     # === stepsize controller
     stepsize_controller, dt = _stepsize_controller(solver)
 
     # === solve differential equation with diffrax
+    exp_ops = jnp.array(exp_ops)
     H = totime(H)
+
     term = SchrodingerTerm(H=H)
 
     solution = dx.diffeqsolve(
@@ -73,21 +57,22 @@ def sesolve(
         t0=tsave[0],
         t1=tsave[-1],
         dt0=dt,
-        y0=psi0,
-        args=(options, exp_ops),
+        y0=split_complex(psi0),
+        args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
         adjoint=adjoint_class(),
+        max_steps=options.max_steps if isinstance(options, _ODEAdaptiveStep) else None,
     )
 
     # === get results
     ysave = None
     if options.save_states:
-        ysave = solution.ys['states']
+        ysave = merge_complex(solution.ys['states'])
 
     Esave = None
-    if options.save_expects:
-        Esave = solution.ys['expects']
+    if "expects" in solution.ys:
+        Esave = merge_complex(solution.ys['expects']).T
         Esave = jnp.stack(Esave, axis=0)
 
     return Result(

@@ -3,8 +3,7 @@ from __future__ import annotations
 from math import cos, exp, pi, sin
 from typing import Any
 
-import torch
-from torch import Tensor
+from jax import numpy as jnp, Array
 
 import dynamiqs as dq
 from dynamiqs import TimeArray
@@ -70,18 +69,18 @@ class MCavity(MonitoredSystem):
     ):
         # store parameters
         self.n = n
-        self.kappa = torch.as_tensor(kappa).requires_grad_(requires_grad)
-        self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
-        self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
-        self.etas = torch.tensor([eta, 0.0])
-        self.t_end = torch.as_tensor(t_end)
+        self.kappa = jnp.asarray(kappa)
+        self.delta = jnp.asarray(delta)
+        self.alpha0 = jnp.asarray(alpha0)
+        self.etas = jnp.asarray([eta, 0.0])
+        self.t_end = jnp.asarray(t_end)
 
         # define gradient parameters
         self.params = (self.delta, self.alpha0, self.kappa)
 
         # bosonic operators
         a = dq.destroy(self.n)
-        adag = a.mH
+        adag = dq.dag(a)
 
         # loss operator
         self.loss_op = adag @ a
@@ -89,8 +88,8 @@ class MCavity(MonitoredSystem):
         # prepare quantum operators
         self.H = self.delta * adag @ a
         self.Hb = [0.5 * self.H, self.H, 2 * self.H]
-        self.L = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
-        self.Lb = [L * torch.arange(5).view(5, 1, 1) for L in self.L]
+        self.L = [jnp.sqrt(self.kappa) * a, dq.eye(self.n)]
+        self.Lb = [L * jnp.arange(5).reshape(5, 1, 1) for L in self.L]
         self.E = [dq.position(self.n), dq.momentum(self.n)]
 
         # prepare initial states
@@ -102,28 +101,28 @@ class MCavity(MonitoredSystem):
             dq.coherent_dm(self.n, -1j * self.alpha0),
         ]
 
-    def tsave(self, n: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), n)
+    def tsave(self, n: int) -> Array:
+        return jnp.linspace(0.0, self.t_end.item(), n)
 
-    def _alpha(self, t: float) -> Tensor:
-        return self.alpha0 * torch.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
+    def _alpha(self, t: float) -> Array:
+        return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
 
-    def state(self, t: float) -> Tensor:
+    def state(self, t: float) -> Array:
         return dq.coherent_dm(self.n, self._alpha(t))
 
-    def expect(self, t: float) -> Tensor:
+    def expect(self, t: float) -> Array:
         alpha_t = self._alpha(t)
         exp_x = alpha_t.real
         exp_p = alpha_t.imag
-        return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
+        return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_state(self, t: float) -> Tensor:
+    def grads_state(self, t: float) -> Array:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
         grad_kappa = -self.alpha0**2 * t * exp(-self.kappa * t)
-        return torch.tensor([grad_delta, grad_alpha0, grad_kappa]).detach()
+        return jnp.array([grad_delta, grad_alpha0, grad_kappa])
 
-    def grads_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> Array:
         cdt = cos(self.delta * t)
         sdt = sin(self.delta * t)
         emkt = exp(-0.5 * self.kappa * t)
@@ -135,10 +134,10 @@ class MCavity(MonitoredSystem):
         grad_x_kappa = -0.5 * self.alpha0 * t * cdt * emkt
         grad_p_kappa = 0.5 * self.alpha0 * t * sdt * emkt
 
-        return torch.tensor([
+        return jnp.array([
             [grad_x_delta, grad_x_alpha0, grad_x_kappa],
             [grad_p_delta, grad_p_alpha0, grad_p_kappa],
-        ]).detach()
+        ])
 
 
 # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null

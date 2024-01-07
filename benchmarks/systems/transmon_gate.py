@@ -71,7 +71,7 @@ class TransmonGate(ClosedSystem):
 
         # get charge operator in truncated basis
         U = evecs[:, : self.N]  # change of basis matrix
-        self.charge = (U.mH @ charge @ U).to(get_cdtype())
+        self.charge = dq.dag(U) @ charge @ U
 
     def gaussian(self, t: float) -> float:
         return exp(-((t - 0.5 * self.T) ** 2) / (2 * self.T0**2))

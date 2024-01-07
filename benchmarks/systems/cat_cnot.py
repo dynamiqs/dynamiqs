@@ -32,7 +32,7 @@ class CatCNOT(OpenSystem):
         ac = dq.tensor(dq.destroy(N), dq.eye(N))
         at = dq.tensor(dq.eye(N), dq.destroy(N))
         i = dq.tensor(dq.eye(N), dq.eye(N))
-        self.H = self.g * (ac + ac.mH) @ (at.mH @ at - alpha**2 * i)
+        self.H = self.g * (ac + dq.dag(ac)) @ (dq.dag(at) @ at - alpha**2 * i)
 
         # jump operator
         self.jump_ops = [sqrt(kappa2) * (ac @ ac - alpha**2 * i)]

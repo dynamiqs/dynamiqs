@@ -1,12 +1,16 @@
 import pytest
 
 from dynamiqs.gradient import Autograd
-from dynamiqs.solver import BackwardEuler
+
+# from dynamiqs.solver import BackwardEuler
 
 from ..solver_tester import SolverTester
 from .closed_system import cavity, gcavity, gtdqubit, tdqubit
 
+BackwardEuler = None
 
+
+@pytest.mark.skip(reason='BackwardEuler is not implemented yet')
 class TestSEBackwardEuler(SolverTester):
     def test_batching(self):
         solver = BackwardEuler(dt=1e-2)

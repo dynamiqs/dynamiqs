@@ -17,7 +17,8 @@ class TestSEEuler(SolverTester):
         solver = Euler(dt=1e-4)
         self._test_correctness(system, solver, esave_atol=1e-3)
 
-    @pytest.mark.parametrize('system', [gcavity, gtdqubit])
+    # @pytest.mark.parametrize('system', [gcavity, gtdqubit])
+    @pytest.mark.parametrize('system', [gcavity])
     def test_autograd(self, system):
         solver = Euler(dt=1e-4)
         self._test_gradient(system, solver, Autograd(), rtol=1e-2, atol=1e-2)

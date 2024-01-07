@@ -1,6 +1,5 @@
 import jax.numpy as jnp
 import pytest
-import torch
 from jax import Array
 
 from dynamiqs.time_array import (
@@ -14,7 +13,7 @@ from dynamiqs.time_array import (
 
 
 def assert_equal(xt: Array, y: list):
-    assert torch.equal(xt, jnp.array(y))
+    assert jnp.array_equal(xt, jnp.array(y))
 
 
 class TestConstantTimeArray:
@@ -27,18 +26,22 @@ class TestConstantTimeArray:
         assert_equal(self.x(1.0), [1, 2])
 
     def test_call_caching(self):
-        assert hash(self.x(0.0)) == hash(self.x(0.0))
-        assert hash(self.x(1.0)) == hash(self.x(1.0))
+        assert self.x(0.0) is self.x(0.0)
+        assert self.x(1.0) is self.x(1.0)
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[1, 2]])
+
+    def test_repeat(self):
+        x = self.x.repeat(2, 0)
+        assert_equal(x(0.0), [1, 1, 2, 2])
 
     def test_adjoint(self):
         x = ConstantTimeArray(jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]]))
         x = x.adjoint()
         res = jnp.array([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
-        assert torch.equal(x(0.0), res)
+        assert jnp.array_equal(x(0.0), res)
 
     def test_neg(self):
         x = -self.x
@@ -91,20 +94,25 @@ class TestCallableTimeArray:
         assert_equal(self.x(1.0), [1, 2])
 
     def test_call_caching(self):
-        assert hash(self.x(0.0)) == hash(self.x(0.0))
-        assert hash(self.x(1.0)) == hash(self.x(1.0))
+        assert self.x(0.0) is self.x(0.0)
+        assert self.x(1.0) is self.x(1.0)
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[0, 0]])
         assert_equal(x(1.0), [[1, 2]])
+
+    def test_repeat(self):
+        x = self.x.repeat(2, 0)
+        assert_equal(x(0.0), [0, 0, 0, 0])
+        assert_equal(x(1.0), [1, 1, 2, 2])
 
     def test_adjoint(self):
         f = lambda t: t * jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
         x = CallableTimeArray(f, f(0.0))
         x = x.adjoint()
         res = jnp.array([[1 - 1j, 3 - 3j], [2 - 2j, 4 - 4j]])
-        assert torch.equal(x(1.0), res)
+        assert jnp.array_equal(x(1.0), res)
 
     def test_neg(self):
         x = -self.x
@@ -170,7 +178,7 @@ class TestPWCTimeArray:
         array2 = jnp.array([[1j, 1j], [1j, 1j]])
 
         factors = [f1, f2]
-        arrays = torch.stack([array1, array2])
+        arrays = jnp.stack([array1, array2])
         self.x = PWCTimeArray(factors, arrays)  # shape at t: (2, 2)
 
     def test_call(self):
@@ -189,10 +197,19 @@ class TestPWCTimeArray:
         assert hash(self.x(1.0)) == hash(self.x(1.0)) == hash(self.x(1.999))
         assert hash(self.x(5.0)) == hash(self.x(5.0)) == hash(self.x(6.0))
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(-0.1), [[[0, 0], [0, 0]]])
         assert_equal(x(0.0), [[[1, 2], [3, 4]]])
+
+    def test_repeat(self):
+        print(self.x(-0.1))
+        x = self.x.repeat(2, 0)
+        print()
+        print((x(-0.1)))
+        print((x(0.0)))
+        assert_equal(x(-0.1), [[0, 0], [0, 0], [0, 0], [0, 0]])
+        assert_equal(x(0.0), [[1, 2], [1, 2], [3, 4], [3, 4]])
 
     def test_adjoint(self):
         x = self.x.adjoint()
@@ -221,7 +238,7 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_add(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
 
         # test type `Array`
         x = self.x + array
@@ -235,7 +252,7 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 4], [6, 8]])
 
     def test_radd(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
 
         # test type `Array`
         x = array + self.x
@@ -262,17 +279,30 @@ class TestModulatedTimeArray:
         array2 = jnp.array([[1j, 1j], [1j, 1j]])
 
         factors = [f1, f2]
-        arrays = torch.stack([array1, array2])
+        arrays = jnp.stack([array1, array2])
         self.x = ModulatedTimeArray(factors, arrays)
 
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
         assert_equal(self.x(2.0), [[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]])
 
-    def test_view(self):
+    def test_reshape(self):
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(0.0), [[[1.0j, 2.0j], [3.0j, 4.0j]]])
         assert_equal(x(2.0), [[[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]]])
+
+    def test_repeat(self):
+        x = self.x.repeat(2, 0)
+        assert_equal(x(0.0), [[1.0j, 2.0j], [1.0j, 2.0j], [3.0j, 4.0j], [3.0j, 4.0j]])
+        assert_equal(
+            x(2.0),
+            [
+                [1.0 + 5.0j, 2.0 + 6.0j],
+                [1.0 + 5.0j, 2.0 + 6.0j],
+                [3.0 + 7.0j, 4.0 + 8.0j],
+                [3.0 + 7.0j, 4.0 + 8.0j],
+            ],
+        )
 
     def test_adjoint(self):
         x = self.x.adjoint()
@@ -301,7 +331,7 @@ class TestModulatedTimeArray:
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_add(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
 
         # test type `Array`
         x = self.x + array
@@ -314,7 +344,7 @@ class TestModulatedTimeArray:
         assert_equal(x(0.0), [[2.0j, 4.0j], [6.0j, 8.0j]])
 
     def test_radd(self):
-        array = jnp.array([[1, 1], [1, 1]], dtype=torch.complex64)
+        array = jnp.array([[1, 1], [1, 1]], dtype=jnp.complex64)
 
         # test type `Array`
         x = array + self.x
