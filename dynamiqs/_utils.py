@@ -7,7 +7,7 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import Array
 
-from .gradient import Autograd, Adjoint
+from .gradient import Adjoint, Autograd
 from .utils import dag, isket
 
 

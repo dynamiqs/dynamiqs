@@ -6,20 +6,20 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from .schrodinger_term import SchrodingerTerm
 from .._utils import (
-    save_fn,
+    SolverArgs,
     _get_adjoint_class,
     _get_solver_class,
-    SolverArgs,
     merge_complex,
+    save_fn,
     split_complex,
 )
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Solver, _stepsize_controller, Euler, _ODEAdaptiveStep
+from ..solver import Dopri5, Euler, Solver, _ODEAdaptiveStep, _stepsize_controller
 from ..time_array import totime
+from .schrodinger_term import SchrodingerTerm
 
 
 def sesolve(
@@ -71,7 +71,7 @@ def sesolve(
         ysave = merge_complex(solution.ys['states'])
 
     Esave = None
-    if "expects" in solution.ys:
+    if 'expects' in solution.ys:
         Esave = merge_complex(solution.ys['expects']).T
         Esave = jnp.stack(Esave, axis=0)
 

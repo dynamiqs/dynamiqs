@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import jax.numpy as jnp
 from typing import Any
+
+import jax.numpy as jnp
 
 from .gradient import Gradient
 from .solver import Solver

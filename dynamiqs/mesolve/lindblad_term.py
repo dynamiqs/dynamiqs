@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array, PyTree, Scalar
 
-from ..time_array import TimeArray, ConstantTimeArray
+from ..time_array import ConstantTimeArray, TimeArray
 from ..utils.utils import dag
 
 

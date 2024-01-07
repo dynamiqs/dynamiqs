@@ -4,7 +4,7 @@ import diffrax as dx
 from jaxtyping import PyTree, Scalar
 
 from .._utils import merge_complex, split_complex
-from ..time_array import TimeArray, ConstantTimeArray
+from ..time_array import ConstantTimeArray, TimeArray
 
 
 class SchrodingerTerm(dx.ODETerm):

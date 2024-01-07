@@ -2,22 +2,20 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
 import diffrax as dx
 import jax.numpy as jnp
+import numpy as np
 from jaxtyping import ArrayLike
 
-from .lindblad_term import LindbladTerm
-from .rouchon import Rouchon1Solver
-from .._utils import save_fn, _get_solver_class, _get_adjoint_class
+from .._utils import _get_adjoint_class, _get_solver_class, save_fn
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Rouchon1, Solver, _stepsize_controller
-from ..utils.utils import todm
-
-
 from ..time_array import TimeArray, totime
+from ..utils.utils import todm
+from .lindblad_term import LindbladTerm
+from .rouchon import Rouchon1Solver
 
 
 def mesolve(
@@ -46,7 +44,8 @@ def mesolve(
 
     # === solve differential equation with diffrax
     H = totime(H)
-    Ls = format_L(jump_ops)
+    Ls = [totime(L) for L in jump_ops]
+    Ls = format_L(Ls)
     term = LindbladTerm(H=H, Ls=Ls)
 
     solution = dx.diffeqsolve(
@@ -67,7 +66,7 @@ def mesolve(
         ysave = solution.ys['states']
 
     Esave = None
-    if "expects" in solution.ys:
+    if 'expects' in solution.ys:
         Esave = solution.ys['expects']
         Esave = jnp.stack(Esave, axis=0)
 
@@ -79,34 +78,32 @@ def mesolve(
     )
 
 
-def format_L(L: list[ArrayLike | TimeArray]) -> list[TimeArray]:
-    # Format a list of tensors of individual shape (n, n) or (?, n, n) into a single
-    # batched tensor of shape (nL, bL, n, n). An error is raised if all batched
-    # dimensions `?` are not the same.
+def format_L(Ls: list[TimeArray]) -> list[TimeArray]:
+    # Format a list of TimeArrays of individual shape (n, n) or (?, n, n) into a list of
+    # TimeArrays of shape (bL, n, n) where bL is a common batch size. An error is
+    # raised if all batched dimensions `?` do not match.
+    n = Ls[0].shape[-1]
+    Ls = [L.reshape(-1, n, n) for L in Ls]  # [(?, n, n)] with ? = 1 if not batched
 
-    L = [totime(x) for x in L]
-    n = L[0](0.0).shape[-1]
-    L = [x.reshape(-1, n, n) for x in L]  # [(?, n, n)] with ? = 1 if not batched
-
-    bL = common_batch_size([x.shape[0] for x in L])
+    bL = common_batch_size([L.shape[0] for L in Ls])
     if bL is None:
-        L_shapes = [tuple(x.shape) for x in L]
+        L_shapes = [tuple(L.shape) for L in Ls]
         raise ValueError(
             'Argument `jump_ops` should be a list of 2D arrays or 3D arrays with the'
             ' same batch size, but got a list of arrays with incompatible shapes'
             f' {L_shapes}.'
         )
 
-    res = []
-    for x in L:
-        if x.ndim == 3:
-            L.append(x)
-        elif x.ndim == 2:
-            L.append(x.repeat(bL, 0))
+    Ls_formatted = []
+    for L in Ls:
+        if L.ndim == 3:
+            Ls_formatted.append(L)
+        elif L.ndim == 2:
+            Ls_formatted.append(L.repeat(bL, 0))
         else:
-            raise Exception(f'Unexpected dimension {x.ndim}.')
+            raise Exception(f'Unexpected dimension {L.ndim}.')
 
-    return res
+    return Ls_formatted
 
 
 def common_batch_size(dims: list[int]) -> int | None:

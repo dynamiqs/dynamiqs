@@ -1,9 +1,9 @@
 import pytest
+
 from dynamiqs.gradient import Autograd
 
 from ..solver_tester import SolverTester
 from .open_system import gocavity, ocavity
-
 
 Propagator = None
 

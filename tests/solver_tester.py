@@ -7,7 +7,6 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 
-from dynamiqs import plot_wigner_mosaic
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 
@@ -197,11 +196,6 @@ class SolverTester(ABC):
         grads_expect = jnp.stack(grads_expect)
         true_grads_expect = system.grads_expect(tsave[-1])
 
-        print()
-        print(f'grads_expect      =')
-        print(grads_expect)
-        print(f'true_grads_expect = ')
-        print(true_grads_expect)
         logging.warning(f'grads_expect      = {grads_expect}')
         logging.warning(f'true_grads_expect = {true_grads_expect}')
 
