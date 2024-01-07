@@ -8,7 +8,7 @@ from .closed_system import cavity, gcavity
 Propagator = None
 
 
-@pytest.mark.skip(reason="Propagator not implemented yet")
+@pytest.mark.skip(reason='Propagator not implemented yet')
 class TestSEPropagator(SolverTester):
     def test_batching(self):
         self._test_batching(cavity, Propagator())

@@ -46,13 +46,8 @@ def mesolve(
 
     # === solve differential equation with diffrax
     H = totime(H)
-    print("BIP")
     Ls = format_L(jump_ops)
     term = LindbladTerm(H=H, Ls=Ls)
-
-    print(H)
-    print(Ls)
-    print("AAAA")
 
     solution = dx.diffeqsolve(
         term,
