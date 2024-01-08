@@ -20,15 +20,16 @@ class LindbladTerm(dx.ODETerm):
 
     def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree):
         rho = merge_complex(rho)
+        H_t = self.H(t)
         Ls_t = jnp.stack([L(t) for L in self.Ls])
-        Hnh_t = self.H(t) - 0.5j * jnp.sum(dag(Ls_t) @ Ls_t, axis=0)
+        Hnh_t = Hnh(H_t, Ls_t)
         out = -1j * Hnh_t @ rho + 0.5 * jnp.sum(Ls_t @ rho @ dag(Ls_t), axis=0)
         return split_complex(out + dag(out))
-
-    def Hnh(self, t: float) -> Array:
-        Ls_t = jnp.stack([L(t) for L in self.Ls])
-        return self.H(t) - 0.5j * jnp.sum(dag(Ls_t) @ Ls_t, axis=0)
 
     @property
     def Id(self) -> Array:
         return jnp.eye(self.H.shape[-1], dtype=self.H.dtype)
+
+
+def Hnh(H_t: Array, Ls_t: list[Array]) -> Array:
+    return H_t - 0.5j * jnp.sum(dag(Ls_t) @ Ls_t, axis=0)

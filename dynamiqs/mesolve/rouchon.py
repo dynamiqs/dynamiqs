@@ -1,8 +1,9 @@
 import diffrax as dx
 import jax.numpy as jnp
 
+from .._utils import merge_complex, split_complex
 from ..utils.utils import dag
-from .lindblad_term import LindbladTerm
+from .lindblad_term import Hnh, LindbladTerm
 
 
 class Rouchon1Solver(dx.AbstractSolver):
@@ -18,11 +19,20 @@ class Rouchon1Solver(dx.AbstractSolver):
     def step(self, terms, t0, t1, y0, args, solver_state, made_jump):
         del solver_state, made_jump
 
+        # merge complex
+        y0 = merge_complex(y0)
+
         # compute y1
         dt = terms.contr(t0, t1)
-        M0 = terms.term.Id - 1j * dt * terms.term.Hnh(t0)  # (n, n)
-        M1s = jnp.sqrt(jnp.abs(dt)) * terms.term.Ls(t0)  # (nL, n, n)
+        H_t = terms.term.H(t0)
+        Ls_t = jnp.stack([L(t0) for L in terms.term.Ls])
+        M0 = terms.term.Id - 1j * dt * Hnh(H_t, Ls_t)  # (n, n)
+        M1s = jnp.sqrt(jnp.abs(dt)) * Ls_t  # (nL, n, n)
         y1 = M0 @ y0 @ dag(M0) + jnp.sum(M1s @ y0 @ dag(M1s), axis=0)
+
+        # split complex
+        y1 = split_complex(y1)
+        y0 = split_complex(y0)
 
         # return
         dense_info = dict(y0=y0, y1=y1)
