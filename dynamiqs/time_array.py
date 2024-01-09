@@ -8,9 +8,9 @@ import numpy as np
 from jax import Array, lax
 from jax import numpy as jnp
 from jax.tree_util import Partial
+from jaxtyping import Scalar
 
 from ._utils import check_time_array, obj_type_str, type_str
-from .types import Scalar
 from .utils.array_types import ArrayLike, dtype_complex_to_real, get_cdtype
 
 __all__ = ['totime']
