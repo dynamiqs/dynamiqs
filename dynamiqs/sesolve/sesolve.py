@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import diffrax as dx
+import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
@@ -61,7 +62,9 @@ def sesolve(
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
         adjoint=adjoint_class(),
-        max_steps=options.max_steps if isinstance(options, _ODEAdaptiveStep) else None,
+        max_steps=(
+            options.max_steps if isinstance(options, _ODEAdaptiveStep) else None
+        ),
     )
 
     # === get results

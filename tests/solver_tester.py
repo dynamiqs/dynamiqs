@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
+import timeit
 from abc import ABC
 from typing import Any
 
 import jax
 import jax.numpy as jnp
+from jax.config import config
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
@@ -134,6 +136,42 @@ class SolverTester(ABC):
         assert jnp.allclose(result.Esave, true_Esave, rtol=esave_rtol, atol=esave_atol)
 
     def test_correctness(self):
+        pass
+
+    def _test_jit(
+        self,
+        system: System,
+        solver: Solver,
+        *,
+        options: dict[str, Any] | None = None,
+        ntsave: int = 11,
+        ysave_atol: float = 1e-3,
+        esave_rtol: float = 1e-3,
+        esave_atol: float = 1e-5,
+    ):
+        tsave = system.tsave(ntsave)
+
+        if options is None:
+            options = {}
+
+        config.update('jax_disable_jit', True)
+        options["use_jit"] = False
+        t1 = timeit.timeit(
+            lambda: system.run(tsave, solver, options=options), number=10
+        )
+
+        config.update('jax_disable_jit', False)
+        options["use_jit"] = True
+        t2 = timeit.timeit(
+            lambda: system.run(tsave, solver, options=options), number=10
+        )
+
+        logging.warning(f't1 = {t1}')
+        logging.warning(f't2 = {t2}')
+
+        assert t2 < t1
+
+    def test_jit(self):
         pass
 
     def _test_gradient(

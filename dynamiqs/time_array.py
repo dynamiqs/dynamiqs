@@ -3,12 +3,13 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import get_args
 
+import jax
 import numpy as np
 from jax import Array
 from jax import numpy as jnp
 
 from ._utils import check_time_array, obj_type_str, type_str
-from .types import Scalar
+from .custom_types import Scalar
 from .utils.array_types import ArrayLike, dtype_complex_to_real, get_cdtype
 
 __all__ = ['totime']
@@ -238,6 +239,8 @@ class TimeArray:
 
 
 class ConstantTimeArray(TimeArray):
+    x: Array
+
     def __init__(self, x: Array):
         self.x = x
 
@@ -253,7 +256,12 @@ class ConstantTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ConstantTimeArray(self.x.mT)
 
-    def __call__(self, t: Scalar) -> Array:
+    def __call__(self, t: jax.PyTree) -> Array:
+        # todo: remove
+        res = 0
+        for i in range(1000):
+            res += i % 20
+            res = res % 3
         return self.x
 
     def reshape(self, *args: int) -> TimeArray:
