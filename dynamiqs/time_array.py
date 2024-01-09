@@ -3,9 +3,11 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import get_args
 
+import equinox as eqx
 import numpy as np
 from jax import Array
 from jax import numpy as jnp
+from jax.tree_util import Partial
 
 from ._utils import check_time_array, obj_type_str, type_str
 from .types import Scalar
@@ -22,6 +24,7 @@ def totime(
         | tuple[callable[[float], Array], ArrayLike]
     ),
     *,
+    args: tuple = (),
     dtype: jnp.dtype | None = None,
 ) -> TimeArray:
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
@@ -37,7 +40,7 @@ def totime(
         return _factory_constant(x, dtype=dtype)
     # callable time array
     elif callable(x):
-        return _factory_callable(x, dtype=dtype)
+        return _factory_callable(x, args=args, dtype=dtype)
     else:
         raise TypeError(
             'For time-dependent arrays, argument `x` must be one of 4 types: (1)'
@@ -54,9 +57,9 @@ def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeArray:
 
 
 def _factory_callable(
-    x: callable[[float], Array], *, dtype: jnp.dtype
+    f: callable[[float], Array], *, args: tuple, dtype: jnp.dtype
 ) -> CallableTimeArray:
-    f0 = x(0.0)
+    f0 = f(0.0, args)
 
     # check type, dtype and device match
     if not isinstance(f0, Array):
@@ -73,7 +76,7 @@ def _factory_callable(
             ' conversion at each solver time step.'
         )
 
-    return CallableTimeArray(x, f0)
+    return CallableTimeArray(Partial(f, args=args), f0)
 
 
 def _factory_pwc(
@@ -161,7 +164,15 @@ def _factory_modulated(
     return ModulatedTimeArray(factors, arrays)
 
 
-class TimeArray:
+class SumCallable(eqx.Module):
+    fn1: callable
+    fn2: callable
+
+    def __call__(self, t: float) -> Array:
+        return self.fn1(t) + self.fn2(t)
+
+
+class TimeArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, shape, mT
     # - the methods: __call__, reshape, conj, __neg__, __mul__, __add__
@@ -238,8 +249,7 @@ class TimeArray:
 
 
 class ConstantTimeArray(TimeArray):
-    def __init__(self, x: Array):
-        self.x = x
+    x: Array
 
     @property
     def dtype(self) -> np.dtype:
@@ -278,10 +288,8 @@ class ConstantTimeArray(TimeArray):
 
 
 class CallableTimeArray(TimeArray):
-    def __init__(self, f: callable[[float], Array], f0: Array):
-        # f0 carries all the transformation on the shape
-        self.f = f
-        self.f0 = f0
+    f: callable
+    f0: Array
 
     @property
     def dtype(self) -> np.dtype:
@@ -322,15 +330,15 @@ class CallableTimeArray(TimeArray):
 
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(y, get_args(ArrayLike)):
-            f = lambda t: self.f(t) + y
+            f = SumCallable(self.f, ConstantTimeArray(y))
             f0 = self.f0 + y
             return CallableTimeArray(f, f0)
         elif isinstance(y, ConstantTimeArray):
-            f = lambda t: self.f(t) + y.x
+            f = SumCallable(self.f, y)
             f0 = self.f0 + y.x
             return CallableTimeArray(f, f0)
         elif isinstance(y, CallableTimeArray):
-            f = lambda t: self.f(t) + y.f(t)
+            f = SumCallable(self.f, y.f)
             f0 = self.f0 + y.f0
             return CallableTimeArray(f, f0)
         else:
