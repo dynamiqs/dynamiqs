@@ -257,11 +257,6 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.x.mT)
 
     def __call__(self, t: jax.PyTree) -> Array:
-        # todo: remove
-        res = 0
-        for i in range(1000):
-            res += i % 20
-            res = res % 3
         return self.x
 
     def reshape(self, *args: int) -> TimeArray:

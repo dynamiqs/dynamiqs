@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 import diffrax as dx
-import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
+from .schrodinger_term import SchrodingerTerm
 from .._utils import (
     SolverArgs,
     _get_adjoint_class,
@@ -20,7 +20,6 @@ from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver, _ODEAdaptiveStep, _stepsize_controller
 from ..time_array import totime
-from .schrodinger_term import SchrodingerTerm
 
 
 def sesolve(
