@@ -5,7 +5,7 @@ from typing import get_args
 
 import equinox as eqx
 import numpy as np
-from jax import Array
+from jax import Array, lax
 from jax import numpy as jnp
 from jax.tree_util import Partial
 
@@ -34,7 +34,7 @@ def totime(
         return _factory_pwc(x, dtype=dtype)
     # modulated time array
     if isinstance(x, tuple) and len(x) == 2:
-        return _factory_modulated(x, dtype=dtype)
+        return _factory_modulated(x, args=args, dtype=dtype)
     # constant time array
     if isinstance(x, get_args(ArrayLike)):
         return _factory_constant(x, dtype=dtype)
@@ -115,12 +115,13 @@ def _factory_pwc(
 
     factors = [_PWCFactor(times, values)]
     arrays = array[None, ...]  # (1, n, n)
-    return PWCTimeArray(factors, arrays)
+    return PWCTimeArray(factors, arrays, static=jnp.zeros_like(array))
 
 
 def _factory_modulated(
     x: tuple[callable[[float], Array], Array],
     *,
+    args: tuple,
     dtype: jnp.dtype,
 ) -> ModulatedTimeArray:
     f, array = x
@@ -137,7 +138,7 @@ def _factory_modulated(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
-    f0 = f(0.0)
+    f0 = f(0.0, args=args)
     if not isinstance(f0, Array):
         raise TypeError(
             'For a modulated time array `(f, array)`, argument `f` must'
@@ -159,9 +160,9 @@ def _factory_modulated(
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_ModulatedFactor(f, f0)]
+    factors = [_ModulatedFactor(Partial(f, args=args), f0)]
     arrays = array[None, ...]  # (1, n, n)
-    return ModulatedTimeArray(factors, arrays)
+    return ModulatedTimeArray(factors, arrays, static=jnp.zeros_like(array))
 
 
 class SumCallable(eqx.Module):
@@ -345,7 +346,7 @@ class CallableTimeArray(TimeArray):
             return NotImplemented
 
 
-class _Factor:
+class _Factor(eqx.Module):
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
@@ -370,11 +371,8 @@ class _PWCFactor(_Factor):
     #          values, where nv is the number of time intervals
     # - values: (..., nv) are the constant values for each time interval, where (...)
     #           is an arbitrary batching size
-
-    def __init__(self, times: Array, values: Array):
-        self.times = times  # (nv+1)
-        self.values = values  # (..., nv)
-        self.nv = self.values.shape[-1]
+    times: Array
+    values: Array
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -384,15 +382,15 @@ class _PWCFactor(_Factor):
         return _PWCFactor(self.times, self.values.conj())
 
     def __call__(self, t: Scalar) -> Array:
-        if t < self.times[0] or t >= self.times[-1]:
-            return jnp.zeros_like(self.values[..., 0])  # (...)
-        else:
-            # find the index $k$ such that $t \in [t_k, t_{k+1})$
-            idx = jnp.searchsorted(self.times, t, side='right') - 1
-            return self.values[..., idx]  # (...)
+        idx = jnp.searchsorted(self.times, t, side='right') - 1
+        return lax.select(
+            jnp.logical_or(t < self.times[0], t >= self.times[-1]),
+            jnp.zeros_like(self.values[..., 0]),
+            self.values[..., idx],
+        )
 
     def reshape(self, *args: int) -> _Factor:
-        return _PWCFactor(self.times, self.values.reshape(*args, self.nv))
+        return _PWCFactor(self.times, self.values.reshape(*args, self.values.shape[-1]))
 
 
 class _ModulatedFactor(_Factor):
@@ -400,10 +398,8 @@ class _ModulatedFactor(_Factor):
     # - f is a callable that takes a time and returns an array of shape (...)
     # - f0 is the array of shape (...) returned by f(0.0)
     # f0 holds information about the shape of the array returned by f(t).
-
-    def __init__(self, f: callable[[float], Array], f0: Array):
-        self.f = f  # (float) -> (...)
-        self.f0 = f0  # (...)
+    f: callable[[float], Array]  # (float) -> (...)
+    f0: Array  # (...)
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -424,14 +420,9 @@ class _ModulatedFactor(_Factor):
 
 
 class FactorTimeArray(TimeArray):
-    def __init__(
-        self, factors: list[_Factor], arrays: Array, static: Array | None = None
-    ):
-        # factors must be non-empty
-        self.factors = factors  # list of length (nf)
-        self.arrays = arrays  # (nf, n, n)
-        self.n = arrays.shape[-1]
-        self.static = jnp.zeros_like(self.arrays[0]) if static is None else static
+    factors: list[_Factor]
+    arrays: Array
+    static: Array
 
     @property
     def dtype(self) -> np.dtype:
@@ -439,7 +430,15 @@ class FactorTimeArray(TimeArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return tuple(self.factors[0].shape, self.n, self.n)  # (..., n, n)
+        n = self.arrays.shape[-1]
+        return tuple(self.factors[0].shape, n, n)  # (..., n, n)
+
+    @property
+    def mT(self) -> TimeArray:
+        factors = [x.conj() for x in self.factors]
+        arrays = self.arrays.conj().mT
+        static = self.static.conj().mT
+        return FactorTimeArray(factors, arrays, static=static)
 
     def __call__(self, t: float) -> Array:
         values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
@@ -479,12 +478,7 @@ class FactorTimeArray(TimeArray):
 
 class PWCTimeArray(FactorTimeArray):
     # Arbitrary sum of arrays with PWC factors.
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # merge all times
-        self.times = jnp.unique(jnp.concatenate([x.times for x in self.factors]))
+    pass
 
 
 class ModulatedTimeArray(FactorTimeArray):
