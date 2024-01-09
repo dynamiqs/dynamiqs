@@ -379,12 +379,16 @@ class _PWCFactor(_Factor):
         return _PWCFactor(self.times, self.values.conj())
 
     def __call__(self, t: Scalar) -> Array:
-        if t < self.times[0] or t >= self.times[-1]:
-            return jnp.zeros_like(self.values[..., 0])  # (...)
-        else:
-            # find the index $k$ such that $t \in [t_k, t_{k+1})$
-            idx = jnp.searchsorted(self.times, t, side='right') - 1
-            return self.values[..., idx]  # (...)
+        idx = jnp.searchsorted(self.times, t, side='right') - 1
+        return jax.lax.select(
+            t < self.times[0],
+            jnp.zeros_like(self.values[..., 0]),
+            jax.lax.select(
+                t >= self.times[-1],
+                jnp.zeros_like(self.values[..., 0]),
+                self.values[..., idx],
+            ),
+        )
 
     def reshape(self, *args: int) -> _Factor:
         return _PWCFactor(self.times, self.values.reshape(*args, self.nv))

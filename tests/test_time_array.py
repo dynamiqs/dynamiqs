@@ -170,6 +170,16 @@ class TestPWCTimeArray:
         arrays = jnp.stack([array1, array2])
         self.x = PWCTimeArray(factors, arrays)  # shape at t: (2, 2)
 
+    def test_jit(self):
+        x = jax.jit(self.x)
+        assert_equal(x(-0.1), [[0, 0], [0, 0]])
+        assert_equal(x(0.0), [[1, 2], [3, 4]])
+        assert_equal(x(1.0), [[10 + 1j, 20 + 1j], [30 + 1j, 40 + 1j]])
+
+        t1 = timeit.timeit(lambda: x(1.0), number=1000)
+        t2 = timeit.timeit(lambda: self.x(1.0), number=1000)
+        assert t1 < t2
+
     def test_call(self):
         assert_equal(self.x(-0.1), [[0, 0], [0, 0]])
         assert_equal(self.x(0.0), [[1, 2], [3, 4]])
