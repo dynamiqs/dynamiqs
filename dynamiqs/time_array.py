@@ -29,6 +29,9 @@ def totime(
 ) -> TimeArray:
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
 
+    # already a time array
+    if isinstance(x, TimeArray):
+        return x
     # PWC time array
     if isinstance(x, tuple) and len(x) == 3:
         return _factory_pwc(x, dtype=dtype)
