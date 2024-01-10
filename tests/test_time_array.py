@@ -1,3 +1,6 @@
+import timeit
+
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -19,6 +22,11 @@ class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.x = ConstantTimeArray(jnp.array([1, 2]))
+
+    def test_jit(self):
+        # we don't test speed here, just that it works
+        x = jax.jit(self.x)
+        assert_equal(x(0.0), [1, 2])
 
     def test_call(self):
         assert_equal(self.x(0.0), [1, 2])
@@ -68,6 +76,15 @@ class TestCallableTimeArray:
     def setup(self):
         f = lambda t: t * jnp.array([1, 2])
         self.x = CallableTimeArray(f, f(0.0))
+
+    def test_jit(self):
+        x = jax.jit(self.x)
+        assert_equal(x(0.0), [0, 0])
+        assert_equal(x(1.0), [1, 2])
+
+        t1 = timeit.timeit(lambda: x(1.0), number=1000)
+        t2 = timeit.timeit(lambda: self.x(1.0), number=1000)
+        assert t1 < t2
 
     def test_call(self):
         assert_equal(self.x(0.0), [0, 0])
@@ -152,6 +169,16 @@ class TestPWCTimeArray:
         factors = [f1, f2]
         arrays = jnp.stack([array1, array2])
         self.x = PWCTimeArray(factors, arrays)  # shape at t: (2, 2)
+
+    def test_jit(self):
+        x = jax.jit(self.x)
+        assert_equal(x(-0.1), [[0, 0], [0, 0]])
+        assert_equal(x(0.0), [[1, 2], [3, 4]])
+        assert_equal(x(1.0), [[10 + 1j, 20 + 1j], [30 + 1j, 40 + 1j]])
+
+        t1 = timeit.timeit(lambda: x(1.0), number=1000)
+        t2 = timeit.timeit(lambda: self.x(1.0), number=1000)
+        assert t1 < t2
 
     def test_call(self):
         assert_equal(self.x(-0.1), [[0, 0], [0, 0]])

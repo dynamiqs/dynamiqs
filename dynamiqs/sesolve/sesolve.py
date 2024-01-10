@@ -6,13 +6,13 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
+from .schrodinger_term import SchrodingerTerm
 from .._utils import SolverArgs, _get_adjoint_class, _get_solver_class, save_fn
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver, _ODEAdaptiveStep, _stepsize_controller
 from ..time_array import totime
-from .schrodinger_term import SchrodingerTerm
 
 
 def sesolve(
@@ -54,7 +54,9 @@ def sesolve(
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
         adjoint=adjoint_class(),
-        max_steps=options.max_steps if isinstance(options, _ODEAdaptiveStep) else None,
+        max_steps=(
+            options.max_steps if isinstance(options, _ODEAdaptiveStep) else None
+        ),
     )
 
     # === get results
