@@ -145,9 +145,6 @@ class SolverTester(ABC):
         *,
         options: dict[str, Any] | None = None,
         ntsave: int = 11,
-        ysave_atol: float = 1e-3,
-        esave_rtol: float = 1e-3,
-        esave_atol: float = 1e-5,
     ):
         tsave = system.tsave(ntsave)
 
@@ -169,7 +166,7 @@ class SolverTester(ABC):
         logging.warning(f't1 = {t1}')
         logging.warning(f't2 = {t2}')
 
-        assert t2 < t1
+        assert t2 < 0.5 * t1
 
     def test_jit(self):
         pass

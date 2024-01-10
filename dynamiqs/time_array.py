@@ -256,7 +256,7 @@ class ConstantTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ConstantTimeArray(self.x.mT)
 
-    def __call__(self, t: jax.PyTree) -> Array:
+    def __call__(self, t: Scalar) -> Array:
         return self.x
 
     def reshape(self, *args: int) -> TimeArray:
