@@ -22,14 +22,6 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def split_complex(x: Array) -> Array:
-    return jnp.stack((x.real, x.imag), axis=-1)
-
-
-def merge_complex(x: Array) -> Array:
-    return x[..., 0] + 1j * x[..., 1]
-
-
 def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
     # check that a time array is valid (it must be a 1D array sorted in strictly
     # ascending order and containing only positive values)
@@ -62,9 +54,7 @@ def save_fn(_t, y, args: SolverArgs):
     if args.save_states:
         res['states'] = y
     if args.exp_ops is not None and len(args.exp_ops) > 0:
-        y = merge_complex(y)
-        exp = bexpect(args.exp_ops, y)
-        res['expects'] = split_complex(exp)
+        res['expects'] = bexpect(args.exp_ops, y)
     return res
 
 
