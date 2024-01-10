@@ -7,14 +7,7 @@ from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
 from .schrodinger_term import SchrodingerTerm
-from .._utils import (
-    SolverArgs,
-    _get_adjoint_class,
-    _get_solver_class,
-    merge_complex,
-    save_fn,
-    split_complex,
-)
+from .._utils import SolverArgs, _get_adjoint_class, _get_solver_class, save_fn
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
@@ -56,7 +49,7 @@ def sesolve(
         t0=tsave[0],
         t1=tsave[-1],
         dt0=dt,
-        y0=split_complex(psi0),
+        y0=psi0,
         args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
         saveat=dx.SaveAt(ts=tsave, fn=save_fn),
         stepsize_controller=stepsize_controller,
@@ -69,12 +62,11 @@ def sesolve(
     # === get results
     ysave = None
     if options.save_states:
-        ysave = merge_complex(solution.ys['states'])
+        ysave = solution.ys['states']
 
     Esave = None
     if 'expects' in solution.ys:
-        Esave = merge_complex(solution.ys['expects']).T
-        Esave = jnp.stack(Esave, axis=0)
+        Esave = jnp.stack(solution.ys['expects'].T, axis=0)
 
     return Result(
         options,
