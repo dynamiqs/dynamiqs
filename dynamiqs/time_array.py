@@ -19,9 +19,10 @@ __all__ = ['totime']
 def totime(
     x: (
         ArrayLike
-        | callable[[float], Array]
+        | callable[[float, tuple], Array]
         | tuple[ArrayLike, ArrayLike, ArrayLike]
-        | tuple[callable[[float], Array], ArrayLike]
+        | tuple[callable[[float, tuple], Array], ArrayLike]
+        | TimeArray
     ),
     *,
     args: tuple = (),
@@ -33,13 +34,13 @@ def totime(
     if isinstance(x, TimeArray):
         return x
     # PWC time array
-    if isinstance(x, tuple) and len(x) == 3:
+    elif isinstance(x, tuple) and len(x) == 3:
         return _factory_pwc(x, dtype=dtype)
     # modulated time array
-    if isinstance(x, tuple) and len(x) == 2:
+    elif isinstance(x, tuple) and len(x) == 2:
         return _factory_modulated(x, args=args, dtype=dtype)
     # constant time array
-    if isinstance(x, get_args(ArrayLike)):
+    elif isinstance(x, get_args(ArrayLike)):
         return _factory_constant(x, dtype=dtype)
     # callable time array
     elif callable(x):
@@ -79,7 +80,12 @@ def _factory_callable(
             ' conversion at each solver time step.'
         )
 
-    return CallableTimeArray(Partial(f, args=args), f0)
+    # Pass `f` through `jax.tree_util.Partial`.
+    # This is necessary:
+    # (1) to make f a Pytree, and
+    # (2) to avoid jitting again every time the args change.
+    f_partial = Partial(f, args=args)
+    return CallableTimeArray(f_partial, f0)
 
 
 def _factory_pwc(
@@ -385,11 +391,15 @@ class _PWCFactor(_Factor):
         return _PWCFactor(self.times, self.values.conj())
 
     def __call__(self, t: Scalar) -> Array:
-        idx = jnp.searchsorted(self.times, t, side='right') - 1
-        return lax.select(
-            jnp.logical_or(t < self.times[0], t >= self.times[-1]),
-            jnp.zeros_like(self.values[..., 0]),
-            self.values[..., idx],
+        def _zero(t: Scalar) -> Array:
+            return jnp.zeros_like(self.values[..., 0])
+
+        def _pwc(t: Scalar) -> Array:
+            idx = jnp.searchsorted(self.times, t, side='right') - 1
+            return self.values[..., idx]  # (...)
+
+        return lax.cond(
+            jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
     def reshape(self, *args: int) -> _Factor:
@@ -423,9 +433,9 @@ class _ModulatedFactor(_Factor):
 
 
 class FactorTimeArray(TimeArray):
-    factors: list[_Factor]
-    arrays: Array
-    static: Array
+    factors: list[_Factor]  # list of length (nf) - must be non-empty
+    arrays: Array  # (nf, n, n)
+    static: Array  # (n, n)
 
     @property
     def dtype(self) -> np.dtype:
@@ -438,10 +448,7 @@ class FactorTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        factors = [x.conj() for x in self.factors]
-        arrays = self.arrays.conj().mT
-        static = self.static.conj().mT
-        return FactorTimeArray(factors, arrays, static=static)
+        return FactorTimeArray(self.factors, self.arrays.mT, static=self.static.mT)
 
     def __call__(self, t: float) -> Array:
         values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
@@ -481,7 +488,16 @@ class FactorTimeArray(TimeArray):
 
 class PWCTimeArray(FactorTimeArray):
     # Arbitrary sum of arrays with PWC factors.
-    pass
+    times: Array
+
+    def __init__(
+        self,
+        factors: list[_PWCFactor],
+        arrays: Array,
+        static: Array,
+    ):
+        super().__init__(factors, arrays, static)
+        self.times = jnp.unique(jnp.concatenate([x.times for x in self.factors]))
 
 
 class ModulatedTimeArray(FactorTimeArray):
