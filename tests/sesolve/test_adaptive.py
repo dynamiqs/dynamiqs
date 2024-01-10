@@ -15,6 +15,9 @@ class TestSEAdaptive(SolverTester):
     def test_correctness(self, system):
         self._test_correctness(system, Dopri5())
 
+    def test_jit(self):
+        self._test_jit(cavity, Dopri5())
+
     # @pytest.mark.parametrize('system', [gcavity, gtdqubit]) # TODO: restore gtdqubit
     @pytest.mark.parametrize('system', [gcavity])
     def test_autograd(self, system):
