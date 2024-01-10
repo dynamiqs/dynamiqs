@@ -149,7 +149,7 @@ class TDQubit(ClosedSystem):
 
     def H(self, params: Array = None):
         eps, omega = params if params is not None else self.params
-        return dq.totime(lambda t: eps * jnp.cos(omega * t) * dq.sigmax())
+        return dq.totime(lambda t, args: eps * jnp.cos(omega * t) * dq.sigmax())
 
     def tsave(self, n: int) -> Array:
         return jnp.linspace(0.0, self.t_end.item(), n)

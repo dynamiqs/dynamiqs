@@ -162,7 +162,9 @@ class OTDQubit(OpenSystem):
         self.loss_op = dq.sigmaz()
 
         # prepare quantum operators
-        self.H = dq.totime(lambda t: self.eps * jnp.cos(self.omega * t) * dq.sigmax())
+        self.H = dq.totime(
+            lambda t, args: self.eps * jnp.cos(self.omega * t) * dq.sigmax()
+        )
         self.L = [jnp.sqrt(self.gamma) * dq.sigmax()]
         self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
