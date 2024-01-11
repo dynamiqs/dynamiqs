@@ -44,7 +44,7 @@ def mesolve(
     stepsize_controller, dt = _stepsize_controller(solver)
 
     # === progress bar
-    bar, update_progressbar = make_progressbar(options.progress_bar, tsave[-1])
+    bar, update_progressbar = make_progressbar(options.verbose, tsave[0], tsave[-1])
 
     # === solve differential equation with diffrax
     H = totime(H)

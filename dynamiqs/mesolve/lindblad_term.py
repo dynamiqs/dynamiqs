@@ -15,7 +15,7 @@ class LindbladTerm(ProgressBarTerm):
     vector_field: Callable[[Scalar, PyTree, PyTree], PyTree]
 
     def __init__(
-        self, H: TimeArray, Ls: TimeArray, update_progressbar: Optional[Callable]
+        self, H: TimeArray, Ls: TimeArray, update_progressbar: callable | None
     ):
         super().__init__(update_progressbar)
         self.H = H
