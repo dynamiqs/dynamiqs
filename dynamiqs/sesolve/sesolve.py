@@ -5,7 +5,9 @@ from typing import Any
 import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
+from tqdm import tqdm
 
+from progress_bar import make_progressbar, close_progressbar
 from .schrodinger_term import SchrodingerTerm
 from .._utils import SolverArgs, _get_adjoint_class, _get_solver_class, save_fn
 from ..gradient import Autograd, Gradient
@@ -38,9 +40,13 @@ def sesolve(
     # === stepsize controller
     stepsize_controller, dt = _stepsize_controller(solver)
 
+    # === progress bar
+    bar, update_progressbar = make_progressbar(options.progress_bar, tsave[-1])
+
     # === solve differential equation with diffrax
+
     H = totime(H)
-    term = SchrodingerTerm(H=H)
+    term = SchrodingerTerm(H=H, update_progressbar=update_progressbar)
     exp_ops = jnp.asarray(exp_ops)
 
     solution = dx.diffeqsolve(
@@ -58,6 +64,8 @@ def sesolve(
             options.max_steps if isinstance(options, _ODEAdaptiveStep) else None
         ),
     )
+
+    close_progressbar(bar)
 
     # === get results
     ysave = None

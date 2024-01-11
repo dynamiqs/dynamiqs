@@ -1,24 +1,28 @@
 from __future__ import annotations
-from typing import Callable
+from typing import Callable, Optional
 
-import diffrax as dx
 import jax.numpy as jnp
 from jaxtyping import Array, PyTree, Scalar
 
+from progress_bar import ProgressBarTerm
 from ..time_array import TimeArray
 from ..utils.utils import dag
 
 
-class LindbladTerm(dx.ODETerm):
+class LindbladTerm(ProgressBarTerm):
     H: TimeArray  # (n, n)
     Ls: list[TimeArray]  # (nL, n, n)
     vector_field: Callable[[Scalar, PyTree, PyTree], PyTree]
 
-    def __init__(self, H: TimeArray, Ls: TimeArray):
+    def __init__(
+        self, H: TimeArray, Ls: TimeArray, update_progressbar: Optional[Callable]
+    ):
+        super().__init__(update_progressbar)
         self.H = H
         self.Ls = Ls
 
     def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree):
+        super().vector_field(t, rho, _args)
         H_t = self.H(t)
         Ls_t = jnp.stack([L(t) for L in self.Ls])
         Hnh_t = Hnh(H_t, Ls_t)

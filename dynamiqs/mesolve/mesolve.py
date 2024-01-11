@@ -7,6 +7,7 @@ import jax.numpy as jnp
 import numpy as np
 from jaxtyping import ArrayLike
 
+from progress_bar import make_progressbar, close_progressbar
 from .._utils import SolverArgs, _get_adjoint_class, _get_solver_class, save_fn
 from ..gradient import Autograd, Gradient
 from ..options import Options
@@ -42,11 +43,14 @@ def mesolve(
     # === stepsize controller
     stepsize_controller, dt = _stepsize_controller(solver)
 
+    # === progress bar
+    bar, update_progressbar = make_progressbar(options.progress_bar, tsave[-1])
+
     # === solve differential equation with diffrax
     H = totime(H)
     Ls = [totime(L) for L in jump_ops]
     Ls = format_L(Ls)
-    term = LindbladTerm(H=H, Ls=Ls)
+    term = LindbladTerm(H=H, Ls=Ls, update_progressbar=update_progressbar)
     exp_ops = jnp.asarray(exp_ops)
 
     solution = dx.diffeqsolve(
@@ -61,6 +65,8 @@ def mesolve(
         stepsize_controller=stepsize_controller,
         adjoint=adjoint_class(),
     )
+
+    close_progressbar(bar)
 
     ysave = None
     if options.save_states:
