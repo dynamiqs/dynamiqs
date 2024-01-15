@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from math import pi, sqrt
 
-import torch
-
+from jax import numpy as jnp
 import dynamiqs as dq
 
 # units
@@ -42,8 +41,4 @@ class CatCNOT(OpenSystem):
         self.y0 = dq.tensor(plus, plus)
 
         # tsave
-        self.tsave = torch.linspace(0, self.T, self.num_tslots + 1)
-
-    def to(self, dtype: torch.dtype, device: torch.device):
-        super().to(dtype=dtype, device=device)
-        self.H = self.H.to(dtype=dtype, device=device)
+        self.tsave = jnp.linspace(0, self.T, self.num_tslots + 1)
