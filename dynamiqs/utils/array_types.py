@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 import numpy as np
-import torch
 from jax.typing import ArrayLike
 from qutip import Qobj
 
@@ -38,7 +37,7 @@ def get_rdtype(
 ) -> jnp.float32 | jnp.float64:
     if dtype is None:
         return _get_default_dtype()
-    elif dtype not in (torch.float32, torch.float64):
+    elif dtype not in (jnp.float32, jnp.float64):
         raise TypeError(
             'Argument `dtype` must be `jnp.float32`, `jnp.float64` or `None` for'
             f' a real-valued array, but is `{dtype}`.'
