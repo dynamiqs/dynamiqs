@@ -218,7 +218,6 @@ def plot_wigner_mosaic(
             xmax=xmax,
             ymax=ymax,
             vmax=vmax,
-            # npixels=npixels,
             cmap=cmap,
             interpolation=interpolation,
             colorbar=False,

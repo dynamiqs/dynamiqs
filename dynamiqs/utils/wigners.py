@@ -51,12 +51,17 @@ def wigner(
 
     if method == 'clenshaw':
         state = todm(state)
+        expanded = False
         if state.ndim == 2:
             state = state[None, ...]
+            expanded = True
+
         n = state.shape[-1]
         w = jax.vmap(_wigner_clenshaw, in_axes=(0, None, None, None, None))(
             state, xvec, yvec, g, n
         )
+        if expanded:
+            w = w[0]
     elif method == 'fft':
         if state.ndim > 2:
             raise NotImplementedError(
