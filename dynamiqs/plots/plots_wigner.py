@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import jax
 import jax.numpy as jnp
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
@@ -192,8 +193,6 @@ def plot_wigner_mosaic(
     if nstates < n:
         n = nstates
 
-    # todo: precompute batched wigners
-
     # create grid of plot
     _, axs = gridplot(
         n,
@@ -206,7 +205,9 @@ def plot_wigner_mosaic(
     )
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = wigner(states, xmax=xmax, ymax=ymax, npixels=npixels)
+    _, _, w = jax.vmap(wigner, in_axes=(0, None, None, None))(
+        states, xmax, ymax, npixels
+    )
 
     # plot individual wigner
     for i in range(n):

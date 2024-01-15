@@ -15,6 +15,7 @@ from .utils import isdm, isket, todm
 __all__ = ['wigner']
 
 
+@ft.partial(jax.jit, static_argnums=(3, 4))
 def wigner(
     state: ArrayLike,
     xmax: float = 6.2832,
@@ -51,17 +52,7 @@ def wigner(
 
     if method == 'clenshaw':
         state = todm(state)
-        expanded = False
-        if state.ndim == 2:
-            state = state[None, ...]
-            expanded = True
-
-        n = state.shape[-1]
-        w = jax.vmap(_wigner_clenshaw, in_axes=(0, None, None, None, None))(
-            state, xvec, yvec, g, n
-        )
-        if expanded:
-            w = w[0]
+        w = _wigner_clenshaw(state, xvec, yvec, g)
     elif method == 'fft':
         if state.ndim > 2:
             raise NotImplementedError(
@@ -87,13 +78,14 @@ def wigner(
 
 @ft.partial(jax.jit, static_argnums=(4,))
 def _wigner_clenshaw(
-    rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float, n: int
+    rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float
 ) -> Array:
     """Compute the wigner distribution of a density matrix using the iterative method
     of QuTiP based on the Clenshaw summation algorithm."""
     rho = jnp.asarray(rho)
     xvec = jnp.asarray(xvec)
     yvec = jnp.asarray(yvec)
+    n = rho.shape[-1]
 
     x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
     a = 0.5 * g * (x + 1.0j * p)
