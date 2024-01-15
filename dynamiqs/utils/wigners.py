@@ -54,11 +54,6 @@ def wigner(
         state = todm(state)
         w = _wigner_clenshaw(state, xvec, yvec, g)
     elif method == 'fft':
-        if state.ndim > 2:
-            raise NotImplementedError(
-                'Batching is not yet implemented for `wigner` with "FFT" method.'
-            )
-
         if isket(state):
             w, yvec = _wigner_fft_psi(state, xvec, g)
         elif isdm(state):
