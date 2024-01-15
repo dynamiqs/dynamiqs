@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Literal
 
-import jax.lax as lax
-import jax.numpy as jnp
-from jax import Array
+import jax
+from jax import lax, numpy as jnp, Array
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
+import functools as ft
 
 from .array_types import dtype_complex_to_real, dtype_real_to_complex
 from .operators import eye
@@ -45,17 +45,24 @@ def wigner(
     """
     state = jnp.asarray(state)
 
-    if state.ndim > 2:
-        raise NotImplementedError('Batching is not yet implemented for `wigner`.')
-
     rdtype = dtype_complex_to_real(state.dtype)
     xvec = jnp.linspace(-xmax, xmax, npixels, dtype=rdtype)
     yvec = jnp.linspace(-ymax, ymax, npixels, dtype=rdtype)
 
     if method == 'clenshaw':
         state = todm(state)
-        w = _wigner_clenshaw(state, xvec, yvec, g)
+        if state.ndim == 2:
+            state = state[None, ...]
+        n = state.shape[-1]
+        w = jax.vmap(_wigner_clenshaw, in_axes=(0, None, None, None, None))(
+            state, xvec, yvec, g, n
+        )
     elif method == 'fft':
+        if state.ndim > 2:
+            raise NotImplementedError(
+                'Batching is not yet implemented for `wigner` with "FFT" method.'
+            )
+
         if isket(state):
             w, yvec = _wigner_fft_psi(state, xvec, g)
         elif isdm(state):
@@ -73,8 +80,9 @@ def wigner(
     return xvec, yvec, w
 
 
+@ft.partial(jax.jit, static_argnums=(4,))
 def _wigner_clenshaw(
-    rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float
+    rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float, n: int
 ) -> Array:
     """Compute the wigner distribution of a density matrix using the iterative method
     of QuTiP based on the Clenshaw summation algorithm."""
@@ -82,25 +90,22 @@ def _wigner_clenshaw(
     xvec = jnp.asarray(xvec)
     yvec = jnp.asarray(yvec)
 
-    n = rho.shape[-1]
-
     x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
     a = 0.5 * g * (x + 1.0j * p)
     a2 = jnp.abs(a) ** 2
 
     w = 2 * rho[0, -1] * jnp.ones_like(a)
-    rho = rho * (2 * jnp.ones((n, n), dtype=rho.dtype) - eye(n, dtype=rho.dtype))
+    rho = rho * (2 * jnp.ones((n, n)) - eye(n))
     for i in range(n - 2, -1, -1):
         w *= 2 * a * (i + 1) ** (-0.5)
-        w += _laguerre_series(i, 4 * a2, jnp.diag(rho, k=i))
+        w += _laguerre_series(i, 4 * a2, jnp.diag(rho, k=i), n)
 
     return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
 
 
-def _laguerre_series(i, x, c):
+def _laguerre_series(i, x, c, n):
     r"""Evaluate a polynomial series of the form `$\sum_n c_n L_n^i$` where `$L_n$` is
     such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`."""
-    n = len(c)
 
     if n == 1:
         return c[0]

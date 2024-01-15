@@ -43,7 +43,9 @@ def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axe
     return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
-def optax(func):
+def optax(
+    func,
+):  # todo: maybe not such a great name now that we are in the JAX ecosystem
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 
