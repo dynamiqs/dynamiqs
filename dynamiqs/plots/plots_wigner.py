@@ -119,7 +119,7 @@ def plot_wigner(
     state = jnp.asarray(state)
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
+    _, _, w = wigner(state, xmax, ymax, npixels)
 
     plot_wigner_data(
         w,
@@ -205,9 +205,7 @@ def plot_wigner_mosaic(
     )
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = jax.vmap(wigner, in_axes=(0, None, None, None))(
-        states, xmax, ymax, npixels
-    )
+    _, _, w = wigner(states, xmax, ymax, npixels)
 
     # plot individual wigner
     for i in range(n):
