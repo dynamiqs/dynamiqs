@@ -15,8 +15,8 @@ from .utils import isdm, isket, todm
 __all__ = ['wigner']
 
 
-@ft.partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
-@ft.partial(jax.jit, static_argnums=(3, 4))
+@ft.partial(jax.jit, static_argnums=(1, 2))
+@ft.partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2})
 def wigner(
     state: ArrayLike,
     xmax: float = 6.2832,
@@ -72,7 +72,6 @@ def wigner(
     return xvec, yvec, w
 
 
-@ft.partial(jax.jit, static_argnums=(4,))
 def _wigner_clenshaw(
     rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float
 ) -> Array:
