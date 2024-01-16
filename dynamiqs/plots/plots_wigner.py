@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import jax
 import jax.numpy as jnp
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
@@ -118,7 +119,7 @@ def plot_wigner(
     state = jnp.asarray(state)
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
+    _, _, w = wigner(state, xmax, ymax, npixels)
 
     plot_wigner_data(
         w,
@@ -192,8 +193,6 @@ def plot_wigner_mosaic(
     if nstates < n:
         n = nstates
 
-    # todo: precompute batched wigners
-
     # create grid of plot
     _, axs = gridplot(
         n,
@@ -205,22 +204,23 @@ def plot_wigner_mosaic(
         sharey=True,
     )
 
-    # individual wigner plot options
-    kwargs = dict(
-        xmax=xmax,
-        ymax=ymax,
-        vmax=vmax,
-        npixels=npixels,
-        cmap=cmap,
-        interpolation=interpolation,
-        colorbar=False,
-        cross=cross,
-        clear=False,
-    )
+    ymax = xmax if ymax is None else ymax
+    _, _, w = wigner(states, xmax, ymax, npixels)
 
     # plot individual wigner
     for i in range(n):
-        ax = next(axs)
         idx = int(linmap(i, 0, n - 1, 0, nstates - 1))
-        plot_wigner(states[idx], ax=ax, **kwargs)
+        ax = next(axs)
+        plot_wigner_data(
+            w[idx],
+            ax=ax,
+            xmax=xmax,
+            ymax=ymax,
+            vmax=vmax,
+            cmap=cmap,
+            interpolation=interpolation,
+            colorbar=False,
+            cross=cross,
+            clear=False,
+        )
         ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
