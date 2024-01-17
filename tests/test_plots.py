@@ -4,6 +4,8 @@ import jax.numpy as jnp
 
 from dynamiqs import coherent, plot_wigner, todm, plot_wigner_mosaic
 
+# todo : add comparison with analytical wigner for coherent states and cat states
+
 
 class TestPlots:
     @pytest.fixture(autouse=True)
