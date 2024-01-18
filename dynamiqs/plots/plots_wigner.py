@@ -1,18 +1,24 @@
 from __future__ import annotations
 
-import jax
+
 import jax.numpy as jnp
+import IPython.display as ipy
 from jax.typing import ArrayLike
+from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
+from tqdm import tqdm
+import imageio
+import pathlib
+import shutil
 
 from ..utils.wigners import wigner
-from .utils import add_colorbar, colors, gridplot, linmap, optax
+from .utils import add_colorbar, colors, gridplot, linmap, optional_ax, figax
 
-__all__ = ['plot_wigner', 'plot_wigner_mosaic']
+__all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
 
 
-@optax
+@optional_ax
 def plot_wigner_data(
     wigner: ArrayLike,
     xmax: float,
@@ -63,7 +69,7 @@ def plot_wigner_data(
         ax.axis(False)
 
 
-@optax
+@optional_ax
 def plot_wigner(
     state: ArrayLike,
     *,
@@ -224,3 +230,64 @@ def plot_wigner_mosaic(
             clear=False,
         )
         ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
+
+
+def plot_wigner_gif(
+    states: ArrayLike,
+    length_s: int = 5,
+    fps: int = 10,
+    w: float = 5.0,
+    h: float = 5.0,
+    xmax: float = 5.0,
+    ymax: float | None = None,
+    vmax: float = 2 / jnp.pi,
+    npixels: int = 101,
+    cmap: str = 'dq',
+    interpolation: str = 'bilinear',
+    cross: bool = False,
+    clear: bool = False,
+):
+    """Multiprocessed Wigner gif plot function."""
+    if ymax is None:
+        ymax = xmax
+
+    states = jnp.asarray(states)
+
+    nframes = length_s * fps
+    tmpdir = './.tmp/dynamiqs'
+    tmpdir = pathlib.Path(tmpdir)
+    tmpdir.mkdir(parents=True, exist_ok=True)
+
+    _, _, wigners = wigner(states, xmax, ymax, npixels)
+
+    tmpdir.mkdir(exist_ok=True)
+    frames = []
+    for frame_idx in tqdm(range(nframes)):
+        fig, ax = figax(w=w, h=h)
+
+        idx = int(linmap(frame_idx, 0, nframes - 1, 0, len(states) - 1))
+        plot_wigner_data(
+            wigners[idx],
+            ax=ax,
+            xmax=xmax,
+            ymax=ymax,
+            vmax=vmax,
+            cmap=cmap,
+            interpolation=interpolation,
+            colorbar=False,
+            cross=cross,
+            clear=clear,
+        )
+
+        filename = tmpdir / f'tmp-{frame_idx}.png'
+        fig.savefig(filename)
+        plt.close()
+        frame = imageio.v2.imread(filename)
+        frames.append(frame)
+
+    if tmpdir.exists():
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    filename = 'wigner.gif'
+    imageio.mimwrite(filename, frames, format='GIF', duration=1 / fps)
+    ipy.display(ipy.Image(filename))

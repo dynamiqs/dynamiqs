@@ -47,7 +47,10 @@ def mesolve(
     Ls = [totime(L) for L in jump_ops]
     Ls = format_L(Ls)
     term = LindbladTerm(H=H, Ls=Ls)
-    exp_ops = jnp.asarray(exp_ops)
+    if exp_ops is not None:
+        exp_ops = jnp.asarray(exp_ops)
+    else:
+        exp_ops = jnp.empty(0)
 
     solution = dx.diffeqsolve(
         term,

@@ -7,7 +7,14 @@ from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from ..utils.utils import isdm, isket
-from .utils import add_colorbar, colors, integer_ticks, ket_ticks, optax, sample_cmap
+from .utils import (
+    add_colorbar,
+    colors,
+    integer_ticks,
+    ket_ticks,
+    optional_ax,
+    sample_cmap,
+)
 
 __all__ = ['plot_fock', 'plot_fock_evolution']
 
@@ -22,7 +29,7 @@ def _populations(x: ArrayLike) -> Array:
         return bdiag(x).real
 
 
-@optax
+@optional_ax
 def plot_fock(
     state: ArrayLike,
     *,
@@ -67,7 +74,7 @@ def plot_fock(
     ket_ticks(ax.xaxis)
 
 
-@optax
+@optional_ax
 def plot_fock_evolution(
     states: ArrayLike,
     *,
