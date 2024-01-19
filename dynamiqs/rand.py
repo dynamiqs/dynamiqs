@@ -4,6 +4,13 @@ import jax
 from dynamiqs.utils import dag  # todo: clean this dependency
 
 
+def complex_matrix(dims: tuple[int, ...], key=None) -> Array:
+    key = key if key is not None else jax.random.PRNGKey(0)
+    key1, key2 = jax.random.split(key, 2)
+    mat = jax.random.normal(key1, dims) + 1j * jax.random.normal(key2, dims)
+    return mat
+
+
 def hermitian(n: int, key=None) -> Array:
     key = key if key is not None else jax.random.PRNGKey(0)
     key1, key2 = jax.random.split(key, 2)
@@ -22,7 +29,6 @@ def dm(n: int, key=None) -> Array:
 
 def ket(n: int, key=None) -> Array:
     key = key if key is not None else jax.random.PRNGKey(0)
-    key1, key2 = jax.random.split(key, 2)
-    vec = jax.random.normal(key1, (n, 1)) + 1j * jax.random.normal(key2, (n, 1))
+    vec = complex_matrix((n, 1), key)
     vec /= jnp.linalg.norm(vec)
     return vec
