@@ -166,9 +166,6 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     if isket(x) or isbra(x):
         return ptrace_braket(x, keep, dims)
     elif isdm(x):
-        # x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
-        # eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
-        # x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
         return ptrace_dm(x, keep, dims)
     else:
         raise ValueError(
