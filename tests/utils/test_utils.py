@@ -1,3 +1,4 @@
+import jax
 import jax.numpy as jnp
 import qutip as qt
 from pytest import approx
@@ -120,3 +121,32 @@ def test_hadamard():
         dtype=c64,
     )
     assert jnp.allclose(dq.hadamard(3), H3)
+
+
+def test_jit_ptrace():
+    import jax
+
+    key = jax.random.PRNGKey(0)
+    key1, key2, key3, key4 = jax.random.split(key, 4)
+
+    # kets
+
+    # todo: this one doesn't pass
+
+    a = dq.rand.ket(20, key=key1)
+    b = dq.rand.ket(30, key=key2)
+
+    ab = dq.tensor(a, b)
+    ap = dq.ptrace(ab, 0, (20, 30))
+
+    assert jnp.allclose(a, ap, 1e-3)
+
+    # density matrix
+
+    a = dq.rand.dm(20, key=key3)
+    b = dq.rand.dm(30, key=key4)
+
+    ab = dq.tensor(a, b)
+    ap = dq.ptrace(ab, 0, (20, 30))
+
+    assert jnp.allclose(a, ap, 1e-3)
