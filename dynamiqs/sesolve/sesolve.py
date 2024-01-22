@@ -41,7 +41,10 @@ def sesolve(
     # === solve differential equation with diffrax
     H = totime(H)
     term = SchrodingerTerm(H=H)
-    exp_ops = jnp.asarray(exp_ops)
+    if exp_ops is not None:
+        exp_ops = jnp.asarray(exp_ops)
+    else:
+        exp_ops = jnp.empty(0)
 
     solution = dx.diffeqsolve(
         term,

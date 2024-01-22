@@ -19,7 +19,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 __all__ = [
     'linmap',
     'figax',
-    'optax',
+    'optional_ax',
     'gridplot',
     'mplstyle',
     'integer_ticks',
@@ -43,9 +43,7 @@ def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axe
     return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
-def optax(
-    func,
-):  # todo: maybe not such a great name now that we are in the JAX ecosystem
+def optional_ax(func):
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 

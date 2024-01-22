@@ -4,12 +4,12 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 
-from .utils import colors, optax
+from .utils import colors, optional_ax
 
 __all__ = ['plot_pwc_pulse']
 
 
-@optax
+@optional_ax
 def plot_pwc_pulse(
     times: ArrayLike,
     values: ArrayLike,

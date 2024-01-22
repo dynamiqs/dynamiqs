@@ -12,7 +12,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
-from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optax
+from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['plot_hinton']
 
@@ -67,7 +67,7 @@ def _plot_squares(
     ax.add_collection(squares)
 
 
-@optax
+@optional_ax
 def _plot_hinton(
     areas: ArrayLike,
     colors: ArrayLike,
@@ -117,7 +117,7 @@ def _plot_hinton(
             cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
 
-@optax
+@optional_ax
 def plot_hinton(
     x: ArrayLike,
     *,

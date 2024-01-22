@@ -7,7 +7,9 @@ dependencies = [
     "numpy",
     "matplotlib",
     "tqdm",
-    "torch>=2.0",
+    "jax",
+    "diffrax",
+    "imageio",
     "methodtools",
     "cmasher",
 ]
