@@ -15,8 +15,8 @@ from .utils import isdm, isket, todm
 __all__ = ['wigner']
 
 
-@ft.partial(jax.jit, static_argnums=(1, 2))
-@ft.partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2})
+@ft.partial(jax.jit, static_argnames=('npixels', 'method'))
+@ft.partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
 def wigner(
     state: ArrayLike,
     xmax: float = 6.2832,
