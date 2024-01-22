@@ -234,7 +234,7 @@ def plot_wigner_mosaic(
 
 def plot_wigner_gif(
     states: ArrayLike,
-    length_s: int = 5,
+    length_s: float = 5.0,
     fps: int = 10,
     w: float = 5.0,
     h: float = 5.0,
@@ -247,7 +247,26 @@ def plot_wigner_gif(
     cross: bool = False,
     clear: bool = False,
 ):
-    """Multiprocessed Wigner gif plot function."""
+    """Plot a gif of the Wigner function of multiple states.
+
+    Parameters:
+        states (ArrayLike): The quantum states to be plotted.
+        length_s (float): The length of the gif in seconds.
+        fps (int): The frames per second of the gif.
+        w (float): The width of the plot.
+        h (float): The height of the plot.
+        xmax (float): The maximum x value of the plot.
+        ymax (float | None): The maximum y value of the plot. If None, it is set to xmax.
+        vmax (float): The maximum value of the colorbar.
+        npixels (int): The number of pixels in the plot.
+        cmap (str): The colormap to be used.
+        interpolation (str): The interpolation method to be used.
+        cross (bool): If True, a cross is plotted at the origin.
+        clear (bool): If True, the axes are cleared.
+
+    Returns:
+        None. The function saves a gif of the Wigner function plot and displays it.
+    """
     if ymax is None:
         ymax = xmax
 
