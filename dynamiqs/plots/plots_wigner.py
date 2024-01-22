@@ -234,7 +234,7 @@ def plot_wigner_mosaic(
 
 def plot_wigner_gif(
     states: ArrayLike,
-    length_s: float = 5.0,
+    gif_duration: float = 5.0,
     fps: int = 10,
     w: float = 5.0,
     h: float = 5.0,
@@ -251,7 +251,7 @@ def plot_wigner_gif(
 
     Parameters:
         states (ArrayLike): The quantum states to be plotted.
-        length_s (float): The length of the gif in seconds.
+        gif_duration (float): The length of the gif in seconds.
         fps (int): The frames per second of the gif.
         w (float): The width of the plot.
         h (float): The height of the plot.
@@ -272,7 +272,7 @@ def plot_wigner_gif(
 
     states = jnp.asarray(states)
 
-    nframes = length_s * fps
+    nframes = gif_duration * fps
     tmpdir = './.tmp/dynamiqs'
     tmpdir = pathlib.Path(tmpdir)
     tmpdir.mkdir(parents=True, exist_ok=True)
