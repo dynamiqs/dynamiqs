@@ -22,6 +22,8 @@ def plot_fock(
     allxticks: bool = True,
     ymax: float | None = 1.0,
     color: str = colors['blue'],
+    alpha: float = 1.0,
+    ticks: bool = True,
 ):
     """Plot the photon number population of a state.
 
@@ -48,14 +50,15 @@ def plot_fock(
     y = populations(state)
 
     # plot
-    ax.bar(x, y, color=color)
+    ax.bar(x, y, color=color, alpha=alpha)
     if ymax is not None:
         ax.set_ylim(ymax=ymax)
     ax.set(xlim=(0 - 0.5, n - 0.5))
 
     # set x ticks
-    integer_ticks(ax.xaxis, n, all=allxticks)
-    ket_ticks(ax.xaxis)
+    if ticks:
+        integer_ticks(ax.xaxis, n, all=allxticks)
+        ket_ticks(ax.xaxis)
 
 
 @optax
