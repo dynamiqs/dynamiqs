@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 import IPython.display as ipy
+import numpy as np
 from jax.typing import ArrayLike
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -211,14 +212,13 @@ def plot_wigner_mosaic(
     )
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = wigner(states, xmax, ymax, npixels)
+    selected_indexes = np.linspace(0, nstates, n, dtype=int)
+    _, _, w = wigner(states[selected_indexes], xmax, ymax, npixels)
 
     # plot individual wigner
-    for i in range(n):
-        idx = int(linmap(i, 0, n - 1, 0, nstates - 1))
-        ax = next(axs)
+    for i, ax in enumerate(axs):
         plot_wigner_data(
-            w[idx],
+            w[i],
             ax=ax,
             xmax=xmax,
             ymax=ymax,
@@ -272,21 +272,21 @@ def plot_wigner_gif(
 
     states = jnp.asarray(states)
 
-    nframes = gif_duration * fps
+    nframes = int(gif_duration * fps)
     tmpdir = './.tmp/dynamiqs'
     tmpdir = pathlib.Path(tmpdir)
     tmpdir.mkdir(parents=True, exist_ok=True)
 
-    _, _, wigners = wigner(states, xmax, ymax, npixels)
+    selected_indexes = np.linspace(0, len(states), nframes, dtype=int)
+    _, _, wigners = wigner(states[selected_indexes], xmax, ymax, npixels)
 
     tmpdir.mkdir(exist_ok=True)
     frames = []
     for frame_idx in tqdm(range(nframes)):
         fig, ax = figax(w=w, h=h)
 
-        idx = int(linmap(frame_idx, 0, nframes - 1, 0, len(states) - 1))
         plot_wigner_data(
-            wigners[idx],
+            wigners[frame_idx],
             ax=ax,
             xmax=xmax,
             ymax=ymax,
