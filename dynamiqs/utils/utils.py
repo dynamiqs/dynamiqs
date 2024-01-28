@@ -151,7 +151,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     hdim = _hdim(x)
     prod_dims = _prod(dims)
     if not prod_dims == hdim:
-        dims_prod_str = '*'.join(str(d.item()) for d in dims) + f'={prod_dims}'
+        dims_prod_str = '*'.join(str(d) for d in dims) + f'={prod_dims}'
         raise ValueError(
             'Argument `dims` must match the Hilbert space dimension of `x` of'
             f' {hdim}, but the product of its values is {dims_prod_str}.'
