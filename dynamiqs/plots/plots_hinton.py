@@ -259,8 +259,8 @@ def plot_hinton(
         ax.xaxis.set_ticklabels(tickslabel)
         ax.yaxis.set_ticklabels(tickslabel)
 
-    ket_ticks(ax.xaxis)
-    bra_ticks(ax.yaxis)
+    bra_ticks(ax.xaxis)
+    ket_ticks(ax.yaxis)
 
     if clear:
         ax.axis(False)
