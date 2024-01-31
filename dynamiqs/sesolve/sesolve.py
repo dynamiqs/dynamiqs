@@ -6,13 +6,13 @@ import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from .schrodinger_term import SchrodingerTerm
 from .._utils import SolverArgs, _get_adjoint_class, _get_solver_class, save_fn
 from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver, _ODEAdaptiveStep, _stepsize_controller
 from ..time_array import totime
+from .schrodinger_term import SchrodingerTerm
 
 
 def sesolve(

@@ -1,20 +1,20 @@
 from __future__ import annotations
 
+import pathlib
+import shutil
 
-import jax.numpy as jnp
+import imageio
 import IPython.display as ipy
+import jax.numpy as jnp
 import numpy as np
 from jax.typing import ArrayLike
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from tqdm import tqdm
-import imageio
-import pathlib
-import shutil
 
 from ..utils.wigners import wigner
-from .utils import add_colorbar, colors, gridplot, linmap, optional_ax, figax
+from .utils import add_colorbar, colors, figax, gridplot, linmap, optional_ax
 
 __all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
 

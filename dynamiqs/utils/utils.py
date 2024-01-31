@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools as ft
 from functools import reduce
 from typing import Iterable
 
@@ -8,7 +9,6 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
-import functools as ft
 
 __all__ = [
     'dag',
