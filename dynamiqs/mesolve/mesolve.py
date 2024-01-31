@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import diffrax as dx
@@ -52,18 +53,20 @@ def mesolve(
     else:
         exp_ops = jnp.empty(0)
 
-    solution = dx.diffeqsolve(
-        term,
-        solver_class(),
-        t0=tsave[0],
-        t1=tsave[-1],
-        dt0=dt,
-        y0=todm(rho0),
-        args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
-        saveat=dx.SaveAt(ts=tsave, fn=save_fn),
-        stepsize_controller=stepsize_controller,
-        adjoint=adjoint_class(),
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', UserWarning)
+        solution = dx.diffeqsolve(
+            term,
+            solver_class(),
+            t0=tsave[0],
+            t1=tsave[-1],
+            dt0=dt,
+            y0=todm(rho0),
+            args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
+            saveat=dx.SaveAt(ts=tsave, fn=save_fn),
+            stepsize_controller=stepsize_controller,
+            adjoint=adjoint_class(),
+        )
 
     ysave = None
     if options.save_states:
