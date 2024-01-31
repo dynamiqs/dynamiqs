@@ -124,8 +124,6 @@ def test_hadamard():
 
 
 def test_jit_ptrace():
-    import jax
-
     key = jax.random.PRNGKey(0)
     key1, key2, key3, key4 = jax.random.split(key, 4)
 

@@ -14,7 +14,7 @@ from matplotlib.colors import Normalize
 from tqdm import tqdm
 
 from ..utils.wigners import wigner
-from .utils import add_colorbar, colors, figax, gridplot, linmap, optional_ax
+from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
 __all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
 
@@ -256,7 +256,8 @@ def plot_wigner_gif(
         w (float): The width of the plot.
         h (float): The height of the plot.
         xmax (float): The maximum x value of the plot.
-        ymax (float | None): The maximum y value of the plot. If None, it is set to xmax.
+        ymax (float | None): The maximum y value of the plot. If None, it is set to
+            xmax.
         vmax (float): The maximum value of the colorbar.
         npixels (int): The number of pixels in the plot.
         cmap (str): The colormap to be used.

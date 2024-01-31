@@ -6,7 +6,6 @@ from typing import Iterable
 
 import jax
 import jax.numpy as jnp
-import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 

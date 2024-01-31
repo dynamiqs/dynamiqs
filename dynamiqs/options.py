@@ -48,9 +48,9 @@ class SharedOptions:
         # save_states (bool, optional): If `True`, the state is saved at every
         #     time value. If `False`, only the final state is stored and returned.
         #     Defaults to `True`.
-        # dtype (jax.numpy.dtype, optional): Complex data type to which all complex-valued
-        #     arrays are converted. `tsave` is also converted to a real data type of
-        #     the corresponding precision.
+        # dtype (jax.numpy.dtype, optional): Complex data type to which all
+        #     complex-valued arrays are converted. `tsave` is also converted to a real
+        #     data type of the corresponding precision.
         self.save_states = save_states
         self.verbose = verbose
         self.cdtype = get_cdtype(dtype)
