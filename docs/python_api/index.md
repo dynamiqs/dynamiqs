@@ -178,6 +178,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - plot_wigner
         - plot_wigner_mosaic
+        - plot_wigner_gif
         - plot_pwc_pulse
         - plot_fock
         - plot_fock_evolution

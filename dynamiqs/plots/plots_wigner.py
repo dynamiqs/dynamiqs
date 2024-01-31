@@ -249,6 +249,8 @@ def plot_wigner_gif(
 ):
     """Plot a gif of the Wigner function of multiple states.
 
+    The function saves a gif of the Wigner function plot and displays it.
+
     Parameters:
         states (ArrayLike): The quantum states to be plotted.
         gif_duration (float): The length of the gif in seconds.
@@ -264,9 +266,6 @@ def plot_wigner_gif(
         interpolation (str): The interpolation method to be used.
         cross (bool): If True, a cross is plotted at the origin.
         clear (bool): If True, the axes are cleared.
-
-    Returns:
-        None. The function saves a gif of the Wigner function plot and displays it.
     """
     if ymax is None:
         ymax = xmax
