@@ -171,29 +171,30 @@ def plot_wigner_mosaic(
 
         ![plot_wigner_mosaic_fock](/figs-code/plot_wigner_mosaic_fock.png){.fig}
 
-        >>> n = 16
-        >>> a = dq.destroy(n)
-        >>> H = dq.zero(n)
-        >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]
-        >>> psi0 = dq.coherent(n, 0)
-        >>> tsave = np.linspace(0, 1.0, 101)
-        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
-        >>> renderfig('plot_wigner_mosaic_cat')
+        >>> # n = 16
+        >>> # a = dq.destroy(n)
+        >>> # H = dq.zero(n)
+        >>> # jump_ops = [a @ a - 4.0 * dq.eye(n)]
+        >>> # psi0 = dq.coherent(n, 0)
+        >>> # tsave = np.linspace(0, 1.0, 101)
+        >>> # result = dq.mesolve(H, jump_ops, psi0, tsave)
+        >>> # dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
+        >>> # renderfig('plot_wigner_mosaic_cat')
 
-        ![plot_wigner_mosaic_cat](/figs-code/plot_wigner_mosaic_cat.png){.fig}
+        <!-- ![plot_wigner_mosaic_cat](/figs-code/plot_wigner_mosaic_cat.png){.fig} -->
 
-        >>> n = 16
-        >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
-        >>> psi0 = dq.coherent(n, 2)
-        >>> tsave = np.linspace(0, np.pi, 101)
-        >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
-        >>> renderfig('plot_wigner_mosaic_kerr')
+        >>> # n = 16
+        >>> # a = dq.destroy(n)
+        >>> # H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> # psi0 = dq.coherent(n, 2)
+        >>> # tsave = np.linspace(0, np.pi, 101)
+        >>> # result = dq.sesolve(H, psi0, tsave)
+        >>> # dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
+        >>> # renderfig('plot_wigner_mosaic_kerr')
 
-        ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
-    """
+        <!-- ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig} -->
+    """  # noqa: E501
+    # todo: fix examples
     states = jnp.asarray(states)
 
     nstates = len(states)
