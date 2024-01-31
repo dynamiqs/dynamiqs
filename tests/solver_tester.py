@@ -7,7 +7,6 @@ from typing import Any
 
 import jax
 import jax.numpy as jnp
-from jax.config import config
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
@@ -151,14 +150,14 @@ class SolverTester(ABC):
         if options is None:
             options = {}
 
-        config.update('jax_disable_jit', True)
-        options["use_jit"] = False
+        jax.config.update('jax_disable_jit', True)
+        options['use_jit'] = False
         t1 = timeit.timeit(
             lambda: system.run(tsave, solver, options=options), number=10
         )
 
-        config.update('jax_disable_jit', False)
-        options["use_jit"] = True
+        jax.config.update('jax_disable_jit', False)
+        options['use_jit'] = True
         t2 = timeit.timeit(
             lambda: system.run(tsave, solver, options=options), number=10
         )
