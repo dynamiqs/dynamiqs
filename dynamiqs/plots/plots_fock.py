@@ -37,6 +37,7 @@ def plot_fock(
     allxticks: bool = True,
     ymax: float | None = 1.0,
     color: str = colors['blue'],
+    alpha: float = 1.0,
 ):
     """Plot the photon number population of a state.
 
@@ -56,6 +57,12 @@ def plot_fock(
         >>> renderfig('plot_fock_even_cat')
 
         ![plot_fock_even_cat](/figs-code/plot_fock_even_cat.png){.fig}
+
+        >>> dq.plot_fock(dq.coherent(16, 1.0), alpha=0.5)
+        >>> dq.plot_fock(dq.coherent(16, 2.0), ax=plt.gca(), alpha=0.5, color='red')
+        >>> renderfig('plot_fock_coherent')
+
+        ![plot_fock_coherent](/figs-code/plot_fock_coherent.png){.fig}
     """
     state = jnp.asarray(state)
 
@@ -64,7 +71,7 @@ def plot_fock(
     y = _populations(state)
 
     # plot
-    ax.bar(x, y, color=color)
+    ax.bar(x, y, color=color, alpha=alpha)
     if ymax is not None:
         ax.set_ylim(ymax=ymax)
     ax.set(xlim=(0 - 0.5, n - 0.5))

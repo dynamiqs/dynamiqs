@@ -189,12 +189,11 @@ def integer_ticks(axis: Axis, n: int, all: bool = True):
     else:
         # let maptlotlib choose major ticks location but restrict to integers
         axis.get_major_locator().set_params(integer=True)
-
-        # format major ticks as integer
-        axis.set_major_formatter(lambda x, _: f'{int(x)}')
-
         # fix minor ticks to integer locations only
         axis.set_minor_locator(MultipleLocator(1))
+
+    # format major ticks as integer
+    axis.set_major_formatter(lambda x, _: f'{int(x)}')
 
 
 def ket_ticks(axis: Axis):
