@@ -81,9 +81,9 @@ def vector_to_operator(x: ArrayLike) -> Array:
                [2, 4]], dtype=int32)
     """
     x = jnp.asarray(x)
-    batch_sizes = x.shape[:-2]
+    bshape = x.shape[:-2]
     n = int(jnp.sqrt(x.shape[-2]))
-    return x.reshape(*batch_sizes, n, n).mT
+    return x.reshape(*bshape, n, n).mT
 
 
 def spre(x: ArrayLike) -> Array:
