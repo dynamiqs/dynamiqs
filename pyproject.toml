@@ -8,9 +8,10 @@ dependencies = [
     "matplotlib",
     "tqdm",
     "jax",
-    "diffrax",
+    "jaxtyping",
+    "diffrax>=0.5.0",  # for complex support
+    "equinox",
     "imageio",
-    "methodtools",
     "cmasher",
 ]
 
