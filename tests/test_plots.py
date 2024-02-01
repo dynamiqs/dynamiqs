@@ -1,8 +1,8 @@
-import pytest
-import numpy as np
 import jax.numpy as jnp
+import numpy as np
+import pytest
 
-from dynamiqs import coherent, plot_wigner, todm, plot_wigner_mosaic
+from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, todm
 
 # todo : add comparison with analytical wigner for coherent states and cat states
 

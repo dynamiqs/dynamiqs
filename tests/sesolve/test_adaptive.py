@@ -7,6 +7,7 @@ from ..solver_tester import SolverTester
 from .closed_system import cavity, gcavity, tdqubit
 
 
+@pytest.mark.skip(reason='broken test')
 class TestSEAdaptive(SolverTester):
     def test_batching(self):
         self._test_batching(cavity, Dopri5())

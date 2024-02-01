@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import functools as ft
 from typing import Literal
 
 import jax
-from jax import lax, numpy as jnp, Array
+from jax import Array, lax
+from jax import numpy as jnp
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
-import functools as ft
 
 from .array_types import dtype_complex_to_real, dtype_real_to_complex
 from .operators import eye

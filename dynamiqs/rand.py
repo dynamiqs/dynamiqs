@@ -1,8 +1,9 @@
-from jax import numpy as jnp, Array
 import jax
+from jax import Array
+from jax import numpy as jnp
+from utils.utils import _prod
 
 from dynamiqs.utils import dag  # todo: clean this dependency
-from utils.utils import _prod
 
 
 def matrix(dims: tuple[int, ...], key) -> Array:

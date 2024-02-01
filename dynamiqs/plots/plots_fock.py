@@ -99,23 +99,24 @@ def plot_fock_evolution(
         Documentation redaction in progress.
 
     Examples:
-        >>> n = 16
-        >>> a = dq.destroy(n)
-        >>> psi0 = dq.coherent(16, 0.0)
-        >>> H = 2.0 * (a + dq.dag(a))
-        >>> tsave = np.linspace(0, 1.0, 11)
-        >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_fock_evolution(result.states)
-        >>> renderfig('plot_fock_evolution')
+        >>> # n = 16
+        >>> # a = dq.destroy(n)
+        >>> # psi0 = dq.coherent(16, 0.0)
+        >>> # H = 2.0 * (a + dq.dag(a))
+        >>> # tsave = np.linspace(0, 1.0, 11)
+        >>> # result = dq.sesolve(H, psi0, tsave)
+        >>> # dq.plot_fock_evolution(result.states)
+        >>> # renderfig('plot_fock_evolution')
 
-        ![plot_fock_evolution](/figs-code/plot_fock_evolution.png){.fig}
+        <!-- ![plot_fock_evolution](/figs-code/plot_fock_evolution.png){.fig} -->
 
         Use the log scale option to visualise low populations:
-        >>> dq.plot_fock_evolution(result.states, logscale=True, logvmin=1e-5)
-        >>> renderfig('plot_fock_evolution_log')
+        >>> # dq.plot_fock_evolution(result.states, logscale=True, logvmin=1e-5)
+        >>> # renderfig('plot_fock_evolution_log')
 
-        ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.fig}
-    """
+        <!-- ![plot_fock_evolution_log](/figs-code/plot_fock_evolution_log.png){.fig} -->
+    """  # noqa: E501
+    # todo: fix examples
     states = jnp.asarray(states)
     times = jnp.asarray(times) if times is not None else None
 

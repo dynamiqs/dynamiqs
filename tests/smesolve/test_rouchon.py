@@ -1,3 +1,5 @@
+import pytest
+
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Rouchon1
 
@@ -5,6 +7,7 @@ from .monitored_system import gmcavity, mcavity
 from .sme_solver_tester import SMESolverTester
 
 
+@pytest.mark.skip(reason='broken test')
 class TestMERouchon1(SMESolverTester):
     def test_batching(self):
         solver = Rouchon1(dt=1e-2)

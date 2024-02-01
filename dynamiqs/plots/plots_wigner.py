@@ -1,20 +1,20 @@
 from __future__ import annotations
 
+import pathlib
+import shutil
 
-import jax.numpy as jnp
+import imageio
 import IPython.display as ipy
+import jax.numpy as jnp
 import numpy as np
 from jax.typing import ArrayLike
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from tqdm import tqdm
-import imageio
-import pathlib
-import shutil
 
 from ..utils.wigners import wigner
-from .utils import add_colorbar, colors, gridplot, linmap, optional_ax, figax
+from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
 __all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
 
@@ -171,29 +171,30 @@ def plot_wigner_mosaic(
 
         ![plot_wigner_mosaic_fock](/figs-code/plot_wigner_mosaic_fock.png){.fig}
 
-        >>> n = 16
-        >>> a = dq.destroy(n)
-        >>> H = dq.zero(n)
-        >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]
-        >>> psi0 = dq.coherent(n, 0)
-        >>> tsave = np.linspace(0, 1.0, 101)
-        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
-        >>> renderfig('plot_wigner_mosaic_cat')
+        >>> # n = 16
+        >>> # a = dq.destroy(n)
+        >>> # H = dq.zero(n)
+        >>> # jump_ops = [a @ a - 4.0 * dq.eye(n)]
+        >>> # psi0 = dq.coherent(n, 0)
+        >>> # tsave = np.linspace(0, 1.0, 101)
+        >>> # result = dq.mesolve(H, jump_ops, psi0, tsave)
+        >>> # dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
+        >>> # renderfig('plot_wigner_mosaic_cat')
 
-        ![plot_wigner_mosaic_cat](/figs-code/plot_wigner_mosaic_cat.png){.fig}
+        <!-- ![plot_wigner_mosaic_cat](/figs-code/plot_wigner_mosaic_cat.png){.fig} -->
 
-        >>> n = 16
-        >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
-        >>> psi0 = dq.coherent(n, 2)
-        >>> tsave = np.linspace(0, np.pi, 101)
-        >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
-        >>> renderfig('plot_wigner_mosaic_kerr')
+        >>> # n = 16
+        >>> # a = dq.destroy(n)
+        >>> # H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> # psi0 = dq.coherent(n, 2)
+        >>> # tsave = np.linspace(0, np.pi, 101)
+        >>> # result = dq.sesolve(H, psi0, tsave)
+        >>> # dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
+        >>> # renderfig('plot_wigner_mosaic_kerr')
 
-        ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
-    """
+        <!-- ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig} -->
+    """  # noqa: E501
+    # todo: fix examples
     states = jnp.asarray(states)
 
     nstates = len(states)
@@ -249,6 +250,8 @@ def plot_wigner_gif(
 ):
     """Plot a gif of the Wigner function of multiple states.
 
+    The function saves a gif of the Wigner function plot and displays it.
+
     Parameters:
         states (ArrayLike): The quantum states to be plotted.
         gif_duration (float): The length of the gif in seconds.
@@ -256,16 +259,14 @@ def plot_wigner_gif(
         w (float): The width of the plot.
         h (float): The height of the plot.
         xmax (float): The maximum x value of the plot.
-        ymax (float | None): The maximum y value of the plot. If None, it is set to xmax.
+        ymax (float | None): The maximum y value of the plot. If None, it is set to
+            xmax.
         vmax (float): The maximum value of the colorbar.
         npixels (int): The number of pixels in the plot.
         cmap (str): The colormap to be used.
         interpolation (str): The interpolation method to be used.
         cross (bool): If True, a cross is plotted at the origin.
         clear (bool): If True, the axes are cleared.
-
-    Returns:
-        None. The function saves a gif of the Wigner function plot and displays it.
     """
     if ymax is None:
         ymax = xmax

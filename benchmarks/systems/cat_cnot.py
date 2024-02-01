@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import pi, sqrt
 
 from jax import numpy as jnp
+
 import dynamiqs as dq
 
 # units

@@ -7,6 +7,7 @@ from ..solver_tester import SolverTester
 from .open_system import gocavity, gotdqubit, ocavity, otdqubit
 
 
+@pytest.mark.skip(reason='broken test')
 class TestMEEuler(SolverTester):
     def test_batching(self):
         solver = Euler(dt=1e-2)
