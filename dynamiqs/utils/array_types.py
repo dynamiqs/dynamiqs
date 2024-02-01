@@ -64,17 +64,17 @@ def dtype_real_to_complex(
 
 
 def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
-    r"""Convert an array-like object to a QuTiP quantum object (or a list of QuTiP
-    quantum object if it has more than two dimensions).
+    r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
+    quantum objects if it has more than two dimensions).
 
     Args:
         x: Array-like object.
-        dims _(tuple of ints)_: Dimensions of each subsystem in a composite system
-            Hilbert space tensor product, defaults to `None` (a single system with the
-            same dimension as `x`).
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
+            Hilbert space of the composite system, defaults to `None` (a single system
+            with the same dimension as `x`).
 
     Returns:
-        QuTiP quantum object or list of QuTiP quantum object.
+        QuTiP quantum object or list of QuTiP quantum objects.
 
     Examples:
         >>> psi = dq.fock(3, 1)
@@ -118,18 +118,16 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
-    x = jnp.asarray(x)
+    x = np.asarray(x)
 
     if x.ndim > 2:
         return [to_qutip(sub_x) for sub_x in x]
     else:
-        if dims is None:
-            dims = [_hdim(x)]
-        dims = list(dims)
+        dims = [_hdim(x)] if dims is None else list(dims)
         if isket(x):  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]
             dims = [dims, [1] * len(dims)]
         elif isbra(x):  # [[1], [3]] or for composite systems [[1, 1], [3, 4]]
             dims = [[1] * len(dims), dims]
         elif isop(x):  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
             dims = [dims, dims]
-        return Qobj(np.asarray(x), dims=dims)
+        return Qobj(x, dims=dims)
