@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import functools as ft
-from functools import reduce
-from typing import Iterable
+from functools import partial, reduce
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
@@ -103,10 +102,7 @@ def _hdim(x: ArrayLike) -> int:
     return x.shape[-2] if isket(x) else x.shape[-1]
 
 
-def _prod(x: Iterable):
-    return reduce(lambda a, b: a * b, x)
-
-
+@partial(jax.jit, static_argnums=(1, 2))
 def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Array:
     r"""Returns the partial trace of a ket, bra or density matrix.
 
@@ -142,96 +138,55 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     """
     x = jnp.asarray(x)
 
-    # convert keep and dims to arrays
-    keep = [keep] if isinstance(keep, int) else keep  # e.g. [1, 2]
-    keep = tuple(keep)
+    # convert keep and dims to numpy arrays
+    keep = np.asarray([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
+    dims = np.asarray(dims)  # e.g. [20, 2, 5]
+    ndims = len(dims)  # e.g. 3
 
     # check that input dimensions match
     hdim = _hdim(x)
-    prod_dims = _prod(dims)
+    prod_dims = np.prod(dims)
     if not prod_dims == hdim:
         dims_prod_str = '*'.join(str(d) for d in dims) + f'={prod_dims}'
         raise ValueError(
             'Argument `dims` must match the Hilbert space dimension of `x` of'
             f' {hdim}, but the product of its values is {dims_prod_str}.'
         )
-    if any([k < 0 or k > len(dims) - 1 for k in keep]):
+    if np.any(keep < 0) or np.any(keep > len(dims) - 1):
         raise ValueError(
             'Argument `keep` must match the Hilbert space structure specified by'
             ' `dims`.'
         )
 
+    # sort keep
+    keep.sort()
+
+    # create einsum alphabet
+    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+
+    # compute einsum equations
+    eq1 = alphabet[:ndims]  # e.g. 'abc'
+    unused = iter(alphabet[ndims:])
+    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
+
+    bshape = x.shape[:-2]
+
     # trace out x over unkept dimensions
     if isket(x) or isbra(x):
-        return ptrace_braket(x, keep, dims)
+        x = x.reshape(*bshape, *dims)  # e.g. (..., 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
+        x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     elif isdm(x):
-        return ptrace_dm(x, keep, dims)
+        x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
+        eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
+        x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
     else:
         raise ValueError(
             'Argument `x` must be a ket, bra or density matrix, but has shape'
             f' {x.shape}.'
         )
 
-
-@ft.partial(jax.jit, static_argnums=(1, 2))
-def ptrace_braket(
-    x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]
-) -> Array:
-    """A JIT compiled version of `ptrace` for kets and bras. It won't display
-    nice error messages, but it's faster."""
-
-    # convert keep and dims to arrays
-    keep = [keep] if isinstance(keep, int) else keep  # e.g. [1, 2]
-    keep = tuple(sorted(keep))
-    ndims = len(dims)  # e.g. 3
-
-    # create einsum alphabet
-    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
-    # compute einsum equations
-    eq1 = alphabet[:ndims]  # e.g. 'abc'
-    unused = iter(alphabet[ndims:])
-    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
-
-    # trace out x over unkept dimensions
-    bshape = x.shape[:-2]
-    x = x.reshape(*bshape, *dims)  # e.g. (..., 20, 2, 5)
-    eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
-    x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
-
-    # reshape to final dimension
-    nkeep = _prod([dims[k] for k in keep])  # e.g. 10
-    return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
-
-
-@ft.partial(jax.jit, static_argnums=(1, 2))
-def ptrace_dm(
-    x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]
-) -> Array:
-    """A JIT compiled version of `ptrace` for density matrices. It won't display
-    nice error messages, but it's faster."""
-
-    # convert keep and dims to arrays
-    keep = [keep] if isinstance(keep, int) else keep  # e.g. [1, 2]
-    keep = tuple(sorted(keep))
-    ndims = len(dims)  # e.g. 3
-
-    # create einsum alphabet
-    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
-    # compute einsum equations
-    eq1 = alphabet[:ndims]  # e.g. 'abc'
-    unused = iter(alphabet[ndims:])
-    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
-
-    # trace out x over unkept dimensions
-    bshape = x.shape[:-2]
-    x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
-    eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
-    x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
-
-    # reshape to final dimension
-    nkeep = _prod([dims[k] for k in keep])  # e.g. 10
+    nkeep = np.prod(dims[keep])  # e.g. 10
     return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
