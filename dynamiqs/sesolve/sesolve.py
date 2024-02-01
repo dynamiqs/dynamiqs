@@ -47,6 +47,7 @@ def sesolve(
     else:
         exp_ops = jnp.empty(0)
 
+    # todo: remove once complex support is stabilized in diffrax
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', UserWarning)
 
