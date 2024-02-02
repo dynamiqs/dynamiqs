@@ -6,7 +6,6 @@ from .mesolve import mesolve
 from .plots import *
 from .result import Result
 from .sesolve import sesolve
-from .smesolve import smesolve
 from .time_array import TimeArray, totime
 from .utils import *
 

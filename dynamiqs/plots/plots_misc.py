@@ -27,7 +27,8 @@ def plot_pwc_pulse(
     Examples:
         >>> n = 20
         >>> times = np.linspace(0, 1.0, n+1)
-        >>> values = dq.rand_complex(n)
+        >>> key = jax.random.PRNGKey(42)
+        >>> values = dq.rand_complex(key, n)
         >>> dq.plot_pwc_pulse(times, values)
         >>> renderfig('plot_pwc_pulse')
 

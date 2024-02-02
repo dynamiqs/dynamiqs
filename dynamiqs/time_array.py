@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Callable, Union, get_args
+from typing import Callable, Union, get_args
 
 import equinox as eqx
 import numpy as np
 from jax import Array, lax
 from jax import numpy as jnp
 from jax.tree_util import Partial
-from jaxtyping import Scalar
+from jaxtyping import PyTree, Scalar
 
 from ._utils import check_time_array, obj_type_str, type_str
 from .utils.array_types import ArrayLike, dtype_complex_to_real, get_cdtype
@@ -17,15 +17,15 @@ __all__ = ['totime']
 
 TimeArrayLike = Union[
     ArrayLike,
-    Callable[[float, tuple[Any]], Array],
+    Callable[[float, tuple[PyTree]], Array],
     tuple[ArrayLike, ArrayLike, ArrayLike],
-    tuple[Callable[[float, tuple[Any]], Array], ArrayLike],
+    tuple[Callable[[float, tuple[PyTree]], Array], ArrayLike],
     'TimeArray',
 ]
 
 
 def totime(
-    x: TimeArrayLike, *, args: tuple[Any] = (), dtype: jnp.dtype | None = None
+    x: TimeArrayLike, *, args: tuple[PyTree] = (), dtype: jnp.dtype | None = None
 ) -> TimeArray:
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
 
@@ -60,7 +60,7 @@ def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeArray:
 
 
 def _factory_callable(
-    f: callable[[float, tuple[Any]], Array], *, args: tuple[Any], dtype: jnp.dtype
+    f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree], dtype: jnp.dtype
 ) -> CallableTimeArray:
     f0 = f(0.0, args)
 
@@ -126,9 +126,9 @@ def _factory_pwc(
 
 
 def _factory_modulated(
-    x: tuple[callable[[float, tuple[Any]], Array], Array],
+    x: tuple[callable[[float, tuple[PyTree]], Array], Array],
     *,
-    args: tuple[Any],
+    args: tuple[PyTree],
     dtype: jnp.dtype,
 ) -> ModulatedTimeArray:
     f, array = x
