@@ -7,6 +7,7 @@ import jax.numpy as jnp
 from .gradient import Gradient
 from .solver import Solver
 from .utils.array_types import dtype_complex_to_real, get_cdtype
+from .progress_bar import TqdmProgressBar
 
 
 class Options:
@@ -44,6 +45,7 @@ class SharedOptions:
         verbose: bool = True,
         dtype: jnp.complex64 | jnp.complex128 | None = None,
         cartesian_batching: bool = True,
+        progress_bar: AbstractProgressBar = TqdmProgressBar(),
     ):
         # save_states (bool, optional): If `True`, the state is saved at every
         #     time value. If `False`, only the final state is stored and returned.
@@ -56,3 +58,4 @@ class SharedOptions:
         self.cdtype = get_cdtype(dtype)
         self.rdtype = dtype_complex_to_real(self.cdtype)
         self.cartesian_batching = cartesian_batching
+        self.progress_bar = progress_bar

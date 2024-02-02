@@ -65,6 +65,7 @@ def sesolve(
             max_steps=(
                 options.max_steps if isinstance(options, _ODEAdaptiveStep) else None
             ),
+            progress_meter=options.progress_bar,
         )
 
     # === get results
