@@ -1,4 +1,4 @@
-from typing import ClassVar
+from typing import ClassVar, Literal, Optional
 
 import diffrax as dx
 import equinox as eqx
@@ -15,6 +15,10 @@ class Solver(eqx.Module):
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
 
 
+class Propagator(Solver):
+    SUPPORTED_GRADIENT = (Autograd,)
+
+
 class _ODEFixedStep(Solver):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
@@ -26,6 +30,19 @@ class Euler(_ODEFixedStep):
 
 
 class Rouchon1(_ODEFixedStep):
+    # normalize: The default scheme is trace-preserving at first order only. This
+    # parameter sets the normalisation behaviour:
+    # - `None`: The scheme is not normalized.
+    # - `'sqrt'`: The Kraus map is renormalized with a matrix square root. Ideal
+    #   for stiff problems, recommended for time-independent problems.
+    # - `cholesky`: The Kraus map is renormalized at each time step using a Cholesky
+    #   decomposition. Ideal for stiff problems, recommended for time-dependent
+    #   problems.
+
+    normalize: Optional[Literal['sqrt', 'cholesky']] = None
+
+
+class Rouchon2(_ODEFixedStep):
     pass
 
 
