@@ -1,4 +1,7 @@
-class Gradient:
+import equinox as eqx
+
+
+class Gradient(eqx.Module):
     pass
 
 
