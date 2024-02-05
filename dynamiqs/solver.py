@@ -1,51 +1,24 @@
+from typing import ClassVar
+
 import diffrax as dx
-from jax import Array
+import equinox as eqx
+from jaxtyping import Scalar
 
 from .gradient import Adjoint, Autograd, Gradient
 
 
-class Solver:
-    SUPPORTED_GRADIENT = ()
+class Solver(eqx.Module):
+    SUPPORTED_GRADIENT: ClassVar[tuple[Gradient]] = ()
 
-    def supports_gradient(self, gradient: Gradient) -> bool:
-        if len(self.SUPPORTED_GRADIENT) == 0:
-            return False
-        return isinstance(gradient, self.SUPPORTED_GRADIENT)
+    @classmethod
+    def supports_gradient(cls, gradient: Gradient) -> bool:
+        return isinstance(gradient, cls.SUPPORTED_GRADIENT)
 
 
 class _ODEFixedStep(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
-
-    def __init__(self, *, dt: float):
-        # convert `dt` in case an array was passed instead of a float
-        if isinstance(dt, Array):
-            dt = dt.item()
-        self.dt = dt
-
-
-class _ODEAdaptiveStep(Solver):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
-    def __init__(
-        self,
-        *,
-        atol: float = 1e-8,
-        rtol: float = 1e-6,
-        safety_factor: float = 0.9,
-        min_factor: float = 0.2,
-        max_factor: float = 5.0,
-        max_steps: int = 100_000,
-    ):
-        self.atol = atol
-        self.rtol = rtol
-        self.safety_factor = safety_factor
-        self.min_factor = min_factor
-        self.max_factor = max_factor
-        self.max_steps = max_steps
-
-
-class Dopri5(_ODEAdaptiveStep):
-    pass
+    dt: Scalar
 
 
 class Euler(_ODEFixedStep):
@@ -53,6 +26,21 @@ class Euler(_ODEFixedStep):
 
 
 class Rouchon1(_ODEFixedStep):
+    pass
+
+
+class _ODEAdaptiveStep(Solver):
+    SUPPORTED_GRADIENT = (Autograd, Adjoint)
+
+    atol: float = 1e-8
+    rtol: float = 1e-6
+    safety_factor: float = 0.9
+    min_factor: float = 0.2
+    max_factor: float = 5.0
+    max_steps: int = 100_000
+
+
+class Dopri5(_ODEAdaptiveStep):
     pass
 
 
