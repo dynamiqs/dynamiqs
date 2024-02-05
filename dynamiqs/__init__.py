@@ -6,7 +6,7 @@ from .mesolve import mesolve
 from .plots import *
 from .result import Result
 from .sesolve import sesolve
-from .time_array import TimeArray, totime
+from .time_array import TimeArray, TimeArrayLike, totime
 from .utils import *
 
 # get version from pyproject.toml

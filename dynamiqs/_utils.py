@@ -46,15 +46,15 @@ def bexpect(O: Array, x: Array) -> Array:
     return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
 
 
-SolverArgs = namedtuple('SolverArgs', ['save_states', 'exp_ops'])
+SolverArgs = namedtuple('SolverArgs', ['save_states', 'E'])
 
 
 def save_fn(_t, y, args: SolverArgs):
     res = {}
     if args.save_states:
-        res['states'] = y
-    if args.exp_ops is not None and len(args.exp_ops) > 0:
-        res['expects'] = bexpect(args.exp_ops, y)
+        res['ysave'] = y
+    if args.E is not None and len(args.E) > 0:
+        res['Esave'] = bexpect(args.E, y)
     return res
 
 
