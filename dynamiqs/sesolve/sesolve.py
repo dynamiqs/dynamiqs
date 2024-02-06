@@ -51,7 +51,8 @@ def sesolve(
 
     # === solve differential equation with diffrax
     term = SchrodingerTerm(H=H)
-    max_steps = options.max_steps if isinstance(options, _ODEAdaptiveStep) else None
+    # todo: fix hard-coded max_steps
+    max_steps = options.max_steps if isinstance(options, _ODEAdaptiveStep) else 100_000
 
     # todo: remove once complex support is stabilized in diffrax
     with warnings.catch_warnings():
