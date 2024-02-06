@@ -3,7 +3,7 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..utils.operators import displace
 from ..utils.states import fock
@@ -14,11 +14,11 @@ __all__ = ['rand_real', 'rand_complex', 'snap_gate', 'cd_gate']
 
 
 def rand_real(
+    key: PRNGKeyArray,
     shape: int | tuple[int, ...],
     *,
     min: float = 0.0,
     max: float = 1.0,
-    seed: int = 0,
     dtype: jnp.float32 | jnp.float64 | None = None,
 ) -> Array:
     r"""Returns an array filled with uniformly distributed random real numbers.
@@ -27,35 +27,33 @@ def rand_real(
     $[\text{min}, \text{max})$.
 
     Args:
+        key: A PRNG key used as the random key.
         shape _(int or tuple of ints)_: Shape of the returned array.
         min: Minimum (inclusive) value.
         max: Maximum (exclusive) value.
-        seed: Seed for the random number generator.
         dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (*shape))_ Array filled with random real numbers.
 
     Examples:
-        >>> dq.rand_real((2, 5), max=5.0, seed=42)
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.rand_real(key, (2, 5), max=5.0)
         Array([[3.22 , 1.613, 0.967, 4.432, 4.21 ],
                [0.96 , 1.726, 1.262, 3.16 , 3.274]], dtype=float32)
     """
     dtype = get_rdtype(dtype)
     shape = (shape,) if isinstance(shape, int) else shape
 
-    # define PRNG key from seed
-    key = jax.random.PRNGKey(seed)
-
     # sample uniformly in [min, max)
     return jax.random.uniform(key, shape=shape, dtype=dtype, minval=min, maxval=max)
 
 
 def rand_complex(
+    key: PRNGKeyArray,
     shape: int | tuple[int, ...],
     *,
     rmax: float = 1.0,
-    seed: int = 0,
     dtype: jnp.complex64 | jnp.complex128 | None = None,
 ) -> Array:
     r"""Returns an array filled with random complex numbers uniformly distributed in
@@ -83,7 +81,8 @@ def rand_complex(
         ax1.scatter(x.real, x.imag, s=1.0)
 
         # option 3: uniformly distributed in a disk (in dynamiqs)
-        x = dq.rand_complex(n)
+        key = jax.random.PRNGKey(42)
+        x = dq.rand_complex(key, n)
         ax2.scatter(x.real, x.imag, s=1.0)
         renderfig('rand_complex')
         ```
@@ -91,25 +90,23 @@ def rand_complex(
         ![rand_complex](/figs-code/rand_complex.png){.fig}
 
     Args:
+        key: A PRNG key used as the random key.
         shape _(int or tuple of ints)_: Shape of the returned array.
         rmax: Maximum magnitude.
-        seed: Seed for the random number generator.
         dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (*shape))_ Array filled with random complex numbers.
 
     Examples:
-        >>> dq.rand_complex((2, 3), rmax=5.0, seed=42)
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.rand_complex(key, (2, 3), rmax=5.0)
         Array([[ 1.341+4.17j ,  3.978-0.979j, -2.592-0.946j],
                [-4.428+1.744j, -0.53 +1.668j,  2.582+0.65j ]], dtype=complex64)
     """
     cdtype = get_cdtype(dtype)
     rdtype = dtype_complex_to_real(cdtype)
     shape = (shape,) if isinstance(shape, int) else shape
-
-    # define PRNG key from seed
-    key = jax.random.PRNGKey(seed)
 
     # sample uniformly in the unit L2 ball and scale
     x = rmax * jax.random.ball(key, 2, shape=shape, dtype=rdtype)

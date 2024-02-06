@@ -60,15 +60,15 @@ def dag(x: ArrayLike) -> Array:
 def mpow(x: ArrayLike, n: int) -> Array:
     """Returns the $n$-th matrix power of an array.
 
-    Notes:
-        This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
-
     Args:
         x _(array_like of shape (..., n, n))_: Square matrix.
         n: Integer exponent.
 
     Returns:
         _(array of shape (..., n, n))_ Matrix power of `x`.
+
+    Notes:
+        This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
         >>> dq.mpow(dq.sigmax(), 2)
