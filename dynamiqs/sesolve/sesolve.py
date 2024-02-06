@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from functools import partial
-from typing import Any
+from typing import Any, get_args
 
 import diffrax as dx
 import jax
@@ -14,13 +14,13 @@ from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver, _ODEAdaptiveStep, _stepsize_controller
-from ..time_array import TimeArrayLike, totime
+from ..time_array import TimeArray, _factory_constant
 from .schrodinger_term import SchrodingerTerm
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def sesolve(
-    H: TimeArrayLike,
+    H: ArrayLike | TimeArray,
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
@@ -33,7 +33,8 @@ def sesolve(
     options = {} if options is None else options
     options = Options(**options)
 
-    H = totime(H, dtype=options.cdtype)
+    if isinstance(H, get_args(ArrayLike)):
+        H = _factory_constant(H, dtype=options.cdtype)
     y0 = jnp.asarray(psi0, dtype=options.cdtype)
     tsave = jnp.asarray(tsave, dtype=options.rdtype)
     E = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
