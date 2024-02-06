@@ -3,7 +3,7 @@ import pytest
 from dynamiqs.gradient import Autograd
 
 from ..solver_tester import SolverTester
-from .closed_system import cavity, gcavity
+from .closed_system import cavity
 
 Propagator = None
 
@@ -17,4 +17,4 @@ class TestSEPropagator(SolverTester):
         self._test_correctness(cavity, Propagator())
 
     def test_autograd(self):
-        self._test_gradient(gcavity, Propagator(), Autograd())
+        self._test_gradient(cavity, Propagator(), Autograd())
