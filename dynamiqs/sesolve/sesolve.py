@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, get_args
+from typing import Any
 
 import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
+from ..core._utils import _astimearray
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver
-from ..time_array import TimeArray, _factory_constant
+from ..time_array import TimeArray
 from .sediffrax import SEDopri5, SEEuler
 
 
@@ -30,8 +31,7 @@ def sesolve(
     options = {} if options is None else options
     options = Options(**options)
 
-    if isinstance(H, get_args(ArrayLike)):
-        H = _factory_constant(H, dtype=options.cdtype)
+    H = _astimearray(H, dtype=options.cdtype)
     y0 = jnp.asarray(psi0, dtype=options.cdtype)
     ts = jnp.asarray(tsave, dtype=options.rdtype)
     E = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
