@@ -5,11 +5,12 @@ from typing import Any
 
 from jax import Array
 from jax import numpy as jnp
-from jaxtyping import PyTree
+from jaxtyping import ArrayLike, PyTree
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
+from dynamiqs.time_array import TimeArray
 
 
 class System(ABC):
@@ -19,7 +20,7 @@ class System(ABC):
         self.params_default = None
 
     @abstractmethod
-    def H(self, params: PyTree) -> Array:
+    def H(self, params: PyTree) -> ArrayLike | TimeArray:
         """Compute the Hamiltonian."""
         pass
 
