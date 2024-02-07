@@ -22,8 +22,10 @@ class LindbladTerm(dx.ODETerm):
     def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree):
         Ls = jnp.stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
-        Hnh = self.H(t) - 0.5j * (Lsd @ Ls).sum(axis=0)
-        out = -1j * Hnh @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0)
+        LdL = (Lsd @ Ls).sum(axis=0)
+        # drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
+        #         = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
+        out = -1j * self.H(t) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0) - 0.5 * LdL @ rho
         return out + dag(out)
 
 
