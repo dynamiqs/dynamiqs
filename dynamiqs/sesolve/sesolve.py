@@ -7,7 +7,7 @@ import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from ..core._utils import _astimearray
+from ..core._utils import _astimearray, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
@@ -38,14 +38,7 @@ def sesolve(
 
     # === select solver class
     solvers = {Euler: SEEuler, Dopri5: SEDopri5}
-
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
-        )
-    solver_class = solvers[type(solver)]
+    solver_class = get_solver_class(solvers, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
