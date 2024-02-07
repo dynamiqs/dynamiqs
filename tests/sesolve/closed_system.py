@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import Any
 
 import numpy as np
 from jax import Array
@@ -10,6 +9,7 @@ from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
 from dynamiqs.gradient import Gradient
+from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
 from dynamiqs.time_array import TimeArray
@@ -23,7 +23,7 @@ class ClosedSystem(System):
         solver: Solver,
         *,
         gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
+        options: Options = Options(),
         params: PyTree | None = None,
     ) -> Result:
         params = self.params_default if params is None else params

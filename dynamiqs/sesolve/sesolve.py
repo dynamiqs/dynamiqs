@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
 
 import jax
 from jax import numpy as jnp
@@ -25,12 +24,9 @@ def sesolve(
     exp_ops: ArrayLike | None = None,
     solver: Solver = Dopri5(),
     gradient: Gradient | None = None,
-    options: dict[str, Any] | None = None,
+    options: Options = Options(),
 ) -> Result:
     # === convert arguments
-    options = {} if options is None else options
-    options = Options(**options)
-
     H = _astimearray(H, dtype=options.cdtype)
     y0 = jnp.asarray(psi0, dtype=options.cdtype)
     ts = jnp.asarray(tsave, dtype=options.rdtype)
