@@ -27,7 +27,7 @@ dev = [
     "black[jupyter]==23.11.0",
     "codespell",
     "flake8",
-    "pytest",
+    "pytest>=7.0,<8.0",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
