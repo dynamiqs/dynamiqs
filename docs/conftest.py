@@ -28,6 +28,7 @@ def renderfig():
     def savefig_docs(figname):
         filename = f'docs/figs-docs/{figname}.png'
         plt.gcf().savefig(filename, bbox_inches='tight', dpi=300)
+        plt.close()
 
     return savefig_docs
 
