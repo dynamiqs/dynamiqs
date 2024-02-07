@@ -13,15 +13,15 @@ from ..gradient import Adjoint, Autograd
 from ..result import Result
 from .abstract_solver import BaseSolver
 
-SolverArgs = namedtuple('SolverArgs', ['save_states', 'E'])
+SolverArgs = namedtuple('SolverArgs', ['save_states', 'Es'])
 
 
 def save_fn(_t, y, args: SolverArgs):
     res = {}
     if args.save_states:
         res['ysave'] = y
-    if args.E is not None and len(args.E) > 0:
-        res['Esave'] = bexpect(args.E, y)
+    if args.Es is not None and len(args.Es) > 0:
+        res['Esave'] = bexpect(args.Es, y)
     return res
 
 
@@ -41,7 +41,7 @@ class DiffraxSolver(BaseSolver):
             warnings.simplefilter('ignore', UserWarning)
 
             # === prepare diffrax arguments
-            args = SolverArgs(save_states=self.options.save_states, E=self.E)
+            args = SolverArgs(save_states=self.options.save_states, Es=self.Es)
             saveat = dx.SaveAt(ts=self.ts, fn=save_fn)
 
             if self.gradient is None:

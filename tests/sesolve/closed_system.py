@@ -29,12 +29,12 @@ class ClosedSystem(System):
         params = self.params_default if params is None else params
         H = self.H(params)
         y0 = self.y0(params)
-        E = self.E(params)
+        Es = self.Es(params)
         return dq.sesolve(
             H,
             y0,
             self.tsave,
-            exp_ops=E,
+            exp_ops=Es,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -59,7 +59,7 @@ class Cavity(ClosedSystem):
     def y0(self, params: PyTree) -> Array:
         return dq.coherent(self.n, params.alpha0)
 
-    def E(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:
         return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
 
     def _alpha(self, t: float) -> Array:
@@ -113,7 +113,7 @@ class TDQubit(ClosedSystem):
     def y0(self, params: PyTree) -> Array:
         return dq.fock(2, 0)
 
-    def E(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:
         return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:
