@@ -22,7 +22,7 @@ class BaseSolver(AbstractSolver):
     ts: Array
     y0: Array
     H: TimeArray
-    E: Array
+    Es: Array
     solver: Solver
     gradient: Gradient | None
     options: Options

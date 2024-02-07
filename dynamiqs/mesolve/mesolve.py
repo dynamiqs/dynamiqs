@@ -38,7 +38,7 @@ def mesolve(
     y0 = jnp.asarray(psi0, dtype=options.cdtype)
     y0 = todm(y0)
     ts = jnp.asarray(tsave, dtype=options.rdtype)
-    E = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
+    Es = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
 
     # === select solver class
     solvers = {Euler: MEEuler, Dopri5: MEDopri5}
@@ -48,7 +48,7 @@ def mesolve(
     solver.assert_supports_gradient(gradient)
 
     # === init solver
-    solver = solver_class(ts, y0, H, E, solver, gradient, options, Ls)
+    solver = solver_class(ts, y0, H, Es, solver, gradient, options, Ls)
 
     # === run solver
     result = solver.run()

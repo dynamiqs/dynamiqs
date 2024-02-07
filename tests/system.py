@@ -30,7 +30,7 @@ class System(ABC):
         pass
 
     @abstractmethod
-    def E(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:
         """Compute the expectation value operators."""
         pass
 
