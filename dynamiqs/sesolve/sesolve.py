@@ -25,6 +25,37 @@ def sesolve(
     solver: Solver = Dopri5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
+):
+    # === vectorize function
+    f = _sesolve
+
+    # we vectorize over H and psi0, all other arguments are not vectorized
+    args = (None, None, None, None, None)
+    # the result is vectorized over ysave and Esave
+    out_axes = Result(None, None, None, None, 0, 0)
+    if H.ndim > 2 and psi0.ndim > 2:
+        if options.cartesian_batching:
+            f = jax.vmap(f, in_axes=(None, 0, *args), out_axes=out_axes)
+            f = jax.vmap(f, in_axes=(0, None, *args), out_axes=out_axes)
+        else:
+            f = jax.vmap(f, in_axes=(0, 0, *args), out_axes=out_axes)
+    elif psi0.ndim > 2:
+        f = jax.vmap(f, in_axes=(None, 0, *args), out_axes=out_axes)
+    elif H.ndim > 2:
+        f = jax.vmap(f, in_axes=(0, None, *args), out_axes=out_axes)
+
+    # === apply vectorized function
+    return f(H, psi0, tsave, exp_ops, solver, gradient, options)
+
+
+def _sesolve(
+    H: ArrayLike | TimeArray,
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    exp_ops: ArrayLike | None = None,
+    solver: Solver = Dopri5(),
+    gradient: Gradient | None = None,
+    options: Options = Options(),
 ) -> Result:
     # === convert arguments
     H = _astimearray(H, dtype=options.cdtype)
