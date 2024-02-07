@@ -48,9 +48,10 @@ def totime(
         raise TypeError(
             'For time-dependent arrays, argument `x` must be one of 4 types: (1)'
             ' ArrayLike; (2) 2-tuple with type (function, ArrayLike) where function'
-            ' has signature (t: float) -> Array; (3) 3-tuple with type (ArrayLike,'
-            ' ArrayLike, ArrayLike); (4) function with signature (t: float) -> Array.'
-            f' The provided `x` has type {obj_type_str(x)}.'
+            ' has signature (t: float, *args: PyTree) -> Array; (3) 3-tuple with type'
+            ' (ArrayLike, ArrayLike, ArrayLike); (4) function with signature (t:'
+            ' float, *args: PyTree) -> Array. The provided `x` has type'
+            f' {obj_type_str(x)}.'
         )
 
 
@@ -62,7 +63,7 @@ def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeArray:
 def _factory_callable(
     f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree], dtype: jnp.dtype
 ) -> CallableTimeArray:
-    f0 = f(0.0, args)
+    f0 = f(0.0, *args)
 
     # check type, dtype and device match
     if not isinstance(f0, Array):
@@ -83,7 +84,7 @@ def _factory_callable(
     # This is necessary:
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
-    f_partial = Partial(f, args=args)
+    f_partial = Partial(f, *args)
     return CallableTimeArray(f_partial, f0)
 
 
@@ -145,7 +146,7 @@ def _factory_modulated(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
-    f0 = f(0.0, args=args)
+    f0 = f(0.0, *args)
     if not isinstance(f0, Array):
         raise TypeError(
             'For a modulated time array `(f, array)`, argument `f` must'
@@ -167,7 +168,7 @@ def _factory_modulated(
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_ModulatedFactor(Partial(f, args=args), f0)]
+    factors = [_ModulatedFactor(Partial(f, *args), f0)]
     arrays = array[None, ...]  # (1, n, n)
     static = jnp.zeros_like(array)
     return ModulatedTimeArray(factors, arrays, static=static)
