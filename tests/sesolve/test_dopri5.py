@@ -7,7 +7,7 @@ from ..solver_tester import SolverTester
 from .closed_system import cavity
 
 
-class TestSEAdaptive(SolverTester):
+class TestSEDopri5(SolverTester):
     # @pytest.mark.parametrize('system', [cavity, tdqubit])
     @pytest.mark.parametrize('system', [cavity])
     def test_correctness(self, system):
