@@ -2,6 +2,7 @@ from doctest import ELLIPSIS
 
 import jax
 import jax.numpy as jnp
+import matplotlib
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
@@ -30,6 +31,12 @@ def jax_set_printoptions():
 @pytest.fixture(scope='session', autouse=True)
 def mplstyle():
     dynamiqs.plots.utils.mplstyle()
+
+
+@pytest.fixture(scope='session', autouse=True)
+def mpl_backend():
+    # use a non-interactive backend for matplotlib, to avoid opening a display window
+    matplotlib.use('Agg')
 
 
 # doctest fixture
