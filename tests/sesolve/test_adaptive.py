@@ -8,10 +8,6 @@ from .closed_system import cavity
 
 
 class TestSEAdaptive(SolverTester):
-    @pytest.mark.skip(reason='broken test')
-    def test_batching(self):
-        self._test_batching(cavity, Dopri5())
-
     # @pytest.mark.parametrize('system', [cavity, tdqubit])
     @pytest.mark.parametrize('system', [cavity])
     def test_correctness(self, system):

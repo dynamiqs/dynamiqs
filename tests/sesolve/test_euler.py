@@ -8,11 +8,6 @@ from .closed_system import cavity
 
 
 class TestSEEuler(SolverTester):
-    @pytest.mark.skip(reason='broken test')
-    def test_batching(self):
-        solver = Euler(dt=1e-2)
-        self._test_batching(cavity, solver)
-
     # @pytest.mark.parametrize('system', [cavity, tdqubit])
     @pytest.mark.parametrize('system', [cavity])
     def test_correctness(self, system):
