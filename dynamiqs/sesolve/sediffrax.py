@@ -3,6 +3,8 @@ from typing import Callable
 import diffrax as dx
 from jaxtyping import PyTree, Scalar
 
+from ..core.abstract_solver import SESolver
+from ..core.diffrax_solver import DiffraxSolver, Dopri5Solver, EulerSolver
 from ..time_array import TimeArray
 
 
@@ -15,3 +17,17 @@ class SchrodingerTerm(dx.ODETerm):
 
     def vector_field(self, t: Scalar, psi: PyTree, _args: PyTree):
         return -1j * self.H(t) @ psi
+
+
+class SEDiffraxSolver(DiffraxSolver, SESolver):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.term = SchrodingerTerm(self.H)
+
+
+class SEEuler(SEDiffraxSolver, EulerSolver):
+    pass
+
+
+class SEDopri5(SEDiffraxSolver, Dopri5Solver):
+    pass

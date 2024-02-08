@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-from collections import namedtuple
 from typing import Any
 
-import diffrax as dx
 from jax import numpy as jnp
 from jaxtyping import Array
 
-from .gradient import Adjoint, Autograd
-from .utils import dag, isket
+from .utils.utils import dag, isket
 
 
 def type_str(type: Any) -> str:
@@ -44,51 +41,3 @@ def bexpect(O: Array, x: Array) -> Array:
     if isket(x):
         return jnp.einsum('ij,bjk,kl->b', dag(x), O, x)  # <x|O|x>
     return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
-
-
-SolverArgs = namedtuple('SolverArgs', ['save_states', 'E'])
-
-
-def save_fn(_t, y, args: SolverArgs):
-    res = {}
-    if args.save_states:
-        res['ysave'] = y
-    if args.E is not None and len(args.E) > 0:
-        res['Esave'] = bexpect(args.E, y)
-    return res
-
-
-def _get_solver_class(solver, solvers):
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
-        )
-    solver_class = solvers[type(solver)]
-    return solver_class
-
-
-def _get_adjoint_class(gradient, solver):
-    if gradient is None:
-        return dx.RecursiveCheckpointAdjoint
-
-    adjoints = {
-        Autograd: dx.RecursiveCheckpointAdjoint,
-        Adjoint: dx.BacksolveAdjoint,
-    }
-    if not isinstance(gradient, tuple(adjoints.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in adjoints.keys())
-        raise ValueError(
-            f'Gradient of type `{type(gradient).__name__}` is not supported'
-            f' (supported gradient types: {supported_str}).'
-        )
-    elif not solver.supports_gradient(gradient):
-        support_str = ', '.join(f'`{x.__name__}`' for x in solver.SUPPORTED_GRADIENT)
-        raise ValueError(
-            f'Solver `{type(solver).__name__}` does not support gradient'
-            f' `{type(gradient).__name__}` (supported gradient types: {support_str}).'
-        )
-
-    gradient_class = adjoints[type(gradient)]
-    return gradient_class

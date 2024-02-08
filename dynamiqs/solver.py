@@ -1,6 +1,7 @@
-from typing import ClassVar, Literal, Optional
+from __future__ import annotations
 
-import diffrax as dx
+from typing import ClassVar, Literal
+
 import equinox as eqx
 from jaxtyping import Scalar
 
@@ -11,17 +12,29 @@ class Solver(eqx.Module):
     SUPPORTED_GRADIENT: ClassVar[tuple[Gradient]] = ()
 
     @classmethod
-    def supports_gradient(cls, gradient: Gradient) -> bool:
+    def supports_gradient(cls, gradient: Gradient | None) -> bool:
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
+
+    @classmethod
+    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:
+        if gradient is not None and not cls.supports_gradient(gradient):
+            support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
+            raise ValueError(
+                f'Solver `{cls.__name__}` does not support gradient'
+                f' `{type(gradient).__name__}` (supported gradient types:'
+                f' {support_str}).'
+            )
 
 
 class Propagator(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
 
 
-class _ODEFixedStep(Solver):
+class _ODESolver(Solver):
     SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
+
+class _ODEFixedStep(_ODESolver):
     dt: Scalar
 
 
@@ -39,16 +52,14 @@ class Rouchon1(_ODEFixedStep):
     #   decomposition. Ideal for stiff problems, recommended for time-dependent
     #   problems.
 
-    normalize: Optional[Literal['sqrt', 'cholesky']] = None
+    normalize: Literal['sqrt', 'cholesky'] | None = None
 
 
 class Rouchon2(_ODEFixedStep):
     pass
 
 
-class _ODEAdaptiveStep(Solver):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
-
+class _ODEAdaptiveStep(_ODESolver):
     atol: float = 1e-8
     rtol: float = 1e-6
     safety_factor: float = 0.9
@@ -59,23 +70,3 @@ class _ODEAdaptiveStep(Solver):
 
 class Dopri5(_ODEAdaptiveStep):
     pass
-
-
-def _stepsize_controller(solver):
-    if isinstance(solver, _ODEFixedStep):
-        stepsize_controller = dx.ConstantStepSize()
-        dt = solver.dt
-    elif isinstance(solver, _ODEAdaptiveStep):
-        stepsize_controller = dx.PIDController(
-            rtol=solver.rtol,
-            atol=solver.atol,
-            safety=solver.safety_factor,
-            factormin=solver.min_factor,
-            factormax=solver.max_factor,
-        )
-        dt = None
-    else:
-        raise RuntimeError(
-            'Should never occur, all solvers should be either fixed or adaptive.'
-        )
-    return stepsize_controller, dt
