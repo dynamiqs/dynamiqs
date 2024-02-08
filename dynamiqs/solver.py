@@ -7,11 +7,9 @@ from jaxtyping import Scalar
 
 from .gradient import Adjoint, Autograd, Gradient
 
-NoneType = type(None)
-
 
 class Solver(eqx.Module):
-    SUPPORTED_GRADIENT: ClassVar[tuple[Gradient | NoneType]] = (NoneType,)
+    SUPPORTED_GRADIENT: ClassVar[tuple[Gradient]] = ()
 
     @classmethod
     def supports_gradient(cls, gradient: Gradient | None) -> bool:
@@ -19,7 +17,7 @@ class Solver(eqx.Module):
 
     @classmethod
     def assert_supports_gradient(cls, gradient: Gradient | None) -> None:
-        if not cls.supports_gradient(gradient):
+        if gradient is not None and not cls.supports_gradient(gradient):
             support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
             raise ValueError(
                 f'Solver `{cls.__name__}` does not support gradient'
@@ -29,11 +27,11 @@ class Solver(eqx.Module):
 
 
 class Propagator(Solver):
-    SUPPORTED_GRADIENT = (NoneType, Autograd)
+    SUPPORTED_GRADIENT = (Autograd,)
 
 
 class _ODESolver(Solver):
-    SUPPORTED_GRADIENT = (NoneType, Autograd, Adjoint)
+    SUPPORTED_GRADIENT = (Autograd, Adjoint)
 
 
 class _ODEFixedStep(_ODESolver):

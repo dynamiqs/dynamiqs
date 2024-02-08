@@ -4,8 +4,6 @@ import warnings
 from collections import namedtuple
 
 import diffrax as dx
-
-# from equinox import AbstractVar
 from jaxtyping import PyTree
 
 from .._utils import bexpect
