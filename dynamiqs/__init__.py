@@ -8,6 +8,7 @@ from .result import Result
 from .sesolve import sesolve
 from .time_array import TimeArray, TimeArrayLike, totime
 from .utils import *
+from .progress_bar import *
 
 # get version from pyproject.toml
 __version__ = version(__package__)

@@ -3,6 +3,10 @@ from __future__ import annotations
 import equinox as eqx
 import jax.numpy as jnp
 
+from .gradient import Gradient
+from .solver import Solver
+from .utils.array_types import dtype_complex_to_real, get_cdtype
+from .progress_bar import TqdmProgressBar
 from .utils.array_types import get_cdtype
 
 
@@ -19,6 +23,7 @@ class Options(eqx.Module):
         verbose: bool = True,
         dtype: jnp.complex64 | jnp.complex128 | None = None,
         cartesian_batching: bool = True,
+        progress_bar: AbstractProgressBar = TqdmProgressBar(),
     ):
         # save_states (bool, optional): If `True`, the state is saved at every
         #     time value. If `False`, only the final state is stored and returned.
@@ -31,6 +36,7 @@ class Options(eqx.Module):
         cdtype = get_cdtype(dtype)
         self._double_precision = cdtype == jnp.complex128
         self.cartesian_batching = cartesian_batching
+        self.progress_bar = progress_bar
 
     @property
     def rdtype(self) -> jnp.float32 | jnp.float64:

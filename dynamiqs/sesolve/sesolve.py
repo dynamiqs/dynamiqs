@@ -68,7 +68,8 @@ def sesolve(
             args=SolverArgs(save_states=options.save_states, E=E),
             saveat=dx.SaveAt(ts=tsave, fn=save_fn),
             stepsize_controller=stepsize_controller,
-            adjoint=adjoint_class(),
+            adjoint=adjoint_class()
+            progress_meter=options.progress_bar,
             max_steps=max_steps,
         )
 

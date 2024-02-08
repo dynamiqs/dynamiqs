@@ -67,6 +67,7 @@ def mesolve(
             saveat=dx.SaveAt(ts=tsave, fn=save_fn),
             stepsize_controller=stepsize_controller,
             adjoint=adjoint_class(),
+            progress_meter=options.progress_bar,
         )
 
     ysave = None
