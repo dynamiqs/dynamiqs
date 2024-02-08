@@ -31,6 +31,8 @@ class DiffraxSolver(BaseSolver):
     term: dx.ODETerm
 
     def __init__(self, *args):
+        # this dummy init is needed because of the way the class hierarchy is set up,
+        # to have subsequent init working properly
         super().__init__(*args)
 
     def run(self) -> PyTree:
