@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import jax
 from jax import numpy as jnp
 from jaxtyping import Array
 
@@ -41,3 +42,27 @@ def bexpect(O: Array, x: Array) -> Array:
     if isket(x):
         return jnp.einsum('ij,bjk,kl->b', dag(x), O, x)  # <x|O|x>
     return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
+
+
+def compute_batching(f, cartesian_batching, other_in_axes, out_axes, *should_batch):
+    # Build a list of batch mask (ie binary numbers). Each digit is 1 if we
+    # should batch over the dimension and 0 otherwise.
+    # For example if `should_batch` = (True, False, True), the batch_mask will be
+    # [001, 100]
+    batch_mask = [2**k * v for k, v in enumerate(should_batch)]
+
+    # When doing cartesian batching, we need to batch over all dimensions
+    # one by one, but when cartesian batching is off, we want to batch over
+    # every dimension at once, hence the sum.
+    # For example if `should_batch` = (True, False, True), the batch_mask will be
+    # [001, 100] if we want to do cartesian batching and [101] otherwise.
+    if not cartesian_batching:
+        batch_mask = [sum(batch_mask)]
+
+    for mask in reversed(batch_mask):
+        if mask == 0:  # skip the no batching case
+            continue
+        mask = tuple([0 if mask & (1 << i) else None for i in range(len(should_batch))])
+        f = jax.vmap(f, in_axes=mask + other_in_axes, out_axes=out_axes)
+
+    return f
