@@ -6,7 +6,7 @@ import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from dynamiqs import compute_batching
+from dynamiqs import compute_vmap
 from ..core._utils import _astimearray, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
@@ -28,14 +28,11 @@ def sesolve(
     options: Options = Options(),
 ):
     # === vectorize function
-
     # we vectorize over H and psi0, all other arguments are not vectorized
-    args = (None, None, None, None, None)
+    is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
     # the result is vectorized over ysave and Esave
     out_axes = Result(None, None, None, None, 0, 0)
-    f = compute_batching(
-        _sesolve, options.cartesian_batching, args, out_axes, H.ndim > 2, psi0.ndim > 2
-    )
+    f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)

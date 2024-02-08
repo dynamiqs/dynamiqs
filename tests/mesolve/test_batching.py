@@ -19,7 +19,7 @@ def test_batching(cartesian_batching):
     # create random objects
     k1, k2, k3, k4 = jax.random.split(jax.random.PRNGKey(42), 4)
     H = dq.rand.herm(k1, (nH, n, n))
-    Ls = dq.rand.herm(k2, (nLs, 1, n, n))
+    Ls = dq.rand.herm(k2, (nLs, 2, n, n))
     exp_ops = dq.rand.complex(k3, (nEs, n, n))
     psi0 = dq.rand.ket(k4, (npsi0, n, 1))
     tsave = jnp.linspace(0, 0.01, nt)
@@ -34,7 +34,7 @@ def test_batching(cartesian_batching):
     assert result.ysave.shape == (nH, nt, n, n)
     assert result.Esave.shape == (nH, nEs, nt)
 
-    # jump ops batched
+    # Ls batched
     result = dq.mesolve(H[0], Ls, psi0[0], tsave, exp_ops=exp_ops, options=options)
     assert result.ysave.shape == (nLs, nt, n, n)
     assert result.Esave.shape == (nLs, nEs, nt)
