@@ -1,6 +1,7 @@
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 
 from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, todm
 
@@ -15,6 +16,13 @@ class TestPlots:
 
         self.psis = jnp.asarray(self.psis)
         self.rhos = jnp.asarray(self.rhos)
+
+    @pytest.fixture(autouse=True)
+    def teardown(self):
+        # once the test is finished, pytest will go back here and run the code after
+        # the yield statement
+        yield
+        plt.close('all')
 
     def test_plot_wigner_psi(self):
         plot_wigner(self.psis[0])

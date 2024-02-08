@@ -1,6 +1,7 @@
 from typing import Sequence
 
 import jax.numpy as jnp
+import matplotlib
 import pytest
 from matplotlib import pyplot as plt
 from sybil import Sybil
@@ -22,12 +23,19 @@ def mplstyle():
     dynamiqs.plots.utils.mplstyle()
 
 
+@pytest.fixture(scope='session', autouse=True)
+def mpl_backend():
+    # use a non-interactive backend for matplotlib, to avoid opening a display window
+    matplotlib.use('Agg')
+
+
 # doctest fixture
 @pytest.fixture()
 def renderfig():
     def savefig_docs(figname):
         filename = f'docs/figs-docs/{figname}.png'
         plt.gcf().savefig(filename, bbox_inches='tight', dpi=300)
+        plt.close()
 
     return savefig_docs
 
