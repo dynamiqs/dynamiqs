@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from math import cos, pi, sin
 from typing import Any
 
 import numpy as np
@@ -13,6 +12,7 @@ import dynamiqs as dq
 from dynamiqs.gradient import Gradient
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
+from dynamiqs.time_array import TimeArray
 
 from ..system import System
 
@@ -53,7 +53,7 @@ class Cavity(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0)
 
-    def H(self, params: PyTree) -> Array:
+    def H(self, params: PyTree) -> ArrayLike | TimeArray:
         return params.delta * dq.number(self.n)
 
     def y0(self, params: PyTree) -> Array:
@@ -83,8 +83,8 @@ class Cavity(ClosedSystem):
         return self.Params(grad_delta, grad_alpha0)
 
     def grads_expect(self, t: float) -> PyTree:
-        cdt = cos(self.delta * t)
-        sdt = sin(self.delta * t)
+        cdt = jnp.cos(self.delta * t)
+        sdt = jnp.sin(self.delta * t)
 
         grad_x_delta = -self.alpha0 * t * sdt
         grad_p_delta = -self.alpha0 * t * cdt
@@ -106,7 +106,7 @@ class TDQubit(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega)
 
-    def H(self, params: PyTree):
+    def H(self, params: PyTree) -> ArrayLike | TimeArray:
         f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
         return dq.totime(f, args=(params.eps, params.omega))
 
@@ -117,44 +117,44 @@ class TDQubit(ClosedSystem):
         return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:
-        return self.eps / self.omega * sin(self.omega * t)
+        return self.eps / self.omega * jnp.sin(self.omega * t)
 
     def state(self, t: float) -> Array:
         theta = self._theta(t)
-        return cos(theta) * dq.fock(2, 0) - 1j * sin(theta) * dq.fock(2, 1)
+        return jnp.cos(theta) * dq.fock(2, 0) - 1j * jnp.sin(theta) * dq.fock(2, 1)
 
     def expect(self, t: float) -> Array:
         theta = self._theta(t)
         exp_x = 0
-        exp_y = -sin(2 * theta)
-        exp_z = cos(2 * theta)
+        exp_y = -jnp.sin(2 * theta)
+        exp_z = jnp.cos(2 * theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
 
     def grads_state(self, t: float) -> PyTree:
         theta = self._theta(t)
         # gradients of theta
-        dtheta_deps = sin(self.omega * t) / self.omega
-        dtheta_domega = self.eps * t * cos(
+        dtheta_deps = jnp.sin(self.omega * t) / self.omega
+        dtheta_domega = self.eps * t * jnp.cos(
             self.omega * t
-        ) / self.omega - self.eps / self.omega**2 * sin(self.omega * t)
+        ) / self.omega - self.eps / self.omega**2 * jnp.sin(self.omega * t)
         # gradients of sigma_z
-        grad_eps = -2 * dtheta_deps * sin(2 * theta)
-        grad_omega = -2 * dtheta_domega * sin(2 * theta)
+        grad_eps = -2 * dtheta_deps * jnp.sin(2 * theta)
+        grad_omega = -2 * dtheta_domega * jnp.sin(2 * theta)
         return self.Params(grad_eps, grad_omega)
 
     def grads_expect(self, t: float) -> PyTree:
         theta = self._theta(t)
         # gradients of theta
-        dtheta_deps = sin(self.omega * t) / self.omega
-        dtheta_domega = self.eps * t * cos(
+        dtheta_deps = jnp.sin(self.omega * t) / self.omega
+        dtheta_domega = self.eps * t * jnp.cos(
             self.omega * t
-        ) / self.omega - self.eps / self.omega**2 * sin(self.omega * t)
+        ) / self.omega - self.eps / self.omega**2 * jnp.sin(self.omega * t)
         # gradients of sigma_z
-        grad_z_eps = -2 * dtheta_deps * sin(2 * theta)
-        grad_z_omega = -2 * dtheta_domega * sin(2 * theta)
+        grad_z_eps = -2 * dtheta_deps * jnp.sin(2 * theta)
+        grad_z_omega = -2 * dtheta_domega * jnp.sin(2 * theta)
         # gradients of sigma_y
-        grad_y_eps = -2 * dtheta_deps * cos(2 * theta)
-        grad_y_omega = -2 * dtheta_domega * cos(2 * theta)
+        grad_y_eps = -2 * dtheta_deps * jnp.cos(2 * theta)
+        grad_y_omega = -2 * dtheta_domega * jnp.cos(2 * theta)
         # gradients of sigma_x
         grad_x_eps = 0
         grad_x_omega = 0
@@ -166,7 +166,7 @@ class TDQubit(ClosedSystem):
 
 # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # gradients
-Hz = 2 * pi
+Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave)
 
