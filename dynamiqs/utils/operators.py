@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 
-from .array_types import get_cdtype
+from .array_types import cdtype
 from .utils import dag, tensor
 
 __all__ = [
@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-def eye(*dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def eye(*dims: int) -> Array:
     r"""Returns the identity operator.
 
     If only a single dimension is provided, `eye` returns the identity operator
@@ -41,7 +41,6 @@ def eye(*dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Arra
 
     Args:
         *dims: Variable length argument list of the Hilbert space dimensions.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (n, n))_ Identity operator (with _n_ the product of
@@ -61,12 +60,11 @@ def eye(*dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Arra
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
     dim = prod(dims)
-    return jnp.eye(dim, dtype=dtype)
+    return jnp.eye(dim, dtype=cdtype())
 
 
-def zero(*dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def zero(*dims: int) -> Array:
     r"""Returns the null operator.
 
     If only a single dimension is provided, `zero` returns the null operator
@@ -76,7 +74,6 @@ def zero(*dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Arr
 
     Args:
         *dims: Variable length argument list of the Hilbert space dimensions.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (n, n))_ Null operator (with _n_ the product of dimensions
@@ -96,14 +93,11 @@ def zero(*dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Arr
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
     dim = prod(dims)
-    return jnp.zeros((dim, dim), dtype=dtype)
+    return jnp.zeros((dim, dim), dtype=cdtype())
 
 
-def destroy(
-    *dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array | tuple[Array, ...]:
+def destroy(*dims: int) -> Array | tuple[Array, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators in
     a multi-mode system.
 
@@ -114,7 +108,6 @@ def destroy(
 
     Args:
         *dims: Variable length argument list of the Hilbert space dimensions.
-        dtype: Complex data type of the returned array(s).
 
     Returns:
         _(array or tuple of arrays)_ Annihilation operator of given dimension, or
@@ -142,27 +135,24 @@ def destroy(
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j],
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]],      dtype=complex64)
     """  # noqa: E501
-    dtype = get_cdtype(dtype)
 
     if len(dims) == 1:
-        return _destroy_single(dims[0], dtype=dtype)
+        return _destroy_single(dims[0])
 
-    a = [_destroy_single(dim, dtype=dtype) for dim in dims]
-    I = [eye(dim, dtype=dtype) for dim in dims]
+    a = [_destroy_single(dim) for dim in dims]
+    I = [eye(dim) for dim in dims]
     return tuple(
         tensor(*[a[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _destroy_single(dim: int, *, dtype: jnp.complex64 | jnp.complex128) -> Array:
+def _destroy_single(dim: int) -> Array:
     """Bosonic annihilation operator."""
-    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=dtype)), k=1)
+    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=1)
 
 
-def create(
-    *dims: int, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array | tuple[Array, ...]:
+def create(*dims: int) -> Array | tuple[Array, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators in a
     multi-mode system.
 
@@ -173,7 +163,6 @@ def create(
 
     Args:
         *dims: Variable length argument list of the Hilbert space dimensions.
-        dtype: Complex data type of the returned array(s).
 
     Returns:
         _(array or tuple of arrays)_ Creation operator of given dimension, or tuple
@@ -201,25 +190,23 @@ def create(
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j],
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j]],      dtype=complex64)
     """  # noqa: E501
-    dtype = get_cdtype(dtype)
-
     if len(dims) == 1:
-        return _create_single(dims[0], dtype=dtype)
+        return _create_single(dims[0])
 
-    adag = [_create_single(dim, dtype=dtype) for dim in dims]
-    I = [eye(dim, dtype=dtype) for dim in dims]
+    adag = [_create_single(dim) for dim in dims]
+    I = [eye(dim) for dim in dims]
     return tuple(
         tensor(*[adag[j] if i == j else I[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _create_single(dim: int, *, dtype: jnp.complex64 | jnp.complex128) -> Array:
+def _create_single(dim: int) -> Array:
     """Bosonic creation operator."""
-    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=dtype)), k=-1)
+    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
 
 
-def number(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def number(dim: int | None = None) -> Array:
     r"""Returns the number operator of a bosonic mode.
 
     It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
@@ -227,7 +214,6 @@ def number(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> 
 
     Args:
         dim: Dimension of the Hilbert space.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (dim, dim))_ Number operator.
@@ -239,11 +225,10 @@ def number(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> 
                [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    return jnp.diag(jnp.arange(0, stop=dim, dtype=dtype))
+    return jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
 
 
-def parity(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def parity(dim: int) -> Array:
     r"""Returns the parity operator of a bosonic mode.
 
     It is defined by $P = e^{i\pi a^\dag a}$, where $a$ and $a^\dag$ are the
@@ -251,7 +236,6 @@ def parity(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> 
 
     Args:
         dim: Dimension of the Hilbert space.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (dim, dim))_ Parity operator.
@@ -263,15 +247,12 @@ def parity(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> 
                [ 0.+0.j,  0.+0.j,  1.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j, -1.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    diag_values = jnp.ones(dim, dtype=dtype)
+    diag_values = jnp.ones(dim, dtype=cdtype())
     diag_values = diag_values.at[1::2].set(-1)
     return jnp.diag(diag_values)
 
 
-def displace(
-    dim: int, alpha: ArrayLike, *, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array:
+def displace(dim: int, alpha: ArrayLike) -> Array:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -283,7 +264,6 @@ def displace(
     Args:
         dim: Dimension of the Hilbert space.
         alpha _(array_like of shape (...))_: Displacement amplitude.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (..., dim, dim))_ Displacement operator.
@@ -297,18 +277,14 @@ def displace(
         >>> dq.displace(4, [0.1, 0.2]).shape
         (2, 4, 4)
     """
-    dtype = get_cdtype(dtype)
-
-    alpha = jnp.asarray(alpha, dtype=dtype)
+    alpha = jnp.asarray(alpha, dtype=cdtype())
     alpha = alpha[..., None, None]  # (..., 1, 1)
 
-    a = destroy(dim, dtype=dtype)  # (n, n)
+    a = destroy(dim)  # (n, n)
     return jax.scipy.linalg.expm(alpha * dag(a) - alpha.conj() * a)
 
 
-def squeeze(
-    dim: int, z: ArrayLike, *, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array:
+def squeeze(dim: int, z: ArrayLike) -> Array:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
@@ -320,7 +296,6 @@ def squeeze(
     Args:
         dim: Dimension of the Hilbert space.
         z _(array_like of shape (...))_: Squeezing amplitude.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (..., dim, dim))_ Squeezing operator.
@@ -334,19 +309,15 @@ def squeeze(
         >>> dq.squeeze(4, [0.1, 0.2]).shape
         (2, 4, 4)
     """
-    dtype = get_cdtype(dtype)
-
-    z = jnp.asarray(z, dtype=dtype)
+    z = jnp.asarray(z, dtype=cdtype())
     z = z[..., None, None]  # (..., 1, 1)
 
-    a = destroy(dim, dtype=dtype)  # (n, n)
+    a = destroy(dim)  # (n, n)
     a2 = a @ a
     return jax.scipy.linalg.expm(0.5 * (z.conj() * a2 - z * dag(a2)))
 
 
-def quadrature(
-    dim: int, phi: float, *, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array:
+def quadrature(dim: int, phi: float) -> Array:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
     It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$, where $a$ and
@@ -355,7 +326,6 @@ def quadrature(
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (dim, dim))_ Quadrature operator.
@@ -370,17 +340,15 @@ def quadrature(
                [-0.+0.5j  ,  0.+0.j   , -0.-0.707j],
                [ 0.+0.j   , -0.+0.707j,  0.+0.j   ]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    a = destroy(dim, dtype=dtype)
+    a = destroy(dim)
     return 0.5 * (jnp.exp(1.0j * phi) * dag(a) + jnp.exp(-1.0j * phi) * a)
 
 
-def position(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def position(dim: int) -> Array:
     r"""Returns the position operator $x = (a^\dag + a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (dim, dim))_ Position operator.
@@ -391,17 +359,15 @@ def position(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -
                [0.5  +0.j, 0.   +0.j, 0.707+0.j],
                [0.   +0.j, 0.707+0.j, 0.   +0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    a = destroy(dim, dtype=dtype)
+    a = destroy(dim)
     return 0.5 * (a + dag(a))
 
 
-def momentum(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def momentum(dim: int) -> Array:
     r"""Returns the momentum operator $p = i (a^\dag - a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (dim, dim))_ Momentum operator.
@@ -412,18 +378,16 @@ def momentum(dim: int, *, dtype: jnp.complex64 | jnp.complex128 | None = None) -
                [0.+0.5j  , 0.+0.j   , 0.-0.707j],
                [0.+0.j   , 0.+0.707j, 0.+0.j   ]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    a = destroy(dim, dtype=dtype)
+    a = destroy(dim)
     return 0.5j * (dag(a) - a)
 
 
-def sigmax(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def sigmax() -> Array:
     r"""Returns the Pauli $\sigma_x$ operator.
 
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
 
     Args:
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_x$ operator.
@@ -433,17 +397,15 @@ def sigmax(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
         Array([[0.+0.j, 1.+0.j],
                [1.+0.j, 0.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    return jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=dtype)
+    return jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
 
 
-def sigmay(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def sigmay() -> Array:
     r"""Returns the Pauli $\sigma_y$ operator.
 
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
 
     Args:
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_y$ operator.
@@ -453,17 +415,15 @@ def sigmay(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
         Array([[ 0.+0.j, -0.-1.j],
                [ 0.+1.j,  0.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    return jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=dtype)
+    return jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
 
 
-def sigmaz(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def sigmaz() -> Array:
     r"""Returns the Pauli $\sigma_z$ operator.
 
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
 
     Args:
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_z$ operator.
@@ -473,17 +433,15 @@ def sigmaz(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
         Array([[ 1.+0.j,  0.+0.j],
                [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    return jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=dtype)
+    return jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
 
 
-def sigmap(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def sigmap() -> Array:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
 
     Args:
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_+$ operator.
@@ -493,17 +451,15 @@ def sigmap(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
         Array([[0.+0.j, 1.+0.j],
                [0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    return jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=dtype)
+    return jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
 
 
-def sigmam(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
+def sigmam() -> Array:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
 
     Args:
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_-$ operator.
@@ -513,13 +469,10 @@ def sigmam(*, dtype: jnp.complex64 | jnp.complex128 | None = None) -> Array:
         Array([[0.+0.j, 0.+0.j],
                [1.+0.j, 0.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    return jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=dtype)
+    return jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
 
 
-def hadamard(
-    n: int = 1, *, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array:
+def hadamard(n: int = 1) -> Array:
     r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
@@ -536,7 +489,6 @@ def hadamard(
 
     Args:
         n: Number of qubits to act on.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (2^n, 2^n))_ Hadamard transform operator.
@@ -551,7 +503,6 @@ def hadamard(
                [ 0.5+0.j,  0.5+0.j, -0.5+0.j, -0.5+0.j],
                [ 0.5+0.j, -0.5+0.j, -0.5+0.j,  0.5-0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-    H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=dtype) / jnp.sqrt(2)
+    H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)

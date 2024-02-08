@@ -12,6 +12,7 @@ from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver
 from ..time_array import TimeArray
+from ..utils.array_types import cdtype
 from .sediffrax import SEDopri5, SEEuler
 
 
@@ -47,10 +48,10 @@ def _sesolve(
     options: Options = Options(),
 ) -> Result:
     # === convert arguments
-    H = _astimearray(H, dtype=options.cdtype)
-    y0 = jnp.asarray(psi0, dtype=options.cdtype)
-    ts = jnp.asarray(tsave, dtype=options.rdtype)
-    Es = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
+    H = _astimearray(H)
+    y0 = jnp.asarray(psi0, dtype=cdtype())
+    ts = jnp.asarray(tsave)
+    Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === select solver class
     solvers = {Euler: SEEuler, Dopri5: SEDopri5}

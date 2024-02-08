@@ -12,6 +12,7 @@ from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver
 from ..time_array import TimeArray
+from ..utils.array_types import cdtype
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEEuler
 
@@ -30,7 +31,7 @@ def mesolve(
 ):
     # === vectorize function
     # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
-    jump_ops_ndim = _astimearray(jump_ops[0], dtype=options.cdtype).ndim + 1
+    jump_ops_ndim = _astimearray(jump_ops[0]).ndim + 1
     is_batched = (
         H.ndim > 2,
         jump_ops_ndim > 3,  # todo: this is a temporary fix
@@ -61,12 +62,12 @@ def _mesolve(
     options: Options = Options(),
 ) -> Result:
     # === convert arguments
-    H = _astimearray(H, dtype=options.cdtype)
-    Ls = [_astimearray(L, dtype=options.cdtype) for L in jump_ops]
-    y0 = jnp.asarray(psi0, dtype=options.cdtype)
+    H = _astimearray(H)
+    Ls = [_astimearray(L) for L in jump_ops]
+    y0 = jnp.asarray(psi0, dtype=cdtype())
     y0 = todm(y0)
-    ts = jnp.asarray(tsave, dtype=options.rdtype)
-    Es = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
+    ts = jnp.asarray(tsave)
+    Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === select solver class
     solvers = {Euler: MEEuler, Dopri5: MEDopri5}

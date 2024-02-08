@@ -9,7 +9,7 @@ from jax import numpy as jnp
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
 
-from .array_types import dtype_complex_to_real, dtype_real_to_complex
+from .array_types import cdtype
 from .operators import eye
 from .utils import isdm, isket, todm
 
@@ -48,9 +48,8 @@ def wigner(
     """
     state = jnp.asarray(state)
 
-    rdtype = dtype_complex_to_real(state.dtype)
-    xvec = jnp.linspace(-xmax, xmax, npixels, dtype=rdtype)
-    yvec = jnp.linspace(-ymax, ymax, npixels, dtype=rdtype)
+    xvec = jnp.linspace(-xmax, xmax, npixels)
+    yvec = jnp.linspace(-ymax, ymax, npixels)
 
     if method == 'clenshaw':
         state = todm(state)
@@ -151,7 +150,7 @@ def _fock_to_position(n: int, positions: Array) -> Array:
     oscillator of dimension n, as evaluated at the specific position values provided.
     """
     n_positions = positions.shape[0]
-    U = jnp.zeros((n, n_positions), dtype=dtype_real_to_complex(positions.dtype))
+    U = jnp.zeros((n, n_positions), dtype=cdtype())
     U = U.at[0].set(jnp.pi ** (-0.25) * jnp.exp(-0.5 * positions**2))
 
     if n == 1:
