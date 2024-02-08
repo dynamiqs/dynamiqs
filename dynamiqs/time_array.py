@@ -84,7 +84,7 @@ def _factory_callable(
     # This is necessary:
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
-    f_partial = Partial(f, *args)
+    f_partial = Partial(lambda t: f(t, *args))
     return CallableTimeArray(f_partial, f0)
 
 

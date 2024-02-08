@@ -106,7 +106,7 @@ class TDQubit(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega)
 
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+    def H(self, params: PyTree) -> TimeArray:
         f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
         return dq.totime(f, args=(params.eps, params.omega))
 
@@ -129,6 +129,9 @@ class TDQubit(ClosedSystem):
         exp_y = -jnp.sin(2 * theta)
         exp_z = jnp.cos(2 * theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
+
+    def loss_state(self, state: Array) -> Array:
+        return dq.expect(dq.sigmaz(), state).real
 
     def grads_state(self, t: float) -> PyTree:
         theta = self._theta(t)

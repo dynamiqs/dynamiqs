@@ -30,7 +30,8 @@ class SolverTester(ABC):
         # === test ysave
         true_ysave = system.states(system.tsave)
         errs = jnp.linalg.norm(true_ysave - result.ysave, axis=(-2, -1))
-        logging.warning(f'errs = {errs}')
+        logging.warning(f'true_ysave = {true_ysave}')
+        logging.warning(f'ysave      = {result.ysave}')
         assert jnp.all(errs <= ysave_atol)
 
         # === test Esave

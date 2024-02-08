@@ -165,6 +165,9 @@ class OTDQubit(OpenSystem):
         exp_z = eta * jnp.cos(2 * theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
 
+    def loss_state(self, state: Array) -> Array:
+        return dq.expect(dq.sigmaz(), state).real
+
     def grads_state(self, t: float) -> PyTree:
         theta = self._theta(t)
         eta = self._eta(t)
