@@ -2,7 +2,7 @@
 
 ## Requirements
 
-The project was written using Python 3.8+, you must have a compatible version of Python (i.e. >= 3.8) installed on your computer.
+The project was written using Python 3.9+, you must have a compatible version of Python (i.e. >= 3.9) installed on your computer.
 
 ## Setup
 
