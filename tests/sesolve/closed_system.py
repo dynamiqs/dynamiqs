@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+from collections import namedtuple
 from math import cos, pi, sin
 from typing import Any
 
 import numpy as np
 from jax import Array
 from jax import numpy as jnp
+from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import dag
 from dynamiqs.gradient import Gradient
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.utils.array_types import ArrayLike, dtype_real_to_complex
 
 from ..system import System
 
@@ -20,22 +20,21 @@ from ..system import System
 class ClosedSystem(System):
     def run(
         self,
-        tsave: ArrayLike,
         solver: Solver,
         *,
         gradient: Gradient | None = None,
         options: dict[str, Any] | None = None,
-        params: ArrayLike | None = None,
-        y0: ArrayLike | None = None,
+        params: PyTree | None = None,
     ) -> Result:
-        H = self.H()
-        if y0 is None:
-            y0 = self.y0
+        params = self.params_default if params is None else params
+        H = self.H(params)
+        y0 = self.y0(params)
+        E = self.E(params)
         return dq.sesolve(
             H,
             y0,
-            tsave,
-            exp_ops=self.E,
+            self.tsave,
+            exp_ops=E,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -43,56 +42,25 @@ class ClosedSystem(System):
 
 
 class Cavity(ClosedSystem):
-    # `Hb: (3, n, n)
-    # `y0b`: (4, n, n)
-    # `E`: (2, n, n)
+    Params = namedtuple('Params', ['delta', 'alpha0'])
 
-    def __init__(
-        self,
-        *,
-        n: int,
-        delta: float,
-        alpha0: float,
-        t_end: float,
-    ):
-        # store parameters
+    def __init__(self, *, n: int, delta: float, alpha0: float, tsave: ArrayLike):
         self.n = n
-        self.delta = jnp.asarray(delta)
-        self.alpha0 = jnp.asarray(alpha0)
-        self.t_end = jnp.asarray(t_end)
+        self.delta = delta
+        self.alpha0 = alpha0
+        self.tsave = tsave
 
-        # define gradient parameters
-        self.params = (self.delta, self.alpha0)
+        # define default gradient parameters
+        self.params_default = self.Params(delta, alpha0)
 
-        # bosonic operators
-        a = dq.destroy(self.n)
-        adag = dag(a)
+    def H(self, params: PyTree) -> Array:
+        return params.delta * dq.number(self.n)
 
-        # loss operator
-        self.loss_op = adag @ a
+    def y0(self, params: PyTree) -> Array:
+        return dq.coherent(self.n, params.alpha0)
 
-        # prepare quantum operators
-        self.E = [dq.position(self.n), dq.momentum(self.n)]
-
-        # prepare initial states
-        self.y0 = dq.coherent(self.n, self.alpha0)
-        self.y0b = [
-            dq.coherent(self.n, self.alpha0),
-            dq.coherent(self.n, 1j * self.alpha0),
-            dq.coherent(self.n, -self.alpha0),
-            dq.coherent(self.n, -1j * self.alpha0),
-        ]
-
-    def H(self, params: Array = None):
-        delta, alpha0 = params if params is not None else self.params
-        return delta * dq.number(self.n)
-
-    def Hb(self, params: Array):
-        H = self.H(params)
-        return [0.5 * H, H, 2 * H]
-
-    def tsave(self, n: int) -> ArrayLike:
-        return np.linspace(0.0, self.t_end.item(), n)
+    def E(self, params: PyTree) -> Array:
+        return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t)
@@ -106,12 +74,15 @@ class Cavity(ClosedSystem):
         exp_p = alpha_t.imag
         return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_state(self, t: float) -> Array:
+    def loss_state(self, state: Array) -> Array:
+        return dq.expect(dq.number(self.n), state).real
+
+    def grads_state(self, t: float) -> PyTree:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0
-        return jnp.array([grad_delta, grad_alpha0])
+        return self.Params(grad_delta, grad_alpha0)
 
-    def grads_expect(self, t: float) -> Array:
+    def grads_expect(self, t: float) -> PyTree:
         cdt = cos(self.delta * t)
         sdt = sin(self.delta * t)
 
@@ -120,39 +91,30 @@ class Cavity(ClosedSystem):
         grad_x_alpha0 = cdt
         grad_p_alpha0 = -sdt
 
-        return jnp.array([
-            [grad_x_delta, grad_x_alpha0],
-            [grad_p_delta, grad_p_alpha0],
-        ])
+        return self.Params([grad_x_delta, grad_p_delta], [grad_x_alpha0, grad_p_alpha0])
 
 
 class TDQubit(ClosedSystem):
-    def __init__(self, *, eps: float, omega: float, t_end: float):
+    Params = namedtuple('Params', ['eps', 'omega'])
+
+    def __init__(self, *, eps: float, omega: float, tsave: ArrayLike):
         self.n = 2
+        self.eps = eps
+        self.omega = omega
+        self.tsave = tsave
 
-        # store parameters
-        self.eps = jnp.asarray(eps)
-        self.omega = jnp.asarray(omega)
-        self.t_end = jnp.asarray(t_end)
+        # define default gradient parameters
+        self.params_default = self.Params(eps, omega)
 
-        # define gradient parameters
-        self.params = (self.eps, self.omega)
+    def H(self, params: PyTree):
+        f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
+        return dq.totime(f, args=(params.eps, params.omega))
 
-        # loss operator
-        self.loss_op = dq.sigmaz()
+    def y0(self, params: PyTree) -> Array:
+        return dq.fock(2, 0)
 
-        # prepare quantum operators
-        self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
-
-        # prepare initial states
-        self.y0 = dq.fock(2, 0)
-
-    def H(self, params: Array = None):
-        eps, omega = params if params is not None else self.params
-        return dq.totime(lambda t, args: eps * jnp.cos(omega * t) * dq.sigmax())
-
-    def tsave(self, n: int) -> Array:
-        return jnp.linspace(0.0, self.t_end.item(), n)
+    def E(self, params: PyTree) -> Array:
+        return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:
         return self.eps / self.omega * sin(self.omega * t)
@@ -166,12 +128,9 @@ class TDQubit(ClosedSystem):
         exp_x = 0
         exp_y = -sin(2 * theta)
         exp_z = cos(2 * theta)
-        return jnp.array(
-            [exp_x, exp_y, exp_z],
-            dtype=dtype_real_to_complex(theta.dtype),
-        )
+        return jnp.array([exp_x, exp_y, exp_z]).real
 
-    def grads_state(self, t: float) -> Array:
+    def grads_state(self, t: float) -> PyTree:
         theta = self._theta(t)
         # gradients of theta
         dtheta_deps = sin(self.omega * t) / self.omega
@@ -181,9 +140,9 @@ class TDQubit(ClosedSystem):
         # gradients of sigma_z
         grad_eps = -2 * dtheta_deps * sin(2 * theta)
         grad_omega = -2 * dtheta_domega * sin(2 * theta)
-        return jnp.array([grad_eps, grad_omega])
+        return self.Params(grad_eps, grad_omega)
 
-    def grads_expect(self, t: float) -> Array:
+    def grads_expect(self, t: float) -> PyTree:
         theta = self._theta(t)
         # gradients of theta
         dtheta_deps = sin(self.omega * t) / self.omega
@@ -199,18 +158,17 @@ class TDQubit(ClosedSystem):
         # gradients of sigma_x
         grad_x_eps = 0
         grad_x_omega = 0
-        return jnp.array([
-            [grad_x_eps, grad_x_omega],
-            [grad_y_eps, grad_y_omega],
-            [grad_z_eps, grad_z_omega],
-        ])
+        return self.Params(
+            [grad_x_eps, grad_y_eps, grad_z_eps],
+            [grad_x_omega, grad_y_omega, grad_z_omega],
+        )
 
 
 # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # gradients
 Hz = 2 * pi
-cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
-gcavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
+tsave = np.linspace(0.0, 0.3, 11)
+cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave)
 
-tdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
-gtdqubit = TDQubit(eps=3.0, omega=10.0, t_end=1.0)
+tsave = np.linspace(0.0, 1.0, 11)
+tdqubit = TDQubit(eps=3.0, omega=10.0, tsave=tsave)

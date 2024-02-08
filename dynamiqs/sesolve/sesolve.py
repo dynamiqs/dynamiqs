@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from functools import partial
+from typing import Any, get_args
 
 import diffrax as dx
+import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
@@ -12,12 +14,13 @@ from ..gradient import Autograd, Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Euler, Solver, _ODEAdaptiveStep, _stepsize_controller
-from ..time_array import totime
+from ..time_array import TimeArray, _factory_constant
 from .schrodinger_term import SchrodingerTerm
 
 
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def sesolve(
-    H: ArrayLike,
+    H: ArrayLike | TimeArray,
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
@@ -26,8 +29,15 @@ def sesolve(
     gradient: Gradient = Autograd(),
     options: dict[str, Any] | None = None,
 ) -> Result:
-    # === options
-    options = Options(solver=solver, gradient=gradient, options=options)
+    # === convert arguments
+    options = {} if options is None else options
+    options = Options(**options)
+
+    if isinstance(H, get_args(ArrayLike)):
+        H = _factory_constant(H, dtype=options.cdtype)
+    y0 = jnp.asarray(psi0, dtype=options.cdtype)
+    tsave = jnp.asarray(tsave, dtype=options.rdtype)
+    E = jnp.asarray(exp_ops, dtype=options.cdtype) if exp_ops is not None else None
 
     # === solver class
     solvers = {Dopri5: dx.Dopri5, Euler: dx.Euler}
@@ -40,12 +50,9 @@ def sesolve(
     stepsize_controller, dt = _stepsize_controller(solver)
 
     # === solve differential equation with diffrax
-    H = totime(H)
     term = SchrodingerTerm(H=H)
-    if exp_ops is not None:
-        exp_ops = jnp.asarray(exp_ops)
-    else:
-        exp_ops = jnp.empty(0)
+    # todo: fix hard-coded max_steps
+    max_steps = options.max_steps if isinstance(options, _ODEAdaptiveStep) else 100_000
 
     # todo: remove once complex support is stabilized in diffrax
     with warnings.catch_warnings():
@@ -57,29 +64,19 @@ def sesolve(
             t0=tsave[0],
             t1=tsave[-1],
             dt0=dt,
-            y0=psi0,
-            args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
+            y0=y0,
+            args=SolverArgs(save_states=options.save_states, E=E),
             saveat=dx.SaveAt(ts=tsave, fn=save_fn),
             stepsize_controller=stepsize_controller,
-            adjoint=adjoint_class(),
-            max_steps=(
-                options.max_steps if isinstance(options, _ODEAdaptiveStep) else None
-            ),
+            adjoint=adjoint_class()
             progress_meter=options.progress_bar,
+            max_steps=max_steps,
         )
 
     # === get results
-    ysave = None
-    if options.save_states:
-        ysave = solution.ys['states']
+    ysave = solution.ys.get('ysave', None)
+    Esave = solution.ys.get('Esave', None)
+    if Esave is not None:
+        Esave = Esave.swapaxes(-1, -2)
 
-    Esave = None
-    if 'expects' in solution.ys:
-        Esave = jnp.stack(solution.ys['expects'].T, axis=0)
-
-    return Result(
-        options,
-        ysave=ysave,
-        Esave=Esave,
-        tsave=solution.ts,
-    )
+    return Result(tsave, solver, gradient, options, ysave, Esave)

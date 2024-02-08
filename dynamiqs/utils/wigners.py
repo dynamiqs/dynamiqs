@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import functools as ft
+from functools import partial
 from typing import Literal
 
 import jax
@@ -16,8 +16,8 @@ from .utils import isdm, isket, todm
 __all__ = ['wigner']
 
 
-@ft.partial(jax.jit, static_argnames=('npixels', 'method'))
-@ft.partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
+@partial(jax.jit, static_argnames=('npixels', 'method'))
+@partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
 def wigner(
     state: ArrayLike,
     xmax: float = 6.2832,

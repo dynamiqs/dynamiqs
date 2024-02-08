@@ -1,32 +1,31 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import get_args
+from typing import Callable, Union, get_args
 
 import equinox as eqx
 import numpy as np
 from jax import Array, lax
 from jax import numpy as jnp
 from jax.tree_util import Partial
-from jaxtyping import Scalar
+from jaxtyping import PyTree, Scalar
 
 from ._utils import check_time_array, obj_type_str, type_str
 from .utils.array_types import ArrayLike, dtype_complex_to_real, get_cdtype
 
 __all__ = ['totime']
 
+TimeArrayLike = Union[
+    ArrayLike,
+    Callable[[float, tuple[PyTree]], Array],
+    tuple[ArrayLike, ArrayLike, ArrayLike],
+    tuple[Callable[[float, tuple[PyTree]], Array], ArrayLike],
+    'TimeArray',
+]
+
 
 def totime(
-    x: (
-        ArrayLike
-        | callable[[float, tuple], Array]
-        | tuple[ArrayLike, ArrayLike, ArrayLike]
-        | tuple[callable[[float, tuple], Array], ArrayLike]
-        | TimeArray
-    ),
-    *,
-    args: tuple = (),
-    dtype: jnp.dtype | None = None,
+    x: TimeArrayLike, *, args: tuple[PyTree] = (), dtype: jnp.dtype | None = None
 ) -> TimeArray:
     dtype = dtype or get_cdtype(dtype)  # assume complex by default
 
@@ -49,9 +48,10 @@ def totime(
         raise TypeError(
             'For time-dependent arrays, argument `x` must be one of 4 types: (1)'
             ' ArrayLike; (2) 2-tuple with type (function, ArrayLike) where function'
-            ' has signature (t: float) -> Array; (3) 3-tuple with type (ArrayLike,'
-            ' ArrayLike, ArrayLike); (4) function with signature (t: float) -> Array.'
-            f' The provided `x` has type {obj_type_str(x)}.'
+            ' has signature (t: float, *args: PyTree) -> Array; (3) 3-tuple with type'
+            ' (ArrayLike, ArrayLike, ArrayLike); (4) function with signature (t:'
+            ' float, *args: PyTree) -> Array. The provided `x` has type'
+            f' {obj_type_str(x)}.'
         )
 
 
@@ -61,9 +61,9 @@ def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeArray:
 
 
 def _factory_callable(
-    f: callable[[float], Array], *, args: tuple, dtype: jnp.dtype
+    f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree], dtype: jnp.dtype
 ) -> CallableTimeArray:
-    f0 = f(0.0, args)
+    f0 = f(0.0, *args)
 
     # check type, dtype and device match
     if not isinstance(f0, Array):
@@ -84,14 +84,12 @@ def _factory_callable(
     # This is necessary:
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
-    f_partial = Partial(f, args=args)
+    f_partial = Partial(f, *args)
     return CallableTimeArray(f_partial, f0)
 
 
 def _factory_pwc(
-    x: tuple[ArrayLike, ArrayLike, ArrayLike],
-    *,
-    dtype: jnp.dtype,
+    x: tuple[ArrayLike, ArrayLike, ArrayLike], *, dtype: jnp.dtype
 ) -> PWCTimeArray:
     times, values, array = x
 
@@ -124,13 +122,14 @@ def _factory_pwc(
 
     factors = [_PWCFactor(times, values)]
     arrays = array[None, ...]  # (1, n, n)
-    return PWCTimeArray(factors, arrays, static=jnp.zeros_like(array))
+    static = jnp.zeros_like(array)
+    return PWCTimeArray(factors, arrays, static=static)
 
 
 def _factory_modulated(
-    x: tuple[callable[[float], Array], Array],
+    x: tuple[callable[[float, tuple[PyTree]], Array], Array],
     *,
-    args: tuple,
+    args: tuple[PyTree],
     dtype: jnp.dtype,
 ) -> ModulatedTimeArray:
     f, array = x
@@ -147,7 +146,7 @@ def _factory_modulated(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
-    f0 = f(0.0, args=args)
+    f0 = f(0.0, *args)
     if not isinstance(f0, Array):
         raise TypeError(
             'For a modulated time array `(f, array)`, argument `f` must'
@@ -169,17 +168,18 @@ def _factory_modulated(
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_ModulatedFactor(Partial(f, args=args), f0)]
+    factors = [_ModulatedFactor(Partial(f, *args), f0)]
     arrays = array[None, ...]  # (1, n, n)
-    return ModulatedTimeArray(factors, arrays, static=jnp.zeros_like(array))
+    static = jnp.zeros_like(array)
+    return ModulatedTimeArray(factors, arrays, static=static)
 
 
 class SumCallable(eqx.Module):
-    fn1: callable
-    fn2: callable
+    f1: callable[[float], Array]
+    f2: callable[[float], Array]
 
     def __call__(self, t: float) -> Array:
-        return self.fn1(t) + self.fn2(t)
+        return self.f1(t) + self.f2(t)
 
 
 class TimeArray(eqx.Module):
@@ -298,7 +298,7 @@ class ConstantTimeArray(TimeArray):
 
 
 class CallableTimeArray(TimeArray):
-    f: callable
+    f: callable[[float], Array]
     f0: Array
 
     @property
@@ -392,7 +392,7 @@ class _PWCFactor(_Factor):
 
     def __call__(self, t: Scalar) -> Array:
         def _zero(t: Scalar) -> Array:
-            return jnp.zeros_like(self.values[..., 0])
+            return jnp.zeros_like(self.values[..., 0])  # (...)
 
         def _pwc(t: Scalar) -> Array:
             idx = jnp.searchsorted(self.times, t, side='right') - 1

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-import timeit
 from abc import ABC
+from functools import partial
 from typing import Any
 
 import jax
@@ -11,163 +11,35 @@ import jax.numpy as jnp
 from dynamiqs.gradient import Gradient
 from dynamiqs.solver import Solver
 
-from .mesolve.open_system import OpenSystem
-from .sesolve.closed_system import ClosedSystem
 from .system import System
 
 
 class SolverTester(ABC):
-    def test_batching(self):
-        pass
-
-    def _test_batching(
-        self,
-        system: ClosedSystem,
-        solver: Solver,
-        *,
-        options: dict[str, Any] | None = None,
-    ):
-        n = system.n
-        m = 1 if isinstance(system, ClosedSystem) else n
-        bH = len(system.Hb)
-        by = len(system.y0b)
-        nE = len(system.E)
-        nt = 11
-        tsave = system.tsave(nt)
-
-        def run(Hb, yb):
-            H = system.H if not Hb else system.Hb
-            y0 = system.y0 if not yb else system.y0b
-            return system.run(tsave, solver, options=options, H=H, y0=y0)
-
-        # === test regular batching (cartesian product)
-
-        # no batching
-        result = run(Hb=False, yb=False)
-        assert result.ysave.shape == (nt, n, m)
-        assert result.Esave.shape == (nE, nt)
-
-        # batched H
-        result = run(Hb=True, yb=False)
-        assert result.ysave.shape == (bH, nt, n, m)
-        assert result.Esave.shape == (bH, nE, nt)
-
-        # batched y0
-        result = run(Hb=False, yb=True)
-        assert result.ysave.shape == (by, nt, n, m)
-        assert result.Esave.shape == (by, nE, nt)
-
-        # batched H and y0
-        result = run(Hb=True, yb=True)
-        assert result.ysave.shape == (bH, by, nt, n, m)
-        assert result.ysave.shape == (bH, by, nt, n, m)
-
-        if isinstance(system, OpenSystem):
-            bL = len(system.Lb[0])
-
-            def run(Hb, Lb, yb):
-                H = system.H if not Hb else system.Hb
-                L = system.L if not Lb else system.Lb
-                y0 = system.y0 if not yb else system.y0b
-                return system.run(tsave, solver, options=options, H=H, L=L, y0=y0)
-
-            # batched L
-            result = run(Hb=False, Lb=True, yb=False)
-            assert result.ysave.shape == (bL, nt, n, n)
-            assert result.Esave.shape == (bL, nE, nt)
-
-            # batched H and L
-            result = run(Hb=True, Lb=True, yb=False)
-            assert result.ysave.shape == (bH, bL, nt, n, n)
-            assert result.Esave.shape == (bH, bL, nE, nt)
-
-            # batched L and y0
-            result = run(Hb=False, Lb=True, yb=True)
-            assert result.ysave.shape == (bL, by, nt, n, n)
-            assert result.Esave.shape == (bL, by, nE, nt)
-
-            # batched H and L and y0
-            result = run(Hb=True, Lb=True, yb=True)
-            assert result.ysave.shape == (bH, bL, by, nt, n, n)
-            assert result.Esave.shape == (bH, bL, by, nE, nt)
-
-        # === test non cartesian batching
-        options = {} if options is None else options
-        options['cartesian_batching'] = False
-        b = 2
-
-        Hb = system.Hb[:b]
-        y0b = system.y0b[:b]
-
-        if isinstance(system, ClosedSystem):
-            result = system.run(tsave, solver, options=options, H=Hb, y0=y0b)
-            assert result.ysave.shape == (b, nt, n, 1)
-            assert result.Esave.shape == (b, nE, nt)
-        elif isinstance(system, OpenSystem):
-            Lb = [L[:b] for L in system.Lb]
-            result = system.run(tsave, solver, options=options, H=Hb, L=Lb, y0=y0b)
-            assert result.ysave.shape == (b, nt, n, n)
-            assert result.Esave.shape == (b, nE, nt)
-
     def _test_correctness(
         self,
         system: System,
         solver: Solver,
         *,
         options: dict[str, Any] | None = None,
-        ntsave: int = 11,
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
         esave_atol: float = 1e-5,
     ):
-        tsave = system.tsave(ntsave)
-        result = system.run(tsave, solver, options=options)
+        result = system.run(solver, options=options)
 
         # === test ysave
-        errs = jnp.linalg.norm(result.ysave - system.states(tsave), axis=(-2, -1))
+        true_ysave = system.states(system.tsave)
+        errs = jnp.linalg.norm(true_ysave - result.ysave, axis=(-2, -1))
         logging.warning(f'errs = {errs}')
         assert jnp.all(errs <= ysave_atol)
 
         # === test Esave
-        true_Esave = system.expects(tsave)
-        logging.warning(f'Esave      = {result.Esave}')
+        true_Esave = system.expects(system.tsave)
         logging.warning(f'true_Esave = {true_Esave}')
-        assert jnp.allclose(result.Esave, true_Esave, rtol=esave_rtol, atol=esave_atol)
+        logging.warning(f'Esave      = {result.Esave}')
+        assert jnp.allclose(true_Esave, result.Esave, rtol=esave_rtol, atol=esave_atol)
 
     def test_correctness(self):
-        pass
-
-    def _test_jit(
-        self,
-        system: System,
-        solver: Solver,
-        *,
-        options: dict[str, Any] | None = None,
-        ntsave: int = 11,
-    ):
-        tsave = system.tsave(ntsave)
-
-        if options is None:
-            options = {}
-
-        jax.config.update('jax_disable_jit', True)
-        options['use_jit'] = False
-        t1 = timeit.timeit(
-            lambda: system.run(tsave, solver, options=options), number=10
-        )
-
-        jax.config.update('jax_disable_jit', False)
-        options['use_jit'] = True
-        t2 = timeit.timeit(
-            lambda: system.run(tsave, solver, options=options), number=10
-        )
-
-        logging.warning(f't1 = {t1}')
-        logging.warning(f't2 = {t2}')
-
-        assert t2 < 0.5 * t1
-
-    def test_jit(self):
         pass
 
     def _test_gradient(
@@ -177,61 +49,41 @@ class SolverTester(ABC):
         gradient: Gradient,
         *,
         options: dict[str, Any] | None = None,
-        ntsave: int = 11,
         rtol: float = 1e-3,
         atol: float = 1e-5,
     ):
-        tsave = system.tsave(ntsave)
-        # result = system.run(tsave, solver, gradient=gradient, options=options)
+        def assert_allclose(pytree1, pytree2):
+            # assert two pytrees are equal
+            f = partial(jnp.allclose, rtol=rtol, atol=atol)
+            allclose_tree = jax.tree_util.tree_map(f, pytree1, pytree2)
+            # reduce the tree to a single boolean value
+            all_true = jax.tree_util.tree_reduce(
+                lambda x, y: x and y, allclose_tree, True
+            )
+            assert all_true, f'Pytrees are not close enough: \n{pytree1}\n{pytree2}'
 
         # === test gradients depending on final ysave
+        def loss_ysave(params):
+            res = system.run(solver, gradient=gradient, options=options, params=params)
+            return system.loss_state(res.ysave[-1])
 
-        def loss_states(params):
-            result = system.run(
-                tsave,
-                solver,
-                options=options,
-                y0=system.y0,
-                params=params,
-            )
-            l = system.loss_state(result.ysave[-1])
-            return l
+        true_grads_ysave = system.grads_state(system.tsave[-1])
+        grads_ysave = jax.grad(loss_ysave)(system.params_default)
 
-        # loss_state = system.loss_state(result.ysave[-1])
-        # grads_state = torch.autograd.grad(
-        #     loss_state, system.params, retain_graph=True, allow_unused=True
-        # )
-        grads_state = jax.grad(loss_states, 0)(system.params)
-        grads_state = jnp.stack(grads_state)
-        true_grads_state = system.grads_state(tsave[-1])
+        logging.warning(f'true_grads_ysave = {true_grads_ysave}')
+        logging.warning(f'grads_ysave      = {grads_ysave}')
 
-        logging.warning(f'grads_state       = {grads_state}')
-        logging.warning(f'true_grads_state  = {true_grads_state}')
+        assert_allclose(true_grads_ysave, grads_ysave)
 
         # === test gradients depending on final Esave
-        # todo: this part does not pass (yet)
-        # loss_expect = system.loss_expect(result.Esave[:, -1])
-        def loss_expect(params):
-            result = system.run(
-                tsave,
-                solver,
-                options=options,
-                y0=system.y0,
-                params=params,
-            )
-            l = system.loss_expect(result.Esave[:, -1])
-            return l
+        def loss_Esave(params):
+            res = system.run(solver, gradient=gradient, options=options, params=params)
+            return system.loss_expect(res.Esave[:, -1])
 
-        # grads_expect = [
-        #     jnp.stack(torch.autograd.grad(loss, system.params, retain_graph=True))
-        #     for loss in loss_expect
-        # ]
-        grads_expect = jax.jacrev(loss_expect, 0)(system.params)
-        grads_expect = jnp.stack(grads_expect)
-        true_grads_expect = system.grads_expect(tsave[-1])
+        true_grads_Esave = system.grads_expect(system.tsave[-1])
+        grads_Esave = jax.jacrev(loss_Esave)(system.params_default)
 
-        logging.warning(f'grads_expect      = {grads_expect}')
-        logging.warning(f'true_grads_expect = {true_grads_expect}')
+        logging.warning(f'true_grads_Esave = {true_grads_Esave}')
+        logging.warning(f'grads_Esave      = {grads_Esave}')
 
-        assert jnp.allclose(grads_state, true_grads_state, rtol=rtol, atol=atol)
-        assert jnp.allclose(grads_expect, true_grads_expect, rtol=rtol, atol=atol)
+        assert_allclose(true_grads_ysave, grads_ysave)

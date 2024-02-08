@@ -1,43 +1,21 @@
 from __future__ import annotations
 
-from typing import Any
-
+import equinox as eqx
 import jax.numpy as jnp
 
 from .gradient import Gradient
 from .solver import Solver
 from .utils.array_types import dtype_complex_to_real, get_cdtype
 from .progress_bar import TqdmProgressBar
+from .utils.array_types import get_cdtype
 
 
-class Options:
-    def __init__(
-        self,
-        solver: Solver,
-        gradient: Gradient | None,
-        options: dict[str, Any] | None,
-    ):
-        if options is None:
-            options = {}
+class Options(eqx.Module):
+    save_states: bool
+    verbose: bool
+    _double_precision: bool
+    cartesian_batching: bool
 
-        self.solver = solver
-        self.gradient = gradient
-        self.options = SharedOptions(**options)
-
-    def __getattr__(self, name: str) -> Any:
-        if name in dir(self.solver):
-            return getattr(self.solver, name)
-        elif name in dir(self.gradient):
-            return getattr(self.gradient, name)
-        elif name in dir(self.options):
-            return getattr(self.options, name)
-        else:
-            raise AttributeError(
-                f'Attribute `{name}` not found in `{type(self).__name__}`.'
-            )
-
-
-class SharedOptions:
     def __init__(
         self,
         *,
@@ -55,7 +33,15 @@ class SharedOptions:
         #     data type of the corresponding precision.
         self.save_states = save_states
         self.verbose = verbose
-        self.cdtype = get_cdtype(dtype)
-        self.rdtype = dtype_complex_to_real(self.cdtype)
+        cdtype = get_cdtype(dtype)
+        self._double_precision = cdtype == jnp.complex128
         self.cartesian_batching = cartesian_batching
         self.progress_bar = progress_bar
+
+    @property
+    def rdtype(self) -> jnp.float32 | jnp.float64:
+        return jnp.float64 if self._double_precision else jnp.float32
+
+    @property
+    def cdtype(self) -> jnp.complex64 | jnp.complex128:
+        return jnp.complex128 if self._double_precision else jnp.complex64
