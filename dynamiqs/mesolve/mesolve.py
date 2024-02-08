@@ -20,11 +20,11 @@ from .mediffrax import MEDopri5, MEEuler
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def mesolve(
     H: ArrayLike | TimeArray,
-    jump_ops: ArrayLike | list[ArrayLike | TimeArray],
+    jump_ops: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
-    exp_ops: ArrayLike | None = None,
+    exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Dopri5(),
     gradient: Gradient | None = None,
     options: dict[str, Any] | None = None,
