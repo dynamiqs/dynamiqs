@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from jax import Array
 from jax import numpy as jnp
 from jaxtyping import ArrayLike, PyTree
 
 from dynamiqs.gradient import Gradient
+from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
 from dynamiqs.time_array import TimeArray
@@ -72,7 +72,7 @@ class System(ABC):
         solver: Solver,
         *,
         gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
+        options: Options = Options(),
         params: PyTree | None = None,
     ) -> Result:
         pass

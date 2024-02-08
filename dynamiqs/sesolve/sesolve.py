@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
 
 import jax
 from jax import numpy as jnp
@@ -25,12 +24,40 @@ def sesolve(
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Dopri5(),
     gradient: Gradient | None = None,
-    options: dict[str, Any] | None = None,
+    options: Options = Options(),
+):
+    # === vectorize function
+    f = _sesolve
+
+    # we vectorize over H and psi0, all other arguments are not vectorized
+    args = (None, None, None, None, None)
+    # the result is vectorized over ysave and Esave
+    out_axes = Result(None, None, None, None, 0, 0)
+    if H.ndim > 2 and psi0.ndim > 2:
+        if options.cartesian_batching:
+            f = jax.vmap(f, in_axes=(None, 0, *args), out_axes=out_axes)
+            f = jax.vmap(f, in_axes=(0, None, *args), out_axes=out_axes)
+        else:
+            f = jax.vmap(f, in_axes=(0, 0, *args), out_axes=out_axes)
+    elif psi0.ndim > 2:
+        f = jax.vmap(f, in_axes=(None, 0, *args), out_axes=out_axes)
+    elif H.ndim > 2:
+        f = jax.vmap(f, in_axes=(0, None, *args), out_axes=out_axes)
+
+    # === apply vectorized function
+    return f(H, psi0, tsave, exp_ops, solver, gradient, options)
+
+
+def _sesolve(
+    H: ArrayLike | TimeArray,
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    exp_ops: list[ArrayLike] | None = None,
+    solver: Solver = Dopri5(),
+    gradient: Gradient | None = None,
+    options: Options = Options(),
 ) -> Result:
     # === convert arguments
-    options = {} if options is None else options
-    options = Options(**options)
-
     H = _astimearray(H, dtype=options.cdtype)
     y0 = jnp.asarray(psi0, dtype=options.cdtype)
     ts = jnp.asarray(tsave, dtype=options.rdtype)

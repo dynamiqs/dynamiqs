@@ -3,12 +3,12 @@ from __future__ import annotations
 import logging
 from abc import ABC
 from functools import partial
-from typing import Any
 
 import jax
 import jax.numpy as jnp
 
 from dynamiqs.gradient import Gradient
+from dynamiqs.options import Options
 from dynamiqs.solver import Solver
 
 from .system import System
@@ -20,7 +20,7 @@ class SolverTester(ABC):
         system: System,
         solver: Solver,
         *,
-        options: dict[str, Any] | None = None,
+        options: Options = Options(),
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
         esave_atol: float = 1e-5,
@@ -48,7 +48,7 @@ class SolverTester(ABC):
         solver: Solver,
         gradient: Gradient,
         *,
-        options: dict[str, Any] | None = None,
+        options: Options = Options(),
         rtol: float = 1e-3,
         atol: float = 1e-5,
     ):
