@@ -15,8 +15,10 @@ def _astimearray(
 ) -> TimeArray:
     if isinstance(x, get_args(ArrayLike)):
         return _factory_constant(x, dtype=dtype)
-    else:
+    elif isinstance(x, TimeArray):
         return x
+    else:
+        raise TypeError()  # todo: add error message
 
 
 def get_solver_class(
