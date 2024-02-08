@@ -52,7 +52,7 @@ def _sesolve(
     H: ArrayLike | TimeArray,
     psi0: ArrayLike,
     tsave: ArrayLike,
-    exp_ops: ArrayLike | None = None,
+    exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Dopri5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
