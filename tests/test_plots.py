@@ -19,6 +19,8 @@ class TestPlots:
 
     @pytest.fixture(autouse=True)
     def teardown(self):
+        # once the test is finished, pytest will go back here and run the code after
+        # the yield statement
         yield
         plt.close('all')
 
