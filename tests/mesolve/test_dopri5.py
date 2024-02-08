@@ -7,7 +7,7 @@ from ..solver_tester import SolverTester
 from .open_system import ocavity
 
 
-class TestMEAdaptive(SolverTester):
+class TestMEDopri5(SolverTester):
     # @pytest.mark.parametrize('system', [ocavity, otdqubit])
     @pytest.mark.parametrize('system', [ocavity])
     def test_correctness(self, system):
