@@ -55,6 +55,8 @@ def compute_vmap(
         if cartesian_batching:
             # iteratively map over the first axis of each batched argument
             idx_batched = np.where(is_batched)[0]
+             # we apply the succesive vmaps in reverse order, so that the output
+             # batched dimensions are in the correct order
             for i in reversed(idx_batched):
                 in_axes = [None] * len(is_batched)
                 in_axes[i] = 0
