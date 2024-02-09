@@ -227,7 +227,8 @@ _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 
 def expect(O: ArrayLike, x: ArrayLike) -> Array:
-    r"""Returns the expectation value of an operator on a ket, bra or density matrix.
+    r"""Returns the expectation value of an operator or list of operators on a ket, bra
+    or density matrix.
 
     The expectation value $\braket{O}$ of an operator $O$ is computed
 
@@ -241,25 +242,40 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
         `dq.expect(O, x).real`.
 
     Args:
-        O _(array_like of shape (n, n))_: Arbitrary operator.
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
-            density matrix.
+        O _(array_like of shape (nO?, n, n))_: Arbitrary operator or list of _nO_
+            operators.
+        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket,
+            bra or density matrix.
 
     Returns:
-        _(array of shape (...))_ Complex-valued expectation value.
+        _(array of shape (nO?, ...))_ Complex-valued expectation value.
 
     Raises:
         ValueError: If `x` is not a ket, bra or density matrix.
 
     Examples:
-        >>> a = dq.destroy(16)
+        >>> O = dq.number(16)
         >>> psi = dq.coherent(16, 2.0)
-        >>> dq.expect(dq.dag(a) @ a, psi)
+        >>> dq.expect(O, psi)
         Array(4.+0.j, dtype=complex64)
+        >>> psis = [dq.fock(16, i) for i in range(5)]
+        >>> dq.expect(O, psis).shape
+        (5,)
+        >>> Os = [dq.position(16), dq.momentum(16)]
+        >>> dq.expect(Os, psis).shape
+        (2, 5)
     """
     O = jnp.asarray(O)
     x = jnp.asarray(x)
 
+    f = _expect_single
+    if O.ndim > 2:
+        f = jax.vmap(f, in_axes=(0, None))
+    return f(O, x)
+
+
+def _expect_single(O: Array, x: Array) -> Array:
+    # O: (n, n), x: (..., n, m)
     if isket(x):
         return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
     elif isbra(x):

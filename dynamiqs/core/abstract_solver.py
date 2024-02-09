@@ -6,12 +6,12 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
 
-from .._utils import bexpect
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Solver
 from ..time_array import TimeArray
+from ..utils.utils import expect
 
 
 class AbstractSolver(eqx.Module):
@@ -34,7 +34,7 @@ class BaseSolver(AbstractSolver):
         if self.options.save_states:
             saved['ysave'] = y
         if self.Es is not None and len(self.Es) > 0:
-            saved['Esave'] = bexpect(self.Es, y)
+            saved['Esave'] = expect(self.Es, y)
         return saved
 
     def result(self, saved: dict[str, Array]) -> Result:
