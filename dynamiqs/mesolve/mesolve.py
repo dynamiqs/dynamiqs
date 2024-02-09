@@ -30,9 +30,10 @@ def mesolve(
 ):
     # === vectorize function
     # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
+    jump_ops_ndim = _astimearray(jump_ops[0], dtype=options.cdtype).ndim + 1
     is_batched = (
         H.ndim > 2,
-        jump_ops.ndim > 3,
+        jump_ops_ndim > 3,  # todo: this is a temporary fix
         psi0.ndim > 2,
         False,
         False,
