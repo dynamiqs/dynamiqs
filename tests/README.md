@@ -20,7 +20,7 @@ We test our solvers on systems with an analytical solution.
 - State:
 
 $$
-\rho_t = \ket{\alpha(t)}\!\bra{\alpha(t)} \ \text{with} \ \alpha(t) = \alpha_0 e^{-i\Delta t - \kappa t/2}
+\rho_t = \ket{\alpha(t)}\bra{\alpha(t)} \ \text{with} \ \alpha(t) = \alpha_0 e^{-i\Delta t - \kappa t/2}
 $$
 
 - Expectation values:
