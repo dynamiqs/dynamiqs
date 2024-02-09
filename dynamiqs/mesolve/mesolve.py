@@ -10,11 +10,12 @@ from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Euler, Solver
+from ..solver import Dopri5, Euler, Propagator, Solver
 from ..time_array import TimeArray
 from ..utils.array_types import cdtype
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEEuler
+from .mepropagator import MEPropagator
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
@@ -70,7 +71,7 @@ def _mesolve(
     Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === select solver class
-    solvers = {Euler: MEEuler, Dopri5: MEDopri5}
+    solvers = {Euler: MEEuler, Dopri5: MEDopri5, Propagator: MEPropagator}
     solver_class = get_solver_class(solvers, solver)
 
     # === check gradient is supported
