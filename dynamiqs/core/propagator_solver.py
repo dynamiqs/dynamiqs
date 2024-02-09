@@ -23,7 +23,7 @@ class PropagatorSolver(BaseSolver):
 
     def run(self) -> PyTree:
         # === solve differential equation
-        def f(y, delta_t):
+        def propagate(y, delta_t):
             # propagate forward except if delta_t is zero
             y = jax.lax.cond(delta_t == 0, lambda: y, lambda: self.forward(delta_t, y))
             # save result
@@ -32,7 +32,7 @@ class PropagatorSolver(BaseSolver):
 
         # todo: fix next line once t0 option is implemented
         delta_ts = jnp.diff(jnp.concatenate((jnp.zeros(1), self.ts)))
-        saved = jax.lax.scan(f, self.y0, delta_ts)[-1]
+        saved = jax.lax.scan(propagate, self.y0, delta_ts)[-1]
 
         # === collect and return results
         return self.result(saved)
