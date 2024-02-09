@@ -117,17 +117,17 @@ class TDQubit(ClosedSystem):
         return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:
-        return self.eps / self.omega * jnp.sin(self.omega * t)
+        return 2 * self.eps / self.omega * jnp.sin(self.omega * t)
 
     def state(self, t: float) -> Array:
-        theta = self._theta(t)
-        return jnp.cos(theta) * dq.fock(2, 0) - 1j * jnp.sin(theta) * dq.fock(2, 1)
+        theta_2 = (1 / 2) * self._theta(t)
+        return jnp.cos(theta_2) * dq.fock(2, 0) - 1j * jnp.sin(theta_2) * dq.fock(2, 1)
 
     def expect(self, t: float) -> Array:
         theta = self._theta(t)
         exp_x = 0
-        exp_y = -jnp.sin(2 * theta)
-        exp_z = jnp.cos(2 * theta)
+        exp_y = -jnp.sin(theta)
+        exp_z = jnp.cos(theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
 
     def loss_state(self, state: Array) -> Array:
@@ -136,28 +136,26 @@ class TDQubit(ClosedSystem):
     def grads_state(self, t: float) -> PyTree:
         theta = self._theta(t)
         # gradients of theta
-        dtheta_deps = jnp.sin(self.omega * t) / self.omega
-        dtheta_domega = self.eps * t * jnp.cos(
-            self.omega * t
-        ) / self.omega - self.eps / self.omega**2 * jnp.sin(self.omega * t)
+        dtheta_deps = 2 * jnp.sin(self.omega * t) / self.omega
+        dtheta_domega = 2 * self.eps * t * jnp.cos(self.omega * t) / self.omega
+        dtheta_domega -= 2 * self.eps / self.omega**2 * jnp.sin(self.omega * t)
         # gradients of sigma_z
-        grad_eps = -2 * dtheta_deps * jnp.sin(2 * theta)
-        grad_omega = -2 * dtheta_domega * jnp.sin(2 * theta)
+        grad_eps = -dtheta_deps * jnp.sin(theta)
+        grad_omega = -dtheta_domega * jnp.sin(theta)
         return self.Params(grad_eps, grad_omega)
 
     def grads_expect(self, t: float) -> PyTree:
         theta = self._theta(t)
         # gradients of theta
-        dtheta_deps = jnp.sin(self.omega * t) / self.omega
-        dtheta_domega = self.eps * t * jnp.cos(
-            self.omega * t
-        ) / self.omega - self.eps / self.omega**2 * jnp.sin(self.omega * t)
+        dtheta_deps = 2 * jnp.sin(self.omega * t) / self.omega
+        dtheta_domega = 2 * self.eps * t * jnp.cos(self.omega * t) / self.omega
+        dtheta_domega -= 2 * self.eps / self.omega**2 * jnp.sin(self.omega * t)
         # gradients of sigma_z
-        grad_z_eps = -2 * dtheta_deps * jnp.sin(2 * theta)
-        grad_z_omega = -2 * dtheta_domega * jnp.sin(2 * theta)
+        grad_z_eps = -dtheta_deps * jnp.sin(theta)
+        grad_z_omega = -dtheta_domega * jnp.sin(theta)
         # gradients of sigma_y
-        grad_y_eps = -2 * dtheta_deps * jnp.cos(2 * theta)
-        grad_y_omega = -2 * dtheta_domega * jnp.cos(2 * theta)
+        grad_y_eps = -dtheta_deps * jnp.cos(theta)
+        grad_y_omega = -dtheta_domega * jnp.cos(theta)
         # gradients of sigma_x
         grad_x_eps = 0
         grad_x_omega = 0
