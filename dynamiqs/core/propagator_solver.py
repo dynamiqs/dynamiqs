@@ -30,8 +30,7 @@ class PropagatorSolver(BaseSolver):
             res = self.save(y)
             return y, res
 
-        # todo: fix next line once t0 option is implemented
-        delta_ts = jnp.diff(jnp.concatenate((jnp.zeros(1), self.ts)))
+        delta_ts = jnp.diff(self.ts, prepend=self.t0)
         saved = jax.lax.scan(propagate, self.y0, delta_ts)[-1]
 
         # === collect and return results
