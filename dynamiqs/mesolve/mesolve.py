@@ -6,7 +6,7 @@ import jax
 from jax import numpy as jnp
 from jaxtyping import ArrayLike
 
-from dynamiqs import compute_vmap
+from .._utils import compute_vmap
 from ..core._utils import _astimearray, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
