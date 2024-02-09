@@ -126,7 +126,7 @@ def snap_gate(phase: ArrayLike) -> Array:
         >>> dq.snap_gate([[0, 1, 2], [2, 3, 4]]).shape
         (2, 3, 3)
     """
-    phase = jnp.asarray(phase)
+    phase = jnp.asarray(phase, dtype=cdtype())
     # batched construct diagonal array
     bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
     return bdiag(jnp.exp(1j * phase))
