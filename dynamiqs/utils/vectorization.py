@@ -51,7 +51,7 @@ def operator_to_vector(x: ArrayLike) -> Array:
     return x.mT.reshape(*bshape, -1, 1)
 
 
-def vector_to_operator(x: ArrayLike) -> Array:
+def vector_to_operator(x: ArrayLike, n: int | None = None) -> Array:
     r"""Returns the operator version of a vectorized operator.
 
     The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
@@ -80,9 +80,13 @@ def vector_to_operator(x: ArrayLike) -> Array:
         Array([[1, 3],
                [2, 4]], dtype=int32)
     """
+    # todo: document n
     x = jnp.asarray(x)
     bshape = x.shape[:-2]
-    n = int(jnp.sqrt(x.shape[-2]))
+    # todo: it would be nice to always infer n, but the current implementation is not
+    #       jit compatible
+    if n is None:
+        n = int(jnp.sqrt(x.shape[-2]))
     return x.reshape(*bshape, n, n).mT
 
 
