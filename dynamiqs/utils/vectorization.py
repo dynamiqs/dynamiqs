@@ -70,7 +70,7 @@ def vector_to_operator(x: ArrayLike, n: int | None = None) -> Array:
         _(array of shape (..., n, n))_ Operator.
 
     Examples:
-        >>> Avec = jnp.array([[1], [2], [3], [4]])
+        >>> Avec = jnp.array([[1+1j], [2+2j], [3+3j], [4+4j]])
         >>> Avec
         Array([[1.+1.j],
                [2.+2.j],
