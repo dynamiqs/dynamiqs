@@ -23,5 +23,5 @@ class MEPropagator(MEPropagatorSolver):
     def save(self, y: Array) -> dict[str, Array]:
         # todo: implement bexpect for vectorized operators and convert at the end
         #       instead ofat each step
-        y = vector_to_operator(y, self.H.shape[-1])
+        y = vector_to_operator(y)
         return super().save(y)

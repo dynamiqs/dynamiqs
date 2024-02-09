@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
@@ -51,7 +52,7 @@ def operator_to_vector(x: ArrayLike) -> Array:
     return x.mT.reshape(*bshape, -1, 1)
 
 
-def vector_to_operator(x: ArrayLike, n: int | None = None) -> Array:
+def vector_to_operator(x: ArrayLike) -> Array:
     r"""Returns the operator version of a vectorized operator.
 
     The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
@@ -80,13 +81,9 @@ def vector_to_operator(x: ArrayLike, n: int | None = None) -> Array:
         Array([[1.+1.j, 3.+3.j],
                [2.+2.j, 4.+4.j]], dtype=complex64)
     """
-    # todo: document n
     x = jnp.asarray(x)
     bshape = x.shape[:-2]
-    # todo: it would be nice to always infer n, but the current implementation is not
-    #       jit compatible
-    if n is None:
-        n = int(jnp.sqrt(x.shape[-2]))
+    n = int(np.sqrt(x.shape[-2]))
     return x.reshape(*bshape, n, n).mT
 
 
