@@ -16,10 +16,10 @@ def test_batching(cartesian_batching):
     options = dq.options.Options(cartesian_batching=cartesian_batching)
 
     # create random objects
-    key = jax.random.PRNGKey(42)
-    H = dq.rand.herm(key, (nH, n, n))
-    exp_ops = dq.rand.complex(key, (nEs, n, n))
-    psi0 = dq.rand.ket(key, (npsi0, n, 1))
+    k1, k2, k3 = jax.random.split(jax.random.PRNGKey(42), 3)
+    H = dq.rand.herm(k1, (nH, n, n))
+    exp_ops = dq.rand.complex(k2, (nEs, n, n))
+    psi0 = dq.rand.ket(k3, (npsi0, n, 1))
     tsave = jnp.linspace(0, 0.01, nt)
 
     # no batching
