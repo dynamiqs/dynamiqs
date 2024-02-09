@@ -5,8 +5,6 @@ from typing import Any
 import jax.numpy as jnp
 from jaxtyping import Array
 
-from .utils.utils import dag, isket
-
 
 def type_str(type: Any) -> str:
     if type.__module__ in ('builtins', '__main__'):
@@ -34,10 +32,3 @@ def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
         )
     if not jnp.all(x >= 0):
         raise ValueError(f'Argument `{arg_name}` must contain positive values only.')
-
-
-def bexpect(O: Array, x: Array) -> Array:
-    # batched over O
-    if isket(x):
-        return jnp.einsum('ij,bjk,kl->b', dag(x), O, x)  # <x|O|x>
-    return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
