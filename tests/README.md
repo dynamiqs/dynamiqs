@@ -87,7 +87,7 @@ $$
 
 **Problem**
 
-- Hamiltonian: $H(t) = \varepsilon \cos(\omega t) \sigma_z$
+- Hamiltonian: $H(t) = \varepsilon \cos(\omega t) \sigma_x$
 - Jump operators: $L = \sqrt{\gamma} \sigma_x$
 - Expectation operators:
   - $O_x = \sigma_x$
