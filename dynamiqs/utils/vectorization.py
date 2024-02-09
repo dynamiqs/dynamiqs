@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
@@ -36,19 +37,19 @@ def operator_to_vector(x: ArrayLike) -> Array:
         _(array of shape (..., n^2, 1))_ Vectorized operator.
 
     Examples:
-        >>> A = jnp.array([[1, 2], [3, 4]])
+        >>> A = jnp.array([[1+1j, 2+2j], [3+3j, 4+4j]])
         >>> A
-        Array([[1, 2],
-               [3, 4]], dtype=int32)
+        Array([[1.+1.j, 2.+2.j],
+               [3.+3.j, 4.+4.j]], dtype=complex64)
         >>> dq.operator_to_vector(A)
-        Array([[1],
-               [3],
-               [2],
-               [4]], dtype=int32)
+        Array([[1.+1.j],
+               [3.+3.j],
+               [2.+2.j],
+               [4.+4.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
     bshape = x.shape[:-2]
-    return dag(x).reshape(*bshape, -1, 1)
+    return x.mT.reshape(*bshape, -1, 1)
 
 
 def vector_to_operator(x: ArrayLike) -> Array:
@@ -70,19 +71,19 @@ def vector_to_operator(x: ArrayLike) -> Array:
         _(array of shape (..., n, n))_ Operator.
 
     Examples:
-        >>> Avec = jnp.array([[1], [2], [3], [4]])
+        >>> Avec = jnp.array([[1+1j], [2+2j], [3+3j], [4+4j]])
         >>> Avec
-        Array([[1],
-               [2],
-               [3],
-               [4]], dtype=int32)
+        Array([[1.+1.j],
+               [2.+2.j],
+               [3.+3.j],
+               [4.+4.j]], dtype=complex64)
         >>> dq.vector_to_operator(Avec)
-        Array([[1, 3],
-               [2, 4]], dtype=int32)
+        Array([[1.+1.j, 3.+3.j],
+               [2.+2.j, 4.+4.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
     bshape = x.shape[:-2]
-    n = int(jnp.sqrt(x.shape[-2]))
+    n = int(np.sqrt(x.shape[-2]))
     return x.reshape(*bshape, n, n).mT
 
 

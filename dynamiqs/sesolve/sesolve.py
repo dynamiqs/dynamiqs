@@ -10,10 +10,11 @@ from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Euler, Solver
+from ..solver import Dopri5, Euler, Propagator, Solver
 from ..time_array import TimeArray
 from ..utils.array_types import cdtype
 from .sediffrax import SEDopri5, SEEuler
+from .sepropagator import SEPropagator
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
@@ -54,7 +55,7 @@ def _sesolve(
     Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === select solver class
-    solvers = {Euler: SEEuler, Dopri5: SEDopri5}
+    solvers = {Euler: SEEuler, Dopri5: SEDopri5, Propagator: SEPropagator}
     solver_class = get_solver_class(solvers, solver)
 
     # === check gradient is supported
