@@ -23,7 +23,7 @@ class AbstractSolver(eqx.Module):
 class BaseSolver(AbstractSolver):
     ts: Array
     y0: Array
-    H: TimeArray
+    H: Array | TimeArray
     Es: Array
     solver: Solver
     gradient: Gradient | None
@@ -50,4 +50,4 @@ SESolver = BaseSolver
 
 
 class MESolver(BaseSolver):
-    Ls: list[TimeArray]
+    Ls: list[Array | TimeArray]
