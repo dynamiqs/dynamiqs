@@ -17,9 +17,14 @@ def _get_default_dtype() -> jnp.float32 | jnp.float64:
 
 def cdtype() -> jnp.complex64 | jnp.complex128:
     # the default dtype for complex arrays is determined by the default floating point
-    # dtype (jnp.complex128 if default is jnp.float64, otherwise jnp.complex64)
-    default_dtype = _get_default_dtype()
-    return jnp.complex128 if default_dtype is jnp.float64 else jnp.complex64
+    # dtype
+    dtype = _get_default_dtype()
+    if dtype is jnp.float32:
+        return jnp.complex64
+    elif dtype is jnp.float64:
+        return jnp.complex128
+    else:
+        raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')
 
 
 def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
