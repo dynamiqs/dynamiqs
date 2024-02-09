@@ -53,6 +53,7 @@ def compute_vmap(
 ) -> callable:
     if any(is_batched):
         if cartesian_batching:
+            # iteratively map over the first axis of each batched argument
             idx_batched = np.where(is_batched)[0]
             for i in reversed(idx_batched):
                 in_axes = [None] * len(is_batched)
