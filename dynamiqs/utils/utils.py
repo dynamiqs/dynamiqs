@@ -710,21 +710,16 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
 def _dm_fidelity(x: ArrayLike, y: ArrayLike) -> Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
+
+    # Note that the fidelity can be rewritten as Tr[sqrt(x @ y)]^2 (see
+    # https://arxiv.org/abs/2211.02623). This is cheaper numerically, we just compute
+    # the eigenvalues \lambda_i of the matrix product x @ y and compute the fidelity as
+    # F = (\sum_i \sqrt{\lambda_i})^2
+
     x = jnp.asarray(x)
     y = jnp.asarray(y)
-
-    sqrtm_x = _bsqrtm(x)
-    tmp = sqrtm_x @ y @ sqrtm_x
-
-    # we don't need the whole matrix `sqrtm(tmp)`, just its trace, which can be computed
-    # by summing the square roots of `tmp` eigenvalues
-    eigvals_tmp = jnp.linalg.eigvalsh(tmp)
+    # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
+    lambdas = jnp.linalg.eigvals(x @ y).real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    eigvals_tmp = jnp.where(eigvals_tmp < 0, 0, eigvals_tmp)
-    trace_sqrtm_tmp = jnp.sqrt(eigvals_tmp).sum(-1)
-
-    return (trace_sqrtm_tmp**2).real
-
-
-# batched matrix square root
-_bsqrtm = jnp.vectorize(jax.scipy.linalg.sqrtm, signature='(m,n)->(m,n)')
+    lambdas = jnp.where(lambdas < 0, 0, lambdas)
+    return jnp.sqrt(lambdas).sum(-1) ** 2
