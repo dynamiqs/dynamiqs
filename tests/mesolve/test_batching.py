@@ -1,6 +1,6 @@
 import jax
+import jax.numpy as jnp
 import pytest
-from jax import numpy as jnp
 
 import dynamiqs as dq
 

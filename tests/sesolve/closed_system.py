@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections import namedtuple
 
+import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jax import numpy as jnp
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq

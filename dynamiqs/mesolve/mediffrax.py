@@ -1,7 +1,7 @@
 from typing import Callable
 
 import diffrax as dx
-from jax import numpy as jnp
+import jax.numpy as jnp
 from jaxtyping import PyTree, Scalar
 
 from ..core.abstract_solver import MESolver

@@ -4,8 +4,8 @@ from functools import partial
 from typing import Literal
 
 import jax
+import jax.numpy as jnp
 from jax import Array, lax
-from jax import numpy as jnp
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
 

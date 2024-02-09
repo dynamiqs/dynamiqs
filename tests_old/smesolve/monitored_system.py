@@ -3,8 +3,8 @@ from __future__ import annotations
 from math import cos, exp, pi, sin
 from typing import Any
 
+import jax.numpy as jnp
 from jax import Array
-from jax import numpy as jnp
 
 import dynamiqs as dq
 from dynamiqs import TimeArray

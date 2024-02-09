@@ -4,9 +4,9 @@ from abc import abstractmethod
 from typing import Callable, Union, get_args
 
 import equinox as eqx
+import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
-from jax import numpy as jnp
 from jax.tree_util import Partial
 from jaxtyping import PyTree, Scalar
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import partial
 
 import jax
-from jax import numpy as jnp
+import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
