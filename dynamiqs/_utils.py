@@ -62,6 +62,7 @@ def compute_vmap(
                 in_axes[i] = 0
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
         else:
+            # map over the first axis of all batched arguments
             in_axes = list(np.where(is_batched, 0, None))
             f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
