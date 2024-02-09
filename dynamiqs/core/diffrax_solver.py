@@ -1,26 +1,12 @@
 from __future__ import annotations
 
 import warnings
-from collections import namedtuple
 
 import diffrax as dx
 from jaxtyping import PyTree
 
-from .._utils import bexpect
 from ..gradient import Adjoint, Autograd
-from ..result import Result
 from .abstract_solver import BaseSolver
-
-SolverArgs = namedtuple('SolverArgs', ['save_states', 'Es'])
-
-
-def save_fn(_t, y, args: SolverArgs):
-    res = {}
-    if args.save_states:
-        res['ysave'] = y
-    if args.Es is not None and len(args.Es) > 0:
-        res['Esave'] = bexpect(args.Es, y)
-    return res
 
 
 class DiffraxSolver(BaseSolver):
@@ -41,8 +27,8 @@ class DiffraxSolver(BaseSolver):
             warnings.simplefilter('ignore', UserWarning)
 
             # === prepare diffrax arguments
-            args = SolverArgs(save_states=self.options.save_states, Es=self.Es)
-            saveat = dx.SaveAt(ts=self.ts, fn=save_fn)
+            fn = lambda t, y, args: self.save(y)
+            saveat = dx.SaveAt(ts=self.ts, fn=fn)
 
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
@@ -59,20 +45,15 @@ class DiffraxSolver(BaseSolver):
                 t1=self.ts[-1],
                 dt0=self.dt0,
                 y0=self.y0,
-                args=args,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
                 max_steps=self.max_steps,
             )
 
-        # === collect results
-        ysave = solution.ys.get('ysave', None)
-        Esave = solution.ys.get('Esave', None)
-        if Esave is not None:
-            Esave = Esave.swapaxes(-1, -2)
-
-        return Result(self.ts, self.solver, self.gradient, self.options, ysave, Esave)
+        # === collect and return results
+        saved = solution.ys
+        return self.result(saved)
 
 
 class EulerSolver(DiffraxSolver):
