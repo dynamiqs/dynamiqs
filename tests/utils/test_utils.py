@@ -5,6 +5,7 @@ import qutip as qt
 from pytest import approx
 
 import dynamiqs as dq
+from dynamiqs.utils.array_types import cdtype
 
 
 def test_ket_fidelity_correctness():
@@ -89,10 +90,8 @@ def test_ket_dm_fidelity_batching():
 
 
 def test_hadamard():
-    c64 = jnp.complex64
-
     # one qubit
-    H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=c64)
+    H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=cdtype())
     assert jnp.allclose(dq.hadamard(1), H1)
 
     # two qubits
@@ -103,7 +102,7 @@ def test_hadamard():
             [1, 1, -1, -1],
             [1, -1, -1, 1],
         ],
-        dtype=c64,
+        dtype=cdtype(),
     )
     assert jnp.allclose(dq.hadamard(2), H2)
 
@@ -119,7 +118,7 @@ def test_hadamard():
             [1, 1, -1, -1, -1, -1, 1, 1],
             [1, -1, -1, 1, -1, 1, 1, -1],
         ],
-        dtype=c64,
+        dtype=cdtype(),
     )
     assert jnp.allclose(dq.hadamard(3), H3)
 

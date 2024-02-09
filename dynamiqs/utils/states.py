@@ -6,25 +6,19 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 
-from .array_types import get_cdtype
+from .array_types import cdtype
 from .operators import displace
 from .utils import tensor, todm
 
 __all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
 
-def fock(
-    dim: int | tuple[int, ...],
-    number: int | tuple[int, ...],
-    *,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
+def fock(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
     r"""Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
     Args:
         dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
         number _(int or tuple of ints)_: Fock state number of each mode.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (n, 1))_ Ket of the Fock state or tensor product of Fock
@@ -43,8 +37,6 @@ def fock(
                [0.+0.j],
                [0.+0.j]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-
     # convert integer inputs to tuples by default, and check dimensions match
     dim = (dim,) if isinstance(dim, int) else dim
     number = (number,) if isinstance(number, int) else number
@@ -58,24 +50,18 @@ def fock(
     n = 0
     for d, s in zip(dim, number):
         n = d * n + s
-    ket = jnp.zeros((prod(dim), 1), dtype=dtype)
+    ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
     ket = ket.at[n].set(1.0)
     return ket
 
 
-def fock_dm(
-    dim: int | tuple[int, ...],
-    number: int | tuple[int, ...],
-    *,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
+def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
     r"""Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
 
     Args:
         dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
         number _(int or tuple of ints)_: Fock state number of each mode.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (n, n))_ Density matrix of the Fock state or tensor product of
@@ -94,42 +80,26 @@ def fock_dm(
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return todm(fock(dim, number, dtype=dtype))
+    return todm(fock(dim, number))
 
 
-def basis(
-    dim: int | tuple[int, ...],
-    number: int | tuple[int, ...],
-    *,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
+def basis(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
     """Alias of [`dq.fock()`][dynamiqs.fock]."""
-    return fock(dim, number, dtype=dtype)
+    return fock(dim, number)
 
 
-def basis_dm(
-    dim: int | tuple[int, ...],
-    number: int | tuple[int, ...],
-    *,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
+def basis_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
     """Alias of [`dq.fock_dm()`][dynamiqs.fock_dm]."""
-    return fock_dm(dim, number, dtype=dtype)
+    return fock_dm(dim, number)
 
 
-def coherent(
-    dim: int | tuple[int, ...],
-    alpha: ArrayLike,
-    *,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
+def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     r"""Returns the ket of a coherent state, or the ket of a tensor product of coherent
     states.
 
     Args:
         dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
         alpha _(array_like)_: Coherent state amplitude of each mode.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (n, 1))_ Ket of the coherent state.
@@ -148,11 +118,9 @@ def coherent(
                [ 0.   +0.211j],
                [-0.08 +0.j   ]], dtype=complex64)
     """
-    dtype = get_cdtype(dtype)
-
     # convert inputs to tuples by default, and check dimensions match
     dim = (dim,) if isinstance(dim, int) else dim
-    alpha = jnp.asarray(alpha, dtype=dtype)
+    alpha = jnp.asarray(alpha, dtype=cdtype())
 
     if alpha.ndim == 0:
         alpha = alpha[..., None]
@@ -167,26 +135,17 @@ def coherent(
             f' {len(dim)}, but has length {len(alpha)}.'
         )
 
-    kets = [
-        displace(d, a, dtype=dtype) @ fock(d, 0, dtype=dtype)
-        for d, a in zip(dim, alpha)
-    ]
+    kets = [displace(d, a) @ fock(d, 0) for d, a in zip(dim, alpha)]
     return tensor(*kets)
 
 
-def coherent_dm(
-    dim: int | tuple[int, ...],
-    alpha: ArrayLike,
-    *,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
+def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     r"""Returns the density matrix of a coherent state, or the density matrix of a
     tensor product of coherent states.
 
     Args:
         dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
         alpha _(array_like)_: Coherent state amplitude of each mode.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (n, n))_ Density matrix of the coherent state.
@@ -205,4 +164,4 @@ def coherent_dm(
                [0.163+0.j, 0.081+0.j, 0.031+0.j, 0.089+0.j, 0.044+0.j, 0.017+0.j],
                [0.062+0.j, 0.031+0.j, 0.012+0.j, 0.034+0.j, 0.017+0.j, 0.006+0.j]],      dtype=complex64)
     """  # noqa: E501
-    return todm(coherent(dim, alpha, dtype=dtype))
+    return todm(coherent(dim, alpha))

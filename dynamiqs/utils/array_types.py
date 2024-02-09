@@ -15,52 +15,16 @@ def _get_default_dtype() -> jnp.float32 | jnp.float64:
     return jnp.float64 if default_dtype == jnp.float64 else jnp.float32
 
 
-def get_cdtype(
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> jnp.complex64 | jnp.complex128:
-    if dtype is None:
-        # the default dtype for complex arrays is determined by the default
-        # floating point dtype (jnp.complex128 if default is jnp.float64,
-        # otherwise jnp.complex64)
-        default_dtype = _get_default_dtype()
-        return jnp.complex128 if default_dtype is jnp.float64 else jnp.complex64
-    elif dtype not in (jnp.complex64, jnp.complex128):
-        raise TypeError(
-            'Argument `dtype` must be `jnp.complex64`, `jnp.complex128` or `None`'
-            f' for a complex-valued array, but is `{dtype}`.'
-        )
-    return dtype
-
-
-def get_rdtype(
-    dtype: jnp.float32 | jnp.float64 | None = None,
-) -> jnp.float32 | jnp.float64:
-    if dtype is None:
-        return _get_default_dtype()
-    elif dtype not in (jnp.float32, jnp.float64):
-        raise TypeError(
-            'Argument `dtype` must be `jnp.float32`, `jnp.float64` or `None` for'
-            f' a real-valued array, but is `{dtype}`.'
-        )
-    return dtype
-
-
-def dtype_complex_to_real(
-    dtype: jnp.complex64 | jnp.complex128,
-) -> jnp.float32 | jnp.float64:
-    if dtype == jnp.complex64:
-        return jnp.float32
-    elif dtype == jnp.complex128:
-        return jnp.float64
-
-
-def dtype_real_to_complex(
-    dtype: jnp.float32 | jnp.float64,
-) -> jnp.complex64 | jnp.complex128:
-    if dtype == jnp.float32:
+def cdtype() -> jnp.complex64 | jnp.complex128:
+    # the default dtype for complex arrays is determined by the default floating point
+    # dtype
+    dtype = _get_default_dtype()
+    if dtype is jnp.float32:
         return jnp.complex64
-    elif dtype == jnp.float64:
+    elif dtype is jnp.float64:
         return jnp.complex128
+    else:
+        raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')
 
 
 def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:

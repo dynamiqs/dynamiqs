@@ -11,7 +11,7 @@ from jax.tree_util import Partial
 from jaxtyping import PyTree, Scalar
 
 from ._utils import check_time_array, obj_type_str, type_str
-from .utils.array_types import ArrayLike, dtype_complex_to_real, get_cdtype
+from .utils.array_types import ArrayLike, cdtype
 
 __all__ = ['totime']
 
@@ -24,26 +24,22 @@ TimeArrayLike = Union[
 ]
 
 
-def totime(
-    x: TimeArrayLike, *, args: tuple[PyTree] = (), dtype: jnp.dtype | None = None
-) -> TimeArray:
-    dtype = dtype or get_cdtype(dtype)  # assume complex by default
-
+def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
     # already a time array
     if isinstance(x, TimeArray):
         return x
     # PWC time array
     elif isinstance(x, tuple) and len(x) == 3:
-        return _factory_pwc(x, dtype=dtype)
+        return _factory_pwc(x)
     # modulated time array
     elif isinstance(x, tuple) and len(x) == 2:
-        return _factory_modulated(x, args=args, dtype=dtype)
+        return _factory_modulated(x, args=args)
     # constant time array
     elif isinstance(x, get_args(ArrayLike)):
-        return _factory_constant(x, dtype=dtype)
+        return _factory_constant(x)
     # callable time array
     elif callable(x):
-        return _factory_callable(x, args=args, dtype=dtype)
+        return _factory_callable(x, args=args)
     else:
         raise TypeError(
             'For time-dependent arrays, argument `x` must be one of 4 types: (1)'
@@ -55,13 +51,13 @@ def totime(
         )
 
 
-def _factory_constant(x: ArrayLike, *, dtype: jnp.dtype) -> ConstantTimeArray:
-    x = jnp.asarray(x, dtype=dtype)
+def _factory_constant(x: ArrayLike) -> ConstantTimeArray:
+    x = jnp.asarray(x, dtype=cdtype())
     return ConstantTimeArray(x)
 
 
 def _factory_callable(
-    f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree], dtype: jnp.dtype
+    f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree]
 ) -> CallableTimeArray:
     f0 = f(0.0, *args)
 
@@ -72,9 +68,9 @@ def _factory_callable(
             f' type {obj_type_str(f0)}. The provided function must return an array,'
             ' to avoid costly type conversion at each time solver step.'
         )
-    elif f0.dtype != dtype:
+    elif f0.dtype != cdtype():
         raise TypeError(
-            f'The time-dependent operator must have dtype `{dtype}`, but has dtype'
+            f'The time-dependent operator must have dtype `{cdtype()}`, but has dtype'
             f' `{f0.dtype}`. The provided function must return an array with the'
             ' same `dtype` as provided to the solver, to avoid costly dtype'
             ' conversion at each solver time step.'
@@ -88,23 +84,15 @@ def _factory_callable(
     return CallableTimeArray(f_partial, f0)
 
 
-def _factory_pwc(
-    x: tuple[ArrayLike, ArrayLike, ArrayLike], *, dtype: jnp.dtype
-) -> PWCTimeArray:
+def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
     times, values, array = x
 
-    # get real-valued dtype
-    if dtype in (jnp.complex64, jnp.complex128):
-        rdtype = dtype_complex_to_real(dtype)
-    else:
-        rdtype = dtype
-
     # times
-    times = jnp.asarray(times, dtype=rdtype)
+    times = jnp.asarray(times)
     check_time_array(times, arg_name='times')
 
     # values
-    values = jnp.asarray(values, dtype=dtype)
+    values = jnp.asarray(values, dtype=cdtype())
     if values.shape[0] != len(times) - 1:
         raise TypeError(
             'For a PWC array `(times, values, array)`, argument `values` must'
@@ -113,7 +101,7 @@ def _factory_pwc(
         )
 
     # array
-    array = jnp.asarray(array, dtype=dtype)
+    array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
             'For a PWC array `(times, values, array)`, argument `array` must be'
@@ -127,18 +115,9 @@ def _factory_pwc(
 
 
 def _factory_modulated(
-    x: tuple[callable[[float, tuple[PyTree]], Array], Array],
-    *,
-    args: tuple[PyTree],
-    dtype: jnp.dtype,
+    x: tuple[callable[[float, tuple[PyTree]], Array], Array], *, args: tuple[PyTree]
 ) -> ModulatedTimeArray:
     f, array = x
-
-    # get real-valued dtype
-    if dtype in (jnp.complex64, jnp.complex128):
-        rdtype = dtype_complex_to_real(dtype)
-    else:
-        rdtype = dtype
 
     # check f
     if not callable(f):
@@ -152,16 +131,17 @@ def _factory_modulated(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' return an array, but returns type {obj_type_str(f0)}.'
         )
-    if f0.dtype not in [dtype, rdtype]:
-        dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
-        raise TypeError(
-            'For a modulated time array, the array returned by the function must'
-            f' have dtype `{dtypes}`, but has dtype `{f0.dtype}`. This is necessary'
-            ' to avoid costly dtype conversion at each solver time step.'
-        )
+    # todo: do we really need this?
+    # if f0.dtype not in [dtype, rdtype]:
+    #     dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
+    #     raise TypeError(
+    #         'For a modulated time array, the array returned by the function must'
+    #         f' have dtype `{dtypes}`, but has dtype `{f0.dtype}`. This is necessary'
+    #         ' to avoid costly dtype conversion at each solver time step.'
+    #     )
 
     # array
-    array = jnp.asarray(array, dtype=dtype)
+    array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
             'For a modulated time array `(f, array)`, argument `array` must'
