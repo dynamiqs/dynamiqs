@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from math import cos, exp, pi, sqrt
 
+import jax.numpy as jnp
 from jax import Array
-from jax import numpy as jnp
 from scipy.special import erf
 
 import dynamiqs as dq

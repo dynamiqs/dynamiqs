@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from jax import numpy as jnp
+import jax.numpy as jnp
 from jaxtyping import Array
 
 from .utils.utils import dag, isket

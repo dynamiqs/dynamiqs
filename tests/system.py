@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+import jax.numpy as jnp
 from jax import Array
-from jax import numpy as jnp
 from jaxtyping import ArrayLike, PyTree
 
 from dynamiqs.gradient import Gradient
