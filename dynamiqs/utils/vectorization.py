@@ -48,7 +48,7 @@ def operator_to_vector(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     bshape = x.shape[:-2]
-    return dag(x).reshape(*bshape, -1, 1)
+    return x.mT.reshape(*bshape, -1, 1)
 
 
 def vector_to_operator(x: ArrayLike) -> Array:
