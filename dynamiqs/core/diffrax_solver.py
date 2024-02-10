@@ -6,6 +6,7 @@ import diffrax as dx
 from jaxtyping import PyTree
 
 from ..gradient import Adjoint, Autograd
+from ..utils.utils import expect
 from .abstract_solver import BaseSolver
 
 
@@ -27,8 +28,7 @@ class DiffraxSolver(BaseSolver):
             warnings.simplefilter('ignore', UserWarning)
 
             # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)
-            saveat = dx.SaveAt(ts=self.ts, fn=fn)
+            saveat = dx.SaveAt(ts=self.ts)
 
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
@@ -52,7 +52,13 @@ class DiffraxSolver(BaseSolver):
             )
 
         # === collect and return results
-        saved = solution.ys
+        saved = {'ysave': solution.ys}
+
+        # compute expectation values a posteriori
+        if self.Es is not None and len(self.Es) > 0:
+            expects = expect(self.Es, solution.ys)
+            expects = expects.swapaxes(-1, -2)
+            saved['Esave'] = expects
         return self.result(saved)
 
 
