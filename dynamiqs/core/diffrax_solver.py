@@ -6,6 +6,7 @@ import diffrax as dx
 from jaxtyping import PyTree
 
 from ..gradient import Adjoint, Autograd
+from ..utils.utils import expect
 from .abstract_solver import BaseSolver
 
 
@@ -30,12 +31,16 @@ class DiffraxSolver(BaseSolver):
             fn = lambda t, y, args: self.save(y)
             saveat = dx.SaveAt(ts=self.ts, fn=fn)
 
-            if self.gradient is None:
+            if self.gradient is None or isinstance(self.gradient, Autograd):
                 adjoint = dx.RecursiveCheckpointAdjoint()
-            elif isinstance(self.gradient, Autograd):
-                adjoint = dx.RecursiveCheckpointAdjoint()
+                fn = lambda t, y, args: self.save(y)
+                saveat = dx.SaveAt(ts=self.ts, fn=fn)
             elif isinstance(self.gradient, Adjoint):
-                adjoint = dx.BacksolveAdjoint()
+                if self.options.save_states:
+                    adjoint = dx.BacksolveAdjoint()
+                    saveat = dx.SaveAt(ts=self.ts)
+                else:
+                    raise ValueError('Adjoint method requires `options.save_states=True`')
 
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
@@ -52,7 +57,15 @@ class DiffraxSolver(BaseSolver):
             )
 
         # === collect and return results
-        saved = solution.ys
+        if self.gradient is None or isinstance(self.gradient, Autograd):
+            saved = solution.ys
+        elif isinstance(self.gradient, Adjoint):
+            saved = {'ysave': solution.ys}
+            if self.Es is not None and len(self.Es) > 0:
+                expects = expect(self.Es, solution.ys)
+                expects = expects.swapaxes(-1, -2)
+                saved['Esave'] = expects
+
         return self.result(saved)
 
 
