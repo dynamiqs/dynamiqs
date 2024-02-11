@@ -11,7 +11,8 @@ from jax import Array, lax
 from jax.tree_util import Partial
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
-from ._utils import cdtype, check_time_array, obj_type_str
+from ._checks import check_shape, check_time_array
+from ._utils import cdtype, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -29,6 +30,7 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
         _(time-array object)_ Callable object returning $O_0$ for any time $t$.
     """
     array = jnp.asarray(array, dtype=cdtype())
+    check_shape(array, 'array', '(..., n, n)')
     return ConstantTimeArray(array)
 
 
@@ -66,7 +68,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     """
     # times
     times = jnp.asarray(times)
-    check_time_array(times, arg_name='times')
+    check_time_array(times, 'times')
 
     # values
     values = jnp.asarray(values, dtype=cdtype())
@@ -78,10 +80,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
-    if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
-        raise TypeError(
-            f'Argument `array` must have shape `(n, n)`, but has shape {array.shape}.'
-        )
+    check_shape(array, 'array', '(n, n)')
 
     return PWCTimeArray(times, values, array)
 
@@ -118,10 +117,7 @@ def modulated(
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
-    if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
-        raise TypeError(
-            f'Argument `array` must have shape `(n, n)`, but has shape {array.shape}.'
-        )
+    check_shape(array, 'array', '(n, n)')
 
     # Pass `f` through `jax.tree_util.Partial`.
     # This is necessary:
