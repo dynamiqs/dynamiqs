@@ -32,3 +32,8 @@ def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
         )
     if not jnp.all(x >= 0):
         raise ValueError(f'Argument `{arg_name}` must contain positive values only.')
+
+
+def on_cpu(x: Array) -> str:
+    # todo: this is a temporary solution, it won't work when we have multiple devices
+    return x.devices().pop().device_kind == 'cpu'
