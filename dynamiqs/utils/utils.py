@@ -8,6 +8,8 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._utils import on_cpu
+
 __all__ = [
     'dag',
     'mpow',
@@ -720,22 +722,60 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
     if isket(x) or isket(y):
         return overlap(x, y)
     else:
-        return _dm_fidelity(x, y)
+        # we distinguish the method on CPU vs GPU, because the fastest method is
+        # based on `jnp.linalg.eigvals` which is unavailable on GPU
+        if on_cpu(x):
+            return _dm_fidelity_cpu(x, y)
+        else:
+            return _dm_fidelity_gpu(x, y)
 
 
-def _dm_fidelity(x: ArrayLike, y: ArrayLike) -> Array:
+def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
 
     # Note that the fidelity can be rewritten as Tr[sqrt(x @ y)]^2 (see
     # https://arxiv.org/abs/2211.02623). This is cheaper numerically, we just compute
-    # the eigenvalues \lambda_i of the matrix product x @ y and compute the fidelity as
-    # F = (\sum_i \sqrt{\lambda_i})^2
+    # the eigenvalues w_i of the matrix product x @ y and compute the fidelity as
+    # F = (\sum_i \sqrt{w_i})^2.
 
-    x = jnp.asarray(x)
-    y = jnp.asarray(y)
+    # This method only works on CPU because we use `jnp.linalg.eigvals` which is only
+    # implemented on the CPU backend (see https://github.com/google/jax/issues/1259
+    # tracking support on GPU). Note that we can't use eigvalsh here, because the
+    # matrix x @ y is not Hermitian.
+
     # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
-    lambdas = jnp.linalg.eigvals(x @ y).real
+    w = jnp.linalg.eigvals(x @ y).real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    lambdas = jnp.where(lambdas < 0, 0, lambdas)
-    return jnp.sqrt(lambdas).sum(-1) ** 2
+    w = jnp.where(w < 0, 0, w)
+    return jnp.sqrt(w).sum(-1) ** 2
+
+
+def _dm_fidelity_gpu(x: Array, y: Array) -> Array:
+    # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
+    # x: (..., n, n), y: (..., n, n) -> (...)
+
+    # We compute the eigenvalues w_i of the matrix product sqrt(x) @ y @ sqrt(x)
+    # and compute the fidelity as F = (\sum_i \sqrt{w_i})^2.
+
+    sqrtm_x = _sqrtm_gpu(x)
+    w = jnp.linalg.eigvalsh(sqrtm_x @ y @ sqrtm_x)
+    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
+    w = jnp.where(w < 0, 0, w)
+    return jnp.sqrt(w).sum(-1) ** 2
+
+
+def _sqrtm_gpu(x: Array) -> Array:
+    # returns the square root of a symmetric or Hermitian positive definite matrix
+    # x: (..., n, n) -> (..., n, n)
+
+    # code inspired by
+    # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
+
+    # This method is a GPU-compatible implementation of `jax.scipy.linalg.sqrtm` for
+    # symmetric or Hermitian positive definite matrix.
+
+    w, v = jnp.linalg.eigh(x)
+    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
+    w = jnp.where(w < 0, 0, w)
+    return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
