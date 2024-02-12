@@ -4,7 +4,7 @@ from abc import abstractmethod
 
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
 from ..gradient import Gradient
 from ..options import Options
@@ -28,6 +28,10 @@ class BaseSolver(AbstractSolver):
     solver: Solver
     gradient: Gradient | None
     options: Options
+
+    @property
+    def t0(self) -> Scalar:
+        return self.ts[0] if self.options.t0 is None else self.options.t0
 
     def save(self, y: Array) -> dict[str, Array]:
         saved = {}
