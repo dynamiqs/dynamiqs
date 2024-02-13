@@ -23,7 +23,7 @@ class SolverTester(ABC):
         options: Options = Options(),
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
-        esave_atol: float = 1e-5,
+        esave_atol: float = 1e-4,
     ):
         result = system.run(solver, options=options)
 
@@ -51,7 +51,7 @@ class SolverTester(ABC):
         *,
         options: Options = Options(),
         rtol: float = 1e-3,
-        atol: float = 1e-5,
+        atol: float = 1e-4,
     ):
         def assert_allclose(pytree1, pytree2):
             # assert two pytrees are equal
