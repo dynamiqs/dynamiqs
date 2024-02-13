@@ -24,7 +24,7 @@ def sesolve(
     tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Dopri5(),
+    solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
 ):
@@ -44,7 +44,7 @@ def _sesolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Dopri5(),
+    solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
 ) -> Result:
