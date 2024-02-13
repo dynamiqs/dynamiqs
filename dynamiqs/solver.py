@@ -70,3 +70,11 @@ class _ODEAdaptiveStep(_ODESolver):
 
 class Dopri5(_ODEAdaptiveStep):
     pass
+
+
+class Dopri8(_ODEAdaptiveStep):
+    pass
+
+
+class Tsit5(_ODEAdaptiveStep):
+    pass

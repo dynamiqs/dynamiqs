@@ -65,10 +65,9 @@ class EulerSolver(DiffraxSolver):
         self.max_steps = 100_000  # todo: fix hard-coded max_steps
 
 
-class Dopri5Solver(DiffraxSolver):
+class AdaptiveSolver(DiffraxSolver):
     def __init__(self, *args):
         super().__init__(*args)
-        self.diffrax_solver = dx.Dopri5()
         self.stepsize_controller = dx.PIDController(
             rtol=self.solver.rtol,
             atol=self.solver.atol,
@@ -78,3 +77,15 @@ class Dopri5Solver(DiffraxSolver):
         )
         self.dt0 = None
         self.max_steps = self.solver.max_steps
+
+
+class Dopri5Solver(AdaptiveSolver):
+    diffrax_solver = dx.Dopri5()
+
+
+class Dopri8Solver(AdaptiveSolver):
+    diffrax_solver = dx.Dopri8()
+
+
+class Tsit5Solver(AdaptiveSolver):
+    diffrax_solver = dx.Tsit5()

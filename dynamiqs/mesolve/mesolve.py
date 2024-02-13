@@ -10,11 +10,11 @@ from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Euler, Propagator, Solver
+from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.array_types import cdtype
 from ..utils.utils import todm
-from .mediffrax import MEDopri5, MEEuler
+from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
 
@@ -71,7 +71,13 @@ def _mesolve(
     Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === select solver class
-    solvers = {Euler: MEEuler, Dopri5: MEDopri5, Propagator: MEPropagator}
+    solvers = {
+        Euler: MEEuler,
+        Dopri5: MEDopri5,
+        Dopri8: MEDopri8,
+        Tsit5: METsit5,
+        Propagator: MEPropagator,
+    }
     solver_class = get_solver_class(solvers, solver)
 
     # === check gradient is supported
