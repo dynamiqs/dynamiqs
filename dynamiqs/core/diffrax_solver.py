@@ -28,7 +28,9 @@ class DiffraxSolver(BaseSolver):
 
             # === prepare diffrax arguments
             fn = lambda t, y, args: self.save(y)
-            saveat = dx.SaveAt(ts=self.ts, fn=fn)
+            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
@@ -52,8 +54,10 @@ class DiffraxSolver(BaseSolver):
             )
 
         # === collect and return results
-        saved = solution.ys
-        return self.result(saved)
+        save_a, save_b = solution.ys
+        saved = save_a
+        ylast = save_b[0]  # (n, m)
+        return self.result(saved, ylast)
 
 
 class EulerSolver(DiffraxSolver):

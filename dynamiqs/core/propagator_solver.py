@@ -31,10 +31,10 @@ class PropagatorSolver(BaseSolver):
             return y, res
 
         delta_ts = jnp.diff(self.ts, prepend=self.t0)
-        saved = jax.lax.scan(propagate, self.y0, delta_ts)[-1]
+        ylast, saved = jax.lax.scan(propagate, self.y0, delta_ts)
 
         # === collect and return results
-        return self.result(saved)
+        return self.result(saved, ylast)
 
     @abstractmethod
     def forward(self, delta_t: Scalar, y: Array) -> Array:
