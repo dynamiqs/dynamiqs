@@ -6,7 +6,6 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Solver
@@ -26,7 +25,6 @@ class BaseSolver(AbstractSolver):
     H: Array | TimeArray
     Es: Array
     solver: Solver
-    gradient: Gradient | None
     options: Options
 
     @property
@@ -47,7 +45,7 @@ class BaseSolver(AbstractSolver):
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
 
-        return Result(self.ts, self.solver, self.gradient, self.options, ysave, Esave)
+        return Result(self.ts, self.solver, self.options, ysave, Esave)
 
 
 SESolver = BaseSolver

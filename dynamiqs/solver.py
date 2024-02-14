@@ -1,48 +1,49 @@
 from __future__ import annotations
 
-from typing import ClassVar
-
 import equinox as eqx
 from jaxtyping import Scalar
 
-from .gradient import Adjoint, Autograd, Gradient
 
-
+# === generic solvers options
 class Solver(eqx.Module):
-    SUPPORTED_GRADIENT: ClassVar[tuple[Gradient]] = ()
-
-    @classmethod
-    def supports_gradient(cls, gradient: Gradient | None) -> bool:
-        return isinstance(gradient, cls.SUPPORTED_GRADIENT)
-
-    @classmethod
-    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:
-        if gradient is not None and not cls.supports_gradient(gradient):
-            support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
-            raise ValueError(
-                f'Solver `{cls.__name__}` does not support gradient'
-                f' `{type(gradient).__name__}` (supported gradient types:'
-                f' {support_str}).'
-            )
+    pass
 
 
+# === propagator solvers options
 class Propagator(Solver):
-    SUPPORTED_GRADIENT = (Autograd,)
+    pass
 
 
+# === generic ODE solvers options
 class _ODESolver(Solver):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
+    pass
 
 
 class _ODEFixedStep(_ODESolver):
     dt: Scalar
 
 
-class Euler(_ODEFixedStep):
+class _ODEAdaptiveStep(_ODESolver):
+    rtol: float = 1e-4
+    atol: float = 1e-6
+    safety_factor: float = 0.9
+    min_factor: float = 0.2
+    max_factor: float = 5.0
+    max_steps: int = 100_000
+
+
+# === diffrax-based solvers options
+class _DiffraxSolver(Solver):
+    autograd: bool = False
+    ncheckpoints: int | None = None
+
+
+# === public solvers options
+class Euler(_DiffraxSolver, _ODEFixedStep):
     pass
 
 
-class Rouchon1(_ODEFixedStep):
+class Rouchon1(_DiffraxSolver, _ODEFixedStep):
     # normalize: The default scheme is trace-preserving at first order only. This
     # parameter sets the normalisation behaviour:
     # - `None`: The scheme is not normalized.
@@ -57,26 +58,17 @@ class Rouchon1(_ODEFixedStep):
     pass
 
 
-class Rouchon2(_ODEFixedStep):
+class Rouchon2(_DiffraxSolver, _ODEFixedStep):
     pass
 
 
-class _ODEAdaptiveStep(_ODESolver):
-    rtol: float = 1e-4
-    atol: float = 1e-6
-    safety_factor: float = 0.9
-    min_factor: float = 0.2
-    max_factor: float = 5.0
-    max_steps: int = 100_000
-
-
-class Dopri5(_ODEAdaptiveStep):
+class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
     pass
 
 
-class Dopri8(_ODEAdaptiveStep):
+class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
     pass
 
 
-class Tsit5(_ODEAdaptiveStep):
+class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
     pass

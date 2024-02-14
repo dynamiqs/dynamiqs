@@ -9,7 +9,6 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
@@ -28,7 +27,6 @@ class OpenSystem(System):
         self,
         solver: Solver,
         *,
-        gradient: Gradient | None = None,
         options: Options = Options(),
         params: PyTree | None = None,
     ) -> Result:
@@ -44,7 +42,6 @@ class OpenSystem(System):
             self.tsave,
             exp_ops=Es,
             solver=solver,
-            gradient=gradient,
             options=options,
         )
 

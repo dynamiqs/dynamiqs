@@ -6,7 +6,6 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
-from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
@@ -71,7 +70,6 @@ class System(ABC):
         self,
         solver: Solver,
         *,
-        gradient: Gradient | None = None,
         options: Options = Options(),
         params: PyTree | None = None,
     ) -> Result:

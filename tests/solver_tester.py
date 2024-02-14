@@ -7,7 +7,6 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
-from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.solver import Solver
 
@@ -47,7 +46,6 @@ class SolverTester(ABC):
         self,
         system: System,
         solver: Solver,
-        gradient: Gradient,
         *,
         options: Options = Options(),
         rtol: float = 1e-3,
@@ -65,7 +63,7 @@ class SolverTester(ABC):
 
         # === test gradients depending on final ysave
         def loss_ysave(params):
-            res = system.run(solver, gradient=gradient, options=options, params=params)
+            res = system.run(solver, options=options, params=params)
             return system.loss_state(res.ysave[-1])
 
         true_grads_ysave = system.grads_state(system.tsave[-1])
@@ -78,7 +76,7 @@ class SolverTester(ABC):
 
         # === test gradients depending on final Esave
         def loss_Esave(params):
-            res = system.run(solver, gradient=gradient, options=options, params=params)
+            res = system.run(solver, options=options, params=params)
             return system.loss_expect(res.Esave[:, -1])
 
         true_grads_Esave = system.grads_expect(system.tsave[-1])

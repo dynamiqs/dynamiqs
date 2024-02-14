@@ -7,7 +7,6 @@ import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
-from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
@@ -18,7 +17,7 @@ from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('solver', 'options'))
 def mesolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -27,7 +26,6 @@ def mesolve(
     *,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),
-    gradient: Gradient | None = None,
     options: Options = Options(),
 ):
     # === vectorize function
@@ -41,15 +39,14 @@ def mesolve(
         False,
         False,
         False,
-        False,
     )
     # the result is vectorized over ysave and Esave
-    out_axes = Result(None, None, None, None, 0, 0)
+    out_axes = Result(None, None, None, 0, 0)
 
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
-    return f(H, jump_ops, psi0, tsave, exp_ops, solver, gradient, options)
+    return f(H, jump_ops, psi0, tsave, exp_ops, solver, options)
 
 
 def _mesolve(
@@ -59,7 +56,6 @@ def _mesolve(
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),
-    gradient: Gradient | None = None,
     options: Options = Options(),
 ) -> Result:
     # === convert arguments
@@ -80,11 +76,8 @@ def _mesolve(
     }
     solver_class = get_solver_class(solvers, solver)
 
-    # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
-
     # === init solver
-    solver = solver_class(ts, y0, H, Es, solver, gradient, options, Ls)
+    solver = solver_class(ts, y0, H, Es, solver, options, Ls)
 
     # === run solver
     result = solver.run()
