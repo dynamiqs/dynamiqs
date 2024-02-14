@@ -16,7 +16,7 @@ def rand_real(
     min: float = 0.0,
     max: float = 1.0,
 ) -> Array:
-    r"""Returns an array filled with uniformly distributed random real numbers.
+    r"""Returns an array of uniformly distributed random real numbers.
 
     Each element of the returned array is sampled uniformly in
     $[\text{min}, \text{max})$.
@@ -28,7 +28,7 @@ def rand_real(
         max: Maximum (exclusive) value.
 
     Returns:
-        _(array of shape (*shape))_ Array filled with random real numbers.
+        _(array of shape (*shape))_ Random real number array.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -44,8 +44,7 @@ def rand_real(
 def rand_complex(
     key: PRNGKeyArray, shape: int | tuple[int, ...], *, rmax: float = 1.0
 ) -> Array:
-    r"""Returns an array filled with random complex numbers uniformly distributed in
-    the complex plane.
+    r"""Returns an array of uniformly distributed random complex numbers.
 
     Each element of the returned array is sampled uniformly in the disk of radius
     $\text{rmax}$.
@@ -83,7 +82,7 @@ def rand_complex(
         rmax: Maximum magnitude.
 
     Returns:
-        _(array of shape (*shape))_ Array filled with random complex numbers.
+        _(array of shape (*shape))_ Random complex number array.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -98,26 +97,93 @@ def rand_complex(
 
 
 def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    # hermitian
-    assert len(shape) >= 2 and shape[-1] == shape[-2]
+    """Returns a random complex Hermitian array.
+
+    Args:
+        key: A PRNG key used as the random key.
+        shape: Shape of the returned array.
+
+    Returns:
+        _(array of shape (*shape))_ Random complex Hermitian array.
+
+    Examples:
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.rand_herm(key, (2, 2))
+        Array([[-0.291+0.j   ,  0.473-0.446j],
+               [ 0.473+0.446j,  0.13 +0.j   ]], dtype=complex64)
+    """
+    if not len(shape) >= 2 or not shape[-1] == shape[-2]:
+        raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
     x = rand_complex(key, shape)
     return 0.5 * (x + dag(x))
 
 
 def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    # positive semi-definite
-    assert len(shape) >= 2 and shape[-1] == shape[-2]
+    """Returns a random complex positive semi-definite array.
+
+    Args:
+        key: A PRNG key used as the random key.
+        shape: Shape of the returned array.
+
+    Returns:
+        _(array of shape (*shape))_ Random complex positive semi-definite array.
+
+    Examples:
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.rand_psd(key, (2, 2))
+        Array([[1.145+0.j  , 0.582+0.33j],
+               [0.582-0.33j, 0.844+0.j  ]], dtype=complex64)
+
+    """
+    if not len(shape) >= 2 or not shape[-1] == shape[-2]:
+        raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
     x = rand_complex(key, shape)
     return x @ dag(x)
 
 
 def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    assert len(shape) >= 2 and shape[-1] == shape[-2]
+    """Returns a random density matrix (positive semi-definite, hermitian and unit
+    trace).
+
+    Args:
+        key: A PRNG key used as the random key.
+        shape: Shape of the returned array.
+
+    Returns:
+        _(array of shape (*shape))_ Random density matrix.
+
+    Examples:
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.rand_dm(key, (2, 2))
+        Array([[0.576+0.j   , 0.293+0.166j],
+               [0.293-0.166j, 0.424+0.j   ]], dtype=complex64)
+    """
+
+    if not len(shape) >= 2 or not shape[-1] == shape[-2]:
+        raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
     x = rand_psd(key, shape)
     return unit(x)
 
 
 def rand_ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    assert len(shape) >= 2 and shape[-1] == 1
+    """Returns a random ket with unit norm.
+
+    Args:
+        key: A PRNG key used as the random key.
+        shape: Shape of the returned array.
+
+    Returns:
+        _(array of shape (*shape))_ Random ket.
+
+    Examples:
+        >>> key = jax.random.PRNGKey(42)
+        >>> dq.rand_ket(key, (2, 1))
+        Array([[-0.004+0.083j],
+               [-0.26 +0.962j]], dtype=complex64)
+    """
+    if not len(shape) >= 2 or not shape[-1] == 1:
+        raise ValueError(
+            f'`shape` must be at least 2D and with last dimension 1, but got {shape}.'
+        )
     x = rand_complex(key, shape)
     return unit(x)

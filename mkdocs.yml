@@ -192,6 +192,10 @@ nav:
           - Random arrays:
               - rand_real: python_api/utils/random/rand_real.md
               - rand_complex: python_api/utils/random/rand_complex.md
+              - rand_herm: python_api/utils/random/rand_herm.md
+              - rand_psd: python_api/utils/random/rand_psd.md
+              - rand_dm: python_api/utils/random/rand_dm.md
+              - rand_ket: python_api/utils/random/rand_ket.md
           - Plotting:
               - plot_wigner: python_api/plots/namespace/plot_wigner.md
               - plot_wigner_mosaic: python_api/plots/namespace/plot_wigner_mosaic.md
