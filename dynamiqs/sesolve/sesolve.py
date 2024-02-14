@@ -10,10 +10,10 @@ from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
-from ..solver import Dopri5, Euler, Propagator, Solver
+from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.array_types import cdtype
-from .sediffrax import SEDopri5, SEEuler
+from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
 
@@ -24,7 +24,7 @@ def sesolve(
     tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Dopri5(),
+    solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
 ):
@@ -44,7 +44,7 @@ def _sesolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Dopri5(),
+    solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
 ) -> Result:
@@ -55,7 +55,13 @@ def _sesolve(
     Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === select solver class
-    solvers = {Euler: SEEuler, Dopri5: SEDopri5, Propagator: SEPropagator}
+    solvers = {
+        Euler: SEEuler,
+        Dopri5: SEDopri5,
+        Dopri8: SEDopri8,
+        Tsit5: SETsit5,
+        Propagator: SEPropagator,
+    }
     solver_class = get_solver_class(solvers, solver)
 
     # === check gradient is supported

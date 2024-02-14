@@ -5,7 +5,13 @@ import jax.numpy as jnp
 from jaxtyping import PyTree, Scalar
 
 from ..core.abstract_solver import MESolver
-from ..core.diffrax_solver import DiffraxSolver, Dopri5Solver, EulerSolver
+from ..core.diffrax_solver import (
+    DiffraxSolver,
+    Dopri5Solver,
+    Dopri8Solver,
+    EulerSolver,
+    Tsit5Solver,
+)
 from ..time_array import TimeArray
 from ..utils.utils import dag
 
@@ -40,4 +46,12 @@ class MEEuler(MEDiffraxSolver, EulerSolver):
 
 
 class MEDopri5(MEDiffraxSolver, Dopri5Solver):
+    pass
+
+
+class MEDopri8(MEDiffraxSolver, Dopri8Solver):
+    pass
+
+
+class METsit5(MEDiffraxSolver, Tsit5Solver):
     pass

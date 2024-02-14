@@ -4,7 +4,13 @@ import diffrax as dx
 from jaxtyping import PyTree, Scalar
 
 from ..core.abstract_solver import SESolver
-from ..core.diffrax_solver import DiffraxSolver, Dopri5Solver, EulerSolver
+from ..core.diffrax_solver import (
+    DiffraxSolver,
+    Dopri5Solver,
+    Dopri8Solver,
+    EulerSolver,
+    Tsit5Solver,
+)
 from ..time_array import TimeArray
 
 
@@ -30,4 +36,12 @@ class SEEuler(SEDiffraxSolver, EulerSolver):
 
 
 class SEDopri5(SEDiffraxSolver, Dopri5Solver):
+    pass
+
+
+class SEDopri8(SEDiffraxSolver, Dopri8Solver):
+    pass
+
+
+class SETsit5(SEDiffraxSolver, Tsit5Solver):
     pass

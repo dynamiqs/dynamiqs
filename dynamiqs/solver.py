@@ -60,8 +60,8 @@ class Rouchon2(_ODEFixedStep):
 
 
 class _ODEAdaptiveStep(_ODESolver):
-    atol: float = 1e-8
-    rtol: float = 1e-6
+    rtol: float = 1e-4
+    atol: float = 1e-6
     safety_factor: float = 0.9
     min_factor: float = 0.2
     max_factor: float = 5.0
@@ -69,4 +69,12 @@ class _ODEAdaptiveStep(_ODESolver):
 
 
 class Dopri5(_ODEAdaptiveStep):
+    pass
+
+
+class Dopri8(_ODEAdaptiveStep):
+    pass
+
+
+class Tsit5(_ODEAdaptiveStep):
     pass
