@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 import equinox as eqx
 from jaxtyping import Scalar
@@ -52,7 +52,9 @@ class Rouchon1(_ODEFixedStep):
     #   decomposition. Ideal for stiff problems, recommended for time-dependent
     #   problems.
 
-    normalize: Literal['sqrt', 'cholesky'] | None = None
+    # todo: fix, strings are not valid JAX types
+    # normalize: Literal['sqrt', 'cholesky'] | None = None
+    pass
 
 
 class Rouchon2(_ODEFixedStep):
