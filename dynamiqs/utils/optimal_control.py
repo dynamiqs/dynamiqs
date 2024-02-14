@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike
 
 from ..utils.operators import displace
 from ..utils.states import fock
