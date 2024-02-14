@@ -75,6 +75,7 @@ def _mesolve(
     solver_class = get_solver_class(solvers, solver)
 
     # === check gradient is supported
+    gradient = solver.DEFAULT_GRADIENT if gradient is None else gradient
     solver.assert_supports_gradient(gradient)
 
     # === init solver

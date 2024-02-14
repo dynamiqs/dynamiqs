@@ -5,11 +5,12 @@ from typing import ClassVar, Literal
 import equinox as eqx
 from jaxtyping import Scalar
 
-from .gradient import Adjoint, Autograd, Gradient
+from .gradient import Autograd, CheckpointAutograd, Gradient
 
 
 class Solver(eqx.Module):
     SUPPORTED_GRADIENT: ClassVar[tuple[Gradient]] = ()
+    DEFAULT_GRADIENT: ClassVar[Gradient]
 
     @classmethod
     def supports_gradient(cls, gradient: Gradient | None) -> bool:
@@ -28,10 +29,12 @@ class Solver(eqx.Module):
 
 class Propagator(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
+    DEFAULT_GRADIENT = Autograd()
 
 
 class _ODESolver(Solver):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    DEFAULT_GRADIENT = CheckpointAutograd()
 
 
 class _ODEFixedStep(_ODESolver):
