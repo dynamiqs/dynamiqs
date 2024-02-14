@@ -5,6 +5,7 @@ import warnings
 import diffrax as dx
 from jaxtyping import PyTree
 
+from ..gradient import Autograd, CheckpointAutograd
 from .abstract_solver import BaseSolver
 
 
@@ -31,10 +32,11 @@ class DiffraxSolver(BaseSolver):
             subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
             saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
-            if self.solver.autograd:
+            if isinstance(self.solver.gradient, Autograd):
                 adjoint = dx.DirectAdjoint()
-            else:
-                adjoint = dx.RecursiveCheckpointAdjoint(self.solver.ncheckpoints)
+            elif isinstance(self.solver.gradient, CheckpointAutograd):
+                checkpoints = self.solver.gradient.ncheckpoints
+                adjoint = dx.RecursiveCheckpointAdjoint(checkpoints)
 
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(

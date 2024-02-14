@@ -1,17 +1,37 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 import equinox as eqx
 from jaxtyping import Scalar
+
+from ._utils import obj_type_str
+from .gradient import Autograd, CheckpointAutograd, Gradient
 
 
 # === generic solvers options
 class Solver(eqx.Module):
-    pass
+    SUPPORTED_GRADIENT: ClassVar[tuple] = ()  # todo: typing
+    # Note: The next line is commented due to an issue with dataclasses and the
+    # ordering of non-default vs default argument (see e.g.
+    # https://stackoverflow.com/a/53085935). This issue is inherited by equinox Module.
+    # For simplicity, we skip the definition of gradient in the base class.
+    # gradient: Gradient
+
+    def __check_init__(self):
+        if not isinstance(self.gradient, self.SUPPORTED_GRADIENT):
+            support_str = ', '.join(f'`{x.__name__}`' for x in self.SUPPORTED_GRADIENT)
+            raise ValueError(
+                f'Solver `{obj_type_str(self)}` does not support gradient'
+                f' `{obj_type_str(self.gradient)}` (supported gradient types:'
+                f' {support_str}).'
+            )
 
 
 # === propagator solvers options
 class Propagator(Solver):
-    pass
+    SUPPORTED_GRADIENT = (Autograd,)
+    gradient: Gradient = Autograd()
 
 
 # === generic ODE solvers options
@@ -34,8 +54,8 @@ class _ODEAdaptiveStep(_ODESolver):
 
 # === diffrax-based solvers options
 class _DiffraxSolver(Solver):
-    autograd: bool = False
-    ncheckpoints: int | None = None
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    gradient: Gradient = CheckpointAutograd()
 
 
 # === public solvers options

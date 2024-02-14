@@ -1,5 +1,6 @@
 import pytest
 
+from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Tsit5
 
 from ..solver_tester import SolverTester
@@ -14,6 +15,6 @@ class TestMEAdaptive(SolverTester):
         self._test_correctness(system, Tsit5())
 
     @pytest.mark.parametrize('system', [ocavity, otdqubit])
-    @pytest.mark.parametrize('autograd', [True, False])
-    def test_gradient(self, system, autograd):
-        self._test_gradient(system, Tsit5(autograd=autograd))
+    @pytest.mark.parametrize('gradient', [Autograd(), CheckpointAutograd()])
+    def test_gradient(self, system, gradient):
+        self._test_gradient(system, Tsit5(gradient=gradient))
