@@ -1,6 +1,6 @@
 from importlib.metadata import version
 
-from . import dark, rand
+from . import dark
 from ._utils import *  # todo: remove, dev purpose only
 from .mesolve import mesolve
 from .options import Options

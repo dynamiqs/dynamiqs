@@ -187,10 +187,11 @@ nav:
               - sdissipator: python_api/utils/vectorization/sdissipator.md
               - slindbladian: python_api/utils/vectorization/slindbladian.md
           - Quantum optimal control:
-              - rand_real: python_api/utils/optimal_control/rand_real.md
-              - rand_complex: python_api/utils/optimal_control/rand_complex.md
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
+          - Random arrays:
+              - rand_real: python_api/utils/random/rand_real.md
+              - rand_complex: python_api/utils/random/rand_complex.md
           - Plotting:
               - plot_wigner: python_api/plots/namespace/plot_wigner.md
               - plot_wigner_mosaic: python_api/plots/namespace/plot_wigner_mosaic.md

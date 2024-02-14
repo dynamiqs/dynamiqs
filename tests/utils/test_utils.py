@@ -132,8 +132,8 @@ def test_jit_ptrace():
 
     # todo: this one doesn't pass
 
-    a = dq.rand.ket(20, key=key1)
-    b = dq.rand.ket(30, key=key2)
+    a = dq.rand_ket(20, key=key1)
+    b = dq.rand_ket(30, key=key2)
 
     ab = dq.tensor(a, b)
     ap = dq.ptrace(ab, 0, (20, 30))
@@ -142,8 +142,8 @@ def test_jit_ptrace():
 
     # density matrix
 
-    a = dq.rand.dm(20, key=key3)
-    b = dq.rand.dm(30, key=key4)
+    a = dq.rand_dm(20, key=key3)
+    b = dq.rand_dm(30, key=key4)
 
     ab = dq.tensor(a, b)
     ap = dq.ptrace(ab, 0, (20, 30))
