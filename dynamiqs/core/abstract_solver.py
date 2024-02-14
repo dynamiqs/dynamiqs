@@ -41,8 +41,8 @@ class BaseSolver(AbstractSolver):
             saved['Esave'] = expect(self.Es, y)
         return saved
 
-    def result(self, saved: dict[str, Array]) -> Result:
-        ysave = saved.get('ysave', None)
+    def result(self, saved: dict[str, Array], ylast: Array) -> Result:
+        ysave = saved.get('ysave', ylast)
         Esave = saved.get('Esave', None)
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
