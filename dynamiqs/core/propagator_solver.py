@@ -30,7 +30,8 @@ class PropagatorSolver(BaseSolver):
             res = self.save(y)
             return y, res
 
-        delta_ts = jnp.diff(self.ts, prepend=self.t0)
+        # we use `jnp.asarray` because of this bug (fixed in jax-0.4.24)
+        delta_ts = jnp.diff(self.ts, prepend=jnp.asarray(self.t0))
         ylast, saved = jax.lax.scan(propagate, self.y0, delta_ts)
 
         # === collect and return results
