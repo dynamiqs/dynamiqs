@@ -270,21 +270,21 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
     O = jnp.asarray(O)
     x = jnp.asarray(x)
 
-    f = _expect_single
-    if O.ndim > 2:
-        f = jax.vmap(f, in_axes=(0, None))
-    return f(O, x)
-
-
-def _expect_single(O: Array, x: Array) -> Array:
-    # O: (n, n), x: (..., n, m)
     if isket(x):
-        return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
+        if O.ndim > 2:
+            return jnp.einsum('...ij,bjk,...kl->b...', dag(x), O, x)
+        else:
+            return jnp.einsum('...ij,jk,...kl->...', dag(x), O, x)
     elif isbra(x):
-        return (x @ O @ dag(x)).squeeze((-1, -2))
+        if O.ndim > 2:
+            return jnp.einsum('...ij,bjk,...kl->b...', x, O, dag(x))
+        else:
+            return jnp.einsum('...ij,jk,...kl->...', x, O, dag(x))
     elif isdm(x):
-        return trace(O @ x)  # tr(Ox)
-    else:
+        if O.ndim > 2:
+            return jnp.einsum('bij,...ji->b...', O, x)
+        else:
+            return jnp.einsum('ij,...ji->...', O, x)
         raise ValueError(
             'Argument `x` must be a ket, bra or density matrix, but has shape'
             f' {x.shape}.'
