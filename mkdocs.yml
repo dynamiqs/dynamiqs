@@ -121,6 +121,8 @@ nav:
           - tutorials/open-system.md
           - tutorials/batching-simulations.md
           - tutorials/computing-gradients.md
+      - Advanced:
+          - tutorials/experimental-fits.md
   - Python API:
       - python_api/index.md
       - Solvers:
