@@ -9,7 +9,7 @@ The **dynamiqs** library enables GPU simulation of large quantum systems, and co
 
 Some exciting features of dynamiqs include:
 
-- Running simulations on **GPUs**, with a significant speedup for large Hilbert space dimensions.
+- Running simulations on **GPUs** and **TPUs**, with a significant speedup for large Hilbert space dimensions.
 - **Batching** many simulations of different Hamiltonians, jump operators or initial states to run them concurrently.
 - Exploring solvers **tailored to quantum** simulations that preserve the properties of the state, such as trace and positivity.
 - Computing **gradients** of any function of the evolved quantum state with respect to any parameter of the Hamiltonian, jump operators, or initial state.

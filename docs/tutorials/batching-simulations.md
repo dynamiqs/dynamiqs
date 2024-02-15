@@ -100,7 +100,7 @@ H = amplitudes[:, None, None] * (a + dq.dag(a))  # shape (11, 16, 16)
 jump_ops = [jnp.sqrt(0.1) * a]
 
 # initial states
-angles = jnp.linspace(0, 2 * pi, 11)
+angles = jnp.linspace(0, 2 * jnp.pi, 11)
 alphas = 2.0 * jnp.exp(1j * angles)
 rho0 = jnp.stack([dq.coherent_dm(n, a) for a in alphas])  # shape (11, 16, 16)
 
@@ -122,9 +122,9 @@ So we want to run a total of `11 * 11 = 121` simulations. Let's compare how long
 <!-- skip: start -->
 
 ```pycon
->>> %timeit run_unbatched('cpu')
+>>> %timeit run_unbatched()
 119 ms ± 9.18 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
->>> %timeit run_batched('cpu')
+>>> %timeit run_batched()
 56.5 ms ± 539 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
@@ -134,9 +134,9 @@ The result is even more striking on GPU[^2]:
 [^2]: NVIDIA GeForce RTX 4090.
 
 ```pycon
->>> %timeit run_unbatched('cuda')
+>>> %timeit run_unbatched()
 439 ms ± 692 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
->>> %timeit run_batched('cuda')
+>>> %timeit run_batched()
 6.29 ms ± 160 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
