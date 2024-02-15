@@ -10,7 +10,7 @@ from .gradient import Autograd, CheckpointAutograd, Gradient
 
 # === generic solvers options
 class Solver(eqx.Module):
-    SUPPORTED_GRADIENT: ClassVar[tuple[Type[Gradient]]] = ()
+    SUPPORTED_GRADIENT: ClassVar[tuple[Type[Gradient], ...]] = ()
 
     @classmethod
     def supports_gradient(cls, gradient: Gradient | None) -> bool:
