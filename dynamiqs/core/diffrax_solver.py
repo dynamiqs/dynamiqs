@@ -34,7 +34,7 @@ class DiffraxSolver(BaseSolver):
 
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
-            if isinstance(self.gradient, CheckpointAutograd):
+            elif isinstance(self.gradient, CheckpointAutograd):
                 adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
             elif isinstance(self.gradient, Autograd):
                 adjoint = dx.DirectAdjoint()
