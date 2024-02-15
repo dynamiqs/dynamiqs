@@ -89,21 +89,22 @@ There are two main types of ODE solvers:
 
 ## Using dynamiqs
 
-You can create the state and Hamiltonian using any array-like object (Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using any array-like object (Python lists, NumPy or JAX arrays). Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
-import numpy as np
+import jax.numpy as jnp
 import dynamiqs as dq
-psi0 = [[1], [0]]                 # initial state
-H = [[-1, 0], [0, 1]]             # Hamiltonian
-tsave = np.linspace(0, 1.0, 11)   # saving times
+
+psi0 = jnp.array([[1], [0]])      # initial state
+H = jnp.array([[-1, 0], [0, 1]])  # Hamiltonian
+tsave = jnp.linspace(0, 1.0, 11)  # saving times
 res = dq.sesolve(H, psi0, tsave)  # run the simulation
 ```
 
 ```pycon
 >>> res.states[-1]                # print the final state
-tensor([[0.540+0.841j],
-        [0.000+0.000j]])
+Array([[0.5402927+0.8414829j],
+       [0.       +0.j       ]], dtype=complex64)
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`](../python_api/solvers/sesolve.md) API documentation.

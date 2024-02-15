@@ -20,11 +20,12 @@ In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the
 >>> I = dq.eye(2)
 >>> sz = dq.sigmaz()
 >>> sz - 2 * I  # correct
-tensor([[-1.+0.j,  0.+0.j],
-        [ 0.+0.j, -3.+0.j]])
+Array([[-1.+0.j,  0.+0.j],
+       [ 0.+0.j, -3.+0.j]], dtype=complex64)
+
 >>> sz - 2  # incorrect
-tensor([[-1.+0.j, -2.+0.j],
-        [-2.+0.j, -3.+0.j]])
+Array([[-1.+0.j, -2.+0.j],
+       [-2.+0.j, -3.+0.j]], dtype=complex64)
 ```
 
 ### Multiplying two operators
@@ -34,22 +35,22 @@ In QuTiP, the `*` symbol is used to multiply two operators. This convention also
 ```pycon
 >>> sx = dq.sigmax()
 >>> sx @ sx  # correct
-tensor([[1.+0.j, 0.+0.j],
-        [0.+0.j, 1.+0.j]])
+Array([[1.+0.j, 0.+0.j],
+       [0.+0.j, 1.+0.j]], dtype=complex64)
 >>> sx * sx  # incorrect
-tensor([[0.+0.j, 1.+0.j],
-        [1.+0.j, 0.+0.j]])
+Array([[0.+0.j, 1.+0.j],
+       [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
 Likewise, you should use `dq.mpow()` instead of `**` (element-wise power) to compute the power of a matrix:
 
 ```pycon
 >>> dq.mpow(sx, 2)  # correct
-tensor([[1.+0.j, 0.+0.j],
-        [0.+0.j, 1.+0.j]])
+Array([[1.+0.j, 0.+0.j],
+       [0.+0.j, 1.+0.j]], dtype=complex64)
 >>> sx**2  # incorrect
-tensor([[0.+0.j, 1.+0.j],
-        [1.+0.j, 0.+0.j]])
+Array([[0.+0.j, 1.+0.j],
+       [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
 ### Computing the adjoint
