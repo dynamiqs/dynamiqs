@@ -97,14 +97,14 @@ def rand_complex(
 
 
 def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    """Returns a random complex Hermitian array.
+    """Returns a random complex Hermitian matrix.
 
     Args:
         key: A PRNG key used as the random key.
         shape: Shape of the returned array.
 
     Returns:
-        _(array of shape (*shape))_ Random complex Hermitian array.
+        _(array of shape (*shape))_ Random complex Hermitian matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -119,14 +119,14 @@ def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
 
 def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    """Returns a random complex positive semi-definite array.
+    """Returns a random complex positive semi-definite matrix.
 
     Args:
         key: A PRNG key used as the random key.
         shape: Shape of the returned array.
 
     Returns:
-        _(array of shape (*shape))_ Random complex positive semi-definite array.
+        _(array of shape (*shape))_ Random complex positive semi-definite matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
@@ -142,7 +142,7 @@ def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
 
 def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
-    """Returns a random density matrix (positive semi-definite, hermitian and unit
+    """Returns a random density matrix (hermitian, positive semi-definite, and unit
     trace).
 
     Args:
