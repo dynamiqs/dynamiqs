@@ -16,7 +16,7 @@ omega = 1.0  # frequency
 kappa = 0.1  # decay rate
 alpha = 1.0  # initial coherent state amplitude
 
-# initialize operators, state and saving times
+# initialize operators, initial state and saving times
 a = dq.destroy(n)
 H = omega * dq.dag(a) @ a
 jump_ops = [jnp.sqrt(kappa) * a]
@@ -50,8 +50,8 @@ kappa = 0.1  # decay rate
 alpha = 1.0  # initial coherent state amplitude
 
 def population(omega, kappa, alpha):
-    """Return the population inside the cavity after time evolution."""
-    # initialize operators, state and saving times
+    """Return the oscillator population after time evolution."""
+    # initialize operators, initial state and saving times
     a = dq.destroy(n)
     H = omega * dq.dag(a) @ a
     jump_ops = [jnp.sqrt(kappa) * a]
@@ -61,13 +61,18 @@ def population(omega, kappa, alpha):
     # run simulation
     result = dq.mesolve(H, jump_ops, psi0, tsave)
 
-    return dq.expect(dq.dag(a) @ a, result.states[-1]).real
+    return dq.expect(dq.number(n), result.states[-1]).real
 
 # compute gradient with respect to kappa and alpha
-grad_population = jax.grad(population, argnums=(1, 2))
-print(grad_population(omega, kappa, alpha))
+grad_population = jax.grad(population, argnums=(0, 1, 2))
+grads = grad_population(omega, kappa, alpha)
+print(f'Gradient w.r.t. omega={grads[0]:.2f}')
+print(f'Gradient w.r.t. kappa={grads[1]:.2f}')
+print(f'Gradient w.r.t. alpha={grads[2]:.2f}')
 ```
 
 ```text
-(Array(-0.90483725, dtype=float32, weak_type=True), Array(1.8096755, dtype=float32, weak_type=True))
+Gradient w.r.t. omega=0.00
+Gradient w.r.t. kappa=-0.90
+Gradient w.r.t. alpha=1.81
 ```

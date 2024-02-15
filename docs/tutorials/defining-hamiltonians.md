@@ -1,13 +1,13 @@
 # Defining Hamiltonians
 
-In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently four ways: using array-like objects for constant Hamiltonians, defining a function or function-like coefficients for time-dependent Hamiltonians, and using a custom format for piecewise constant Hamiltonians.
+In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently four ways: using array-like objects for constant Hamiltonians, defining a function for time-dependent Hamiltonians, defining time-dependent coefficients as functions that precede constant Hamiltonians, or using a custom format for piecewise constant Hamiltonians.
 
 !!! Warning "Differences with QuTiP"
     dynamiqs manipulates JAX arrays, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.html) page the main differences, briefly:
 
     - use `x + 2 * dq.eye(n)` instead of `x + 2`
     - use `x @ y` instead of `x * y`, and `dq.mpow(x, 4)` instead of `x**4`
-    - use `dq.dag(x)`, `x.T.conj()` instead of `x.dag()`
+    - use `dq.dag(x)`, `x.mT.conj()` instead of `x.dag()`
 
 ## Constant Hamiltonians
 
@@ -20,7 +20,7 @@ For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of 
 import numpy as np
 H = np.array([[1, 0], [0, -1]])
 
-# using PyTorch tensors
+# using JAX arrays
 import jax.numpy as jnp
 H = jnp.array([[1, 0], [0, -1]])
 
@@ -31,7 +31,7 @@ H = dq.sigmaz()
 
 ## Time-dependent Hamiltonians
 
-A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Tensor` that returns the Hamiltonian as a JAX array for any time `t`, which is then fed into `dq.totime`.
+A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the Hamiltonian as a JAX array for any time `t`, which is then fed into `dq.totime`.
 
 For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, you can use the following syntax:
 

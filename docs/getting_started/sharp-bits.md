@@ -14,7 +14,7 @@ The syntax in dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Pytho
 
 ### Adding a scalar to an operator
 
-In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch, SciPy or JAX. In dynamiqs, adding a scalar to a tensor performs an element-wise addition. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**:
+In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch, SciPy or JAX. In dynamiqs, adding a scalar to an array performs an element-wise addition. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**:
 
 ```pycon
 >>> I = dq.eye(2)
@@ -55,10 +55,10 @@ Array([[0.+0.j, 1.+0.j],
 
 ### Computing the adjoint
 
-Use `dq.dag(x)` or `x.T.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
+Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
 
 ??? Note "Why is there no `.dag()` method in dynamiqs?"
-    To guarantee optimum performances and straightforward compatibility with the JAX ecosystem, dynamiqs does not subclass JAX arrays. As a consequence, we can't define a custom `.dag()` method on tensors. Note that this will possibly change in the future, as we are working on an extension that will allow defining custom methods on arrays.
+    To guarantee optimum performances and straightforward compatibility with the JAX ecosystem, dynamiqs does not subclass JAX arrays. As a consequence, we can't define a custom `.dag()` method on arrays. Note that this will possibly change in the future, as we are working on an extension that will allow defining custom methods on arrays.
 
 
 ## Using a for loop

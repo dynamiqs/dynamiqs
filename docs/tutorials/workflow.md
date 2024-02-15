@@ -39,11 +39,11 @@ State of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 1).
 Hamiltonian of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 2).
 ```
 
-In dynamiqs, all quantum objects are defined directly with [JAX arrays](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.array.html), and without subclassing. This allows for easy interfacing with JAX utility functions, and avoids runtime overheads. Also, all quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have a shape `(..., N, 1)`. Note also that objects are single-precision (`float32` or `complex64`) by default.
+In dynamiqs, all quantum objects are defined directly with [JAX arrays](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.array.html), and without subclassing. This allows for easy interfacing with JAX utility functions, and avoids runtime overheads. Also, all quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have a shape `(..., n, 1)`. Note also that objects are single-precision (`float32` or `complex64`) by default.
 
 ## 2. Define the scope
 
-Next, we define the scope of the simulation. This includes the total duration of time evolution, the observables we want to measure and how often we measure them. Observables are defined similarly to the Hamiltonian, using Tensors and dynamiqs utility functions. The total duration and how often measurements are performed is defined in a single object named `tsave`. It is an arbitrary array of time points, of which `tsave[-1]` specifies the total duration of time evolution.
+Next, we define the scope of the simulation. This includes the total duration of time evolution, the observables we want to measure and how often we measure them. Observables are defined similarly to the Hamiltonian, using arrays and dynamiqs utility functions. The total duration and how often measurements are performed is defined in a single object named `tsave`. It is an arbitrary array of time points, of which `tsave[-1]` specifies the total duration of time evolution.
 
 We also need to specify the solver and options related to it, namely the method of integration and the eventual related parameters. The list of available solvers and their parameters is available in the [API documentation](../python_api/index.md).
 

@@ -13,7 +13,7 @@ import timeit
 To simulate multiple Hamiltonians, you can pass an array of Hamiltonians for the argument `H` to [`dq.sesolve()`](../python_api/solvers/sesolve.md), [`dq.mesolve()`](../python_api/solvers/mesolve.md) or [`dq.smesolve()`](../python_api/solvers/smesolve.md). You can also pass an array of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
 
 !!! Note "Result of a batched simulation"
-    When a simulation is batched in dynamiqs, the result of the simulation is a batched tensor (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(bH?, bstate?, nt, n, m)` where
+    When a simulation is batched in dynamiqs, the result of the simulation is a batched array (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(bH?, bstate?, nt, n, m)` where
 
     - `bH` is the number of Hamiltonians,
     - `bstate` is the number of initial states,
@@ -47,13 +47,13 @@ States  : Array complex64 (4, 11, 2, 1) | 0.69 Kb
 Expects : Array complex64 (4, 1, 11) | 0.34 Kb
 ```
 
-The returned `states` Tensor has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
+The returned `states` Array has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
 
 Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial states, `1` is the number of `exp_ops` operators (a single one here) and `11` is the number of saved expectation values (the length of `tsave`).
 
 
-!!! Note "Creating a batched tensor with JAX"
-    To directly create a batched JAX tensor, use `jnp.stack`:
+!!! Note "Creating a batched array with JAX"
+    To directly create a batched JAX array, use `jnp.stack`:
 
     ```python
     H0 = dq.sigmaz()
@@ -77,7 +77,7 @@ For the diffusive stochastic master equation solver, many stochastic trajectorie
 
 ## Why batching?
 
-When batching multiple simulations, the state is not a 2-D tensor that evolves in time but a N-D tensor which holds each independent simulation. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the subsequent analysis of the simulation, because all the results are gathered in a single large array.
+When batching multiple simulations, the state is not a 2-D array that evolves in time but a N-D array which holds each independent simulation. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the subsequent analysis of the simulation, because all the results are gathered in a single large array.
 
 Common use cases for batching include:
 
@@ -140,6 +140,6 @@ The result is even more striking on GPU[^2]:
 6.29 ms ± 160 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
-On the GPU, because we save costly data transfers with the CPU and do N-D matrices multiplications, we gain a **factor x70** in speedup!
+On the GPU, because we remove latency between function calls, we gain a **factor x70** in speedup!
 
 <!-- skip: end -->

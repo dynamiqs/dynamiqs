@@ -2,7 +2,7 @@
 name = "dynamiqs"
 version = "0.1.0"
 requires-python = ">=3.9"
-description = "Quantum systems simulation with PyTorch."
+description = "Quantum systems simulation with JAX."
 dependencies = [
     "qutip",
     "numpy",
