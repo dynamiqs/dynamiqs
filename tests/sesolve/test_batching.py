@@ -17,9 +17,9 @@ def test_batching(cartesian_batching):
 
     # create random objects
     k1, k2, k3 = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.rand.herm(k1, (nH, n, n))
-    exp_ops = dq.rand.complex(k2, (nEs, n, n))
-    psi0 = dq.rand.ket(k3, (npsi0, n, 1))
+    H = dq.rand_herm(k1, (nH, n, n))
+    exp_ops = dq.rand_complex(k2, (nEs, n, n))
+    psi0 = dq.rand_ket(k3, (npsi0, n, 1))
     tsave = jnp.linspace(0, 0.01, nt)
 
     # no batching

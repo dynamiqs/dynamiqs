@@ -165,10 +165,21 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - rand_real
-        - rand_complex
         - snap_gate
         - cd_gate
+
+### Random arrays
+
+::: dynamiqs.utils.random
+    options:
+        table: true
+        members:
+        - rand_real
+        - rand_complex
+        - rand_herm
+        - rand_psd
+        - rand_dm
+        - rand_ket
 
 ### Plotting
 
