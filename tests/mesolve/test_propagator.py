@@ -9,5 +9,5 @@ class TestMEPropagator(SolverTester):
     def test_correctness(self):
         self._test_correctness(ocavity, Propagator())
 
-    def test_autograd(self):
+    def test_gradient(self):
         self._test_gradient(ocavity, Propagator(), Autograd())

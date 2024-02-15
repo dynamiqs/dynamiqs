@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Type
 
 import equinox as eqx
 from jaxtyping import Scalar
 
-from .gradient import Adjoint, Autograd, Gradient
+from .gradient import Autograd, CheckpointAutograd, Gradient
 
 
+# === generic solvers options
 class Solver(eqx.Module):
-    SUPPORTED_GRADIENT: ClassVar[tuple[Gradient]] = ()
+    SUPPORTED_GRADIENT: ClassVar[tuple[Type[Gradient]]] = ()
 
     @classmethod
     def supports_gradient(cls, gradient: Gradient | None) -> bool:
@@ -26,23 +27,40 @@ class Solver(eqx.Module):
             )
 
 
+# === propagator solvers options
 class Propagator(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
 
 
+# === generic ODE solvers options
 class _ODESolver(Solver):
-    SUPPORTED_GRADIENT = (Autograd, Adjoint)
+    pass
 
 
 class _ODEFixedStep(_ODESolver):
     dt: Scalar
 
 
-class Euler(_ODEFixedStep):
+class _ODEAdaptiveStep(_ODESolver):
+    rtol: float = 1e-4
+    atol: float = 1e-6
+    safety_factor: float = 0.9
+    min_factor: float = 0.2
+    max_factor: float = 5.0
+    max_steps: int = 100_000
+
+
+# === diffrax-based solvers options
+class _DiffraxSolver(Solver):
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
+
+# === public solvers options
+class Euler(_DiffraxSolver, _ODEFixedStep):
     pass
 
 
-class Rouchon1(_ODEFixedStep):
+class Rouchon1(_DiffraxSolver, _ODEFixedStep):
     # normalize: The default scheme is trace-preserving at first order only. This
     # parameter sets the normalisation behaviour:
     # - `None`: The scheme is not normalized.
@@ -57,26 +75,17 @@ class Rouchon1(_ODEFixedStep):
     pass
 
 
-class Rouchon2(_ODEFixedStep):
+class Rouchon2(_DiffraxSolver, _ODEFixedStep):
     pass
 
 
-class _ODEAdaptiveStep(_ODESolver):
-    rtol: float = 1e-4
-    atol: float = 1e-6
-    safety_factor: float = 0.9
-    min_factor: float = 0.2
-    max_factor: float = 5.0
-    max_steps: int = 100_000
-
-
-class Dopri5(_ODEAdaptiveStep):
+class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
     pass
 
 
-class Dopri8(_ODEAdaptiveStep):
+class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
     pass
 
 
-class Tsit5(_ODEAdaptiveStep):
+class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
     pass

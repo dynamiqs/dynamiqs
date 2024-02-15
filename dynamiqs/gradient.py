@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import equinox as eqx
 
 
@@ -9,5 +11,5 @@ class Autograd(Gradient):
     pass
 
 
-class Adjoint(Gradient):
-    pass
+class CheckpointAutograd(Gradient):
+    ncheckpoints: int | None = None
