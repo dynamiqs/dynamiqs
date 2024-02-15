@@ -42,7 +42,7 @@ class _ODEFixedStep(_ODESolver):
 
 
 class _ODEAdaptiveStep(_ODESolver):
-    rtol: float = 1e-4
+    rtol: float = 1e-6
     atol: float = 1e-6
     safety_factor: float = 0.9
     min_factor: float = 0.2
