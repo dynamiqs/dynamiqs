@@ -58,7 +58,7 @@ a, b = dq.destroy(Na, Nb))
 
 ### Loading the data
 
-We provide real experimental data but also leave the possibility to simply simulate them, you can choose the one that suits you best
+We now initialize the experimental data with which we will work. There are two possible options to do so: either load the actual experimental data from [^1]_, or generate synthetic data from a noisy master equation simulation.
 
 #### Option 1: Real world data
 
