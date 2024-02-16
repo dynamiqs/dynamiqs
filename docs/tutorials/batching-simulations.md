@@ -47,7 +47,7 @@ States  : Array complex64 (4, 11, 2, 1) | 0.69 Kb
 Expects : Array complex64 (4, 1, 11) | 0.34 Kb
 ```
 
-The returned `states` Array has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
+The returned `states` array has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
 
 Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial states, `1` is the number of `exp_ops` operators (a single one here) and `11` is the number of saved expectation values (the length of `tsave`).
 
