@@ -5,7 +5,7 @@ dynamiqs enables fast simulations of quantum systems with automatic gradient com
 ## Context of the experiment
 
 !!! note Info
-    This part introduces the kind of data and process that we will fit in the notebook. If you are only interested in the code you can skip it.
+    This section introduces the kind of data and process that we will fit in the notebook. If you are only interested in the code you can skip the next section.
 
 !!! example "Diving deep 🤿"
     You can discover further details about this experiment in the original research paper from which this data was sourced [^1]
