@@ -7,8 +7,6 @@ Dynamiqs enables rapid simulations and facilitates automatic gradient computatio
 !!! note Info
     This part introduces the kind of data and process that we will fit in the notebook. If you are only interested in the code you can skip it.
 
-!!! example "Diving deep 🤿"
-    You can discover further details about this experiment in the original research paper from which this data was sourced [^1]
 
 The data we will work with are deflation curves. Our system is composed of a high lifetime cavity - the memory -  coupled to a lossy one - the buffer - in vacuum state. We denote $a$ (respectively $b$) the memory (respectively buffer) annihilation operator. The memory and the buffer are coupled through a two to one photon exchange mechanism $g_2 a^2 b^\dagger + h.c.$. The buffer is a highly-dissipative mode, that we model with the dissipator $D[\sqrt{\kappa_b} b]$. Both cavities have a finite temperature, expressed in thermal population.
 
