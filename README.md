@@ -68,7 +68,7 @@ States  : Array complex64 (101, 128, 128) | 12.62 Mb
 
 ### Compute gradients with respect to some parameters
 
-Suppose that in the above example, we want to compute the gradient of the number of photons in the final state, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(t_f)]$, with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha$. For this computation, we will define the objects with dynamiqs:
+Suppose that in the above example, we want to compute the gradient of the number of photons in the final state, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(t_f)]$, with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha$.
 
 ```python
 import dynamiqs as dq
@@ -95,7 +95,7 @@ def population(omega, kappa, alpha):
 
     return dq.expect(dq.number(n), result.states[-1]).real
 
-# compute gradient with respect to kappa and alpha
+# compute gradient with respect to omega, kappa and alpha
 grad_population = jax.grad(population, argnums=(0, 1, 2))
 grads = grad_population(omega, kappa, alpha)
 print(f'Gradient w.r.t. omega={grads[0]:.2f}')
