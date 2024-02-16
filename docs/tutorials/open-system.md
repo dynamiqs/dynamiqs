@@ -116,8 +116,8 @@ res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
 
 ```pycon
 >>> res.states[-1]                          # print the final state
-Array([[0.36788338+0.j, 0.        +0.j],
-       [0.        +0.j, 0.6321166 +0.j]], dtype=complex64)
+Array([[0.368+0.j, 0.   +0.j],
+       [0.   +0.j, 0.632+0.j]], dtype=complex64)
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`](../python_api/solvers/mesolve.md) API documentation.

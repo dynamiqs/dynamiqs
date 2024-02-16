@@ -103,8 +103,8 @@ res = dq.sesolve(H, psi0, tsave)  # run the simulation
 
 ```pycon
 >>> res.states[-1]                # print the final state
-Array([[0.5402927+0.8414829j],
-       [0.       +0.j       ]], dtype=complex64)
+Array([[0.54+0.841j],
+       [0.  +0.j   ]], dtype=complex64)
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`](../python_api/solvers/sesolve.md) API documentation.

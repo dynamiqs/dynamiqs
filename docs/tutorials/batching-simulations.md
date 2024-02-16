@@ -68,7 +68,7 @@ Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial s
     H = H0 + amplitudes[:, None, None] * H1  # shape (3, 2, 2)
     ```
 
-<!-- skip until smesolve is written again
+<!-- remove until smesolve is written again
 ## Batching over stochastic trajectories (SME)
 
 For the diffusive stochastic master equation solver, many stochastic trajectories must often be solved to obtain faithful statistics of the evolved density matrix. In this case, dynamiqs also provides batching over trajectories to run them simultaneously. This is performed automatically by setting the value of the `ntrajs` argument in [`dq.smesolve()`](../python_api/solvers/smesolve.md). The resulting `states` object has shape `(bH?, brho?, ntrajs, nt, n, n)`.
