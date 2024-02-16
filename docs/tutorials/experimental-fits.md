@@ -19,7 +19,7 @@ _Pulse sequence of the experiment, taken from [^1]_
 
 [^1]:  [Quantum control of a cat-qubit with bit-flip times exceeding ten seconds, arxiv:2307.06617](https://arxiv.org/pdf/2307.06617.pdf)
 
-## Step by step solution
+## Fitting real-world data, step by step
 
 We start by importing all necessary libraries:
 
