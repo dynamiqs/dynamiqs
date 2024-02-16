@@ -1,4 +1,4 @@
-# Experimental data fits
+# Fitting a cat qubit experiment with real-world data
 
 Dynamiqs enables rapid simulations and facilitates automatic gradient computation, making it highly suitable for data fitting tasks. This tutorial will guide you through the process of simulating and fitting real-world experimental data, step by step.
 
