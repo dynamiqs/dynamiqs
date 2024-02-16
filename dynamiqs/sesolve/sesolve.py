@@ -27,7 +27,53 @@ def sesolve(
     solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
-):
+) -> Result:
+    r"""Solve the Schrödinger equation.
+
+    This function computes the evolution of the state vector $\ket{\psi(t)}$ starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
+    equation ($\hbar=1$)
+    $$
+        \frac{\dd\ket{\psi(t)}}{\dt} = -i H(t) \ket{\psi(t)},
+    $$
+    where $H(t)$ is the system's Hamiltonian at time $t$.
+
+    Quote: Time-dependent Hamiltonian
+        If the Hamiltonian depends on time, it can be converted to a `TimeArray` using
+        `dq.totime`.
+
+    Quote: Running multiple simulations concurrently
+        Both the Hamiltonian `H` and the initial state `psi0` can be batched to
+        solve multiple Schrödinger equations concurrently. All other arguments are
+        common to every batch.
+
+    Args:
+        H _(array-like or TimeArray)_: Hamiltonian of shape _(bH?, n, n)_.
+        psi0 _(array-like)_: Initial state vector of shape _(bpsi?, n, 1)_.
+        tsave _(1D array-like)_: Times at which the states and expectation values are
+            saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
+            to `tsave[-1]` if `t0` is given in `options`.
+        exp_ops _(list of 2D array-like, optional)_: List of operators of shape _(n, n)_
+            for which the expectation value is computed. Defaults to `None`.
+        solver _(Solver, optional)_: Solver for the differential equation integration.
+            Defaults to `dq.solver.Tsit5()`.
+        gradient _(Gradient, optional)_: Algorithm used to compute the gradient.
+            Defaults to `None`.
+        options _(Options, optional)_: Generic options. Defaults to `None`.
+
+    Returns:
+        Object of type `Result` holding the result of the Schrödinger equation
+            integration. It has the following attributes:
+
+            - **states** _(Array)_ – Saved states with shape
+                _(bH?, bpsi?, len(tsave), n, 1)_.
+            - **expects** _(Array, optional)_ – Saved expectation values with shape
+                _(bH?, bpsi?, len(exp_ops), len(tsave))_.
+            - **tsave** _(Array)_ – Times for which states and expectation values were
+                saved.
+            - **solver** (Solver) –  Solver used.
+            - **gradient** (Gradient) – Gradient used.
+            - **options** _(dict)_  – Options used.
+    """
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
