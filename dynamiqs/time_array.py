@@ -25,6 +25,62 @@ TimeArrayLike = Union[
 
 
 def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
+    r"""Instantiate a time-dependent array of type `TimeArray`.
+
+    There are 4 ways to define a time-dependent array in dynamiqs.
+
+    **1/ Constant time array** – A constant array of the form $A(t) = A_0$. It is
+    initialized with `x = A0` as an array-like object:
+
+    - **A0** _(array-like)_ – The constant array $A_0$, of shape _(..., n, n)_.
+
+    **2/ Modulated time array** – A modulated time array of the form $A(t) = f(t) A_0$.
+    It is initialized with `x = (f, A0)`, where:
+
+    - **f** _(function)_ – A function with signature `(t: float, *args: PyTree) ->
+    Array` that returns the modulating factor $f(t)$ of shape _(...,)_.
+    - **A0** _(array-like)_ – The constant array $A_0$, of shape _(n, n)_.
+
+    **3/ PWC time array** – A piecewise-constant (PWC) time array of the form $A(t) =
+    A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with `x = (times, values, array)`, where:
+
+    - **times** _(array-like)_ – The time points $t_i$ between which the PWC factor
+    takes constant values, of shape _(nv+1,)_ where _nv_ is the number of time
+    intervals.
+    - **values** _(array-like)_ – The constant values for each time interval, of shape
+    _(..., nv)_.
+    - **array** _(array-like)_ – The constant array $A_i$, of shape _(n, n)_.
+
+    **4/ Callable time array** – A time array defined by a callable function, of
+    generic form $A(t) = f(t)$. It is initialized with `x = f` as:
+
+    - **f** _(function)_ – A function with signature `(t: float, *args: PyTree) ->
+    Array` with shape _(..., n, n)_.
+
+    Note: TimeArrays
+        A `TimeArray` object has several attributes and methods, including:
+
+        - **self.dtype** – Returns the data type of the array.
+        - **self.shape** – Returns the shape of the array.
+        - **self.mT** – Returns the transpose of the array.
+        - **self(t: float)** – Evaluates the array at a given time.
+        - **self.reshape(*args: int)** – Returns an array containing the same data with
+            a new shape.
+        - **self.conj()** – Returns the complex conjugate, element-wise.
+
+        `TimeArray` objects also support the following operations:
+
+        - **-self** – Returns the negation of the array.
+        - **y * self** – Returns the product of `y` with the array, where `y` is an
+            array-like broadcastable with `self`.
+        - **self + other** – Returns the sum of the array and `other`, where `other` is
+            an array-like object or another instance of `TimeArray`.
+
+    Args:
+        x: The time-dependent array initializer.
+        args: The extra arguments passed to the function for modulated and callable
+            time arrays.
+    """
     # already a time array
     if isinstance(x, TimeArray):
         return x

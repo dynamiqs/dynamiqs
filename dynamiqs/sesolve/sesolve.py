@@ -39,7 +39,7 @@ def sesolve(
 
     Quote: Time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a `TimeArray` using
-        `dq.totime`.
+        [`dq.totime`](/python_api/totime/totime.html).
 
     Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
@@ -61,8 +61,8 @@ def sesolve(
         options _(Options, optional)_: Generic options. Defaults to `None`.
 
     Returns:
-        Object of type `Result` holding the result of the Schrödinger equation
-            integration. It has the following attributes:
+        Object of type [`Result`](/python_api/result/Result.html) holding the result of
+            the Schrödinger equation integration. It has the following attributes:
 
             - **states** _(Array)_ – Saved states with shape
                 _(bH?, bpsi?, len(tsave), n, 1)_.

@@ -7,6 +7,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
+__all__ = ['Result']
 
 def memory_bytes(x: Array) -> int:
     return x.itemsize * x.size
@@ -34,6 +35,32 @@ class Result(eqx.Module):
     ysave: Array
     Esave: Array | None
 
+    def __init__(
+        self,
+        tsave: Array,
+        solver: Solver,
+        gradient: Gradient | None,
+        options: Options,
+        ysave: Array,
+        Esave: Array | None,
+    ):
+        """Result of a quantum equation integration.
+
+        Attributes:
+            states: State array, alias of `ysave`.
+            expects: Expectation array, alias of `Esave`.
+            tsave: Time array.
+            solver: Solver used.
+            gradient: Gradient used.
+            options: Options used.
+        """
+        self.tsave = tsave
+        self.solver = solver
+        self.gradient = gradient
+        self.options = options
+        self.ysave = ysave
+        self.Esave = Esave
+
     @property
     def states(self) -> Array:
         # alias for ysave
@@ -58,7 +85,17 @@ class Result(eqx.Module):
         return '==== Result ====\n' + parts_str
 
     def to_qutip(self) -> Result:
+        """Convert the Result arrays to QuTiP `QObj` objects.
+
+        Warning:
+            Not implemented yet.
+        """
         raise NotImplementedError
 
     def to_numpy(self) -> Result:
+        """Convert the Result arrays to NumPy arrays.
+
+        Warning:
+            Not implemented yet.
+        """
         raise NotImplementedError
