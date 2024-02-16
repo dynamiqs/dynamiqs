@@ -30,8 +30,9 @@ def sesolve(
 ) -> Result:
     r"""Solve the Schrödinger equation.
 
-    This function computes the evolution of the state vector $\ket{\psi(t)}$ starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
-    equation ($\hbar=1$)
+    This function computes the evolution of the state vector $\ket{\psi(t)}$ starting
+    from an initial state $\ket{\psi_0}$, according to the Schrödinger equation
+    ($\hbar=1$)
     $$
         \frac{\dd\ket{\psi(t)}}{\dt} = -i H(t) \ket{\psi(t)},
     $$

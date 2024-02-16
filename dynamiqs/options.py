@@ -5,13 +5,20 @@ from jaxtyping import Scalar
 
 __all__ = ['Options']
 
+
 class Options(eqx.Module):
     save_states: bool = True
     verbose: bool = True
     cartesian_batching: bool = True
     t0: Scalar | None = None  # defaults to tsave[0]
 
-    def __init__(self, save_states: bool = True, verbose: bool = True, cartesian_batching: bool = True, t0: Scalar | None = None):
+    def __init__(
+        self,
+        save_states: bool = True,
+        verbose: bool = True,
+        cartesian_batching: bool = True,
+        t0: Scalar | None = None,
+    ):
         """Generic options for solvers.
 
         Args:

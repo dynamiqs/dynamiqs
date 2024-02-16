@@ -4,6 +4,7 @@ import equinox as eqx
 
 __all__ = ['Autograd', 'CheckpointAutograd']
 
+
 class Gradient(eqx.Module):
     pass
 

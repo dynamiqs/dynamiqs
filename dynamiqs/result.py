@@ -9,6 +9,7 @@ from .solver import Solver
 
 __all__ = ['Result']
 
+
 def memory_bytes(x: Array) -> int:
     return x.itemsize * x.size
 

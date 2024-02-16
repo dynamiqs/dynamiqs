@@ -42,7 +42,8 @@ def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
     - **A0** _(array-like)_ – The constant array $A_0$, of shape _(n, n)_.
 
     **3/ PWC time array** – A piecewise-constant (PWC) time array of the form $A(t) =
-    A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with `x = (times, values, array)`, where:
+    A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with
+    `x = (times, values, array)`, where:
 
     - **times** _(array-like)_ – The time points $t_i$ between which the PWC factor
     takes constant values, of shape _(nv+1,)_ where _nv_ is the number of time
