@@ -8,9 +8,9 @@ dynamiqs enables fast simulations of quantum systems with automatic gradient com
     This section introduces the kind of data and process that we will fit in the notebook. If you are only interested in the code you can skip the next section.
 
 
-The data we will work with are deflation curves. Our system is composed of a high lifetime cavity - the memory -  coupled to a lossy one - the buffer - in vacuum state. We denote $a$ (respectively $b$) the memory (respectively buffer) annihilation operator. The memory and the buffer are coupled through a two to one photon exchange mechanism $g_2 a^2 b^\dagger + h.c.$. The buffer is a highly-dissipative mode, that we model with the dissipator $D[\sqrt{\kappa_b} b]$. Both cavities have a finite temperature, expressed in thermal population.
+Our system is composed of a high lifetime cavity - the memory -  coupled to a lossy one - the buffer - in vacuum state. We denote $a$ (respectively $b$) the memory (respectively buffer) annihilation operator. The memory and the buffer are coupled through a two to one photon exchange mechanism $g_2 a^2 b^\dagger + h.c.$. The buffer is a highly-dissipative mode, that we model with the dissipator $D[\sqrt{\kappa_b} b]$. Both cavities have a finite temperature, expressed in thermal population. For more details, please see [^1].
 
-At the beginning of the experiment the memory is populated with a coherent state and the buffer is in thermal vacuum. We enable for a period of two photon exchange mechanism. During this period, pairs of photons leave the memory and are converted into a single buffer photon, that is then dissipated into the environment. The memory photon number $a^\dagger a$ is measured at different times and saved into the `data` variable. Our goal is to infer $g_2$ from the data.
+At the beginning of the experiment the memory is populated with a coherent state and the buffer is in thermal vacuum. We activate the two photons exchange mechanism. Pairs of photons leave the memory and are converted into a single buffer photon, that is then dissipated into the environment. The memory photon number $a^\dagger a$ is measured at different times and saved into the `data` variable. Our goal is to infer $g_2$ from the data.
 
 ![Pulse sequence](/figs-docs/g2-pulse-sequence.png)
 _Pulse sequence of the experiment, taken from [^1]_
@@ -18,6 +18,8 @@ _Pulse sequence of the experiment, taken from [^1]_
 [^1]:  [Quantum control of a cat-qubit with bit-flip times exceeding ten seconds, arxiv:2307.06617](https://arxiv.org/pdf/2307.06617.pdf)
 
 ## Fitting real-world data, step by step
+
+In this notebook, we will load the experimental data (or simulate some), encode the two photon exchange model in dynamiqs, simulate the system evolution and measure the number of photons at different instants. We will then use gradient descent to fit the $g_2$ parameter to the data.
 
 We start by importing all necessary libraries:
 
@@ -28,28 +30,22 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-```
 
-Declare useful helpers to handle units:
+# Declare useful helpers to handle units:
 
-```python
 MHz = 2 * np.pi
 kHz = 2 * np.pi * 1e-3
 us = 1.0
 ns = 1.0e-3
-```
 
-Define physical values that describe our system (taken from [^1]):
+# Define physical values that describe our system (taken from [^1]):
 
-```python
 thermal_a, thermal_b = 0.1, 0.011
 kappa_a = 9.3e-3 * kHz
 kappa_b = 2.6 * MHz
-```
 
-Instanciate our bosonic annihilation operators:
+# Instanciate our bosonic annihilation operators:
 
-```python
 Na, Nb = 15, 7
 a, b = dq.destroy(Na, Nb))
 ```
@@ -62,9 +58,8 @@ We now initialize the experimental data with which we will work. There are two p
 
 Before running the code, you can download the data at this link (TODO: add link)
 
-Load the data
-
 ```python
+# Load the data
 def load(file):
     x = np.loadtxt(file)
     x = jnp.array(x)
@@ -73,11 +68,8 @@ def load(file):
 data = load("short.npy")
 time = load("time_short.npy")
 alpha2 = data[0]
-```
 
-and plot them
-
-```python
+# and plot them
 plt.figure(figsize=(10, 5))
 
 plt.plot(time, data, "+")
@@ -100,7 +92,7 @@ Create the synthetic data
 g2_true = 1.2 * MHz
 b0 = dq.unit(dq.fock(Nb, 0) + thermal_b ** 0.5 * dq.fock(Nb, 1))
 
-alpha2 = np.linspace(1, 3, 3)
+alpha2 = np.linspace(1, 3, 5)
 rho0 = jnp.stack([dq.tensor(dq.coherent(Na, alpha), b0) for alpha in alpha2 ** 0.5])
 
 H = g2_true * a @ a @ dq.dag(b)
@@ -228,7 +220,7 @@ plt.grid()
 plt.xlabel("iteration")
 plt.xlabel("g2 [MHz]")
 ```
-![Fit result](/figs-docs/g2-fit-result.png)
+![Fit result](/figs-docs/g2-fit-value-cost.png)
 
 Finally we plot the fit and compare with the data
 ```python
@@ -245,12 +237,13 @@ plt.ylabel("Photon number")
 
 print(g2 / MHz)
 ```
+![Fit result](/figs-docs/g2-fit-result.png)
 
 !!! example "Final note"
     $g_2$ value differs from the one reported in
     [arxiv:2307.06617](https://arxiv.org/pdf/2307.06617.pdf)
     by approximately 15%. This discrepancy is attributed to the unavailability 
-    of Dynamiqs for performing fits at the time of writing the article. 
+    of dynamiqs for performing fits at the time of writing the article. 
     Consequently, the authors were unable to employ gradient descent for their
     fit and had to resort to alternative methods.
 
@@ -289,7 +282,7 @@ kappa_b = 2.6 * MHz
 g2_true = 1.2 * MHz
 b0 = dq.unit(dq.fock(Nb, 0) + thermal_b ** 0.5 * dq.fock(Nb, 1))
 
-alpha2 = np.linspace(1, 3, 3)
+alpha2 = np.linspace(1, 3, 5)
 rho0 = jnp.stack([dq.tensor(dq.coherent(Na, alpha), b0) for alpha in alpha2 ** 0.5])
 
 H = g2_true * a @ a @ dq.dag(b)
