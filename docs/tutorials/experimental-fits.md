@@ -1,11 +1,11 @@
-# Experimental data fits
+# Fitting a cat qubit experiment with real-world data
 
-Dynamiqs enables rapid simulations and facilitates automatic gradient computation, making it highly suitable for data fitting tasks. This tutorial will guide you through the process of simulating and fitting real-world experimental data, step by step.
+dynamiqs enables fast simulations of quantum systems with automatic gradient computation, making it highly suitable for data fitting tasks. This tutorial will guide you through the process of simulating and fitting real-world experimental data, step by step.
 
 ## Context of the experiment
 
 !!! note Info
-    This part introduces the kind of data and process that we will fit in the notebook. If you are only interested in the code you can skip it.
+    This section introduces the kind of data and process that we will fit in the notebook. If you are only interested in the code you can skip the next section.
 
 
 The data we will work with are deflation curves. Our system is composed of a high lifetime cavity - the memory -  coupled to a lossy one - the buffer - in vacuum state. We denote $a$ (respectively $b$) the memory (respectively buffer) annihilation operator. The memory and the buffer are coupled through a two to one photon exchange mechanism $g_2 a^2 b^\dagger + h.c.$. The buffer is a highly-dissipative mode, that we model with the dissipator $D[\sqrt{\kappa_b} b]$. Both cavities have a finite temperature, expressed in thermal population.
@@ -17,7 +17,7 @@ _Pulse sequence of the experiment, taken from [^1]_
 
 [^1]:  [Quantum control of a cat-qubit with bit-flip times exceeding ten seconds, arxiv:2307.06617](https://arxiv.org/pdf/2307.06617.pdf)
 
-## Step by step solution
+## Fitting real-world data, step by step
 
 We start by importing all necessary libraries:
 
@@ -56,7 +56,7 @@ a, b = dq.destroy(Na, Nb))
 
 ### Loading the data
 
-We provide real experimental data but also leave the possibility to simply simulate them, you can choose the one that suits you best
+We now initialize the experimental data with which we will work. There are two possible options to do so: either load the actual experimental data from [^1]_, or generate synthetic data from a noisy master equation simulation.
 
 #### Option 1: Real world data
 
