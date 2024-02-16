@@ -96,9 +96,7 @@ cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs-code/*.png && pytest dyna
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-# todo: reactivate when the documentation is ready
-# cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs-docs/*.png && pytest docs'
-cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs-docs/*.png && echo "temporarily skipped"'
+cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs-docs/*.png && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
