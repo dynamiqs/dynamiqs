@@ -1,6 +1,6 @@
 # Batching simulations
 
-Batching can be used to **run multiple independent simulations simultaneously**, and can dramatically speedup simulations, especially on GPU/TPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
+Batching can be used to **run multiple independent simulations simultaneously**, and can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -85,6 +85,8 @@ Common use cases for batching include:
 - simulate a system with different initial states (e.g. for gate tomography),
 - perform optimisation using multiple starting points with random initial guesses (for parameters fitting or quantum optimal control).
 
+<!-- skip this part for now (no performance improvement with batching)
+
 Let's quickly benchmark the speedup obtained by batching a simple simulation:
 
 ```python
@@ -118,13 +120,15 @@ def run_batched():
 
 So we want to run a total of `11 * 11 = 121` simulations. Let's compare how long it takes to run them unbatched vs batched on CPU[^1]:
 [^1]: Apple M1 chip with 8-core CPU.
-
+-->
 <!-- skip: start -->
-
+<!--
 ```pycon
->>> %timeit run_unbatched()
+>>> run_unbatched().block_until_ready() # run once for JIT compilation
+>>> %timeit run_unbatched().block_until_ready()
 119 ms ± 9.18 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
->>> %timeit run_batched()
+>>> run_batched().block_until_ready() # run once for JIT compilation
+>>> %timeit run_batched().block_until_ready()
 56.5 ms ± 539 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
@@ -134,12 +138,14 @@ The result is even more striking on GPU[^2]:
 [^2]: NVIDIA GeForce RTX 4090.
 
 ```pycon
->>> %timeit run_unbatched()
+>>> run_unbatched().block_until_ready() # run once for JIT compilation
+>>> %timeit run_unbatched().block_until_ready()
 439 ms ± 692 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
->>> %timeit run_batched()
+>>> run_batched().block_until_ready() # run once for JIT compilation
+>>> %timeit run_batched().block_until_ready()
 6.29 ms ± 160 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
 On the GPU, because we remove latency between function calls, we gain a **factor x70** in speedup!
-
+-->
 <!-- skip: end -->
