@@ -63,6 +63,53 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     </div>
 </div>
 
+## Core
+
+### totime
+
+::: dynamiqs.time_array
+    options:
+        table: true
+        members:
+        - totime
+
+### Solvers
+
+::: dynamiqs.solver
+    options:
+        table: true
+        members:
+        - Tsit5
+        - Dopri5
+        - Dopri8
+        - Euler
+        - Propagator
+
+### Gradients
+
+::: dynamiqs.gradient
+    options:
+        table: true
+        members:
+        - Autograd
+        - CheckpointAutograd
+
+### Options
+
+::: dynamiqs.options
+    options:
+        table: true
+        members:
+        - Options
+
+### Result
+
+::: dynamiqs.result
+    options:
+        table: true
+        members:
+        - Result
+
 ## Utilities
 
 ### Operators
