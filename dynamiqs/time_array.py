@@ -17,14 +17,14 @@ __all__ = ['totime']
 
 TimeArrayLike = Union[
     ArrayLike,
-    Callable[[float, tuple[PyTree]], Array],
+    Callable[[float, ...], Array],
     tuple[ArrayLike, ArrayLike, ArrayLike],
-    tuple[Callable[[float, tuple[PyTree]], Array], ArrayLike],
+    tuple[Callable[[float, ...], Array], ArrayLike],
     'TimeArray',
 ]
 
 
-def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
+def totime(x: TimeArrayLike, *args: PyTree) -> TimeArray:
     # already a time array
     if isinstance(x, TimeArray):
         return x
@@ -57,7 +57,7 @@ def _factory_constant(x: ArrayLike) -> ConstantTimeArray:
 
 
 def _factory_callable(
-    f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree]
+    f: callable[[float, ...], Array], *, args: tuple[PyTree]
 ) -> CallableTimeArray:
     f0 = f(0.0, *args)
 
@@ -80,8 +80,9 @@ def _factory_callable(
     # This is necessary:
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
-    f_partial = Partial(lambda t: f(t, *args))
-    return CallableTimeArray(f_partial, f0)
+    f = Partial(f)
+    static = jnp.zeros_like(f0)
+    return CallableTimeArray(f, static, args)
 
 
 def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
@@ -115,7 +116,7 @@ def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
 
 
 def _factory_modulated(
-    x: tuple[callable[[float, tuple[PyTree]], Array], Array], *, args: tuple[PyTree]
+    x: tuple[callable[[float, ...], Array], Array], *, args: tuple[PyTree]
 ) -> ModulatedTimeArray:
     f, array = x
 
@@ -148,18 +149,10 @@ def _factory_modulated(
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_ModulatedFactor(Partial(f, *args), f0)]
+    factors = [_ModulatedFactor(Partial(f), f0, args)]
     arrays = array[None, ...]  # (1, n, n)
     static = jnp.zeros_like(array)
     return ModulatedTimeArray(factors, arrays, static=static)
-
-
-class SumCallable(eqx.Module):
-    f1: callable[[float], Array]
-    f2: callable[[float], Array]
-
-    def __call__(self, t: float) -> Array:
-        return self.f1(t) + self.f2(t)
 
 
 class TimeArray(eqx.Module):
@@ -278,59 +271,54 @@ class ConstantTimeArray(TimeArray):
 
 
 class CallableTimeArray(TimeArray):
-    f: callable[[float], Array]
-    f0: Array
+    f: callable[[float, ...], Array]
+    static: Array
+    args: tuple[PyTree]
 
     @property
     def dtype(self) -> np.dtype:
-        return self.f0.dtype
+        return self.static.dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.f0.shape
+        return self.static.shape
 
     @property
     def mT(self) -> TimeArray:
-        f = lambda t: self.f(t).mT
-        f0 = self.f0.mT
-        return CallableTimeArray(f, f0)
+        f = Partial(lambda t, *args: self.f(t, *args).mT)
+        static = self.static.mT
+        return CallableTimeArray(f, static, self.args)
 
     def __call__(self, t: float) -> Array:
-        return self.f(t).reshape(*self.shape)
+        return self.static + self.f(t, *self.args).reshape(*self.shape)
 
-    def reshape(self, *args: int) -> TimeArray:
+    def reshape(self, *new_shape: int) -> TimeArray:
         f = self.f
-        f0 = self.f0.reshape(*args)
-        return CallableTimeArray(f, f0)
+        static = self.static.reshape(*new_shape)
+        return CallableTimeArray(f, static, self.args)
 
     def conj(self) -> TimeArray:
-        f = lambda t: self.f(t).conj()
-        f0 = self.f0.conj()
-        return CallableTimeArray(f, f0)
+        f = Partial(lambda t, *args: self.f(t, *args).conj())
+        static = self.static.conj()
+        return CallableTimeArray(f, static, self.args)
 
     def __neg__(self) -> TimeArray:
-        f = lambda t: -self.f(t)
-        f0 = -self.f0
-        return CallableTimeArray(f, f0)
+        f = Partial(lambda t, *args: -self.f(t, *args))
+        static = -self.static
+        return CallableTimeArray(f, static, self.args)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = lambda t: self.f(t) * y
-        f0 = self.f0 * y
-        return CallableTimeArray(f, f0)
+        f = Partial(lambda t, *args: self.f(t, *args) * y)
+        static = self.static * y
+        return CallableTimeArray(f, static, self.args)
 
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(y, get_args(ArrayLike)):
-            f = SumCallable(self.f, ConstantTimeArray(y))
-            f0 = self.f0 + y
-            return CallableTimeArray(f, f0)
+            static = self.static + jnp.asarray(y)
+            return CallableTimeArray(self.f, static, self.args)
         elif isinstance(y, ConstantTimeArray):
-            f = SumCallable(self.f, y)
-            f0 = self.f0 + y.x
-            return CallableTimeArray(f, f0)
-        elif isinstance(y, CallableTimeArray):
-            f = SumCallable(self.f, y.f)
-            f0 = self.f0 + y.f0
-            return CallableTimeArray(f, f0)
+            static = self.static + y.x
+            return CallableTimeArray(self.f, static, self.args)
         else:
             return NotImplemented
 
@@ -393,23 +381,24 @@ class _ModulatedFactor(_Factor):
     # f0 holds information about the shape of the array returned by f(t).
     f: callable[[float], Array]  # (float) -> (...)
     f0: Array  # (...)
+    args: tuple[PyTree]
 
     @property
     def shape(self) -> tuple[int, ...]:
         return self.f0.shape
 
     def conj(self) -> _Factor:
-        f = lambda t: self.f(t).conj()
+        f = Partial(lambda t, *args: self.f(t, *args).conj())
         f0 = self.f0.conj()
-        return _ModulatedFactor(f, f0)
+        return _ModulatedFactor(f, f0, self.args)
 
     def __call__(self, t: Scalar) -> Array:
-        return self.f(t).reshape(self.shape)
+        return self.f(t, *self.args).reshape(self.shape)
 
     def reshape(self, *args: int) -> _Factor:
         f = self.f
         f0 = self.f0.reshape(*args)
-        return _ModulatedFactor(f, f0)
+        return _ModulatedFactor(f, f0, self.args)
 
 
 class FactorTimeArray(TimeArray):
