@@ -108,7 +108,7 @@ class TDQubit(ClosedSystem):
 
     def H(self, params: PyTree) -> TimeArray:
         f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
-        return dq.totime(f, args=(params.eps, params.omega))
+        return dq.totime(f, params.eps, params.omega)
 
     def y0(self, params: PyTree) -> Array:
         return dq.fock(2, 0)
