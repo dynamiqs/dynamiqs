@@ -27,7 +27,13 @@ def sesolve(
     solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
-):
+) -> Result:
+    # === convert arguments
+    H = _astimearray(H)
+    psi0 = jnp.asarray(psi0, dtype=cdtype())
+    tsave = jnp.asarray(tsave)
+    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
@@ -40,7 +46,7 @@ def sesolve(
 
 
 def _sesolve(
-    H: ArrayLike | TimeArray,
+    H: TimeArray,
     psi0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
@@ -48,12 +54,6 @@ def _sesolve(
     gradient: Gradient | None = None,
     options: Options = Options(),
 ) -> Result:
-    # === convert arguments
-    H = _astimearray(H)
-    y0 = jnp.asarray(psi0, dtype=cdtype())
-    ts = jnp.asarray(tsave)
-    Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
-
     # === select solver class
     solvers = {
         Euler: SEEuler,
@@ -68,7 +68,7 @@ def _sesolve(
     solver.assert_supports_gradient(gradient)
 
     # === init solver
-    solver = solver_class(ts, y0, H, Es, solver, gradient, options)
+    solver = solver_class(tsave, psi0, H, exp_ops, solver, gradient, options)
 
     # === run solver
     result = solver.run()

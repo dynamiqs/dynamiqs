@@ -12,12 +12,13 @@ from .abstract_solver import AbstractSolver
 
 
 def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
-    if isinstance(x, get_args(ArrayLike)):
-        return _factory_constant(x)
-    elif isinstance(x, TimeArray):
+    if isinstance(x, TimeArray):
         return x
     else:
-        raise TypeError()  # todo: add error message
+        try:
+            return _factory_constant(x)
+        except:
+            raise TypeError('Input must be already be a `TimeArray` or an array-like object.')
 
 
 def get_solver_class(

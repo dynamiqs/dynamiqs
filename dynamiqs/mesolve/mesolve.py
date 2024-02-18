@@ -29,14 +29,21 @@ def mesolve(
     solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
-):
+) -> Result:
+    # === convert arguments
+    H = _astimearray(H)
+    jump_ops = [_astimearray(jump_op) for jump_op in jump_ops]
+    psi0 = jnp.asarray(psi0, dtype=cdtype())
+    rho0 = todm(psi0)
+    tsave = jnp.asarray(tsave)
+    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
     # === vectorize function
-    # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
-    jump_ops_ndim = _astimearray(jump_ops[0]).ndim + 1
+    # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (
         H.ndim > 2,
         jump_ops_ndim > 3,  # todo: this is a temporary fix
-        psi0.ndim > 2,
+        rho0.ndim > 2,
         False,
         False,
         False,
@@ -49,27 +56,19 @@ def mesolve(
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
-    return f(H, jump_ops, psi0, tsave, exp_ops, solver, gradient, options)
+    return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
 
 
 def _mesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),
     gradient: Gradient | None = None,
     options: Options = Options(),
 ) -> Result:
-    # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
-    y0 = jnp.asarray(psi0, dtype=cdtype())
-    y0 = todm(y0)
-    ts = jnp.asarray(tsave)
-    Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
-
     # === select solver class
     solvers = {
         Euler: MEEuler,
@@ -84,7 +83,7 @@ def _mesolve(
     solver.assert_supports_gradient(gradient)
 
     # === init solver
-    solver = solver_class(ts, y0, H, Es, solver, gradient, options, Ls)
+    solver = solver_class(tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops)
 
     # === run solver
     result = solver.run()
