@@ -33,10 +33,16 @@ class BaseSolver(AbstractSolver):
     def t0(self) -> Scalar:
         return self.ts[0] if self.options.t0 is None else self.options.t0
 
+    def ysave_transform(self, x) -> PyTree:
+        if self.options.ysave_transform is None:
+            return x
+        else:
+            return self.options.ysave_transform(x)
+
     def save(self, y: Array) -> dict[str, Array]:
         saved = {}
         if self.options.save_states:
-            saved['ysave'] = y
+            saved['ysave'] = self.ysave_transform(y)
         if self.Es is not None and len(self.Es) > 0:
             saved['Esave'] = expect(self.Es, y)
         return saved
