@@ -41,7 +41,7 @@ def mesolve(
     # === check len(jump_ops) > 0
     if len(jump_ops) == 0:
         raise ValueError(
-            "At least one jump operator must be provided for `dq.mesolve`. If you don't"
+            'At least one jump operator must be provided for `dq.mesolve`. If you do not'
             ' need jump operators, consider using `dq.sesolve` instead.'
         )
 
