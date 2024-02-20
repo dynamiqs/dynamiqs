@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import equinox as eqx
 from jax import Array
+from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
@@ -33,6 +34,7 @@ class Result(eqx.Module):
     options: Options
     ysave: Array
     Esave: Array | None
+    save: PyTree | None
 
     @property
     def states(self) -> Array:

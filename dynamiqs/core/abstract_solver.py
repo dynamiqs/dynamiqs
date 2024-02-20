@@ -33,27 +33,27 @@ class BaseSolver(AbstractSolver):
     def t0(self) -> Scalar:
         return self.ts[0] if self.options.t0 is None else self.options.t0
 
-    def ysave_transform(self, x) -> PyTree:
-        if self.options.ysave_transform is None:
-            return x
-        else:
-            return self.options.ysave_transform(x)
-
     def save(self, y: Array) -> dict[str, Array]:
         saved = {}
         if self.options.save_states:
-            saved['ysave'] = self.ysave_transform(y)
+            saved['ysave'] = y
         if self.Es is not None and len(self.Es) > 0:
             saved['Esave'] = expect(self.Es, y)
+        if self.options.save_fn:
+            saved["save_fn"] = self.options.save_fn(y)
+
         return saved
 
     def result(self, saved: dict[str, Array], ylast: Array) -> Result:
         ysave = saved.get('ysave', ylast)
         Esave = saved.get('Esave', None)
+        save_fn = saved.get('save_fn', None)
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
 
-        return Result(self.ts, self.solver, self.gradient, self.options, ysave, Esave)
+        return Result(
+            self.ts, self.solver, self.gradient, self.options, ysave, Esave, save_fn
+        )
 
 
 SESolver = BaseSolver

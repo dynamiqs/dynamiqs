@@ -20,13 +20,13 @@ class Options(eqx.Module):
             of batched arguments. If `False` the solver will be called with zipped
             batched arguments.
         t0 (Scalar, optional): Initial simulation time. Defaults to `tsave[0]`.
-        ysave_transform (Callable[[Array], PyTree], optional): A function to transform
-            the `ysave` array. If `None` the whole state is saved. This parameter is
-            useful to save only a part of the state.
+        save_fn (Callable[[Array], PyTree], optional): A function to save
+            additional arbitrary data. The function should take the state
+            as input and return a pytree of arrays. Defaults to `None`.
     """
 
     save_states: bool = True
     verbose: bool = True
     cartesian_batching: bool = True
     t0: Scalar | None = None  # defaults to tsave[0]
-    ysave_transform: Callable[[Array], PyTree] | None = None  # defaults to identity
+    save_fn: Callable[[Array], PyTree] | None = None
