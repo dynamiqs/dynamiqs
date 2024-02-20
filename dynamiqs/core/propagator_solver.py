@@ -32,8 +32,7 @@ class PropagatorSolver(BaseSolver):
 
         # we use `jnp.asarray(self.t0)` because of the bug fixed here:
         # https://github.com/google/jax/pull/19381 (fixed in jax-0.4.24)
-        # the `.reshape(-1)` covers the case where `self.t0` is a 0-dimensional array,
-        # that can occur when using `vmap`
+        # the `.reshape(-1)` covers the case where `self.t0` is a 0-dimensional array
         delta_ts = jnp.diff(self.ts, prepend=jnp.asarray(self.t0).reshape(-1))
         ylast, saved = jax.lax.scan(propagate, self.y0, delta_ts)
 
