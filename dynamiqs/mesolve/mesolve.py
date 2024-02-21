@@ -22,7 +22,7 @@ from .mepropagator import MEPropagator
 def mesolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
+    rho0: ArrayLike,
     tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
@@ -36,63 +36,62 @@ def mesolve(
     starting from an initial state $\rho_0$, according to the Lindblad master
     equation ($\hbar=1$):
     $$
-        \frac{\dd\rho}{\dt} =-i[H(t), \rho]
+        \frac{\dd\rho(t)}{\dt} = -i[H(t), \rho(t)]
         + \sum_{k=1}^N \left(
-            L_k(t) \rho L_k^\dag(t)
-            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho
-            - \frac{1}{2} \rho L_k^\dag(t) L_k(t)
+            L_k(t) \rho(t) L_k^\dag(t)
+            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
+            - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
         \right),
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
-    collection of jump operators.
+    collection of jump operators at time $t$.
 
     Quote: Time-dependent Hamiltonian or jump operators
-        If the Hamiltonian or jump operators depend on time, they can be converted to a
-        `TimeArray` using [`dq.totime`](/python_api/totime/totime.html).
+        If the Hamiltonian or the jump operators depend on time, they can be converted
+        to a time-array using [`dq.totime`](/python_api/totime/totime.html).
 
     Quote: Running multiple simulations concurrently
-        The Hamiltonian `H`, the initial density matrix `rho0` and the jump operators
-        `L_k` can be batched to solve multiple master equations concurrently. All other
-        arguments are common to every batch.
+        The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
+        matrix `rho0` can be batched to solve multiple master equations concurrently.
+        All other arguments are common to every batch.
 
     Args:
-        H _(array-like or TimeArray)_: Hamiltonian of shape _(bH?, n, n)_.
-        jump_ops _(list of array-like or TimeArray)_: List of jump operators, each of
-            shape _(bL?, n, n)_.
-        psi0 _(array-like)_: Initial state vector of shape _(brho?, n, 1)_ or density
-            matrix of shape _(brho?, n, n)_.
-        tsave _(1D array-like)_: Times at which the states and expectation values are
-            saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
-            to `tsave[-1]` if `t0` is given in `options`.
-        exp_ops _(list of 2D array-like, optional)_: List of operators of shape _(n, n)_
-            for which the expectation value is computed. Defaults to `None`.
-        solver _(Solver, optional)_: Solver for the differential equation integration.
-            Defaults to `dq.solver.Tsit5()`.
-        gradient _(Gradient, optional)_: Algorithm used to compute the gradient.
-            Defaults to `None`.
-        options _(Options, optional)_: Generic options. Defaults to `None`.
+        H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
+        jump_ops _(list of array-like or time-array with shape (bL?, n, n))_: List
+            of jump operators.
+        rho0 _(array-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
+        tsave _(array-like of shape (nt,))_: Times at which the states and expectation
+            values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
+            from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        exp_ops _(list of array-like, with shape (nE, n, n), optional)_: List of
+            operators for which the expectation value is computed.
+        solver: Solver for the differential equation integration.
+            Defaults to [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+        gradient: Algorithm used to compute the gradient.
+        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
 
     Returns:
-        Object of type [`Result`](/python_api/result/Result.html) holding the result of
-            the Lindblad master equation integration. It has the following attributes:
+        [`dq.Result`](/python_api/result/Result.html) object holding the result of the
+            Lindblad master equation integration. It has the following attributes:
 
-            - **states** _(Array)_ – Saved states with shape
-                _(bH?, bpsi?, len(tsave), n, 1)_.
-            - **expects** _(Array, optional)_ – Saved expectation values with shape
-                _(bH?, bpsi?, len(exp_ops), len(tsave))_.
-            - **tsave** _(Array)_ – Times for which states and expectation values were
-                saved.
+            - **states** _(array of shape (bH?, brho?, nt, n, n))_ – Saved states.
+            - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ – Saved
+                expectation values.
+            - **extra** _(PyTree, optional)_- Extra data saved with `save_extra()` if
+                specified in `options`.
+            - **tsave** _(array of shape (nt,))_ – Times for which states and
+                expectation values were saved.
             - **solver** (Solver) –  Solver used.
             - **gradient** (Gradient) – Gradient used.
-            - **options** _(dict)_  – Options used.
+            - **options** _(Options)_  – Options used.
     """
     # === vectorize function
-    # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
+    # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     jump_ops_ndim = _astimearray(jump_ops[0]).ndim + 1
     is_batched = (
         H.ndim > 2,
         jump_ops_ndim > 3,  # todo: this is a temporary fix
-        psi0.ndim > 2,
+        rho0.ndim > 2,
         False,
         False,
         False,
@@ -105,13 +104,13 @@ def mesolve(
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
-    return f(H, jump_ops, psi0, tsave, exp_ops, solver, gradient, options)
+    return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
 
 
 def _mesolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
+    rho0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),
@@ -121,7 +120,7 @@ def _mesolve(
     # === convert arguments
     H = _astimearray(H)
     Ls = [_astimearray(L) for L in jump_ops]
-    y0 = jnp.asarray(psi0, dtype=cdtype())
+    y0 = jnp.asarray(rho0, dtype=cdtype())
     y0 = todm(y0)
     ts = jnp.asarray(tsave)
     Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
