@@ -10,6 +10,8 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
+__all__ = ['Result']
+
 
 def memory_bytes(x: Array) -> int:
     return x.itemsize * x.size
@@ -33,6 +35,18 @@ Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], extra=Optional[P
 
 
 class Result(eqx.Module):
+    """Result of the integration.
+
+    Attributes:
+        states _(Array)_: Saved states.
+        expects _(Array, optional)_: Saved expectation values.
+        extra _(PyTree, optional)_: Extra data saved.
+        tsave _(Array)_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+    """
+
     tsave: Array
     solver: Solver
     gradient: Gradient | None

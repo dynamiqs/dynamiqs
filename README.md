@@ -19,7 +19,7 @@ Some exciting features of dynamiqs include:
 - **Batching** many simulations of different Hamiltonians, jump operators or initial states to run them concurrently.
 - Exploring solvers **tailored to quantum** simulations that preserve the properties of the state, such as trace and positivity.
 - Computing **gradients** of any function of the evolved quantum state with respect to any parameter of the Hamiltonian, jump operators, or initial state.
-- Implementing your own solvers with ease by subclassing our base solver class and focusing directly on the solver logic.
+- Implementing **your own solvers** with ease by subclassing our base solver class and focusing directly on the solver logic.
 - Enjoy reading our carefully crafted documentation on our website: <https://www.dynamiqs.org>.
 
 We hope that this library will prove beneficial to the community for e.g. simulations of large quantum systems, batched simulations of time-varying problems, gradient-based parameter estimation, or large-scale quantum optimal control.

@@ -11,7 +11,7 @@ In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There
 
 ## Constant Hamiltonians
 
-A constant Hamiltonian can be defined using **array-like objects**, i.e. NumPy and JAX arrays. In all cases, the Hamiltonian is then converted internally into a JAX array for differentiability and GPU/TPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common Hamiltonians.
+A constant Hamiltonian can be defined using **array-like objects**, i.e. NumPy and JAX arrays. In all cases, the Hamiltonian is then converted internally into a JAX array for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common Hamiltonians.
 
 For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of the following syntaxes:
 
