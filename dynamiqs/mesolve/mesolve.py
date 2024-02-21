@@ -43,7 +43,7 @@ def mesolve(
         False,
         False,
     )
-    # the result is vectorized over ysave and Esave
+    # the result is vectorized over ysave, Esave and save_fn
     out_axes = Result(None, None, None, None, 0, 0, 0)
 
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
