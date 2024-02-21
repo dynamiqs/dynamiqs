@@ -107,5 +107,5 @@ def smesolve(
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
-    """
+    """  # noqa: E501
     return NotImplementedError

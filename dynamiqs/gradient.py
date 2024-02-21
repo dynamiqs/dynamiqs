@@ -20,7 +20,7 @@ class Autograd(Gradient):
             This falls back to the
             [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
             option.
-        """
+        """  # noqa: E501
         super().__init__()
 
 
@@ -62,5 +62,5 @@ class CheckpointAutograd(Gradient):
                 for which a theoretical result is available guaranteeing that
                 backpropagation will take `O(n_steps log(n_steps))` time in the number
                 of steps `n_steps <= max_steps`.
-        """
+        """  # noqa: E501
         super().__init__()

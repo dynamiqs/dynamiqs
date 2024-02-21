@@ -213,7 +213,7 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
             min_factor: Minimum factor for adaptive step sizing.
             max_factor: Maximum factor for adaptive step sizing.
             max_steps: Maximum number of steps.
-        """
+        """  # noqa: E501
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
