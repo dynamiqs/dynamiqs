@@ -32,7 +32,7 @@ def sesolve(
 
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
     $t$, starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
-    equation ($\hbar=1$):
+    equation ($\hbar=1$)
     $$
         \frac{\dd\ket{\psi(t)}}{\dt} = -i H(t) \ket{\psi(t)},
     $$
@@ -53,10 +53,10 @@ def sesolve(
         tsave _(array-like of shape (nt,))_: Times at which the states and expectation
             values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
             from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, with shape (nE, n, n), optional)_: List of
+        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the differential equation integration.
-            Defaults to [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+        solver: Solver for the integration. Defaults to
+            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
 
