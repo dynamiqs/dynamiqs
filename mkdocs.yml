@@ -131,13 +131,13 @@ nav:
           - smesolve: python_api/solvers/smesolve.md
       - Core:
           - totime: python_api/totime/totime.md
-          - Solvers:
+          - Solvers (dq.solver):
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
               - Dopri8: python_api/solver/Dopri8.md
               - Euler: python_api/solver/Euler.md
               - Propagator: python_api/solver/Propagator.md
-          - Gradients:
+          - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
           - Options: python_api/options/Options.md

@@ -73,7 +73,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - totime
 
-### Solvers
+### Solvers (dq.solver)
 
 ::: dynamiqs.solver
     options:
@@ -85,7 +85,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - Euler
         - Propagator
 
-### Gradients
+### Gradients (dq.gradient)
 
 ::: dynamiqs.gradient
     options:
