@@ -35,38 +35,23 @@ Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], extra=Optional[P
 
 
 class Result(eqx.Module):
+    """Result of the integration.
+
+    Attributes:
+        states _(Array)_: Saved states.
+        expects _(Array, optional)_: Saved expectation values.
+        extra _(PyTree, optional)_: Extra data saved.
+        tsave _(Array)_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+    """
+
     tsave: Array
     solver: Solver
     gradient: Gradient | None
     options: Options
     _saved: Saved
-
-    def __init__(
-        self,
-        tsave: Array,
-        solver: Solver,
-        gradient: Gradient | None,
-        options: Options,
-        ysave: Array,
-        Esave: Array | None,
-    ):
-        """Result of the integration.
-
-        Attributes:
-            states: Saved states.
-            expects: Saved expectation values.
-            extra: Extra data saved.
-            tsave: Times for which results were saved.
-            solver: Solver used.
-            gradient: Gradient used.
-            options: Options used.
-        """
-        self.tsave = tsave
-        self.solver = solver
-        self.gradient = gradient
-        self.options = options
-        self.ysave = ysave
-        self.Esave = Esave
 
     @property
     def states(self) -> Array:
@@ -97,17 +82,7 @@ class Result(eqx.Module):
         return '==== Result ====\n' + parts_str
 
     def to_qutip(self) -> Result:
-        """Convert the Result arrays to QuTiP `QObj` objects.
-
-        Warning:
-            Not implemented yet.
-        """
         raise NotImplementedError
 
     def to_numpy(self) -> Result:
-        """Convert the Result arrays to NumPy arrays.
-
-        Warning:
-            Not implemented yet.
-        """
         raise NotImplementedError
