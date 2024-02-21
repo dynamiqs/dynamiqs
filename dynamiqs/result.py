@@ -40,14 +40,6 @@ class Result(eqx.Module):
     _saved: Saved
 
     @property
-    def ysave(self) -> Array:
-        return self._saved.ysave
-
-    @property
-    def Esave(self) -> Array:
-        return self._saved.Esave
-
-    @property
     def states(self) -> Array:
         return self._saved.ysave
 

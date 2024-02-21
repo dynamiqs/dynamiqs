@@ -24,24 +24,24 @@ def test_batching(cartesian_batching):
 
     # no batching
     result = dq.sesolve(H[0], psi0[0], tsave, exp_ops=exp_ops, options=options)
-    assert result.ysave.shape == (nt, n, 1)
-    assert result.Esave.shape == (nEs, nt)
+    assert result.states.shape == (nt, n, 1)
+    assert result.expects.shape == (nEs, nt)
 
     # H batched
     result = dq.sesolve(H, psi0[0], tsave, exp_ops=exp_ops, options=options)
-    assert result.ysave.shape == (nH, nt, n, 1)
-    assert result.Esave.shape == (nH, nEs, nt)
+    assert result.states.shape == (nH, nt, n, 1)
+    assert result.expects.shape == (nH, nEs, nt)
 
     # psi0 batched
     result = dq.sesolve(H[0], psi0, tsave, exp_ops=exp_ops, options=options)
-    assert result.ysave.shape == (npsi0, nt, n, 1)
-    assert result.Esave.shape == (npsi0, nEs, nt)
+    assert result.states.shape == (npsi0, nt, n, 1)
+    assert result.expects.shape == (npsi0, nEs, nt)
 
     # H and psi0 batched
     result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops, options=options)
     if cartesian_batching:
-        assert result.ysave.shape == (nH, npsi0, nt, n, 1)
-        assert result.Esave.shape == (nH, npsi0, nEs, nt)
+        assert result.states.shape == (nH, npsi0, nt, n, 1)
+        assert result.expects.shape == (nH, npsi0, nEs, nt)
     else:
-        assert result.ysave.shape == (nH, nt, n, 1)
-        assert result.Esave.shape == (nH, nEs, nt)
+        assert result.states.shape == (nH, nt, n, 1)
+        assert result.expects.shape == (nH, nEs, nt)
