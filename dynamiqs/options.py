@@ -10,7 +10,7 @@ class Options(eqx.Module):
     save_states: bool = True
     verbose: bool = True
     cartesian_batching: bool = True
-    t0: Scalar | None = None  # defaults to tsave[0]
+    t0: Scalar | None = None
 
     def __init__(
         self,
@@ -19,16 +19,21 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         t0: Scalar | None = None,
     ):
-        """Generic options for solvers.
+        """Generic options for the quantum solvers.
 
         Args:
-            save_states: Whether to save the states at each time step. If `False`, only
-                the final state is returned.
-            verbose: Whether to print information about the solver integration.
-            cartesian_batching: Whether to use the cartesian batching or not. Cartesian
-                batching means batching only once over multiple batched arrays.
-                Otherwise, each batched array is batched separately.
+            save_states: If `True`, the state is saved at every time in `tsave`,
+                otherwise only the final state is returned.
+            verbose: If `True`, print information about the integration, otherwise
+                nothing is printed.
+            cartesian_batching: If `True`, batched arguments are treated as separated
+                batch dimensions, otherwise the batching is performed over a single
+                shared batched dimension.
             t0: Initial time. If `None`, defaults to the first time in `tsave`.
+            save_extra _(function, optional)_: A function with signature
+                `f(Array) -> PyTree` that takes a state as input and returns a PyTree.
+                This can be used to save additional arbitrary data during the
+                integration.
         """
         self.save_states = save_states
         self.verbose = verbose
