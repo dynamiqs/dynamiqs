@@ -29,7 +29,7 @@ def array_str(x: Array) -> str:
     return f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
-Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], other=Optional[PyTree])
+Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], extra=Optional[PyTree])
 
 
 class Result(eqx.Module):
@@ -48,8 +48,8 @@ class Result(eqx.Module):
         return self._saved.Esave
 
     @property
-    def other(self) -> PyTree | None:
-        return self._saved.other
+    def extra(self) -> PyTree | None:
+        return self._saved.extra
 
     def __str__(self) -> str:
         parts = {
@@ -59,8 +59,8 @@ class Result(eqx.Module):
             ),
             'States  ': array_str(self.states),
             'Expects ': array_str(self.expects) if self.expects is not None else None,
-            'Other   ': (
-                eqx.tree_pformat(self.other) if self.other is not None else None
+            'Extra   ': (
+                eqx.tree_pformat(self.extra) if self.extra is not None else None
             ),
         }
         parts = {k: v for k, v in parts.items() if v is not None}

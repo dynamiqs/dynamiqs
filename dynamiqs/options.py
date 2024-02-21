@@ -13,9 +13,9 @@ class Options(eqx.Module):
     verbose: bool = True
     cartesian_batching: bool = True
     t0: Scalar | None = None  # defaults to tsave[0]
-    save_fun: Callable[[Array], PyTree] | None = None
+    save_extra: Callable[[Array], PyTree] | None = None
 
     def __post_init__(self):
-        if self.save_fun is not None:
-            # use `jax.tree_util.Partial` to make `save_fun` a valid Pytree
-            self.save_fun = jax.tree_util.Partial(self.save_fun)
+        if self.save_extra is not None:
+            # use `jax.tree_util.Partial` to make `save_extra` a valid Pytree
+            self.save_extra = jax.tree_util.Partial(self.save_extra)
