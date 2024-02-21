@@ -2,7 +2,7 @@
 
 The **dynamiqs** Python API features two main types of functions: solvers of differential equations describing quantum systems, and various utility functions to ease the creation and manipulation of quantum states and operators.
 
-## Solvers
+## Quantum solvers
 
 <div class="doc doc-object doc-module">
     <div class="doc doc-contents first">

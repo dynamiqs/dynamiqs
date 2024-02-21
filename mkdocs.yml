@@ -125,7 +125,7 @@ nav:
           - tutorials/computing-gradients.md
   - Python API:
       - python_api/index.md
-      - Quantum Solvers:
+      - Quantum solvers:
           - sesolve: python_api/solvers/sesolve.md
           - mesolve: python_api/solvers/mesolve.md
           - smesolve: python_api/solvers/smesolve.md
