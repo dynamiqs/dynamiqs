@@ -59,6 +59,9 @@ class Result(eqx.Module):
             ),
             'States  ': array_str(self.states),
             'Expects ': array_str(self.expects) if self.expects is not None else None,
+            'Other   ': (
+                eqx.tree_pformat(self.other) if self.other is not None else None
+            ),
         }
         parts = {k: v for k, v in parts.items() if v is not None}
         parts_str = '\n'.join(f'{k}: {v}' for k, v in parts.items())
