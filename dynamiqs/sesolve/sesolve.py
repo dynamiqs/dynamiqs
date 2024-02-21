@@ -24,9 +24,9 @@ def sesolve(
     tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),
+    solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),
+    options: Options = Options(),  # noqa: B008
 ) -> Result:
     r"""Solve the Schrödinger equation.
 
@@ -64,15 +64,15 @@ def sesolve(
         [`dq.Result`](/python_api/result/Result.html) object holding the result of the
             Schrödinger equation integration. It has the following attributes:
 
-            - **states** _(array of shape (bH?, bpsi?, nt, n, 1))_ – Saved states.
-            - **expects** _(array of shape (bH?, bpsi?, nE, nt), optional)_ – Saved
+            - **states** _(array of shape (bH?, bpsi?, nt, n, 1))_ -- Saved states.
+            - **expects** _(array of shape (bH?, bpsi?, nE, nt), optional)_ -- Saved
                 expectation values.
-            - **extra** _(PyTree, optional)_- Extra data saved with `save_extra()` if
+            - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
                 specified in `options`.
-            - **tsave** _(array of shape (nt,))_ – Times for which results were saved.
-            - **solver** (Solver) –  Solver used.
-            - **gradient** (Gradient) – Gradient used.
-            - **options** _(Options)_  – Options used.
+            - **tsave** _(array of shape (nt,))_ -- Times for which results were saved.
+            - **solver** _(Solver)_ -- Solver used.
+            - **gradient** _(Gradient)_ -- Gradient used.
+            - **options** _(Options)_ -- Options used.
     """
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
@@ -90,9 +90,9 @@ def _sesolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),
+    solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),
+    options: Options = Options(),  # noqa: B008
 ) -> Result:
     # === convert arguments
     H = _astimearray(H)
@@ -120,4 +120,4 @@ def _sesolve(
     result = solver.run()
 
     # === return result
-    return result
+    return result  # noqa: RET504

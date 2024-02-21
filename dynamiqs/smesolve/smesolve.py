@@ -1,3 +1,5 @@
+# ruff: noqa: ARG001
+
 from __future__ import annotations
 
 from jaxtyping import ArrayLike
@@ -21,7 +23,7 @@ def smesolve(
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver | None = None,
     gradient: Gradient | None = None,
-    options: Options = Options(),
+    options: Options = Options(),  # noqa: B008
 ) -> Result:
     r"""Solve the diffusive stochastic master equation (SME).
 

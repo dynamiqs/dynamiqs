@@ -2,7 +2,6 @@ import jax
 import jax.numpy as jnp
 import pytest
 import qutip as qt
-from pytest import approx
 
 import dynamiqs as dq
 from dynamiqs.utils.array_types import cdtype
@@ -22,7 +21,7 @@ def test_ket_fidelity_correctness():
     dq_fid = dq.fidelity(psi, phi).item()
 
     # compare
-    assert qt_fid == approx(dq_fid)
+    assert qt_fid == pytest.approx(dq_fid)
 
 
 def test_ket_fidelity_batching():
@@ -48,7 +47,7 @@ def test_dm_fidelity_correctness():
     dq_fid = dq.fidelity(rho, sigma).item()
 
     # compare
-    assert qt_fid == approx(dq_fid, abs=1e-5)
+    assert qt_fid == pytest.approx(dq_fid, abs=1e-5)
 
 
 def test_dm_fidelity_batching():
@@ -75,8 +74,8 @@ def test_ket_dm_fidelity_correctness():
     dq_fid_dm_ket = dq.fidelity(rho, psi).item()
 
     # compare
-    assert qt_fid == approx(dq_fid_ket_dm, abs=1e-6)
-    assert qt_fid == approx(dq_fid_dm_ket, abs=1e-6)
+    assert qt_fid == pytest.approx(dq_fid_ket_dm, abs=1e-6)
+    assert qt_fid == pytest.approx(dq_fid_dm_ket, abs=1e-6)
 
 
 def test_ket_dm_fidelity_batching():
@@ -96,13 +95,7 @@ def test_hadamard():
 
     # two qubits
     H2 = 0.5 * jnp.array(
-        [
-            [1, 1, 1, 1],
-            [1, -1, 1, -1],
-            [1, 1, -1, -1],
-            [1, -1, -1, 1],
-        ],
-        dtype=cdtype(),
+        [[1, 1, 1, 1], [1, -1, 1, -1], [1, 1, -1, -1], [1, -1, -1, 1]], dtype=cdtype()
     )
     assert jnp.allclose(dq.hadamard(2), H2)
 
@@ -130,7 +123,7 @@ def test_jit_ptrace():
 
     # kets
 
-    # todo: this one doesn't pass
+    # TODO: this one doesn't pass
 
     a = dq.rand_ket(20, key=key1)
     b = dq.rand_ket(30, key=key2)

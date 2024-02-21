@@ -46,8 +46,8 @@ class BaseSolver(AbstractSolver):
 
     def result(self, saved: dict[str, Array], ylast: Array) -> Result:
         ysave = saved.get('ysave', ylast)
-        Esave = saved.get('Esave', None)
-        extra = saved.get('extra', None)
+        Esave = saved.get('Esave')
+        extra = saved.get('extra')
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
         saved = Saved(ysave, Esave, extra)

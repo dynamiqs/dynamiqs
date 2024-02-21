@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import ClassVar, Type
+from typing import ClassVar
 
 import equinox as eqx
 
@@ -11,14 +11,14 @@ __all__ = ['Propagator', 'Euler', 'Rouchon1', 'Rouchon2', 'Dopri5', 'Dopri8', 'T
 
 # === generic solvers options
 class Solver(eqx.Module):
-    SUPPORTED_GRADIENT: ClassVar[tuple[Type[Gradient], ...]] = ()
+    SUPPORTED_GRADIENT: ClassVar[tuple[type[Gradient], ...]] = ()
 
     @classmethod
-    def supports_gradient(cls, gradient: Gradient | None) -> bool:
+    def supports_gradient(cls, gradient: Gradient | None) -> bool:  # noqa: ANN102
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
 
     @classmethod
-    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:
+    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:  # noqa: ANN102
         if gradient is not None and not cls.supports_gradient(gradient):
             support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
             raise ValueError(
@@ -59,7 +59,6 @@ class Propagator(Solver):
             The propagator method only supports constant Hamiltonian and jump
             operators. Piecewise-constant problems will also be supported in the future.
         """
-        pass
 
 
 # === generic ODE solvers options
@@ -120,9 +119,8 @@ class Rouchon1(_DiffraxSolver, _ODEFixedStep):
     #   decomposition. Ideal for stiff problems, recommended for time-dependent
     #   problems.
 
-    # todo: fix, strings are not valid JAX types
+    # TODO: fix, strings are not valid JAX types
     # normalize: Literal['sqrt', 'cholesky'] | None = None
-    pass
 
 
 class Rouchon2(_DiffraxSolver, _ODEFixedStep):

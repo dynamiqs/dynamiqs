@@ -26,9 +26,9 @@ def mesolve(
     tsave: ArrayLike,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),
+    solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),
+    options: Options = Options(),  # noqa: B008
 ) -> Result:
     r"""Solve the Lindblad master equation.
 
@@ -74,23 +74,23 @@ def mesolve(
         [`dq.Result`](/python_api/result/Result.html) object holding the result of the
             Lindblad master equation integration. It has the following attributes:
 
-            - **states** _(array of shape (bH?, brho?, nt, n, n))_ – Saved states.
-            - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ – Saved
+            - **states** _(array of shape (bH?, brho?, nt, n, n))_ -- Saved states.
+            - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
                 expectation values.
-            - **extra** _(PyTree, optional)_- Extra data saved with `save_extra()` if
+            - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
                 specified in `options`.
-            - **tsave** _(array of shape (nt,))_ – Times for which states and
+            - **tsave** _(array of shape (nt,))_ -- Times for which states and
                 expectation values were saved.
-            - **solver** (Solver) –  Solver used.
-            - **gradient** (Gradient) – Gradient used.
-            - **options** _(Options)_  – Options used.
+            - **solver** _(Solver)_ -- Solver used.
+            - **gradient** _(Gradient)_ -- Gradient used.
+            - **options** _(Options)_ -- Options used.
     """
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     jump_ops_ndim = _astimearray(jump_ops[0]).ndim + 1
     is_batched = (
         H.ndim > 2,
-        jump_ops_ndim > 3,  # todo: this is a temporary fix
+        jump_ops_ndim > 3,  # TODO: this is a temporary fix
         rho0.ndim > 2,
         False,
         False,
@@ -113,9 +113,9 @@ def _mesolve(
     rho0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),
+    solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
-    options: Options = Options(),
+    options: Options = Options(),  # noqa: B008
 ) -> Result:
     # === convert arguments
     H = _astimearray(H)
@@ -145,4 +145,4 @@ def _mesolve(
     result = solver.run()
 
     # === return result
-    return result
+    return result  # noqa: RET504

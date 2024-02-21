@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC
 from functools import partial
 
 import jax
@@ -14,13 +13,13 @@ from dynamiqs.solver import Solver
 from .system import System
 
 
-class SolverTester(ABC):
+class SolverTester:
     def _test_correctness(
         self,
         system: System,
         solver: Solver,
         *,
-        options: Options = Options(),
+        options: Options = Options(),  # noqa: B008
         ysave_atol: float = 1e-3,
         esave_rtol: float = 1e-3,
         esave_atol: float = 1e-4,
@@ -51,7 +50,7 @@ class SolverTester(ABC):
         solver: Solver,
         gradient: Gradient,
         *,
-        options: Options = Options(),
+        options: Options = Options(),  # noqa: B008
         rtol: float = 1e-3,
         atol: float = 1e-4,
     ):
