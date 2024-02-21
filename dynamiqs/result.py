@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import NamedTuple, Optional
+
 import equinox as eqx
 from jax import Array
+from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
@@ -28,13 +31,15 @@ def array_str(x: Array) -> str:
     return f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
+Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], extra=Optional[PyTree])
+
+
 class Result(eqx.Module):
     tsave: Array
     solver: Solver
     gradient: Gradient | None
     options: Options
-    ysave: Array
-    Esave: Array | None
+    _saved: Saved
 
     def __init__(
         self,
@@ -65,13 +70,15 @@ class Result(eqx.Module):
 
     @property
     def states(self) -> Array:
-        # alias for ysave
-        return self.ysave
+        return self._saved.ysave
 
     @property
     def expects(self) -> Array | None:
-        # alias for Esave
-        return self.Esave
+        return self._saved.Esave
+
+    @property
+    def extra(self) -> PyTree | None:
+        return self._saved.extra
 
     def __str__(self) -> str:
         parts = {
@@ -81,6 +88,9 @@ class Result(eqx.Module):
             ),
             'States  ': array_str(self.states),
             'Expects ': array_str(self.expects) if self.expects is not None else None,
+            'Extra   ': (
+                eqx.tree_pformat(self.extra) if self.extra is not None else None
+            ),
         }
         parts = {k: v for k, v in parts.items() if v is not None}
         parts_str = '\n'.join(f'{k}: {v}' for k, v in parts.items())

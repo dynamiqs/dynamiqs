@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import Callable
+
 import equinox as eqx
-from jaxtyping import Scalar
+import jax
+from jax import Array
+from jaxtyping import PyTree, Scalar
 
 __all__ = ['Options']
 
@@ -11,6 +15,7 @@ class Options(eqx.Module):
     verbose: bool = True
     cartesian_batching: bool = True
     t0: Scalar | None = None
+    save_extra: Callable[[Array], PyTree] | None = None
 
     def __init__(
         self,
@@ -18,6 +23,7 @@ class Options(eqx.Module):
         verbose: bool = True,
         cartesian_batching: bool = True,
         t0: Scalar | None = None,
+        save_extra: Callable[[Array], PyTree] | None = None,
     ):
         """Generic options for the quantum solvers.
 
@@ -39,3 +45,9 @@ class Options(eqx.Module):
         self.verbose = verbose
         self.cartesian_batching = cartesian_batching
         self.t0 = t0
+        self.save_extra = save_extra
+
+    def __post_init__(self):
+        if self.save_extra is not None:
+            # use `jax.tree_util.Partial` to make `save_extra` a valid Pytree
+            self.save_extra = jax.tree_util.Partial(self.save_extra)

@@ -29,16 +29,18 @@ class SolverTester(ABC):
 
         # === test ysave
         true_ysave = system.states(system.tsave)
-        errs = jnp.linalg.norm(true_ysave - result.ysave, axis=(-2, -1))
+        errs = jnp.linalg.norm(true_ysave - result.states, axis=(-2, -1))
         logging.warning(f'true_ysave = {true_ysave}')
-        logging.warning(f'ysave      = {result.ysave}')
+        logging.warning(f'ysave      = {result.states}')
         assert jnp.all(errs <= ysave_atol)
 
         # === test Esave
         true_Esave = system.expects(system.tsave)
         logging.warning(f'true_Esave = {true_Esave}')
-        logging.warning(f'Esave      = {result.Esave}')
-        assert jnp.allclose(true_Esave, result.Esave, rtol=esave_rtol, atol=esave_atol)
+        logging.warning(f'Esave      = {result.expects}')
+        assert jnp.allclose(
+            true_Esave, result.expects, rtol=esave_rtol, atol=esave_atol
+        )
 
     def test_correctness(self):
         pass
@@ -66,7 +68,7 @@ class SolverTester(ABC):
         # === test gradients depending on final ysave
         def loss_ysave(params):
             res = system.run(solver, gradient=gradient, options=options, params=params)
-            return system.loss_state(res.ysave[-1])
+            return system.loss_state(res.states[-1])
 
         true_grads_ysave = system.grads_state(system.tsave[-1])
         grads_ysave = jax.grad(loss_ysave)(system.params_default)
@@ -79,7 +81,7 @@ class SolverTester(ABC):
         # === test gradients depending on final Esave
         def loss_Esave(params):
             res = system.run(solver, gradient=gradient, options=options, params=params)
-            return system.loss_expect(res.Esave[:, -1])
+            return system.loss_expect(res.expects[:, -1])
 
         true_grads_Esave = system.grads_expect(system.tsave[-1])
         grads_Esave = jax.jacrev(loss_Esave)(system.params_default)
