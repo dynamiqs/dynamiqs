@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import NamedTuple, Optional
+
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
@@ -27,24 +29,35 @@ def array_str(x: Array) -> str:
     return f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
+Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], other=Optional[PyTree])
+
+
 class Result(eqx.Module):
     tsave: Array
     solver: Solver
     gradient: Gradient | None
     options: Options
-    ysave: Array
-    Esave: Array | None
-    save: PyTree | None
+    _saved: Saved
+
+    @property
+    def ysave(self) -> Array:
+        return self._saved.ysave
+
+    @property
+    def Esave(self) -> Array:
+        return self._saved.Esave
 
     @property
     def states(self) -> Array:
-        # alias for ysave
-        return self.ysave
+        return self._saved.ysave
 
     @property
     def expects(self) -> Array | None:
-        # alias for Esave
-        return self.Esave
+        return self._saved.Esave
+
+    @property
+    def other(self) -> PyTree | None:
+        return self._saved.other
 
     def __str__(self) -> str:
         parts = {
