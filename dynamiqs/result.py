@@ -45,12 +45,13 @@ class Result(eqx.Module):
         ysave: Array,
         Esave: Array | None,
     ):
-        """Result of a quantum equation integration.
+        """Result of the integration.
 
         Attributes:
-            states: State array, alias of `ysave`.
-            expects: Expectation array, alias of `Esave`.
-            tsave: Time array.
+            states: Saved states.
+            expects: Saved expectation values.
+            extra: Extra data saved.
+            tsave: Times for which results were saved.
             solver: Solver used.
             gradient: Gradient used.
             options: Options used.
