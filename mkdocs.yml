@@ -136,6 +136,8 @@ nav:
               - Dopri5: python_api/solver/Dopri5.md
               - Dopri8: python_api/solver/Dopri8.md
               - Euler: python_api/solver/Euler.md
+              - Rouchon1: python_api/solver/Rouchon1.md
+              - Rouchon2: python_api/solver/Rouchon2.md
               - Propagator: python_api/solver/Propagator.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md

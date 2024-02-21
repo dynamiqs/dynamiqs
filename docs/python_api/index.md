@@ -83,6 +83,8 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - Dopri5
         - Dopri8
         - Euler
+        - Rouchon1
+        - Rouchon2
         - Propagator
 
 ### Gradients (dq.gradient)

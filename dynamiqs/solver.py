@@ -35,21 +35,29 @@ class Propagator(Solver):
     def __init__(self):
         r"""Quantum propagator method.
 
-        Compute the exact quantum propagator from matrix exponentiation. For the
-        Schrödinger equation with Hamiltonian $H$, the propagator is given by
+        Explicitly compute the propagator to evolve the state between each time in
+        `tsave`.
+
+        For the Schrödinger equation with constant Hamiltonian $H$, the propagator to
+        evolve the state from time $t_0$ to time $t_1$ is an $n\times n$ matrix given by
         $$
-            U(t_0, t_1) = \exp(-i H (t_1 - t_0)),
-        $$
-        For the Lindblad master equation with Liouvillian $\mathcal{L}$, the problem is
-        vectorized and the propagator is given by
-        $$
-            \mathcal{U}(t_0, t_1) = \exp(-i \mathcal{L} (t_1 - t_0)),
+            U(t_0, t_1) = \exp(-i (t_1 - t_0) H).
         $$
 
-        Note: Constant problem support only.
-            The propagator method only supports constant Hamiltonians and jump
-            operators for now. Piecewise-constant problems will be supported in the
-            future.
+        For the Lindblad master equation with constant Liouvillian $\mathcal{L}$, the
+        problem is vectorized and the propagator to evolve the state from time $t_0$ to
+        time $t_1$ is an $n^2\times n^2$ matrix given by
+        $$
+            \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
+        $$
+
+        Warning:
+            This solver is not recommended for open systems of large dimension, due to
+            the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian exponential.
+
+        Warning: Constant Hamiltonian and jump operators only
+            The propagator method only supports constant Hamiltonian and jump
+            operators. Piecewise-constant problems will also be supported in the future.
         """
         pass
 
@@ -80,19 +88,29 @@ class _DiffraxSolver(Solver):
 # === public solvers options
 class Euler(_DiffraxSolver, _ODEFixedStep):
     def __init__(self, dt: float):
-        """Euler's method (from [Diffrax](https://docs.kidger.site/diffrax/)).
+        """Euler method (fixed step size ODE solver).
 
-        1st order explicit Runge--Kutta method. Does not support adaptive step sizing.
-        Uses 1 stage. Uses 1st order local linear interpolation for dense `tsave`
-        output.
+        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
+
+        Warning:
+            This solver is not recommended for general use.
 
         Args:
-            dt _(float)_: Time step.
-        """
+            dt _(float)_: Fixed time step.
+        """  # noqa: E501
         _ODEFixedStep.__init__(self, dt)
 
 
 class Rouchon1(_DiffraxSolver, _ODEFixedStep):
+    def __init__(self, dt: float):
+        """First-order Rouchon method (fixed step size ODE solver).
+
+        Warning:
+            This solver has not been ported to JAX yet.
+        """
+        _ODEFixedStep.__init__(self, dt)
+
     # normalize: The default scheme is trace-preserving at first order only. This
     # parameter sets the normalisation behaviour:
     # - `None`: The scheme is not normalized.
@@ -108,7 +126,13 @@ class Rouchon1(_DiffraxSolver, _ODEFixedStep):
 
 
 class Rouchon2(_DiffraxSolver, _ODEFixedStep):
-    pass
+    def __init__(self, dt: float):
+        """Second-order Rouchon method (fixed step size ODE solver).
+
+        Warning:
+            This solver has not been ported to JAX yet.
+        """
+        _ODEFixedStep.__init__(self, dt)
 
 
 class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
@@ -121,25 +145,19 @@ class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        """
-        Dormand--Prince's 5/4 method (from
-        [Diffrax](https://docs.kidger.site/diffrax/)).
+        """Dormand-Prince method of order 5 (adaptive step size ODE solver).
 
-        5th order Runge--Kutta method. Has an embedded 4th order method for adaptive
-        step sizing. Uses 7 stages with first same as last. Uses 5th order
-        interpolation for dense `tsave` output.
+        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        [`diffrax.Dopri5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri5).
 
         Args:
-            rtol _(float, optional)_: Relative tolerance. Defaults to 1e-6.
-            atol _(float, optional)_: Absolute tolerance. Defaults to 1e-6.
-            safety_factor _(float, optional)_: Safety factor for step sizing. Defaults
-                to 0.9.
-            min_factor _(float, optional)_: Minimum factor for step sizing. Defaults to
-                0.2.
-            max_factor _(float, optional)_: Maximum factor for step sizing. Defaults to
-                5.0.
-            max_steps _(int, optional)_: Maximum number of steps. Defaults to 100_000.
-        """
+            rtol: Relative tolerance.
+            atol: Absolute tolerance.
+            safety_factor: Safety factor for adaptive step sizing.
+            min_factor: Minimum factor for adaptive step sizing.
+            max_factor: Maximum factor for adaptive step sizing.
+            max_steps: Maximum number of steps.
+        """  # noqa: E501
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
@@ -155,25 +173,19 @@ class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        """
-        Dormand--Prince's 8/7 method (from
-        [Diffrax](https://docs.kidger.site/diffrax/)).
+        """Dormand-Prince method of order 8 (adaptive step size ODE solver).
 
-        8th order Runge--Kutta method. Has an embedded 7th order method for adaptive
-        step sizing. Uses 14 stages with first same as last. Uses 8th order
-        interpolation for dense `tsave` output.
+        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        [`diffrax.Dopri8`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri8).
 
         Args:
-            rtol _(float, optional)_: Relative tolerance. Defaults to 1e-6.
-            atol _(float, optional)_: Absolute tolerance. Defaults to 1e-6.
-            safety_factor _(float, optional)_: Safety factor for step sizing. Defaults
-                to 0.9.
-            min_factor _(float, optional)_: Minimum factor for step sizing. Defaults to
-                0.2.
-            max_factor _(float, optional)_: Maximum factor for step sizing. Defaults to
-                5.0.
-            max_steps _(int, optional)_: Maximum number of steps. Defaults to 100_000.
-        """
+            rtol: Relative tolerance.
+            atol: Absolute tolerance.
+            safety_factor: Safety factor for adaptive step sizing.
+            min_factor: Minimum factor for adaptive step sizing.
+            max_factor: Maximum factor for adaptive step sizing.
+            max_steps: Maximum number of steps.
+        """  # noqa: E501
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
@@ -189,22 +201,18 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        """Tsitouras' 5/4 method (from [Diffrax](https://docs.kidger.site/diffrax/)).
+        """Tsitouras method of order 5 (adaptive step size ODE solver).
 
-        5th order explicit Runge--Kutta method. Has an embedded 4th order method for
-        adaptive step sizing. Uses 7 stages with first same as last. Uses 5th order
-        interpolation for dense `tsave` output.
+        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        [`diffrax.Tsit5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Tsit5).
 
         Args:
-            rtol _(float, optional)_: Relative tolerance. Defaults to 1e-6.
-            atol _(float, optional)_: Absolute tolerance. Defaults to 1e-6.
-            safety_factor _(float, optional)_: Safety factor for step sizing. Defaults
-                to 0.9.
-            min_factor _(float, optional)_: Minimum factor for step sizing. Defaults to
-                0.2.
-            max_factor _(float, optional)_: Maximum factor for step sizing. Defaults to
-                5.0.
-            max_steps _(int, optional)_: Maximum number of steps. Defaults to 100_000.
+            rtol: Relative tolerance.
+            atol: Absolute tolerance.
+            safety_factor: Safety factor for adaptive step sizing.
+            min_factor: Minimum factor for adaptive step sizing.
+            max_factor: Maximum factor for adaptive step sizing.
+            max_steps: Maximum number of steps.
         """
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
