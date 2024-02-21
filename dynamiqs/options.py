@@ -45,9 +45,8 @@ class Options(eqx.Module):
         self.verbose = verbose
         self.cartesian_batching = cartesian_batching
         self.t0 = t0
-        self.save_extra = save_extra
-
-    def __post_init__(self):
-        if self.save_extra is not None:
+        if save_extra is not None:
             # use `jax.tree_util.Partial` to make `save_extra` a valid Pytree
-            self.save_extra = jax.tree_util.Partial(self.save_extra)
+            self.save_extra = jax.tree_util.Partial(save_extra)
+        else:
+            self.save_extra = save_extra
