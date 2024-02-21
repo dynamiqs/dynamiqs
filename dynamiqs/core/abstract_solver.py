@@ -8,7 +8,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result
+from ..result import Result, Saved
 from ..solver import Solver
 from ..time_array import TimeArray
 from ..utils.utils import expect
@@ -39,15 +39,19 @@ class BaseSolver(AbstractSolver):
             saved['ysave'] = y
         if self.Es is not None and len(self.Es) > 0:
             saved['Esave'] = expect(self.Es, y)
+        if self.options.save_extra is not None:
+            saved['extra'] = self.options.save_extra(y)
+
         return saved
 
     def result(self, saved: dict[str, Array], ylast: Array) -> Result:
         ysave = saved.get('ysave', ylast)
         Esave = saved.get('Esave', None)
+        extra = saved.get('extra', None)
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
-
-        return Result(self.ts, self.solver, self.gradient, self.options, ysave, Esave)
+        saved = Saved(ysave, Esave, extra)
+        return Result(self.ts, self.solver, self.gradient, self.options, saved)
 
 
 SESolver = BaseSolver

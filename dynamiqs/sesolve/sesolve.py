@@ -31,8 +31,8 @@ def sesolve(
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
-    # the result is vectorized over ysave and Esave
-    out_axes = Result(None, None, None, None, 0, 0)
+    # the result is vectorized over `saved`
+    out_axes = Result(None, None, None, None, 0)
     f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
