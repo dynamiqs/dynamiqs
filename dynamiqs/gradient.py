@@ -11,24 +11,15 @@ class Gradient(eqx.Module):
 
 class Autograd(Gradient):
     def __init__(self):
-        """JAX's default automatic differentiation.
+        """Standard automatic differentiation of JAX.
 
-        For more information, see the [JAX documentation](https://jax.readthedocs.io/en/
-        latest/notebooks/quickstart.html#taking-derivatives-with-grad). For Diffrax
-        solvers, this falls back to `diffrax.DirectAdjoint` differentation.
+        With this option, the gradient is computed by automatically differentiating
+        through the internals of the solver.
 
-        Note: _From the Diffrax documentation:_
-            A variant of `diffrax.RecursiveCheckpointAdjoint`. The differences are that
-            `DirectAdjoint`:
-
-            - Is less time+memory efficient at reverse-mode autodifferentiation
-                (specifically, these will increase every time max_steps increases
-                passes a power of 16);
-            - Cannot be reverse-mode autodifferentated if max_steps is None;
-                Supports forward-mode autodifferentiation.
-
-            So unless you need forward-mode autodifferentiation then `diffrax.
-            RecursiveCheckpointAdjoint` should be preferred.
+        Note: For Diffrax-based solvers
+            This falls back to the
+            [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
+            option.
         """
         super().__init__()
 
@@ -37,31 +28,39 @@ class CheckpointAutograd(Gradient):
     ncheckpoints: int | None = None
 
     def __init__(self, ncheckpoints: int | None = None):
-        """Diffrax's `RecursiveCheckpointAdjoint` automatic differentation.
+        """Checkpointed automatic differentiation.
 
-        Note: _From the Diffrax documentation:_
-            Backpropagate through `diffrax.diffeqsolve` by differentiating the numerical
-            solution directly. This is sometimes known as "discretise-then-optimise", or
-            described as "backpropagation through the solver".
+        With this option, the gradient is computed by automatically differentiating
+        through the internals of the solver. The difference with the standard automatic
+        differentiation (see [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd]) is
+        that a checkpointing scheme is used to reduce the memory usage of the
+        backpropagation.
 
-            Uses a binomial checkpointing scheme to keep memory usage low.
-
+        Note:
             For most problems this is the preferred technique for backpropagating
-            through a differential equation.
+            through the quantum solvers.
 
-            Note that this cannot be forward-mode autodifferentiated (e.g. using
-                [`jax.jvp`](https://jax.readthedocs.io/en/latest/_autosummary/
-                jax.jvp.html)). Try using `diffrax.DirectAdjoint` if that is something
-                you need.
+        Warning:
+            This cannot be forward-mode autodifferentiated  (e.g. using
+            [`jax.jvp`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html)
+            ). Try using [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] if that
+            is something you need.
+
+
+        Note: For Diffrax-based solvers
+            This falls back to the
+            [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
+            option.
 
         Args:
             ncheckpoints: Number of checkpoints to use. The amount of memory used by
                 the differential equation solve will be roughly equal to the number of
-                checkpoints multiplied by the size of the initial state.
-                You can speed up backpropagation by allocating more checkpoints, so it
-                makes sense to set as many checkpoints as you have memory for. This
-                value is set to `None` by default, in which case it will be set to
-                log(max_steps), for which a theoretical result is available guaranteeing
-                that backpropagation will take O(n log n) time in the number of steps n.
+                checkpoints multiplied by the size of the state. You can speed up
+                backpropagation by allocating more checkpoints, so it makes sense to
+                set as many checkpoints as you have memory for. This value is set to
+                `None` by default, in which case it will be set to `log(max_steps)`,
+                for which a theoretical result is available guaranteeing that
+                backpropagation will take `O(n_steps log(n_steps))` time in the number
+                of steps `n_steps <= max_steps`.
         """
         super().__init__()
