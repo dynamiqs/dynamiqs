@@ -39,8 +39,8 @@ class BaseSolver(AbstractSolver):
             saved['ysave'] = y
         if self.Es is not None and len(self.Es) > 0:
             saved['Esave'] = expect(self.Es, y)
-        if self.options.save_fn is not None:
-            saved['other'] = self.options.save_fn(y)
+        if self.options.save_fun is not None:
+            saved['other'] = self.options.save_fun(y)
 
         return saved
 
