@@ -40,19 +40,19 @@ class BaseSolver(AbstractSolver):
         if self.Es is not None and len(self.Es) > 0:
             saved['Esave'] = expect(self.Es, y)
         if self.options.save_fn is not None:
-            saved['save_fn'] = self.options.save_fn(y)
+            saved['save'] = self.options.save_fn(y)
 
         return saved
 
     def result(self, saved: dict[str, Array], ylast: Array) -> Result:
         ysave = saved.get('ysave', ylast)
         Esave = saved.get('Esave', None)
-        save_fn = saved.get('save_fn', None)
+        save = saved.get('save', None)
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
 
         return Result(
-            self.ts, self.solver, self.gradient, self.options, ysave, Esave, save_fn
+            self.ts, self.solver, self.gradient, self.options, ysave, Esave, save
         )
 
 
