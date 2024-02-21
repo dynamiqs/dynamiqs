@@ -105,16 +105,8 @@ cmd = 'task lint && task format && task codespell'
 help = "clean the code (ruff + codespell)"
 
 [tool.taskipy.tasks.test]
-cmd = 'echo "\n>>> pytest -n=auto -m \"not long\" tests" && pytest -n=auto -m "not long" tests'
-help = "run the unit tests suite excluding long tests (pytest)"
-
-[tool.taskipy.tasks.test-long]
-cmd = 'echo "\n>>> pytest -n=auto -m \"long\" tests" && pytest -n=auto -m "long" tests'
-help = "run the unit tests suite including only long tests (pytest)"
-
-[tool.taskipy.tasks.test-all]
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
-help = "run the complete unit tests suite (pytest)"
+help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
 cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs-code/*.png && pytest dynamiqs'
