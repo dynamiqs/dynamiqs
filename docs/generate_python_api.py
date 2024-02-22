@@ -1,5 +1,6 @@
 """Automatically generate the Python API documentation pages by parsing the public
-functions from `__all__`."""
+functions from `__all__`.
+"""
 
 import re
 from pathlib import Path
@@ -23,7 +24,7 @@ PATHS_TO_PARSE = [
 
 def get_elements_from_all(file_path):
     """Parse a file to find all elements of the `__all__` attribute."""
-    with open(file_path, 'r') as f:
+    with Path.open(file_path) as f:
         contents = f.read()
 
         # capture list assigned to __all__ with a regular expression (the `[^\]]+` part
@@ -59,7 +60,7 @@ for path, namespace in PATHS_TO_PARSE:
         with mkdocs_gen_files.open(doc_path_function, 'w') as f:
             module = identifier.split('.')[0]
             print(f'::: {identifier}.{function}', file=f)
-            print(f'    options:', file=f)
+            print('    options:', file=f)
             print(f'        namespace: {namespace}', file=f)
 
         mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)

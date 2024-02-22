@@ -76,7 +76,8 @@ def _wigner_clenshaw(
     rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float
 ) -> Array:
     """Compute the wigner distribution of a density matrix using the iterative method
-    of QuTiP based on the Clenshaw summation algorithm."""
+    of QuTiP based on the Clenshaw summation algorithm.
+    """
     rho = jnp.asarray(rho)
     xvec = jnp.asarray(xvec)
     yvec = jnp.asarray(yvec)
@@ -95,10 +96,10 @@ def _wigner_clenshaw(
     return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
 
 
-def _laguerre_series(i, x, c, n):
+def _laguerre_series(i: int, x: Array, c: Array, n: int) -> Array:
     r"""Evaluate a polynomial series of the form `$\sum_n c_n L_n^i$` where `$L_n$` is
-    such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`."""
-
+    such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`.
+    """
     if n == 1:
         return c[0]
     elif n == 2:
@@ -145,9 +146,8 @@ def _wigner_fft_dm(rho: Array, xvec: Array, g: float) -> tuple[Array, Array]:
 
 
 def _fock_to_position(n: int, positions: Array) -> Array:
-    """
-    Compute the change-of-basis matrix from the Fock basis to the position basis of an
-    oscillator of dimension n, as evaluated at the specific position values provided.
+    """Compute the change-of-basis matrix from the Fock basis to the position basis of
+    an oscillator of dimension n, as evaluated at the specific position values provided.
     """
     n_positions = positions.shape[0]
     U = jnp.zeros((n, n_positions), dtype=cdtype())
@@ -171,6 +171,7 @@ def _wigner_fft(psi: Array, xvec: Array) -> tuple[Array, Array]:
     Args:
         psi: ket of shape (N)
         xvec: position vector of shape (N)
+
     Returns:
         A tuple `(w, p)` where `w` is the wigner function at all sample points, and `p`
         is the vector of momentum sample points.

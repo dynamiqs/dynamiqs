@@ -37,7 +37,7 @@ def operator_to_vector(x: ArrayLike) -> Array:
         _(array of shape (..., n^2, 1))_ Vectorized operator.
 
     Examples:
-        >>> A = jnp.array([[1+1j, 2+2j], [3+3j, 4+4j]])
+        >>> A = jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
         >>> A
         Array([[1.+1.j, 2.+2.j],
                [3.+3.j, 4.+4.j]], dtype=complex64)
@@ -71,7 +71,7 @@ def vector_to_operator(x: ArrayLike) -> Array:
         _(array of shape (..., n, n))_ Operator.
 
     Examples:
-        >>> Avec = jnp.array([[1+1j], [2+2j], [3+3j], [4+4j]])
+        >>> Avec = jnp.array([[1 + 1j], [2 + 2j], [3 + 3j], [4 + 4j]])
         >>> Avec
         Array([[1.+1.j],
                [2.+2.j],
@@ -108,8 +108,8 @@ def spre(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     n = x.shape[-1]
-    I = eye(n)
-    return _bkron(I, x)
+    Id = eye(n)
+    return _bkron(Id, x)
 
 
 def spost(x: ArrayLike) -> Array:
@@ -133,8 +133,8 @@ def spost(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     n = x.shape[-1]
-    I = eye(n)
-    return _bkron(dag(x), I)
+    Id = eye(n)
+    return _bkron(dag(x), Id)
 
 
 def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
@@ -220,7 +220,7 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
-    """  # noqa: E501
+    """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     return -1j * (spre(H) - spost(H)) + sdissipator(jump_ops).sum(0)

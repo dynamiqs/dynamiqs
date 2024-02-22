@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from jaxtyping import Array
 
 
-def type_str(type: Any) -> str:
+def type_str(type: Any) -> str:  # noqa: A002
     if type.__module__ in ('builtins', '__main__'):
         return f'`{type.__name__}`'
     else:
@@ -35,5 +35,5 @@ def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
 
 
 def on_cpu(x: Array) -> str:
-    # todo: this is a temporary solution, it won't work when we have multiple devices
+    # TODO: this is a temporary solution, it won't work when we have multiple devices
     return x.devices().pop().device_kind == 'cpu'

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import equinox as eqx
 from jax import Array
@@ -31,7 +31,10 @@ def array_str(x: Array) -> str:
     return f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
-Saved = NamedTuple('Saved', ysave=Array, Esave=Optional[Array], extra=Optional[PyTree])
+class Saved(NamedTuple):
+    ysave: Array
+    Esave: Array | None
+    extra: PyTree | None
 
 
 class Result(eqx.Module):

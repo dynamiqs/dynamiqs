@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import partial, reduce
+from functools import reduce
 
 import jax
 import jax.numpy as jnp
@@ -104,7 +104,7 @@ def _hdim(x: ArrayLike) -> int:
     return x.shape[-2] if isket(x) else x.shape[-1]
 
 
-@partial(jax.jit, static_argnums=(1, 2))
+# @partial(jax.jit, static_argnums=(1, 2))
 def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Array:
     r"""Returns the partial trace of a ket, bra or density matrix.
 
@@ -148,7 +148,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     # check that input dimensions match
     hdim = _hdim(x)
     prod_dims = np.prod(dims)
-    if not prod_dims == hdim:
+    if prod_dims != hdim:
         dims_prod_str = '*'.join(str(d) for d in dims) + f'={prod_dims}'
         raise ValueError(
             'Argument `dims` must match the Hilbert space dimension of `x` of'
@@ -164,23 +164,25 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     keep.sort()
 
     # create einsum alphabet
-    alphabet = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
     # compute einsum equations
     eq1 = alphabet[:ndims]  # e.g. 'abc'
     unused = iter(alphabet[ndims:])
-    eq2 = [next(unused) if i in keep else eq1[i] for i in range(ndims)]  # e.g. 'ade'
+    eq2 = ''.join(
+        [next(unused) if i in keep else eq1[i] for i in range(ndims)]
+    )  # e.g. 'ade'
 
     bshape = x.shape[:-2]
 
     # trace out x over unkept dimensions
     if isket(x) or isbra(x):
         x = x.reshape(*bshape, *dims)  # e.g. (..., 20, 2, 5)
-        eq = ''.join(['...'] + eq1 + [',...'] + eq2)  # e.g. '...abc,...ade'
+        eq = f'...{eq1},...{eq2}'  # e.g. '...abc,...ade'
         x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
     elif isdm(x):
         x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
-        eq = ''.join(['...'] + eq1 + eq2)  # e.g. '...abcade'
+        eq = f'...{eq1}{eq2}'  # e.g. '...abcade'
         x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
     else:
         raise ValueError(
@@ -220,7 +222,7 @@ def tensor(*args: ArrayLike) -> Array:
     """
     args = [jnp.asarray(arg) for arg in args]
 
-    # todo: use jax.lax.reduce
+    # TODO: use jax.lax.reduce
     return reduce(_bkron, args)
 
 
@@ -423,7 +425,7 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
-    """  # noqa: E501
+    """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     rho = jnp.asarray(rho)
@@ -721,13 +723,10 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
 
     if isket(x) or isket(y):
         return overlap(x, y)
+    elif on_cpu(x):
+        return _dm_fidelity_cpu(x, y)
     else:
-        # we distinguish the method on CPU vs GPU, because the fastest method is
-        # based on `jnp.linalg.eigvals` which is unavailable on GPU
-        if on_cpu(x):
-            return _dm_fidelity_cpu(x, y)
-        else:
-            return _dm_fidelity_gpu(x, y)
+        return _dm_fidelity_gpu(x, y)
 
 
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:

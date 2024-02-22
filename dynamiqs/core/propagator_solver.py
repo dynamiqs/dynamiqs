@@ -23,7 +23,7 @@ class PropagatorSolver(BaseSolver):
 
     def run(self) -> PyTree:
         # === solve differential equation
-        def propagate(y, delta_t):
+        def propagate(y, delta_t):  # noqa: ANN001, ANN202
             # propagate forward except if delta_t is zero
             y = jax.lax.cond(delta_t == 0, lambda: y, lambda: self.forward(delta_t, y))
             # save result

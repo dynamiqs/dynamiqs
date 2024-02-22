@@ -43,7 +43,7 @@ task all
 
 ### Run some tasks automatically before each commit
 
-Alternatively, you can use `pre-commit` to automatically run the linting tasks (isort + black + codespell + flake8) before each commit:
+Alternatively, you can use `pre-commit` to automatically run the cleaning tasks (ruff + codespell) before each commit:
 
 ```shell
 pip install pre-commit
@@ -74,20 +74,18 @@ This will create a `site/` directory with the contents of the documentation webs
 
 You can also execute tasks individually:
 
-```text
-isort        sort the imports (isort)
-black        auto-format the code (black)
+```shell
+> task --list
+lint         lint the code (ruff)
+format       auto-format the code (ruff)
 codespell    check for misspellings (codespell)
-flake8       check code style (flake8)
-lint         lint the code and check style (isort + black + codespell + flake8)
-test         run the unit tests suite excluding long tests (pytest)
-test-long    run the unit tests suite including only long tests (pytest)
-test-all     run the complete unit tests suite (pytest)
+clean        clean the code (ruff + codespell)
+test         run the unit tests suite (pytest)
 doctest-code check code docstrings examples (doctest)
 doctest-docs check documentation examples (doctest)
 doctest      check all examples (doctest)
 docbuild     build the documentation website
 docserve     preview documentation website with hot-reloading
-all          run all tasks before a commit (isort + black + codespell + flake8 + pytest + doctest)
+all          run all tasks before a commit (ruff + codespell + pytest + doctest)
 ci           run all the CI checks
 ```
