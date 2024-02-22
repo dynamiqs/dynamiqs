@@ -1,38 +1,46 @@
 from __future__ import annotations
 
+import pathlib
+import shutil
+
+import imageio
+import IPython.display as ipy
+import jax.numpy as jnp
 import numpy as np
+from jax.typing import ArrayLike
+from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
+from tqdm import tqdm
 
-from ..utils.tensor_types import ArrayLike, to_numpy, to_tensor
 from ..utils.wigners import wigner
-from .utils import add_colorbar, colors, gridplot, linmap, optax
+from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
-__all__ = ['plot_wigner', 'plot_wigner_mosaic']
+__all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
 
 
-@optax
+@optional_ax
 def plot_wigner_data(
     wigner: ArrayLike,
     xmax: float,
     ymax: float,
     *,
     ax: Axes | None = None,
-    vmax: float = 2 / np.pi,
+    vmax: float = 2 / jnp.pi,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
 ):
-    w = to_numpy(wigner)
+    w = jnp.asarray(wigner)
 
     # set plot norm
     vmin = -vmax
     norm = Normalize(vmin=vmin, vmax=vmax, clip=True)
 
     # clip to avoid rounding errors
-    w = np.clip(w, vmin, vmax)
+    w = w.clip(vmin, vmax)
 
     # plot
     ax.imshow(
@@ -50,7 +58,7 @@ def plot_wigner_data(
 
     if colorbar and not clear:
         cax = add_colorbar(ax, cmap, norm)
-        if vmax == 2 / np.pi:
+        if vmax == 2 / jnp.pi:
             cax.set_yticks([vmin, 0.0, vmax], labels=[r'$-2/\pi$', r'$0$', r'$2/\pi$'])
 
     if cross:
@@ -62,14 +70,14 @@ def plot_wigner_data(
         ax.axis(False)
 
 
-@optax
+@optional_ax
 def plot_wigner(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / np.pi,
+    vmax: float = 2 / jnp.pi,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -115,9 +123,10 @@ def plot_wigner(
 
         ![plot_wigner_4legged](/figs-code/plot_wigner_4legged.png){.fig-half}
     """
-    state = to_tensor(state)
+    state = jnp.asarray(state)
+
     ymax = xmax if ymax is None else ymax
-    _, _, w = wigner(state, xmax=xmax, ymax=ymax, npixels=npixels)
+    _, _, w = wigner(state, xmax, ymax, npixels)
 
     plot_wigner_data(
         w,
@@ -142,7 +151,7 @@ def plot_wigner_mosaic(
     h: float | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
-    vmax: float = 2 / np.pi,
+    vmax: float = 2 / jnp.pi,
     npixels: int = 101,
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
@@ -176,7 +185,7 @@ def plot_wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = a.mH @ a.mH @ a @ a  # Kerr Hamiltonian
+        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = np.linspace(0, np.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -185,13 +194,11 @@ def plot_wigner_mosaic(
 
         ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
     """
-    states = to_tensor(states)
+    states = jnp.asarray(states)
 
     nstates = len(states)
     if nstates < n:
         n = nstates
-
-    # todo: precompute batched wigners
 
     # create grid of plot
     _, axs = gridplot(
@@ -204,22 +211,102 @@ def plot_wigner_mosaic(
         sharey=True,
     )
 
-    # individual wigner plot options
-    kwargs = dict(
-        xmax=xmax,
-        ymax=ymax,
-        vmax=vmax,
-        npixels=npixels,
-        cmap=cmap,
-        interpolation=interpolation,
-        colorbar=False,
-        cross=cross,
-        clear=False,
-    )
+    ymax = xmax if ymax is None else ymax
+    selected_indexes = np.linspace(0, nstates, n, dtype=int)
+    _, _, w = wigner(states[selected_indexes], xmax, ymax, npixels)
 
     # plot individual wigner
-    for i in range(n):
-        ax = next(axs)
-        idx = int(linmap(i, 0, n - 1, 0, nstates - 1))
-        plot_wigner(states[idx], ax=ax, **kwargs)
+    for i, ax in enumerate(axs):
+        plot_wigner_data(
+            w[i],
+            ax=ax,
+            xmax=xmax,
+            ymax=ymax,
+            vmax=vmax,
+            cmap=cmap,
+            interpolation=interpolation,
+            colorbar=False,
+            cross=cross,
+            clear=False,
+        )
         ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
+
+
+def plot_wigner_gif(
+    states: ArrayLike,
+    gif_duration: float = 5.0,
+    fps: int = 10,
+    w: float = 5.0,
+    h: float = 5.0,
+    xmax: float = 5.0,
+    ymax: float | None = None,
+    vmax: float = 2 / jnp.pi,
+    npixels: int = 101,
+    cmap: str = 'dq',
+    interpolation: str = 'bilinear',
+    cross: bool = False,
+    clear: bool = False,
+):
+    """Plot a gif of the Wigner function of multiple states.
+
+    The function saves a gif of the Wigner function plot and displays it.
+
+    Parameters:
+        states (ArrayLike): The quantum states to be plotted.
+        gif_duration (float): The length of the gif in seconds.
+        fps (int): The frames per second of the gif.
+        w (float): The width of the plot.
+        h (float): The height of the plot.
+        xmax (float): The maximum x value of the plot.
+        ymax (float | None): The maximum y value of the plot. If None, it is set to
+            xmax.
+        vmax (float): The maximum value of the colorbar.
+        npixels (int): The number of pixels in the plot.
+        cmap (str): The colormap to be used.
+        interpolation (str): The interpolation method to be used.
+        cross (bool): If True, a cross is plotted at the origin.
+        clear (bool): If True, the axes are cleared.
+    """
+    if ymax is None:
+        ymax = xmax
+
+    states = jnp.asarray(states)
+
+    nframes = int(gif_duration * fps)
+    tmpdir = './.tmp/dynamiqs'
+    tmpdir = pathlib.Path(tmpdir)
+    tmpdir.mkdir(parents=True, exist_ok=True)
+
+    selected_indexes = np.linspace(0, len(states), nframes, dtype=int)
+    _, _, wigners = wigner(states[selected_indexes], xmax, ymax, npixels)
+
+    tmpdir.mkdir(exist_ok=True)
+    frames = []
+    for frame_idx in tqdm(range(nframes)):
+        fig, ax = figax(w=w, h=h)
+
+        plot_wigner_data(
+            wigners[frame_idx],
+            ax=ax,
+            xmax=xmax,
+            ymax=ymax,
+            vmax=vmax,
+            cmap=cmap,
+            interpolation=interpolation,
+            colorbar=False,
+            cross=cross,
+            clear=clear,
+        )
+
+        filename = tmpdir / f'tmp-{frame_idx}.png'
+        fig.savefig(filename)
+        plt.close()
+        frame = imageio.v2.imread(filename)
+        frames.append(frame)
+
+    if tmpdir.exists():
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    filename = 'wigner.gif'
+    imageio.mimwrite(filename, frames, format='GIF', duration=1 / fps)
+    ipy.display(ipy.Image(filename))

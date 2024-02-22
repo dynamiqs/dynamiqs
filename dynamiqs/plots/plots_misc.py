@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import jax.numpy as jnp
+from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 
-from ..utils.tensor_types import ArrayLike, to_numpy
-from .utils import colors, optax
+from .utils import colors, optional_ax
 
 __all__ = ['plot_pwc_pulse']
 
 
-@optax
+@optional_ax
 def plot_pwc_pulse(
     times: ArrayLike,
     values: ArrayLike,
@@ -25,15 +26,16 @@ def plot_pwc_pulse(
 
     Examples:
         >>> n = 20
-        >>> times = np.linspace(0, 1.0, n+1)
-        >>> values = dq.rand_complex(n, seed=42)
+        >>> times = np.linspace(0, 1.0, n + 1)
+        >>> key = jax.random.PRNGKey(42)
+        >>> values = dq.rand_complex(key, n)
         >>> dq.plot_pwc_pulse(times, values)
         >>> renderfig('plot_pwc_pulse')
 
         ![plot_pwc_pulse](/figs-code/plot_pwc_pulse.png){.fig}
     """
-    times = to_numpy(times)  # (n + 1)
-    values = to_numpy(values)  # (n)
+    times = jnp.asarray(times)  # (n + 1)
+    values = jnp.asarray(values)  # (n)
 
     # format times and values, for example:
     # times  = [0, 1, 2, 3] -> [0, 1, 1, 2, 2, 3]

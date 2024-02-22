@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from functools import wraps
 from math import ceil
-from typing import Iterable
 
 import matplotlib
 import matplotlib as mpl
@@ -19,7 +19,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 __all__ = [
     'linmap',
     'figax',
-    'optax',
+    'optional_ax',
     'gridplot',
     'mplstyle',
     'integer_ticks',
@@ -43,7 +43,7 @@ def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axe
     return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
-def optax(func):
+def optional_ax(func):  # noqa: ANN201, ANN001
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 
@@ -65,12 +65,8 @@ def optax(func):
     """
 
     @wraps(func)
-    def wrapper(
-        *args,
-        ax: Axes | None = None,
-        w: float = 7.0,
-        h: float | None = None,
-        **kwargs,
+    def wrapper(  # noqa: ANN202
+        *args, ax: Axes | None = None, w: float = 7.0, h: float | None = None, **kwargs
     ):
         if ax is None:
             _, ax = figax(w=w, h=h)
@@ -80,12 +76,7 @@ def optax(func):
 
 
 def gridplot(
-    n: int,
-    nrows: int = 1,
-    *,
-    w: float = 4.0,
-    h: float | None = None,
-    **kwargs,
+    n: int, nrows: int = 1, *, w: float = 4.0, h: float | None = None, **kwargs
 ) -> tuple[Figure, Iterable[Axes]]:
     """Return an iterator on `Axes` objects organised in a grid fashion.
 
@@ -96,7 +87,7 @@ def gridplot(
         fig, axs = plt.subplots(2, 3, figsize=(3 * 4.0, 2 * 3.0))
 
         for i, age in enumerate(ages):
-            axs[i//3][i%3].plot([1, 2], [1, 2], label=f'{age}')
+            axs[i // 3][i % 3].plot([1, 2], [1, 2], label=f'{age}')
 
         fig.tight_layout()
         ```
@@ -133,68 +124,69 @@ colors = {
 
 def mplstyle(*, usetex: bool = False):
     """Set custom Matplotlib style."""
-    plt.rcParams.update({
-        # xtick
-        'xtick.direction': 'in',
-        'xtick.major.size': 4.5,
-        'xtick.minor.size': 2.5,
-        'xtick.major.width': 1.0,
-        'xtick.labelsize': 12,
-        'xtick.minor.visible': True,
-        # ytick
-        'ytick.direction': 'in',
-        'ytick.major.size': 4.5,
-        'ytick.minor.size': 2.5,
-        'ytick.major.width': 1.0,
-        'ytick.labelsize': 12,
-        'ytick.minor.visible': True,
-        # axes
-        'axes.facecolor': 'white',
-        'axes.grid': False,
-        'axes.titlesize': 12,
-        'axes.labelsize': 12,
-        'axes.linewidth': 1.0,
-        'axes.prop_cycle': cycler('color', colors.values()),
-        # grid
-        'grid.color': 'gray',
-        'grid.linestyle': '--',
-        'grid.alpha': 0.3,
-        # legend
-        'legend.frameon': False,
-        'legend.fontsize': 12,
-        # figure
-        'figure.facecolor': 'white',
-        'figure.dpi': 72,
-        'figure.figsize': (7, 7 / 1.6),
-        # other
-        'savefig.facecolor': 'white',
-        'font.size': 12,
-        'scatter.marker': 'o',
-        'lines.linewidth': 2.0,
-        # fonts
-        'text.usetex': usetex,
-        'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
-        'font.family': 'serif',
-        'font.serif': 'Times New Roman',
-        # if usetex=False, matplotlib uses mathtext, for which we choose the STIX font
-        # which is designed to blend well with Times
-        'mathtext.fontset': 'stix',
-    })
+    plt.rcParams.update(
+        {
+            # xtick
+            'xtick.direction': 'in',
+            'xtick.major.size': 4.5,
+            'xtick.minor.size': 2.5,
+            'xtick.major.width': 1.0,
+            'xtick.labelsize': 12,
+            'xtick.minor.visible': True,
+            # ytick
+            'ytick.direction': 'in',
+            'ytick.major.size': 4.5,
+            'ytick.minor.size': 2.5,
+            'ytick.major.width': 1.0,
+            'ytick.labelsize': 12,
+            'ytick.minor.visible': True,
+            # axes
+            'axes.facecolor': 'white',
+            'axes.grid': False,
+            'axes.titlesize': 12,
+            'axes.labelsize': 12,
+            'axes.linewidth': 1.0,
+            'axes.prop_cycle': cycler('color', colors.values()),
+            # grid
+            'grid.color': 'gray',
+            'grid.linestyle': '--',
+            'grid.alpha': 0.3,
+            # legend
+            'legend.frameon': False,
+            'legend.fontsize': 12,
+            # figure
+            'figure.facecolor': 'white',
+            'figure.dpi': 72,
+            'figure.figsize': (7, 7 / 1.6),
+            # other
+            'savefig.facecolor': 'white',
+            'font.size': 12,
+            'scatter.marker': 'o',
+            'lines.linewidth': 2.0,
+            # fonts
+            'text.usetex': usetex,
+            'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
+            'font.family': 'serif',
+            'font.serif': 'Times New Roman',
+            # if usetex=False, matplotlib uses mathtext, for which we choose the STIX
+            # font which is designed to blend well with Times
+            'mathtext.fontset': 'stix',
+        }
+    )
 
 
-def integer_ticks(axis: Axis, n: int, all: bool = True):
+def integer_ticks(axis: Axis, n: int, all: bool = True):  # noqa: A002
     if all:
         axis.set_ticks(range(n))
         minorticks_off(axis)
     else:
         # let maptlotlib choose major ticks location but restrict to integers
         axis.get_major_locator().set_params(integer=True)
-
-        # format major ticks as integer
-        axis.set_major_formatter(lambda x, _: f'{int(x)}')
-
         # fix minor ticks to integer locations only
         axis.set_minor_locator(MultipleLocator(1))
+
+    # format major ticks as integer
+    axis.set_major_formatter(lambda x, _: f'{int(x)}')
 
 
 def ket_ticks(axis: Axis):
@@ -202,7 +194,7 @@ def ket_ticks(axis: Axis):
     axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
 
     # format ticks as ket
-    new_labels = [fr'$| {label.get_text()} \rangle$' for label in axis.get_ticklabels()]
+    new_labels = [rf'$| {label.get_text()} \rangle$' for label in axis.get_ticklabels()]
     axis.set_ticklabels(new_labels)
 
 
@@ -211,7 +203,7 @@ def bra_ticks(axis: Axis):
     axis.set_major_locator(FixedLocator(axis.get_ticklocs()))
 
     # format ticks as ket
-    new_labels = [fr'$\langle {label.get_text()} |$' for label in axis.get_ticklabels()]
+    new_labels = [rf'$\langle {label.get_text()} |$' for label in axis.get_ticklabels()]
     axis.set_ticklabels(new_labels)
 
 
