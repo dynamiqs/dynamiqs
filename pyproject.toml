@@ -15,6 +15,7 @@ dependencies = [
     "equinox",
     "imageio",
     "cmasher",
+    "ipython",
 ]
 
 [build-system]
