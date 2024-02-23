@@ -44,14 +44,18 @@ class BaseSolver(AbstractSolver):
 
         return saved
 
-    def result(self, saved: dict[str, Array], ylast: Array) -> Result:
+    def result(
+        self, saved: dict[str, Array], ylast: Array, infos: PyTree | None = None
+    ) -> Result:
         ysave = saved.get('ysave', ylast)
         Esave = saved.get('Esave')
         extra = saved.get('extra')
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
         saved = Saved(ysave, Esave, extra)
-        return Result(self.ts, self.solver, self.gradient, self.options, saved)
+        return Result(
+            self.ts, self.solver, self.gradient, self.options, saved, infos=infos
+        )
 
 
 SESolver = BaseSolver

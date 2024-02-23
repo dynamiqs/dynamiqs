@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -12,6 +13,19 @@ from .abstract_solver import BaseSolver, MESolver
 
 
 class PropagatorSolver(BaseSolver):
+    class Infos(eqx.Module):
+        nsteps: Array
+
+        def __str__(self) -> str:
+            if self.nsteps.ndim >= 1:
+                # note: propagator solvers can make different number of steps between
+                # batch elements when batching over PWC objects
+                return (
+                    f'avg. {self.nsteps.mean()} steps | infos shape'
+                    f' {self.nsteps.shape}'
+                )
+            return f'{self.nsteps} steps'
+
     def __init__(self, *args):
         super().__init__(*args)
         # check that Hamiltonian is time-independent
@@ -37,7 +51,8 @@ class PropagatorSolver(BaseSolver):
         ylast, saved = jax.lax.scan(propagate, self.y0, delta_ts)
 
         # === collect and return results
-        return self.result(saved, ylast)
+        nsteps = (delta_ts != 0).sum()
+        return self.result(saved, ylast, infos=self.Infos(nsteps))
 
     @abstractmethod
     def forward(self, delta_t: Scalar, y: Array) -> Array:

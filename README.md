@@ -64,6 +64,7 @@ print(result)
 ==== Result ====
 Solver  : Tsit5
 States  : Array complex64 (101, 128, 128) | 12.62 Mb
+Infos   : 7 steps (7 accepted, 0 rejected)
 ```
 
 ### Compute gradients with respect to some parameters

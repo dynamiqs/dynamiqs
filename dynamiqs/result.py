@@ -44,6 +44,7 @@ class Result(eqx.Module):
         states _(Array)_: Saved states.
         expects _(Array, optional)_: Saved expectation values.
         extra _(PyTree, optional)_: Extra data saved.
+        infos _(PyTree, optional)_: Solver-dependent information on the resolution.
         tsave _(Array)_: Times for which results were saved.
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
@@ -55,6 +56,7 @@ class Result(eqx.Module):
     gradient: Gradient | None
     options: Options
     _saved: Saved
+    infos: PyTree | None = None
 
     @property
     def states(self) -> Array:
@@ -79,6 +81,7 @@ class Result(eqx.Module):
             'Extra   ': (
                 eqx.tree_pformat(self.extra) if self.extra is not None else None
             ),
+            'Infos   ': self.infos if self.infos is not None else None,
         }
         parts = {k: v for k, v in parts.items() if v is not None}
         parts_str = '\n'.join(f'{k}: {v}' for k, v in parts.items())
