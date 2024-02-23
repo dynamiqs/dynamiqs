@@ -79,6 +79,8 @@ def mesolve(
                 expectation values.
             - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
                 specified in `options`.
+            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
+                resolution.
             - **tsave** _(array of shape (nt,))_ -- Times for which states and
                 expectation values were saved.
             - **solver** _(Solver)_ -- Solver used.
@@ -99,7 +101,7 @@ def mesolve(
         False,
     )
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0)
+    out_axes = Result(None, None, None, None, 0, 0)
 
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 

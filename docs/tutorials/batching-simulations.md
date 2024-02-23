@@ -45,12 +45,12 @@ print(result)
 Solver  : Tsit5
 States  : Array complex64 (4, 11, 2, 1) | 0.69 Kb
 Expects : Array complex64 (4, 1, 11) | 0.34 Kb
+Infos   : avg. 6.0 steps (6.0 accepted, 0.0 rejected) | infos shape (4,)
 ```
 
 The returned `states` array has shape `(4, 11, 2, 1)` where `4` is the number of initial states, `11` is the number of saved states (the length of `tsave`) and `(2, 1)` is the shape of a single state.
 
 Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial states, `1` is the number of `exp_ops` operators (a single one here) and `11` is the number of saved expectation values (the length of `tsave`).
-
 
 !!! Note "Creating a batched array with JAX"
     To directly create a batched JAX array, use `jnp.stack`:
