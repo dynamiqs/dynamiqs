@@ -311,8 +311,15 @@ class ConstantTimeArray(TimeArray):
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ConstantTimeArray(self.x * y)
 
-    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            return ConstantTimeArray(jnp.asarray(other, dtype=cdtype()) + self.x)
+        elif isinstance(other, ConstantTimeArray):
+            return ConstantTimeArray(self.x + other.x)
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
 
 
 class PWCTimeArray(TimeArray):
@@ -368,7 +375,13 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values, self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
 
 
 class ModulatedTimeArray(TimeArray):
@@ -416,7 +429,13 @@ class ModulatedTimeArray(TimeArray):
         return ModulatedTimeArray(self.f, self.array * y, self.args)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
 
 
 class CallableTimeArray(TimeArray):
@@ -455,5 +474,55 @@ class CallableTimeArray(TimeArray):
         f = Partial(lambda t, *args: self.f(t, *args) * y)
         return CallableTimeArray(f, self.args)
 
-    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
+
+
+class SummedTimeArray(TimeArray):
+    timearrays: list[TimeArray]
+
+    @property
+    def dtype(self) -> np.dtype:
+        return self.timearrays[0].dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return jnp.broadcast_shapes(*[tarray.shape for tarray in self.timearrays])
+
+    @property
+    def mT(self) -> TimeArray:
+        return SummedTimeArray([tarray.mT for tarray in self.timearrays])
+
+    def __call__(self, t: float) -> Array:
+        return jax.tree_util.tree_reduce(
+            jnp.add, [tarray(t) for tarray in self.timearrays]
+        )
+
+    def reshape(self, *new_shape: int) -> TimeArray:
+        return SummedTimeArray(
+            [tarray.reshape(*new_shape) for tarray in self.timearrays]
+        )
+
+    def conj(self) -> TimeArray:
+        return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
+
+    def __neg__(self) -> TimeArray:
+        return SummedTimeArray([-tarray for tarray in self.timearrays])
+
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return SummedTimeArray([tarray * y for tarray in self.timearrays])
+
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([*self.timearrays, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([*self.timearrays, other])
+        else:
+            return NotImplemented
