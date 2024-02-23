@@ -69,6 +69,8 @@ def sesolve(
                 expectation values.
             - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
                 specified in `options`.
+            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
+                resolution.
             - **tsave** _(array of shape (nt,))_ -- Times for which results were saved.
             - **solver** _(Solver)_ -- Solver used.
             - **gradient** _(Gradient)_ -- Gradient used.
@@ -99,7 +101,7 @@ def _vmap_sesolve(
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0)
+    out_axes = Result(None, None, None, None, 0, 0)
     f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
