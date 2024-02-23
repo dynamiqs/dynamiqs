@@ -4,13 +4,14 @@ from abc import abstractmethod
 from typing import Callable, Union, get_args
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
 from jaxtyping import PyTree, Scalar
 
-from ._utils import check_time_array, obj_type_str, type_str
+from ._utils import check_time_array, obj_type_str
 from .utils.array_types import ArrayLike, cdtype
 
 __all__ = ['totime']
@@ -116,19 +117,20 @@ def _factory_constant(x: ArrayLike) -> ConstantTimeArray:
 def _factory_callable(
     f: callable[[float, ...], Array], *, args: tuple[PyTree]
 ) -> CallableTimeArray:
-    f0 = f(0.0, *args)
-
-    # check type, dtype and device match
-    if not isinstance(f0, Array):
+    # check f is callable
+    if not callable(f):
         raise TypeError(
-            f'The time-dependent operator must be a {type_str(Array)}, but has'
-            f' type {obj_type_str(f0)}. The provided function must return an array,'
-            ' to avoid costly type conversion at each time solver step.'
+            'For a callable time array, argument `f` must be a function, but has type'
+            f' {obj_type_str(f)}.'
         )
-    if f0.dtype != cdtype():
+
+    out = jax.eval_shape(f, 0.0, *args)
+
+    # check dtype
+    if out.dtype != cdtype():
         raise TypeError(
             f'The time-dependent operator must have dtype `{cdtype()}`, but has dtype'
-            f' `{f0.dtype}`. The provided function must return an array with the'
+            f' `{out.dtype}`. The provided function must return an array with the'
             ' same `dtype` as provided to the solver, to avoid costly dtype'
             ' conversion at each solver time step.'
         )
@@ -138,8 +140,7 @@ def _factory_callable(
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
     f = Partial(f)
-    static = jnp.zeros_like(f0)
-    return CallableTimeArray(f, static, args)
+    return CallableTimeArray(f, args)
 
 
 def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
@@ -177,26 +178,23 @@ def _factory_modulated(
 ) -> ModulatedTimeArray:
     f, array = x
 
-    # check f
+    # check f is callable
     if not callable(f):
         raise TypeError(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
-    f0 = f(0.0, *args)
-    if not isinstance(f0, Array):
+
+    out = jax.eval_shape(f, 0.0, *args)
+
+    # check dtype
+    if out.dtype != cdtype():
         raise TypeError(
-            'For a modulated time array `(f, array)`, argument `f` must'
-            f' return an array, but returns type {obj_type_str(f0)}.'
+            f'The time-dependent operator must have dtype `{cdtype()}`, but has dtype'
+            f' `{out.dtype}`. The provided function must return an array with the'
+            ' same `dtype` as provided to the solver, to avoid costly dtype'
+            ' conversion at each solver time step.'
         )
-    # TODO: do we really need this?
-    # if f0.dtype not in [dtype, rdtype]:
-    #     dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
-    #     raise TypeError(
-    #         'For a modulated time array, the array returned by the function must'
-    #         f' have dtype `{dtypes}`, but has dtype `{f0.dtype}`. This is necessary'
-    #         ' to avoid costly dtype conversion at each solver time step.'
-    #     )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
@@ -206,7 +204,7 @@ def _factory_modulated(
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_ModulatedFactor(Partial(f), f0, args)]
+    factors = [_ModulatedFactor(Partial(f), args)]
     arrays = array[None, ...]  # (1, n, n)
     static = jnp.zeros_like(array)
     return ModulatedTimeArray(factors, arrays, static=static)
@@ -324,53 +322,47 @@ class ConstantTimeArray(TimeArray):
 
 class CallableTimeArray(TimeArray):
     f: callable[[float, ...], Array]
-    static: Array
     args: tuple[PyTree]
 
     @property
     def dtype(self) -> np.dtype:
-        return self.static.dtype
+        return jax.eval_shape(self.f, 0.0, *self.args).dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.static.shape
+        return jax.eval_shape(self.f, 0.0, *self.args).shape
 
     @property
     def mT(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).mT)
-        static = self.static.mT
-        return CallableTimeArray(f, static, self.args)
+        return CallableTimeArray(f, self.args)
 
     def __call__(self, t: float) -> Array:
-        return self.static + self.f(t, *self.args).reshape(*self.shape)
+        return self.f(t, *self.args)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = self.f
-        static = self.static.reshape(*new_shape)
-        return CallableTimeArray(f, static, self.args)
+        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_shape))
+        return CallableTimeArray(f, self.args)
 
     def conj(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).conj())
-        static = self.static.conj()
-        return CallableTimeArray(f, static, self.args)
+        return CallableTimeArray(f, self.args)
 
     def __neg__(self) -> TimeArray:
         f = Partial(lambda t, *args: -self.f(t, *args))
-        static = -self.static
-        return CallableTimeArray(f, static, self.args)
+        return CallableTimeArray(f, self.args)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args) * y)
-        static = self.static * y
-        return CallableTimeArray(f, static, self.args)
+        return CallableTimeArray(f, self.args)
 
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(y, get_args(ArrayLike)):
-            static = self.static + jnp.asarray(y)
-            return CallableTimeArray(self.f, static, self.args)
+            f = Partial(lambda t, *args: self.f(t, *args) + y)
+            return CallableTimeArray(f, self.args)
         elif isinstance(y, ConstantTimeArray):
-            static = self.static + y.x
-            return CallableTimeArray(self.f, static, self.args)
+            f = Partial(lambda t, *args: self.f(t, *args) + y.x)
+            return CallableTimeArray(f, self.args)
         else:
             return NotImplemented
 
@@ -427,30 +419,27 @@ class _PWCFactor(_Factor):
 
 
 class _ModulatedFactor(_Factor):
-    # Defined by two objects (f, f0), where
-    # - f is a callable that takes a time and returns an array of shape (...)
-    # - f0 is the array of shape (...) returned by f(0.0)
-    # f0 holds information about the shape of the array returned by f(t).
     f: callable[[float], Array]  # (float) -> (...)
-    f0: Array  # (...)
     args: tuple[PyTree]
 
     @property
+    def dtype(self) -> np.dtype:
+        return jax.eval_shape(self.f, 0.0, *self.args).dtype
+
+    @property
     def shape(self) -> tuple[int, ...]:
-        return self.f0.shape
+        return jax.eval_shape(self.f, 0.0, *self.args).shape
 
     def conj(self) -> _Factor:
         f = Partial(lambda t, *args: self.f(t, *args).conj())
-        f0 = self.f0.conj()
-        return _ModulatedFactor(f, f0, self.args)
+        return _ModulatedFactor(f, self.args)
 
     def __call__(self, t: Scalar) -> Array:
         return self.f(t, *self.args).reshape(self.shape)
 
-    def reshape(self, *args: int) -> _Factor:
-        f = self.f
-        f0 = self.f0.reshape(*args)
-        return _ModulatedFactor(f, f0, self.args)
+    def reshape(self, *new_shape: int) -> _Factor:
+        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_shape))
+        return _ModulatedFactor(f, self.args)
 
 
 class FactorTimeArray(TimeArray):
