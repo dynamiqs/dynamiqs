@@ -86,7 +86,7 @@ def mesolve(
     """
     # === convert arguments
     H = _astimearray(H)
-    jump_ops = [_astimearray(jump_op) for jump_op in jump_ops]
+    jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = jnp.asarray(rho0, dtype=cdtype())
     rho0 = todm(rho0)
     tsave = jnp.asarray(tsave)
