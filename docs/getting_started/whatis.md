@@ -7,11 +7,15 @@ The **dynamiqs** library enables GPU simulation of large quantum systems, and co
 !!! Warning
     This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
 
+!!! Note
+    There hasn't been much activity on the `main` branch in recent months, but the project is more alive than ever! We are currently in the process of switching from PyTorch to JAX, and most of the development is now taking place on the [jax](https://github.com/dynamiqs/dynamiqs/tree/jax) branch. The main motivation for this switch is to improve performance. The JAX version will be faster than ever, for both small and large quantum systems. We plan to merge all this behind-the-scenes work over the coming months.
+
 Some exciting features of dynamiqs include:
 
 - Running simulations on **GPUs** and **TPUs**, with a significant speedup for large Hilbert space dimensions.
 - **Batching** many simulations of different Hamiltonians, jump operators or initial states to run them concurrently.
 - Exploring solvers **tailored to quantum** simulations that preserve the properties of the state, such as trace and positivity.
 - Computing **gradients** of any function of the evolved quantum state with respect to any parameter of the Hamiltonian, jump operators, or initial state.
+- Implementing **your own solvers** with ease by subclassing our base solver class and focusing directly on the solver logic.
 
 We hope that this library will prove beneficial to the community for e.g. simulations of large quantum systems, batched simulations of time-varying problems, gradient-based parameter estimation, or large-scale quantum optimal control.

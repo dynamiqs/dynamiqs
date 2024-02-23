@@ -1,6 +1,6 @@
 # Batching simulations
 
-Batching can be used to **run multiple independent simulations simultaneously**, and can dramatically speedup simulations, especially on GPU/TPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
+Batching can be used to **run multiple independent simulations simultaneously**, and can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -84,62 +84,3 @@ Common use cases for batching include:
 - simulating a system with different values of a parameter (e.g. a drive amplitude),
 - simulate a system with different initial states (e.g. for gate tomography),
 - perform optimisation using multiple starting points with random initial guesses (for parameters fitting or quantum optimal control).
-
-Let's quickly benchmark the speedup obtained by batching a simple simulation:
-
-```python
-# Hilbert space size
-n = 16
-
-# Hamiltonians
-amplitudes = jnp.linspace(-1, 1, 11)
-a = dq.destroy(n)
-H = amplitudes[:, None, None] * (a + dq.dag(a))  # shape (11, 16, 16)
-
-# jump operator
-jump_ops = [jnp.sqrt(0.1) * a]
-
-# initial states
-angles = jnp.linspace(0, 2 * jnp.pi, 11)
-alphas = 2.0 * jnp.exp(1j * angles)
-rho0 = jnp.stack([dq.coherent_dm(n, a) for a in alphas])  # shape (11, 16, 16)
-
-# time vector
-tsave = jnp.linspace(0, 1, 11)
-
-def run_unbatched():
-    for i in range(H.shape[0]):
-        for j in range(rho0.shape[0]):
-            dq.mesolve(H[i], jump_ops, rho0[j], tsave)
-
-def run_batched():
-    dq.mesolve(H, jump_ops, rho0, tsave)
-```
-
-So we want to run a total of `11 * 11 = 121` simulations. Let's compare how long it takes to run them unbatched vs batched on CPU[^1]:
-[^1]: Apple M1 chip with 8-core CPU.
-
-<!-- skip: start -->
-
-```pycon
->>> %timeit run_unbatched()
-119 ms ± 9.18 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
->>> %timeit run_batched()
-56.5 ms ± 539 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
-```
-
-Even with this simple example, we gain a **factor x2** in speedup just from batching.
-
-The result is even more striking on GPU[^2]:
-[^2]: NVIDIA GeForce RTX 4090.
-
-```pycon
->>> %timeit run_unbatched()
-439 ms ± 692 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
->>> %timeit run_batched()
-6.29 ms ± 160 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
-```
-
-On the GPU, because we remove latency between function calls, we gain a **factor x70** in speedup!
-
-<!-- skip: end -->

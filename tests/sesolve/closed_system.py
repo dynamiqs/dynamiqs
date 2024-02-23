@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import namedtuple
+from typing import NamedTuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -23,7 +23,7 @@ class ClosedSystem(System):
         solver: Solver,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),
+        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
     ) -> Result:
         params = self.params_default if params is None else params
@@ -42,7 +42,9 @@ class ClosedSystem(System):
 
 
 class Cavity(ClosedSystem):
-    Params = namedtuple('Params', ['delta', 'alpha0'])
+    class Params(NamedTuple):
+        delta: float
+        alpha0: float
 
     def __init__(self, *, n: int, delta: float, alpha0: float, tsave: ArrayLike):
         self.n = n
@@ -59,7 +61,7 @@ class Cavity(ClosedSystem):
     def y0(self, params: PyTree) -> Array:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
         return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
 
     def _alpha(self, t: float) -> Array:
@@ -77,7 +79,7 @@ class Cavity(ClosedSystem):
     def loss_state(self, state: Array) -> Array:
         return dq.expect(dq.number(self.n), state).real
 
-    def grads_state(self, t: float) -> PyTree:
+    def grads_state(self, t: float) -> PyTree:  # noqa: ARG002
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0
         return self.Params(grad_delta, grad_alpha0)
@@ -95,7 +97,9 @@ class Cavity(ClosedSystem):
 
 
 class TDQubit(ClosedSystem):
-    Params = namedtuple('Params', ['eps', 'omega'])
+    class Params(NamedTuple):
+        eps: float
+        omega: float
 
     def __init__(self, *, eps: float, omega: float, tsave: ArrayLike):
         self.n = 2
@@ -110,10 +114,10 @@ class TDQubit(ClosedSystem):
         f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
         return dq.totime(f, args=(params.eps, params.omega))
 
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> Array:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
         return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:

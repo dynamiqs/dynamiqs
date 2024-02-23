@@ -6,7 +6,7 @@ import dynamiqs as dq
 
 
 @pytest.mark.parametrize('cartesian_batching', [True, False])
-def test_batching(cartesian_batching):
+def test_batching(cartesian_batching):  # noqa: PLR0915
     n = 8
     nt = 11
     nH = 3
@@ -56,17 +56,17 @@ def test_batching(cartesian_batching):
         assert result.ysave.shape == (nH, nL1, nL2, nt, n, n)
         assert result.Esave.shape == (nH, nL1, nL2, nEs, nt)
     else:
-        assert result.ysave.shape == (nH, nt, n, n)
-        assert result.Esave.shape == (nH, nEs, nt)
+        assert result.states.shape == (nH, nt, n, n)
+        assert result.expects.shape == (nH, nEs, nt)
 
     # H and psi0 batched
     result = dq.mesolve(H, Ls0, psi0, tsave, exp_ops=exp_ops, options=options)
     if cartesian_batching:
-        assert result.ysave.shape == (nH, npsi0, nt, n, n)
-        assert result.Esave.shape == (nH, npsi0, nEs, nt)
+        assert result.states.shape == (nH, npsi0, nt, n, n)
+        assert result.expects.shape == (nH, npsi0, nEs, nt)
     else:
-        assert result.ysave.shape == (nH, nt, n, n)
-        assert result.Esave.shape == (nH, nEs, nt)
+        assert result.states.shape == (nH, nt, n, n)
+        assert result.expects.shape == (nH, nEs, nt)
 
     # H, Ls and psi0 batched
     result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=exp_ops, options=options)
@@ -74,5 +74,5 @@ def test_batching(cartesian_batching):
         assert result.ysave.shape == (nH, nL1, nL2, npsi0, nt, n, n)
         assert result.Esave.shape == (nH, nL1, nL2, npsi0, nEs, nt)
     else:
-        assert result.ysave.shape == (nH, nt, n, n)
-        assert result.Esave.shape == (nH, nEs, nt)
+        assert result.states.shape == (nH, nt, n, n)
+        assert result.expects.shape == (nH, nEs, nt)

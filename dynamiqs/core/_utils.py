@@ -15,18 +15,18 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
     else:
         try:
             return _factory_constant(x)
-        except TypeError:
+        except TypeError as e:
             raise TypeError(
                 'Input must be already be a `TimeArray` or an array-like object.'
-            )
+            ) from e
 
 
 def get_solver_class(
     solvers: dict[Solver, AbstractSolver], solver: Solver
 ) -> AbstractSolver:
     if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
+        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers)
+        raise TypeError(
             f'Solver of type `{type(solver).__name__}` is not supported (supported'
             f' solver types: {supported_str}).'
         )
@@ -64,7 +64,7 @@ def compute_vmap(
     return f
 
 
-def flatten(lst):
+def flatten(lst: list) -> list:
     result = []
     for item in lst:
         if isinstance(item, list):
@@ -74,7 +74,7 @@ def flatten(lst):
     return result
 
 
-def unflatten(flat_list, ref_list):
+def unflatten(flat_list: list, ref_list: list) -> list:
     result = []
     for item in ref_list:
         if isinstance(item, list):

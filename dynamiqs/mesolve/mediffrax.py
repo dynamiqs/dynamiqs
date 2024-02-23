@@ -25,7 +25,7 @@ class LindbladTerm(dx.ODETerm):
         self.H = H
         self.Ls = Ls
 
-    def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree):
+    def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree) -> PyTree:
         Ls = jnp.stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
         LdL = (Lsd @ Ls).sum(axis=0)

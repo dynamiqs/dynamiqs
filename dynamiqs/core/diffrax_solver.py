@@ -22,12 +22,12 @@ class DiffraxSolver(BaseSolver):
         super().__init__(*args)
 
     def run(self) -> PyTree:
-        # todo: remove once complex support is stabilized in diffrax
+        # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
 
             # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)
+            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
             subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
             subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
             saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
@@ -66,7 +66,7 @@ class EulerSolver(DiffraxSolver):
         self.diffrax_solver = dx.Euler()
         self.stepsize_controller = dx.ConstantStepSize()
         self.dt0 = self.solver.dt
-        self.max_steps = 100_000  # todo: fix hard-coded max_steps
+        self.max_steps = 100_000  # TODO: fix hard-coded max_steps
 
 
 class AdaptiveSolver(DiffraxSolver):

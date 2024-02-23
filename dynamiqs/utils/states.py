@@ -52,7 +52,7 @@ def fock(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
         n = d * n + s
     ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
     ket = ket.at[n].set(1.0)
-    return ket
+    return ket  # noqa: RET504
 
 
 def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
