@@ -13,8 +13,8 @@ def rand_real(
     key: PRNGKeyArray,
     shape: int | tuple[int, ...],
     *,
-    min: float = 0.0,
-    max: float = 1.0,
+    min: float = 0.0,  # noqa: A002
+    max: float = 1.0,  # noqa: A002
 ) -> Array:
     r"""Returns an array of uniformly distributed random real numbers.
 
@@ -158,7 +158,6 @@ def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         Array([[0.576+0.j   , 0.293+0.166j],
                [0.293-0.166j, 0.424+0.j   ]], dtype=complex64)
     """
-
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
         raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
     x = rand_psd(key, shape)

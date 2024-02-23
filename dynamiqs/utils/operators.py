@@ -135,14 +135,13 @@ def destroy(*dims: int) -> Array | tuple[Array, ...]:
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j],
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]],      dtype=complex64)
     """  # noqa: E501
-
     if len(dims) == 1:
         return _destroy_single(dims[0])
 
     a = [_destroy_single(dim) for dim in dims]
-    I = [eye(dim) for dim in dims]
+    Id = [eye(dim) for dim in dims]
     return tuple(
-        tensor(*[a[j] if i == j else I[j] for j in range(len(dims))])
+        tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
@@ -194,9 +193,9 @@ def create(*dims: int) -> Array | tuple[Array, ...]:
         return _create_single(dims[0])
 
     adag = [_create_single(dim) for dim in dims]
-    I = [eye(dim) for dim in dims]
+    Id = [eye(dim) for dim in dims]
     return tuple(
-        tensor(*[adag[j] if i == j else I[j] for j in range(len(dims))])
+        tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
@@ -387,8 +386,6 @@ def sigmax() -> Array:
 
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
 
-    Args:
-
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_x$ operator.
 
@@ -404,8 +401,6 @@ def sigmay() -> Array:
     r"""Returns the Pauli $\sigma_y$ operator.
 
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
-
-    Args:
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_y$ operator.
@@ -423,8 +418,6 @@ def sigmaz() -> Array:
 
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
 
-    Args:
-
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_z$ operator.
 
@@ -441,8 +434,6 @@ def sigmap() -> Array:
 
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
 
-    Args:
-
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_+$ operator.
 
@@ -458,8 +449,6 @@ def sigmam() -> Array:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
-
-    Args:
 
     Returns:
         _(array of shape (2, 2))_ Pauli $\sigma_-$ operator.

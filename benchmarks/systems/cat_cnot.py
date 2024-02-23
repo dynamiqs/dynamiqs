@@ -10,6 +10,8 @@ import dynamiqs as dq
 MHz = 2 * pi
 ns = 1.0 * 1e-3
 
+OpenSystem = object
+
 
 class CatCNOT(OpenSystem):
     def __init__(

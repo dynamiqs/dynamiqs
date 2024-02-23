@@ -27,6 +27,8 @@ def _populations(x: ArrayLike) -> Array:
         # batched extract diagonal
         bdiag = jnp.vectorize(jnp.diag, signature='(a,b)->(c)')
         return bdiag(x).real
+    else:
+        raise TypeError
 
 
 @optional_ax

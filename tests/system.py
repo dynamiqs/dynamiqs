@@ -22,17 +22,14 @@ class System(ABC):
     @abstractmethod
     def H(self, params: PyTree) -> ArrayLike | TimeArray:
         """Compute the Hamiltonian."""
-        pass
 
     @abstractmethod
     def y0(self, params: PyTree) -> Array:
         """Compute the initial state."""
-        pass
 
     @abstractmethod
     def Es(self, params: PyTree) -> Array:
         """Compute the expectation value operators."""
-        pass
 
     def state(self, t: float) -> Array:
         """Compute the exact state at a given time."""
@@ -54,7 +51,8 @@ class System(ABC):
 
     def grads_states(self, t: float) -> PyTree:
         """Compute the exact gradients of the example state loss function with respect
-        to the system parameters."""
+        to the system parameters.
+        """
         raise NotImplementedError
 
     def loss_expect(self, expect: Array) -> Array:
@@ -63,7 +61,8 @@ class System(ABC):
 
     def grads_expect(self, t: float) -> PyTree:
         """Compute the exact gradients of the example expectation values loss functions
-        with respect to the system parameters."""
+        with respect to the system parameters.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -72,7 +71,7 @@ class System(ABC):
         solver: Solver,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),
+        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
     ) -> Result:
         pass

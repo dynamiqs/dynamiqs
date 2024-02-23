@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import get_args
-
 import jax
 import numpy as np
 from jaxtyping import ArrayLike
@@ -17,16 +15,18 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
     else:
         try:
             return _factory_constant(x)
-        except:
-            raise TypeError('Input must be already be a `TimeArray` or an array-like object.')
+        except TypeError as e:
+            raise TypeError(
+                'Input must be already be a `TimeArray` or an array-like object.'
+            ) from e
 
 
 def get_solver_class(
     solvers: dict[Solver, AbstractSolver], solver: Solver
 ) -> AbstractSolver:
     if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
+        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers)
+        raise TypeError(
             f'Solver of type `{type(solver).__name__}` is not supported (supported'
             f' solver types: {supported_str}).'
         )
