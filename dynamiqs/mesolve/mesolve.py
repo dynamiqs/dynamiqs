@@ -128,8 +128,8 @@ def _vmap_mesolve(
 
 
 def _mesolve(
-    H: TimeArray,
-    jump_ops: list[TimeArray],
+    H: ArrayLike | TimeArray,
+    jump_ops: list[ArrayLike | TimeArray],
     rho0: ArrayLike,
     tsave: ArrayLike,
     exp_ops: list[ArrayLike] | None = None,
@@ -137,6 +137,14 @@ def _mesolve(
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> Result:
+    # === convert arguments
+    H = _astimearray(H)
+    jump_ops = [_astimearray(jump_op) for jump_op in jump_ops]
+    rho0 = jnp.asarray(rho0, dtype=cdtype())
+    rho0 = todm(rho0)
+    tsave = jnp.asarray(tsave)
+    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
     # === select solver class
     solvers = {
         Euler: MEEuler,
