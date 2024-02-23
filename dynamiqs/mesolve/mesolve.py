@@ -18,7 +18,6 @@ from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def mesolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -93,6 +92,20 @@ def mesolve(
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
+    return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+
+
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _vmap_mesolve(
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: ArrayLike,
+    tsave: ArrayLike,
+    exp_ops: list[ArrayLike] | None = None,
+    solver: Solver = Tsit5(),  # noqa: B008
+    gradient: Gradient | None = None,
+    options: Options = Options(),  # noqa: B008
+) -> Result:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (

@@ -17,7 +17,6 @@ from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def sesolve(
     H: ArrayLike | TimeArray,
     psi0: ArrayLike,
@@ -80,6 +79,19 @@ def sesolve(
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
+    return _vmap_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
+
+
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _vmap_sesolve(
+    H: TimeArray,
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    exp_ops: list[ArrayLike] | None = None,
+    solver: Solver = Tsit5(),  # noqa: B008
+    gradient: Gradient | None = None,
+    options: Options = Options(),  # noqa: B008
+) -> Result:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
