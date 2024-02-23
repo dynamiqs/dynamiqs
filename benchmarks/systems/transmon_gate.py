@@ -47,7 +47,7 @@ class TransmonGate(ClosedSystem):
         self.transmon_hamiltonian()
 
     def transmon_hamiltonian(self):
-        """diagonalize the transmon Hamiltonian"""
+        """Diagonalize the transmon Hamiltonian."""
         # charge basis dimension
         N_charge = 2 * self.num_charge + 1
 

@@ -17,15 +17,15 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
     elif isinstance(x, TimeArray):
         return x
     else:
-        raise TypeError()  # todo: add error message
+        raise TypeError  # TODO: add error message
 
 
 def get_solver_class(
     solvers: dict[Solver, AbstractSolver], solver: Solver
 ) -> AbstractSolver:
     if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
+        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers)
+        raise TypeError(
             f'Solver of type `{type(solver).__name__}` is not supported (supported'
             f' solver types: {supported_str}).'
         )

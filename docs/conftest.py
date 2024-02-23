@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 import jax.numpy as jnp
 import matplotlib
@@ -13,18 +13,18 @@ import dynamiqs
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def jax_set_printoptions():
+def _jax_set_printoptions():
     jnp.set_printoptions(precision=3, suppress=True)
 
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def mplstyle():
+def _mplstyle():
     dynamiqs.plots.utils.mplstyle()
 
 
 @pytest.fixture(scope='session', autouse=True)
-def mpl_backend():
+def _mpl_backend():
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
 
@@ -57,11 +57,7 @@ class PyconCodeBlockParser(PythonCodeBlockParser):
 
 # sybil configuration
 pytest_collect_file = Sybil(
-    parsers=[
-        PythonCodeBlockParser(),
-        PyconCodeBlockParser(),
-        SkipParser(),
-    ],
+    parsers=[PythonCodeBlockParser(), PyconCodeBlockParser(), SkipParser()],
     patterns=['*.md'],
     fixtures=['renderfig'],
 ).pytest()

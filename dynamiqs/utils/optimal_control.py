@@ -70,7 +70,7 @@ def cd_gate(dim: int, alpha: ArrayLike) -> Array:
                [ 0.   +0.j, -0.05 +0.j,  0.   +0.j,  0.999+0.j]], dtype=complex64)
         >>> dq.cd_gate(3, [0.1, 0.2]).shape
         (2, 6, 6)
-    """  # noqa: E501
+    """
     alpha = jnp.asarray(alpha, dtype=cdtype())
     g = fock(2, 0)  # (2, 1)
     e = fock(2, 1)  # (2, 1)

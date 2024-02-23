@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from abc import ABC
 
-
-class System(ABC):
+class System:
     pass
 
 

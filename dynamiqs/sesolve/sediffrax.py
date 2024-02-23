@@ -21,7 +21,7 @@ class SchrodingerTerm(dx.ODETerm):
     def __init__(self, H: TimeArray):
         self.H = H
 
-    def vector_field(self, t: Scalar, psi: PyTree, _args: PyTree):
+    def vector_field(self, t: Scalar, psi: PyTree, _args: PyTree) -> PyTree:
         return -1j * self.H(t) @ psi
 
 
