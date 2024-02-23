@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike
 
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
@@ -101,12 +102,12 @@ def mesolve(
 def _vmap_mesolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
-    rho0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
@@ -130,23 +131,15 @@ def _vmap_mesolve(
 
 
 def _mesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    rho0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
-    # === convert arguments
-    H = _astimearray(H)
-    jump_ops = [_astimearray(jump_op) for jump_op in jump_ops]
-    rho0 = jnp.asarray(rho0, dtype=cdtype())
-    rho0 = todm(rho0)
-    tsave = jnp.asarray(tsave)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
-
     # === select solver class
     solvers = {
         Euler: MEEuler,

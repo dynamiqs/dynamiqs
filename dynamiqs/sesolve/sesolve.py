@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike
 
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
@@ -87,12 +88,12 @@ def sesolve(
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vmap_sesolve(
     H: TimeArray,
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    psi0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
@@ -107,12 +108,12 @@ def _vmap_sesolve(
 
 def _sesolve(
     H: TimeArray,
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    psi0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
     # === select solver class
     solvers = {
