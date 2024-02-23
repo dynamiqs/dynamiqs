@@ -30,19 +30,19 @@ def totime(x: TimeArrayLike, *args: PyTree) -> TimeArray:
 
     There are 4 ways to define a time-dependent array in dynamiqs.
 
-    **1/ Constant time array** - A constant array of the form $A(t) = A_0$. It is
+    **(1) Constant time array:** A constant array of the form $A(t) = A_0$. It is
     initialized with `x = A0` as an array-like object:
 
     - **A0** _(array-like)_ - The constant array $A_0$, of shape _(..., n, n)_.
 
-    **2/ Modulated time array** - A modulated time array of the form $A(t) = f(t) A_0$.
+    **(2) Modulated time array:** A modulated time array of the form $A(t) = f(t) A_0$.
     It is initialized with `x = (f, A0)`, where:
 
     - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
     Array` that returns the modulating factor $f(t)$ of shape _(...,)_.
     - **A0** _(array-like)_ - The constant array $A_0$, of shape _(n, n)_.
 
-    **3/ PWC time array** - A piecewise-constant (PWC) time array of the form $A(t) =
+    **(3) PWC time array:** A piecewise-constant (PWC) time array of the form $A(t) =
     A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with
     `x = (times, values, array)`, where:
 
@@ -53,7 +53,7 @@ def totime(x: TimeArrayLike, *args: PyTree) -> TimeArray:
     _(..., nv)_.
     - **array** _(array-like)_ - The constant array $A_i$, of shape _(n, n)_.
 
-    **4/ Callable time array** - A time array defined by a callable function, of
+    **(4) Callable time array:** A time array defined by a callable function, of
     generic form $A(t) = f(t)$. It is initialized with `x = f` as:
 
     - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
@@ -77,6 +77,28 @@ def totime(x: TimeArrayLike, *args: PyTree) -> TimeArray:
             array-like broadcastable with `self`.
         - **self + other** - Returns the sum of the array and `other`, where `other` is
             an array-like object or another instance of `TimeArray`.
+
+    Note: Batching over callable and modulated time arrays
+        To batch over callable and modulated time arrays, the function `f` must take
+        its batched array as extra argument. For example, here are two correct
+        implementations of the Hamiltonian $H(t) = \sigma_z + \cos(\omega t) \sigma_x$
+        with batching over $\omega$:
+        ```python
+        import jax.numpy as jnp
+
+        # array to batch over
+        omegas = jnp.linspace(-1.0, 1.0, 20)
+
+        # using a modulated time array
+        def cx(t, omega):
+            return jnp.cos(t * omega)
+        H = dq.sigmaz() + dq.totime((cx, dq.sigmax()), omegas)
+
+        # using a callable time array
+        def Hx(t, omega):
+            return jnp.cos(t * jnp.expand_dims(omega, (-1, -2))) * dq.sigmax()
+        H = dq.sigmaz() + dq.totime(Hx, omegas)
+        ```
 
     Args:
         x: The time-dependent array initializer.
