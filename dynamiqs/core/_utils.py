@@ -4,6 +4,7 @@ import jax
 import numpy as np
 from jaxtyping import ArrayLike
 
+from .._utils import obj_type_str
 from ..solver import Solver
 from ..time_array import TimeArray, _factory_constant
 from .abstract_solver import AbstractSolver
@@ -15,9 +16,10 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
     else:
         try:
             return _factory_constant(x)
-        except TypeError as e:
+        except (TypeError, ValueError) as e:
             raise TypeError(
-                'Input must be already be a `TimeArray` or an array-like object.'
+                f'Argument must be an array-like or a time-array object, but has type'
+                f' {obj_type_str(x)}.'
             ) from e
 
 
