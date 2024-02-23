@@ -1,23 +1,26 @@
 from __future__ import annotations
 
-from typing import get_args
-
 import jax
 import numpy as np
 from jaxtyping import ArrayLike
 
+from .._utils import obj_type_str
 from ..solver import Solver
 from ..time_array import TimeArray, _factory_constant
 from .abstract_solver import AbstractSolver
 
 
 def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
-    if isinstance(x, get_args(ArrayLike)):
-        return _factory_constant(x)
-    elif isinstance(x, TimeArray):
+    if isinstance(x, TimeArray):
         return x
     else:
-        raise TypeError  # TODO: add error message
+        try:
+            return _factory_constant(x)
+        except (TypeError, ValueError) as e:
+            raise TypeError(
+                f'Argument must be an array-like or a time-array object, but has type'
+                f' {obj_type_str(x)}.'
+            ) from e
 
 
 def get_solver_class(

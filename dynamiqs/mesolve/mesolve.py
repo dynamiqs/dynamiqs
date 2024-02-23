@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike
 
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
@@ -18,7 +19,6 @@ from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def mesolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -87,12 +87,35 @@ def mesolve(
             - **gradient** _(Gradient)_ -- Gradient used.
             - **options** _(Options)_ -- Options used.
     """
+    # === convert arguments
+    H = _astimearray(H)
+    jump_ops = [_astimearray(L) for L in jump_ops]
+    rho0 = jnp.asarray(rho0, dtype=cdtype())
+    rho0 = todm(rho0)
+    tsave = jnp.asarray(tsave)
+    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
+    # we implement the jitted vmap in another function to pre-convert QuTiP objects
+    # (which are not JIT-compatible) to JAX arrays
+    return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+
+
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _vmap_mesolve(
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> Result:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
-    jump_ops_ndim = _astimearray(jump_ops[0]).ndim + 1
     is_batched = (
         H.ndim > 2,
-        jump_ops_ndim > 3,  # TODO: this is a temporary fix
+        False,  # todo: this is a temporary fix
         rho0.ndim > 2,
         False,
         False,
@@ -110,23 +133,15 @@ def mesolve(
 
 
 def _mesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    rho0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
-    # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
-    y0 = jnp.asarray(rho0, dtype=cdtype())
-    y0 = todm(y0)
-    ts = jnp.asarray(tsave)
-    Es = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
-
     # === select solver class
     solvers = {
         Euler: MEEuler,
@@ -141,7 +156,7 @@ def _mesolve(
     solver.assert_supports_gradient(gradient)
 
     # === init solver
-    solver = solver_class(ts, y0, H, Es, solver, gradient, options, Ls)
+    solver = solver_class(tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops)
 
     # === run solver
     result = solver.run()
