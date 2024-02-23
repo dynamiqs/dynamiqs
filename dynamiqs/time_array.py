@@ -354,15 +354,11 @@ class PWCTimeArray(TimeArray):
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
-        return value.reshape(*value, 1, 1) * self.array
+        return value.reshape(*value.shape, 1, 1) * self.array
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        # there may be a better way to handle this
-        if new_shape[0] != self.shape[0]:
-            raise ValueError(
-                'The first dimension of the new shape must match the batching dimension'
-                f' of the time array, but got {new_shape[0]} and {self.shape[0]}.'
-            )
+        # find if the reshape is on `self.values` or `self.array`
+
         return PWCTimeArray(self.times, self.values, self.array.reshape(*new_shape[1:]))
 
     def conj(self) -> TimeArray:
