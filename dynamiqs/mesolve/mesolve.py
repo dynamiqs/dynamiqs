@@ -115,7 +115,7 @@ def _vmap_mesolve(
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (
         H.ndim > 2,
-        False,  # todo: this is a temporary fix
+        [jump_op.ndim > 2 for jump_op in jump_ops],
         rho0.ndim > 2,
         False,
         False,
