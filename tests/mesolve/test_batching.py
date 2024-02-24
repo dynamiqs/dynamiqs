@@ -21,12 +21,12 @@ def test_batching(cartesian_batching):  # noqa: PLR0915
     k1, k2, k3, k4, k5 = jax.random.split(jax.random.PRNGKey(42), 5)
     H = dq.rand_herm(k1, (nH, n, n))
     Ls = [dq.rand_herm(k2, (nL1, n, n)), dq.rand_herm(k3, (nL2, n, n))]
+    Ls0 = [L[0] for L in Ls]  # not batched L
     exp_ops = dq.rand_complex(k4, (nEs, n, n))
     psi0 = dq.rand_ket(k5, (npsi0, n, 1))
     tsave = jnp.linspace(0, 0.01, nt)
 
     # no batching
-    Ls0 = [L[0] for L in Ls]
     result = dq.mesolve(H[0], Ls0, psi0[0], tsave, exp_ops=exp_ops, options=options)
     assert result.states.shape == (nt, n, n)
     assert result.expects.shape == (nEs, nt)
@@ -64,6 +64,15 @@ def test_batching(cartesian_batching):  # noqa: PLR0915
     if cartesian_batching:
         assert result.states.shape == (nH, npsi0, nt, n, n)
         assert result.expects.shape == (nH, npsi0, nEs, nt)
+    else:
+        assert result.states.shape == (nH, nt, n, n)
+        assert result.expects.shape == (nH, nEs, nt)
+
+    # Ls and psi0 batched
+    result = dq.mesolve(H[0], Ls, psi0, tsave, exp_ops=exp_ops, options=options)
+    if cartesian_batching:
+        assert result.states.shape == (nL1, nL2, npsi0, nt, n, n)
+        assert result.expects.shape == (nL1, nL2, npsi0, nEs, nt)
     else:
         assert result.states.shape == (nH, nt, n, n)
         assert result.expects.shape == (nH, nEs, nt)
