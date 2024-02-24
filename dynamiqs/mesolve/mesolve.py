@@ -57,8 +57,8 @@ def mesolve(
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, of shape (nL, bL?, n, n))_: List
-            of jump operators.
+        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
+            jump operators.
         rho0 _(array-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
         tsave _(array-like of shape (nt,))_: Times at which the states and expectation
             values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or

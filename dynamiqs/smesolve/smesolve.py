@@ -91,8 +91,8 @@ def smesolve(
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, of shape (nL, bL?, n, n))_: List
-            of jump operators.
+        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
+            jump operators.
         etas _(array-like of shape (nL,))_: Measurement efficiencies, must be of the
             same length as `jump_ops` with values between 0 and 1. For a purely
             dissipative loss channel, set the corresponding efficiency to 0. No
