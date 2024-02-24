@@ -95,13 +95,6 @@ def mesolve(
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
-    # === check len(jump_ops) > 0
-    if len(jump_ops) == 0:
-        raise ValueError(
-            'At least one jump operator must be provided for `dq.mesolve`. If you do'
-            ' not need jump operators, consider using `dq.sesolve` instead.'
-        )
-
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
     return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
