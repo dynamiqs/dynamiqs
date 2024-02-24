@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike
 
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
@@ -68,6 +69,8 @@ def sesolve(
                 expectation values.
             - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
                 specified in `options`.
+            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
+                resolution.
             - **tsave** _(array of shape (nt,))_ -- Times for which results were saved.
             - **solver** _(Solver)_ -- Solver used.
             - **gradient** _(Gradient)_ -- Gradient used.
@@ -79,24 +82,26 @@ def sesolve(
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
+    # we implement the jitted vmap in another function to pre-convert QuTiP objects
+    # (which are not JIT-compatible) to JAX arrays
     return _vmap_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vmap_sesolve(
     H: TimeArray,
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    psi0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0)
+    out_axes = Result(None, None, None, None, 0, 0)
     f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
@@ -105,12 +110,12 @@ def _vmap_sesolve(
 
 def _sesolve(
     H: TimeArray,
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
-    gradient: Gradient | None = None,
-    options: Options = Options(),  # noqa: B008
+    psi0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
 ) -> Result:
     # === select solver class
     solvers = {

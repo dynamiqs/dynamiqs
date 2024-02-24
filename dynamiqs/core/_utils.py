@@ -15,10 +15,10 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
     else:
         try:
             return _factory_constant(x)
-        except TypeError as e:
+        except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument `x` must be an array-like object or have type `TimeArray`,'
-                f' but has type {obj_type_str(x)}.'
+                f'Argument must be an array-like or a time-array object, but has type'
+                f' {obj_type_str(x)}.'
             ) from e
 
 
