@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import jax
-import numpy as np
 from jaxtyping import ArrayLike
 
 from .._utils import obj_type_str
@@ -41,46 +40,34 @@ def compute_vmap(
     is_batched: list[bool | list[bool]],
     out_axes: list[int | None],
 ) -> callable:
-    is_batched_flat = flatten(is_batched)
-    if any(is_batched_flat):
+    # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
+    # argument `is_batched` indicates for each argument of `f` whether it is batched.
+    # There are two possible strategies to vectorize `f`:
+    # - If `cartesian_batching` is True, we want to apply `f` to every possible
+    #   combination of the arguments batched dimension (the cartesian product). To do
+    #   so, we essentially wrap f with multiple vmap applications, one for each batched
+    #   dimension.
+    # - If `cartesian_batching` is False, we directly map f over all batched arguments
+    #   and apply vmap once.
+
+    leaves, treedef = jax.tree_util.tree_flatten(is_batched)
+    n = len(leaves)
+    if any(leaves):
         if cartesian_batching:
-            # iteratively map over the first axis of each batched argument
-            idx_batched = np.where(is_batched_flat)[0]
-            # we apply the successive vmaps in reverse order, so that the output
+            # map over each batched dimension separately
+            # note: we apply the successive vmaps in reverse order, so the output
             # batched dimensions are in the correct order
-            for i in reversed(idx_batched):
-                in_axes = [None] * len(is_batched_flat)
-                in_axes[i] = 0
-                # recover the original structure of the batched arguments
-                in_axes = unflatten(in_axes, is_batched)
-                # apply vmap
-                f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+            for i, leaf in enumerate(reversed(leaves)):
+                if leaf:
+                    # build the `in_axes` argument with the same structure as
+                    # `is_batched`, but with 0 at the `leaf` position
+                    in_axes = jax.tree_util.tree_map(lambda _: None, leaves)
+                    in_axes[n - 1 - i] = 0
+                    in_axes = jax.tree_util.tree_unflatten(treedef, in_axes)
+                    f = jax.vmap(f, in_axes=in_axes, out_axes=0)
         else:
-            # map over the first axis of all batched arguments
-            in_axes = list(np.where(is_batched_flat, 0, None))
-            # recover the original structure of the batched arguments
-            in_axes = unflatten(in_axes, is_batched)
-            # apply vmap
+            # map over all batched dimensions at once
+            in_axes = jax.tree_util.tree_map(lambda x: 0 if x else None, is_batched)
             f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
-
-
-def flatten(lst: list) -> list:
-    result = []
-    for item in lst:
-        if isinstance(item, list):
-            result.extend(flatten(item))
-        else:
-            result.append(item)
-    return result
-
-
-def unflatten(flat_list: list, ref_list: list) -> list:
-    result = []
-    for item in ref_list:
-        if isinstance(item, list):
-            result.append(unflatten(flat_list, item))
-        else:
-            result.append(flat_list.pop(0))
-    return result
