@@ -38,6 +38,7 @@ dev = [
     "mkdocs-simple-hooks",
     "mkdocs-glightbox",
     "sybil>=6",
+    "black",  # needed by mkdocstrings to format function signatures
 ]
 
 [tool.ruff]
