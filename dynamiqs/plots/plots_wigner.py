@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib
 import shutil
 
-import imageio
+import imageio as iio
 import IPython.display as ipy
 import jax.numpy as jnp
 import numpy as np
@@ -174,7 +174,7 @@ def plot_wigner_mosaic(
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> H = dq.zero(n)
-        >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]
+        >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = np.linspace(0, 1.0, 101)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -213,12 +213,12 @@ def plot_wigner_mosaic(
 
     ymax = xmax if ymax is None else ymax
     selected_indexes = np.linspace(0, nstates, n, dtype=int)
-    _, _, w = wigner(states[selected_indexes], xmax, ymax, npixels)
+    _, _, wig = wigner(states[selected_indexes], xmax, ymax, npixels)
 
     # plot individual wigner
     for i, ax in enumerate(axs):
         plot_wigner_data(
-            w[i],
+            wig[i],
             ax=ax,
             xmax=xmax,
             ymax=ymax,
@@ -234,10 +234,11 @@ def plot_wigner_mosaic(
 
 def plot_wigner_gif(
     states: ArrayLike,
+    *,
     gif_duration: float = 5.0,
     fps: int = 10,
     w: float = 5.0,
-    h: float = 5.0,
+    h: float | None = None,
     xmax: float = 5.0,
     ymax: float | None = None,
     vmax: float = 2 / jnp.pi,
@@ -246,67 +247,102 @@ def plot_wigner_gif(
     interpolation: str = 'bilinear',
     cross: bool = False,
     clear: bool = False,
+    filename: str = '.tmp/dynamiqs/wigner.gif',
+    dpi: int = 72,
+    display: bool = True,
 ):
-    """Plot a gif of the Wigner function of multiple states.
+    r"""Plot a GIF of the Wigner function of multiple states.
 
-    The function saves a gif of the Wigner function plot and displays it.
+    Warning:
+        Documentation redaction in progress.
 
-    Parameters:
-        states (ArrayLike): The quantum states to be plotted.
-        gif_duration (float): The length of the gif in seconds.
-        fps (int): The frames per second of the gif.
-        w (float): The width of the plot.
-        h (float): The height of the plot.
-        xmax (float): The maximum x value of the plot.
-        ymax (float | None): The maximum y value of the plot. If None, it is set to
-            xmax.
-        vmax (float): The maximum value of the colorbar.
-        npixels (int): The number of pixels in the plot.
-        cmap (str): The colormap to be used.
-        interpolation (str): The interpolation method to be used.
-        cross (bool): If True, a cross is plotted at the origin.
-        clear (bool): If True, the axes are cleared.
+    Warning:
+        This function creates files in the current working directory under
+        `.tmp/dynamiqs`.
+
+    Note:
+        By default, the GIF is displayed in Jupyter notebook environments.
+
+    See [`dq.plot_wigner()`][dynamiqs.plot_wigner] for more details.
+
+    Examples:
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = dq.zero(n)
+        >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
+        >>> psi0 = dq.coherent(n, 0)
+        >>> tsave = np.linspace(0, 1.0, 1001)
+        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
+        >>> dq.plot_wigner_gif(
+        ...     result.states,
+        ...     fps=25,  # 25 frames per second
+        ...     xmax=4.0,
+        ...     ymax=2.0,
+        ...     filename='docs/figs-code/wigner-cat.gif',
+        ...     dpi=150,
+        ...     display=False,
+        ... )
+
+        ![plot_wigner_gif_cat](/figs-code/wigner-cat.gif){.fig}
+
+        >>> n = 16
+        >>> a = dq.destroy(n)
+        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> psi0 = dq.coherent(n, 2)
+        >>> tsave = np.linspace(0, np.pi, 1001)
+        >>> result = dq.sesolve(H, psi0, tsave)
+        >>> dq.plot_wigner_gif(
+        ...     result.states,
+        ...     gif_duration=10.0,  # 10 seconds GIF
+        ...     fps=25,
+        ...     xmax=4.0,
+        ...     clear=True,
+        ...     filename='docs/figs-code/wigner-kerr.gif',
+        ...     dpi=150,
+        ...     display=False,
+        ... )
+
+        ![plot_wigner_gif_kerr](/figs-code/wigner-kerr.gif){.fig-half}
     """
-    if ymax is None:
-        ymax = xmax
-
     states = jnp.asarray(states)
 
+    ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
-    tmpdir = './.tmp/dynamiqs'
-    tmpdir = pathlib.Path(tmpdir)
-    tmpdir.mkdir(parents=True, exist_ok=True)
-
     selected_indexes = np.linspace(0, len(states), nframes, dtype=int)
-    _, _, wigners = wigner(states[selected_indexes], xmax, ymax, npixels)
+    _, _, wig = wigner(states[selected_indexes], xmax, ymax, npixels)
 
-    tmpdir.mkdir(exist_ok=True)
-    frames = []
-    for frame_idx in tqdm(range(nframes)):
-        fig, ax = figax(w=w, h=h)
+    try:
+        # create temporary directory
+        tmpdir = pathlib.Path('./.tmp/dynamiqs')
+        tmpdir.mkdir(parents=True, exist_ok=True)
 
-        plot_wigner_data(
-            wigners[frame_idx],
-            ax=ax,
-            xmax=xmax,
-            ymax=ymax,
-            vmax=vmax,
-            cmap=cmap,
-            interpolation=interpolation,
-            colorbar=False,
-            cross=cross,
-            clear=clear,
-        )
+        frames = []
+        for i in tqdm(range(nframes)):
+            fig, ax = figax(w=w, h=h)
 
-        filename = tmpdir / f'tmp-{frame_idx}.png'
-        fig.savefig(filename)
-        plt.close()
-        frame = imageio.v2.imread(filename)
-        frames.append(frame)
+            plot_wigner_data(
+                wig[i],
+                ax=ax,
+                xmax=xmax,
+                ymax=ymax,
+                vmax=vmax,
+                cmap=cmap,
+                interpolation=interpolation,
+                colorbar=False,
+                cross=cross,
+                clear=clear,
+            )
 
-    if tmpdir.exists():
-        shutil.rmtree(tmpdir, ignore_errors=True)
+            frame_filename = tmpdir / f'tmp-{i}.png'
+            fig.savefig(frame_filename, bbox_inches='tight', dpi=dpi)
+            plt.close()
+            frame = iio.v3.imread(frame_filename)
+            frames.append(frame)
 
-    filename = 'wigner.gif'
-    imageio.mimwrite(filename, frames, format='GIF', duration=1 / fps)
-    ipy.display(ipy.Image(filename))
+        # loop=0: loop the GIF forever
+        iio.v3.imwrite(filename, frames, format='GIF', fps=fps, loop=0)
+        if display:
+            ipy.display(ipy.Image(filename))
+    finally:
+        if tmpdir.exists():
+            shutil.rmtree(tmpdir, ignore_errors=True)
