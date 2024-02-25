@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections import namedtuple
+from typing import NamedTuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -22,14 +22,13 @@ class OpenSystem(System):
     @abstractmethod
     def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
         """Compute the jump operators."""
-        pass
 
     def run(
         self,
         solver: Solver,
         *,
         gradient: Gradient | None = None,
-        options: Options = Options(),
+        options: Options = Options(),  # noqa: B008
         params: PyTree | None = None,
     ) -> Result:
         params = self.params_default if params is None else params
@@ -50,7 +49,10 @@ class OpenSystem(System):
 
 
 class OCavity(OpenSystem):
-    Params = namedtuple('Params', ['delta', 'alpha0', 'kappa'])
+    class Params(NamedTuple):
+        delta: float
+        alpha0: float
+        kappa: float
 
     def __init__(
         self, *, n: int, delta: float, alpha0: float, kappa: float, tsave: ArrayLike
@@ -73,7 +75,7 @@ class OCavity(OpenSystem):
     def y0(self, params: PyTree) -> Array:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
         return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
 
     def _alpha(self, t: float) -> Array:
@@ -94,7 +96,7 @@ class OCavity(OpenSystem):
     def grads_state(self, t: float) -> PyTree:
         grad_delta = 0.0
         grad_alpha0 = 2 * self.alpha0 * jnp.exp(-self.kappa * t)
-        grad_kappa = -self.alpha0**2 * t * jnp.exp(-self.kappa * t)
+        grad_kappa = -(self.alpha0**2) * t * jnp.exp(-self.kappa * t)
         return self.Params(grad_delta, grad_alpha0, grad_kappa)
 
     def grads_expect(self, t: float) -> PyTree:
@@ -117,7 +119,10 @@ class OCavity(OpenSystem):
 
 
 class OTDQubit(OpenSystem):
-    Params = namedtuple('Params', ['eps', 'omega', 'gamma'])
+    class Params(NamedTuple):
+        eps: float
+        omega: float
+        gamma: float
 
     def __init__(self, *, eps: float, omega: float, gamma: float, tsave: ArrayLike):
         self.n = 2
@@ -136,10 +141,10 @@ class OTDQubit(OpenSystem):
     def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
         return [jnp.sqrt(params.gamma) * dq.sigmax()]
 
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> Array:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
         return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:

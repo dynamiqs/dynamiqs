@@ -20,7 +20,7 @@ def assert_equal(x, y):
 
 class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def _setup(self):
         self.x = ConstantTimeArray(jnp.array([1, 2]))
 
     @pytest.mark.skip('broken test')
@@ -74,7 +74,7 @@ class TestConstantTimeArray:
 
 class TestCallableTimeArray:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def _setup(self):
         f = lambda t: t * jnp.array([1, 2])
         self.x = CallableTimeArray(f, f(0.0))
 
@@ -155,7 +155,7 @@ class TestCallableTimeArray:
 
 class TestPWCTimeArray:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def _setup(self):
         # PWC factor 1
         t1 = jnp.array([0, 1, 2, 3])
         v1 = jnp.array([1, 10, 100])
@@ -249,7 +249,7 @@ class TestPWCTimeArray:
 
 class TestModulatedTimeArray:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def _setup(self):
         one = jnp.array(1.0)
 
         # modulated factor 1

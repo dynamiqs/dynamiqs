@@ -23,18 +23,18 @@ def sybil_setup(namespace):
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def jax_set_printoptions():
+def _jax_set_printoptions():
     jnp.set_printoptions(precision=3, suppress=True)
 
 
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
-def mplstyle():
+def _mplstyle():
     dynamiqs.plots.utils.mplstyle()
 
 
 @pytest.fixture(scope='session', autouse=True)
-def mpl_backend():
+def _mpl_backend():
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
 

@@ -25,6 +25,63 @@ TimeArrayLike = Union[
 
 
 def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
+    r"""Instantiate a time-dependent array of type `TimeArray`.
+
+    There are 4 ways to define a time-dependent array in dynamiqs.
+
+    **1/ Constant time array** - A constant array of the form $A(t) = A_0$. It is
+    initialized with `x = A0` as an array-like object:
+
+    - **A0** _(array-like)_ - The constant array $A_0$, of shape _(..., n, n)_.
+
+    **2/ Modulated time array** - A modulated time array of the form $A(t) = f(t) A_0$.
+    It is initialized with `x = (f, A0)`, where:
+
+    - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
+    Array` that returns the modulating factor $f(t)$ of shape _(...,)_.
+    - **A0** _(array-like)_ - The constant array $A_0$, of shape _(n, n)_.
+
+    **3/ PWC time array** - A piecewise-constant (PWC) time array of the form $A(t) =
+    A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with
+    `x = (times, values, array)`, where:
+
+    - **times** _(array-like)_ - The time points $t_i$ between which the PWC factor
+    takes constant values, of shape _(nv+1,)_ where _nv_ is the number of time
+    intervals.
+    - **values** _(array-like)_ - The constant values for each time interval, of shape
+    _(..., nv)_.
+    - **array** _(array-like)_ - The constant array $A_i$, of shape _(n, n)_.
+
+    **4/ Callable time array** - A time array defined by a callable function, of
+    generic form $A(t) = f(t)$. It is initialized with `x = f` as:
+
+    - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
+    Array` with shape _(..., n, n)_.
+
+    Note: TimeArrays
+        A `TimeArray` object has several attributes and methods, including:
+
+        - **self.dtype** - Returns the data type of the array.
+        - **self.shape** - Returns the shape of the array.
+        - **self.mT** - Returns the transpose of the array.
+        - **self(t: float)** - Evaluates the array at a given time.
+        - **self.reshape(*args: int)** - Returns an array containing the same data with
+            a new shape.
+        - **self.conj()** - Returns the complex conjugate, element-wise.
+
+        `TimeArray` objects also support the following operations:
+
+        - **-self** - Returns the negation of the array.
+        - **y * self** - Returns the product of `y` with the array, where `y` is an
+            array-like broadcastable with `self`.
+        - **self + other** - Returns the sum of the array and `other`, where `other` is
+            an array-like object or another instance of `TimeArray`.
+
+    Args:
+        x: The time-dependent array initializer.
+        args: The extra arguments passed to the function for modulated and callable
+            time arrays.
+    """
     # already a time array
     if isinstance(x, TimeArray):
         return x
@@ -68,7 +125,7 @@ def _factory_callable(
             f' type {obj_type_str(f0)}. The provided function must return an array,'
             ' to avoid costly type conversion at each time solver step.'
         )
-    elif f0.dtype != cdtype():
+    if f0.dtype != cdtype():
         raise TypeError(
             f'The time-dependent operator must have dtype `{cdtype()}`, but has dtype'
             f' `{f0.dtype}`. The provided function must return an array with the'
@@ -131,7 +188,7 @@ def _factory_modulated(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' return an array, but returns type {obj_type_str(f0)}.'
         )
-    # todo: do we really need this?
+    # TODO: do we really need this?
     # if f0.dtype not in [dtype, rdtype]:
     #     dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
     #     raise TypeError(
@@ -174,13 +231,11 @@ class TimeArray(eqx.Module):
     @abstractmethod
     def dtype(self) -> np.dtype:
         """The data type (numpy.dtype) of the array."""
-        pass
 
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
         """The shape of the array."""
-        pass
 
     @property
     @abstractmethod
@@ -195,17 +250,14 @@ class TimeArray(eqx.Module):
     @abstractmethod
     def __call__(self, t: Scalar) -> Array:
         """Evaluate at a given time."""
-        pass
 
     @abstractmethod
     def reshape(self, *args: int) -> TimeArray:
         """Returns an array containing the same data with a new shape."""
-        pass
 
     @abstractmethod
     def conj(self) -> TimeArray:
         """Return the complex conjugate, element-wise."""
-        pass
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
@@ -253,7 +305,7 @@ class ConstantTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ConstantTimeArray(self.x.mT)
 
-    def __call__(self, t: Scalar) -> Array:
+    def __call__(self, t: Scalar) -> Array:  # noqa: ARG002
         return self.x
 
     def reshape(self, *args: int) -> TimeArray:
@@ -371,7 +423,7 @@ class _PWCFactor(_Factor):
         return _PWCFactor(self.times, self.values.conj())
 
     def __call__(self, t: Scalar) -> Array:
-        def _zero(t: Scalar) -> Array:
+        def _zero(t: Scalar) -> Array:  # noqa: ARG001
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
         def _pwc(t: Scalar) -> Array:
@@ -470,12 +522,7 @@ class PWCTimeArray(FactorTimeArray):
     # Arbitrary sum of arrays with PWC factors.
     times: Array
 
-    def __init__(
-        self,
-        factors: list[_PWCFactor],
-        arrays: Array,
-        static: Array,
-    ):
+    def __init__(self, factors: list[_PWCFactor], arrays: Array, static: Array):
         super().__init__(factors, arrays, static)
         self.times = jnp.unique(jnp.concatenate([x.times for x in self.factors]))
 

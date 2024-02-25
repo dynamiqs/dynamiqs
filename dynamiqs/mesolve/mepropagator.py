@@ -8,7 +8,7 @@ from ..utils.vectorization import operator_to_vector, slindbladian, vector_to_op
 
 class MEPropagator(MEPropagatorSolver):
     # supports only ConstantTimeArray
-    # todo: support PWCTimeArray
+    # TODO: support PWCTimeArray
     lindbladian: Array
 
     def __init__(self, *args):
@@ -21,7 +21,7 @@ class MEPropagator(MEPropagatorSolver):
         return propagator @ y
 
     def save(self, y: Array) -> dict[str, Array]:
-        # todo: implement bexpect for vectorized operators and convert at the end
+        # TODO: implement bexpect for vectorized operators and convert at the end
         #       instead ofat each step
         y = vector_to_operator(y)
         return super().save(y)

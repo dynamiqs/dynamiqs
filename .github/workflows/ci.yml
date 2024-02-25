@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - jax
   pull_request:
     branches:
       - main
-      - jax
   workflow_dispatch:
 
 concurrency:

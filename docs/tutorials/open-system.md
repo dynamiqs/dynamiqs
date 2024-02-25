@@ -101,22 +101,23 @@ Also called the **quantum-jump** approach.
 
 ## Using dynamiqs
 
-You can create the state, Hamiltonian and jump operators using any array-like object (Python lists, NumPy arrays, QuTiP quantum objects or PyTorch tensors). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+You can create the state, Hamiltonian and jump operators using any array-like object (NumPy or JAX arrays). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
-import numpy as np
+import jax.numpy as jnp
 import dynamiqs as dq
-rho0 = [[1, 0], [0, 0]]                     # initial state
-H = [[-1, 0], [0, 1]]                       # Hamiltonian
-jump_ops = [[[0, 0], [1, 0]]]               # list of jump operators
-tsave = np.linspace(0, 1.0, 11)             # saving times
+
+rho0 = jnp.array([[1, 0], [0, 0]])                # initial state
+H = jnp.array([[-1, 0], [0, 1]])            # Hamiltonian
+jump_ops = jnp.array([[[0, 0], [1, 0]]])    # list of jump operators
+tsave = jnp.linspace(0, 1.0, 11)            # saving times
 res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
 ```
 
 ```pycon
 >>> res.states[-1]                          # print the final state
-tensor([[0.368+0.j, 0.000+0.j],
-        [0.000+0.j, 0.632+0.j]])
+Array([[0.368+0.j, 0.   +0.j],
+       [0.   +0.j, 0.632+0.j]], dtype=complex64)
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`](../python_api/solvers/mesolve.md) API documentation.

@@ -4,10 +4,10 @@ from itertools import product
 
 import jax.numpy as jnp
 import matplotlib as mpl
-import matplotlib.patches as patches
 import numpy as np
 from jax import Array
 from jax.typing import ArrayLike
+from matplotlib import patches
 from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
@@ -125,7 +125,7 @@ def plot_hinton(
     cmap: str | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
-    colorbar: 'bool' = True,
+    colorbar: bool = True,
     allticks: bool = False,
     tickslabel: list[str] | None = None,
     ecolor: str = 'white',
@@ -151,12 +151,7 @@ def plot_hinton(
 
         ![plot_hinton_hamiltonian](/figs-code/plot_hinton_hamiltonian.png){.fig-half}
 
-        >>> cnot = jnp.array(
-        ...     [[1, 0, 0, 0],
-        ...      [0, 1, 0, 0],
-        ...      [0, 0, 0, 1],
-        ...      [0, 0, 1, 0]],
-        ...  )
+        >>> cnot = jnp.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
         >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
