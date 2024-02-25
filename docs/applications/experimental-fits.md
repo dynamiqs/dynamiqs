@@ -39,9 +39,10 @@ We start by importing all necessary libraries, and defining the physical paramet
 import dynamiqs as dq
 import jax
 import jax.numpy as jnp
+import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-dq.mplstyle()s
+dq.mplstyle()
 
 # Declare useful helpers to handle units
 MHz = 2 * jnp.pi
@@ -276,6 +277,7 @@ g2 = 0.785 MHz
 import dynamiqs as dq
 import jax
 import jax.numpy as jnp
+import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 dq.mplstyle()
