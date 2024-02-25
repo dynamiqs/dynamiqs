@@ -227,16 +227,15 @@ costs, g2s = jnp.array(costs), jnp.array(g2s)
 
 Once the optimization is finished, we can plot the loss to ensure we converged correctly.
 ```python
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5))
+fig, (ax0, ax1) = plt.subplots(1, 2, tight_layout=True)
 
 ax0.plot(costs)
 ax0.set_xlabel("Epoch")
 ax0.set_ylabel("Cost")
-ax0.set_yscale("log")
 
 ax1.plot(g2s / MHz)
 ax1.set_xlabel("Epoch")
-ax1.set_xlabel("g2 [MHz]")
+ax1.set_ylabel("g2 [MHz]")
 ```
 ![Fit result](/figs-docs/g2-fit-value-cost.png)
 
@@ -364,7 +363,7 @@ data += data * (jax.random.normal(key, data.shape) + 1.0) * 0.01 # multiplicativ
 data += jax.random.normal(key, data.shape) * 0.015 # additive noise
 
 # Plot the synthetic data
-plt.figure(figsize=(10, 5))
+plt.figure()
 plt.plot(tsave / us, data, "+")
 plt.grid()
 plt.xlabel("Time [us]")
@@ -394,7 +393,7 @@ def simulate(g2):
 g2 = jnp.array(1.0 * MHz)
 result = simulate(g2)
 
-plt.figure(figsize=(10, 5))
+plt.figure()
 
 for i in range(len(alphas)):
     plt.plot(tsave, data[:, i].real, f"+C{i}")
@@ -435,16 +434,15 @@ costs, g2s = jnp.array(costs), jnp.array(g2s)
 # =============================================================================
 
 # Plot the cost and the g2 values
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5))
+fig, (ax0, ax1) = plt.subplots(1, 2, tight_layout=True)
 
 ax0.plot(costs)
-ax0.set_xlabel("iteration")
-ax0.set_ylabel("loss")
-ax0.set_yscale("log")
+ax0.set_xlabel("Epoch")
+ax0.set_ylabel("Cost")
 
 ax1.plot(g2s / MHz)
-ax1.set_xlabel("iteration")
-ax1.set_xlabel("g2 [MHz]")
+ax1.set_xlabel("Epoch")
+ax1.set_ylabel("g2 [MHz]")
 
 # Print the final g2 value
 print(f"g2 = {g2 / MHz:.3f} MHz")
