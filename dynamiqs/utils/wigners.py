@@ -92,6 +92,15 @@ def _wigner_clenshaw(
         w *= 2 * a * (i + 1) ** (-0.5)
         w += _laguerre_series(i, 4 * a2, jnp.diag(rho, k=i), n)
 
+    # def loop(i, w):
+    #     i = n - 2 - i
+    #     w = w * (2 * a * (i + 1) ** (-0.5))
+    #     diag = jnp.diag(rho, k=i)
+    #     w = w + (_laguerre_series(i, 4 * a2, diag, n))
+    #     return w
+    #
+    # w = lax.fori_loop(-1, n - 2, loop, w)
+
     return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
 
 
@@ -99,20 +108,31 @@ def _laguerre_series(i, x, c, n):
     r"""Evaluate a polynomial series of the form `$\sum_n c_n L_n^i$` where `$L_n$` is
     such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`."""
 
-    if n == 1:
-        return c[0]
-    elif n == 2:
-        return c[0] - c[1] * (i + 1 - x) * (i + 1) ** (-0.5)
+    def n_1():
+        return c[0] * jnp.ones_like(x)
 
-    y0 = c[-2]
-    y1 = c[-1]
-    for k in range(n - 2, 0, -1):
-        y0, y1 = (
-            c[k - 1] - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
-            y0 - y1 * (i + 2 * k - x + 1) * ((i + k + 1) * (k + 1)) ** -0.5,
-        )
+    def n_2():
+        return (c[0] - c[1] * (i + 1 - x) * (i + 1) ** (-0.5)) * jnp.ones_like(x)
 
-    return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
+    def n_other():
+        y0 = c[-2] * jnp.ones_like(x)
+        y1 = c[-1] * jnp.ones_like(x)
+
+        def loop(k, args):
+            k = n - 2 - k
+            y0, y1 = args
+            y0, y1 = (
+                c[k - 1] - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
+                y0 - y1 * (i + 2 * k - x + 1) * ((i + k + 1) * (k + 1)) ** -0.5,
+            )
+            return y0, y1
+
+        y0, y1 = loop(0, (y0, y1))
+        y0, y1 = lax.fori_loop(0, n - 2, loop, (y0, y1))
+
+        return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
+
+    return lax.cond(n == 1, n_1, lambda: lax.cond(n == 2, n_2, n_other))
 
 
 def _wigner_fft_psi(psi: Array, xvec: Array, g: float) -> tuple[Array, Array]:
