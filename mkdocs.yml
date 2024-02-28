@@ -173,6 +173,7 @@ nav:
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
               - mpow: python_api/utils/utils/mpow.md
+              - tracemm: python_api/utils/utils/tracemm.md
               - trace: python_api/utils/utils/trace.md
               - ptrace: python_api/utils/utils/ptrace.md
               - tensor: python_api/utils/utils/tensor.md

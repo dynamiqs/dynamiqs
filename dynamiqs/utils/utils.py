@@ -13,6 +13,7 @@ from .._utils import on_cpu
 __all__ = [
     'dag',
     'mpow',
+    'tracemm',
     'trace',
     'ptrace',
     'tensor',
@@ -79,6 +80,41 @@ def mpow(x: ArrayLike, n: int) -> Array:
     """
     x = jnp.asarray(x)
     return jnp.linalg.matrix_power(x, n)
+
+
+def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
+    r"""Return $\tr{xy}$ (using a fast implementation).
+
+    The trace is computed as `(x * y).sum()` where `*` is the element-wise product.
+    For two matrices A and B:
+
+    $$
+        \tr{AB} = \sum_i (AB)_{ii}
+                = \sum_i \sum_j A_{ij} B_{ji}
+                = \sum_i \sum_j A_{ij} (B^\intercal)_{ij}
+                = \sum_i \sum_j (A * B^\intercal)_{ij}
+    $$
+
+    Notes:
+        The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
+        instead of $\mathcal{O}(n^3)$ with the naïve formula.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Array.
+        y _(array_like of shape (..., n, n))_: Array.
+
+    Returns:
+        _(array of shape (...))_ Trace of `x @ y`.
+
+    Examples:
+        >>> x = jnp.ones((3, 3))
+        >>> y = jnp.ones((3, 3))
+        >>> dq.tracemm(x, y)
+        Array(9., dtype=float32)
+    """
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    return (x * y.mT).sum((-2, -1))
 
 
 def trace(x: ArrayLike) -> Array:
