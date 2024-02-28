@@ -41,7 +41,7 @@ class CheckpointAutograd(Gradient):
             through the quantum solvers.
 
         Warning:
-            This cannot be forward-mode autodifferentiated  (e.g. using
+            This cannot be forward-mode autodifferentiated (e.g. using
             [`jax.jvp`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html)
             ). Try using [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] if that
             is something you need.

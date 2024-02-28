@@ -196,8 +196,10 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-          - Array conversion:
-              - to_qutip: python_api/utils/array_types/to_qutip.md
+          - JAX-related utilities:
+              - to_qutip: python_api/utils/jax_utils/to_qutip.md
+              - device: python_api/utils/jax_utils/device.md
+              - precision: python_api/utils/jax_utils/precision.md
           - Wigner distribution:
               - wigner: python_api/utils/wigners/wigner.md
           - Vectorization:

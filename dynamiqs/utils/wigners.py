@@ -9,7 +9,7 @@ from jax import Array, lax
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
 
-from .array_types import cdtype
+from .._utils import cdtype
 from .operators import eye
 from .utils import isdm, isket, todm
 

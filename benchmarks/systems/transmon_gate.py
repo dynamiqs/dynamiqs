@@ -7,7 +7,7 @@ from jax import Array
 from scipy.special import erf
 
 import dynamiqs as dq
-from dynamiqs.utils.array_types import get_cdtype
+from dynamiqs._utils import get_cdtype
 
 from .system import ClosedSystem, OpenSystem
 

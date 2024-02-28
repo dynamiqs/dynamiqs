@@ -9,10 +9,9 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
-from jaxtyping import PyTree, Scalar
+from jaxtyping import ArrayLike, PyTree, Scalar
 
-from ._utils import check_time_array, obj_type_str
-from .utils.array_types import ArrayLike, cdtype
+from ._utils import cdtype, check_time_array, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray', 'TimeArrayLike']
 

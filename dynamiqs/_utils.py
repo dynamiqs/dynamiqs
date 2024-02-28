@@ -37,3 +37,20 @@ def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
 def on_cpu(x: Array) -> str:
     # TODO: this is a temporary solution, it won't work when we have multiple devices
     return x.devices().pop().device_kind == 'cpu'
+
+
+def _get_default_dtype() -> jnp.float32 | jnp.float64:
+    default_dtype = jnp.array(0.0).dtype
+    return jnp.float64 if default_dtype == jnp.float64 else jnp.float32
+
+
+def cdtype() -> jnp.complex64 | jnp.complex128:
+    # the default dtype for complex arrays is determined by the default floating point
+    # dtype
+    dtype = _get_default_dtype()
+    if dtype is jnp.float32:
+        return jnp.complex64
+    elif dtype is jnp.float64:
+        return jnp.complex128
+    else:
+        raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')

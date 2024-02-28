@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import Literal
+
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.typing import ArrayLike
@@ -7,24 +10,7 @@ from qutip import Qobj
 
 from .utils import _hdim, isbra, isket, isop
 
-__all__ = ['to_qutip']
-
-
-def _get_default_dtype() -> jnp.float32 | jnp.float64:
-    default_dtype = jnp.array(0.0).dtype
-    return jnp.float64 if default_dtype == jnp.float64 else jnp.float32
-
-
-def cdtype() -> jnp.complex64 | jnp.complex128:
-    # the default dtype for complex arrays is determined by the default floating point
-    # dtype
-    dtype = _get_default_dtype()
-    if dtype is jnp.float32:
-        return jnp.complex64
-    elif dtype is jnp.float64:
-        return jnp.complex128
-    else:
-        raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')
+__all__ = ['to_qutip', 'device', 'precision']
 
 
 def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
@@ -95,3 +81,45 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
         elif isop(x):  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
             dims = [dims, dims]
         return Qobj(x, dims=dims)
+
+
+def device(backend: Literal['cpu', 'gpu', 'tpu']):
+    """Configure the default device.
+
+    Notes:
+        This function is equivalent to
+        ```
+        jax.config.update('jax_default_device', jax.devices(backend)[0])
+        ```
+
+    See [JAX documentation on devices](https://jax.readthedocs.io/en/latest/faq.html#faq-data-placement).
+
+    Args:
+        backend _(string 'cpu', 'gpu', or 'tpu')_: Default device.
+    """
+    jax.config.update('jax_default_device', jax.devices(backend)[0])
+
+
+def precision(dtype: jnp.float32 | jnp.float64):
+    """Configure the default floating point precision.
+
+    Notes:
+        This function is equivalent to
+        ```
+        jax.config.update('jax_enable_x64', dtype == jnp.float64)
+        ```
+
+    See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
+
+    Args:
+        dtype _(jnp.float32 or jnp.float64)_: Default float data type.
+    """
+    if dtype == jnp.float32:
+        jax.config.update('jax_enable_x64', False)
+    elif dtype == jnp.float64:
+        jax.config.update('jax_enable_x64', True)
+    else:
+        raise ValueError(
+            f'Argument `x` should be `{jnp.float32}` or `{jnp.float64}`, but is'
+            f' `{dtype}`.'
+        )
