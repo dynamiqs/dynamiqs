@@ -321,7 +321,7 @@ def _expect_single(O: Array, x: Array) -> Array:
     elif isbra(x):
         return (x @ O @ dag(x)).squeeze((-1, -2))
     elif isdm(x):
-        return trace(O @ x)  # tr(Ox)
+        return tracemm(O, x)  # tr(Ox)
     else:
         raise ValueError(
             'Argument `x` must be a ket, bra or density matrix, but has shape'
@@ -718,7 +718,7 @@ def overlap(x: ArrayLike, y: ArrayLike) -> Array:
     elif isket(y):
         return jnp.abs((dag(y) @ x @ y).squeeze((-1, -2)))
     else:
-        return trace(dag(x) @ y).real
+        return tracemm(dag(x), y).real
 
 
 def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
