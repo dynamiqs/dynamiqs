@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, todm
 from dynamiqs.utils.wigners import _diag_element
 
-
 # TODO : add comparison with analytical wigner for coherent states and cat states
 
 
@@ -24,7 +23,7 @@ class TestPlots:
         # once the test is finished, pytest will go back here and run the code after
         # the yield statement
         yield
-        plt.close("all")
+        plt.close('all')
 
     def test_plot_wigner_psi(self):
         plot_wigner(self.psis[0])
