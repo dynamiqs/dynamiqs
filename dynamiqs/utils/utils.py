@@ -718,7 +718,7 @@ def overlap(x: ArrayLike, y: ArrayLike) -> Array:
     elif isket(y):
         return jnp.abs((dag(y) @ x @ y).squeeze((-1, -2)))
     else:
-        return trace(dag(x) @ y).squeeze((-1, -2)).real
+        return trace(dag(x) @ y).real
 
 
 def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
