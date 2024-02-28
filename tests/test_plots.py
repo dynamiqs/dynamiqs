@@ -3,6 +3,8 @@ import numpy as np
 import jax.numpy as jnp
 
 from dynamiqs import coherent, plot_wigner, todm, plot_wigner_mosaic
+from dynamiqs.utils.wigners import _diag_element
+
 
 # todo : add comparison with analytical wigner for coherent states and cat states
 
@@ -27,3 +29,17 @@ class TestPlots:
 
     def test_plot_wigner_rhos(self):
         plot_wigner_mosaic(self.rhos)
+
+    def test_diag_element(self):
+        mat = jnp.arange(25).reshape(5, 5)
+        for diag in range(-4, 5):
+            diag_len = 5 - abs(diag)
+            for element in range(-diag_len + 1, diag_len):
+                assert (
+                    _diag_element(mat, diag, element) == np.diag(mat, diag)[element]
+                ), 'Failed for diag = {}, element = {}, expected "{}", got "{}"'.format(
+                    diag,
+                    element,
+                    np.diag(mat, diag)[element],
+                    _diag_element(mat, diag, element),
+                )

@@ -88,41 +88,51 @@ def _wigner_clenshaw(
 
     w = 2 * rho[0, -1] * jnp.ones_like(a)
     rho = rho * (2 * jnp.ones((n, n)) - eye(n))
-    for i in range(n - 2, -1, -1):
-        w *= 2 * a * (i + 1) ** (-0.5)
-        w += _laguerre_series(i, 4 * a2, jnp.diag(rho, k=i), n)
 
-    # def loop(i, w):
-    #     i = n - 2 - i
-    #     w = w * (2 * a * (i + 1) ** (-0.5))
-    #     diag = jnp.diag(rho, k=i)
-    #     w = w + (_laguerre_series(i, 4 * a2, diag, n))
-    #     return w
-    #
-    # w = lax.fori_loop(-1, n - 2, loop, w)
+    def loop(i, w):
+        i = n - 2 - i
+        w = w * (2 * a * (i + 1) ** (-0.5))
+        w = w + (_laguerre_series(i, 4 * a2, rho, n))
+        return w
+
+    w = lax.fori_loop(-1, n - 1, loop, w)
 
     return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
 
 
-def _laguerre_series(i, x, c, n):
+def _diag_element(mat: jnp.array, diag: int, element: int):
+    r"""Return the element of a matrix `mat` at `jnp.diag(mat, diag)[element]`.
+    This function is jittable for `diag` while it is not for the `jnp.diag` version."""
+    assert mat.shape[0] == mat.shape[1], 'Matrix must be square.'
+    n = mat.shape[0]
+    element = jax.lax.select(element < 0, n - jnp.abs(diag) - jnp.abs(element), element)
+    return mat[jnp.maximum(-diag, 0) + element, jnp.maximum(diag, 0) + element]
+
+
+def _laguerre_series(i, x, rho, n):
     r"""Evaluate a polynomial series of the form `$\sum_n c_n L_n^i$` where `$L_n$` is
     such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`."""
 
     def n_1():
-        return c[0] * jnp.ones_like(x)
+        return _diag_element(rho, i, 0) * jnp.ones_like(x)
 
     def n_2():
-        return (c[0] - c[1] * (i + 1 - x) * (i + 1) ** (-0.5)) * jnp.ones_like(x)
+        c0 = _diag_element(rho, i, 0)
+        c1 = _diag_element(rho, i, 1)
+        return (c0 - c1 * (i + 1 - x) * (i + 1) ** (-0.5)) * jnp.ones_like(x)
 
     def n_other():
-        y0 = c[-2] * jnp.ones_like(x)
-        y1 = c[-1] * jnp.ones_like(x)
+        cm2 = _diag_element(rho, i, -2)
+        cm1 = _diag_element(rho, i, -1)
+        y0 = cm2 * jnp.ones_like(x)
+        y1 = cm1 * jnp.ones_like(x)
 
         def loop(k, args):
             k = n - 2 - k
             y0, y1 = args
+            ckm1 = _diag_element(rho, i, k - 1)
             y0, y1 = (
-                c[k - 1] - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
+                ckm1 - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
                 y0 - y1 * (i + 2 * k - x + 1) * ((i + k + 1) * (k + 1)) ** -0.5,
             )
             return y0, y1
