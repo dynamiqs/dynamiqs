@@ -13,17 +13,17 @@ from .array_types import cdtype
 from .operators import eye
 from .utils import isdm, isket, todm
 
-__all__ = ['wigner']
+__all__ = ["wigner"]
 
 
-@partial(jax.jit, static_argnames=('npixels', 'method'))
-@partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
+@partial(jax.jit, static_argnames=("npixels", "method"))
+@partial(jnp.vectorize, signature="(n,m)->(k),(l),(k,l)", excluded={1, 2, 3})
 def wigner(
     state: ArrayLike,
     xmax: float = 6.2832,
     ymax: float = 6.2832,
     npixels: int = 200,
-    method: Literal['clenshaw', 'fft'] = 'clenshaw',
+    method: Literal["clenshaw", "fft"] = "clenshaw",
     g: float = 2.0,
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
@@ -51,18 +51,18 @@ def wigner(
     xvec = jnp.linspace(-xmax, xmax, npixels)
     yvec = jnp.linspace(-ymax, ymax, npixels)
 
-    if method == 'clenshaw':
+    if method == "clenshaw":
         state = todm(state)
         w = _wigner_clenshaw(state, xvec, yvec, g)
-    elif method == 'fft':
+    elif method == "fft":
         if isket(state):
             w, yvec = _wigner_fft_psi(state, xvec, g)
         elif isdm(state):
             w, yvec = _wigner_fft_dm(state, xvec, g)
         else:
             raise ValueError(
-                'Argument `state` must be a ket or density matrix, but has shape'
-                f' {state.shape}.'
+                "Argument `state` must be a ket or density matrix, but has shape"
+                f" {state.shape}."
             )
     else:
         raise ValueError(
@@ -83,7 +83,7 @@ def _wigner_clenshaw(
     yvec = jnp.asarray(yvec)
     n = rho.shape[-1]
 
-    x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
+    x, p = jnp.meshgrid(xvec, yvec, indexing="ij")
     a = 0.5 * g * (x + 1.0j * p)
     a2 = jnp.abs(a) ** 2
 
@@ -95,7 +95,7 @@ def _wigner_clenshaw(
         w = w * (2 * a * (i + 1) ** (-0.5))
         return w + (_laguerre_series(i, 4 * a2, rho, n))
 
-    w = lax.fori_loop(-1, n - 1, loop, w)
+    w = lax.fori_loop(0, n - 1, loop, w)
 
     return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
 
@@ -104,7 +104,7 @@ def _diag_element(mat: jnp.array, diag: int, element: int) -> float:
     r"""Return the element of a matrix `mat` at `jnp.diag(mat, diag)[element]`.
     This function is jittable for `diag` while it is not for the `jnp.diag` version.
     """
-    assert mat.shape[0] == mat.shape[1], 'Matrix must be square.'
+    assert mat.shape[0] == mat.shape[1], "Matrix must be square."
     n = mat.shape[0]
     element = jax.lax.select(element < 0, n - jnp.abs(diag) - jnp.abs(element), element)
     return mat[jnp.maximum(-diag, 0) + element, jnp.maximum(diag, 0) + element]
@@ -140,7 +140,7 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
             return y0, y1
 
         y0, y1 = loop(0, (y0, y1))
-        y0, y1 = lax.fori_loop(0, n - 2, loop, (y0, y1))
+        y0, y1 = lax.fori_loop(1, n - 2, loop, (y0, y1))
 
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
