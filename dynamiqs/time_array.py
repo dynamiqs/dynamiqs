@@ -210,6 +210,30 @@ def _factory_callable(
     return CallableTimeArray(f, args)
 
 
+def _split_shape(
+    shape: tuple[int, ...], shape_1: tuple[int, ...], shape_2: tuple[int, ...]
+) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    """Split `shape` in two shapes of the same total size as `shape_1` and `shape_2`."""
+    # convert all to jnp arrays
+    _shape = jnp.array(shape)
+    _shape_1 = jnp.array(shape_1)
+    _shape_2 = jnp.array(shape_2)
+
+    # find total sizes
+    _size = jnp.prod(_shape)
+    _size_1 = jnp.prod(_shape_1)
+    _size_2 = jnp.prod(_shape_2)
+
+    # check if shape is compatible with shape_1 and shape_2
+    if _size != _size_1 * _size_2:
+        raise ValueError('The shape is not compatible with the shape_1 and shape_2.')
+
+    # find where to split shape
+    cumprod = jnp.cumprod(jnp.concatenate([jnp.array([1]), _shape]))
+    idx = jnp.where(cumprod == _size_1)[0][-1]
+    return (shape[:idx], shape[idx:])
+
+
 class TimeArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, shape, mT
@@ -311,8 +335,15 @@ class ConstantTimeArray(TimeArray):
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ConstantTimeArray(self.x * y)
 
-    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            return ConstantTimeArray(jnp.asarray(other, dtype=cdtype()) + self.x)
+        elif isinstance(other, ConstantTimeArray):
+            return ConstantTimeArray(self.x + other.x)
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
 
 
 class PWCTimeArray(TimeArray):
@@ -347,16 +378,18 @@ class PWCTimeArray(TimeArray):
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
-        return value.reshape(*value, 1, 1) * self.array
+        return value.reshape(*value.shape, 1, 1) * self.array
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        # there may be a better way to handle this
-        if new_shape[0] != self.shape[0]:
-            raise ValueError(
-                'The first dimension of the new shape must match the batching dimension'
-                f' of the time array, but got {new_shape[0]} and {self.shape[0]}.'
-            )
-        return PWCTimeArray(self.times, self.values, self.array.reshape(*new_shape[1:]))
+        new_values_shape, new_array_shape = _split_shape(
+            new_shape, self.values.shape[:-1], self.array.shape
+        )
+
+        return PWCTimeArray(
+            self.times,
+            self.values.reshape(*new_values_shape, self.values.shape[-1]),
+            self.array.reshape(*new_array_shape),
+        )
 
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
@@ -368,7 +401,13 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values, self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
 
 
 class ModulatedTimeArray(TimeArray):
@@ -397,13 +436,12 @@ class ModulatedTimeArray(TimeArray):
         return values.reshape(*values.shape, 1, 1) * self.array
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        # there may be a better way to handle this
-        if new_shape[0] != self.shape[0]:
-            raise ValueError(
-                'The first dimension of the new shape must match the batching dimension'
-                f' of the time array, but got {new_shape[0]} and {self.shape[0]}.'
-            )
-        return ModulatedTimeArray(self.f, self.array.reshape(*new_shape[1:]), self.args)
+        f_shape = jax.eval_shape(self.f, 0.0, *self.args).shape
+        new_f_shape, new_array_shape = _split_shape(
+            new_shape, f_shape, self.array.shape
+        )
+        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
+        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape), self.args)
 
     def conj(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).conj())
@@ -416,7 +454,13 @@ class ModulatedTimeArray(TimeArray):
         return ModulatedTimeArray(self.f, self.array * y, self.args)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
 
 
 class CallableTimeArray(TimeArray):
@@ -455,5 +499,55 @@ class CallableTimeArray(TimeArray):
         f = Partial(lambda t, *args: self.f(t, *args) * y)
         return CallableTimeArray(f, self.args)
 
-    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        return NotImplemented
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
+
+
+class SummedTimeArray(TimeArray):
+    timearrays: list[TimeArray]
+
+    @property
+    def dtype(self) -> np.dtype:
+        return self.timearrays[0].dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return jnp.broadcast_shapes(*[tarray.shape for tarray in self.timearrays])
+
+    @property
+    def mT(self) -> TimeArray:
+        return SummedTimeArray([tarray.mT for tarray in self.timearrays])
+
+    def __call__(self, t: float) -> Array:
+        return jax.tree_util.tree_reduce(
+            jnp.add, [tarray(t) for tarray in self.timearrays]
+        )
+
+    def reshape(self, *new_shape: int) -> TimeArray:
+        return SummedTimeArray(
+            [tarray.reshape(*new_shape) for tarray in self.timearrays]
+        )
+
+    def conj(self) -> TimeArray:
+        return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
+
+    def __neg__(self) -> TimeArray:
+        return SummedTimeArray([-tarray for tarray in self.timearrays])
+
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return SummedTimeArray([tarray * y for tarray in self.timearrays])
+
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([*self.timearrays, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([*self.timearrays, other])
+        else:
+            return NotImplemented
