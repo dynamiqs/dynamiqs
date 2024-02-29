@@ -239,12 +239,11 @@ class TestModulatedTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         one = jnp.array(1.0)
-
-        # modulated factor 1
         eps = lambda t: (0.5 * t + 1.0j) * one
         array = jnp.array([[1, 2], [3, 4]])
 
         self.x = ModulatedTimeArray(eps, array, ())
+
 
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
