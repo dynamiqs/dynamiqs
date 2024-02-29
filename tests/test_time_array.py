@@ -244,7 +244,6 @@ class TestModulatedTimeArray:
 
         self.x = ModulatedTimeArray(eps, array, ())
 
-
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
         assert_equal(self.x(2.0), [[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]])
