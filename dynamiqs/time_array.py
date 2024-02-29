@@ -4,44 +4,38 @@ from abc import abstractmethod
 from typing import Callable, Union, get_args
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
 from jaxtyping import PyTree, Scalar
 
-from ._utils import check_time_array, obj_type_str, type_str
+from ._utils import check_time_array, obj_type_str
 from .utils.array_types import ArrayLike, cdtype
 
 __all__ = ['totime']
 
 TimeArrayLike = Union[
     ArrayLike,
-    Callable[[float, tuple[PyTree]], Array],
+    Callable[[float, ...], Array],
     tuple[ArrayLike, ArrayLike, ArrayLike],
-    tuple[Callable[[float, tuple[PyTree]], Array], ArrayLike],
+    tuple[Callable[[float, ...], Array], ArrayLike],
     'TimeArray',
 ]
 
 
-def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
+def totime(x: TimeArrayLike, *args: PyTree) -> TimeArray:
     r"""Instantiate a time-dependent array of type `TimeArray`.
 
     There are 4 ways to define a time-dependent array in dynamiqs.
 
-    **1/ Constant time array** - A constant array of the form $A(t) = A_0$. It is
+    **(1) Constant time array:** A constant array of the form $A(t) = A_0$. It is
     initialized with `x = A0` as an array-like object:
 
     - **A0** _(array-like)_ - The constant array $A_0$, of shape _(..., n, n)_.
 
-    **2/ Modulated time array** - A modulated time array of the form $A(t) = f(t) A_0$.
-    It is initialized with `x = (f, A0)`, where:
-
-    - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
-    Array` that returns the modulating factor $f(t)$ of shape _(...,)_.
-    - **A0** _(array-like)_ - The constant array $A_0$, of shape _(n, n)_.
-
-    **3/ PWC time array** - A piecewise-constant (PWC) time array of the form $A(t) =
+    **(2) PWC time array:** A piecewise-constant (PWC) time array of the form $A(t) =
     A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with
     `x = (times, values, array)`, where:
 
@@ -52,7 +46,14 @@ def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
     _(..., nv)_.
     - **array** _(array-like)_ - The constant array $A_i$, of shape _(n, n)_.
 
-    **4/ Callable time array** - A time array defined by a callable function, of
+    **(3) Modulated time array:** A modulated time array of the form $A(t) = f(t) A_0$.
+    It is initialized with `x = (f, A0)`, where:
+
+    - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
+    Array` that returns the modulating factor $f(t)$ of shape _(...,)_.
+    - **A0** _(array-like)_ - The constant array $A_0$, of shape _(n, n)_.
+
+    **(4) Callable time array:** A time array defined by a callable function, of
     generic form $A(t) = f(t)$. It is initialized with `x = f` as:
 
     - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
@@ -76,6 +77,28 @@ def totime(x: TimeArrayLike, *, args: tuple[PyTree] = ()) -> TimeArray:
             array-like broadcastable with `self`.
         - **self + other** - Returns the sum of the array and `other`, where `other` is
             an array-like object or another instance of `TimeArray`.
+
+    Note: Batching over callable and modulated time arrays
+        To batch over callable and modulated time arrays, the function `f` must take
+        its batched array as extra argument. For example, here are two correct
+        implementations of the Hamiltonian $H(t) = \sigma_z + \cos(\omega t) \sigma_x$
+        with batching over $\omega$:
+        ```python
+        import jax.numpy as jnp
+
+        # array to batch over
+        omegas = jnp.linspace(-1.0, 1.0, 20)
+
+        # using a modulated time array
+        def cx(t, omega):
+            return jnp.cos(t * omega)
+        H = dq.sigmaz() + dq.totime((cx, dq.sigmax()), omegas)
+
+        # using a callable time array
+        def Hx(t, omega):
+            return jnp.cos(t * jnp.expand_dims(omega, (-1, -2))) * dq.sigmax()
+        H = dq.sigmaz() + dq.totime(Hx, omegas)
+        ```
 
     Args:
         x: The time-dependent array initializer.
@@ -113,34 +136,6 @@ def _factory_constant(x: ArrayLike) -> ConstantTimeArray:
     return ConstantTimeArray(x)
 
 
-def _factory_callable(
-    f: callable[[float, tuple[PyTree]], Array], *, args: tuple[PyTree]
-) -> CallableTimeArray:
-    f0 = f(0.0, *args)
-
-    # check type, dtype and device match
-    if not isinstance(f0, Array):
-        raise TypeError(
-            f'The time-dependent operator must be a {type_str(Array)}, but has'
-            f' type {obj_type_str(f0)}. The provided function must return an array,'
-            ' to avoid costly type conversion at each time solver step.'
-        )
-    if f0.dtype != cdtype():
-        raise TypeError(
-            f'The time-dependent operator must have dtype `{cdtype()}`, but has dtype'
-            f' `{f0.dtype}`. The provided function must return an array with the'
-            ' same `dtype` as provided to the solver, to avoid costly dtype'
-            ' conversion at each solver time step.'
-        )
-
-    # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary:
-    # (1) to make f a Pytree, and
-    # (2) to avoid jitting again every time the args change.
-    f_partial = Partial(lambda t: f(t, *args))
-    return CallableTimeArray(f_partial, f0)
-
-
 def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
     times, values, array = x
 
@@ -165,37 +160,20 @@ def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
             f' a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_PWCFactor(times, values)]
-    arrays = array[None, ...]  # (1, n, n)
-    static = jnp.zeros_like(array)
-    return PWCTimeArray(factors, arrays, static=static)
+    return PWCTimeArray(times, values, array)
 
 
 def _factory_modulated(
-    x: tuple[callable[[float, tuple[PyTree]], Array], Array], *, args: tuple[PyTree]
+    x: tuple[callable[[float, ...], Array], Array], *, args: tuple[PyTree]
 ) -> ModulatedTimeArray:
     f, array = x
 
-    # check f
+    # check f is callable
     if not callable(f):
         raise TypeError(
             'For a modulated time array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
-    f0 = f(0.0, *args)
-    if not isinstance(f0, Array):
-        raise TypeError(
-            'For a modulated time array `(f, array)`, argument `f` must'
-            f' return an array, but returns type {obj_type_str(f0)}.'
-        )
-    # TODO: do we really need this?
-    # if f0.dtype not in [dtype, rdtype]:
-    #     dtypes = f'`{dtype}`' if dtype == rdtype else f'`{dtype}` or `{rdtype}`'
-    #     raise TypeError(
-    #         'For a modulated time array, the array returned by the function must'
-    #         f' have dtype `{dtypes}`, but has dtype `{f0.dtype}`. This is necessary'
-    #         ' to avoid costly dtype conversion at each solver time step.'
-    #     )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
@@ -205,18 +183,31 @@ def _factory_modulated(
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
-    factors = [_ModulatedFactor(Partial(f, *args), f0)]
-    arrays = array[None, ...]  # (1, n, n)
-    static = jnp.zeros_like(array)
-    return ModulatedTimeArray(factors, arrays, static=static)
+    # Pass `f` through `jax.tree_util.Partial`.
+    # This is necessary:
+    # (1) to make f a Pytree, and
+    # (2) to avoid jitting again every time the args change.
+    f = Partial(f)
+
+    return ModulatedTimeArray(f, array, args)
 
 
-class SumCallable(eqx.Module):
-    f1: callable[[float], Array]
-    f2: callable[[float], Array]
+def _factory_callable(
+    f: callable[[float, ...], Array], *, args: tuple[PyTree]
+) -> CallableTimeArray:
+    # check f is callable
+    if not callable(f):
+        raise TypeError(
+            'For a callable time array, argument `f` must be a function, but has type'
+            f' {obj_type_str(f)}.'
+        )
 
-    def __call__(self, t: float) -> Array:
-        return self.f1(t) + self.f2(t)
+    # Pass `f` through `jax.tree_util.Partial`.
+    # This is necessary:
+    # (1) to make f a Pytree, and
+    # (2) to avoid jitting again every time the args change.
+    f = Partial(f)
+    return CallableTimeArray(f, args)
 
 
 class TimeArray(eqx.Module):
@@ -321,212 +312,148 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.x * y)
 
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(y, get_args(ArrayLike)):
-            return ConstantTimeArray(self.x + y)
-        elif isinstance(y, ConstantTimeArray):
-            return ConstantTimeArray(self.x + y.x)
-        else:
-            return NotImplemented
+        return NotImplemented
 
 
-class CallableTimeArray(TimeArray):
-    f: callable[[float], Array]
-    f0: Array
+class PWCTimeArray(TimeArray):
+    # `array`` is made a static field such that `vmap` knows to not batch over it.
+    # However, this also implies that the function is re-jitted every time `array`
+    # changes. TODO: find a better way to handle this.
+    times: Array  # (nv+1,)
+    values: Array  # (..., nv)
+    array: Array = eqx.field(static=True)  # (n, n)
 
     @property
     def dtype(self) -> np.dtype:
-        return self.f0.dtype
+        return self.array.dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.f0.shape
+        return (*self.values.shape[:-1], *self.array.shape)
 
     @property
     def mT(self) -> TimeArray:
-        f = lambda t: self.f(t).mT
-        f0 = self.f0.mT
-        return CallableTimeArray(f, f0)
+        return PWCTimeArray(self.times, self.values, self.array.mT)
 
     def __call__(self, t: float) -> Array:
-        return self.f(t).reshape(*self.shape)
-
-    def reshape(self, *args: int) -> TimeArray:
-        f = self.f
-        f0 = self.f0.reshape(*args)
-        return CallableTimeArray(f, f0)
-
-    def conj(self) -> TimeArray:
-        f = lambda t: self.f(t).conj()
-        f0 = self.f0.conj()
-        return CallableTimeArray(f, f0)
-
-    def __neg__(self) -> TimeArray:
-        f = lambda t: -self.f(t)
-        f0 = -self.f0
-        return CallableTimeArray(f, f0)
-
-    def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = lambda t: self.f(t) * y
-        f0 = self.f0 * y
-        return CallableTimeArray(f, f0)
-
-    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(y, get_args(ArrayLike)):
-            f = SumCallable(self.f, ConstantTimeArray(y))
-            f0 = self.f0 + y
-            return CallableTimeArray(f, f0)
-        elif isinstance(y, ConstantTimeArray):
-            f = SumCallable(self.f, y)
-            f0 = self.f0 + y.x
-            return CallableTimeArray(f, f0)
-        elif isinstance(y, CallableTimeArray):
-            f = SumCallable(self.f, y.f)
-            f0 = self.f0 + y.f0
-            return CallableTimeArray(f, f0)
-        else:
-            return NotImplemented
-
-
-class _Factor(eqx.Module):
-    @property
-    @abstractmethod
-    def shape(self) -> tuple[int, ...]:
-        pass
-
-    @abstractmethod
-    def conj(self) -> _Factor:
-        pass
-
-    @abstractmethod
-    def __call__(self, t: Scalar) -> Array:
-        pass
-
-    @abstractmethod
-    def reshape(self, *args: int) -> _Factor:
-        pass
-
-
-class _PWCFactor(_Factor):
-    # Defined by a tuple of 2 arrays (times, values), where
-    # - times: (nv+1) are the time points between which the PWC factor takes constant
-    #          values, where nv is the number of time intervals
-    # - values: (..., nv) are the constant values for each time interval, where (...)
-    #           is an arbitrary batching size
-    times: Array
-    values: Array
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        return self.values.shape[:-1]  # (...)
-
-    def conj(self) -> _Factor:
-        return _PWCFactor(self.times, self.values.conj())
-
-    def __call__(self, t: Scalar) -> Array:
-        def _zero(t: Scalar) -> Array:  # noqa: ARG001
+        def _zero(_: float) -> Array:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
-        def _pwc(t: Scalar) -> Array:
+        def _pwc(t: float) -> Array:
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
-        return lax.cond(
+        value = lax.cond(
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
-    def reshape(self, *args: int) -> _Factor:
-        return _PWCFactor(self.times, self.values.reshape(*args, self.values.shape[-1]))
+        return value.reshape(*value, 1, 1) * self.array
+
+    def reshape(self, *new_shape: int) -> TimeArray:
+        # there may be a better way to handle this
+        if new_shape[0] != self.shape[0]:
+            raise ValueError(
+                'The first dimension of the new shape must match the batching dimension'
+                f' of the time array, but got {new_shape[0]} and {self.shape[0]}.'
+            )
+        return PWCTimeArray(self.times, self.values, self.array.reshape(*new_shape[1:]))
+
+    def conj(self) -> TimeArray:
+        return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
+
+    def __neg__(self) -> TimeArray:
+        return PWCTimeArray(self.times, self.values, -self.array)
+
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return PWCTimeArray(self.times, self.values, self.array * y)
+
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        return NotImplemented
 
 
-class _ModulatedFactor(_Factor):
-    # Defined by two objects (f, f0), where
-    # - f is a callable that takes a time and returns an array of shape (...)
-    # - f0 is the array of shape (...) returned by f(0.0)
-    # f0 holds information about the shape of the array returned by f(t).
-    f: callable[[float], Array]  # (float) -> (...)
-    f0: Array  # (...)
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        return self.f0.shape
-
-    def conj(self) -> _Factor:
-        f = lambda t: self.f(t).conj()
-        f0 = self.f0.conj()
-        return _ModulatedFactor(f, f0)
-
-    def __call__(self, t: Scalar) -> Array:
-        return self.f(t).reshape(self.shape)
-
-    def reshape(self, *args: int) -> _Factor:
-        f = self.f
-        f0 = self.f0.reshape(*args)
-        return _ModulatedFactor(f, f0)
-
-
-class FactorTimeArray(TimeArray):
-    factors: list[_Factor]  # list of length (nf) - must be non-empty
-    arrays: Array  # (nf, n, n)
-    static: Array  # (n, n)
+class ModulatedTimeArray(TimeArray):
+    # `array`` is made a static field such that `vmap` knows to not batch over it.
+    # However, this also implies that the function is re-jitted every time `array`
+    # changes. TODO: find a better way to handle this.
+    f: callable[[float, ...], Array]  # (...,)
+    array: Array = eqx.field(static=True)  # (n, n)
+    args: tuple[PyTree]
 
     @property
     def dtype(self) -> np.dtype:
-        return self.arrays.dtype
+        return self.array.dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        n = self.arrays.shape[-1]
-        return tuple(self.factors[0].shape, n, n)  # (..., n, n)
+        f_shape = jax.eval_shape(self.f, 0.0, *self.args).shape
+        return (*f_shape, *self.array.shape)
 
     @property
     def mT(self) -> TimeArray:
-        return FactorTimeArray(self.factors, self.arrays.mT, static=self.static.mT)
+        return ModulatedTimeArray(self.f, self.array.mT, self.args)
 
     def __call__(self, t: float) -> Array:
-        values = jnp.stack([x(t) for x in self.factors], axis=-1)  # (..., nf)
-        values = values.reshape(*values.shape, 1, 1)  # (..., nf, n, n)
-        return (values * self.arrays).sum(-3) + self.static  # (..., n, n)
+        values = self.f(t, *self.args)
+        return values.reshape(*values.shape, 1, 1) * self.array
 
-    def reshape(self, *args: int) -> TimeArray:
-        # shape: (..., n, n)
-        factors = [x.reshape(*args[:-2]) for x in self.factors]
-        return self.__class__(factors, self.arrays, static=self.static)
+    def reshape(self, *new_shape: int) -> TimeArray:
+        # there may be a better way to handle this
+        if new_shape[0] != self.shape[0]:
+            raise ValueError(
+                'The first dimension of the new shape must match the batching dimension'
+                f' of the time array, but got {new_shape[0]} and {self.shape[0]}.'
+            )
+        return ModulatedTimeArray(self.f, self.array.reshape(*new_shape[1:]), self.args)
 
     def conj(self) -> TimeArray:
-        factors = [x.conj() for x in self.factors]
-        return self.__class__(factors, self.arrays.conj(), static=self.static.conj())
+        f = Partial(lambda t, *args: self.f(t, *args).conj())
+        return ModulatedTimeArray(f, self.array.conj(), self.args)
 
     def __neg__(self) -> TimeArray:
-        return self.__class__(self.factors, -self.arrays, static=-self.static)
+        return ModulatedTimeArray(self.f, -self.array, self.args)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        return self.__class__(self.factors, self.arrays * y, static=self.static * y)
+        return ModulatedTimeArray(self.f, self.array * y, self.args)
+
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        return NotImplemented
+
+
+class CallableTimeArray(TimeArray):
+    f: callable[[float, ...], Array]
+    args: tuple[PyTree]
+
+    @property
+    def dtype(self) -> np.dtype:
+        return jax.eval_shape(self.f, 0.0, *self.args).dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return jax.eval_shape(self.f, 0.0, *self.args).shape
+
+    @property
+    def mT(self) -> TimeArray:
+        f = Partial(lambda t, *args: self.f(t, *args).mT)
+        return CallableTimeArray(f, self.args)
+
+    def __call__(self, t: float) -> Array:
+        return self.f(t, *self.args)
+
+    def reshape(self, *new_shape: int) -> TimeArray:
+        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_shape))
+        return CallableTimeArray(f, self.args)
+
+    def conj(self) -> TimeArray:
+        f = Partial(lambda t, *args: self.f(t, *args).conj())
+        return CallableTimeArray(f, self.args)
+
+    def __neg__(self) -> TimeArray:
+        f = Partial(lambda t, *args: -self.f(t, *args))
+        return CallableTimeArray(f, self.args)
+
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        f = Partial(lambda t, *args: self.f(t, *args) * y)
+        return CallableTimeArray(f, self.args)
 
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(y, get_args(ArrayLike)):
-            static = self.static + y
-            return self.__class__(self.factors, self.arrays, static=static)
-        elif isinstance(y, ConstantTimeArray):
-            static = self.static + y.x
-            return self.__class__(self.factors, self.arrays, static=static)
-        elif isinstance(y, self.__class__):
-            factors = self.factors + y.factors  # list of length (nf1 + nf2)
-            arrays = jnp.concatenate((self.arrays, y.arrays))  # (nf1 + nf2, n, n)
-            static = self.static + y.static  # (n, n)
-            return self.__class__(factors, arrays, static=static)
-        else:
-            return NotImplemented
-
-
-class PWCTimeArray(FactorTimeArray):
-    # Arbitrary sum of arrays with PWC factors.
-    times: Array
-
-    def __init__(self, factors: list[_PWCFactor], arrays: Array, static: Array):
-        super().__init__(factors, arrays, static)
-        self.times = jnp.unique(jnp.concatenate([x.times for x in self.factors]))
-
-
-class ModulatedTimeArray(FactorTimeArray):
-    # Sum of arrays with callable factors.
-    pass
+        return NotImplemented
