@@ -47,7 +47,16 @@ H = dq.totime(lambda t, *args: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
     ```python
     def _H(t, omega):
         return dq.sigmaz() + jnp.cos(omega * t) * dq.sigmax()
-    H = dq.totime(_H, args=(1.0,))
+    omega = 1.0
+    H = dq.totime(_H, omega)
+    ```
+
+    In addition, any array that you want to batch over should be passed as an extra argument to `dq.totime`. For instance,
+    ```python
+    def _H(t, omega):
+        return dq.sigmaz() + jnp.cos(jnp.expand_dims(omega, (-1, -2)) * t) * dq.sigmax()
+    omegas = jnp.linspace(0.0, 2.0, 10)
+    H = dq.totime(_H, omegas)
     ```
 
 ## Piecewise constant Hamiltonians

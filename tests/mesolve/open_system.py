@@ -136,7 +136,7 @@ class OTDQubit(OpenSystem):
 
     def H(self, params: PyTree):
         f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
-        return dq.totime(f, args=(params.eps, params.omega))
+        return dq.totime(f, params.eps, params.omega)
 
     def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
         return [jnp.sqrt(params.gamma) * dq.sigmax()]
