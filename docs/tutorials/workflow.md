@@ -84,6 +84,7 @@ print(result)
 Solver  : Dopri5
 States  : Array complex64 (101, 2, 1) | 1.58 Kb
 Expects : Array complex64 (1, 101) | 0.79 Kb
+Infos   : 56 steps (48 accepted, 8 rejected)
 ```
 
 ## 4. Analyze the results
