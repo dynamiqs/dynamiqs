@@ -532,9 +532,9 @@ def isherm(x: ArrayLike) -> bool:
 
     Examples:
         >>> dq.isherm(jnp.eye(3))
-        True
+        Array(True, dtype=bool)
         >>> dq.isherm(jnp.diag(jnp.ones(5), k=1))
-        False
+        Array(False, dtype=bool)
     """
     x = jnp.asarray(x)
     return jnp.allclose(x, dag(x))
@@ -769,7 +769,7 @@ def eigenstates(
         >>> H = dq.dag(a) @ dq.dag(a) @ a @ a
         >>> D, P = dq.eigenstates(H)
         >>> D
-        Array([0., 0., 1.9999999, 5.9999995, 12.], dtype=float32)
+        Array([ 0.,  0.,  2.,  6., 12.], dtype=float32)
     """
     x = jnp.asarray(x)
     if x.shape[-1] != x.shape[-2]:
