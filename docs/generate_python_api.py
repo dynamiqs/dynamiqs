@@ -17,6 +17,7 @@ PATHS_TO_PARSE = [
     ('dynamiqs/utils/optimal_control.py', 'dq'),
     ('dynamiqs/utils/random.py', 'dq'),
     ('dynamiqs/plots/namespace.py', 'dq'),
+    ('dynamiqs/time_array.py', 'dq'),
     ('dynamiqs/solver.py', 'dq.solver'),
     ('dynamiqs/gradient.py', 'dq.gradient'),
 ]

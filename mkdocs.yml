@@ -130,7 +130,11 @@ nav:
           - mesolve: python_api/solvers/mesolve.md
           - smesolve: python_api/solvers/smesolve.md
       - Core:
-          - totime: python_api/totime/totime.md
+          - Time Arrays:
+              - constant: python_api/time_array/constant.md
+              - pwc: python_api/time_array/pwc.md
+              - modulated: python_api/time_array/modulated.md
+              - timecallable: python_api/time_array/timecallable.md
           - Solvers (dq.solver):
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
