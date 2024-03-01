@@ -171,12 +171,14 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - isbra
         - isdm
         - isop
+        - isherm
         - toket
         - tobra
         - todm
         - braket
         - overlap
         - fidelity
+        - eigenstates
 
 ### Array conversion
 
