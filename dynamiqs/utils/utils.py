@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
+from typing import Literal
 
 import jax
 import jax.numpy as jnp
@@ -25,12 +26,14 @@ __all__ = [
     'isbra',
     'isdm',
     'isop',
+    'isherm',
     'toket',
     'tobra',
     'todm',
     'braket',
     'overlap',
     'fidelity',
+    'eigenstates',
 ]
 
 
@@ -517,6 +520,26 @@ def isop(x: ArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
+def isherm(x: ArrayLike) -> bool:
+    r"""Returns True if the array is Hermitian.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Array.
+
+    Returns:
+        True if all the matrices in the last dimensions of `x` are Hermitian,
+        False otherwise.
+
+    Examples:
+        >>> dq.isherm(jnp.eye(3))
+        True
+        >>> dq.isherm(jnp.diag(jnp.ones(5), k=1))
+        False
+    """
+    x = jnp.asarray(x)
+    return jnp.allclose(x, dag(x))
+
+
 def toket(x: ArrayLike) -> Array:
     r"""Returns the ket representation of a pure quantum state.
 
@@ -727,6 +750,45 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_cpu(x, y)
     else:
         return _dm_fidelity_gpu(x, y)
+
+
+def eigenstates(
+    x: ArrayLike, sort: Literal['high', 'low'] = 'low'
+) -> tuple[Array, Array]:
+    r"""Returns the eigenvalues and eigenvectors of operators or super-operators.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Operator or super-operator.
+        sort ({"high", "low"}, optional): Eigenvalues sorting order. Defaults to "low".
+
+    Returns:
+        tuple: Eigenvalues and eigenvectors.
+
+    Examples:
+        >>> a = dq.destroy(5)
+        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a
+        >>> D, P = dq.eigenstates(H)
+        >>> D
+        Array([0., 0., 1.9999999, 5.9999995, 12.], dtype=float32)
+    """
+    x = jnp.asarray(x)
+    if x.shape[-1] != x.shape[-2]:
+        raise ValueError('Argument `x` must be a square matrix.')
+
+    if isherm(x):
+        P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
+        if sort == 'high':
+            P = jnp.flip(P, axis=-1)
+            D = jnp.flip(D, axis=-1)
+    else:
+        D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
+
+        idx = jnp.argsort(D, axis=-1)
+        if sort == 'high':
+            idx = idx[..., ::-1]
+        D = jnp.take_along_axis(D, idx, axis=-1)
+        P = jnp.take_along_axis(P, idx[..., None, :], axis=-1)
+    return D, P
 
 
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
