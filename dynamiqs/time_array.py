@@ -145,11 +145,10 @@ def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
 
     # values
     values = jnp.asarray(values, dtype=cdtype())
-    if values.shape[0] != len(times) - 1:
+    if values.shape[-1] != len(times) - 1:
         raise TypeError(
             'For a PWC array `(times, values, array)`, argument `values` must'
-            ' have shape `(len(times)-1, ...)`, but has shape'
-            f' {tuple(values.shape)}.'
+            f' have shape `(..., len(times)-1)`, but has shape {tuple(values.shape)}.'
         )
 
     # array
