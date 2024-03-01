@@ -32,6 +32,8 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'einkron',
+    'liouvillian',
 ]
 
 
@@ -763,6 +765,84 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_cpu(x, y)
     else:
         return _dm_fidelity_gpu(x, y)
+
+
+def einkron(x: ArrayLike, y: ArrayLike) -> ArrayLike:
+    """Returns the Kronecker product of two square arrays of same shape using einsum.
+
+    Args:
+        x _(array of shape (..., n, n))_: Array.
+        y _(array of shape (..., n, n))_: Array.
+
+    Returns:
+        _(array of shape (..., n**2, n**2))_ Kronecker product of `x` and `y`.
+
+    Examples:
+        >>> x = jnp.ones((2, 2))
+        >>> y = jnp.ones((2, 2))
+        >>> dq.einkron(x, y)
+        array([[1., 1., 1., 1.],
+               [1., 1., 1., 1.],
+               [1., 1., 1., 1.],
+               [1., 1., 1., 1.]], dtype=float32)
+    """
+    if x.ndim != 2 and y.ndim != 2 and x.shape != y.shape:
+        raise ValueError('Arguments `x` and `y` must be 2D arrays of same shape.')
+
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    dim = x.shape[-1] ** 2
+    shapes = x.shape[:-2] if x.ndim > y.ndim else y.shape[:-2]
+    return np.einsum('...ik,...jl', x, y).reshape(*shapes, dim, dim)
+
+
+def liouvillian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
+    r"""Returns the Liouvillian superoperator of a quantum system.
+    The Liouvillian superoperator $\mathcal{L}$ is defined by:
+    $$
+        \mathcal{L} (\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k] (\rho),
+    $$
+    where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
+    (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
+    (see [`dq.dissipator()`][dynamiqs.dissipator]).
+
+    Args:
+        H _(array_like of shape (..., n, n))_: Hamiltonian.
+        jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
+
+    Returns:
+        _(array of shape (..., n**2, n**2))_ Liouvillian superoperator.
+
+    Examples:
+        >>> a = dq.destroy(2)
+        >>> H = dq.dag(a) @ a
+        >>> L = [a, dq.dag(a) @ a]
+        >>> dq.liouvillian(H, L)
+        Array([[ 0.+0.j,  0.+0.j,  0.+0.j,  1.+0.j],
+               [ 0.+0.j, -1.-1.j,  0.+0.j,  0.+0.j],
+               [ 0.+0.j,  0.+0.j, -1.+1.j,  0.+0.j],
+               [ 0.+0.j,  0.+0.j,  0.+0.j, -1.+0.j]], dtype=complex64)
+
+    """
+    H = jnp.asarray(H)
+    jump_ops = jnp.asarray(jump_ops)
+
+    if H.shape[-1] != H.shape[-2]:
+        raise ValueError('Hamiltonian must be square')
+
+    dim = H.shape[-1]
+    id_dim = jnp.eye(dim, dtype=H.dtype)
+
+    L = -1j * (einkron(id_dim, H) - einkron(dag(H), id_dim))
+    c_dag_c = dag(jump_ops) @ jump_ops
+
+    term_1 = jnp.sum(einkron(jump_ops.conj(), jump_ops), axis=0)
+    term_2 = 0.5 * jnp.sum(
+        jnp.kron(id_dim, c_dag_c) + jnp.kron(dag(c_dag_c), id_dim), axis=0
+    )
+    L_diss = term_1 - term_2
+
+    return L + L_diss
 
 
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:

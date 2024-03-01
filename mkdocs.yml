@@ -192,6 +192,8 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
+              - einkron: python_api/utils/utils/einkron.md
+              - liouvillian: python_api/utils/utils/liouvillian.md
           - Array conversion:
               - to_qutip: python_api/utils/array_types/to_qutip.md
           - Wigner distribution:

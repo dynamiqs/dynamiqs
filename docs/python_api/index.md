@@ -178,6 +178,8 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - braket
         - overlap
         - fidelity
+        - einkron
+        - liouvillian
 
 ### Array conversion
 
