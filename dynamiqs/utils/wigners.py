@@ -129,22 +129,22 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
         y0 = cm2 * jnp.ones_like(x)
         y1 = cm1 * jnp.ones_like(x)
 
-        def loop(k: int, args: tuple[Array, Array]) -> tuple[Array, Array]:
-            k = n - 2 - k
+        def loop(j: int, args: tuple[Array, Array]) -> tuple[Array, Array]:
+            k = n + 1 - i - j
             y0, y1 = args
-            ckm1 = _diag_element(rho, i, k - 1)
+            ckm1 = _diag_element(rho, i, -j)
             y0, y1 = (
                 ckm1 - y1 * (k * (i + k) / ((i + k + 1) * (k + 1))) ** 0.5,
                 y0 - y1 * (i + 2 * k - x + 1) * ((i + k + 1) * (k + 1)) ** -0.5,
             )
+
             return y0, y1
 
-        y0, y1 = loop(0, (y0, y1))
-        y0, y1 = lax.fori_loop(1, n - 2, loop, (y0, y1))
+        y0, y1 = lax.fori_loop(3, n + 1 - i, loop, (y0, y1))
 
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
-    return lax.cond(n == 1, n_1, lambda: lax.cond(n == 2, n_2, n_other))
+    return lax.cond(n - i == 1, n_1, lambda: lax.cond(n - i == 2, n_2, n_other))
 
 
 def _wigner_fft_psi(psi: Array, xvec: Array, g: float) -> tuple[Array, Array]:
