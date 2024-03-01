@@ -80,7 +80,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 
 
 def modulated(
-    f: callable[[float, ...], Array], array: ArrayLike, *, args: tuple[PyTree]
+    f: callable[[float, ...], Array], array: ArrayLike, *, args: tuple[PyTree] = ()
 ) -> ModulatedTimeArray:
     r"""Instantiate a modulated time array.
 
@@ -126,7 +126,7 @@ def modulated(
 
 
 def timecallable(
-    f: callable[[float, ...], Array], *, args: tuple[PyTree]
+    f: callable[[float, ...], Array], *, args: tuple[PyTree] = ()
 ) -> CallableTimeArray:
     r"""Instantiate a callable time array.
 
