@@ -346,12 +346,9 @@ class ConstantTimeArray(TimeArray):
 
 
 class PWCTimeArray(TimeArray):
-    # `array`` is made a static field such that `vmap` knows to not batch over it.
-    # However, this also implies that the function is re-jitted every time `array`
-    # changes. TODO: find a better way to handle this.
     times: Array  # (nv+1,)
     values: Array  # (..., nv)
-    array: Array = eqx.field(static=True)  # (n, n)
+    array: Array  # (n, n)
 
     @property
     def dtype(self) -> np.dtype:
@@ -410,11 +407,8 @@ class PWCTimeArray(TimeArray):
 
 
 class ModulatedTimeArray(TimeArray):
-    # `array`` is made a static field such that `vmap` knows to not batch over it.
-    # However, this also implies that the function is re-jitted every time `array`
-    # changes. TODO: find a better way to handle this.
     f: callable[[float, ...], Array]  # (...,)
-    array: Array = eqx.field(static=True)  # (n, n)
+    array: Array  # (n, n)
     args: tuple[PyTree]
 
     @property
