@@ -48,7 +48,10 @@ def mesolve(
 
     Quote: Time-dependent Hamiltonian or jump operators
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to a time-array using [`dq.totime`](/python_api/totime/totime.html).
+        to time-arrays using [`dq.constant`](/python_api/time_array/constant.html),
+        [`dq.pwc`](/python_api/time_array/pwc.html),
+        [`dq.modulated`](/python_api/time_array/modulated.html), or
+        [`dq.timecallable`](/python_api/time_array/timecallable.html).
 
     Quote: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density

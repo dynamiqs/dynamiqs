@@ -31,32 +31,32 @@ H = dq.sigmaz()
 
 ## Time-dependent Hamiltonians
 
-A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the Hamiltonian as a JAX array for any time `t`, which is then fed into `dq.totime`.
+A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the Hamiltonian as a JAX array for any time `t`, which is then fed into `dq.timecallable`.
 
 For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, you can use the following syntax:
 
 ```python
-H = dq.totime(lambda t, *args: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
+H = dq.timecallable(lambda t: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
 ```
 
 !!! Warning "Function returning non-array object"
     An error is raised if `H(t)` return a non-array object, or an array with a different `dtype` than the ones specified to the solver. This is enforced to avoid costly type or data type conversions at every time step of the numerical integration.
 
 ??? Note "Function with optional arguments"
-    To define a time-dependent Hamiltonian with additional arguments, you can use the optional `args` parameter of `dq.totime`.
+    To define a time-dependent Hamiltonian with additional arguments, you can use the optional `args` parameter of `dq.timecallable`.
     ```python
     def _H(t, omega):
         return dq.sigmaz() + jnp.cos(omega * t) * dq.sigmax()
     omega = 1.0
-    H = dq.totime(_H, omega)
+    H = dq.timecallable(_H, args=(omega,))
     ```
 
-    In addition, any array that you want to batch over should be passed as an extra argument to `dq.totime`. For instance,
+    In addition, any array that you want to batch over should be passed as an extra argument to `dq.timecallable`. For instance,
     ```python
     def _H(t, omega):
         return dq.sigmaz() + jnp.cos(jnp.expand_dims(omega, (-1, -2)) * t) * dq.sigmax()
     omegas = jnp.linspace(0.0, 2.0, 10)
-    H = dq.totime(_H, omegas)
+    H = dq.timecallable(_H, args=(omegas,))
     ```
 
 ## Piecewise constant Hamiltonians

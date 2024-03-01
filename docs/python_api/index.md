@@ -65,13 +65,16 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Core
 
-### totime
+### Time Arrays
 
 ::: dynamiqs.time_array
     options:
         table: true
         members:
-        - totime
+        - constant
+        - pwc
+        - modulated
+        - timecallable
 
 ### Solvers (dq.solver)
 
