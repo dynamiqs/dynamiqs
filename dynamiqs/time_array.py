@@ -44,6 +44,9 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     A piecewise-constant (PWC) time array is defined by $A(t) = v_i A$ for $t \in [t_i,
     t_{i+1}$, where $v_i$ is a constant value and $A$ is a constant array.
 
+    Warning:
+        Batching is not yet supported for PWC time arrays. This should be fixed soon.
+
     Args:
         times: The time points $t_i$ between which the PWC factor takes constant values,
             of shape _(nv+1,)_ where _nv_ is the number of time intervals.
@@ -84,6 +87,10 @@ def modulated(
     A modulated time array is defined by $A(t) = f(t) A$, where $f(t)$ is an arbitrary
     function of signature `(t: float, *args: PyTree) -> Array` with `Array` of shape
     `(...,)`, and $A$ is a constant array.
+
+    Warning:
+        Batching is not yet supported for modulated time arrays. This should be fixed
+        soon.
 
     Args:
         f: A function with signature `(t: float, *args: PyTree) -> Array` that returns
