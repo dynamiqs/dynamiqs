@@ -65,7 +65,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Core
 
-### Time Arrays
+### Time-dependent arrays
 
 ::: dynamiqs.time_array
     options:
