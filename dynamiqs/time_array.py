@@ -26,13 +26,16 @@ TimeArrayLike = Union[
 
 
 def constant(array: ArrayLike) -> ConstantTimeArray:
-    """Instantiate a constant time-array.
+    r"""Instantiate a constant time-array.
+
+    A constant time-array is defined by $A(t)=A_0$ for any time $t$, where $A_0$ is a
+    constant array.
 
     Args:
-        array: The constant array of shape _(..., n, n)_.
+        array _(array_like of shape (..., n, n))_: Constant array $A$.
 
     Returns:
-        An instance of a `ConstantTimeArray`.
+        _(time-array object)_ Callable object returning $A_0$ for any time $t$.
     """
     array = jnp.asarray(array, dtype=cdtype())
     return ConstantTimeArray(array)
@@ -41,20 +44,22 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
 def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     r"""Instantiate a piecewise-constant (PWC) time-array.
 
-    A piecewise-constant (PWC) time-array is defined by $A(t) = v_i A$ for $t \in [t_i,
-    t_{i+1}$, where $v_i$ is a constant value and $A$ is a constant array.
+    A PWC time-array is defined by $A(t) = v_i A_0$ for $t \in [t_i, t_{i+1})$, where
+    $v_i$ is a constant value, and $A_0$ is a constant array.
 
     Warning:
-        Batching is not yet supported for PWC time-arrays. This should be fixed soon.
+        Batching is not yet supported for PWC time-arrays, this will be fixed soon.
 
     Args:
-        times: The time points $t_i$ between which the PWC factor takes constant values,
-            of shape _(nv+1,)_ where _nv_ is the number of time intervals.
-        values: The constant values for each time interval, of shape _(..., nv)_.
-        array: The constant array $A_i$, of shape _(n, n)_.
+        times _(array_like of shape (nv+1,))_: Time points $t_i$ between which the
+            PWC factor takes constant values, where _nv_ is the number of time
+            intervals.
+        values _(array_like of shape (..., nv))_: Constant values $v_i$ for each time
+            interval.
+        array _(array_like of shape (n, n))_: Constant array $A_0$.
 
     Returns:
-        An instance of a `PWCTimeArray`.
+        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
     """
     # times
     times = jnp.asarray(times)
@@ -64,16 +69,15 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     values = jnp.asarray(values, dtype=cdtype())
     if values.shape[-1] != len(times) - 1:
         raise TypeError(
-            'For a PWC array `(times, values, array)`, argument `values` must'
-            f' have shape `(..., len(times)-1)`, but has shape {tuple(values.shape)}.'
+            'Argument `values` must have shape `(..., len(times)-1)`, but has shape'
+            f' `{values.shape}.'
         )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a PWC array `(times, values, array)`, argument `array` must be'
-            f' a square matrix, but has shape {tuple(array.shape)}.'
+            f'Argument `array` must have shape `(n, n)`, but has shape {array.shape}.'
         )
 
     return PWCTimeArray(times, values, array)
@@ -84,36 +88,34 @@ def modulated(
 ) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
-    A modulated time-array is defined by $A(t) = f(t) A$, where $f(t)$ is an arbitrary
-    function of signature `(t: float, *args: PyTree) -> Array` with `Array` of shape
-    `(...,)`, and $A$ is a constant array.
+    A modulated time-array is defined by $A(t) = f(t) A_0$, where $f(t)$ is a function
+    with signature `f(t: float, *args: PyTree) -> Array`, and $A_0$ is a constant array.
 
     Warning:
-        Batching is not yet supported for modulated time-arrays. This should be fixed
+        Batching is not yet supported for modulated time-arrays, this will be fixed
         soon.
 
     Args:
-        f: A function with signature `(t: float, *args: PyTree) -> Array` that returns
-            the modulating factor $f(t)$ of shape _(...,)_.
-        array: The constant array $A$, of shape _(..., n, n)_.
-        args: The extra arguments passed to the function `f`.
+        f _(function returning array of shape (...))_: Function with signature
+            `f(t: float, *args: PyTree) -> Array` that returns the modulating factor
+            $f(t)$.
+        array _(array_like of shape (n, n))_: Constant array $A_0$.
+        args: Other positional arguments passed to the function $f$.
 
     Returns:
-        An instance of a `ModulatedTimeArray`.
+        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
         raise TypeError(
-            'For a modulated time-array `(f, array)`, argument `f` must'
-            f' be a function, but has type {obj_type_str(f)}.'
+            f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a modulated time-array `(f, array)`, argument `array` must'
-            f' be a square matrix, but has shape {tuple(array.shape)}.'
+            f'Argument `array` must have shape `(n, n)`, but has shape {array.shape}.'
         )
 
     # Pass `f` through `jax.tree_util.Partial`.
@@ -130,23 +132,21 @@ def timecallable(
 ) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
-    A callable time-array is defined by $A(t) = f(t)$, where $f(t)$ is an arbitrary
-    function of signature `(t: float, *args: PyTree) -> Array` with `Array` of shape
-    `(..., n, n)`.
+    A callable time-array is defined by $A(t) = f(t)$, where $f(t)$ is a function with
+    signature `f(t: float, *args: PyTree) -> Array`.
 
     Args:
-        f: A function with signature `(t: float, *args: PyTree) -> Array` that returns
-            the array $f(t)$ of shape _(..., n, n)_.
-        args: The extra arguments passed to the function `f`.
+        f _(function returning array of shape (..., n, n))_: Function with signature
+            `(t: float, *args: PyTree) -> Array` that returns the array $f(t)$.
+        args: Other positional arguments passed to the function $f$.
 
     Returns:
-        An instance of a `CallableTimeArray`.
+        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
         raise TypeError(
-            'For a callable time-array, argument `f` must be a function, but has type'
-            f' {obj_type_str(f)}.'
+            f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
     # Pass `f` through `jax.tree_util.Partial`.
