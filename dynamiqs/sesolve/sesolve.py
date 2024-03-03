@@ -40,10 +40,10 @@ def sesolve(
 
     Quote: Time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
-        [`dq.constant`](/python_api/time_array/constant.html),
-        [`dq.pwc`](/python_api/time_array/pwc.html),
-        [`dq.modulated`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable`](/python_api/time_array/timecallable.html).
+        [`dq.constant()`](/python_api/time_array/constant.html),
+        [`dq.pwc()`](/python_api/time_array/pwc.html),
+        [`dq.modulated()`](/python_api/time_array/modulated.html), or
+        [`dq.timecallable()`](/python_api/time_array/timecallable.html).
 
     Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
