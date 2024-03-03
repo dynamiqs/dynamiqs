@@ -189,8 +189,8 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - to_qutip
-        - device
-        - precision
+        - set_device
+        - set_precision
 
 ### Wigner distribution
 
