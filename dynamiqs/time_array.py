@@ -26,7 +26,7 @@ TimeArrayLike = Union[
 
 
 def constant(array: ArrayLike) -> ConstantTimeArray:
-    """Instantiate a constant time array.
+    """Instantiate a constant time-array.
 
     Args:
         array: The constant array of shape _(..., n, n)_.
@@ -39,13 +39,13 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
 
 
 def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
-    r"""Instantiate a piecewise-constant (PWC) time array.
+    r"""Instantiate a piecewise-constant (PWC) time-array.
 
-    A piecewise-constant (PWC) time array is defined by $A(t) = v_i A$ for $t \in [t_i,
+    A piecewise-constant (PWC) time-array is defined by $A(t) = v_i A$ for $t \in [t_i,
     t_{i+1}$, where $v_i$ is a constant value and $A$ is a constant array.
 
     Warning:
-        Batching is not yet supported for PWC time arrays. This should be fixed soon.
+        Batching is not yet supported for PWC time-arrays. This should be fixed soon.
 
     Args:
         times: The time points $t_i$ between which the PWC factor takes constant values,
@@ -82,14 +82,14 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 def modulated(
     f: callable[[float, ...], Array], array: ArrayLike, *, args: tuple[PyTree] = ()
 ) -> ModulatedTimeArray:
-    r"""Instantiate a modulated time array.
+    r"""Instantiate a modulated time-array.
 
-    A modulated time array is defined by $A(t) = f(t) A$, where $f(t)$ is an arbitrary
+    A modulated time-array is defined by $A(t) = f(t) A$, where $f(t)$ is an arbitrary
     function of signature `(t: float, *args: PyTree) -> Array` with `Array` of shape
     `(...,)`, and $A$ is a constant array.
 
     Warning:
-        Batching is not yet supported for modulated time arrays. This should be fixed
+        Batching is not yet supported for modulated time-arrays. This should be fixed
         soon.
 
     Args:
@@ -104,7 +104,7 @@ def modulated(
     # check f is callable
     if not callable(f):
         raise TypeError(
-            'For a modulated time array `(f, array)`, argument `f` must'
+            'For a modulated time-array `(f, array)`, argument `f` must'
             f' be a function, but has type {obj_type_str(f)}.'
         )
 
@@ -112,7 +112,7 @@ def modulated(
     array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a modulated time array `(f, array)`, argument `array` must'
+            'For a modulated time-array `(f, array)`, argument `array` must'
             f' be a square matrix, but has shape {tuple(array.shape)}.'
         )
 
@@ -128,9 +128,9 @@ def modulated(
 def timecallable(
     f: callable[[float, ...], Array], *, args: tuple[PyTree] = ()
 ) -> CallableTimeArray:
-    r"""Instantiate a callable time array.
+    r"""Instantiate a callable time-array.
 
-    A callable time array is defined by $A(t) = f(t)$, where $f(t)$ is an arbitrary
+    A callable time-array is defined by $A(t) = f(t)$, where $f(t)$ is an arbitrary
     function of signature `(t: float, *args: PyTree) -> Array` with `Array` of shape
     `(..., n, n)`.
 
@@ -145,7 +145,7 @@ def timecallable(
     # check f is callable
     if not callable(f):
         raise TypeError(
-            'For a functional time array, argument `f` must be a function, but has type'
+            'For a callable time-array, argument `f` must be a function, but has type'
             f' {obj_type_str(f)}.'
         )
 

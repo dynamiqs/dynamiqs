@@ -18,7 +18,7 @@ def obj_type_str(x: Any) -> str:
 
 
 def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
-    # check that a time array is valid (it must be a 1D array sorted in strictly
+    # check that a time-array is valid (it must be a 1D array sorted in strictly
     # ascending order and containing only positive values)
     if x.ndim != 1:
         raise ValueError(
