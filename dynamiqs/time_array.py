@@ -17,10 +17,10 @@ from .utils.array_types import ArrayLike, cdtype
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray', 'TimeArrayLike']
 
 TimeArrayLike = Union[
-    ArrayLike,
-    Callable[[float, ...], Array],
-    tuple[ArrayLike, ArrayLike, ArrayLike],
-    tuple[Callable[[float, ...], Array], ArrayLike],
+    ArrayLike,  # constant
+    tuple[ArrayLike, ArrayLike, ArrayLike],  # pwc
+    tuple[Callable[[float, ...], Array], ArrayLike],  # modulated
+    Callable[[float, ...], Array],  # timecallable
     'TimeArray',
 ]
 
