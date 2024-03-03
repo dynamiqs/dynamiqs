@@ -65,14 +65,6 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Core
 
-### totime
-
-::: dynamiqs.time_array
-    options:
-        table: true
-        members:
-        - totime
-
 ### Solvers (dq.solver)
 
 ::: dynamiqs.solver
@@ -111,6 +103,17 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - Result
+
+### Time-dependent arrays
+
+::: dynamiqs.time_array
+    options:
+        table: true
+        members:
+        - constant
+        - pwc
+        - modulated
+        - timecallable
 
 ## Utilities
 
