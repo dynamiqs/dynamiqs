@@ -14,7 +14,7 @@ from jaxtyping import PyTree, Scalar
 from ._utils import check_time_array, obj_type_str
 from .utils.array_types import ArrayLike, cdtype
 
-__all__ = ['constant', 'pwc', 'modulated', 'timecallable']
+__all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray', 'TimeArrayLike']
 
 TimeArrayLike = Union[
     ArrayLike,
