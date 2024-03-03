@@ -46,7 +46,7 @@ extend-include = ["*.ipynb"]
 
 [tool.ruff.format]
 quote-style = "single"
-docstring-code-format = false
+docstring-code-format = true
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Callable, Union, get_args
+from typing import get_args
 
 import equinox as eqx
 import jax
@@ -13,15 +13,7 @@ from jaxtyping import ArrayLike, PyTree, Scalar
 
 from ._utils import cdtype, check_time_array, obj_type_str
 
-__all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray', 'TimeArrayLike']
-
-TimeArrayLike = Union[
-    ArrayLike,  # constant
-    tuple[ArrayLike, ArrayLike, ArrayLike],  # pwc
-    tuple[Callable[[float, ...], Array], ArrayLike],  # modulated
-    Callable[[float, ...], Array],  # timecallable
-    'TimeArray',
-]
+__all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
 
 def constant(array: ArrayLike) -> ConstantTimeArray:
