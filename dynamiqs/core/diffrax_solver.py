@@ -24,6 +24,9 @@ class DiffraxSolver(BaseSolver):
         # to have subsequent init working properly
         super().__init__(*args)
 
+    def __str__(self) -> str:
+        pass
+
     def run(self) -> PyTree:
         # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():

@@ -22,7 +22,9 @@ class Autograd(Gradient):
             option.
         """
         super().__init__()
-
+    
+    def __str__(self) -> str:
+        return "Standard automatic differentiation Gradient."
 
 class CheckpointAutograd(Gradient):
     ncheckpoints: int | None = None
@@ -64,3 +66,11 @@ class CheckpointAutograd(Gradient):
                 of steps `n_steps <= max_steps`.
         """
         self.ncheckpoints = ncheckpoints
+
+    def __str__(self) -> str:
+        parts = {
+            "Gradient Name": "Checkpointed Automatic Differentiation",
+            "Arguments": "ncheckpoints -> Number of checkpoints to use"
+        }
+        parts_str = '\n'.join(f'{k}: {v}' for k,v in parts.items())
+        return parts_str
