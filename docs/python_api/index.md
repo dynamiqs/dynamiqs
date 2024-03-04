@@ -182,13 +182,15 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - overlap
         - fidelity
 
-### Array conversion
+### JAX-related utilities
 
-::: dynamiqs.utils.array_types
+::: dynamiqs.utils.jax_utils
     options:
         table: true
         members:
         - to_qutip
+        - set_device
+        - set_precision
 
 ### Wigner distribution
 
