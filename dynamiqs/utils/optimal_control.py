@@ -4,10 +4,10 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._utils import cdtype
 from ..utils.operators import displace
 from ..utils.states import fock
 from ..utils.utils import tensor, tobra
-from .array_types import cdtype
 
 __all__ = ['snap_gate', 'cd_gate']
 

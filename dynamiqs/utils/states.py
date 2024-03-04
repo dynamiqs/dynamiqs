@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 
-from .array_types import cdtype
+from .._utils import cdtype
 from .operators import displace
 from .utils import tensor, todm
 
