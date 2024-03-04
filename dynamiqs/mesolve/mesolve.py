@@ -7,13 +7,13 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.array_types import cdtype
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
