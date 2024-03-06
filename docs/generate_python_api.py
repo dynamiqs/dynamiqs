@@ -1,5 +1,6 @@
 """Automatically generate the Python API documentation pages by parsing the public
-functions from `__all__`."""
+functions from `__all__`.
+"""
 
 import re
 from pathlib import Path
@@ -7,20 +8,24 @@ from pathlib import Path
 import mkdocs_gen_files
 
 PATHS_TO_PARSE = [
-    'dynamiqs/utils/operators.py',
-    'dynamiqs/utils/states.py',
-    'dynamiqs/utils/utils.py',
-    'dynamiqs/utils/tensor_types.py',
-    'dynamiqs/utils/wigners.py',
-    'dynamiqs/utils/vectorization.py',
-    'dynamiqs/utils/optimal_control.py',
-    'dynamiqs/plots/namespace.py',
+    ('dynamiqs/utils/operators.py', 'dq'),
+    ('dynamiqs/utils/states.py', 'dq'),
+    ('dynamiqs/utils/utils.py', 'dq'),
+    ('dynamiqs/utils/jax_utils.py', 'dq'),
+    ('dynamiqs/utils/wigners.py', 'dq'),
+    ('dynamiqs/utils/vectorization.py', 'dq'),
+    ('dynamiqs/utils/optimal_control.py', 'dq'),
+    ('dynamiqs/utils/random.py', 'dq'),
+    ('dynamiqs/plots/namespace.py', 'dq'),
+    ('dynamiqs/time_array.py', 'dq'),
+    ('dynamiqs/solver.py', 'dq.solver'),
+    ('dynamiqs/gradient.py', 'dq.gradient'),
 ]
 
 
 def get_elements_from_all(file_path):
     """Parse a file to find all elements of the `__all__` attribute."""
-    with open(file_path, 'r') as f:
+    with Path.open(file_path) as f:
         contents = f.read()
 
         # capture list assigned to __all__ with a regular expression (the `[^\]]+` part
@@ -39,7 +44,7 @@ def get_elements_from_all(file_path):
 
 
 # generate a documentation file for each function of each file
-for path in PATHS_TO_PARSE:
+for path, namespace in PATHS_TO_PARSE:
     # start with e.g. 'dynamiqs/utils/operators.py'
     src_path = Path(path)
     # convert to e.g 'python_api/utils/operators'
@@ -56,5 +61,7 @@ for path in PATHS_TO_PARSE:
         with mkdocs_gen_files.open(doc_path_function, 'w') as f:
             module = identifier.split('.')[0]
             print(f'::: {identifier}.{function}', file=f)
+            print('    options:', file=f)
+            print(f'        namespace: {namespace}', file=f)
 
         mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)

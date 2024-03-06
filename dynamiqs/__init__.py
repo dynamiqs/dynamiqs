@@ -2,11 +2,11 @@ from importlib.metadata import version
 
 from . import dark
 from .mesolve import mesolve
+from .options import Options
 from .plots import *
+from .result import Result
 from .sesolve import sesolve
-from .smesolve import smesolve
-from .solvers.result import Result
-from .time_tensor import TimeTensor, totime
+from .time_array import *
 from .utils import *
 
 # get version from pyproject.toml

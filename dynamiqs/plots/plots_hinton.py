@@ -1,29 +1,48 @@
 from __future__ import annotations
 
+from itertools import product
+
+import jax.numpy as jnp
 import matplotlib as mpl
-import matplotlib.patches as patches
 import numpy as np
+from jax import Array
+from jax.typing import ArrayLike
+from matplotlib import patches
 from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
-from ..utils.tensor_types import ArrayLike, to_numpy
-from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optax
+from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['plot_hinton']
 
 
+def _normalize(x: ArrayLike, vmin: float, vmax: float) -> Array:
+    # linearly normalizes data into the [0.0, 1.0] interval
+    # values outside the range [vmin, vmax] are also transformed linearly, resulting in
+    # values outside [0, 1]
+    x = jnp.asarray(x)
+    return (x - vmin) / (vmax - vmin)
+
+
 def _plot_squares(
     ax: Axes,
-    areas: np.ndarray,
-    colors: np.ndarray,
-    offsets: np.ndarray,
+    areas: ArrayLike,
+    colors: ArrayLike,
+    offsets: ArrayLike,
     ecolor: str = 'white',
     ewidth: float = 0.5,
 ):
     # areas: 1D array (n) with real values in [0, 1]
     # colors: 2D array (n, 4) with RGBA values
     # offsets: 2D array (n, 2) with real values in R
+
+    # we convert all inputs to numpy arrays instead of JAX arrays for two reasons:
+    # - to use masking
+    # - to fix `ValueError: Invalid RGBA argument` when using JAX array for colors
+    areas = np.asarray(areas)
+    colors = np.asarray(colors)
+    offsets = np.asarray(offsets)
 
     # compute squares side length
     sides = np.sqrt(areas)
@@ -48,10 +67,10 @@ def _plot_squares(
     ax.add_collection(squares)
 
 
-@optax
+@optional_ax
 def _plot_hinton(
-    areas: np.ndarray,
-    colors: np.ndarray,
+    areas: ArrayLike,
+    colors: ArrayLike,
     colors_vmin: float,
     colors_vmax: float,
     cmap: str,
@@ -64,6 +83,8 @@ def _plot_hinton(
 ):
     # areas: 2D array (n, n) with real values in [0, 1]
     # colors: 2D array (n, n) with real values in [0, 1]
+    areas = jnp.asarray(areas)
+    colors = jnp.asarray(colors)
 
     areas = areas.clip(0.0, 1.0)
     colors = colors.clip(0.0, 1.0)
@@ -79,8 +100,8 @@ def _plot_hinton(
     integer_ticks(ax.yaxis, n, all=allticks)
 
     # === plot squares
-    # squares coordinates
-    offsets = np.array(list(np.ndindex(areas.shape)))
+    # squares coordinates (cartesian product of all indices)
+    offsets = jnp.asarray(list(product(*(range(s) for s in areas.shape))))
     # squares areas
     areas = areas.T.flatten()
     # squares colors
@@ -92,11 +113,11 @@ def _plot_hinton(
     if colorbar:
         norm = Normalize(colors_vmin, colors_vmax)
         cax = add_colorbar(ax, cmap, norm, size='4%', pad='4%')
-        if colors_vmin == -np.pi and colors_vmax == np.pi:
-            cax.set_yticks([-np.pi, 0.0, np.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
+        if colors_vmin == -jnp.pi and colors_vmax == jnp.pi:
+            cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
 
-@optax
+@optional_ax
 def plot_hinton(
     x: ArrayLike,
     *,
@@ -104,7 +125,7 @@ def plot_hinton(
     cmap: str | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
-    colorbar: 'bool' = True,
+    colorbar: bool = True,
     allticks: bool = False,
     tickslabel: list[str] | None = None,
     ecolor: str = 'white',
@@ -118,30 +139,26 @@ def plot_hinton(
 
     Examples:
         >>> rho = dq.coherent_dm(16, 2.0)
-        >>> dq.plot_hinton(rho.abs())
+        >>> dq.plot_hinton(jnp.abs(rho))
         >>> renderfig('plot_hinton_coherent')
 
         ![plot_hinton_coherent](/figs-code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
-        >>> H = a.mH @ a + 2.0 * (a + a.mH)
-        >>> dq.plot_hinton(H.abs())
+        >>> H = dq.dag(a) @ a + 2.0 * (a + dq.dag(a))
+        >>> dq.plot_hinton(jnp.abs(H))
         >>> renderfig('plot_hinton_hamiltonian')
 
         ![plot_hinton_hamiltonian](/figs-code/plot_hinton_hamiltonian.png){.fig-half}
 
-        >>> cnot = torch.tensor(
-        ...     [[1, 0, 0, 0],
-        ...      [0, 1, 0, 0],
-        ...      [0, 0, 0, 1],
-        ...      [0, 0, 1, 0]],
-        ...  )
+        >>> cnot = jnp.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
         >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
         ![plot_hinton_cnot](/figs-code/plot_hinton_cnot.png){.fig-half}
 
-        >>> x = dq.rand_complex((16, 16))
+        >>> key = jax.random.PRNGKey(42)
+        >>> x = dq.rand_complex(key, (16, 16))
         >>> dq.plot_hinton(x)
         >>> renderfig('plot_hinton_rand_complex')
 
@@ -170,8 +187,8 @@ def plot_hinton(
 
         ![plot_hinton_large](/figs-code/plot_hinton_large.png){.fig}
     """  # noqa: E501
+    x = jnp.asarray(x)
 
-    x = to_numpy(x)
     if x.ndim != 2 or x.shape[0] != x.shape[1]:
         raise ValueError(
             f'Argument `x` must be a 2D square array, but has shape {x.shape}.'
@@ -179,40 +196,40 @@ def plot_hinton(
 
     # set different defaults, areas and colors for real matrix, positive real matrix
     # and complex matrix
-    if np.isrealobj(x):
+    if jnp.isrealobj(x):
         # x: 2D array with real data in [vmin, vmax]
 
-        all_positive = np.all(x >= 0)
+        all_positive = jnp.all(x >= 0)
         if cmap is None:
             # sequential colormap for positive data, diverging colormap otherwise
             cmap = 'Blues' if all_positive else 'dq'
         if vmin is None:
-            vmin = 0.0 if all_positive else np.min(x)
+            vmin = 0.0 if all_positive else jnp.min(x)
 
-        vmax = np.max(x) if vmax is None else vmax
+        vmax = jnp.max(x) if vmax is None else vmax
 
         # areas: absolute value of x
         area_max = max(abs(vmin), abs(vmax))
-        areas = Normalize(0.0, area_max)(np.abs(x))
+        areas = _normalize(jnp.abs(x), 0.0, area_max)
 
         # colors: value of x
-        colors = Normalize(vmin, vmax)(x)
+        colors = _normalize(x, vmin, vmax)
         colors_vmin, colors_vmax = vmin, vmax
-    elif np.iscomplexobj(x):
+    elif jnp.iscomplexobj(x):
         # x: 2D array with complex data
 
         # cyclic colormap for the phase
         cmap = 'cmr_copper' if cmap is None else cmap
 
         # areas: magnitude of x
-        magnitude = np.abs(x)
-        areas_max = np.max(magnitude) if vmax is None else vmax
-        areas = Normalize(0.0, areas_max)(magnitude)
+        magnitude = jnp.abs(x)
+        areas_max = jnp.max(magnitude) if vmax is None else vmax
+        areas = _normalize(magnitude, 0.0, areas_max)
 
         # colors: phase of x
-        phase = np.angle(x)
-        colors = Normalize(-np.pi, np.pi)(phase)
-        colors_vmin, colors_vmax = -np.pi, np.pi
+        phase = jnp.angle(x)
+        colors = _normalize(phase, -jnp.pi, jnp.pi)
+        colors_vmin, colors_vmax = -jnp.pi, jnp.pi
 
     if clear:
         colorbar = False

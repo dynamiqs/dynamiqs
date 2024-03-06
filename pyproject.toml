@@ -1,15 +1,21 @@
 [project]
 name = "dynamiqs"
-version = "0.1.0"
-description = "Quantum systems simulation with PyTorch."
+version = "0.2.0"
+requires-python = ">=3.9"
+description = "Quantum systems simulation with JAX."
 dependencies = [
     "qutip",
     "numpy",
     "matplotlib",
     "tqdm",
-    "torch>=2.0",
-    "methodtools",
+    "jax",
+    "jaxlib",
+    "jaxtyping",
+    "diffrax>=0.5.0",  # for complex support
+    "equinox",
+    "imageio",
     "cmasher",
+    "ipython",
 ]
 
 [build-system]
@@ -19,11 +25,9 @@ build-backend = "flit_core.buildapi"
 [project.optional-dependencies]
 dev = [
     "taskipy",
-    "isort",
-    "black[jupyter]==23.11.0",
+    "ruff",
     "codespell",
-    "flake8",
-    "pytest",
+    "pytest>=7.0,<8.0",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
@@ -34,19 +38,51 @@ dev = [
     "mkdocs-simple-hooks",
     "mkdocs-glightbox",
     "sybil>=6",
+    "black",  # needed by mkdocstrings to format function signatures
 ]
 
-[tool.isort]
-profile = "black"
-skip = ["__init__.py"]
-skip_gitignore = true
+[tool.ruff]
+extend-include = ["*.ipynb"]
 
-[tool.black]
-preview = true
-target-version = ["py38", "py39", "py310", "py311"]
-skip-string-normalization = true
-jupyter = true
-required-version = "23.11.0"
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = [
+    "F", "E", "W", "C90", "I", "D", "UP", "YTT", "ANN", "BLE", "B", "A", "C4", "FA",
+    "INP", "PIE", "T20", "PYI", "PT", "RSE", "RET", "SLF", "SIM", "INT", "ARG", "PTH",
+    "PL", "TRY", "FLY", "NPY", "RUF",
+]
+extend-select = ["D204", "D400", "D404", "D406", "D410"]
+ignore = [
+    "F403",
+    "E203", "E731", "E741",
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D417",
+    "ANN101", "ANN002", "ANN003", "ANN401",
+    "RET505",
+    "TRY003",
+    "PLR0913", "PLR2004"
+]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.flake8-annotations]
+suppress-none-returning = true
+
+[tool.ruff.lint.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"docs/**.py" = ["INP001", "ARG001", "ANN"]
+"conftest.py" = ["ANN"]
+"tests/**.py" = ["ANN"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.codespell]
 skip = ".git,*.ipynb"
@@ -54,37 +90,25 @@ ignore-words-list = "ket, braket"
 
 # === taskipy tasks definition ===
 
-[tool.taskipy.tasks.isort]
-cmd = 'echo "\n>>> isort" && isort .'
-help = "sort the imports (isort)"
+[tool.taskipy.tasks.lint]
+cmd = 'echo "\n>>> ruff check --fix" && ruff check --fix'
+help = "lint the code (ruff)"
 
-[tool.taskipy.tasks.black]
-cmd = 'echo "\n>>> black" && black .'
-help = "auto-format the code (black)"
+[tool.taskipy.tasks.format]
+cmd = 'echo "\n>>> ruff format" && ruff format'
+help = "auto-format the code (ruff)"
 
 [tool.taskipy.tasks.codespell]
 cmd = 'echo "\n>>> codespell" && codespell tests dynamiqs'
 help = "check for misspellings (codespell)"
 
-[tool.taskipy.tasks.flake8]
-cmd = 'echo "\n>>> flake8" && flake8 tests dynamiqs'
-help = "check code style (flake8)"
-
-[tool.taskipy.tasks.lint]
-cmd = 'task isort && task black && task codespell && task flake8'
-help = "lint the code and check style (isort + black + codespell + flake8)"
+[tool.taskipy.tasks.clean]
+cmd = 'task lint && task format && task codespell'
+help = "clean the code (ruff + codespell)"
 
 [tool.taskipy.tasks.test]
-cmd = 'echo "\n>>> pytest -n=auto -m \"not long\" tests" && pytest -n=auto -m "not long" tests'
-help = "run the unit tests suite excluding long tests (pytest)"
-
-[tool.taskipy.tasks.test-long]
-cmd = 'echo "\n>>> pytest -n=auto -m \"long\" tests" && pytest -n=auto -m "long" tests'
-help = "run the unit tests suite including only long tests (pytest)"
-
-[tool.taskipy.tasks.test-all]
 cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
-help = "run the complete unit tests suite (pytest)"
+help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
 cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs-code/*.png && pytest dynamiqs'
@@ -107,14 +131,13 @@ cmd = 'mkdocs serve'
 help = "preview documentation website with hot-reloading"
 
 [tool.taskipy.tasks.all]
-cmd = 'task lint && task test && task doctest'
-help = "run all tasks before a commit (isort + black + codespell + flake8 + pytest + doctest)"
+cmd = 'task clean && task test && task doctest'
+help = "run all tasks before a commit (ruff + codespell + pytest + doctest)"
 
 [tool.taskipy.tasks.ci]
-cmd = '''echo "\n>>> isort" && isort --check . &&
-         echo "\n>>> black" && black --check . &&
+cmd = '''echo "\n>>> ruff check" && ruff check &&
+         echo "\n>>> ruff format --check" && ruff format --check &&
          task codespell &&
-         task flake8 &&
          task test &&
          task doctest &&
          task docbuild'''

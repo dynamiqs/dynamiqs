@@ -77,6 +77,8 @@ plugins:
             show_signature_annotations: true
             separate_signature: true
             line_length: 88
+            show_bases: false
+            merge_init_into_class: true
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
@@ -109,9 +111,12 @@ nav:
       - What is dynamiqs?: getting_started/whatis.md
       - Installation: getting_started/installation.md
       - Basic examples: getting_started/examples.md
+      - More features!: getting_started/more-features.md
+      - The dynamiqs project: getting_started/the-dynamiqs-project.md
       - The sharp bits 🔪: getting_started/sharp-bits.md
-      - Contributing: getting_started/contributing.md
       - Let's talk!: getting_started/talk.md
+      - Contributing: getting_started/contributing.md
+      - Cite us: getting_started/cite-us.md
   - Tutorials:
       - tutorials/index.md
       - Basics:
@@ -123,10 +128,29 @@ nav:
           - tutorials/computing-gradients.md
   - Python API:
       - python_api/index.md
-      - Solvers:
+      - Quantum solvers:
           - sesolve: python_api/solvers/sesolve.md
           - mesolve: python_api/solvers/mesolve.md
           - smesolve: python_api/solvers/smesolve.md
+      - Core:
+          - Solvers (dq.solver):
+              - Tsit5: python_api/solver/Tsit5.md
+              - Dopri5: python_api/solver/Dopri5.md
+              - Dopri8: python_api/solver/Dopri8.md
+              - Euler: python_api/solver/Euler.md
+              - Rouchon1: python_api/solver/Rouchon1.md
+              - Rouchon2: python_api/solver/Rouchon2.md
+              - Propagator: python_api/solver/Propagator.md
+          - Gradients (dq.gradient):
+              - Autograd: python_api/gradient/Autograd.md
+              - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
+          - Options: python_api/options/Options.md
+          - Result: python_api/result/Result.md
+          - Time-dependent arrays:
+              - constant: python_api/time_array/constant.md
+              - pwc: python_api/time_array/pwc.md
+              - modulated: python_api/time_array/modulated.md
+              - timecallable: python_api/time_array/timecallable.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
@@ -156,9 +180,10 @@ nav:
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
               - mpow: python_api/utils/utils/mpow.md
+              - tracemm: python_api/utils/utils/tracemm.md
               - trace: python_api/utils/utils/trace.md
               - ptrace: python_api/utils/utils/ptrace.md
-              - tensprod: python_api/utils/utils/tensprod.md
+              - tensor: python_api/utils/utils/tensor.md
               - expect: python_api/utils/utils/expect.md
               - norm: python_api/utils/utils/norm.md
               - unit: python_api/utils/utils/unit.md
@@ -174,11 +199,10 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-          - Tensor conversion:
-              - to_tensor: python_api/utils/tensor_types/to_tensor.md
-              - to_numpy: python_api/utils/tensor_types/to_numpy.md
-              - to_qutip: python_api/utils/tensor_types/to_qutip.md
-              - from_qutip: python_api/utils/tensor_types/from_qutip.md
+          - JAX-related utilities:
+              - to_qutip: python_api/utils/jax_utils/to_qutip.md
+              - set_device: python_api/utils/jax_utils/set_device.md
+              - set_precision: python_api/utils/jax_utils/set_precision.md
           - Wigner distribution:
               - wigner: python_api/utils/wigners/wigner.md
           - Vectorization:
@@ -190,14 +214,19 @@ nav:
               - sdissipator: python_api/utils/vectorization/sdissipator.md
               - slindbladian: python_api/utils/vectorization/slindbladian.md
           - Quantum optimal control:
-              - rand_real: python_api/utils/optimal_control/rand_real.md
-              - rand_complex: python_api/utils/optimal_control/rand_complex.md
-              - pwc_pulse: python_api/utils/optimal_control/pwc_pulse.md
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
+          - Random arrays:
+              - rand_real: python_api/utils/random/rand_real.md
+              - rand_complex: python_api/utils/random/rand_complex.md
+              - rand_herm: python_api/utils/random/rand_herm.md
+              - rand_psd: python_api/utils/random/rand_psd.md
+              - rand_dm: python_api/utils/random/rand_dm.md
+              - rand_ket: python_api/utils/random/rand_ket.md
           - Plotting:
               - plot_wigner: python_api/plots/namespace/plot_wigner.md
               - plot_wigner_mosaic: python_api/plots/namespace/plot_wigner_mosaic.md
+              - plot_wigner_gif: python_api/plots/namespace/plot_wigner_gif.md
               - plot_pwc_pulse: python_api/plots/namespace/plot_pwc_pulse.md
               - plot_fock: python_api/plots/namespace/plot_fock.md
               - plot_fock_evolution: python_api/plots/namespace/plot_fock_evolution.md

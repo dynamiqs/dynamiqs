@@ -1,47 +1,47 @@
 from __future__ import annotations
 
-from math import cos, exp, pi, sin
-from typing import Any
+from abc import abstractmethod
+from typing import NamedTuple
 
-import torch
-from torch import Tensor
+import jax.numpy as jnp
+import numpy as np
+from jax import Array
+from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import TimeTensor
 from dynamiqs.gradient import Gradient
+from dynamiqs.options import Options
+from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.solvers.result import Result
-from dynamiqs.utils.tensor_types import ArrayLike, dtype_real_to_complex
+from dynamiqs.time_array import TimeArray
 
 from ..system import System
 
 
 class OpenSystem(System):
-    def __init__(self):
-        super().__init__()
-        self.L = None
-        self.Lb = None
+    @abstractmethod
+    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+        """Compute the jump operators."""
 
     def run(
         self,
-        tsave: ArrayLike,
         solver: Solver,
         *,
         gradient: Gradient | None = None,
-        options: dict[str, Any] | None = None,
-        H: ArrayLike | TimeTensor | None = None,
-        L: list[ArrayLike] | None = None,
-        y0: ArrayLike | None = None,
+        options: Options = Options(),  # noqa: B008
+        params: PyTree | None = None,
     ) -> Result:
-        H = self.H if H is None else H
-        L = self.L if L is None else L
-        y0 = self.y0 if y0 is None else y0
+        params = self.params_default if params is None else params
+        H = self.H(params)
+        Ls = self.Ls(params)
+        y0 = self.y0(params)
+        Es = self.Es(params)
         return dq.mesolve(
             H,
-            L,
+            Ls,
             y0,
-            tsave,
-            exp_ops=self.E,
+            self.tsave,
+            exp_ops=Es,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -49,80 +49,60 @@ class OpenSystem(System):
 
 
 class OCavity(OpenSystem):
-    # `Hb: (3, n, n)
-    # `L`: (2, n, n)
-    # `Lb`: (2, 5, n, n)
-    # `y0b`: (4, n, n)
-    # `E`: (2, n, n)
+    class Params(NamedTuple):
+        delta: float
+        alpha0: float
+        kappa: float
 
     def __init__(
-        self,
-        *,
-        n: int,
-        kappa: float,
-        delta: float,
-        alpha0: float,
-        t_end: float,
-        requires_grad: bool = False,
+        self, *, n: int, delta: float, alpha0: float, kappa: float, tsave: ArrayLike
     ):
-        # store parameters
         self.n = n
-        self.kappa = torch.as_tensor(kappa).requires_grad_(requires_grad)
-        self.delta = torch.as_tensor(delta).requires_grad_(requires_grad)
-        self.alpha0 = torch.as_tensor(alpha0).requires_grad_(requires_grad)
-        self.t_end = torch.as_tensor(t_end)
+        self.delta = delta
+        self.alpha0 = alpha0
+        self.kappa = kappa
+        self.tsave = tsave
 
-        # define gradient parameters
-        self.params = (self.delta, self.alpha0, self.kappa)
+        # define default gradient parameters
+        self.params_default = self.Params(delta, alpha0, kappa)
 
-        # bosonic operators
-        a = dq.destroy(self.n)
-        adag = a.mH
+    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+        return params.delta * dq.number(self.n)
 
-        # loss operator
-        self.loss_op = adag @ a
+    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+        return [jnp.sqrt(params.kappa) * dq.destroy(self.n)]
 
-        # prepare quantum operators
-        self.H = self.delta * adag @ a
-        self.Hb = [0.5 * self.H, self.H, 2 * self.H]
-        self.L = [torch.sqrt(self.kappa) * a, dq.eye(self.n)]
-        self.Lb = [L * torch.arange(5).view(5, 1, 1) for L in self.L]
-        self.E = [dq.position(self.n), dq.momentum(self.n)]
+    def y0(self, params: PyTree) -> Array:
+        return dq.coherent(self.n, params.alpha0)
 
-        # prepare initial states
-        self.y0 = dq.coherent_dm(self.n, self.alpha0)
-        self.y0b = [
-            dq.coherent_dm(self.n, self.alpha0),
-            dq.coherent_dm(self.n, 1j * self.alpha0),
-            dq.coherent_dm(self.n, -self.alpha0),
-            dq.coherent_dm(self.n, -1j * self.alpha0),
-        ]
+    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
+        return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
 
-    def tsave(self, n: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), n)
+    def _alpha(self, t: float) -> Array:
+        return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
 
-    def _alpha(self, t: float) -> Tensor:
-        return self.alpha0 * torch.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
-
-    def state(self, t: float) -> Tensor:
+    def state(self, t: float) -> Array:
         return dq.coherent_dm(self.n, self._alpha(t))
 
-    def expect(self, t: float) -> Tensor:
+    def expect(self, t: float) -> Array:
         alpha_t = self._alpha(t)
         exp_x = alpha_t.real
         exp_p = alpha_t.imag
-        return torch.tensor([exp_x, exp_p], dtype=alpha_t.dtype)
+        return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def grads_state(self, t: float) -> Tensor:
+    def loss_state(self, state: Array) -> Array:
+        return dq.expect(dq.number(self.n), state).real
+
+    def grads_state(self, t: float) -> PyTree:
         grad_delta = 0.0
-        grad_alpha0 = 2 * self.alpha0 * exp(-self.kappa * t)
-        grad_kappa = -self.alpha0**2 * t * exp(-self.kappa * t)
-        return torch.tensor([grad_delta, grad_alpha0, grad_kappa]).detach()
+        grad_alpha0 = 2 * self.alpha0 * jnp.exp(-self.kappa * t)
+        grad_kappa = -(self.alpha0**2) * t * jnp.exp(-self.kappa * t)
+        return self.Params(grad_delta, grad_alpha0, grad_kappa)
 
-    def grads_expect(self, t: float) -> Tensor:
-        cdt = cos(self.delta * t)
-        sdt = sin(self.delta * t)
-        emkt = exp(-0.5 * self.kappa * t)
+    def grads_expect(self, t: float) -> PyTree:
+        cdt = jnp.cos(self.delta * t)
+        sdt = jnp.sin(self.delta * t)
+        emkt = jnp.exp(-0.5 * self.kappa * t)
 
         grad_x_delta = -self.alpha0 * t * sdt * emkt
         grad_p_delta = -self.alpha0 * t * cdt * emkt
@@ -131,125 +111,116 @@ class OCavity(OpenSystem):
         grad_x_kappa = -0.5 * self.alpha0 * t * cdt * emkt
         grad_p_kappa = 0.5 * self.alpha0 * t * sdt * emkt
 
-        return torch.tensor([
-            [grad_x_delta, grad_x_alpha0, grad_x_kappa],
-            [grad_p_delta, grad_p_alpha0, grad_p_kappa],
-        ]).detach()
+        return self.Params(
+            [grad_x_delta, grad_p_delta],
+            [grad_x_alpha0, grad_p_alpha0],
+            [grad_x_kappa, grad_p_kappa],
+        )
 
 
 class OTDQubit(OpenSystem):
-    def __init__(
-        self,
-        *,
-        eps: float,
-        omega: float,
-        gamma: float,
-        t_end: float,
-        requires_grad: bool = False,
-    ):
+    class Params(NamedTuple):
+        eps: float
+        omega: float
+        gamma: float
+
+    def __init__(self, *, eps: float, omega: float, gamma: float, tsave: ArrayLike):
         self.n = 2
+        self.eps = eps
+        self.omega = omega
+        self.gamma = gamma
+        self.tsave = tsave
 
-        # store parameters
-        self.eps = torch.as_tensor(eps).requires_grad_(requires_grad)
-        self.omega = torch.as_tensor(omega).requires_grad_(requires_grad)
-        self.gamma = torch.as_tensor(gamma).requires_grad_(requires_grad)
-        self.t_end = torch.as_tensor(t_end)
+        # define default gradient parameters
+        self.params_default = self.Params(eps, omega, gamma)
 
-        # define gradient parameters
-        self.params = (self.eps, self.omega, self.gamma)
+    def H(self, params: PyTree):
+        f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
+        return dq.timecallable(f, args=(params.eps, params.omega))
 
-        # loss operator
-        self.loss_op = dq.sigmaz()
+    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+        return [jnp.sqrt(params.gamma) * dq.sigmax()]
 
-        # prepare quantum operators
-        self.H = dq.totime(lambda t: self.eps * torch.cos(self.omega * t) * dq.sigmax())
-        self.L = [torch.sqrt(self.gamma) * dq.sigmax()]
-        self.E = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
+    def y0(self, params: PyTree) -> Array:  # noqa: ARG002
+        return dq.fock(2, 0)
 
-        # prepare initial states
-        self.y0 = dq.fock(2, 0)
-
-    def tsave(self, n: int) -> Tensor:
-        return torch.linspace(0.0, self.t_end.item(), n)
+    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
+        return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:
-        return self.eps / self.omega * sin(self.omega * t)
+        return 2 * self.eps / self.omega * jnp.sin(self.omega * t)
 
     def _eta(self, t: float) -> float:
-        return exp(-2 * self.gamma * t)
+        return jnp.exp(-2 * self.gamma * t)
 
-    def state(self, t: float) -> Tensor:
+    def state(self, t: float) -> Array:
         theta = self._theta(t)
         eta = self._eta(t)
-        rho_00 = 0.5 * (1 + eta * cos(2 * theta))
-        rho_11 = 0.5 * (1 - eta * cos(2 * theta))
-        rho_01 = 0.5j * eta * sin(2 * theta)
-        rho_10 = -0.5j * eta * sin(2 * theta)
-        return torch.tensor([[rho_00, rho_01], [rho_10, rho_11]])
+        rho_00 = 0.5 * (1 + eta * jnp.cos(theta))
+        rho_11 = 0.5 * (1 - eta * jnp.cos(theta))
+        rho_01 = 0.5j * eta * jnp.sin(theta)
+        rho_10 = -0.5j * eta * jnp.sin(theta)
+        return jnp.array([[rho_00, rho_01], [rho_10, rho_11]])
 
-    def expect(self, t: float) -> Tensor:
+    def expect(self, t: float) -> Array:
         theta = self._theta(t)
         eta = self._eta(t)
         exp_x = 0
-        exp_y = -eta * sin(2 * theta)
-        exp_z = eta * cos(2 * theta)
-        return torch.tensor(
-            [exp_x, exp_y, exp_z],
-            dtype=dtype_real_to_complex(theta.dtype),
-        )
+        exp_y = -eta * jnp.sin(theta)
+        exp_z = eta * jnp.cos(theta)
+        return jnp.array([exp_x, exp_y, exp_z]).real
 
-    def grads_state(self, t: float) -> Tensor:
+    def loss_state(self, state: Array) -> Array:
+        return dq.expect(dq.sigmaz(), state).real
+
+    def grads_state(self, t: float) -> PyTree:
         theta = self._theta(t)
         eta = self._eta(t)
         # gradients of theta
-        dtheta_deps = sin(self.omega * t) / self.omega
-        dtheta_domega = self.eps * t * cos(
-            self.omega * t
-        ) / self.omega - self.eps / self.omega**2 * sin(self.omega * t)
+        dtheta_deps = 2 * jnp.sin(self.omega * t) / self.omega
+        dtheta_domega = 2 * self.eps / self.omega * t * jnp.cos(self.omega * t)
+        dtheta_domega -= 2 * self.eps / self.omega**2 * jnp.sin(self.omega * t)
         # gradient of eta
         deta_dgamma = -2 * t * eta
         # gradients of sigma_z
-        grad_eps = -2 * dtheta_deps * eta * sin(2 * theta)
-        grad_omega = -2 * dtheta_domega * eta * sin(2 * theta)
-        grad_gamma = deta_dgamma * cos(2 * theta)
-        return torch.tensor([grad_eps, grad_omega, grad_gamma]).detach()
+        grad_eps = -dtheta_deps * eta * jnp.sin(theta)
+        grad_omega = -dtheta_domega * eta * jnp.sin(theta)
+        grad_gamma = deta_dgamma * jnp.cos(theta)
+        return self.Params(grad_eps, grad_omega, grad_gamma)
 
-    def grads_expect(self, t: float) -> Tensor:
+    def grads_expect(self, t: float) -> PyTree:
         theta = self._theta(t)
         eta = self._eta(t)
         # gradients of theta
-        dtheta_deps = sin(self.omega * t) / self.omega
-        dtheta_domega = self.eps * t * cos(
-            self.omega * t
-        ) / self.omega - self.eps / self.omega**2 * sin(self.omega * t)
+        dtheta_deps = 2 * jnp.sin(self.omega * t) / self.omega
+        dtheta_domega = 2 * self.eps / self.omega * t * jnp.cos(self.omega * t)
+        dtheta_domega -= 2 * self.eps / self.omega**2 * jnp.sin(self.omega * t)
         # gradient of eta
         deta_dgamma = -2 * t * eta
         # gradients of sigma_z
-        grad_z_eps = -2 * dtheta_deps * eta * sin(2 * theta)
-        grad_z_omega = -2 * dtheta_domega * eta * sin(2 * theta)
-        grad_z_gamma = deta_dgamma * cos(2 * theta)
+        grad_z_eps = -dtheta_deps * eta * jnp.sin(theta)
+        grad_z_omega = -dtheta_domega * eta * jnp.sin(theta)
+        grad_z_gamma = deta_dgamma * jnp.cos(theta)
         # gradients of sigma_y
-        grad_y_eps = -2 * dtheta_deps * eta * cos(2 * theta)
-        grad_y_omega = -2 * dtheta_domega * eta * cos(2 * theta)
-        grad_y_gamma = -deta_dgamma * sin(2 * theta)
+        grad_y_eps = -dtheta_deps * eta * jnp.cos(theta)
+        grad_y_omega = -dtheta_domega * eta * jnp.cos(theta)
+        grad_y_gamma = -deta_dgamma * jnp.sin(theta)
         # gradients of sigma_x
         grad_x_eps = 0
         grad_x_omega = 0
         grad_x_gamma = 0
-        return torch.tensor([
-            [grad_x_eps, grad_x_omega, grad_x_gamma],
-            [grad_y_eps, grad_y_omega, grad_y_gamma],
-            [grad_z_eps, grad_z_omega, grad_z_gamma],
-        ]).detach()
+        return self.Params(
+            [grad_x_eps, grad_y_eps, grad_z_eps],
+            [grad_x_omega, grad_y_omega, grad_z_omega],
+            [grad_x_gamma, grad_y_gamma, grad_z_gamma],
+        )
 
 
-# we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
-# gradients
-Hz = 2 * pi
-ocavity = OCavity(n=8, kappa=1.0 * Hz, delta=1.0 * Hz, alpha0=0.5, t_end=0.3)
-gocavity = OCavity(
-    n=8, kappa=1.0 * Hz, delta=1.0 * Hz, alpha0=0.5, t_end=0.3, requires_grad=True
-)
+# # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
+# # gradients
+Hz = 2 * jnp.pi
+tsave = np.linspace(0.0, 0.3, 11)
+ocavity = OCavity(n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave)
 
-otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0)
-gotdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, t_end=1.0, requires_grad=True)
+tsave = np.linspace(0.0, 1.0, 11)
+otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
