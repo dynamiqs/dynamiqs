@@ -649,10 +649,13 @@ def todm(x: ArrayLike) -> Array:
 
 
 def proj(x: Array) -> Array:
-    r"""Returns the projection operator for a pure quantum state.
+    r"""Returns the projection operator onto a pure quantum state.
+
+    The projection operator onto the state $\ket\psi$ is defined as
+    $P_{\ket\psi} = \ket\psi\bra\psi$.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or Bra.
+        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
         _(array of shape (..., n, n))_ Projection operator.
