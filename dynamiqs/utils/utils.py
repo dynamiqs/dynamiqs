@@ -814,3 +814,29 @@ def _sqrtm_gpu(x: Array) -> Array:
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
+
+def proj(x: Array) -> Array:
+    r"""Returns the projection operator onto a pure quantum state.
+
+    Args:
+    # ket or bra
+        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or Bra.
+
+    Returns:
+        _(array of shape (..., n, n))_ Projection operator.
+
+    Examples:
+        >>> psi = dq.fock(3, 0)
+        >>> dq.proj(psi)
+        Array([[1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+
+    if isket(x):
+        return x @ x.mT
+    elif isbra(x):
+        return x.mT @ x
+    else:
+        raise ValueError(f'Argument `x` must be a ket or bra, but has shape {x.shape}.')
