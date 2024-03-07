@@ -666,10 +666,10 @@ def proj(x: Array) -> Array:
     """
     x = jnp.asarray(x)
 
-    if isket(x):
-        return x @ x.mT
-    elif isbra(x):
-        return x.mT @ x
+    if isbra(x):
+        return dag(x) @ x
+    elif isket(x):
+        return x @ dag(x)
     else:
         raise ValueError(f'Argument `x` must be a ket or bra, but has shape {x.shape}.')
 
