@@ -270,7 +270,9 @@ html .md-typeset .quote> :last-child {
 }
 
 .md-typeset table:not([class]) td.fixed_height {
-  height: 4.7em;
+  height: 2.7em;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
   vertical-align: middle;
 }
 

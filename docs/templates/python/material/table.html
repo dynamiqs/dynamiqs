@@ -40,6 +40,16 @@
                         </td>
                       {% endwith %}
                     {% endwith %}
+                  {% elif class.has_docstring %}
+                    {% with docstring_sections = class.docstring.parsed %}
+                      {% with section = (docstring_sections|selectattr('kind.value', 'eq', "text")|first) %}
+                        {% set text = section.value|convert_markdown(heading_level, html_id) %}
+                        {% set first_sentence = text.split('</p>')[0] %}
+                        <td class="fixed_height">
+                          {{ first_sentence }}
+                        </td>
+                      {% endwith %}
+                    {% endwith %}
                   {% endif %}
                 </tr>
               {% endif %}
