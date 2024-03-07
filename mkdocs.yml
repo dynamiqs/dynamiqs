@@ -199,6 +199,7 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
+              - proj: python_api/utils/utils/proj.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md

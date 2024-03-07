@@ -181,6 +181,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - braket
         - overlap
         - fidelity
+        - proj
 
 ### JAX-related utilities
 

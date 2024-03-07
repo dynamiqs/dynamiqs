@@ -32,6 +32,7 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'proj',
 ]
 
 
