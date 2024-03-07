@@ -196,10 +196,10 @@ nav:
               - toket: python_api/utils/utils/toket.md
               - tobra: python_api/utils/utils/tobra.md
               - todm: python_api/utils/utils/todm.md
+              - proj: python_api/utils/utils/proj.md
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-              - proj: python_api/utils/utils/proj.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md
