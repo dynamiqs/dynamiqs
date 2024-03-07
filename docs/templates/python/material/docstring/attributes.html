@@ -1,16 +1,13 @@
 {{ log.debug("Rendering attributes section") }}
-
-{% import "language.html" as lang with context %}
-
 {% if config.docstring_section_style == "table" %}
   {% block table_style %}
-  <p><strong>{{ section.title or lang.t("Attributes:") }}</strong></p>
+  <p><strong>{{ section.title or "Attributes:" }}</strong></p>
   <table>
     <thead>
       <tr>
-        <th>{{ lang.t("Name") }}</th>
-        <th>{{ lang.t("Type") }}</th>
-        <th>{{ lang.t("Description") }}</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
       </tr>
     </thead>
     <tbody>
@@ -36,21 +33,18 @@
   {% endblock table_style %}
 {% elif config.docstring_section_style == "list" %}
   {% block list_style %}
-  <!-- <p>{{ section.title or lang.t("Attributes:") }}</p> -->
   <p><strong>{{ section.title or "Attributes" }}</strong></p>
   <ul>
     {% for attribute in section.value %}
       <li class="field-body">
         <b>{{ attribute.name }}</b>
-        {% if attribute.annotation %}
-          {% with expression = attribute.annotation %}
-            (<code>{% include "expression.html" with context %}</code>)
+        {% if attribute.annotation is iterable and attribute.annotation[0] == "_" %}
+        {% set annotation = attribute.annotation|join("") %}
+          {% with expression = annotation[1:-1] %}
+            <i>{% include "expression.html" with context %}</i>
           {% endwith %}
         {% endif %}
-        –
-        <div class="doc-md-description">
-          {{ attribute.description|convert_markdown(heading_level, html_id) }}
-        </div>
+        – {{ attribute.description|convert_markdown(heading_level, html_id) }}
       </li>
     {% endfor %}
   </ul>
@@ -60,8 +54,8 @@
   <table>
     <thead>
       <tr>
-        <th><b>{{ (section.title or lang.t("ATTRIBUTE")).rstrip(":").upper() }}</b></th>
-        <th><b>{{ lang.t("DESCRIPTION") }}</b></th>
+        <th><b>{{ (section.title or "ATTRIBUTE").rstrip(":").upper() }}</b></th>
+        <th><b>{{ DESCRIPTION }}</b></th>
       </tr>
     </thead>
     <tbody>
