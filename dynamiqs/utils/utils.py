@@ -648,7 +648,7 @@ def todm(x: ArrayLike) -> Array:
         )
 
 
-def proj(x: Array) -> Array:
+def proj(x: ArrayLike) -> Array:
     r"""Returns the projection operator onto a pure quantum state.
 
     The projection operator onto the state $\ket\psi$ is defined as
