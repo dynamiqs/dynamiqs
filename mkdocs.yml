@@ -196,6 +196,7 @@ nav:
               - toket: python_api/utils/utils/toket.md
               - tobra: python_api/utils/utils/tobra.md
               - todm: python_api/utils/utils/todm.md
+              - proj: python_api/utils/utils/proj.md
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md

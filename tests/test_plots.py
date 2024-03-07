@@ -42,8 +42,10 @@ class TestPlots:
         for diag in range(-4, 5):
             diag_len = 5 - abs(diag)
             for element in range(-diag_len + 1, diag_len):
-                assert (
-                    _diag_element(mat, diag, element) == np.diag(mat, diag)[element]
-                ), f'Failed for diag = {diag}, element = {element}, expected '
-                f'{np.diag(mat, diag)[element]}", got '
-                f'"{_diag_element(mat, diag, element)}"'
+                x = _diag_element(mat, diag, element)
+                y = np.diag(mat, diag)[element]
+                err_msg = (
+                    f'Failed for diag = {diag}, element = {element}, expected "{y}",'
+                    f' got "{x}"'
+                )
+                assert x == y, err_msg
