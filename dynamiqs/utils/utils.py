@@ -817,10 +817,9 @@ def _sqrtm_gpu(x: Array) -> Array:
     return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
 
 def proj(x: Array) -> Array:
-    r"""Returns the projection operator onto a pure quantum state.
+    r"""Returns the projection operator for a pure quantum state.
 
     Args:
-    # ket or bra
         x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or Bra.
 
     Returns:
