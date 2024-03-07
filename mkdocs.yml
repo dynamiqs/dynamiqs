@@ -133,6 +133,11 @@ nav:
           - mesolve: python_api/solvers/mesolve.md
           - smesolve: python_api/solvers/smesolve.md
       - Core:
+          - Time-dependent arrays:
+              - constant: python_api/time_array/constant.md
+              - pwc: python_api/time_array/pwc.md
+              - modulated: python_api/time_array/modulated.md
+              - timecallable: python_api/time_array/timecallable.md
           - Solvers (dq.solver):
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
@@ -146,11 +151,6 @@ nav:
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
           - Options: python_api/options/Options.md
           - Result: python_api/result/Result.md
-          - Time-dependent arrays:
-              - constant: python_api/time_array/constant.md
-              - pwc: python_api/time_array/pwc.md
-              - modulated: python_api/time_array/modulated.md
-              - timecallable: python_api/time_array/timecallable.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
