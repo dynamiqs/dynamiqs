@@ -613,6 +613,10 @@ def tobra(x: ArrayLike) -> Array:
 def todm(x: ArrayLike) -> Array:
     r"""Returns the density matrix representation of a quantum state.
 
+    Note:
+        This function is an alias of [`dq.proj()`][dynamiqs.proj]. If `x` is already a
+        density matrix, it is returned directly.
+
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
             density matrix.
@@ -633,10 +637,8 @@ def todm(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
 
-    if isbra(x):
-        return dag(x) @ x
-    elif isket(x):
-        return x @ dag(x)
+    if isbra(x) or isket(x):
+        return proj(x)
     elif isdm(x):
         return x
     else:
