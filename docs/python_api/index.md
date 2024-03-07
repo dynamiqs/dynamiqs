@@ -65,7 +65,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Core
 
-### Time arrays
+### Time-dependent arrays
 
 ::: dynamiqs.time_array
     options:
@@ -75,7 +75,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - pwc
         - modulated
         - timecallable
-        -
+
 ### Solvers (dq.solver)
 
 ::: dynamiqs.solver

@@ -44,9 +44,6 @@ class TestPlots:
             for element in range(-diag_len + 1, diag_len):
                 assert (
                     _diag_element(mat, diag, element) == np.diag(mat, diag)[element]
-                ), 'Failed for diag = {}, element = {}, expected "{}", got "{}"'.format(
-                    diag,
-                    element,
-                    np.diag(mat, diag)[element],
-                    _diag_element(mat, diag, element),
-                )
+                ), f'Failed for diag = {diag}, element = {element}, expected '
+                f'{np.diag(mat, diag)[element]}", got '
+                f'"{_diag_element(mat, diag, element)}"'
