@@ -33,6 +33,7 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'entropy_vn',
 ]
 
 
@@ -846,3 +847,24 @@ def _sqrtm_gpu(x: Array) -> Array:
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
+
+
+def entropy_vn(x: Tensor) -> Tensor:
+    """Returns the Von-Neumann entropy of a ket or density matrix.
+
+    Args:
+        x _(..., n, 1) or (..., n, n)_: Ket or density matrix.
+
+    Returns:
+        _(...)_ Real-valued Von_Neumann entropy.
+
+    Examples:
+        >>> rho = dq.unit(dq.fock_dm(2,0) + dq.fock_dm(2,1))
+        >>> dq.entropy_vn(rho)
+        tensor(0.693)
+    """
+    x = todm(x)
+    vals = torch.linalg.eigvalsh(x)
+    nzvals = vals[vals != 0]
+    logvals = nzvals.log()
+    return -(nzvals @ logvals).real
