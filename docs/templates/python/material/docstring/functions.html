@@ -1,22 +1,20 @@
 {{ log.debug("Rendering functions section") }}
 
-{% import "language.html" as lang with context %}
-
 {% if config.docstring_section_style == "table" %}
   {% block table_style %}
-  <p><strong>{{ section.title or lang.t("Methods:") if obj.is_class else lang.t("Functions:") }}</strong></p>
+  <p><strong>{{ section.title or "Methods:"}}</strong></p>
   <table>
     <thead>
       <tr>
-        <th>{{ lang.t("Name") }}</th>
-        <th>{{ lang.t("Description") }}</th>
+        <th>{{ "Name" }}</th>
+        <th>{{ "Description" }}</th>
       </tr>
     </thead>
     <tbody>
       {% for function in section.value %}
         {% if not function.name == "__init__" or not config.merge_init_into_class %}
           <tr>
-            <td><code><span data-autorefs-optional-hover="{{ obj.path }}.{{ function.name }}">{{ function.name }}</span></code></td>
+            <td><code><span data-autorefs-optional-hover="{{ class.path }}.{{ function.name }}">{{ function.name }}</span></code></td>
             <td>
               <div class="doc-md-description">
                 {{ function.description|convert_markdown(heading_level, html_id) }}
@@ -30,12 +28,12 @@
   {% endblock table_style %}
 {% elif config.docstring_section_style == "list" %}
   {% block list_style %}
-  <p>{{ section.title or lang.t("Methods:") if obj.is_class else lang.t("Functions:") }}</p>
+  <p>{{ section.title or "Methods:" }}</p>
   <ul>
     {% for function in section.value %}
       {% if not function.name == "__init__" or not config.merge_init_into_class %}
         <li class="field-body">
-          <b><code><span data-autorefs-optional-hover="{{ obj.path }}.{{ function.name }}">{{ function.name }}</span></code></b>
+          <b><code><span data-autorefs-optional-hover="{{ class.path }}.{{ function.name }}">{{ function.name }}</span></code></b>
           –
           <div class="doc-md-description">
             {{ function.description|convert_markdown(heading_level, html_id) }}
@@ -50,15 +48,15 @@
   <table>
     <thead>
       <tr>
-        <th><b>{{ (section.title or lang.t("METHOD") if obj.is_class else lang.t("FUNCTION")).rstrip(":").upper() }}</b></th>
-        <th><b>{{ lang.t("DESCRIPTION") }}</b></th>
+        <th><b>{{ (section.title or "Methods:").rstrip(":").upper() }}</b></th>
+        <th><b>{{ "Description" }}</b></th>
       </tr>
     </thead>
     <tbody>
       {% for function in section.value %}
         {% if not function.name == "__init__" or not config.merge_init_into_class %}
           <tr>
-            <td><code><span data-autorefs-optional-hover="{{ obj.path }}.{{ function.name }}">{{ function.name }}</span></code></td>
+            <td><code><span data-autorefs-optional-hover="{{ class.path }}.{{ function.name }}">{{ function.name }}</span></code></td>
             <td class="doc-function-details">
               <div class="doc-md-description">
                 {{ function.description|convert_markdown(heading_level, html_id) }}
