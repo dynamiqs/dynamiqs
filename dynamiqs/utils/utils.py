@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from .._utils import on_cpu
+from .wigners import wigner
 
 __all__ = [
     'dag',
@@ -33,6 +34,7 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'wigner',
 ]
 
 

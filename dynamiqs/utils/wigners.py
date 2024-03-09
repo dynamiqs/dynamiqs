@@ -13,8 +13,6 @@ from .._utils import cdtype
 from .operators import eye
 from .utils import isdm, isket, todm
 
-__all__ = ['wigner']
-
 
 @partial(jax.jit, static_argnames=('npixels', 'method'))
 @partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})

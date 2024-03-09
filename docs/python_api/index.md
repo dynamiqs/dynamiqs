@@ -182,6 +182,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - braket
         - overlap
         - fidelity
+        - wigner
 
 ### JAX-related utilities
 
@@ -192,14 +193,6 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - to_qutip
         - set_device
         - set_precision
-
-### Wigner distribution
-
-::: dynamiqs.utils.wigners
-    options:
-        table: true
-        members:
-        - wigner
 
 ### Vectorization
 
