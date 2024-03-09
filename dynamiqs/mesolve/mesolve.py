@@ -51,12 +51,15 @@ def mesolve(
         to time-arrays using [`dq.constant()`](/python_api/time_array/constant.html),
         [`dq.pwc()`](/python_api/time_array/pwc.html),
         [`dq.modulated()`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable()`](/python_api/time_array/timecallable.html).
+        [`dq.timecallable()`](/python_api/time_array/timecallable.html). See
+        [Defining Hamiltonians](/tutorials/defining-hamiltonians.html) for
+        more details.
 
     Quote: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
         matrix `rho0` can be batched to solve multiple master equations concurrently.
-        All other arguments are common to every batch.
+        All other arguments are common to every batch. See
+        [Batching simulations](/tutorials/batching-simulations.html) for more details.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
