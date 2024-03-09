@@ -173,6 +173,28 @@ def _split_shape(
 
 
 class TimeArray(eqx.Module):
+    r"""Base class for time-dependent arrays.
+
+    A time-array is a callable object that returns a JAX array for any time $t$. It is
+    used to define time-dependent operators to be used in dynamiqs solvers.
+
+    Attributes:
+        dtype (numpy.dtype): The data type of the array.
+        shape (tuple[int, ...]): The shape of the array.
+        mT (TimeArray): Transposes the last two dimensions of x.
+
+    Methods:
+        __call__(t: float) -> Array: Evaluate at a given time.
+        reshape(*args: int) -> TimeArray: Returns an array containing the same data with
+            a new shape.
+        conj() -> TimeArray: Return the complex conjugate, element-wise.
+        __neg__() -> TimeArray: Return the negation of the array.
+        __mul__(y: ArrayLike) -> TimeArray: Return the element-wise multiplication with
+            another array.
+        __add__(y: ArrayLike | TimeArray) -> TimeArray: Return the element-wise addition
+            with another array.
+    """
+
     # Subclasses should implement:
     # - the properties: dtype, shape, mT
     # - the methods: __call__, reshape, conj, __neg__, __mul__, __add__
