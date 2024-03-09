@@ -10,4 +10,4 @@ This guide is an overview and explains the important features; details are found
 - [The sharp bits 🔪](sharp-bits.md)
 - [Let's talk!](talk.md)
 - [Contributing](contributing.md)
-- [Cite us](cite-us.md)
+- [Citing dynamiqs](citing.md)
