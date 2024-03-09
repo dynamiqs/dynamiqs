@@ -21,7 +21,6 @@ class Autograd(Gradient):
             [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
             option.
         """
-        super().__init__()
 
 
 class CheckpointAutograd(Gradient):
