@@ -25,7 +25,7 @@ class Autograd(Gradient):
 
 
 class CheckpointAutograd(Gradient):
-    ncheckpoints: int | None = None
+    ncheckpoints: int | None
 
     def __init__(self, ncheckpoints: int | None = None):
         """Checkpointed automatic differentiation.
