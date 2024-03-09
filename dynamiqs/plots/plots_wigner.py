@@ -13,7 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 
-from ..utils.wigners import wigner
+from ..utils.utils import wigner
 from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
 __all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
