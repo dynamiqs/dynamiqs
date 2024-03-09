@@ -1,4 +1,4 @@
-# Cite us
+# Citing dynamiqs
 
 If you have found this library useful in your academic research, you can cite:
 
