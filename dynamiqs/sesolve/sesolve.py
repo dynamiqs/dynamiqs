@@ -40,10 +40,9 @@ def sesolve(
 
     Quote: Time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
-        [`dq.constant()`](/python_api/time_array/constant.html),
-        [`dq.pwc()`](/python_api/time_array/pwc.html),
-        [`dq.modulated()`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable()`](/python_api/time_array/timecallable.html).
+        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
+        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable].
 
     Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
@@ -59,12 +58,12 @@ def sesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`](/python_api/result/Result.html) object holding the result of the
+        [`dq.Result`][dynamiqs.Result] object holding the result of the
             Schrödinger equation integration. It has the following attributes:
 
             - **states** _(array of shape (bH?, bpsi?, nt, n, 1))_ -- Saved states.

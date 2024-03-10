@@ -48,10 +48,9 @@ def mesolve(
 
     Quote: Time-dependent Hamiltonian or jump operators
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.constant()`](/python_api/time_array/constant.html),
-        [`dq.pwc()`](/python_api/time_array/pwc.html),
-        [`dq.modulated()`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable()`](/python_api/time_array/timecallable.html).
+        to time-arrays using [`dq.constant()`][dynamiqs.constant],
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable].
 
     Quote: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
@@ -69,13 +68,13 @@ def mesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`](/python_api/result/Result.html) object holding the result of the
-            Lindblad master equation integration. It has the following attributes:
+        [`dq.Result`][dynamiqs.Result] object holding the result of the Lindblad master
+            equation integration. It has the following attributes:
 
             - **states** _(array of shape (bH?, brho?, nt, n, n))_ -- Saved states.
             - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
