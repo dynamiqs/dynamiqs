@@ -4,64 +4,13 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Quantum solvers
 
-<div class="doc doc-object doc-module">
-    <div class="doc doc-contents first">
-        <div class="md-typeset__scrollwrap">
-            <div class="md-typeset__table">
-                <table>
-                    <colgroup>
-                        <col span="1" style="width: 30%;">
-                        <col span="1" style="width: 70%;">
-                    </colgroup>
-                    <tbody>
-                        <tr>
-                            <td class="fixed_height">
-                                <a href="/python_api/solvers/sesolve.html">
-                                <code>
-                                    sesolve
-                                </code>
-                                </a>
-                            </td>
-                            <td class="fixed_height">
-                                <p>
-                                    Solve the Schrödinger equation.
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fixed_height">
-                                <a href="/python_api/solvers/mesolve.html">
-                                <code>
-                                    mesolve
-                                </code>
-                                </a>
-                            </td>
-                            <td class="fixed_height">
-                                <p>
-                                    Solve the Lindblad master equation.
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fixed_height">
-                                <a href="/python_api/solvers/smesolve.html">
-                                <code>
-                                    smesolve
-                                </code>
-                                </a>
-                            </td>
-                            <td class="fixed_height">
-                                <p>
-                                    Solve the diffusive stochastic master equation (SME).
-                                </p>
-                            </td>
-                        </tr>
-                </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
+::: dynamiqs.solvers
+    options:
+        table: true
+        members:
+            - sesolve
+            - mesolve
+            - smesolve
 
 ## Core
 
