@@ -28,12 +28,12 @@
   {% endblock table_style %}
 {% elif config.docstring_section_style == "list" %}
   {% block list_style %}
-  <p>{{ section.title or "Methods:" }}</p>
+  <p><strong>{{ section.title or "Methods" }}</strong></p>
   <ul>
     {% for function in section.value %}
       {% if not function.name == "__init__" or not config.merge_init_into_class %}
         <li class="field-body">
-          <b><code><span data-autorefs-optional-hover="{{ class.path }}.{{ function.name }}">{{ function.name }}</span></code></b>
+          <b>{{ function.name }}</b>
           –
           <div class="doc-md-description">
             {{ function.description|convert_markdown(heading_level, html_id) }}

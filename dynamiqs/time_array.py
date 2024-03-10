@@ -179,20 +179,20 @@ class TimeArray(eqx.Module):
     used to define time-dependent operators to be used in dynamiqs solvers.
 
     Attributes:
-        dtype (numpy.dtype): The data type of the array.
-        shape (tuple[int, ...]): The shape of the array.
-        mT (TimeArray): Transposes the last two dimensions of x.
+        dtype (numpy.dtype): The data type of the time array.
+        shape (tuple of int): The shape of the time array.
+        mT (TimeArray): The time array transposed over its last two dimensions.
+        ndim (int): The number of dimensions in the time array.
 
     Methods:
-        __call__(t: float) -> Array: Evaluate at a given time.
-        reshape(*args: int) -> TimeArray: Returns an array containing the same data with
-            a new shape.
-        conj() -> TimeArray: Return the complex conjugate, element-wise.
-        __neg__() -> TimeArray: Return the negation of the array.
-        __mul__(y: ArrayLike) -> TimeArray: Return the element-wise multiplication with
-            another array.
-        __add__(y: ArrayLike | TimeArray) -> TimeArray: Return the element-wise addition
-            with another array.
+        __call__: Returns the time array evaluation at a given time.
+        reshape: Returns an array containing the same data with a new shape.
+        conj: Returns the element-wise complex conjugate of the time array.
+        __neg__: Returns the negation of the time array.
+        __mul__: Returns the element-wise multiplication with another array.
+        __add__: Returns the element-wise addition with another array.
+        __sub__: Returns the element-wise subtraction with another array.
+        __repr__: Returns a string representation of the time array.
     """
 
     # Subclasses should implement:
@@ -205,26 +205,26 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def dtype(self) -> np.dtype:
-        """The data type (numpy.dtype) of the array."""
+        """The data type of the time array."""
 
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """The shape of the array."""
+        """The shape of the time array."""
 
     @property
     @abstractmethod
     def mT(self) -> TimeArray:
-        """Transposes the last two dimensions of x."""
+        """The time array transposed over its last two dimensions."""
 
     @property
     def ndim(self) -> int:
-        """The number of dimensions in the array."""
+        """The number of dimensions in the time array."""
         return len(self.shape)
 
     @abstractmethod
     def __call__(self, t: Scalar) -> Array:
-        """Evaluate at a given time."""
+        """Returns the time array evaluation at a given time."""
 
     @abstractmethod
     def reshape(self, *args: int) -> TimeArray:
@@ -232,33 +232,35 @@ class TimeArray(eqx.Module):
 
     @abstractmethod
     def conj(self) -> TimeArray:
-        """Return the complex conjugate, element-wise."""
+        """Returns the element-wise complex conjugate of the time array."""
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
-        pass
+        """Returns the negation of the time array."""
 
     @abstractmethod
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        pass
+        """Returns the element-wise multiplication with another array."""
 
     def __rmul__(self, y: ArrayLike) -> TimeArray:
         return self * y
 
     @abstractmethod
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        pass
+        """Returns the element-wise addition with another array."""
 
     def __radd__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return self + y
 
     def __sub__(self, y: ArrayLike | TimeArray) -> TimeArray:
+        """Returns the element-wise subtraction with another array."""
         return self + (-y)
 
     def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
     def __repr__(self) -> str:
+        """Returns a string representation of the time array."""
         return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
     def __str__(self) -> str:
