@@ -1,4 +1,4 @@
-from typing import Callable
+from __future__ import annotations
 
 import diffrax as dx
 import jax.numpy as jnp
@@ -19,7 +19,7 @@ from ..utils.utils import dag
 class LindbladTerm(dx.ODETerm):
     H: TimeArray  # (n, n)
     Ls: list[TimeArray]  # (nL, n, n)
-    vector_field: Callable[[Scalar, PyTree, PyTree], PyTree]
+    vector_field: callable[[Scalar, PyTree, PyTree], PyTree]
 
     def __init__(self, H: TimeArray, Ls: TimeArray):
         self.H = H
