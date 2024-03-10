@@ -52,8 +52,8 @@ The returned `states` array has shape `(4, 11, 2, 1)` where `4` is the number of
 
 Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial states, `1` is the number of `exp_ops` operators (a single one here) and `11` is the number of saved expectation values (the length of `tsave`).
 
-!!! Note "Creating a batched array with JAX"
-    To directly create a batched JAX array, use `jnp.stack`:
+!!! Note "Creating a batched JAX array"
+    To directly create a JAX batched array, use `jnp.stack`:
 
     ```python
     H0 = dq.sigmaz()
