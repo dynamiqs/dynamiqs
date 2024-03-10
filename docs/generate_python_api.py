@@ -18,6 +18,9 @@ PATHS_TO_PARSE = [
     ('dynamiqs/time_array.py', 'dq'),
     ('dynamiqs/solver.py', 'dq.solver'),
     ('dynamiqs/gradient.py', 'dq.gradient'),
+    ('dynamiqs/solvers.py', 'dq'),
+    ('dynamiqs/result.py', 'dq'),
+    ('dynamiqs/options.py', 'dq'),
     # directories
     ('dynamiqs/plots', 'dq'),
     ('dynamiqs/utils/utils', 'dq'),
