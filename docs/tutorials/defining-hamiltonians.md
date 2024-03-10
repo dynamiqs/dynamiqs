@@ -9,30 +9,35 @@ In this short tutorial, we explain how to define time-dependent Hamiltonians –
     - use `x @ y` instead of `x * y`, and `dq.mpow(x, 4)` instead of `x**4`
     - use `dq.dag(x)`, `x.mT.conj()` instead of `x.dag()`
 
+```python
+import dynamiqs as dq
+import jax.numpy as jnp
+```
+
 ## The `TimeArray` type
 
 In dynamiqs, time-dependent operators are defined using `TimeArray` objects. The core feature of such objects is that they can be called for arbitrary times, which computes and returns the underlying array at the given time.
 
-```pycon
->>> H = dq.constant(dq.sigmaz()) # initialize a constant TimeArray
->>> print(type(H))
-dynamiqs.time_array.ConstantTimeArray
->>> type(H(1.0))
-jaxlib.xla_extension.ArrayImpl
->>> H(1.0)
-Array([[ 1.+0.j,  0.+0.j],
-       [ 0.+0.j, -1.+0.j]], dtype=complex64)
+```python
+H = dq.constant(dq.sigmaz()) # initialize a constant TimeArray
+print(type(H))
+# dynamiqs.time_array.ConstantTimeArray
+print(type(H(1.0)))
+# jaxlib.xla_extension.ArrayImpl
+print(H(1.0))
+# Array([[ 1.+0.j,  0.+0.j],
+#        [ 0.+0.j, -1.+0.j]], dtype=complex64)
 ```
 
 `TimeArray` objects can also be arbitrarily summed together. The only requirement to do so is that the shape of the underlying arrays are broadcastable, and that they have the same floating point precision.
 
-```pycon
->>> H0 = dq.constant(dq.sigmaz()) # constant TimeArray
->>> H1 = dq.modulated(lambda t: jnp.cos(2.0 * t), dq.sigmax()) # modulated TimeArray
->>> H = H0 + H1
->>> H(1.0)
-Array([[ 1.        +0.j, -0.41614684+0.j],
-       [-0.41614684+0.j, -1.        +0.j]], dtype=complex64)
+```python
+H0 = dq.constant(dq.sigmaz()) # constant TimeArray
+H1 = dq.modulated(lambda t: jnp.cos(2.0 * t), dq.sigmax()) # modulated TimeArray
+H = H0 + H1
+print(H(1.0))
+# Array([[ 1.        +0.j, -0.41614684+0.j],
+#        [-0.41614684+0.j, -1.        +0.j]], dtype=complex64)
 ```
 
 Finally, a `TimeArray` also supports a subset of common utility functions, such as `.conj()`, `.shape` or `.reshape()`. More details can be found in the [Python API](../python_api/time_array/TimeArray.md).
