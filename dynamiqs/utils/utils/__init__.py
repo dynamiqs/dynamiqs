@@ -1,5 +1,5 @@
 from .general import *
-from .wigners import *
+from .wigner import *
 
 __all__ = [
     'dag',
