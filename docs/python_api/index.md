@@ -25,7 +25,6 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - pwc
         - modulated
         - timecallable
-        - TimeArray
 
 ### Solvers (dq.solver)
 
