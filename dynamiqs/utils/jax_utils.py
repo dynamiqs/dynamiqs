@@ -7,7 +7,8 @@ import numpy as np
 from jax.typing import ArrayLike
 from qutip import Qobj
 
-from .utils import _hdim, isbra, isket, isop
+from .utils import isbra, isket, isop
+from .utils.general import _hdim
 
 __all__ = ['to_qutip', 'set_device', 'set_precision']
 

@@ -3,7 +3,7 @@
 In this short tutorial, we explain how to define Hamiltonians in dynamiqs. There are currently four formats: constant Hamiltonian, piecewise constant Hamiltonian, constant Hamiltonian modulated by a time-dependent factor or arbitrary time-dependent Hamiltonian defined by a function.
 
 !!! Warning "Differences with QuTiP"
-    dynamiqs manipulates JAX arrays, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.html) page the main differences, briefly:
+    dynamiqs manipulates JAX arrays, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](../getting_started/sharp-bits.md) page the main differences, briefly:
 
     - use `x + 2 * dq.eye(n)` instead of `x + 2`
     - use `x @ y` instead of `x * y`, and `dq.mpow(x, 4)` instead of `x**4`
@@ -39,18 +39,18 @@ H = dq.sigmaz()
 ## Piecewise constant Hamiltonians
 
 !!! Warning "Work in Progress."
-    Documentation redaction in progress, in the meantime see [`dq.pwc()`](../python_api/time_array/pwc.md).
+    Documentation redaction in progress, in the meantime see [`dq.pwc()`][dynamiqs.pwc].
 
 
 ## Modulated Hamiltonians
 
 !!! Warning "Work in Progress."
-    Documentation redaction in progress, in the meantime see [`dq.modulated()`](../python_api/time_array/modulated.md).
+    Documentation redaction in progress, in the meantime see [`dq.modulated()`][dynamiqs.modulated].
 
 
 ## Arbitrary time-dependent Hamiltonians
 
-A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the Hamiltonian as a JAX array for any time `t`. The function can be passed to [`dq.timecallable()`](../python_api/time_array/timecallable.md) to obtain a time array object.
+A time-dependent Hamiltonian can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the Hamiltonian as a JAX array for any time `t`. The function can be passed to [`dq.timecallable()`][dynamiqs.timecallable] to obtain a time array object.
 
 For instance, to define a time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, you can use the following syntax:
 
@@ -62,7 +62,7 @@ H = dq.timecallable(lambda t: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
     An error is raised if `H(t)` returns a non-array object (including an array-like object). This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Function with optional arguments"
-    To define a time-dependent Hamiltonian with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`](../python_api/time_array/timecallable.md).
+    To define a time-dependent Hamiltonian with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`][dynamiqs.timecallable].
     ```python
     def _H(t, omega):
         return dq.sigmaz() + jnp.cos(omega * t) * dq.sigmax()
@@ -70,7 +70,7 @@ H = dq.timecallable(lambda t: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
     H = dq.timecallable(_H, args=(omega,))
     ```
 
-    In addition, any array that you want to batch over should be passed as an extra argument to [`dq.timecallable()`](../python_api/time_array/timecallable.md). For instance,
+    In addition, any array that you want to batch over should be passed as an extra argument to [`dq.timecallable()`][dynamiqs.timecallable]. For instance,
     ```python
     def _H(t, omega):
         return dq.sigmaz() + jnp.cos(jnp.expand_dims(omega, (-1, -2)) * t) * dq.sigmax()

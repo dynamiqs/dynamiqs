@@ -6,7 +6,8 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from .operators import eye
-from .utils import _bkron, dag
+from .utils import dag
+from .utils.general import _bkron
 
 __all__ = [
     'operator_to_vector',
