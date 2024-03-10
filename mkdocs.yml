@@ -3,6 +3,7 @@ site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
 repo_name: dynamiqs
+slack_url: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
 theme:
   name: material
   custom_dir: docs/overrides
