@@ -47,7 +47,7 @@ Description: Extra CSS for the dynamiqs documentation
     margin-left: 0;
   }
   [dir="ltr"] .md-header__slack {
-    margin-left: 1rem;
+    margin-left: .8rem;
   }
 }
 
