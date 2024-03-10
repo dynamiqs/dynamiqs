@@ -172,7 +172,7 @@ If you're curious, have questions or suggestions, wish to contribute or simply w
 
 We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to get in touch to discuss what would suit you. Please refer to [CONTRIBUTING.md](https://github.com/dynamiqs/dynamiqs/blob/main/CONTRIBUTING.md) for detailed instructions.
 
-## Cite us
+## Citing dynamiqs
 
 If you have found this library useful in your academic research, you can cite:
 
