@@ -41,6 +41,22 @@ Description: Extra CSS for the dynamiqs documentation
   font-size: .95rem;
 }
 
+/* Slack and github links */
+@media screen and (min-width: 60em) {
+  [dir="ltr"] .md-header__source {
+    margin-left: 0;
+  }
+  [dir="ltr"] .md-header__slack {
+    margin-left: 1rem;
+  }
+}
+
+@media screen and (max-width: 60em) {
+  .md-header__slack {
+    display: none;
+  }
+}
+
 /* Note admonition color shades */
 .md-typeset .admonition,
 .md-typeset details,
