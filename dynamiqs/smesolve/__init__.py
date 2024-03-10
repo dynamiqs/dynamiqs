@@ -1,1 +1,1 @@
-from .smesolve import smesolve
+from .smesolve import *

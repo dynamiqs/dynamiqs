@@ -17,6 +17,8 @@ from ..time_array import TimeArray
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
+__all__ = ['sesolve']
+
 
 def sesolve(
     H: ArrayLike | TimeArray,
@@ -40,18 +42,17 @@ def sesolve(
 
     Quote: Time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
-        [`dq.constant()`](/python_api/time_array/constant.html),
-        [`dq.pwc()`](/python_api/time_array/pwc.html),
-        [`dq.modulated()`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable()`](/python_api/time_array/timecallable.html). See
-        [Defining Hamiltonians](/tutorials/defining-hamiltonians.html) for
+        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc], 
+        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable]. See
+        [Time-dependent operators](/tutorials/defining-hamiltonians.md) for
         more details.
 
     Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
         solve multiple Schrödinger equations concurrently. All other arguments are
         common to every batch. See
-        [Batching simulations](/tutorials/batching-simulations.html) for more details.
+        [Batching simulations](/tutorials/batching-simulations.md) for more details.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
@@ -62,12 +63,12 @@ def sesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`](/python_api/result/Result.html) object holding the result of the
+        [`dq.Result`][dynamiqs.Result] object holding the result of the
             Schrödinger equation integration. It has the following attributes:
 
             - **states** _(array of shape (bH?, bpsi?, nt, n, 1))_ -- Saved states.

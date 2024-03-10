@@ -9,9 +9,9 @@ from jax import Array, lax
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
 
-from .._utils import cdtype
-from .operators import eye
-from .utils import isdm, isket, todm
+from ..._utils import cdtype
+from ..operators import eye
+from .general import isdm, isket, todm
 
 __all__ = ['wigner']
 

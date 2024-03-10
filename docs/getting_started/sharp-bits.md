@@ -53,7 +53,7 @@ Array([[0.+0.j, 1.+0.j],
        [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
-### Computing daggers
+### Computing matrix adjoint
 
 Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
 
@@ -63,4 +63,4 @@ Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conju
 
 ## Using a for loop
 
-If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](/tutorials/batching-simulations.html) tutorial, and the associated gain in performance.
+If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](../tutorials/batching-simulations.md) tutorial, and the associated gain in performance.

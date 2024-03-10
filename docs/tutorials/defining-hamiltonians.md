@@ -3,7 +3,7 @@
 In this short tutorial, we explain how to define time-dependent Hamiltonians – and more generally time-dependent operators – in dynamiqs. There are currently four formats: constant, piecewise constant, constant modulated by a time-dependent factor or arbitrary time-dependent defined by a function.
 
 !!! Warning "Differences with QuTiP"
-    dynamiqs manipulates JAX arrays, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.html) page for more details, briefly:
+    dynamiqs manipulates JAX arrays, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.md) page for more details, briefly:
 
     - use `x + 2 * dq.eye(n)` instead of `x + 2`
     - use `x @ y` instead of `x * y`, and `dq.mpow(x, 4)` instead of `x**4`
@@ -73,11 +73,11 @@ import dynamiqs as dq
 H = dq.sigmaz()
 ```
 
-While such array-like objects can directly be passed to common dynamiqs functions, they can also be converted to a `TimeArray` using [`dq.constant()`](../python_api/time_array/constant.md).
+While such array-like objects can directly be passed to common dynamiqs functions, they can also be converted to a `TimeArray` using [`dq.constant()`](dynamiqs.constant).
 
 ### Piecewise constant operators
 
-Piecewise constant (PWC) operators are defined using a set of three arrays: a set of times defining the boundaries of the intervals (of shape `(nv+1,)`), a set of constant values over each interval (of shape `(..., nv)`), and an array defining the operator (of shape `(n, m)`). These three arrays can then be fed to [`dq.pwc()`](../python_api/time_array/pwc.md) to instantiate the corresponding `PWCTimeArray`. Importantly, the `times` array must be sorted in ascending order, but does not need to be evenly spaced. When calling the time array at any given time, the returned array is the one corresponding to the interval in which the time falls.
+Piecewise constant (PWC) operators are defined using a set of three arrays: a set of times defining the boundaries of the intervals (of shape `(nv+1,)`), a set of constant values over each interval (of shape `(..., nv)`), and an array defining the operator (of shape `(n, m)`). These three arrays can then be fed to [`dq.pwc()`](dynamiqs.pwc) to instantiate the corresponding `PWCTimeArray`. Importantly, the `times` array must be sorted in ascending order, but does not need to be evenly spaced. When calling the time array at any given time, the returned array is the one corresponding to the interval in which the time falls.
 
 ```python
 # define a PWC time array
@@ -103,7 +103,7 @@ print(H(-1.0))
 
 ### Modulated operators
 
-Modulated operators are defined using a Python function with signature `coeff(t: float, *args: ArrayLike) -> Array` that returns the time-dependent factor as a JAX array for any time `t`. The function can be passed to [`dq.modulated()`](../python_api/time_array/modulated.md) to obtain the corresponding `ModulatedTimeArray`. The operator is then modulated by the factor at every time step.
+Modulated operators are defined using a Python function with signature `coeff(t: float, *args: ArrayLike) -> Array` that returns the time-dependent factor as a JAX array for any time `t`. The function can be passed to [`dq.modulated()`](dynamiqs.modulated) to obtain the corresponding `ModulatedTimeArray`. The operator is then modulated by the factor at every time step.
 
 ```python
 # define a modulated time array
@@ -121,7 +121,7 @@ print(H(1.0))
 ```
 
 ??? Note "Function with optional arguments"
-    To define a modulated time array with additional arguments, you can use the optional `args` parameter of [`dq.modulated()`](../python_api/time_array/modulated.md).
+    To define a modulated time array with additional arguments, you can use the optional `args` parameter of [`dq.modulated()`](dynamiqs.modulated).
     ```python
     def coeff(t, omega):
         return jnp.cos(omega * t)
@@ -132,7 +132,7 @@ print(H(1.0))
 
 ### Arbitrary time-dependent operators
 
-A time-dependent operator can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the operator as a JAX array for any time `t`. The function can be passed to [`dq.timecallable()`](../python_api/time_array/timecallable.md) to obtain a `CallableTimeArray` object.
+A time-dependent operator can be defined using a Python function with signature `H(t: float, *args: ArrayLike) -> Array` that returns the operator as a JAX array for any time `t`. The function can be passed to [`dq.timecallable()`](dynamiqs.timecallable) to obtain a `CallableTimeArray` object.
 
 For instance, to define the time-dependent Hamiltonian $H = \sigma_z + \cos(t)\sigma_x$, you can use the following syntax:
 
@@ -144,7 +144,8 @@ H = dq.timecallable(lambda t: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
     An error is raised if `H(t)` returns a non-array object (including array-like objects such as QuTiP Qobjs or Python lists). This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Function with optional arguments"
-    To define a callable time array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`](../python_api/time_array/timecallable.md).
+    To define a callable time array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`](dynamiqs.timecallable).
+
     ```python
     def _H(t, omega):
         return dq.sigmaz() + jnp.cos(omega * t) * dq.sigmax()
@@ -154,7 +155,7 @@ H = dq.timecallable(lambda t: dq.sigmaz() + jnp.cos(t) * dq.sigmax())
 
 ## Batching and differentiating through a `TimeArray`
 
-For modulated and callable time arrays, it is important that any array you want to batch over or differentiate against is passed as an extra argument to [`dq.timecallable()`](../python_api/time_array/timecallable.md) and [`dq.modulated()`](../python_api/time_array/modulated.md). Such requirements are very aligned with JAX philosophy, in which all internal arguments that are required at runtime should be explicitly provided.
+For modulated and callable time arrays, it is important that any array you want to batch over or differentiate against is passed as an extra argument to [`dq.timecallable()`](dynamiqs.timecallable) and [`dq.modulated()`](dynamiqs.modulated). Such requirements are very aligned with JAX philosophy, in which all internal arguments that are required at runtime should be explicitly provided.
 
 Below is an example of how to define a time-dependent Hamiltonian that can be batched over and/or differentiated against the `omegas` array.
 

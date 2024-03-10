@@ -10,7 +10,7 @@ import timeit
 
 ## Batching in dynamiqs
 
-To simulate multiple Hamiltonians, you can pass an array of Hamiltonians for the argument `H` to [`dq.sesolve()`](../python_api/solvers/sesolve.md), [`dq.mesolve()`](../python_api/solvers/mesolve.md) or [`dq.smesolve()`](../python_api/solvers/smesolve.md). You can also pass an array of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
+To simulate multiple Hamiltonians, you can pass an array of Hamiltonians for the argument `H` to [`dq.sesolve()`][dynamiqs.sesolve], [`dq.mesolve()`][dynamiqs.mesolve] or [`dq.smesolve()`][dynamiqs.smesolve]. You can also pass an array of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
 
 !!! Note "Result of a batched simulation"
     When a simulation is batched in dynamiqs, the result of the simulation is a batched array (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(bH?, bstate?, nt, n, m)` where
@@ -71,7 +71,7 @@ Similarly, `expects` has shape `(4, 1, 11)` where `4` is the number of initial s
 <!-- remove until smesolve is written again
 ## Batching over stochastic trajectories (SME)
 
-For the diffusive stochastic master equation solver, many stochastic trajectories must often be solved to obtain faithful statistics of the evolved density matrix. In this case, dynamiqs also provides batching over trajectories to run them simultaneously. This is performed automatically by setting the value of the `ntrajs` argument in [`dq.smesolve()`](../python_api/solvers/smesolve.md). The resulting `states` object has shape `(bH?, brho?, ntrajs, nt, n, n)`.
+For the diffusive stochastic master equation solver, many stochastic trajectories must often be solved to obtain faithful statistics of the evolved density matrix. In this case, dynamiqs also provides batching over trajectories to run them simultaneously. This is performed automatically by setting the value of the `ntrajs` argument in [`dq.smesolve()`][dynamiqs.smesolve]. The resulting `states` object has shape `(bH?, brho?, ntrajs, nt, n, n)`.
 
 -->
 
