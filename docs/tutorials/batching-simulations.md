@@ -31,7 +31,7 @@ g = dq.fock(2, 0)
 e = dq.fock(2, 1)
 plus = dq.unit(g + e)
 minus = dq.unit(g - e)
-psi0 = jnp.stack([g, e, plus, minus])  # shape (4, 2, 1)
+psi0 = [g, e, plus, minus]  # shape (4, 2, 1)
 
 H = dq.sigmaz()
 tsave = jnp.linspace(0, 1, 11)  # shape (11)
