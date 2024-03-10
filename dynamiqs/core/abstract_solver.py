@@ -78,3 +78,7 @@ class MESolver(BaseSolver):
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+
+
+class MCSolver(BaseSolver):
+    Ls: list[Array | TimeArray]

@@ -18,6 +18,7 @@ class DiffraxSolver(BaseSolver):
     max_steps: dx.AbstractVar[int]
     diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
     terms: dx.AbstractVar[dx.AbstractTerm]
+    discrete_terminating_event: dx.DiscreteTerminatingEvent | None
 
     def __init__(self, *args):
         # pass all init arguments to `BaseSolver`
@@ -52,6 +53,7 @@ class DiffraxSolver(BaseSolver):
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
+                discrete_terminating_event=self.discrete_terminating_event,
                 max_steps=self.max_steps,
             )
 
