@@ -18,6 +18,7 @@ class DiffraxSolver(BaseSolver):
     dt0: float | None
     max_steps: int
     term: dx.ODETerm
+    discrete_terminating_event: dx.DiscreteTerminatingEvent | None
 
     def __init__(self, *args):
         # this dummy init is needed because of the way the class hierarchy is set up,
@@ -53,6 +54,7 @@ class DiffraxSolver(BaseSolver):
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
+                discrete_terminating_event=self.discrete_terminating_event,
                 max_steps=self.max_steps,
             )
 

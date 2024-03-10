@@ -39,6 +39,7 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
     def __init__(self, *args):
         super().__init__(*args)
         self.term = LindbladTerm(H=self.H, Ls=self.Ls)
+        self.discrete_terminating_event = None
 
 
 class MEEuler(MEDiffraxSolver, EulerSolver):

@@ -63,3 +63,7 @@ SESolver = BaseSolver
 
 class MESolver(BaseSolver):
     Ls: list[Array | TimeArray]
+
+
+class MCSolver(BaseSolver):
+    Ls: list[Array | TimeArray]

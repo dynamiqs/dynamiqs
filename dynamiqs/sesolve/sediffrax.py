@@ -29,6 +29,7 @@ class SEDiffraxSolver(DiffraxSolver, SESolver):
     def __init__(self, *args):
         super().__init__(*args)
         self.term = SchrodingerTerm(self.H)
+        self.discrete_terminating_event = None
 
 
 class SEEuler(SEDiffraxSolver, EulerSolver):
