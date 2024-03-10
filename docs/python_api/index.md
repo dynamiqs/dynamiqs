@@ -232,7 +232,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Plotting
 
-::: dynamiqs.plots.namespace
+::: dynamiqs.plots
     options:
         table: true
         members:

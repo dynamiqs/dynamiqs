@@ -16,19 +16,20 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import FixedLocator, MultipleLocator, NullLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-__all__ = [
-    'linmap',
-    'figax',
-    'optional_ax',
-    'gridplot',
-    'mplstyle',
-    'integer_ticks',
-    'sample_cmap',
-    'minorticks_off',
-    'ket_ticks',
-    'bra_ticks',
-    'add_colorbar',
-]
+__all__ = ['gridplot']
+# __all__ = [
+#     'linmap',
+#     'figax',
+#     'optional_ax',
+#     'gridplot',
+#     'mplstyle',
+#     'integer_ticks',
+#     'sample_cmap',
+#     'minorticks_off',
+#     'ket_ticks',
+#     'bra_ticks',
+#     'add_colorbar',
+# ]
 
 
 def linmap(x: float, a: float, b: float, c: float, d: float) -> float:
@@ -43,7 +44,7 @@ def figax(w: float = 7.0, h: float | None = None, **kwargs) -> tuple[Figure, Axe
     return plt.subplots(1, 1, figsize=(w, h), constrained_layout=True, **kwargs)
 
 
-def optional_ax(func):  # noqa: ANN201, ANN001
+def optional_ax(func: callable) -> callable:
     """Decorator to build an `Axes` object to pass as an argument to a plot
     function if it wasn't passed by the user.
 
