@@ -10,6 +10,8 @@ from ..result import Result
 from ..solver import Solver
 from ..time_array import TimeArray
 
+__all__ = ['smesolve']
+
 
 def smesolve(
     H: ArrayLike | TimeArray,
@@ -82,10 +84,9 @@ def smesolve(
 
     Quote: Time-dependent Hamiltonian or jump operators
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.constant()`](/python_api/time_array/constant.html),
-        [`dq.pwc()`](/python_api/time_array/pwc.html),
-        [`dq.modulated()`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable()`](/python_api/time_array/timecallable.html).
+        to time-arrays using [`dq.constant()`][dynamiqs.constant],
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable].
 
     Quote: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
@@ -111,6 +112,6 @@ def smesolve(
             operators for which the expectation value is computed.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
     """  # noqa: E501
     return NotImplementedError
