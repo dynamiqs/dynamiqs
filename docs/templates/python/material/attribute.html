@@ -27,7 +27,7 @@
       {% block heading scoped %}
         {% if config.show_symbol_type_heading %}<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>{% endif %}
         {% if config.separate_signature %}
-          <span class="doc doc-object-name doc-attribute-name">{{ class.name }}.{{ attribute_name }}</span>
+          <span class="doc doc-object-name doc-attribute-name">{% if class.name %}{{ class.name }}.{% endif %}{{ attribute_name }}</span>
         {% else %}
           {%+ filter highlight(language="python", inline=True) %}
             {{ attribute_name }}{% if attribute.annotation %}: {{ attribute.annotation }}{% endif %}

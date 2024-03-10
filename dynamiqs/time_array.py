@@ -185,9 +185,9 @@ class TimeArray(eqx.Module):
         ndim (int): The number of dimensions in the time array.
 
     Methods:
-        __call__: Returns the time array evaluation at a given time.
-        reshape: Returns an array containing the same data with a new shape.
+        reshape: Returns a time array containing the same data with a new shape.
         conj: Returns the element-wise complex conjugate of the time array.
+        __call__: Returns the time array evaluation at a given time.
         __neg__: Returns the negation of the time array.
         __mul__: Returns the element-wise multiplication with another array.
         __add__: Returns the element-wise addition with another array.
@@ -223,16 +223,16 @@ class TimeArray(eqx.Module):
         return len(self.shape)
 
     @abstractmethod
-    def __call__(self, t: Scalar) -> Array:
-        """Returns the time array evaluation at a given time."""
-
-    @abstractmethod
     def reshape(self, *args: int) -> TimeArray:
         """Returns an array containing the same data with a new shape."""
 
     @abstractmethod
     def conj(self) -> TimeArray:
         """Returns the element-wise complex conjugate of the time array."""
+
+    @abstractmethod
+    def __call__(self, t: Scalar) -> Array:
+        """Returns the time array evaluation at a given time."""
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
