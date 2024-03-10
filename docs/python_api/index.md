@@ -70,50 +70,30 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.time_array
     options:
         table: true
-        members:
-        - constant
-        - pwc
-        - modulated
-        - timecallable
 
 ### Solvers (dq.solver)
 
 ::: dynamiqs.solver
     options:
         table: true
-        members:
-        - Tsit5
-        - Dopri5
-        - Dopri8
-        - Euler
-        - Rouchon1
-        - Rouchon2
-        - Propagator
 
 ### Gradients (dq.gradient)
 
 ::: dynamiqs.gradient
     options:
         table: true
-        members:
-        - Autograd
-        - CheckpointAutograd
 
 ### Options
 
 ::: dynamiqs.options
     options:
         table: true
-        members:
-        - Options
 
 ### Result
 
 ::: dynamiqs.result
     options:
         table: true
-        members:
-        - Result
 
 ## Utilities
 
@@ -122,124 +102,45 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.utils.operators
     options:
         table: true
-        members:
-        - eye
-        - zero
-        - destroy
-        - create
-        - number
-        - parity
-        - displace
-        - squeeze
-        - quadrature
-        - position
-        - momentum
-        - sigmax
-        - sigmay
-        - sigmaz
-        - sigmap
-        - sigmam
-        - hadamard
 
 ### States
 
 ::: dynamiqs.utils.states
     options:
         table: true
-        members:
-        - fock
-        - fock_dm
-        - basis
-        - basis_dm
-        - coherent
-        - coherent_dm
 
 ### Quantum utilities
 
 ::: dynamiqs.utils.utils
     options:
         table: true
-        members:
-        - dag
-        - mpow
-        - tracemm
-        - trace
-        - ptrace
-        - tensor
-        - expect
-        - norm
-        - unit
-        - dissipator
-        - lindbladian
-        - isket
-        - isbra
-        - isdm
-        - isop
-        - toket
-        - tobra
-        - todm
-        - proj
-        - braket
-        - overlap
-        - fidelity
-        - wigner
 
 ### JAX-related utilities
 
 ::: dynamiqs.utils.jax_utils
     options:
         table: true
-        members:
-        - to_qutip
-        - set_device
-        - set_precision
 
 ### Vectorization
 
 ::: dynamiqs.utils.vectorization
     options:
         table: true
-        members:
-        - operator_to_vector
-        - vector_to_operator
-        - spre
-        - spost
-        - sprepost
-        - sdissipator
-        - slindbladian
 
 ### Quantum optimal control
 
 ::: dynamiqs.utils.optimal_control
     options:
         table: true
-        members:
-        - snap_gate
-        - cd_gate
 
 ### Random arrays
 
 ::: dynamiqs.utils.random
     options:
         table: true
-        members:
-        - rand_real
-        - rand_complex
-        - rand_herm
-        - rand_psd
-        - rand_dm
-        - rand_ket
 
 ### Plotting
 
 ::: dynamiqs.plots
     options:
         table: true
-        members:
-        - plot_wigner
-        - plot_wigner_mosaic
-        - plot_wigner_gif
-        - plot_pwc_pulse
-        - plot_fock
-        - plot_fock_evolution
-        - plot_hinton
