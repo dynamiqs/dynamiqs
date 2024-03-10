@@ -17,6 +17,8 @@ from ..time_array import TimeArray
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
+__all__ = ['sesolve']
+
 
 def sesolve(
     H: ArrayLike | TimeArray,

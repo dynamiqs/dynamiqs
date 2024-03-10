@@ -1,11 +1,12 @@
 from importlib.metadata import version
 
 from . import dark
-from .mesolve import mesolve
-from .options import Options
+from .mesolve import *
+from .options import *
 from .plots import *
-from .result import Result
-from .sesolve import sesolve
+from .result import *
+from .sesolve import *
+from .smesolve import *
 from .time_array import *
 from .utils import *
 

@@ -18,6 +18,8 @@ from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
+__all__ = ['mesolve']
+
 
 def mesolve(
     H: ArrayLike | TimeArray,

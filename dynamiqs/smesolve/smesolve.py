@@ -10,6 +10,8 @@ from ..result import Result
 from ..solver import Solver
 from ..time_array import TimeArray
 
+__all__ = ['smesolve']
+
 
 def smesolve(
     H: ArrayLike | TimeArray,

@@ -1,3 +1,3 @@
-::: dynamiqs.mesolve.mesolve.mesolve
+::: dynamiqs.mesolve
     options:
         namespace: dq
