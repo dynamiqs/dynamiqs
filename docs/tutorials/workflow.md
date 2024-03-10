@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ## 1. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like objects, e.g. [NumPy](https://numpy.org/) or [JAX](https://jax.readthedocs.io/) arrays.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like objects, e.g. [NumPy](https://numpy.org/) or [JAX](https://jax.readthedocs.io/) arrays, Python lists, or [QuTiP](http://qutip.org/) Qobjs.
 
 Here, we will use [`dq.fock`](../python_api/utils/states/fock.md) to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz`](../python_api/utils/operators/sigmaz.md) and [`dq.sigmax`](../python_api/utils/operators/sigmax.md) to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
