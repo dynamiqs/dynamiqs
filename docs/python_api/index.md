@@ -19,12 +19,26 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.time_array
     options:
         table: true
+        members:
+            - constant
+            - pwc
+            - modulated
+            - timecallable
+            - TimeArray
 
 ### Solvers (dq.solver)
 
 ::: dynamiqs.solver
     options:
         table: true
+        members:
+            - Tsit5
+            - Dopri5
+            - Dopri8
+            - Euler
+            - Rouchon1
+            - Rouchon2
+            - Propagator
 
 ### Gradients (dq.gradient)
 
@@ -93,3 +107,12 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.plots
     options:
         table: true
+        members:
+            - plot_wigner
+            - plot_wigner_mosaic
+            - plot_wigner_gif
+            - plot_pwc_pulse
+            - plot_fock
+            - plot_fock_evolution
+            - plot_hinton
+            - gridplot
