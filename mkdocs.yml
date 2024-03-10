@@ -131,7 +131,7 @@ nav:
           - smesolve: python_api/solvers/smesolve.md
       - Core:
           - Time-dependent arrays:
-              - TimeArray: python_api/time_array/_TimeArray.md
+              - TimeArray: python_api/time_array/TimeArray.md
               - constant: python_api/time_array/constant.md
               - pwc: python_api/time_array/pwc.md
               - modulated: python_api/time_array/modulated.md

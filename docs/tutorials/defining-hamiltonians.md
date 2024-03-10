@@ -35,7 +35,7 @@ Array([[ 1.        +0.j, -0.41614684+0.j],
        [-0.41614684+0.j, -1.        +0.j]], dtype=complex64)
 ```
 
-Finally, `TimeArray`s also support a subset of common utility functions, such as `.conj()`, `.shape` or `.reshape(*new_shape: int)`. More details can be found in the [Python API](../python_api/index.md).
+Finally, a `TimeArray` also supports a subset of common utility functions, such as `.conj()`, `.shape` or `.reshape()`. More details can be found in the [Python API](../python_api/time_array/TimeArray.md).
 
 Next, we show how to define a `TimeArray` in dynamiqs.
 
