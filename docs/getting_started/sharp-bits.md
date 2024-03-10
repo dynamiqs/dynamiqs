@@ -53,7 +53,7 @@ Array([[0.+0.j, 1.+0.j],
        [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
-### Computing the adjoint
+### Computing daggers
 
 Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
 
