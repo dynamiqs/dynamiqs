@@ -8,7 +8,7 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._utils import on_cpu
+from ..._utils import on_cpu
 
 __all__ = [
     'dag',
