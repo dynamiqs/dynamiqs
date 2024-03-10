@@ -43,11 +43,14 @@ Next, we show how to define a `TimeArray` in dynamiqs.
 
 ### Constant operators
 
-Constant operators can be defined using either **array-like objects**, i.e. NumPy and JAX arrays, or `ConstantTimeArray` objects. In all cases, the operator is then converted internally into the latter type for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common operators.
+Constant operators can be defined using either **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or `ConstantTimeArray` objects. In all cases, the operator is then converted internally into the latter type for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common operators.
 
 For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 ```python
+# using Python lists
+H = [[1, 0], [0, -1]]
+
 # using NumPy arrays
 import numpy as np
 H = np.array([[1, 0], [0, -1]])
@@ -55,6 +58,10 @@ H = np.array([[1, 0], [0, -1]])
 # using JAX arrays
 import jax.numpy as jnp
 H = jnp.array([[1, 0], [0, -1]])
+
+# using QuTiP Qobjs
+import qutip as qt
+H = qt.sigmaz()
 
 # using dynamiqs
 import dynamiqs as dq
