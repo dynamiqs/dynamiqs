@@ -1,6 +1,6 @@
 # Contributing to dynamiqs
 
-We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to [get in touch](#lets-talk) to discuss what would suit you.
+We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to [get in touch](./lets-talk.md) to discuss what would suit you.
 
 To contribute efficiently, a few guidelines are compiled below.
 
