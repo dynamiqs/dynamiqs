@@ -70,7 +70,10 @@ class CheckpointAutograd(Gradient):
     def __str__(self) -> str:
         parts = {
             "Gradient Name": "Checkpointed Automatic Differentiation",
-            "Arguments": "ncheckpoints -> Number of checkpoints to use"
+            "Checkpoints": self.ncheckpoints
         }
         parts_str = '\n'.join(f'{k}: {v}' for k,v in parts.items())
         return parts_str
+    
+    def __repr__(self) -> str:
+        return f'CheckpointAutograd(ncheckpoints: {self.ncheckpoints})'

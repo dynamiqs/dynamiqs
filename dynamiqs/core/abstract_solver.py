@@ -56,6 +56,17 @@ class BaseSolver(AbstractSolver):
         return Result(
             self.ts, self.solver, self.gradient, self.options, saved, infos=infos
         )
+    
+    def __str__(self) -> str:
+        parts = {
+            "Object": "Base Solver",
+            "Solver": f"{self.solver}",
+            "Hamiltonian": f"{self.H}",
+            "Gradient": f"{self.gradient}",
+        }
+
+    def __repr__(self) -> str:
+            return f'BaseSolver(ts={self.ts}, y0={self.y0}, H={self.H}, Es={self.Es}, solver={self.solver}, gradient={self.gradient}, options={self.options})'
 
 
 SESolver = BaseSolver

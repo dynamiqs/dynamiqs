@@ -25,6 +25,10 @@ class PropagatorSolver(BaseSolver):
                     f' {self.nsteps.shape}'
                 )
             return f'{self.nsteps} steps'
+        
+        def __repr__(self) -> str:
+            return f'PropagatorSolver(nsteps={self.nsteps})'
+
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -72,3 +76,6 @@ class MEPropagatorSolver(MESolver, PropagatorSolver):
                 'Solver `Propagator` requires time-independent jump operators.'
             )
         self.Ls = [L.x for L in self.Ls]
+
+    def __str__(self) -> str:
+        return "Solve the Lindblad Master Equation numerically by computing the propagator."
