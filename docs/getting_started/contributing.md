@@ -1,6 +1,6 @@
 # Contributing to dynamiqs
 
-We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to [get in touch](#lets-talk) to discuss what would suit you.
+We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to [get in touch](./lets-talk.md) to discuss what would suit you.
 
 To contribute efficiently, a few guidelines are compiled below.
 
@@ -93,7 +93,3 @@ docserve     preview documentation website with hot-reloading
 all          run all tasks before a commit (ruff + codespell + pytest + doctest)
 ci           run all the CI checks
 ```
-
-## Let's talk!
-
-If you're curious, have questions or suggestions, wish to contribute or simply want to say hello, please don't hesitate to engage with us, we're always happy to chat! You can join the community on Slack via [this invite link](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA), open an issue on GitHub, or contact the lead developer via email at <pierreguilmin@gmail.com>.
