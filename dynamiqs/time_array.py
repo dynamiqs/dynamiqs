@@ -130,12 +130,10 @@ def timecallable(
 ) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
-    A callable time-array is defined by
-    $$
-        \hat O(t) = f(t)
-    $$
-    where $f(t)$ is a function with signature `f(t: float, *args: PyTree) -> Array` that
-    returns an array of shape _(..., n, m)_ for any time $t$.
+    A callable time-array is defined by $\hat O(t) = f(t)$ where $f(t)$ is a
+    time-dependent operator. The function $f$ is defined by passing a Python function
+    with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
+    _(..., n, n)_ for any time $t$.
 
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
