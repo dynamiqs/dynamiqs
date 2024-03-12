@@ -45,14 +45,15 @@ def sesolve(
         [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
         [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See
-        [Time-dependent operators](/tutorials/defining-hamiltonians.md) for
+        [Time-dependent operators](../../tutorials/defining-hamiltonians.md) for
         more details.
 
     Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
         solve multiple Schrödinger equations concurrently. All other arguments are
         common to every batch. See
-        [Batching simulations](/tutorials/batching-simulations.md) for more details.
+        [Batching simulations](../../tutorials/batching-simulations.md) for more
+        details.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
