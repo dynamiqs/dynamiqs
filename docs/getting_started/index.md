@@ -7,4 +7,5 @@ This guide is an overview and explains the important features; details are found
 - [Basic examples](examples.md)
 - [The sharp bits 🔪](sharp-bits.md)
 - [Contributing](contributing.md)
+- [Let's talk!](lets-talk.md)
 - [Citing dynamiqs](citing.md)
