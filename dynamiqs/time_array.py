@@ -185,23 +185,23 @@ class TimeArray(eqx.Module):
     r"""Base class for time-dependent arrays.
 
     A time-array is a callable object that returns a JAX array for any time $t$. It is
-    used to define time-dependent operators to be used in dynamiqs solvers.
+    used to define time-dependent operators for dynamiqs solvers.
 
     Attributes:
-        dtype (numpy.dtype): The data type of the time-array.
-        shape (tuple of int): The shape of the time-array.
-        mT (TimeArray): The time-array transposed over its last two dimensions.
-        ndim (int): The number of dimensions in the time-array.
+        dtype _(numpy.dtype)_: Data type.
+        shape _(tuple of int)_: Shape.
+        mT _(TimeArray)_: Returns the time-array transposed over its last two
+            dimensions.
+        ndim _(int)_: Number of dimensions.
 
-    Methods:
-        reshape: Returns a time-array containing the same data with a new shape.
-        conj: Returns the element-wise complex conjugate of the time-array.
-        __call__: Returns the time-array evaluation at a given time.
-        __neg__: Returns the negation of the time-array.
-        __mul__: Returns the element-wise multiplication with another array.
-        __add__: Returns the element-wise addition with another array.
-        __sub__: Returns the element-wise subtraction with another array.
-        __repr__: Returns a string representation of the time-array.
+    Notes:
+        Time-arrays support elementary operations:
+
+        - negation (`__neg__`),
+        - left-and-right element-wise addition/subtraction with other arrays or
+            time-arrays (`__add__`, `__radd__`, `__sub__`, `__rsub__`),
+        - left-and-right element-wise multiplication with other arrays (`__mul__`,
+            `__rmul__`).
     """
 
     # Subclasses should implement:
@@ -214,62 +214,77 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def dtype(self) -> np.dtype:
-        """The data type of the time-array."""
+        pass
 
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """The shape of the time-array."""
+        pass
 
     @property
     @abstractmethod
     def mT(self) -> TimeArray:
-        """The time-array transposed over its last two dimensions."""
+        pass
 
     @property
     def ndim(self) -> int:
-        """The number of dimensions in the time-array."""
         return len(self.shape)
 
     @abstractmethod
     def reshape(self, *args: int) -> TimeArray:
-        """Returns an array containing the same data with a new shape."""
+        """Returns a time-array containing the same data with a new shape.
+
+        Args:
+            *args: New shape.
+
+        Returns:
+            New time-array object with the given shape.
+        """
 
     @abstractmethod
     def conj(self) -> TimeArray:
-        """Returns the element-wise complex conjugate of the time-array."""
+        """Returns the element-wise complex conjugate of the time-array.
+
+        Returns:
+            New time-array object with element-wise complex conjuguated values.
+        """
 
     @abstractmethod
     def __call__(self, t: Scalar) -> Array:
-        """Returns the time-array evaluation at a given time."""
+        """Returns the time-array evaluated at a given time.
+
+        Args:
+            t: Time at which to evaluate the array.
+
+        Returns:
+            Array evaluated at time $t$.
+        """
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
-        """Returns the negation of the time-array."""
+        pass
 
     @abstractmethod
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        """Returns the element-wise multiplication with another array."""
+        pass
 
     def __rmul__(self, y: ArrayLike) -> TimeArray:
         return self * y
 
     @abstractmethod
     def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        """Returns the element-wise addition with another array."""
+        pass
 
     def __radd__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return self + y
 
     def __sub__(self, y: ArrayLike | TimeArray) -> TimeArray:
-        """Returns the element-wise subtraction with another array."""
         return self + (-y)
 
     def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
     def __repr__(self) -> str:
-        """Returns a string representation of the time-array."""
         return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
     def __str__(self) -> str:
