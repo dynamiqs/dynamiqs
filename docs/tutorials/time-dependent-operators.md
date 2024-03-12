@@ -34,8 +34,8 @@ Time-arrays support common arithmetic operations, for example we can add two tim
 >>> H1 = dq.modulated(lambda t: jnp.cos(2.0 * t), dq.sigmax()) # modulated time-array
 >>> H = H0 + H1
 >>> H(1.0)
-Array([[ 1.        +0.j, -0.41614684+0.j],
-       [-0.41614684+0.j, -1.        +0.j]], dtype=complex64)
+Array([[ 1.   +0.j, -0.416+0.j],
+       [-0.416+0.j, -1.   +0.j]], dtype=complex64)
 ```
 
 Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the corresponding API page [`TimeArray`][dynamiqs.TimeArray].
