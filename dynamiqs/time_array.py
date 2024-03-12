@@ -35,13 +35,13 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
 def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     r"""Instantiate a piecewise-constant (PWC) time-array.
 
-    A PWC time-array is an array of the form
+    A PWC time-array takes constant values over some time intervals. It is defined by
     $$
-        \hat O(t) = \left( \sum_{k=0}^{N-1} c_k w_{[t_k, t_{k+1}[}(t)\right) \hat O_0
+        \hat O(t) = \left( \sum_{k=1}^N c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) \hat O_0
     $$
-    where $c_k$ are constant values, $w_{[t_k, t_{k+1}[}$ is the rectangular window
-    function that is unity inside the interval and null otherwise, and $t_k$ are the
-    boundaries of the intervals.
+    where $c_k$ are constant values, and $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
+    window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
+    $\Omega_{[t_a, t_b[}(t) = 0$ otherwise.
 
     Warning:
         Batching is not yet supported for PWC time-arrays, this will be fixed soon.
