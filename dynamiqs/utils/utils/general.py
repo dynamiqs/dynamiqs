@@ -8,7 +8,7 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._utils import on_cpu
+from ..._utils import on_cpu
 
 __all__ = [
     'dag',
@@ -29,6 +29,7 @@ __all__ = [
     'toket',
     'tobra',
     'todm',
+    'proj',
     'braket',
     'overlap',
     'fidelity',
@@ -612,6 +613,10 @@ def tobra(x: ArrayLike) -> Array:
 def todm(x: ArrayLike) -> Array:
     r"""Returns the density matrix representation of a quantum state.
 
+    Note:
+        This function is an alias of [`dq.proj()`][dynamiqs.proj]. If `x` is already a
+        density matrix, it is returned directly.
+
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
             density matrix.
@@ -632,10 +637,8 @@ def todm(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
 
-    if isbra(x):
-        return dag(x) @ x
-    elif isket(x):
-        return x @ dag(x)
+    if isbra(x) or isket(x):
+        return proj(x)
     elif isdm(x):
         return x
     else:
@@ -643,6 +646,35 @@ def todm(x: ArrayLike) -> Array:
             'Argument `x` must be a ket, bra or density matrix, but has shape'
             f' {x.shape}.'
         )
+
+
+def proj(x: ArrayLike) -> Array:
+    r"""Returns the projection operator onto a pure quantum state.
+
+    The projection operator onto the state $\ket\psi$ is defined as
+    $P_{\ket\psi} = \ket\psi\bra\psi$.
+
+    Args:
+        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+
+    Returns:
+        _(array of shape (..., n, n))_ Projection operator.
+
+    Examples:
+        >>> psi = dq.fock(3, 0)
+        >>> dq.proj(psi)
+        Array([[1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+
+    if isbra(x):
+        return dag(x) @ x
+    elif isket(x):
+        return x @ dag(x)
+    else:
+        raise ValueError(f'Argument `x` must be a ket or bra, but has shape {x.shape}.')
 
 
 def braket(x: ArrayLike, y: ArrayLike) -> Array:

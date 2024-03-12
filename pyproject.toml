@@ -46,7 +46,7 @@ extend-include = ["*.ipynb"]
 
 [tool.ruff.format]
 quote-style = "single"
-docstring-code-format = false
+docstring-code-format = true
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
@@ -57,7 +57,7 @@ select = [
 ]
 extend-select = ["D204", "D400", "D404", "D406", "D410"]
 ignore = [
-    "F403",
+    "F403", "F405",
     "E203", "E731", "E741",
     "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D417",
     "ANN101", "ANN002", "ANN003", "ANN401",

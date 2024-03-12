@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Callable, Union, get_args
+from typing import get_args
 
 import equinox as eqx
 import jax
@@ -9,178 +9,104 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
-from jaxtyping import PyTree, Scalar
+from jaxtyping import ArrayLike, PyTree, Scalar
 
-from ._utils import check_time_array, obj_type_str
-from .utils.array_types import ArrayLike, cdtype
+from ._utils import cdtype, check_time_array, obj_type_str
 
-__all__ = ['totime']
-
-TimeArrayLike = Union[
-    ArrayLike,
-    Callable[[float, ...], Array],
-    tuple[ArrayLike, ArrayLike, ArrayLike],
-    tuple[Callable[[float, ...], Array], ArrayLike],
-    'TimeArray',
-]
+__all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
 
-def totime(x: TimeArrayLike, *args: PyTree) -> TimeArray:
-    r"""Instantiate a time-dependent array of type `TimeArray`.
+def constant(array: ArrayLike) -> ConstantTimeArray:
+    r"""Instantiate a constant time-array.
 
-    There are 4 ways to define a time-dependent array in dynamiqs.
-
-    **(1) Constant time array:** A constant array of the form $A(t) = A_0$. It is
-    initialized with `x = A0` as an array-like object:
-
-    - **A0** _(array-like)_ - The constant array $A_0$, of shape _(..., n, n)_.
-
-    **(2) PWC time array:** A piecewise-constant (PWC) time array of the form $A(t) =
-    A_i$ for $t \in [t_i, t_{i+1})$. It is initialized with
-    `x = (times, values, array)`, where:
-
-    - **times** _(array-like)_ - The time points $t_i$ between which the PWC factor
-    takes constant values, of shape _(nv+1,)_ where _nv_ is the number of time
-    intervals.
-    - **values** _(array-like)_ - The constant values for each time interval, of shape
-    _(..., nv)_.
-    - **array** _(array-like)_ - The constant array $A_i$, of shape _(n, n)_.
-
-    **(3) Modulated time array:** A modulated time array of the form $A(t) = f(t) A_0$.
-    It is initialized with `x = (f, A0)`, where:
-
-    - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
-    Array` that returns the modulating factor $f(t)$ of shape _(...,)_.
-    - **A0** _(array-like)_ - The constant array $A_0$, of shape _(n, n)_.
-
-    **(4) Callable time array:** A time array defined by a callable function, of
-    generic form $A(t) = f(t)$. It is initialized with `x = f` as:
-
-    - **f** _(function)_ - A function with signature `(t: float, *args: PyTree) ->
-    Array` with shape _(..., n, n)_.
-
-    Note: TimeArrays
-        A `TimeArray` object has several attributes and methods, including:
-
-        - **self.dtype** - Returns the data type of the array.
-        - **self.shape** - Returns the shape of the array.
-        - **self.mT** - Returns the transpose of the array.
-        - **self(t: float)** - Evaluates the array at a given time.
-        - **self.reshape(*args: int)** - Returns an array containing the same data with
-            a new shape.
-        - **self.conj()** - Returns the complex conjugate, element-wise.
-
-        `TimeArray` objects also support the following operations:
-
-        - **-self** - Returns the negation of the array.
-        - **y * self** - Returns the product of `y` with the array, where `y` is an
-            array-like broadcastable with `self`.
-        - **self + other** - Returns the sum of the array and `other`, where `other` is
-            an array-like object or another instance of `TimeArray`.
-
-    Note: Batching over callable and modulated time arrays
-        To batch over callable and modulated time arrays, the function `f` must take
-        its batched array as extra argument. For example, here are two correct
-        implementations of the Hamiltonian $H(t) = \sigma_z + \cos(\omega t) \sigma_x$
-        with batching over $\omega$:
-        ```python
-        import jax.numpy as jnp
-
-        # array to batch over
-        omegas = jnp.linspace(-1.0, 1.0, 20)
-
-        # using a modulated time array
-        def cx(t, omega):
-            return jnp.cos(t * omega)
-        H = dq.sigmaz() + dq.totime((cx, dq.sigmax()), omegas)
-
-        # using a callable time array
-        def Hx(t, omega):
-            return jnp.cos(t * jnp.expand_dims(omega, (-1, -2))) * dq.sigmax()
-        H = dq.sigmaz() + dq.totime(Hx, omegas)
-        ```
+    A constant time-array is defined by $A(t)=A_0$ for any time $t$, where $A_0$ is a
+    constant array.
 
     Args:
-        x: The time-dependent array initializer.
-        args: The extra arguments passed to the function for modulated and callable
-            time arrays.
+        array _(array_like of shape (..., n, n))_: Constant array $A$.
+
+    Returns:
+        _(time-array object)_ Callable object returning $A_0$ for any time $t$.
     """
-    # already a time array
-    if isinstance(x, TimeArray):
-        return x
-    # PWC time array
-    elif isinstance(x, tuple) and len(x) == 3:
-        return _factory_pwc(x)
-    # modulated time array
-    elif isinstance(x, tuple) and len(x) == 2:
-        return _factory_modulated(x, args=args)
-    # constant time array
-    elif isinstance(x, get_args(ArrayLike)):
-        return _factory_constant(x)
-    # callable time array
-    elif callable(x):
-        return _factory_callable(x, args=args)
-    else:
-        raise TypeError(
-            'For time-dependent arrays, argument `x` must be one of 4 types: (1)'
-            ' ArrayLike; (2) 2-tuple with type (function, ArrayLike) where function'
-            ' has signature (t: float, *args: PyTree) -> Array; (3) 3-tuple with type'
-            ' (ArrayLike, ArrayLike, ArrayLike); (4) function with signature (t:'
-            ' float, *args: PyTree) -> Array. The provided `x` has type'
-            f' {obj_type_str(x)}.'
-        )
+    array = jnp.asarray(array, dtype=cdtype())
+    return ConstantTimeArray(array)
 
 
-def _factory_constant(x: ArrayLike) -> ConstantTimeArray:
-    x = jnp.asarray(x, dtype=cdtype())
-    return ConstantTimeArray(x)
+def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
+    r"""Instantiate a piecewise-constant (PWC) time-array.
 
+    A PWC time-array is defined by $A(t) = v_i A_0$ for $t \in [t_i, t_{i+1})$, where
+    $v_i$ is a constant value, and $A_0$ is a constant array.
 
-def _factory_pwc(x: tuple[ArrayLike, ArrayLike, ArrayLike]) -> PWCTimeArray:
-    times, values, array = x
+    Warning:
+        Batching is not yet supported for PWC time-arrays, this will be fixed soon.
 
+    Args:
+        times _(array_like of shape (nv+1,))_: Time points $t_i$ between which the
+            PWC factor takes constant values, where _nv_ is the number of time
+            intervals.
+        values _(array_like of shape (..., nv))_: Constant values $v_i$ for each time
+            interval.
+        array _(array_like of shape (n, n))_: Constant array $A_0$.
+
+    Returns:
+        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
+    """
     # times
     times = jnp.asarray(times)
     check_time_array(times, arg_name='times')
 
     # values
     values = jnp.asarray(values, dtype=cdtype())
-    if values.shape[0] != len(times) - 1:
+    if values.shape[-1] != len(times) - 1:
         raise TypeError(
-            'For a PWC array `(times, values, array)`, argument `values` must'
-            ' have shape `(len(times)-1, ...)`, but has shape'
-            f' {tuple(values.shape)}.'
+            'Argument `values` must have shape `(..., len(times)-1)`, but has shape'
+            f' `{values.shape}.'
         )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a PWC array `(times, values, array)`, argument `array` must be'
-            f' a square matrix, but has shape {tuple(array.shape)}.'
+            f'Argument `array` must have shape `(n, n)`, but has shape {array.shape}.'
         )
 
     return PWCTimeArray(times, values, array)
 
 
-def _factory_modulated(
-    x: tuple[callable[[float, ...], Array], Array], *, args: tuple[PyTree]
+def modulated(
+    f: callable[[float, ...], Array], array: ArrayLike, *, args: tuple[PyTree] = ()
 ) -> ModulatedTimeArray:
-    f, array = x
+    r"""Instantiate a modulated time-array.
 
+    A modulated time-array is defined by $A(t) = f(t) A_0$, where $f(t)$ is a function
+    with signature `f(t: float, *args: PyTree) -> Array`, and $A_0$ is a constant array.
+
+    Warning:
+        Batching is not yet supported for modulated time-arrays, this will be fixed
+        soon.
+
+    Args:
+        f _(function returning array of shape (...))_: Function with signature
+            `f(t: float, *args: PyTree) -> Array` that returns the modulating factor
+            $f(t)$.
+        array _(array_like of shape (n, n))_: Constant array $A_0$.
+        args: Other positional arguments passed to the function $f$.
+
+    Returns:
+        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
+    """
     # check f is callable
     if not callable(f):
         raise TypeError(
-            'For a modulated time array `(f, array)`, argument `f` must'
-            f' be a function, but has type {obj_type_str(f)}.'
+            f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
         raise TypeError(
-            'For a modulated time array `(f, array)`, argument `array` must'
-            f' be a square matrix, but has shape {tuple(array.shape)}.'
+            f'Argument `array` must have shape `(n, n)`, but has shape {array.shape}.'
         )
 
     # Pass `f` through `jax.tree_util.Partial`.
@@ -192,14 +118,26 @@ def _factory_modulated(
     return ModulatedTimeArray(f, array, args)
 
 
-def _factory_callable(
-    f: callable[[float, ...], Array], *, args: tuple[PyTree]
+def timecallable(
+    f: callable[[float, ...], Array], *, args: tuple[PyTree] = ()
 ) -> CallableTimeArray:
+    r"""Instantiate a callable time-array.
+
+    A callable time-array is defined by $A(t) = f(t)$, where $f(t)$ is a function with
+    signature `f(t: float, *args: PyTree) -> Array`.
+
+    Args:
+        f _(function returning array of shape (..., n, n))_: Function with signature
+            `(t: float, *args: PyTree) -> Array` that returns the array $f(t)$.
+        args: Other positional arguments passed to the function $f$.
+
+    Returns:
+        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
+    """
     # check f is callable
     if not callable(f):
         raise TypeError(
-            'For a callable time array, argument `f` must be a function, but has type'
-            f' {obj_type_str(f)}.'
+            f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
     # Pass `f` through `jax.tree_util.Partial`.
@@ -347,12 +285,9 @@ class ConstantTimeArray(TimeArray):
 
 
 class PWCTimeArray(TimeArray):
-    # `array`` is made a static field such that `vmap` knows to not batch over it.
-    # However, this also implies that the function is re-jitted every time `array`
-    # changes. TODO: find a better way to handle this.
     times: Array  # (nv+1,)
     values: Array  # (..., nv)
-    array: Array = eqx.field(static=True)  # (n, n)
+    array: Array  # (n, n)
 
     @property
     def dtype(self) -> np.dtype:
@@ -411,11 +346,8 @@ class PWCTimeArray(TimeArray):
 
 
 class ModulatedTimeArray(TimeArray):
-    # `array`` is made a static field such that `vmap` knows to not batch over it.
-    # However, this also implies that the function is re-jitted every time `array`
-    # changes. TODO: find a better way to handle this.
     f: callable[[float, ...], Array]  # (...,)
-    array: Array = eqx.field(static=True)  # (n, n)
+    array: Array  # (n, n)
     args: tuple[PyTree]
 
     @property

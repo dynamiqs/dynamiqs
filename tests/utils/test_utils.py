@@ -4,7 +4,7 @@ import pytest
 import qutip as qt
 
 import dynamiqs as dq
-from dynamiqs.utils.array_types import cdtype
+from dynamiqs._utils import cdtype
 
 
 def test_ket_fidelity_correctness():

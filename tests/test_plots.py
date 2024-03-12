@@ -4,7 +4,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, todm
-from dynamiqs.utils.wigners import _diag_element
+from dynamiqs.utils.utils.wigner import _diag_element
 
 # TODO : add comparison with analytical wigner for coherent states and cat states
 
@@ -42,11 +42,10 @@ class TestPlots:
         for diag in range(-4, 5):
             diag_len = 5 - abs(diag)
             for element in range(-diag_len + 1, diag_len):
-                assert (
-                    _diag_element(mat, diag, element) == np.diag(mat, diag)[element]
-                ), 'Failed for diag = {}, element = {}, expected "{}", got "{}"'.format(
-                    diag,
-                    element,
-                    np.diag(mat, diag)[element],
-                    _diag_element(mat, diag, element),
+                x = _diag_element(mat, diag, element)
+                y = np.diag(mat, diag)[element]
+                err_msg = (
+                    f'Failed for diag = {diag}, element = {element}, expected "{y}",'
+                    f' got "{x}"'
                 )
+                assert x == y, err_msg

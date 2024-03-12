@@ -21,13 +21,16 @@ class Autograd(Gradient):
             [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
             option.
         """
+
         super().__init__()
     
     def __str__(self) -> str:
         return "Standard automatic differentiation Gradient."
 
+
+
 class CheckpointAutograd(Gradient):
-    ncheckpoints: int | None = None
+    ncheckpoints: int | None
 
     def __init__(self, ncheckpoints: int | None = None):
         """Checkpointed automatic differentiation.
@@ -43,7 +46,7 @@ class CheckpointAutograd(Gradient):
             through the quantum solvers.
 
         Warning:
-            This cannot be forward-mode autodifferentiated  (e.g. using
+            This cannot be forward-mode autodifferentiated (e.g. using
             [`jax.jvp`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html)
             ). Try using [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] if that
             is something you need.

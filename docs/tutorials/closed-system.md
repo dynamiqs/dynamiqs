@@ -89,7 +89,7 @@ There are two main types of ODE solvers:
 
 ## Using dynamiqs
 
-You can create the state and Hamiltonian using any array-like object (Python lists, NumPy or JAX arrays). Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using any array-like object (Python lists, NumPy and JAX arrays, QuTiP Qobjs). Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
 import jax.numpy as jnp
@@ -107,4 +107,4 @@ Array([[0.54+0.841j],
        [0.  +0.j   ]], dtype=complex64)
 ```
 
-If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`](../python_api/solvers/sesolve.md) API documentation.
+If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
