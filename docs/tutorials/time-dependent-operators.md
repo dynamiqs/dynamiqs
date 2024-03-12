@@ -46,7 +46,7 @@ Finally, time-arrays also support common utility functions, such as `.conj()`, o
 
 A constant operator is an operator of the form
 $$
-\hat O(t) = \hat O_0
+    O(t) = O_0
 $$
 for any time $t$. In dynamiqs, constant operators can be defined either with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or with `ConstantTimeArray` objects. In all cases, the operator is then converted internally into the latter type for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common operators. If you need to explicitely define a constant time array, you can use [`dq.constant()`](../python_api/time_array/constant.md).
 
@@ -80,13 +80,13 @@ H = dq.constant(dq.sigmaz())
 
 A piecewise constant (PWC) operator is an operator of the form
 $$
- \hat O(t) = \left( \sum_{k=0}^{N-1} c_k w_{[t_k, t_{k+1}[}(t)\right) \hat O_0
+    O(t) = \left(\sum_{k=0}^{N-1} c_k w_{[t_k, t_{k+1}[}(t)\right) O_0
 $$
 where $c_k$ are constant values, $w_{[t_k, t_{k+1}[}$ is the rectangular window function that is unity inside the interval and null otherwise, and $t_k$ are the boundaries of the intervals. In dynamiqs, PWC operators are defined using a set of three arrays:
 
 - the set of times $[t_0, \ldots, t_N]$ defining the boundaries of the intervals, of shape _(N+1,)_,
 - the set of constant values $[c_0, \ldots, c_{N-1}]$ over each interval, of shape _(..., N)_,
-- the array defining the main operator $\hat O_0$, of shape _(n, m)_.
+- the array defining the main operator $O_0$, of shape _(n, m)_.
 
 These three arrays can then be fed to [`dq.pwc()`](../python_api/time_array/pwc.md) to instantiate the corresponding `PWCTimeArray`. Importantly, the `times` array must be sorted in ascending order, but does not need to be evenly spaced. When calling the time array at any given time, the returned array is the one corresponding to the interval in which the time falls.
 
@@ -116,12 +116,12 @@ print(H(-1.0))
 
 Modulated operators are operators of the form
 $$
- \hat O(t) = f(t) \hat O_0
+    O(t) = f(t) O_0
 $$
 where $f(t)$ is an arbitrary time-dependent factor. In dynamiqs, modulated operators are defined using:
 
 - a Python function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the time-dependent factor of shape _(...,)_ as a JAX array for any time $t$,
-- the array defining the main operator $\hat O_0$, of shape _(n, m)_.
+- the array defining the main operator $O_0$, of shape _(n, m)_.
 
 The function can be passed to [`dq.modulated()`](../python_api/time_array/modulated.md) to obtain the corresponding `ModulatedTimeArray`.
 
@@ -154,7 +154,7 @@ print(H(1.0))
 
 Arbitrary time-dependent operators are operators of the form
 $$
- \hat O(t) = f(t)
+    O(t) = f(t)
 $$
 In dynamiqs, arbitrary time-dependent operators are defined using a Python function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the operator as a JAX array for any time $t$. The function can be passed to [`dq.timecallable()`](../python_api/time_array/timecallable.md) to obtain a `CallableTimeArray` object. For instance, to define the time-dependent Hamiltonian $H = \sigma_z + \cos(2\pi t)\sigma_x$, you can use the following syntax:
 

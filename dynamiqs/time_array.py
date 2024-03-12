@@ -19,14 +19,14 @@ __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 def constant(array: ArrayLike) -> ConstantTimeArray:
     r"""Instantiate a constant time-array.
 
-    A constant time-array is defined by $\hat O(t)= \hat O_0$ for any time $t$, where
-    $\hat O_0$ is a constant array.
+    A constant time-array is defined by $O(t)= O_0$ for any time $t$, where $O_0$ is a
+    constant array.
 
     Args:
-        array _(array_like of shape (..., n, n))_: Constant array $\hat O_0$.
+        array _(array_like of shape (..., n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $\hat O_0$ for any time $t$.
+        _(time-array object)_ Callable object returning $O_0$ for any time $t$.
     """
     array = jnp.asarray(array, dtype=cdtype())
     return ConstantTimeArray(array)
@@ -37,7 +37,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 
     A PWC time-array takes constant values over some time intervals. It is defined by
     $$
-        \hat O(t) = \left( \sum_{k=1}^N c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) \hat O_0
+        O(t) = \left(\sum_{k=1}^N c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
     $$
     where $c_k$ are constant values, and $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
     window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
@@ -52,10 +52,10 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
             intervals.
         values _(array_like of shape (..., N))_: Constant values $c_k$ for each time
             interval.
-        array _(array_like of shape (n, n))_: Constant array $\hat O_0$.
+        array _(array_like of shape (n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $\hat O(t)$ for any time $t$.
+        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
     """
     # times
     times = jnp.asarray(times)
@@ -84,7 +84,7 @@ def modulated(
 ) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
-    A modulated time-array is defined by $\hat O(t) = f(t) \hat O_0$ where $f(t)$ is a
+    A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
     time-dependent scalar. The function $f$ is defined by passing a Python function
     with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
     _(...)_ for any time $t$.
@@ -97,11 +97,11 @@ def modulated(
         f _(function returning array of shape (...))_: Function with signature
             `f(t: float, *args: PyTree) -> Array` that returns the modulating factor
             $f(t)$.
-        array _(array_like of shape (n, n))_: Constant array $\hat O_0$.
+        array _(array_like of shape (n, n))_: Constant array $O_0$.
         args: Other positional arguments passed to the function $f$.
 
     Returns:
-        _(time-array object)_ Callable object returning $\hat O(t)$ for any time $t$.
+        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
@@ -130,7 +130,7 @@ def timecallable(
 ) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
-    A callable time-array is defined by $\hat O(t) = f(t)$ where $f(t)$ is a
+    A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
     time-dependent operator. The function $f$ is defined by passing a Python function
     with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
     _(..., n, n)_ for any time $t$.
@@ -141,7 +141,7 @@ def timecallable(
         args: Other positional arguments passed to the function $f$.
 
     Returns:
-        _(time-array object)_ Callable object returning $\hat O(t)$ for any time $t$.
+        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
