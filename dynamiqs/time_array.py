@@ -188,20 +188,20 @@ class TimeArray(eqx.Module):
     used to define time-dependent operators to be used in dynamiqs solvers.
 
     Attributes:
-        dtype (numpy.dtype): The data type of the time array.
-        shape (tuple of int): The shape of the time array.
-        mT (TimeArray): The time array transposed over its last two dimensions.
-        ndim (int): The number of dimensions in the time array.
+        dtype (numpy.dtype): The data type of the time-array.
+        shape (tuple of int): The shape of the time-array.
+        mT (TimeArray): The time-array transposed over its last two dimensions.
+        ndim (int): The number of dimensions in the time-array.
 
     Methods:
-        reshape: Returns a time array containing the same data with a new shape.
-        conj: Returns the element-wise complex conjugate of the time array.
-        __call__: Returns the time array evaluation at a given time.
-        __neg__: Returns the negation of the time array.
+        reshape: Returns a time-array containing the same data with a new shape.
+        conj: Returns the element-wise complex conjugate of the time-array.
+        __call__: Returns the time-array evaluation at a given time.
+        __neg__: Returns the negation of the time-array.
         __mul__: Returns the element-wise multiplication with another array.
         __add__: Returns the element-wise addition with another array.
         __sub__: Returns the element-wise subtraction with another array.
-        __repr__: Returns a string representation of the time array.
+        __repr__: Returns a string representation of the time-array.
     """
 
     # Subclasses should implement:
@@ -214,21 +214,21 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def dtype(self) -> np.dtype:
-        """The data type of the time array."""
+        """The data type of the time-array."""
 
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """The shape of the time array."""
+        """The shape of the time-array."""
 
     @property
     @abstractmethod
     def mT(self) -> TimeArray:
-        """The time array transposed over its last two dimensions."""
+        """The time-array transposed over its last two dimensions."""
 
     @property
     def ndim(self) -> int:
-        """The number of dimensions in the time array."""
+        """The number of dimensions in the time-array."""
         return len(self.shape)
 
     @abstractmethod
@@ -237,15 +237,15 @@ class TimeArray(eqx.Module):
 
     @abstractmethod
     def conj(self) -> TimeArray:
-        """Returns the element-wise complex conjugate of the time array."""
+        """Returns the element-wise complex conjugate of the time-array."""
 
     @abstractmethod
     def __call__(self, t: Scalar) -> Array:
-        """Returns the time array evaluation at a given time."""
+        """Returns the time-array evaluation at a given time."""
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
-        """Returns the negation of the time array."""
+        """Returns the negation of the time-array."""
 
     @abstractmethod
     def __mul__(self, y: ArrayLike) -> TimeArray:
@@ -269,7 +269,7 @@ class TimeArray(eqx.Module):
         return y + (-self)
 
     def __repr__(self) -> str:
-        """Returns a string representation of the time array."""
+        """Returns a string representation of the time-array."""
         return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
     def __str__(self) -> str:
