@@ -53,7 +53,7 @@ def mesolve(
         to time-arrays using [`dq.constant()`][dynamiqs.constant],
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See
-        [Time-dependent operators](../../tutorials/defining-hamiltonians.md) for
+        [Time-dependent operators](../../tutorials/time-dependent-operators.md) for
         more details.
 
     Quote: Running multiple simulations concurrently
