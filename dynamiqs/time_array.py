@@ -84,13 +84,10 @@ def modulated(
 ) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
-    A modulated time-array is defined by
-    $$
-        \hat O(t) = f(t) \hat O_0
-    $$
-    where $f(t)$ is an arbitrary time-dependent factor. Here, $f$ should be a Python
-    function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the
-    time-dependent factor of shape _(...,)_ as an array for any time $t$.
+    A modulated time-array is defined by $\hat O(t) = f(t) \hat O_0$ where $f(t)$ is a
+    time-dependent scalar. The function $f$ is defined by passing a Python function
+    with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
+    _(...)_ for any time $t$.
 
     Warning:
         Batching is not yet supported for modulated time-arrays, this will be fixed
@@ -384,7 +381,7 @@ class PWCTimeArray(TimeArray):
 
 
 class ModulatedTimeArray(TimeArray):
-    f: callable[[float, ...], Array]  # (...,)
+    f: callable[[float, ...], Array]  # (...)
     array: Array  # (n, n)
     args: tuple[PyTree]
 
