@@ -1,52 +1,54 @@
 # Time-dependent operators
 
-In this short tutorial, we explain how to define time-dependent Hamiltonians – and more generally time-dependent operators – in dynamiqs. There are currently four formats: constant, piecewise constant, constant modulated by a time-dependent factor or arbitrary time-dependent defined by a function.
+In this short tutorial, we explain how to define time-dependent Hamiltonians – and more generally time-dependent operators – in dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
 
 !!! Warning "Differences with QuTiP"
-    dynamiqs manipulates JAX arrays, which are different from QuTiP quantum objects. See in [The sharp bits 🔪](/getting_started/sharp-bits.md) page for more details, briefly:
+    dynamiqs uses JAX arrays, which are different from QuTiP quantum objects. See [The sharp bits 🔪](../getting_started/sharp-bits.md) page for more details, briefly:
 
     - use `x + 2 * dq.eye(n)` instead of `x + 2`
     - use `x @ y` instead of `x * y`, and `dq.mpow(x, 4)` instead of `x**4`
-    - use `dq.dag(x)`, `x.mT.conj()` instead of `x.dag()`
+    - use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()`
 
 ```python
 import dynamiqs as dq
 import jax.numpy as jnp
 ```
 
-## The `TimeArray` type
+## The [`TimeArray`][dynamiqs.TimeArray] type
 
-In dynamiqs, time-dependent operators are defined using `TimeArray` objects. The core feature of such objects is that they can be called for arbitrary times, which computes and returns the underlying array at the given time.
+In dynamiqs, time-dependent operators are defined using [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time:
 
-```python
-H = dq.constant(dq.sigmaz()) # initialize a constant TimeArray
-print(H(1.0))
-# Array([[ 1.+0.j,  0.+0.j],
-#        [ 0.+0.j, -1.+0.j]], dtype=complex64)
+```pycon
+>>> H = dq.timecallable(lambda t: t * dq.sigmaz()) # initialize a callable time-array
+>>> H(2.0)
+Array([[ 2.+0.j,  0.+0.j],
+       [ 0.+0.j, -2.+0.j]], dtype=complex64)
+>>> H.shape
+(2, 2)
 ```
 
-`TimeArray` objects can also be arbitrarily summed together. The only requirement to do so is that the shape of the underlying arrays are broadcastable, and that they have the same floating point precision.
+Time-arrays support common arithmetic operations, for example we can add two time-arrays together:
 
-```python
-H0 = dq.constant(dq.sigmaz()) # constant TimeArray
-H1 = dq.modulated(lambda t: jnp.cos(2.0 * t), dq.sigmax()) # modulated TimeArray
-H = H0 + H1
-print(H(1.0))
-# Array([[ 1.        +0.j, -0.41614684+0.j],
-#        [-0.41614684+0.j, -1.        +0.j]], dtype=complex64)
+```pycon
+>>> H0 = dq.constant(dq.sigmaz()) # constant time-array
+>>> H1 = dq.modulated(lambda t: jnp.cos(2.0 * t), dq.sigmax()) # modulated time-array
+>>> H = H0 + H1
+>>> H(1.0)
+Array([[ 1.        +0.j, -0.41614684+0.j],
+       [-0.41614684+0.j, -1.        +0.j]], dtype=complex64)
 ```
 
-Finally, a `TimeArray` also supports a subset of common utility functions, such as `.conj()`, `.shape` or `.reshape()`. More details can be found in the [Python API](../python_api/time_array/TimeArray.md).
+Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the corresponding API page [`TimeArray`][dynamiqs.TimeArray].
 
-## Defining a `TimeArray`
+## Defining a [`TimeArray`][dynamiqs.TimeArray]
 
 ### Constant operators
 
 A constant operator is an operator of the form
 $$
- \hat O(t) = \hat O_0
+\hat O(t) = \hat O_0
 $$
-for all time $t$. In dynamiqs, constant operators can be defined either with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or with `ConstantTimeArray` objects. In all cases, the operator is then converted internally into the latter type for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common operators. If you need to explicitely define a constant time array, you can use [`dq.constant()`](../python_api/time_array/constant.md).
+for any time $t$. In dynamiqs, constant operators can be defined either with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or with `ConstantTimeArray` objects. In all cases, the operator is then converted internally into the latter type for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common operators. If you need to explicitely define a constant time array, you can use [`dq.constant()`](../python_api/time_array/constant.md).
 
 For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of the following syntaxes:
 
