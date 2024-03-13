@@ -31,14 +31,14 @@ Time-arrays support common arithmetic operations, for example we can add two tim
 
 ```pycon
 >>> H0 = dq.constant(dq.sigmaz()) # constant time-array
->>> H1 = dq.modulated(lambda t: jnp.cos(2.0 * t), dq.sigmax()) # modulated time-array
+>>> H1 = dq.modulated(lambda t: jnp.cos(2.0 * jnp.pi * t), dq.sigmax()) # modulated time-array
 >>> H = H0 + H1
 >>> H(1.0)
-Array([[ 1.   +0.j, -0.416+0.j],
-       [-0.416+0.j, -1.   +0.j]], dtype=complex64)
+Array([[ 1.+0.j,  1.+0.j],
+       [ 1.+0.j, -1.+0.j]], dtype=complex64)
 ```
 
-Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the corresponding API page [`TimeArray`][dynamiqs.TimeArray].
+Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the corresponding [`TimeArray`][dynamiqs.TimeArray] API page.
 
 ## Defining a [`TimeArray`][dynamiqs.TimeArray]
 
@@ -53,7 +53,7 @@ for any time $t$, where $O_0$ is a constant operator.
 In dynamiqs, constant operators can either be defined with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or as a [`TimeArray`][dynamiqs.TimeArray] object (using the [`dq.constant()`][dynamiqs.constant] function).
 
 !!! Notes
-    Common operators are available as utility functions, see the list in the [Python API](../python_api/index.md#operators).
+    Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
 
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
