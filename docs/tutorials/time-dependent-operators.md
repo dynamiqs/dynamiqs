@@ -51,7 +51,7 @@ $$
 $$
 for any time $t$, where $O_0$ is a constant operator.
 
-In dynamiqs, constant operators can either be defined with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or as [`TimeArray`][dynamiqs.TimeArray] objects (using the [`dq.constant()`][dynamiqs.constant] function).
+In dynamiqs, constant operators can either be defined with array-like objects or as [`TimeArray`][dynamiqs.TimeArray] objects (using the [`dq.constant()`][dynamiqs.constant] function).
 
 !!! Notes
     Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
@@ -90,7 +90,7 @@ $$
 $$
 where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant operator.
 
-In dynamiqs, PWC operators are defined by three **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs):
+In dynamiqs, PWC operators are defined by three array-like objects:
 
 - `times`: the time points $(t_0, \ldots, t_N)$ defining the boundaries of the time intervals, of shape _(N+1,)_,
 - `values`: the constant values $(c_0, \ldots, c_{N-1})$ for each time interval, of shape _(..., N)_,
@@ -213,7 +213,7 @@ Array([[1., 0.],
 ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
-    An error is raised if the function `f` does not return a JAX array. This error includes other array-like objects (e.g. Python lists, NumPy arrays or QuTiP Qobjs). This is enforced to avoid costly conversions at every time step of the numerical integration.
+    An error is raised if the function `f` does not return a JAX array. This error includes other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Function with additional arguments"
     To define a callable time-array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`][dynamiqs.timecallable]:
