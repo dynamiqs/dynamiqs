@@ -58,26 +58,26 @@ In dynamiqs, constant operators can either be defined with **array-like objects*
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 ```python
-# using Python lists
+# Python lists
 H = [[1, 0], [0, -1]]
 
-# using NumPy arrays
+# NumPy arrays
 import numpy as np
 H = np.array([[1, 0], [0, -1]])
 
-# using JAX arrays
+# JAX arrays
 import jax.numpy as jnp
 H = jnp.array([[1, 0], [0, -1]])
 
-# using QuTiP Qobjs
+# QuTiP Qobjs
 import qutip as qt
 H = qt.sigmaz()
 
-# using dynamiqs
+# dynamiqs utility function
 import dynamiqs as dq
 H = dq.sigmaz()
 
-# using a constant time array
+# constant time array
 H = dq.constant(dq.sigmaz())
 ```
 
