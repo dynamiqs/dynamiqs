@@ -33,7 +33,7 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
 
 
 def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
-    r"""Instantiate a piecewise-constant (PWC) time-array.
+    r"""Instantiate a piecewise constant (PWC) time-array.
 
     A PWC time-array takes constant values over some time intervals. It is defined by
     $$

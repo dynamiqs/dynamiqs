@@ -19,7 +19,7 @@ def plot_pwc_pulse(
     real_color: str = colors['blue'],
     imag_color: str = colors['purple'],
 ):
-    """Plot a piecewise-constant pulse.
+    """Plot a piecewise constant pulse.
 
     Warning:
         Documentation redaction in progress.
