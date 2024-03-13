@@ -83,38 +83,55 @@ H = dq.constant(dq.sigmaz())
 
 ### Piecewise constant operators
 
-A piecewise constant (PWC) operator is an operator of the form
+A piecewise constant (PWC) operator takes constant values over some time intervals. It is defined by
 $$
-    O(t) = \left(\sum_{k=0}^{N-1} c_k w_{[t_k, t_{k+1}[}(t)\right) O_0
+    O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
 $$
-where $c_k$ are constant values, $w_{[t_k, t_{k+1}[}$ is the rectangular window function that is unity inside the interval and null otherwise, and $t_k$ are the boundaries of the intervals. In dynamiqs, PWC operators are defined using a set of three arrays:
+where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant operator.
 
-- the set of times $[t_0, \ldots, t_N]$ defining the boundaries of the intervals, of shape _(N+1,)_,
-- the set of constant values $[c_0, \ldots, c_{N-1}]$ over each interval, of shape _(..., N)_,
-- the array defining the main operator $O_0$, of shape _(n, m)_.
+In dynamiqs, PWC operators are defined by three **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs):
 
-These three arrays can then be fed to [`dq.pwc()`](../python_api/time_array/pwc.md) to instantiate the corresponding `PWCTimeArray`. Importantly, the `times` array must be sorted in ascending order, but does not need to be evenly spaced. When calling the time array at any given time, the returned array is the one corresponding to the interval in which the time falls.
+- `times`: the time points $(t_0, \ldots, t_N)$ defining the boundaries of the time intervals, of shape _(N+1,)_,
+- `values`: the constant values $(c_0, \ldots, c_{N-1})$ for each time interval, of shape _(..., N)_,
+- `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
 
-```python
-# define a PWC time array
-times = jnp.array([0.0, 1.0, 2.0])
-values = jnp.array([3.0, -2.0])
-array = dq.sigmaz()
-H = dq.pwc(times, values, array)
+To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object.
 
-# call the time array at different times
-print(H(0.5))
-# [[ 3.+0.j  0.+0.j]
-#  [ 0.+0.j -3.+0.j]]
-print(H(1.5))
-# [[-2.+0.j -0.+0.j]
-#  [-0.+0.j  2.-0.j]]
-print(H(1.0))
-# [[-2.+0.j -0.+0.j]
-#  [-0.+0.j  2.-0.j]]
-print(H(-1.0))
-# [[ 0.+0.j  0.+0.j]
-#  [ 0.+0.j -0.+0.j]]
+!!! Notes
+    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
+
+Let's define a PWC operator:
+```pycon
+>>> times = jnp.array([0.0, 1.0, 2.0])
+>>> values = jnp.array([3.0, -2.0])
+>>> array = dq.sigmaz()
+>>> H = dq.pwc(times, values, array)
+>>> type(H)
+<class 'dynamiqs.time_array.PWCTimeArray'>
+>>> H.shape
+(2, 2)
+```
+
+The returned object can be called at different times:
+```pycon
+>>> H(-1.0)
+Array([[ 0.+0.j,  0.+0.j],
+       [ 0.+0.j, -0.+0.j]], dtype=complex64)
+>>> H(0.0)
+Array([[ 3.+0.j,  0.+0.j],
+       [ 0.+0.j, -3.+0.j]], dtype=complex64)
+>>> H(0.5)
+Array([[ 3.+0.j,  0.+0.j],
+       [ 0.+0.j, -3.+0.j]], dtype=complex64)
+>>> H(1.0)
+Array([[-2.+0.j, -0.+0.j],
+       [-0.+0.j,  2.-0.j]], dtype=complex64)
+>>> H(1.5)
+Array([[-2.+0.j, -0.+0.j],
+       [-0.+0.j,  2.-0.j]], dtype=complex64)
+>>> H(2.0)
+Array([[ 0.+0.j,  0.+0.j],
+       [ 0.+0.j, -0.+0.j]], dtype=complex64)
 ```
 
 ### Modulated operators

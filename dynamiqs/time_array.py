@@ -37,19 +37,26 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 
     A PWC time-array takes constant values over some time intervals. It is defined by
     $$
-        O(t) = \left(\sum_{k=1}^N c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
+        O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
     $$
-    where $c_k$ are constant values, and $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
+    where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
     window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
-    $\Omega_{[t_a, t_b[}(t) = 0$ otherwise.
+    $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant array.
 
     Warning:
         Batching is not yet supported for PWC time-arrays, this will be fixed soon.
 
+    Notes:
+        The argument `times` argument must be sorted in ascending order, but does not
+        need to be evenly spaced.
+
+    Notes:
+        If the returned time-array is called for a time $t$ which does not belong to any
+        time intervals, the returned array is null.
+
     Args:
-        times _(array_like of shape (N+1,))_: Time points $t_k$ between which the
-            PWC factor takes constant values, where _N_ is the number of time
-            intervals.
+        times _(array_like of shape (N+1,))_: Time points $t_k$ defining the boundaries
+            of the time intervals, where _N_ is the number of time intervals.
         values _(array_like of shape (..., N))_: Constant values $c_k$ for each time
             interval.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
