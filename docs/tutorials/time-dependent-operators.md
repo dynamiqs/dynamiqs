@@ -44,13 +44,18 @@ Finally, time-arrays also support common utility functions, such as `.conj()`, o
 
 ### Constant operators
 
-A constant operator is an operator of the form
+A constant operator is defined by
 $$
     O(t) = O_0
 $$
-for any time $t$. In dynamiqs, constant operators can be defined either with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or with `ConstantTimeArray` objects. In all cases, the operator is then converted internally into the latter type for differentiability and GPU support. It is also possible to directly use dynamiqs [utility functions](../python_api/index.md) for common operators. If you need to explicitely define a constant time array, you can use [`dq.constant()`](../python_api/time_array/constant.md).
+for any time $t$, where $O_0$ is a constant operator.
 
-For instance, to define the Pauli Z operator $H = \sigma_z$, you can use any of the following syntaxes:
+In dynamiqs, constant operators can either be defined with **array-like objects** (e.g. Python lists, NumPy and JAX arrays, QuTiP Qobjs) or as a [`TimeArray`][dynamiqs.TimeArray] object (using the [`dq.constant()`][dynamiqs.constant] function).
+
+!!! Notes
+    Common operators are available as utility functions, see the list in the [Python API](../python_api/index.md#operators).
+
+For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 ```python
 # using Python lists
