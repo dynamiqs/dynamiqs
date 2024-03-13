@@ -179,38 +179,43 @@ Array([[0.+0.j, 1.+0.j],
 
 ### Arbitrary time-dependent operators
 
-Arbitrary time-dependent operators are operators of the form
+An arbitrary time-dependent operator is defined by
 $$
     O(t) = f(t)
 $$
-In dynamiqs, arbitrary time-dependent operators are defined using a Python function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the operator as a JAX array for any time $t$. The function can be passed to [`dq.timecallable()`](../python_api/time_array/timecallable.md) to obtain a `CallableTimeArray` object. For instance, to define the time-dependent Hamiltonian $H = \sigma_z + \cos(2\pi t)\sigma_x$, you can use the following syntax:
+where $f(t)$ is a time-dependent operator.
 
-```python
-# define a callable time array
-def _H(t):
-    return dq.sigmaz() + jnp.cos(2.0 * jnp.pi * t) * dq.sigmax()
-H = dq.timecallable(_H)
+In dynamiqs, arbitrary time-dependent operators are defined by a Python function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the operator $f(t)$ for any time $t$, as an array of shape _(..., n, n)_. To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object.
 
-# call the time array at different times
-print(H(0.5))
-# [[ 1.+0.j -1.+0.j]
-#  [-1.+0.j -1.+0.j]]
-print(H(1.0))
-# [[ 1.+0.j  1.+0.j]
-#  [ 1.+0.j -1.+0.j]]
+Let's define the arbitrary time-dependent operator $H=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
+```pycon
+>>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
+>>> H = dq.timecallable(f)
+>>> type(H)
+<class 'dynamiqs.time_array.CallableTimeArray'>
+>>> H.shape
+(2, 2)
 ```
 
-!!! Warning "Function returning non-array object"
-    An error is raised if `H(t)` returns a non-array object (including array-like objects such as QuTiP Qobjs or Python lists). This is enforced to avoid costly conversions at every time step of the numerical integration.
+The returned object can be called at different times:
+```pycon
+>>> H(0.5)
+Array([[0.5, 0. ],
+       [0. , 0.5]], dtype=float32)
+>>> H(1.0)
+Array([[1., 0.],
+       [0., 0.]], dtype=float32)
+```
+
+!!! Warning "The function must return a JAX array"
+    An error is raised if the function `f` does not return a JAX array. This error includes other array-like objects (e.g. Python lists, NumPy arrays or QuTiP Qobjs). This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Function with optional arguments"
-    To define a callable time array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`](../python_api/time_array/timecallable.md).
-
+    To define a callable time array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`][dynamiqs.timecallable]:
     ```python
-    def _H(t, omega):
-        return dq.sigmaz() + jnp.cos(omega * t) * dq.sigmax()
-    omega = 1.0
-    H = dq.timecallable(_H, args=(omega,))
+    f = lambda t, x: x * jnp.array([[t, 0], [0, 1 - t]])
+    x = 1.0
+    H = dq.timecallable(f, args=(x,))
     ```
 
 ## Batching and differentiating through a `TimeArray`
