@@ -119,7 +119,7 @@ nav:
       - tutorials/index.md
       - Basics:
           - Workflow in dynamiqs: tutorials/workflow.md
-          - tutorials/defining-hamiltonians.md
+          - tutorials/time-dependent-operators.md
           - tutorials/closed-system.md
           - tutorials/open-system.md
           - tutorials/batching-simulations.md
@@ -132,11 +132,11 @@ nav:
           - smesolve: python_api/solvers/smesolve.md
       - Core:
           - Time-dependent arrays:
+              - TimeArray: python_api/time_array/TimeArray.md
               - constant: python_api/time_array/constant.md
               - pwc: python_api/time_array/pwc.md
               - modulated: python_api/time_array/modulated.md
               - timecallable: python_api/time_array/timecallable.md
-              - TimeArray: python_api/time_array/TimeArray.md
           - Solvers (dq.solver):
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
