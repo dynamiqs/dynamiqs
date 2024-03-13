@@ -136,38 +136,43 @@ Array([[ 0.+0.j,  0.+0.j],
 
 ### Modulated operators
 
-Modulated operators are operators of the form
+A modulated operator is defined by
 $$
     O(t) = f(t) O_0
 $$
-where $f(t)$ is an arbitrary time-dependent factor. In dynamiqs, modulated operators are defined using:
+where $f(t)$ is an time-dependent scalar.
 
-- a Python function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the time-dependent factor of shape _(...,)_ as a JAX array for any time $t$,
-- the array defining the main operator $O_0$, of shape _(n, m)_.
+In dynamiqs, modulated operators are defined by:
 
-The function can be passed to [`dq.modulated()`](../python_api/time_array/modulated.md) to obtain the corresponding `ModulatedTimeArray`.
+- `f`: a Python function with signature `f(t: float, *args: ArrayLike) -> Array` that returns the modulating factor $f(t)$ for any time $t$, as an array of shape _(...)_,
+- `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
 
+To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object.
+
+Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
 ```python
-# define a modulated time array
-def f(t):
-    return jnp.cos(2.0 * jnp.pi * t)
-H = dq.modulated(f, dq.sigmax())
+>>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+>>> H = dq.modulated(f, dq.sigmax())
+>>> type(H)
+<class 'dynamiqs.time_array.ModulatedTimeArray'>
+>>> H.shape
+(2, 2)
+```
 
-# call the time array at different times
-print(H(0.5))
-# [[-0.+0.j -1.+0.j]
-#  [-1.+0.j -0.+0.j]]
-print(H(1.0))
-# [[0.+0.j 1.+0.j]
-#  [1.+0.j 0.+0.j]]
+The returned object can be called at different times:
+```pycon
+>>> H(0.5)
+Array([[-0.+0.j, -1.+0.j],
+       [-1.+0.j, -0.+0.j]], dtype=complex64)
+>>> H(1.0)
+Array([[0.+0.j, 1.+0.j],
+       [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
 ??? Note "Function with optional arguments"
-    To define a modulated time array with additional arguments, you can use the optional `args` parameter of [`dq.modulated()`](../python_api/time_array/modulated.md).
+    To define a modulated time array with additional arguments, you can use the optional `args` parameter of [`dq.modulated()`][dynamiqs.modulated]:
     ```python
-    def f(t, omega):
-        return jnp.cos(omega * t)
-
+    f = lambda t, omega: jnp.cos(omega * t)
     omega = 1.0
     H = dq.modulated(f, dq.sigmax(), args=(omega,))
     ```
