@@ -218,24 +218,13 @@ Array([[1., 0.],
     H = dq.timecallable(f, args=(x,))
     ```
 
-## Batching and differentiating through a `TimeArray`
+## Batching and differentiation with time arrays
 
-For modulated and callable time arrays, it is important that any array you want to batch over or differentiate against is passed as an extra argument to [`dq.timecallable()`](../python_api/time_array/timecallable.md) and [`dq.modulated()`](../python_api/time_array/modulated.md). Such requirements are very aligned with JAX philosophy, in which all internal arguments that are required at runtime should be explicitly provided.
+For modulated and arbitrary time-dependent operators, any array that is batched or differentiated over should be passed as an extra `*args` argument to [`dq.modulated()`][dynamiqs.modulated] and [`dq.timecallable()`][dynamiqs.timecallable].
 
-Below is an example of how to define a time-dependent Hamiltonian that can be batched over and/or differentiated against the `omegas` array.
-
+For example to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched or differentiated over the array `omegas`:
 ```python
-H0 = dq.sigmaz()
-H1 = dq.sigmax()
+f = lambda t, omega: jnp.cos(omega * t)
 omegas = jnp.linspace(0.0, 2.0, 10)
-
-# using a modulated time array
-def coeff(t, omega):
-    return jnp.cos(omega * t)
-H = H0 + dq.modulated(coeff, H1, args=(omegas,))
-
-# using a callable time array
-def _H(t, omega):
-    return H0 + jnp.cos(jnp.expand_dims(omega, (-1, -2)) * t) * H1
-H = dq.timecallable(_H, args=(omegas,))
+H = dq.modulated(f, dq.sigmax(), args=(omegas,))
 ```
