@@ -19,7 +19,7 @@ __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 def constant(array: ArrayLike) -> ConstantTimeArray:
     r"""Instantiate a constant time-array.
 
-    A constant time-array is defined by $O(t)= O_0$ for any time $t$, where $O_0$ is a
+    A constant time-array is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
     constant array.
 
     Args:
