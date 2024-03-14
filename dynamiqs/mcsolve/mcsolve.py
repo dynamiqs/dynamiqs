@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from equinox.internal._loop.loop import while_loop
 from jax.random import PRNGKey
 from jax import Array
 from jaxtyping import ArrayLike
@@ -15,7 +16,7 @@ from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.utils import todm, norm, unit, dag
+from ..utils.utils import todm, unit, dag
 from .mcdiffrax import MCDopri5, MCDopri8, MCEuler, MCTsit5
 
 __all__ = ['mcsolve']
@@ -119,7 +120,8 @@ def _vmap_mcsolve(
     options: Options,
 ) -> Result:
     # === vectorize function
-    # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
+    # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
+    # below we will have another layer of vectorization over ntraj
     is_batched = (
         H.ndim > 2,
         [jump_op.ndim > 2 for jump_op in jump_ops],
@@ -155,18 +157,21 @@ def _mcsolve(
     no_jump_state = _single_traj(H, jump_ops, psi0, tsave, key, jnp.zeros(shape=(1, 1)), exp_ops, solver, gradient, options)
     # extract the no-jump probability, which sets a lower bound on the random
     # numbers we sample
-    norm_nojump = norm(no_jump_state)
+    no_jump_state_sq = jnp.squeeze(no_jump_state)
+    # will still include r but it is zero here
+    p_nojump = jnp.conj(no_jump_state_sq) @ no_jump_state_sq
     # split key into ntraj keys
     # TODO split earlier so that not reusing key for different batch dimensions
     keys = jax.random.split(key, ntraj)
-    random_numbers = jax.random.uniform(keys[0], shape=(ntraj,), minval=norm_nojump)
+    random_numbers = jax.random.uniform(keys[0], shape=(ntraj,), minval=p_nojump)
     # run all single trajectories at once
     # 0 indicates the dimension to vmap over. Here that is the random numbers along
     # with their keys, which come along for the ride so that we can draw further random
     # numbers for which jumps to apply
     run_trajs = jax.vmap(_single_traj, in_axes=(None, None, None, None, 0, 0, None, None, None, None))
     psis = run_trajs(H, jump_ops, psi0, tsave, keys, random_numbers, exp_ops, solver, gradient, options)
-    return no_jump_state, psis, norm_nojump
+    #TODO return values don't fit into Result container
+    return no_jump_state, psis, p_nojump
 
 
 def _single_traj(
@@ -202,7 +207,8 @@ def _single_traj(
         solver = solver_class(new_tsave, state, H, exp_ops, solver, gradient, options, jump_ops)
         # solve until jump
         res = solver.run()
-        t_jump = res.times[-1]
+        # TODO not the correct way to extract jump time I think
+        t_jump = res.tsave[-1]
         state_before_jump = res.states[-1]
         psi_before_jump = state_before_jump[0:-1]
 
@@ -210,29 +216,27 @@ def _single_traj(
         key, sample_key = jax.random.split(key)
         jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
         # only apply a jump if the solve terminated before the end
-        mask = jnp.where(
-            t_jump < tsave[-1],
-            if_true=jnp.array([1.0,]),
-            if_false=jnp.array([0.0,])
-        )
+        mask = jnp.where(t_jump < tsave[-1], jnp.array([1.0, ]), jnp.array([0.0, ]))
         psi = unit(mask * jump_op @ psi_before_jump + (1 - mask) * psi_before_jump)
         # generate new random number
         key, new_key = jax.random.split(key)
-        r = jax.random.uniform(key)
-        state = jnp.concat((psi, r))
+        r = jax.random.uniform(key, shape=(1, 1))
+        state = jnp.concatenate((psi, r))
         return t_jump, state, new_key, solver
 
-    initial_state = jnp.concat((psi0, rand))
-    _, state, _, _ = jax.lax.while_loop(while_cond, while_body, (tsave[0], initial_state, key, solver))
+    initial_state = jnp.concatenate((psi0, rand))
+    _, state, _, _ = while_loop(while_cond, while_body, (tsave[0], initial_state, key, solver),
+                                kind="checkpointed", max_steps=10)
     return state
 
 
 def sample_jump_ops(t, psi, jump_ops, key):
     Ls = jnp.stack([L(t) for L in jump_ops])
     Lsd = dag(Ls)
+    psi_sq = jnp.squeeze(psi, axis=-1)
     probs = jnp.einsum("i,eij,ejk,k->e",
-                       jnp.conj(psi), Lsd, Ls, psi
+                       jnp.conj(psi_sq), Lsd, Ls, psi_sq
                        )
-    logits = jnp.log(probs)
+    logits = jnp.log(jnp.real(probs / jnp.sum(probs)))
     sample_idx = jax.random.categorical(key, logits, shape=(1,))
-    return jump_ops[sample_idx[0]]
+    return jnp.squeeze(jnp.take(Ls, sample_idx, axis=0), axis=0)

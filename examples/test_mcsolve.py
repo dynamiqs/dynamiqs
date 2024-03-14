@@ -1,3 +1,6 @@
+import os
+os.environ["JAX_TRACEBACK_FILTERING"] = "off"
+
 import dynamiqs as dq
 import jax.numpy as jnp
 from dynamiqs import timecallable
@@ -12,9 +15,9 @@ def H_func(t, omega, omega_d, amp):
 
 tsave = jnp.linspace(0, 1.0, 101)
 
-exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)),
-           dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1))
-           ]
+# exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)),
+#            dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1))
+#            ]
 exp_ops = []
 
 jump_ops = [1.0 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)), ]
