@@ -55,7 +55,7 @@ class DiffraxSolver(BaseSolver):
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
                 discrete_terminating_event=self.discrete_terminating_event,
-                max_steps=self.max_steps,
+                max_steps=100000, #TODO hard coding this prevents max_steps error, not sure yet why
             )
 
         # === collect and return results

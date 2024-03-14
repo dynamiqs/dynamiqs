@@ -13,7 +13,7 @@ from ..core.diffrax_solver import (
     Tsit5Solver,
 )
 from ..time_array import TimeArray
-from ..utils.utils import dag, norm
+from ..utils.utils import dag
 
 
 class MonteCarloTerm(dx.ODETerm):
@@ -32,7 +32,7 @@ class MonteCarloTerm(dx.ODETerm):
         psi = state[0:-1]
         r = state[-1][..., None]
         new_state = -1j * (self.H(t) - 1j * 0.5 * LdL) @ psi
-        return jnp.concat((new_state, r))
+        return jnp.concatenate((new_state, r))
 
 
 class MCDiffraxSolver(DiffraxSolver, MCSolver):
@@ -41,9 +41,9 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
         self.term = MonteCarloTerm(H=self.H, Ls=self.Ls)
 
         def norm_below_rand(state, **kwargs):
-            psi = state.y[0:-1]
-            r = state.y[-1]
-            return jnp.where(norm(psi) < r, True, False)
+            psi = jnp.squeeze(state.y[0:-1])
+            r = jnp.squeeze(state.y[-1])
+            return jnp.all((jnp.conj(psi) @ psi) < r)
         self.discrete_terminating_event = dx.DiscreteTerminatingEvent(norm_below_rand)
 
 
