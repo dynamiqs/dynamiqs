@@ -29,7 +29,11 @@
       {% block heading scoped %}
         {% if config.separate_signature %}
           <span class="doc doc-object-name doc-function-name">
-            {% if show_full_path %}{{ function.path }}{% else %}{% if config.namespace %}{{ config.namespace }}.{% if class.name %}{{ class.name }}.{% endif %}{% endif %}{{ function.name }}{% endif %}
+            {% if show_full_path %}
+                {{ function.path }}
+            {% else %}
+                {% if not class.name and config.namespace %}{{ config.namespace }}.{% elif class.name %}{{ class.name}}.{% endif %}{{ function.name }}
+            {% endif %}
           </span>
         {% else %}
           {% filter highlight(language="python", inline=True) %}

@@ -19,38 +19,50 @@ __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 def constant(array: ArrayLike) -> ConstantTimeArray:
     r"""Instantiate a constant time-array.
 
-    A constant time-array is defined by $A(t)=A_0$ for any time $t$, where $A_0$ is a
+    A constant time-array is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
     constant array.
 
     Args:
-        array _(array_like of shape (..., n, n))_: Constant array $A$.
+        array _(array_like of shape (..., n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $A_0$ for any time $t$.
+        _(time-array object)_ Callable object returning $O_0$ for any time $t$.
     """
     array = jnp.asarray(array, dtype=cdtype())
     return ConstantTimeArray(array)
 
 
 def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
-    r"""Instantiate a piecewise-constant (PWC) time-array.
+    r"""Instantiate a piecewise constant (PWC) time-array.
 
-    A PWC time-array is defined by $A(t) = v_i A_0$ for $t \in [t_i, t_{i+1})$, where
-    $v_i$ is a constant value, and $A_0$ is a constant array.
+    A PWC time-array takes constant values over some time intervals. It is defined by
+    $$
+        O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
+    $$
+    where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
+    window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
+    $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant array.
 
     Warning:
         Batching is not yet supported for PWC time-arrays, this will be fixed soon.
 
+    Notes:
+        The argument `times` argument must be sorted in ascending order, but does not
+        need to be evenly spaced.
+
+    Notes:
+        If the returned time-array is called for a time $t$ which does not belong to any
+        time intervals, the returned array is null.
+
     Args:
-        times _(array_like of shape (nv+1,))_: Time points $t_i$ between which the
-            PWC factor takes constant values, where _nv_ is the number of time
-            intervals.
-        values _(array_like of shape (..., nv))_: Constant values $v_i$ for each time
+        times _(array_like of shape (N+1,))_: Time points $t_k$ defining the boundaries
+            of the time intervals, where _N_ is the number of time intervals.
+        values _(array_like of shape (..., N))_: Constant values $c_k$ for each time
             interval.
-        array _(array_like of shape (n, n))_: Constant array $A_0$.
+        array _(array_like of shape (n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
+        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
     """
     # times
     times = jnp.asarray(times)
@@ -79,8 +91,10 @@ def modulated(
 ) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
-    A modulated time-array is defined by $A(t) = f(t) A_0$, where $f(t)$ is a function
-    with signature `f(t: float, *args: PyTree) -> Array`, and $A_0$ is a constant array.
+    A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
+    time-dependent scalar. The function $f$ is defined by passing a Python function
+    with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
+    _(...)_ for any time $t$.
 
     Warning:
         Batching is not yet supported for modulated time-arrays, this will be fixed
@@ -90,11 +104,11 @@ def modulated(
         f _(function returning array of shape (...))_: Function with signature
             `f(t: float, *args: PyTree) -> Array` that returns the modulating factor
             $f(t)$.
-        array _(array_like of shape (n, n))_: Constant array $A_0$.
+        array _(array_like of shape (n, n))_: Constant array $O_0$.
         args: Other positional arguments passed to the function $f$.
 
     Returns:
-        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
+        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
@@ -123,8 +137,10 @@ def timecallable(
 ) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
-    A callable time-array is defined by $A(t) = f(t)$, where $f(t)$ is a function with
-    signature `f(t: float, *args: PyTree) -> Array`.
+    A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
+    time-dependent operator. The function $f$ is defined by passing a Python function
+    with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
+    _(..., n, n)_ for any time $t$.
 
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
@@ -132,7 +148,7 @@ def timecallable(
         args: Other positional arguments passed to the function $f$.
 
     Returns:
-        _(time-array object)_ Callable object returning $A(t)$ for any time $t$.
+        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
@@ -173,6 +189,28 @@ def _split_shape(
 
 
 class TimeArray(eqx.Module):
+    r"""Base class for time-dependent arrays.
+
+    A time-array is a callable object that returns a JAX array for any time $t$. It is
+    used to define time-dependent operators for dynamiqs solvers.
+
+    Attributes:
+        dtype _(numpy.dtype)_: Data type.
+        shape _(tuple of int)_: Shape.
+        mT _(TimeArray)_: Returns the time-array transposed over its last two
+            dimensions.
+        ndim _(int)_: Number of dimensions.
+
+    Notes:
+        Time-arrays support elementary operations:
+
+        - negation (`__neg__`),
+        - left-and-right element-wise addition/subtraction with other arrays or
+            time-arrays (`__add__`, `__radd__`, `__sub__`, `__rsub__`),
+        - left-and-right element-wise multiplication with other arrays (`__mul__`,
+            `__rmul__`).
+    """
+
     # Subclasses should implement:
     # - the properties: dtype, shape, mT
     # - the methods: __call__, reshape, conj, __neg__, __mul__, __add__
@@ -183,34 +221,51 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def dtype(self) -> np.dtype:
-        """The data type (numpy.dtype) of the array."""
+        pass
 
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """The shape of the array."""
+        pass
 
     @property
     @abstractmethod
     def mT(self) -> TimeArray:
-        """Transposes the last two dimensions of x."""
+        pass
 
     @property
     def ndim(self) -> int:
-        """The number of dimensions in the array."""
         return len(self.shape)
 
     @abstractmethod
-    def __call__(self, t: Scalar) -> Array:
-        """Evaluate at a given time."""
-
-    @abstractmethod
     def reshape(self, *args: int) -> TimeArray:
-        """Returns an array containing the same data with a new shape."""
+        """Returns a time-array containing the same data with a new shape.
+
+        Args:
+            *args: New shape.
+
+        Returns:
+            New time-array object with the given shape.
+        """
 
     @abstractmethod
     def conj(self) -> TimeArray:
-        """Return the complex conjugate, element-wise."""
+        """Returns the element-wise complex conjugate of the time-array.
+
+        Returns:
+            New time-array object with element-wise complex conjuguated values.
+        """
+
+    @abstractmethod
+    def __call__(self, t: Scalar) -> Array:
+        """Returns the time-array evaluated at a given time.
+
+        Args:
+            t: Time at which to evaluate the array.
+
+        Returns:
+            Array evaluated at time $t$.
+        """
 
     @abstractmethod
     def __neg__(self) -> TimeArray:
@@ -346,7 +401,7 @@ class PWCTimeArray(TimeArray):
 
 
 class ModulatedTimeArray(TimeArray):
-    f: callable[[float, ...], Array]  # (...,)
+    f: callable[[float, ...], Array]  # (...)
     array: Array  # (n, n)
     args: tuple[PyTree]
 
