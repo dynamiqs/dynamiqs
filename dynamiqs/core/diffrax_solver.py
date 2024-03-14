@@ -24,18 +24,6 @@ class DiffraxSolver(BaseSolver):
         # to have subsequent init working properly
         super().__init__(*args)
 
-    def __str__(self) -> str:
-        parts = {
-            "Solver": "Diffrax Solver",
-            "Term": f'{self.term}',
-        }
-        parts_str = '\n'.join(f'{k}: {v}' for k,v in parts.items-())
-        return parts_str
-
-    def __repr__(self) -> str:
-        return f'DiffraxSolver(diffrax_solver={self.diffrax_solver}, stepsize_controller={self.stepsize_controller}, dt0={self.dt0}, max_steps={self.max_steps}, term={self.term})'
-    
-
     def run(self) -> PyTree:
         # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():
@@ -90,10 +78,6 @@ class FixedSolver(DiffraxSolver):
                     f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
                 )
             return f'{self.nsteps} steps'
-        
-        def __repr__(self) -> str:
-            return f'FixedSolver(nsteps={self.nsteps})'
-
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -103,10 +87,6 @@ class FixedSolver(DiffraxSolver):
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
         return self.Infos(stats['num_steps'])
-    
-
-    
-    
 
 
 class EulerSolver(FixedSolver):
@@ -131,9 +111,6 @@ class AdaptiveSolver(DiffraxSolver):
                 f' {self.nrejected} rejected)'
             )
 
-        def __repr__(self) -> str:
-            return f'AdaptiveSolver(nsteps={self.nsteps}, naccepted={self.naccepted}, nrejected={self.nrejected})'
-
     def __init__(self, *args):
         super().__init__(*args)
         self.stepsize_controller = dx.PIDController(
@@ -150,8 +127,6 @@ class AdaptiveSolver(DiffraxSolver):
         return self.Infos(
             stats['num_steps'], stats['num_accepted_steps'], stats['num_rejected_steps']
         )
-    
-    
 
 
 class Dopri5Solver(AdaptiveSolver):

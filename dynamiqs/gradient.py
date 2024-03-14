@@ -21,12 +21,10 @@ class Autograd(Gradient):
             [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
             option.
         """
-
         super().__init__()
-    
-    def __str__(self) -> str:
-        return "Standard automatic differentiation Gradient."
 
+    def __str__(self) -> str:
+        return 'Standard automatic differentiation Gradient.'
 
 
 class CheckpointAutograd(Gradient):
@@ -72,11 +70,8 @@ class CheckpointAutograd(Gradient):
 
     def __str__(self) -> str:
         parts = {
-            "Gradient Name": "Checkpointed Automatic Differentiation",
-            "Checkpoints": self.ncheckpoints
+            'Gradient Name': 'Checkpointed Automatic Differentiation',
+            'Checkpoints': self.ncheckpoints,
         }
-        parts_str = '\n'.join(f'{k}: {v}' for k,v in parts.items())
-        return parts_str
-    
-    def __repr__(self) -> str:
-        return f'CheckpointAutograd(ncheckpoints: {self.ncheckpoints})'
+
+        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
