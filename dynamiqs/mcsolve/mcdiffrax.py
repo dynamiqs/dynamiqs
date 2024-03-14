@@ -1,3 +1,4 @@
+from jax.tree_util import Partial
 from typing import Callable
 
 import diffrax as dx
@@ -43,8 +44,8 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
         def norm_below_rand(state, **kwargs):
             psi = jnp.squeeze(state.y[0:-1])
             r = jnp.squeeze(state.y[-1])
-            return jnp.all((jnp.conj(psi) @ psi) < r)
-        self.discrete_terminating_event = dx.DiscreteTerminatingEvent(norm_below_rand)
+            return (jnp.conj(psi) @ psi) < r
+        self.discrete_terminating_event = dx.DiscreteTerminatingEvent(Partial(norm_below_rand))
 
 
 class MCEuler(MCDiffraxSolver, EulerSolver):

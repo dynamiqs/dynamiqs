@@ -60,7 +60,7 @@ class DiffraxSolver(BaseSolver):
         # === collect and return results
         save_a, save_b = solution.ys
         saved = self.collect_saved(save_a, save_b[0])
-        return self.result(saved, infos=self.infos(solution.stats))
+        return self.result(saved, solution.ts[-1], infos=self.infos(solution.stats))
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
