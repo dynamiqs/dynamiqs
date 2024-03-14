@@ -1,10 +1,11 @@
 import os
-os.environ["JAX_TRACEBACK_FILTERING"] = "off"
+#os.environ["JAX_TRACEBACK_FILTERING"] = "off"
 
 import dynamiqs as dq
 import jax.numpy as jnp
 from dynamiqs import timecallable
 import matplotlib.pyplot as plt
+from dynamiqs.solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 
 omega = 2.0 * jnp.pi * 1.0
 amp = 2.0 * jnp.pi * 0.5
@@ -28,12 +29,13 @@ result = dq.mcsolve(
     jump_ops,
     dq.basis(2, 0),
     tsave,
-    exp_ops=exp_ops
+    exp_ops=exp_ops,
+    solver=Euler(dt=0.001),
 )
 
-fig, ax = plt.subplots()
-plt.plot(tsave, result.expects[0], label="0")
-plt.plot(tsave, result.expects[1], label="1")
-plt.show()
-
+# fig, ax = plt.subplots()
+# plt.plot(tsave, result.expects[0], label="0")
+# plt.plot(tsave, result.expects[1], label="1")
+# plt.show()
+#
 print(result)

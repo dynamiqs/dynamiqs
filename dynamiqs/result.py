@@ -49,6 +49,7 @@ class Result(eqx.Module):
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
+        final_time _(Array)_: final solution time
     """
 
     tsave: Array
@@ -56,6 +57,7 @@ class Result(eqx.Module):
     gradient: Gradient | None
     options: Options
     _saved: Saved
+    final_time: Array
     infos: PyTree | None = None
 
     @property
