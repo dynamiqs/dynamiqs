@@ -330,7 +330,7 @@ def _expect_single(O: Array, x: Array) -> Array:
         )
 
 
-def norm(x: ArrayLike) -> Array:
+def norm(x: ArrayLike, eps=1e-15) -> Array:
     r"""Returns the norm of a ket, bra or density matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
@@ -339,6 +339,7 @@ def norm(x: ArrayLike) -> Array:
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
             density matrix.
+        eps _(float)_: tolerance in case the vector is zero to prevent nans
 
     Returns:
         _(array of shape (...))_ Real-valued norm of `x`.
@@ -360,9 +361,9 @@ def norm(x: ArrayLike) -> Array:
     x = jnp.asarray(x)
 
     if isket(x) or isbra(x):
-        return jnp.linalg.norm(x, axis=(-1, -2)).real
+        return jnp.linalg.norm(x, axis=(-1, -2)).real + eps
     elif isdm(x):
-        return trace(x).real
+        return trace(x).real + eps
     else:
         raise ValueError(
             'Argument `x` must be a ket, bra or density matrix, but has shape'
@@ -370,7 +371,7 @@ def norm(x: ArrayLike) -> Array:
         )
 
 
-def unit(x: ArrayLike) -> Array:
+def unit(x: ArrayLike, eps=1e-15) -> Array:
     r"""Normalize a ket, bra or density matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
@@ -378,6 +379,7 @@ def unit(x: ArrayLike) -> Array:
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
             density matrix.
+        eps _(float)_: tolerance in case the vector is zero to prevent nans
 
     Returns:
         _(array of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Normalized ket,
@@ -393,7 +395,7 @@ def unit(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
 
-    return x / norm(x)[..., None, None]
+    return x / norm(x, eps=eps)[..., None, None]
 
 
 def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:

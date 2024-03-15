@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from equinox.internal import while_loop
 from jax.random import PRNGKey
 from jax import Array
 from jaxtyping import ArrayLike
@@ -212,25 +213,26 @@ def _single_traj(
         jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
         # only apply a jump if the solve terminated before the end
         mask = jnp.where(t_jump < tsave[-1], jnp.array([1.0, ]), jnp.array([0.0, ]))
-        psi = unit(mask * jump_op @ psi_before_jump + (1 - mask) * psi_before_jump)
+        psi = unit(mask * jump_op @ psi_before_jump) + (1 - mask) * psi_before_jump
         # new random key for the next round of the while loop
         r = jax.random.uniform(next_r_key, shape=(1, 1))
         state = jnp.concatenate((psi, r))
         return t_jump, state, next_loop_key, solver
 
     initial_state = jnp.concatenate((psi0, rand))
-    _, state, _, _ = jax.lax.while_loop(while_cond, while_body, (tsave[0], initial_state, key, solver),)
+    _, state, _, _ = while_loop(while_cond, while_body, (tsave[0], initial_state, key, solver),
+                                kind="checkpointed", max_steps=10)
     return state
 
 
-def sample_jump_ops(t, psi, jump_ops, key):
+def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
     Ls = jnp.stack([L(t) for L in jump_ops])
     Lsd = dag(Ls)
     # i, j, k: hilbert dim indices; e: jump ops; d: index of dimension 1
     probs = jnp.einsum("id,eij,ejk,kd->e",
                        jnp.conj(psi), Lsd, Ls, psi
                        )
-    logits = jnp.log(jnp.real(probs / jnp.sum(probs)))
+    logits = jnp.log(jnp.real(probs / (jnp.sum(probs)+eps)))
     # randomly sample the index of a single jump operator
     sample_idx = jax.random.categorical(key, logits, shape=(1,))
     # extract that jump operator and squeeze size 1 dims
