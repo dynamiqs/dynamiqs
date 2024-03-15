@@ -28,7 +28,7 @@ class Solver(eqx.Module):
             )
 
     def __str__(self) -> str:
-        return 'Generic Solver class with generic options.'
+        return eqx.tree_pformat(self, indent=0).replace('\n', '').replace(',', ', ')
 
 
 # === propagator solvers options
@@ -62,10 +62,6 @@ class Propagator(Solver):
             The propagator method only supports constant Hamiltonian and jump
             operators. Piecewise-constant problems will also be supported in the future.
         """
-
-    def __str__(self) -> str:
-        parts = {'Solver': 'Quantum propagator method'}
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
 
 
 # === generic ODE solvers options
@@ -107,10 +103,6 @@ class Euler(_DiffraxSolver, _ODEFixedStep):
         """  # noqa: E501
         _ODEFixedStep.__init__(self, dt)
 
-    def __str__(self) -> str:
-        parts = {'Solver': 'Euler Method', 'Time Step': f'{self.dt}'}
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
-
 
 class Rouchon1(_DiffraxSolver, _ODEFixedStep):
     def __init__(self, dt: float):
@@ -133,10 +125,6 @@ class Rouchon1(_DiffraxSolver, _ODEFixedStep):
     # TODO: fix, strings are not valid JAX types
     # normalize: Literal['sqrt', 'cholesky'] | None = None
 
-    def __str__(self) -> str:
-        parts = {'Solver': '1st-order Rouchon method', 'Time Step': f'{self.dt}'}
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
-
 
 class Rouchon2(_DiffraxSolver, _ODEFixedStep):
     def __init__(self, dt: float):
@@ -146,10 +134,6 @@ class Rouchon2(_DiffraxSolver, _ODEFixedStep):
             This solver has not been ported to JAX yet.
         """
         _ODEFixedStep.__init__(self, dt)
-
-    def __str__(self) -> str:
-        parts = {'Solver': '2nd-order Rouchon method', 'Time Step': f'{self.dt}'}
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
 
 
 class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
@@ -179,14 +163,6 @@ class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
 
-    def __str__(self) -> str:
-        parts = {
-            'Solver': '5th-order Dormand-Prince method',
-            'Relative & Absolute Tolerance': f'{self.rtol}, {self.atol}',
-            'Maximum Number of Step': self.max_steps,
-        }
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
-
 
 class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
     def __init__(
@@ -215,14 +191,6 @@ class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
 
-    def __str__(self) -> str:
-        parts = {
-            'Solver': '8th-order Dormand-Prince method',
-            'Relative & Absolute Tolerance': f'{self.rtol}, {self.atol}',
-            'Maximum Number of Step': self.max_steps,
-        }
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
-
 
 class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
     def __init__(
@@ -250,11 +218,3 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
-
-    def __str__(self) -> str:
-        parts = {
-            'Solver': '5th-order Tsitouras',
-            'Relative & Absolute Tolerance': f'{self.rtol}, {self.atol}',
-            'Maximum Number of Step': self.max_steps,
-        }
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())

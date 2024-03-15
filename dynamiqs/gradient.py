@@ -24,7 +24,7 @@ class Autograd(Gradient):
         super().__init__()
 
     def __str__(self) -> str:
-        return 'Standard automatic differentiation Gradient.'
+        return eqx.tree_pformat(self, indent=0).replace('\n', '').replace(',', ', ')
 
 
 class CheckpointAutograd(Gradient):
@@ -67,11 +67,3 @@ class CheckpointAutograd(Gradient):
                 of steps `n_steps <= max_steps`.
         """
         self.ncheckpoints = ncheckpoints
-
-    def __str__(self) -> str:
-        parts = {
-            'Gradient Name': 'Checkpointed Automatic Differentiation',
-            'Checkpoints': self.ncheckpoints,
-        }
-
-        return '\n'.join(f'{k}: {v}' for k, v in parts.items())
