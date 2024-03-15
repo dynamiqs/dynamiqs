@@ -28,7 +28,7 @@ class SchrodingerTerm(dx.ODETerm):
 class SEDiffraxSolver(DiffraxSolver, SESolver):
     def __init__(self, *args):
         super().__init__(*args)
-        self.term = SchrodingerTerm(self.H)
+        self.terms = SchrodingerTerm(self.H)
 
 
 class SEEuler(SEDiffraxSolver, EulerSolver):

@@ -17,7 +17,7 @@ class DiffraxSolver(BaseSolver):
     stepsize_controller: dx.AbstractAdaptiveStepSizeController
     dt0: float | None
     max_steps: int
-    term: dx.ODETerm
+    terms: dx.AbstractTerm
 
     def __init__(self, *args):
         # this dummy init is needed because of the way the class hierarchy is set up,
@@ -44,7 +44,7 @@ class DiffraxSolver(BaseSolver):
 
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
-                self.term,
+                self.terms,
                 self.diffrax_solver,
                 t0=self.t0,
                 t1=self.ts[-1],
