@@ -13,15 +13,15 @@ import timeit
 To simulate multiple Hamiltonians, you can pass an array of Hamiltonians for the argument `H` to [`dq.sesolve()`][dynamiqs.sesolve], [`dq.mesolve()`][dynamiqs.mesolve] or [`dq.smesolve()`][dynamiqs.smesolve]. You can also pass an array of initial states for the argument `psi0` (or `rho0` for open systems) to simulate multiple initial states. In this case, we say that the simulation is *batched*.
 
 !!! Note "Result of a batched simulation"
-    When a simulation is batched in dynamiqs, the result of the simulation is a batched array (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(bH?, bstate?, nt, n, m)` where
+    When a simulation is batched in dynamiqs, the result of the simulation is a batched array (a multi-dimensional array) that contains all the individual simulations results. The resulting `states` object has shape `(nH?, nstate?, nt, n, m)` where
 
-    - `bH` is the number of Hamiltonians,
-    - `bstate` is the number of initial states,
+    - `nH` is the number of Hamiltonians,
+    - `nstate` is the number of initial states,
     - `nt` is the number of saved states,
     - `n` is the Hilbert space dimension,
     - `m=1` for closed systems and `m=n` for open systems.
 
-    The `?` in the shape `(bH?, bstate?, nt, n, n)` indicates that the dimension is only present if the simulation is batched over Hamiltonians or initial states.
+    The `?` in the shape `(nH?, nstate?, nt, n, n)` indicates that the dimension is only present if the simulation is batched over Hamiltonians or initial states.
 
 For instance, let's simulate the Schrödinger equation on multiple initial states:
 
@@ -41,7 +41,7 @@ print(result)
 ```
 
 ```
-==== Result ====
+==== SEResult ====
 Solver  : Tsit5
 States  : Array complex64 (4, 11, 2, 1) | 0.69 Kb
 Expects : Array complex64 (4, 1, 11) | 0.34 Kb

@@ -61,7 +61,7 @@ print(result)
 ```
 
 ```text
-==== Result ====
+==== MEResult ====
 Solver  : Tsit5
 States  : Array complex64 (101, 128, 128) | 12.62 Mb
 Infos   : 7 steps (7 accepted, 0 rejected)

@@ -8,7 +8,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result, Saved
+from ..result import MEResult, Result, Saved, SEResult
 from ..solver import Solver
 from ..time_array import TimeArray
 from ..utils.utils import expect
@@ -48,22 +48,26 @@ class BaseSolver(AbstractSolver):
 
         return saved
 
-    def result(
-        self, saved: dict[str, Array], ylast: Array, infos: PyTree | None = None
-    ) -> Result:
+    def collect_saved(self, saved: dict[str, Array], ylast: Array) -> Saved:
         ysave = saved.get('ysave', ylast)
         Esave = saved.get('Esave')
         extra = saved.get('extra')
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
-        saved = Saved(ysave, Esave, extra)
-        return Result(
-            self.ts, self.solver, self.gradient, self.options, saved, infos=infos
-        )
+        return Saved(ysave, Esave, extra)
+
+    @abstractmethod
+    def result(self, saved: Saved, **kwargs) -> Result:
+        pass
 
 
-SESolver = BaseSolver
+class SESolver(BaseSolver):
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return SEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
 
 
 class MESolver(BaseSolver):
     Ls: list[TimeArray]
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
