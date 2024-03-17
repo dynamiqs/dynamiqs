@@ -33,6 +33,8 @@ class PropagatorSolver(BaseSolver):
             raise TypeError(
                 'Solver `Propagator` requires a time-independent Hamiltonian.'
             )
+
+        # extract the constant array from the `ConstantTimeArray` object
         self.H = self.H.x
 
     def run(self) -> PyTree:
@@ -71,4 +73,5 @@ class MEPropagatorSolver(MESolver, PropagatorSolver):
             raise TypeError(
                 'Solver `Propagator` requires time-independent jump operators.'
             )
+        # extract the constant arrays from the `ConstantTimeArray` objects
         self.Ls = [L.x for L in self.Ls]
