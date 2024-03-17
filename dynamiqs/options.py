@@ -3,7 +3,7 @@ from __future__ import annotations
 import equinox as eqx
 import jax
 from jax import Array
-from jaxtyping import PyTree, Scalar
+from jaxtyping import PyTree, ScalarLike
 
 __all__ = ['Options']
 
@@ -29,7 +29,7 @@ class Options(eqx.Module):
     save_states: bool = True
     verbose: bool = True
     cartesian_batching: bool = True
-    t0: Scalar | None = None
+    t0: ScalarLike | None = None
     save_extra: callable[[Array], PyTree] | None = None
 
     def __init__(
@@ -37,7 +37,7 @@ class Options(eqx.Module):
         save_states: bool = True,
         verbose: bool = True,
         cartesian_batching: bool = True,
-        t0: Scalar | None = None,
+        t0: ScalarLike | None = None,
         save_extra: callable[[Array], PyTree] | None = None,
     ):
         self.save_states = save_states
