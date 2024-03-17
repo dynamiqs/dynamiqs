@@ -9,9 +9,13 @@ from .gradient import Autograd, CheckpointAutograd, Gradient
 __all__ = ['Propagator', 'Euler', 'Rouchon1', 'Rouchon2', 'Dopri5', 'Dopri8', 'Tsit5']
 
 
+_TupleGradient = tuple[type[Gradient], ...]
+
+
 # === generic solvers options
 class Solver(eqx.Module):
-    SUPPORTED_GRADIENT: ClassVar[tuple[type[Gradient], ...]] = ()
+    # should be eqx.AbstractClassVar, but this conflicts with the __future__ imports
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient]
 
     @classmethod
     def supports_gradient(cls, gradient: Gradient | None) -> bool:  # noqa: ANN102
@@ -57,7 +61,7 @@ class Propagator(Solver):
         operators. Piecewise-constant problems will also be supported in the future.
     """
 
-    SUPPORTED_GRADIENT = (Autograd,)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
 
     # dummy init to have the signature in the documentation
     def __init__(self):
@@ -96,7 +100,7 @@ class Euler(_ODEFixedStep):
         dt _(float)_: Fixed time step.
     """  # noqa: E501
 
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -110,7 +114,7 @@ class Rouchon1(_ODEFixedStep):
         This solver has not been ported to JAX yet.
     """
 
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -136,7 +140,7 @@ class Rouchon2(_ODEFixedStep):
         This solver has not been ported to JAX yet.
     """
 
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -158,7 +162,7 @@ class Dopri5(_ODEAdaptiveStep):
         max_steps: Maximum number of steps.
     """  # noqa: E501
 
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -188,7 +192,7 @@ class Dopri8(_ODEAdaptiveStep):
         max_steps: Maximum number of steps.
     """  # noqa: E501
 
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
     # dummy init to have the signature in the documentation
     def __init__(
@@ -218,7 +222,7 @@ class Tsit5(_ODEAdaptiveStep):
         max_steps: Maximum number of steps.
     """  # noqa: E501
 
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
     # dummy init to have the signature in the documentation
     def __init__(
