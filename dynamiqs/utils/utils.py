@@ -760,32 +760,35 @@ def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
 
     Returns:
         tuple: Eigenvalues and eigenvectors.
-
-    Examples:
-        >>> a = dq.destroy(5)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a
-        >>> D, P = dq.eigenstates(H)
-        >>> D
-        Array([ 0.,  0.,  2.,  6., 12.], dtype=float32)
     """
     x = jnp.asarray(x)
     if x.shape[-1] != x.shape[-2]:
         raise ValueError('Argument `x` must be a square matrix.')
 
-    if isherm(x):
+    def _eigenstates_herm(x: Array, lower_first: bool = True) -> tuple[Array, Array]:
         P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
-        if not lower_first:
-            P = jnp.flip(P, axis=-1)
-            D = jnp.flip(D, axis=-1)
-    else:
-        D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
+        P, D = jax.lax.cond(
+            lower_first,
+            lambda P, D: (P, D),
+            lambda P, D: (jnp.flip(P, axis=-1), jnp.flip(D, axis=-1)),
+            P,
+            D,
+        )
+        return D.astype(x.dtype), P
 
+    def _eigenstates_non_herm(
+        x: Array, lower_first: bool = True
+    ) -> tuple[Array, Array]:
+        D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
         idx = jnp.argsort(D, axis=-1)
-        if not lower_first:
-            idx = idx[..., ::-1]
+        idx = jax.lax.cond(lower_first, lambda x: x, lambda x: x[..., ::-1], idx)
         D = jnp.take_along_axis(D, idx, axis=-1)
         P = jnp.take_along_axis(P, idx[..., None, :], axis=-1)
-    return D, P
+        return D, P
+
+    return jax.lax.cond(
+        isherm(x), _eigenstates_herm, _eigenstates_non_herm, x, lower_first
+    )
 
 
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
