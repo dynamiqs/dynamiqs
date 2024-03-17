@@ -17,6 +17,7 @@ __all__ = [
     'isbra',
     'isdm',
     'isop',
+    'isherm',
     'toket',
     'tobra',
     'todm',
@@ -24,5 +25,6 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'eigenstates',
     'wigner',
 ]
