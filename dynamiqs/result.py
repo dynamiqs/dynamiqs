@@ -92,13 +92,13 @@ class SEResult(Result):
     """Result of the Schrödinger equation integration.
 
     Attributes:
-        states _(array of shape (nH?, npsi0?, nt, n, 1))_: Saved states.
-        expects _(array of shape (nH?, npsi0?, nE, nt) or None)_: Saved expectation
+        states _(array of shape (nH?, npsi0?, ntsave, n, 1))_: Saved states.
+        expects _(array of shape (nH?, npsi0?, nE, ntsave) or None)_: Saved expectation
             values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options`.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (nt,))_: Times for which results were saved.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
@@ -109,13 +109,13 @@ class MEResult(Result):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (nH?, nrho0?, nt, n, n))_: Saved states.
-        expects _(array of shape (nH?, nrho0?, nE, nt) or None)_: Saved expectation
+        states _(array of shape (nH?, nrho0?, ntsave, n, n))_: Saved states.
+        expects _(array of shape (nH?, nrho0?, nE, ntsave) or None)_: Saved expectation
             values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options`.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (nt,))_: Times for which results were saved.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.

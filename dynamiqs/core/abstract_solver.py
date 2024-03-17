@@ -53,7 +53,7 @@ class BaseSolver(AbstractSolver):
         if not self.options.save_states:
             saved = eqx.tree_at(lambda x: x.ysave, saved, ylast)
 
-        # reorder Esave after jax.lax.scan stacking (nt, nE) -> (nE, nt)
+        # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
         Esave = saved.Esave
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)

@@ -106,9 +106,9 @@ def smesolve(
             dissipative loss channel, set the corresponding efficiency to 0. No
             measurement signal will be returned for such channels.
         rho0 _(array-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
-        tsave _(array-like of shape (nt,))_: Times at which the states and expectation
-            values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
-            from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+            expectation values are saved. The equation is solved from `tsave[0]` to
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         tmeas _(array-like of shape (ntmeas,), optional)_: Times between which
             measurement signals are averaged and saved. Defaults to `tsave`.
         ntrajs: Number of stochastic trajectories to solve concurrently.
