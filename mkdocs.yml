@@ -158,6 +158,7 @@ nav:
           - Results:
               - SEResult: python_api/result/SEResult.md
               - MEResult: python_api/result/MEResult.md
+              - SMEResult: python_api/result/SMEResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
