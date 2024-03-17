@@ -151,6 +151,7 @@ nav:
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
               - Propagator: python_api/solver/Propagator.md
+              - Milstein: python_api/solver/Milstein.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
