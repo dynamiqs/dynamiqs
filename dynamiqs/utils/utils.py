@@ -519,11 +519,13 @@ def isop(x: ArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
-def isherm(x: ArrayLike) -> bool:
+def isherm(x: ArrayLike, rtol: float=1e-5, atol: float=1e-8) -> bool:
     r"""Returns True if the array is Hermitian.
 
     Args:
         x _(array_like of shape (..., n, n))_: Array.
+        rtol: Relative tolerance of the check. Defaults to 1e-5.
+        atol: Absolute tolerance of the check. Defaults to 1e-8.
 
     Returns:
         True if all the matrices in the last dimensions of `x` are Hermitian,
@@ -536,7 +538,7 @@ def isherm(x: ArrayLike) -> bool:
         Array(False, dtype=bool)
     """
     x = jnp.asarray(x)
-    return jnp.allclose(x, dag(x))
+    return jnp.allclose(x, dag(x), rtol=rtol, atol=atol)
 
 
 def toket(x: ArrayLike) -> Array:
@@ -752,14 +754,18 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
 
 
 def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
-    r"""Returns the eigenvalues and eigenvectors of operators or super-operators.
+    r"""Returns the eigenvalues and eigenvectors of an operator or super-operator.
 
     Args:
         x _(array_like of shape (..., n, n))_: Operator or super-operator.
-        sort ({"high", "low"}, optional): Eigenvalues sorting order. Defaults to "low".
+        lower_first: If True, eigenvalues are sorted ascendingly (low to high). If
+            False, eigenvalues are sorted descendingly (high to low). Defaults to True.
 
     Returns:
-        tuple: Eigenvalues and eigenvectors.
+        Tuple `(vals, vecs)` where `vals` is an array of eigenvalues of shape
+            _(..., n)_, and `vecs` is the corresponding array of eigenvectors of shape
+            _(..., n, n)_. Each element `vecs[..., :, i]` is the eigenvector
+            corresponding to eigenvalue `vals[..., i]`.
     """
     x = jnp.asarray(x)
     if x.shape[-1] != x.shape[-2]:
