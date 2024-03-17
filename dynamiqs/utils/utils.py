@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Literal
 
 import jax
 import jax.numpy as jnp
@@ -752,9 +751,7 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_gpu(x, y)
 
 
-def eigenstates(
-    x: ArrayLike, sort: Literal['high', 'low'] = 'low'
-) -> tuple[Array, Array]:
+def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
     r"""Returns the eigenvalues and eigenvectors of operators or super-operators.
 
     Args:
@@ -777,14 +774,14 @@ def eigenstates(
 
     if isherm(x):
         P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
-        if sort == 'high':
+        if not lower_first:
             P = jnp.flip(P, axis=-1)
             D = jnp.flip(D, axis=-1)
     else:
         D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
 
         idx = jnp.argsort(D, axis=-1)
-        if sort == 'high':
+        if not lower_first:
             idx = idx[..., ::-1]
         D = jnp.take_along_axis(D, idx, axis=-1)
         P = jnp.take_along_axis(P, idx[..., None, :], axis=-1)
