@@ -15,10 +15,10 @@ from ..utils.utils import dag
 
 
 class MEDiffraxSolver(DiffraxSolver, MESolver):
-    def __init__(self, *args):
-        super().__init__(*args)
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define Lindblad term drho/dt
 
-        # === define Lindblad term drho/dt
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             # drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
             #         = {(-i H - 0.5 Ld @ L) @ rho + 0.5 L @ rho @ Ld} + h.c.
@@ -28,7 +28,7 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
             return tmp + dag(tmp)
 
-        self.terms = dx.ODETerm(vector_field)
+        return dx.ODETerm(vector_field)
 
 
 class MEEuler(MEDiffraxSolver, EulerSolver):

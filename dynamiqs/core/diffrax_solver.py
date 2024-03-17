@@ -13,15 +13,14 @@ from .abstract_solver import BaseSolver
 
 
 class DiffraxSolver(BaseSolver):
-    diffrax_solver: dx.AbstractSolver
-    stepsize_controller: dx.AbstractAdaptiveStepSizeController
-    dt0: float | None
-    max_steps: int
-    terms: dx.AbstractTerm
+    stepsize_controller: dx.AbstractVar[dx.AbstractStepSizeController]
+    dt0: dx.AbstractVar[float | None]
+    max_steps: dx.AbstractVar[int]
+    diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
+    terms: dx.AbstractVar[dx.AbstractTerm]
 
     def __init__(self, *args):
-        # this dummy init is needed because of the way the class hierarchy is set up,
-        # to have subsequent init working properly
+        # pass all init arguments to `BaseSolver`
         super().__init__(*args)
 
     def run(self) -> PyTree:
@@ -79,18 +78,19 @@ class FixedSolver(DiffraxSolver):
                 )
             return f'{self.nsteps} steps'
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.stepsize_controller = dx.ConstantStepSize()
-        self.dt0 = self.solver.dt
-        self.max_steps = 100_000  # TODO: fix hard-coded max_steps
+    stepsize_controller: dx.AbstractStepSizeController = dx.ConstantStepSize()
+    max_steps: int = 100_000  # TODO: fix hard-coded max_steps
+
+    @property
+    def dt0(self) -> float:
+        return self.solver.dt
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
         return self.Infos(stats['num_steps'])
 
 
 class EulerSolver(FixedSolver):
-    diffrax_solver = dx.Euler()
+    diffrax_solver: dx.AbstractSolver = dx.Euler()
 
 
 class AdaptiveSolver(DiffraxSolver):
@@ -111,17 +111,21 @@ class AdaptiveSolver(DiffraxSolver):
                 f' {self.nrejected} rejected)'
             )
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.stepsize_controller = dx.PIDController(
+    dt0 = None
+
+    @property
+    def stepsize_controller(self) -> dx.AbstractStepSizeController:
+        return dx.PIDController(
             rtol=self.solver.rtol,
             atol=self.solver.atol,
             safety=self.solver.safety_factor,
             factormin=self.solver.min_factor,
             factormax=self.solver.max_factor,
         )
-        self.dt0 = None
-        self.max_steps = self.solver.max_steps
+
+    @property
+    def max_steps(self) -> int:
+        return self.solver.max_steps
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
         return self.Infos(

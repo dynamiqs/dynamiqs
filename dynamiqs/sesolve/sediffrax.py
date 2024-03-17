@@ -13,13 +13,11 @@ from ..core.diffrax_solver import (
 
 
 class SEDiffraxSolver(DiffraxSolver, SESolver):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        # === define Schrödinger term d|psi>/dt = - i H |psi>
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define Schrödinger term d|psi>/dt = - i H |psi>
         vector_field = lambda t, y, _: -1j * self.H(t) @ y
-
-        self.terms = dx.ODETerm(vector_field)
+        return dx.ODETerm(vector_field)
 
 
 class SEEuler(SEDiffraxSolver, EulerSolver):
