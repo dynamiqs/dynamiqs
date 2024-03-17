@@ -4,11 +4,11 @@ from abc import abstractmethod
 
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree, Scalar
+from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ..gradient import Gradient
 from ..options import Options
-from ..result import MEResult, Result, Saved, SEResult
+from ..result import MEResult, Result, Saved, SEResult, SMEResult
 from ..solver import Solver
 from ..time_array import TimeArray
 from ..utils.utils import expect
@@ -78,3 +78,36 @@ class MESolver(BaseSolver):
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+
+
+class SMESolver(BaseSolver):
+    tmeas: Array
+    key: PRNGKeyArray
+    Lcs: list[TimeArray]  # (nLc, n, n)
+    Lms: list[TimeArray]  # (nLm, n, n)
+    etas: Array  # (nLm,)
+
+    @property
+    def Ls(self) -> list[TimeArray]:
+        return self.Lcs + self.Lms  # (nLc + nLm, n, n)
+
+    def save(self, y: PyTree) -> Saved:
+        return super().save(y.rho)
+
+    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+        saved = super().collect_saved(saved, ylast)
+        # reorder Isave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
+        Isave = saved.Isave.swapaxes(-1, -2)
+        return eqx.tree_at(lambda x: x.Isave, saved, Isave)
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return SMEResult(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            self.tmeas,
+            self.key,
+        )
