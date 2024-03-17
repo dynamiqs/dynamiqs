@@ -33,6 +33,10 @@ class BaseSolver(AbstractSolver):
     def t0(self) -> Scalar:
         return self.ts[0] if self.options.t0 is None else self.options.t0
 
+    @property
+    def t1(self) -> Scalar:
+        return self.ts[-1]
+
     def save(self, y: Array) -> dict[str, Array]:
         saved = {}
         if self.options.save_states:
