@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Callable
-
 import equinox as eqx
 import jax
 from jax import Array
@@ -11,11 +9,11 @@ __all__ = ['Options']
 
 
 class Options(eqx.Module):
-    save_states: bool = True
-    verbose: bool = True
-    cartesian_batching: bool = True
-    t0: Scalar | None = None
-    save_extra: Callable[[Array], PyTree] | None = None
+    save_states: bool
+    verbose: bool
+    cartesian_batching: bool
+    t0: Scalar | None
+    save_extra: callable[[Array], PyTree] | None
 
     def __init__(
         self,
@@ -23,7 +21,7 @@ class Options(eqx.Module):
         verbose: bool = True,
         cartesian_batching: bool = True,
         t0: Scalar | None = None,
-        save_extra: Callable[[Array], PyTree] | None = None,
+        save_extra: callable[[Array], PyTree] | None = None,
     ):
         """Generic options for the quantum solvers.
 

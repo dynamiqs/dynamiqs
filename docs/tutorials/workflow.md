@@ -17,9 +17,9 @@ import matplotlib.pyplot as plt
 
 ## 1. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like objects, e.g. [NumPy](https://numpy.org/) or [JAX](https://jax.readthedocs.io/) arrays.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like objects.
 
-Here, we will use [`dq.fock`](../python_api/utils/states/fock.md) to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz`](../python_api/utils/operators/sigmaz.md) and [`dq.sigmax`](../python_api/utils/operators/sigmax.md) to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
+Here, we will use [`dq.fock()`][dynamiqs.fock] to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz()`][dynamiqs.sigmaz] and [`dq.sigmax()`][dynamiqs.sigmax] to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
 ```python
 # initial state
@@ -62,7 +62,7 @@ solver = dq.solver.Dopri5(rtol=1e-6, atol=1e-8)
 
 ## 3. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve()`](../python_api/solvers/sesolve.md) function, which returns an instance of the [`Result`](../python_api/index.md) class. This object contains the computed states, the observables, and various information about the solver.
+We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of the [`Result`][dynamiqs.Result] class. This object contains the computed states, the observables, and various information about the solver.
 
 ```python
 # run simulation

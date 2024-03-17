@@ -79,6 +79,18 @@
         </label>
         {% include "partials/search.html" %}
       {% endif %}
+        <div class="md-header__slack">
+            <a
+            href="{{ config.extra.social[1].link }}"
+            title="{{ lang.t('slack') }}"
+            class="md-source"
+          >
+            <div class="md-slack__icon md-icon">
+              {% set icon = "fontawesome/brands/slack" %}
+              {% include ".icons/" ~ icon ~ ".svg" %}
+            </div>
+          </a>
+        </div>
       {% if config.repo_url %}
         <div class="md-header__source">
           {% include "partials/source.html" %}

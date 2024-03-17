@@ -7,16 +7,18 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.array_types import cdtype
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
+
+__all__ = ['mesolve']
 
 
 def mesolve(
@@ -48,12 +50,18 @@ def mesolve(
 
     Quote: Time-dependent Hamiltonian or jump operators
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to a time-array using [`dq.totime`](/python_api/totime/totime.html).
+        to time-arrays using [`dq.constant()`][dynamiqs.constant],
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable]. See
+        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        tutorial for more details.
 
     Quote: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
         matrix `rho0` can be batched to solve multiple master equations concurrently.
-        All other arguments are common to every batch.
+        All other arguments are common to every batch. See the
+        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
+        more details.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
@@ -66,13 +74,13 @@ def mesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`](/python_api/result/Result.html) object holding the result of the
-            Lindblad master equation integration. It has the following attributes:
+        [`dq.Result`][dynamiqs.Result] object holding the result of the Lindblad master
+            equation integration. It has the following attributes:
 
             - **states** _(array of shape (bH?, brho?, nt, n, n))_ -- Saved states.
             - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved

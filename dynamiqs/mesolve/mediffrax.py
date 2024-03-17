@@ -1,4 +1,4 @@
-from typing import Callable
+from __future__ import annotations
 
 import diffrax as dx
 import jax.numpy as jnp
@@ -19,7 +19,7 @@ from ..utils.utils import dag
 class LindbladTerm(dx.ODETerm):
     H: TimeArray  # (n, n)
     Ls: list[TimeArray]  # (nL, n, n)
-    vector_field: Callable[[Scalar, PyTree, PyTree], PyTree]
+    vector_field: callable[[Scalar, PyTree, PyTree], PyTree]
 
     def __init__(self, H: TimeArray, Ls: TimeArray):
         self.H = H
@@ -31,7 +31,7 @@ class LindbladTerm(dx.ODETerm):
         LdL = (Lsd @ Ls).sum(axis=0)
         # drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
         #         = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
-        out = -1j * self.H(t) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0) - 0.5 * LdL @ rho
+        out = (-1j * self.H(t) - 0.5 * LdL) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0)
         return out + dag(out)
 
 

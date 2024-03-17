@@ -7,15 +7,17 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.array_types import cdtype
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
+
+__all__ = ['sesolve']
 
 
 def sesolve(
@@ -39,13 +41,19 @@ def sesolve(
     where $H(t)$ is the system's Hamiltonian at time $t$.
 
     Quote: Time-dependent Hamiltonian
-        If the Hamiltonian depends on time, it can be converted to a time-array object
-        using [`dq.totime()`](/python_api/totime/totime.html).
+        If the Hamiltonian depends on time, it can be converted to a time-array using
+        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
+        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable]. See
+        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        tutorial for more details.
 
     Quote: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
         solve multiple Schrödinger equations concurrently. All other arguments are
-        common to every batch.
+        common to every batch. See the
+        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
+        more details.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
@@ -56,12 +64,12 @@ def sesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`](/python_api/result/Result.html) object holding the result of the
+        [`dq.Result`][dynamiqs.Result] object holding the result of the
             Schrödinger equation integration. It has the following attributes:
 
             - **states** _(array of shape (bH?, bpsi?, nt, n, 1))_ -- Saved states.
