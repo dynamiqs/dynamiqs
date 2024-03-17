@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import NamedTuple
-
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
@@ -32,7 +30,7 @@ def array_str(x: Array | None) -> str | None:
 
 
 # the Saved object holds quantities saved during the equation integration
-class Saved(NamedTuple):
+class Saved(eqx.Module):
     ysave: Array
     Esave: Array | None
     extra: PyTree | None

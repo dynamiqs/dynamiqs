@@ -37,27 +37,32 @@ class BaseSolver(AbstractSolver):
     def t1(self) -> Scalar:
         return self.ts[-1]
 
-    def save(self, y: Array) -> dict[str, Array]:
-        saved = {}
+    def save(self, y: PyTree) -> Saved:
+        ysave, Esave, extra = None, None, None
         if self.options.save_states:
-            saved['ysave'] = y
+            ysave = y
         if self.Es is not None and len(self.Es) > 0:
-            saved['Esave'] = expect(self.Es, y)
+            Esave = expect(self.Es, y)
         if self.options.save_extra is not None:
-            saved['extra'] = self.options.save_extra(y)
+            extra = self.options.save_extra(y)
+
+        return Saved(ysave, Esave, extra)
+
+    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+        # if save_states is False save only last state
+        if not self.options.save_states:
+            saved = eqx.tree_at(lambda x: x.ysave, saved, ylast)
+
+        # reorder Esave after jax.lax.scan stacking (nt, nE) -> (nE, nt)
+        Esave = saved.Esave
+        if Esave is not None:
+            Esave = Esave.swapaxes(-1, -2)
+            saved = eqx.tree_at(lambda x: x.Esave, saved, Esave)
 
         return saved
 
-    def collect_saved(self, saved: dict[str, Array], ylast: Array) -> Saved:
-        ysave = saved.get('ysave', ylast)
-        Esave = saved.get('Esave')
-        extra = saved.get('extra')
-        if Esave is not None:
-            Esave = Esave.swapaxes(-1, -2)
-        return Saved(ysave, Esave, extra)
-
     @abstractmethod
-    def result(self, saved: Saved, **kwargs) -> Result:
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         pass
 
 
