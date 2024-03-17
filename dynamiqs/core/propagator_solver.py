@@ -28,6 +28,7 @@ class PropagatorSolver(BaseSolver):
 
     def __init__(self, *args):
         super().__init__(*args)
+
         # check that Hamiltonian is time-independent
         if not isinstance(self.H, ConstantTimeArray):
             raise TypeError(
@@ -64,14 +65,15 @@ class PropagatorSolver(BaseSolver):
 SEPropagatorSolver = PropagatorSolver
 
 
-class MEPropagatorSolver(MESolver, PropagatorSolver):
+class MEPropagatorSolver(PropagatorSolver, MESolver):
     def __init__(self, *args):
-        MESolver.__init__(self, *args)
-        PropagatorSolver.__init__(self, *args[:-1])
+        super().__init__(*args)
+
         # check that jump operators are time-independent
         if not all(isinstance(L, ConstantTimeArray) for L in self.Ls):
             raise TypeError(
                 'Solver `Propagator` requires time-independent jump operators.'
             )
+
         # extract the constant arrays from the `ConstantTimeArray` objects
         self.Ls = [L.x for L in self.Ls]
