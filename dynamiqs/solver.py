@@ -82,13 +82,8 @@ class _ODEAdaptiveStep(_ODESolver):
     max_steps: int = 100_000
 
 
-# === diffrax-based solvers options
-class _DiffraxSolver(Solver):
-    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
-
-
 # === public solvers options
-class Euler(_DiffraxSolver, _ODEFixedStep):
+class Euler(_ODEFixedStep):
     """Euler method (fixed step size ODE solver).
 
     This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
@@ -101,21 +96,25 @@ class Euler(_DiffraxSolver, _ODEFixedStep):
         dt _(float)_: Fixed time step.
     """  # noqa: E501
 
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
-        _ODEFixedStep.__init__(self, dt)
+        super().__init__(dt)
 
 
-class Rouchon1(_DiffraxSolver, _ODEFixedStep):
+class Rouchon1(_ODEFixedStep):
     """First-order Rouchon method (fixed step size ODE solver).
 
     Warning:
         This solver has not been ported to JAX yet.
     """
 
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
-        _ODEFixedStep.__init__(self, dt)
+        super().__init__(dt)
 
     # normalize: The default scheme is trace-preserving at first order only. This
     # parameter sets the normalisation behaviour:
@@ -130,19 +129,21 @@ class Rouchon1(_DiffraxSolver, _ODEFixedStep):
     # normalize: Literal['sqrt', 'cholesky'] | None = None
 
 
-class Rouchon2(_DiffraxSolver, _ODEFixedStep):
+class Rouchon2(_ODEFixedStep):
     """Second-order Rouchon method (fixed step size ODE solver).
 
     Warning:
         This solver has not been ported to JAX yet.
     """
 
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
-        _ODEFixedStep.__init__(self, dt)
+        super().__init__(dt)
 
 
-class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
+class Dopri5(_ODEAdaptiveStep):
     """Dormand-Prince method of order 5 (adaptive step size ODE solver).
 
     This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
@@ -157,6 +158,8 @@ class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
         max_steps: Maximum number of steps.
     """  # noqa: E501
 
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
     # dummy init to have the signature in the documentation
     def __init__(
         self,
@@ -167,12 +170,10 @@ class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        _ODEAdaptiveStep.__init__(
-            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
-        )
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
+class Dopri8(_ODEAdaptiveStep):
     """Dormand-Prince method of order 8 (adaptive step size ODE solver).
 
     This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
@@ -187,6 +188,8 @@ class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
         max_steps: Maximum number of steps.
     """  # noqa: E501
 
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
     # dummy init to have the signature in the documentation
     def __init__(
         self,
@@ -197,12 +200,10 @@ class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        _ODEAdaptiveStep.__init__(
-            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
-        )
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
+class Tsit5(_ODEAdaptiveStep):
     """Tsitouras method of order 5 (adaptive step size ODE solver).
 
     This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
@@ -217,6 +218,8 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
         max_steps: Maximum number of steps.
     """  # noqa: E501
 
+    SUPPORTED_GRADIENT = (Autograd, CheckpointAutograd)
+
     # dummy init to have the signature in the documentation
     def __init__(
         self,
@@ -227,6 +230,4 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        _ODEAdaptiveStep.__init__(
-            self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
-        )
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
