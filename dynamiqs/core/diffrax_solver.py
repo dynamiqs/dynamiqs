@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..gradient import Autograd, CheckpointAutograd
+from ..result import Saved
 from .abstract_solver import BaseSolver
 
 
@@ -18,22 +19,24 @@ class DiffraxSolver(BaseSolver):
     max_steps: dx.AbstractVar[int]
     diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
     terms: dx.AbstractVar[dx.AbstractTerm]
+    saveat: dx.SaveAt
 
     def __init__(self, *args):
         # pass all init arguments to `BaseSolver`
         super().__init__(*args)
+
+        # === prepare saveat argument
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        save_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        save_b = dx.SubSaveAt(t1=True)  # save last state
+        self.saveat = dx.SaveAt(subs=[save_a, save_b])
 
     def run(self) -> PyTree:
         # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
 
-            # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
+            # === prepare adjoint argument
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
             elif isinstance(self.gradient, CheckpointAutograd):
@@ -49,16 +52,21 @@ class DiffraxSolver(BaseSolver):
                 t1=self.ts[-1],
                 dt0=self.dt0,
                 y0=self.y0,
-                saveat=saveat,
+                saveat=self.saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
                 max_steps=self.max_steps,
             )
 
         # === collect and return results
-        save_a, save_b = solution.ys
-        saved = self.collect_saved(save_a, save_b[0])
+        saved = self.solution_to_saved(solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
+
+    def solution_to_saved(self, ys: PyTree) -> Saved:
+        # === collect and return results
+        save_a, save_b = ys
+        saved, ylast = save_a, save_b
+        return self.collect_saved(saved, ylast)
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
