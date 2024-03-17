@@ -64,7 +64,12 @@ def sesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
+            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Euler`][dynamiqs.solver.Euler],
+            [`Propagator`][dynamiqs.solver.Propagator]).
+
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
