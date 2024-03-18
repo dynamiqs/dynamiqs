@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 import equinox as eqx
+from _utils import tree_str_inline
 
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
@@ -28,7 +29,7 @@ class Solver(eqx.Module):
             )
 
     def __str__(self) -> str:
-        return eqx.tree_pformat(self, indent=0).replace('\n', '').replace(',', ', ')
+        return tree_str_inline(self)
 
 
 # === propagator solvers options

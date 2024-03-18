@@ -72,10 +72,8 @@ class Result(eqx.Module):
 
     def __str__(self) -> str:
         parts = {
-            'Solver  ': type(self.solver).__name__,
-            'Gradient': (
-                type(self.gradient).__name__ if self.gradient is not None else None
-            ),
+            'Solver  ': self.solver,
+            'Gradient': (self.gradient if self.gradient is not None else None),
             'States  ': array_str(self.states),
             'Expects ': array_str(self.expects) if self.expects is not None else None,
             'Extra   ': (
