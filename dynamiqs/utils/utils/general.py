@@ -571,7 +571,7 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
     Examples:
         >>> dq.isherm(jnp.eye(3))
         Array(True, dtype=bool)
-        >>> dq.isherm(jnp.diag(jnp.ones(5), k=1))
+        >>> dq.isherm([[0, 1j], [1j, 0]])
         Array(False, dtype=bool)
     """
     x = jnp.asarray(x)
