@@ -565,8 +565,7 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         atol: Absolute tolerance of the check.
 
     Returns:
-        True if all the matrices in the last dimensions of `x` are Hermitian,
-        False otherwise.
+        True if `x` is Hermitian, False otherwise.
 
     Examples:
         >>> dq.isherm(jnp.eye(3))
