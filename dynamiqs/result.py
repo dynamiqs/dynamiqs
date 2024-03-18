@@ -80,6 +80,7 @@ class Result(eqx.Module):
                 eqx.tree_pformat(self.extra) if self.extra is not None else None
             ),
             'Infos   ': self.infos if self.infos is not None else None,
+            'Options ': self.options,
         }
         parts = {k: v for k, v in parts.items() if v is not None}
         parts_str = '\n'.join(f'{k}: {v}' for k, v in parts.items())
