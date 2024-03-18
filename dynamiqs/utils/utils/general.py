@@ -561,8 +561,8 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
 
     Args:
         x _(array_like of shape (..., n, n))_: Array.
-        rtol: Relative tolerance of the check. Defaults to 1e-5.
-        atol: Absolute tolerance of the check. Defaults to 1e-8.
+        rtol: Relative tolerance of the check.
+        atol: Absolute tolerance of the check.
 
     Returns:
         True if all the matrices in the last dimensions of `x` are Hermitian,
