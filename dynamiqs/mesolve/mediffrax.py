@@ -29,8 +29,15 @@ class LindbladTerm(dx.ODETerm):
         Ls = jnp.stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
         LdL = (Lsd @ Ls).sum(axis=0)
-        # drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
-        #         = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
+        # The Lindblad equation is:
+        # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
+        # It can be rewritten with the Hermitian conjugate as:
+        # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
+        # Taking account numerical errors, (1) and (2) are not equivalent.
+        # Decompose rho = rho_s + rho_a with Hermitian rho_s and anti-Hermitian rho_a.
+        # In (1), the evolution of rho_s is exact, but non constant in rho_a;
+        # in (2), there's a constant error in rho_s but no evolution of rho_a.
+        # => We choose (2), which is more robust to numerical errors.
         out = (-1j * self.H(t) - 0.5 * LdL) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0)
         return out + dag(out)
 
