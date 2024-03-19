@@ -26,18 +26,25 @@ class LindbladTerm(dx.ODETerm):
         self.Ls = Ls
 
     def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree) -> PyTree:
+        # The Lindblad equation is:
+        # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
+        # An alternative but similar equation is:
+        # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
+        # While (1) and (2) are equivalent assuming that rho is hermitian, they differ
+        # once you take into account numerical errors.
+        # Decomposing rho = rho_s + rho_a with Hermitian rho_s and anti-Hermitian rho_a,
+        # we get that:
+        #  - if rho evolves according to (1), both rho_s and rho_a also evolve
+        #    according to (1);
+        #  - if rho evolves according to (2), rho_s evolves closely to (1) up
+        #    to a constant error that depends on rho_a (which is small up to numerical
+        #    precision), while rho_a is strictly constant.
+        # In practice, we still use (2) because it involves less matrix multiplications,
+        # and is thus more efficient numerically with only a negligible numerical error
+        # induced on the dynamics.
         Ls = jnp.stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
         LdL = (Lsd @ Ls).sum(axis=0)
-        # The Lindblad equation is:
-        # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
-        # It can be rewritten with the Hermitian conjugate as:
-        # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
-        # Taking account numerical errors, (1) and (2) are not equivalent.
-        # Decompose rho = rho_s + rho_a with Hermitian rho_s and anti-Hermitian rho_a.
-        # In (1), the evolution of rho_s is exact, but non constant in rho_a;
-        # in (2), there's a constant error in rho_s but no evolution of rho_a.
-        # => We choose (2), which is more robust to numerical errors.
         out = (-1j * self.H(t) - 0.5 * LdL) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0)
         return out + dag(out)
 
