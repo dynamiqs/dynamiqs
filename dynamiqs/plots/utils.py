@@ -1,13 +1,20 @@
 from __future__ import annotations
 
+import pathlib
+import shutil
 from collections.abc import Iterable
 from functools import wraps
 from math import ceil
+from typing import Callable
 
+import imageio as iio
+import IPython.display as ipy
+import jax.numpy as jnp
 import matplotlib
 import matplotlib as mpl
 import numpy as np
 from cycler import cycler
+from jax.typing import ArrayLike
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
@@ -15,8 +22,9 @@ from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import FixedLocator, MultipleLocator, NullLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from tqdm import tqdm
 
-__all__ = ['gridplot']
+__all__ = ['gridplot', 'gifit']
 # __all__ = [
 #     'linmap',
 #     'figax',
@@ -228,3 +236,104 @@ def add_colorbar(
     plt.colorbar(mappable=mappable, cax=cax)
     cax.grid(False)
     return cax
+
+
+def gifit(
+    plot_function: Callable,
+    gif_duration: float = 5.0,
+    fps: int = 10,
+    filename: str = '.tmp/dynamiqs/evolution.gif',
+    dpi: int = 72,
+    display: bool = True,
+) -> Callable:
+    """Plot a GIF of the plot_function of multiple states.
+
+    Warning:
+        This function creates a temporary directory to store the frames of the GIF.
+        The directory is deleted after the GIF is created. Meaning that the GIF file
+        is deleted if the filename is not changed.
+
+    Note:
+        The plot_function must take a single state as input and plot it.
+        The states must be passed as a list or an array.
+        The plot_function must create its own figure and not close it.
+        By default, the GIF is displayed in Jupyter notebook environments.
+
+    Args:
+        plot_function (Callable): plot function to be giffed.
+        gif_duration (float, optional): GIF duration in seconds.
+        Defaults to 5 s.
+        fps (int, optional): GIF frames per seconds. Defaults to 10.
+        filename (str, optional): save path of the gif.
+        Defaults to '.tmp/dynamiqs/evolution.gif'.
+        dpi (int, optional): GIF resolution. Defaults to 72.
+        display (bool, optional): if True, the GIF will be displayed. Defaults to True.
+
+    Examples:
+        >>> N = 20
+        >>> alpha = 2
+        >>> a = dq.destroy(N)
+        >>> L2 = a @ a - alpha**2 * dq.eye(N)
+        >>> output = dq.mesolve(0 * a, [L2], dq.fock(N, 0), jnp.linspace(0, 1, 100))
+        >>> filename = 'docs/figs-code/cat_inflation.gif'
+        >>> dq.gifit(dq.plot_wigner, filename=filename, display=False)(output.states)
+
+        ![plot_cat_inflation](docs/figs-code/cat_inflation.gif)
+
+        >>> Na, Nb = 20, 5
+        >>> g2 = 2
+        >>> ed = -8
+        >>> kb = 16
+        >>> a = dq.tensor(dq.destroy(Na), dq.eye(Nb))
+        >>> b = dq.tensor(dq.eye(Na), dq.destroy(Nb))
+        >>> H = g2 * dq.dag(a) @ dq.dag(a) @ b + ed * b
+        >>> H += dq.dag(H)
+        >>> output = dq.mesolve(
+        ...     H, [jnp.sqrt(kb) * b], dq.fock(Na * Nb, 0), jnp.linspace(0, 1, 100)
+        ... )
+        >>> def plot_memory_buffer(state):
+        ...     _, ax = plt.subplots(1, 2, figsize=(10, 5))
+        ...     dq.plot_wigner(dq.ptrace(state, 0, (Na, Nb)), ax=ax[0])
+        ...     dq.plot_wigner(dq.ptrace(state, 1, (Na, Nb)), ax=ax[1])
+        >>> dq.gifit(
+        ...     plot_memory_buffer,
+        ...     filename='docs/figs-code/memory_buffer.gif',
+        ...     display=False,
+        ... )(output.states)
+
+        ![plot_memory_buffer](docs/figs-code/memory_buffer.gif)
+
+
+    """
+
+    def wrapper(states: ArrayLike, *args, **kwargs) -> None:
+        states = jnp.asarray(states)
+        nframes = int(gif_duration * fps)
+        selected_indexes = np.linspace(0, len(states), nframes, dtype=int)
+
+        try:
+            # create temporary directory
+            tmpdir = pathlib.Path('./.tmp/dynamiqs')
+            tmpdir.mkdir(parents=True, exist_ok=True)
+
+            frames = []
+            for i in tqdm(range(nframes)):
+                plot_function(states[selected_indexes[i]], *args, **kwargs)
+                frame_filename = tmpdir / f'tmp-{i}.png'
+
+                plt.gcf().savefig(frame_filename, bbox_inches='tight', dpi=dpi)
+                plt.close()
+                frame = iio.v3.imread(frame_filename)
+                frames.append(frame)
+
+            # loop=0: loop the GIF forever
+            iio.v3.imwrite(
+                filename, frames, format='GIF', durations=int(1000 / fps), loop=0
+            )
+            if display:
+                ipy.display(ipy.Image(filename))
+        finally:
+            if tmpdir.exists():
+                shutil.rmtree(tmpdir, ignore_errors=True)
+
+    return wrapper
