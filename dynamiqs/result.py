@@ -27,8 +27,8 @@ def memory_str(x: Array) -> str:
         return f'{mem / 1024**3:.2f} Gb'
 
 
-def array_str(x: Array) -> str:
-    return f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
+def array_str(x: Array | None) -> str | None:
+    return None if x is None else f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
 class Saved(NamedTuple):
@@ -77,7 +77,7 @@ class Result(eqx.Module):
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
             'States  ': array_str(self.states),
-            'Expects ': array_str(self.expects) if self.expects is not None else None,
+            'Expects ': array_str(self.expects),
             'Extra   ': (
                 eqx.tree_pformat(self.extra) if self.extra is not None else None
             ),

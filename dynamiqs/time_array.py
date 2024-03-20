@@ -9,7 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
-from jaxtyping import ArrayLike, PyTree, Scalar
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._utils import cdtype, check_time_array, obj_type_str
 
@@ -257,7 +257,7 @@ class TimeArray(eqx.Module):
         """
 
     @abstractmethod
-    def __call__(self, t: Scalar) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:
         """Returns the time-array evaluated at a given time.
 
         Args:
@@ -313,7 +313,7 @@ class ConstantTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ConstantTimeArray(self.x.mT)
 
-    def __call__(self, t: Scalar) -> Array:  # noqa: ARG002
+    def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.x
 
     def reshape(self, *args: int) -> TimeArray:

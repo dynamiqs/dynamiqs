@@ -23,7 +23,7 @@ class AbstractSolver(eqx.Module):
 class BaseSolver(AbstractSolver):
     ts: Array
     y0: Array
-    H: Array | TimeArray
+    H: TimeArray
     Es: Array
     solver: Solver
     gradient: Gradient | None
@@ -32,6 +32,10 @@ class BaseSolver(AbstractSolver):
     @property
     def t0(self) -> Scalar:
         return self.ts[0] if self.options.t0 is None else self.options.t0
+
+    @property
+    def t1(self) -> Scalar:
+        return self.ts[-1]
 
     def save(self, y: Array) -> dict[str, Array]:
         saved = {}
@@ -62,4 +66,4 @@ SESolver = BaseSolver
 
 
 class MESolver(BaseSolver):
-    Ls: list[Array | TimeArray]
+    Ls: list[TimeArray]

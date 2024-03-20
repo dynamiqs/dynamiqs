@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import diffrax as dx
 import jax.numpy as jnp
-from jaxtyping import PyTree, Scalar
 
 from ..core.abstract_solver import MESolver
 from ..core.diffrax_solver import (
@@ -12,20 +11,14 @@ from ..core.diffrax_solver import (
     EulerSolver,
     Tsit5Solver,
 )
-from ..time_array import TimeArray
 from ..utils.utils import dag
 
 
-class LindbladTerm(dx.ODETerm):
-    H: TimeArray  # (n, n)
-    Ls: list[TimeArray]  # (nL, n, n)
-    vector_field: callable[[Scalar, PyTree, PyTree], PyTree]
+class MEDiffraxSolver(DiffraxSolver, MESolver):
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define Lindblad term drho/dt
 
-    def __init__(self, H: TimeArray, Ls: TimeArray):
-        self.H = H
-        self.Ls = Ls
-
-    def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree) -> PyTree:
         # The Lindblad equation is:
         # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
         # An alternative but similar equation is:
@@ -42,17 +35,15 @@ class LindbladTerm(dx.ODETerm):
         # In practice, we still use (2) because it involves less matrix multiplications,
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
-        Ls = jnp.stack([L(t) for L in self.Ls])
-        Lsd = dag(Ls)
-        LdL = (Lsd @ Ls).sum(axis=0)
-        out = (-1j * self.H(t) - 0.5 * LdL) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0)
-        return out + dag(out)
 
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            Ls = jnp.stack([L(t) for L in self.Ls])
+            Lsd = dag(Ls)
+            LdL = (Lsd @ Ls).sum(0)
+            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
+            return tmp + dag(tmp)
 
-class MEDiffraxSolver(DiffraxSolver, MESolver):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.term = LindbladTerm(H=self.H, Ls=self.Ls)
+        return dx.ODETerm(vector_field)
 
 
 class MEEuler(MEDiffraxSolver, EulerSolver):
