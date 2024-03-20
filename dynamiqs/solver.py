@@ -59,6 +59,10 @@ class Propagator(Solver):
     Warning: Constant Hamiltonian and jump operators only
         The propagator method only supports constant Hamiltonian and jump
         operators. Piecewise-constant problems will also be supported in the future.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
@@ -98,6 +102,11 @@ class Euler(_ODEFixedStep):
 
     Args:
         dt _(float)_: Fixed time step.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """  # noqa: E501
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -112,6 +121,11 @@ class Rouchon1(_ODEFixedStep):
 
     Warning:
         This solver has not been ported to JAX yet.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -138,6 +152,11 @@ class Rouchon2(_ODEFixedStep):
 
     Warning:
         This solver has not been ported to JAX yet.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -160,6 +179,11 @@ class Dopri5(_ODEAdaptiveStep):
         min_factor: Minimum factor for adaptive step sizing.
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """  # noqa: E501
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -190,6 +214,11 @@ class Dopri8(_ODEAdaptiveStep):
         min_factor: Minimum factor for adaptive step sizing.
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """  # noqa: E501
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -220,6 +249,11 @@ class Tsit5(_ODEAdaptiveStep):
         min_factor: Minimum factor for adaptive step sizing.
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """  # noqa: E501
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
