@@ -39,7 +39,7 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             Ls = jnp.stack([L(t) for L in self.Ls])
             Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(axis=0)
+            LdL = (Lsd @ Ls).sum(0)
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
             return tmp + dag(tmp)
 
