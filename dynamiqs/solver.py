@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 import equinox as eqx
+from _utils import tree_str_inline
 
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
@@ -26,6 +27,9 @@ class Solver(eqx.Module):
                 f' `{type(gradient).__name__}` (supported gradient types:'
                 f' {support_str}).'
             )
+
+    def __str__(self) -> str:
+        return tree_str_inline(self)
 
 
 # === propagator solvers options

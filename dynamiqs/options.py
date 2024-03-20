@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax
+from _utils import tree_str_inline
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
@@ -48,3 +49,6 @@ class Options(eqx.Module):
             self.save_extra = jax.tree_util.Partial(save_extra)
         else:
             self.save_extra = save_extra
+
+    def __str__(self) -> str:
+        return tree_str_inline(self)

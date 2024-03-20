@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import equinox as eqx
+from _utils import tree_str_inline
 
 __all__ = ['Autograd', 'CheckpointAutograd']
 
@@ -21,6 +22,9 @@ class Autograd(Gradient):
             [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
             option.
         """
+
+    def __str__(self) -> str:
+        return tree_str_inline(self)
 
 
 class CheckpointAutograd(Gradient):
