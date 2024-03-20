@@ -89,7 +89,8 @@ class Euler(_DiffraxSolver, _ODEFixedStep):
     def __init__(self, dt: float):
         """Euler method (fixed step size ODE solver).
 
-        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        This solver is implemented by [Diffrax](https://docs.kidger.site/diffrax/)
+        library, see
         [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
 
         Warning:
@@ -97,7 +98,7 @@ class Euler(_DiffraxSolver, _ODEFixedStep):
 
         Args:
             dt _(float)_: Fixed time step.
-        """  # noqa: E501
+        """
         _ODEFixedStep.__init__(self, dt)
 
 
@@ -145,7 +146,8 @@ class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
     ):
         """Dormand-Prince method of order 5 (adaptive step size ODE solver).
 
-        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        This solver is implemented by [Diffrax](https://docs.kidger.site/diffrax/)
+        library, see
         [`diffrax.Dopri5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri5).
 
         Args:
@@ -155,7 +157,7 @@ class Dopri5(_DiffraxSolver, _ODEAdaptiveStep):
             min_factor: Minimum factor for adaptive step sizing.
             max_factor: Maximum factor for adaptive step sizing.
             max_steps: Maximum number of steps.
-        """  # noqa: E501
+        """
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
@@ -173,7 +175,8 @@ class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
     ):
         """Dormand-Prince method of order 8 (adaptive step size ODE solver).
 
-        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        This solver is implemented by [Diffrax](https://docs.kidger.site/diffrax/)
+        library, see
         [`diffrax.Dopri8`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri8).
 
         Args:
@@ -183,7 +186,7 @@ class Dopri8(_DiffraxSolver, _ODEAdaptiveStep):
             min_factor: Minimum factor for adaptive step sizing.
             max_factor: Maximum factor for adaptive step sizing.
             max_steps: Maximum number of steps.
-        """  # noqa: E501
+        """
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
@@ -201,7 +204,8 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
     ):
         """Tsitouras method of order 5 (adaptive step size ODE solver).
 
-        This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
+        This solver is implemented by [Diffrax](https://docs.kidger.site/diffrax/)
+        library, see
         [`diffrax.Tsit5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Tsit5).
 
         Args:
@@ -211,7 +215,7 @@ class Tsit5(_DiffraxSolver, _ODEAdaptiveStep):
             min_factor: Minimum factor for adaptive step sizing.
             max_factor: Maximum factor for adaptive step sizing.
             max_steps: Maximum number of steps.
-        """  # noqa: E501
+        """
         _ODEAdaptiveStep.__init__(
             self, rtol, atol, safety_factor, min_factor, max_factor, max_steps
         )
