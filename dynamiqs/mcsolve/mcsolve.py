@@ -187,11 +187,11 @@ def _single_traj(
     options: Options,
 ):
     def while_cond(t_state_key_solver):
-        t, state, key, solver = t_state_key_solver
+        t, state, key, solver, prev_results = t_state_key_solver
         return t < tsave[-1]
 
     def while_body(t_state_key_solver):
-        t, state, key, solver = t_state_key_solver
+        t, state, key, solver, prev_results = t_state_key_solver
         next_r_key, sample_key, next_loop_key = jax.random.split(key, num=3)
         solvers = {
             Euler: MCEuler,
@@ -201,28 +201,43 @@ def _single_traj(
         }
         solver_class = get_solver_class(solvers, solver)
         solver.assert_supports_gradient(gradient)
-        # TODO fix so that we compute exp_ops appropriately
-        new_tsave = jnp.linspace(t, tsave[-1], 2)
+        # new tsave array that has the same spacing as the old one
+        new_tsave = compute_new_tsave(t, tsave)
         mcsolver = solver_class(new_tsave, state, H, exp_ops, solver, gradient, options, jump_ops)
         # solve until jump
         res = mcsolver.run()
+        new_res = {"states": res.states, "expects": res.expects}
         t_jump = res.final_time[0]
+        t_jump_idx = jnp.searchsorted(tsave, t_jump, side="right")
+        concatenated_res = add_results(prev_results, new_res, t_jump_idx)
         state_before_jump = res.states[-1]
+        # peel off the state, excluding the random number
         psi_before_jump = state_before_jump[0:-1]
         # randomly sample one jump operator
         jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
         # only apply a jump if the solve terminated before the end
         mask = jnp.where(t_jump < tsave[-1], jnp.array([1.0, ]), jnp.array([0.0, ]))
+        # renormalize the state if a jump is applied
         psi = unit(mask * jump_op @ psi_before_jump) + (1 - mask) * psi_before_jump
         # new random key for the next round of the while loop
         r = jax.random.uniform(next_r_key, shape=(1, 1))
         state = jnp.concatenate((psi, r))
-        return t_jump, state, next_loop_key, solver
+        return t_jump, state, next_loop_key, solver, concatenated_res
 
     initial_state = jnp.concatenate((psi0, rand))
-    _, state, _, _ = while_loop(while_cond, while_body, (tsave[0], initial_state, key, solver),
-                                kind="checkpointed", max_steps=10)
-    return state
+    n = initial_state.shape[0]
+    nT = tsave.shape[0]
+    # TODO needs to be adjusted if only the final state is kept
+    initial_results = {"states": jnp.zeros(shape=(nT, n, 1), dtype=cdtype())}
+    if exp_ops is not None:
+        nE = len(exp_ops)
+        initial_results["expects"] = jnp.zeros(shape=(nT, nE,), dtype=cdtype())
+    # TODO don't need to carry around both final_state and final_results
+    _, final_state, _, _, final_results = while_loop(
+        while_cond, while_body, (tsave[0], initial_state, key, solver, initial_results),
+        kind="checkpointed", max_steps=10
+    )
+    return final_results
 
 
 def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
@@ -237,3 +252,42 @@ def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
     sample_idx = jax.random.categorical(key, logits, shape=(1,))
     # extract that jump operator and squeeze size 1 dims
     return jnp.squeeze(jnp.take(Ls, sample_idx, axis=0), axis=0)
+
+
+def compute_new_tsave(t, old_tsave):
+    dt = old_tsave[1] - old_tsave[0]
+    nT = old_tsave.shape
+    new_start_index = jnp.searchsorted(old_tsave, t, side="right")
+    new_start_time = old_tsave[new_start_index]
+    return new_start_time + jnp.arange(nT - new_start_index) * dt, new_start_index
+
+
+def add_results(old_res, new_res, new_start_index):
+    concatenated_save = {}
+    if "states" in new_res.keys():
+        concatenated_save["states"] = _concatenate_by_zero_padding(
+            old_res["states"], new_res["states"], new_start_index
+        )
+    if "expects" in new_res.keys():
+        concatenated_save["expects"] = _concatenate_by_zero_padding(
+            old_res["expects"], new_res["expects"], new_start_index
+        )
+    return concatenated_save
+
+
+def _concatenate_by_zero_padding(big_array_with_infs, replacement_array, insert_idx):
+    # ndim = big_array_with_infs.ndim
+    shape = big_array_with_infs.shape
+    zero_pad = jnp.zeros(shape=(insert_idx, *shape[1:-2]), dtype=cdtype())
+    # if ndim == 2:
+    #     zero_pad = jnp.zeros(shape=(insert_idx,), dtype=cdtype())
+    # elif ndim == 3:
+    #     zero_pad = jnp.zeros(shape=(insert_idx, shape[1], shape[2]), dtype=cdtype())
+    # else:
+    #     raise RuntimeError("should be a list of kets or expectation values")
+    inf_mask = jnp.isinf(big_array_with_infs)
+    # replace infs with zeros so that we can replace those values
+    # with those in replacement_array
+    filtered_old_ysave = jnp.where(inf_mask, 0.0, big_array_with_infs)
+    padded_new_ysave = jnp.stack((zero_pad, replacement_array))
+    return filtered_old_ysave + padded_new_ysave

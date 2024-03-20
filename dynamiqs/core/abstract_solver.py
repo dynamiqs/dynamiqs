@@ -82,3 +82,14 @@ class MESolver(BaseSolver):
 
 class MCSolver(BaseSolver):
     Ls: list[Array | TimeArray]
+
+    def save(self, y: Array) -> dict[str, Array]:
+        saved = {}
+        if self.options.save_states:
+            saved['ysave'] = y
+        if self.Es is not None and len(self.Es) > 0:
+            saved['Esave'] = expect(self.Es, y[..., 0:-1, :])
+        if self.options.save_extra is not None:
+            saved['extra'] = self.options.save_extra(y)
+
+        return saved
