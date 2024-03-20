@@ -11,7 +11,7 @@ from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result
+from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.utils import todm
@@ -31,7 +31,7 @@ def mesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> Result:
+) -> MEResult:
     r"""Solve the Lindblad master equation.
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
@@ -64,13 +64,13 @@ def mesolve(
         more details.
 
     Args:
-        H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
+        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
         jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
             jump operators.
-        rho0 _(array-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
-        tsave _(array-like of shape (nt,))_: Times at which the states and expectation
-            values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
-            from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        rho0 _(array-like of shape (nrho0?, n, 1) or (nrho0?, n, n))_: Initial state.
+        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+            expectation values are saved. The equation is solved from `tsave[0]` to
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
@@ -79,21 +79,10 @@ def mesolve(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`][dynamiqs.Result] object holding the result of the Lindblad master
-            equation integration. It has the following attributes:
-
-            - **states** _(array of shape (bH?, brho?, nt, n, n))_ -- Saved states.
-            - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
-                expectation values.
-            - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
-                specified in `options`.
-            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
-                resolution.
-            - **tsave** _(array of shape (nt,))_ -- Times for which states and
-                expectation values were saved.
-            - **solver** _(Solver)_ -- Solver used.
-            - **gradient** _(Gradient)_ -- Gradient used.
-            - **options** _(Options)_ -- Options used.
+        [`dq.MEResult`][dynamiqs.MEResult] object holding the result of the Lindblad
+            master  equation integration. Use the attributes `states` and `expects`
+            to access saved quantities, more details in
+            [`dq.MEResult`][dynamiqs.MEResult].
     """
     # === convert arguments
     H = _astimearray(H)
@@ -118,7 +107,7 @@ def _vmap_mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> MEResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (
@@ -132,7 +121,7 @@ def _vmap_mesolve(
         False,
     )
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0, 0)
+    out_axes = MEResult(None, None, None, None, 0, 0)
 
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
@@ -149,7 +138,7 @@ def _mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> MEResult:
     # === select solver class
     solvers = {
         Euler: MEEuler,

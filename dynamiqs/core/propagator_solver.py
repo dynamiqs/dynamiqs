@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..time_array import ConstantTimeArray
-from .abstract_solver import BaseSolver, MESolver
+from .abstract_solver import BaseSolver, MESolver, SESolver
 
 
 class PropagatorSolver(BaseSolver):
@@ -55,14 +55,16 @@ class PropagatorSolver(BaseSolver):
 
         # === collect and return results
         nsteps = (delta_ts != 0).sum()
-        return self.result(saved, ylast, infos=self.Infos(nsteps))
+        saved = self.collect_saved(saved, ylast)
+        return self.result(saved, infos=self.Infos(nsteps))
 
     @abstractmethod
     def forward(self, delta_t: Scalar, y: Array) -> Array:
         pass
 
 
-SEPropagatorSolver = PropagatorSolver
+class SEPropagatorSolver(PropagatorSolver, SESolver):
+    pass
 
 
 class MEPropagatorSolver(PropagatorSolver, MESolver):
