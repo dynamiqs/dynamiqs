@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..time_array import ConstantTimeArray
-from .abstract_solver import BaseSolver, MESolver
+from .abstract_solver import BaseSolver, MESolver, SESolver
 
 
 class PropagatorSolver(BaseSolver):
@@ -28,11 +28,14 @@ class PropagatorSolver(BaseSolver):
 
     def __init__(self, *args):
         super().__init__(*args)
+
         # check that Hamiltonian is time-independent
         if not isinstance(self.H, ConstantTimeArray):
             raise TypeError(
                 'Solver `Propagator` requires a time-independent Hamiltonian.'
             )
+
+        # extract the constant array from the `ConstantTimeArray` object
         self.H = self.H.x
 
     def run(self) -> PyTree:
@@ -52,23 +55,27 @@ class PropagatorSolver(BaseSolver):
 
         # === collect and return results
         nsteps = (delta_ts != 0).sum()
-        return self.result(saved, ylast, infos=self.Infos(nsteps))
+        saved = self.collect_saved(saved, ylast)
+        return self.result(saved, infos=self.Infos(nsteps))
 
     @abstractmethod
     def forward(self, delta_t: Scalar, y: Array) -> Array:
         pass
 
 
-SEPropagatorSolver = PropagatorSolver
+class SEPropagatorSolver(PropagatorSolver, SESolver):
+    pass
 
 
-class MEPropagatorSolver(MESolver, PropagatorSolver):
+class MEPropagatorSolver(PropagatorSolver, MESolver):
     def __init__(self, *args):
-        MESolver.__init__(self, *args)
-        PropagatorSolver.__init__(self, *args[:-1])
+        super().__init__(*args)
+
         # check that jump operators are time-independent
         if not all(isinstance(L, ConstantTimeArray) for L in self.Ls):
             raise TypeError(
                 'Solver `Propagator` requires time-independent jump operators.'
             )
+
+        # extract the constant arrays from the `ConstantTimeArray` objects
         self.Ls = [L.x for L in self.Ls]

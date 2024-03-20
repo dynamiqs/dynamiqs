@@ -62,7 +62,7 @@ solver = dq.solver.Dopri5(rtol=1e-6, atol=1e-8)
 
 ## 3. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of the [`Result`][dynamiqs.Result] class. This object contains the computed states, the observables, and various information about the solver.
+We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of the [`SEResult`][dynamiqs.SEResult] class. This object contains the computed states, the observables, and various information about the solver.
 
 ```python
 # run simulation
@@ -76,11 +76,11 @@ print(result)
 ```
 
 ```text
-`result` is of type <class 'dynamiqs.result.Result'>.
+`result` is of type <class 'dynamiqs.result.SEResult'>.
 `result` has the following attributes:
 ['Esave', '_abc_impl', 'expects', 'gradient', 'options', 'solver', 'states', 'to_numpy', 'to_qutip', 'tsave', 'ysave']
 
-==== Result ====
+==== SEResult ====
 Solver  : Dopri5
 States  : Array complex64 (101, 2, 1) | 1.58 Kb
 Expects : Array complex64 (1, 101) | 0.79 Kb

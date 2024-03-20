@@ -3,6 +3,7 @@ from jax import Array
 from jaxtyping import Scalar
 
 from ..core.propagator_solver import MEPropagatorSolver
+from ..result import Saved
 from ..utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 
 
@@ -20,7 +21,7 @@ class MEPropagator(MEPropagatorSolver):
         propagator = jax.scipy.linalg.expm(delta_t * self.lindbladian)
         return propagator @ y
 
-    def save(self, y: Array) -> dict[str, Array]:
+    def save(self, y: Array) -> Saved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         #       instead ofat each step
         y = vector_to_operator(y)
