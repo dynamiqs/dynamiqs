@@ -94,8 +94,8 @@ class _ODEAdaptiveStep(_ODESolver):
 class Euler(_ODEFixedStep):
     """Euler method (fixed step size ODE solver).
 
-    This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
-    [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
+    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    library, see [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
 
     Warning:
         This solver is not recommended for general use.
@@ -107,7 +107,7 @@ class Euler(_ODEFixedStep):
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
-    """  # noqa: E501
+    """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
@@ -169,8 +169,8 @@ class Rouchon2(_ODEFixedStep):
 class Dopri5(_ODEAdaptiveStep):
     """Dormand-Prince method of order 5 (adaptive step size ODE solver).
 
-    This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
-    [`diffrax.Dopri5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri5).
+    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    library, see [`diffrax.Dopri5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri5).
 
     Args:
         rtol: Relative tolerance.
@@ -184,7 +184,7 @@ class Dopri5(_ODEAdaptiveStep):
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
-    """  # noqa: E501
+    """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
@@ -204,8 +204,8 @@ class Dopri5(_ODEAdaptiveStep):
 class Dopri8(_ODEAdaptiveStep):
     """Dormand-Prince method of order 8 (adaptive step size ODE solver).
 
-    This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
-    [`diffrax.Dopri8`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri8).
+    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    library, see [`diffrax.Dopri8`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri8).
 
     Args:
         rtol: Relative tolerance.
@@ -219,7 +219,7 @@ class Dopri8(_ODEAdaptiveStep):
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
-    """  # noqa: E501
+    """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
@@ -239,8 +239,8 @@ class Dopri8(_ODEAdaptiveStep):
 class Tsit5(_ODEAdaptiveStep):
     """Tsitouras method of order 5 (adaptive step size ODE solver).
 
-    This solver is implemented by the amazing [Diffrax](https://docs.kidger.site/diffrax/) library, see
-    [`diffrax.Tsit5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Tsit5).
+    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    library, see [`diffrax.Tsit5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Tsit5).
 
     Args:
         rtol: Relative tolerance.
@@ -254,7 +254,7 @@ class Tsit5(_ODEAdaptiveStep):
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
-    """  # noqa: E501
+    """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
