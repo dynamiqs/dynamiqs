@@ -87,25 +87,7 @@ def sesolve(
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === check arguments
-    if not isop(H):
-        raise ValueError(
-            f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
-        )
-
-    if not isket(psi0):
-        raise ValueError(
-            'Initial state `psi0` must have shape (..., n, 1), but got shape'
-            f'{psi0.shape}.'
-        )
-
-    if tsave.ndim != 1:
-        raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
-
-    if exp_ops is not None and not all(isop(op) for op in exp_ops):
-        raise ValueError(
-            'Operators in `exp_ops` must have shape (n, n), but got shapes'
-            f'{[op.shape for op in exp_ops]}.'
-        )
+    _check_sesolve_args(H, psi0, tsave, exp_ops)
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
@@ -163,3 +145,25 @@ def _sesolve(
 
     # === return result
     return result  # noqa: RET504
+
+
+def _check_sesolve_args(H: TimeArray, psi0: Array, tsave: Array, exp_ops: Array | None):
+    if not isop(H):
+        raise ValueError(
+            f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
+        )
+
+    if not isket(psi0):
+        raise ValueError(
+            'Initial state `psi0` must have shape (..., n, 1), but got shape'
+            f'{psi0.shape}.'
+        )
+
+    if tsave.ndim != 1:
+        raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
+
+    if exp_ops is not None and not all(isop(op) for op in exp_ops):
+        raise ValueError(
+            'Operators in `exp_ops` must have shape (n, n), but got shapes'
+            f'{[op.shape for op in exp_ops]}.'
+        )
