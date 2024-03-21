@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
+from diffrax import DiscreteTerminatingEvent
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
@@ -28,6 +29,7 @@ class BaseSolver(AbstractSolver):
     solver: Solver
     gradient: Gradient | None
     options: Options
+    discrete_terminating_event: DiscreteTerminatingEvent | None = None
 
     @property
     def t0(self) -> Scalar:
@@ -64,32 +66,35 @@ class BaseSolver(AbstractSolver):
         return saved
 
     @abstractmethod
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
         pass
 
 
 class SESolver(BaseSolver):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return SEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+    def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
+        return SEResult(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
 
 
 class MESolver(BaseSolver):
-    Ls: list[TimeArray]
+    Ls: list[TimeArray] | None = None
 
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+    def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
+        return MEResult(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
 
 
 class MCSolver(BaseSolver):
-    Ls: list[Array | TimeArray]
+    Ls: list[Array | TimeArray] | None = None
 
-    def save(self, y: Array) -> dict[str, Array]:
-        saved = {}
+    def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
+        return Result(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
+
+    def save(self, y: PyTree) -> Saved:
+        ysave, Esave, extra = None, None, None
         if self.options.save_states:
-            saved['ysave'] = y
+            ysave = y
         if self.Es is not None and len(self.Es) > 0:
-            saved['Esave'] = expect(self.Es, y[..., 0:-1, :])
+            Esave = expect(self.Es, y[..., 0:-1, :])
         if self.options.save_extra is not None:
-            saved['extra'] = self.options.save_extra(y)
+            extra = self.options.save_extra(y)
 
-        return saved
+        return Saved(ysave, Esave, extra)

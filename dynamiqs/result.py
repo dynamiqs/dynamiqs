@@ -32,7 +32,6 @@ def array_str(x: Array | None) -> str | None:
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
     ysave: Array
-    ylast: Array
     Esave: Array | None
     extra: PyTree | None
 
@@ -67,7 +66,10 @@ class Result(eqx.Module):
 
     @property
     def final_state(self) -> Array:
-        return self._saved.ylast
+        if self.options.save_states:
+            return self._saved.ysave[..., -1, :, :]
+        else:
+            return self._saved.ysave
 
     @property
     def expects(self) -> Array | None:
