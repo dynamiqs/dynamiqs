@@ -91,13 +91,16 @@ def sesolve(
         raise ValueError(
             f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
         )
+
     if not isket(psi0):
         raise ValueError(
             'Initial state `psi0` must have shape (..., n, 1), but got shape'
             f'{psi0.shape}.'
         )
+
     if tsave.ndim != 1:
         raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
+
     if exp_ops is not None and not all(isop(op) for op in exp_ops):
         raise ValueError(
             'Operators in `exp_ops` must have shape (n, n), but got shapes'

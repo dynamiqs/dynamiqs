@@ -14,7 +14,7 @@ from ..options import Options
 from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.utils import todm
+from ..utils.utils import isdm, isket, isop, todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
@@ -94,9 +94,36 @@ def mesolve(
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = jnp.asarray(rho0, dtype=cdtype())
-    rho0 = todm(rho0)
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
+    # === check arguments
+    if not isop(H):
+        raise ValueError(
+            f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
+        )
+
+    if not all(isop(L) for L in jump_ops):
+        raise ValueError(
+            'Jump operators in `jump_ops` must have shape (..., n, n), but got shapes'
+            f'{[L.shape for L in jump_ops]}.'
+        )
+
+    if not isket(rho0) and not isdm(rho0):
+        raise ValueError(
+            'Initial state `rho0` must have shape (..., n, 1) or (..., n, n), but got'
+            f'shape {rho0.shape}.'
+        )
+    rho0 = todm(rho0)
+
+    if tsave.ndim != 1:
+        raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
+
+    if exp_ops is not None and not all(isop(op) for op in exp_ops):
+        raise ValueError(
+            'Operators in `exp_ops` must have shape (n, n), but got shapes'
+            f'{[op.shape for op in exp_ops]}.'
+        )
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
