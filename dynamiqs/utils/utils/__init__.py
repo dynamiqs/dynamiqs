@@ -27,4 +27,7 @@ __all__ = [
     'fidelity',
     'eigenstates',
     'wigner',
+    'sincosm',
+    'sinm',
+    'cosm',
 ]

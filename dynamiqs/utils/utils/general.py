@@ -35,6 +35,9 @@ __all__ = [
     'overlap',
     'fidelity',
     'eigenstates',
+    'sincosm',
+    'sinm',
+    'cosm',
 ]
 
 
@@ -83,6 +86,74 @@ def mpow(x: ArrayLike, n: int) -> Array:
     """
     x = jnp.asarray(x)
     return jnp.linalg.matrix_power(x, n)
+
+
+def sincosm(x: ArrayLike) -> tuple[Array, Array]:
+    """Returns the sine and cosine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        `sin, cos` _(arrays of shape (..., n, n))_: sine and cosine of `x`.
+
+    Notes:
+        This function uses `jax.scipy.linalg.expm`.
+
+    Examples:
+        >>> sin, cos = dq.sincosm(0.25 * jnp.pi * dq.sigmax())
+        >>> (sin + cos) * jnp.sqrt(2)
+        Array([[1.+0.j, 1.+0.j],
+               [1.+0.j, 1.+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    exp_ip = jax.scipy.linalg.expm(1j * x)
+    exp_im = jax.scipy.linalg.expm(-1j * x)
+    sin_x = -0.5j * (exp_ip - exp_im)
+    cos_x = 0.5 * (exp_ip + exp_im)
+    return sin_x, cos_x
+
+
+def sinm(x: ArrayLike) -> Array:
+    """Returns the sine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_: sine of `x`.
+
+    Notes:
+        This function uses `jax.scipy.linalg.expm`.
+
+    Examples:
+        >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
+        Array([[0.-0.j, 1.-0.j],
+               [1.-0.j, 0.-0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    return -0.5j * (jax.scipy.linalg.expm(1j * x) - jax.scipy.linalg.expm(-1j * x))
+
+
+def cosm(x: ArrayLike) -> Array:
+    """Returns the cosine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_: cosine of `x`.
+
+    Notes:
+        This function uses `jax.scipy.linalg.expm`.
+
+    Examples:
+        >>> dq.cosm(jnp.pi * dq.sigmax())
+        Array([[-1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    return 0.5 * (jax.scipy.linalg.expm(1j * x) + jax.scipy.linalg.expm(-1j * x))
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
