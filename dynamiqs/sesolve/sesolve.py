@@ -14,7 +14,6 @@ from ..options import Options
 from ..result import SEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.utils import isket, isop
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
@@ -148,22 +147,22 @@ def _sesolve(
 
 
 def _check_sesolve_args(H: TimeArray, psi0: Array, tsave: Array, exp_ops: Array | None):
-    if not isop(H):
+    if H.shape[-1] != H.shape[-2]:
         raise ValueError(
             f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
         )
 
-    if not isket(psi0):
+    if psi0.shape[-1] != 1:
         raise ValueError(
             'Initial state `psi0` must have shape (..., n, 1), but got shape'
-            f'{psi0.shape}.'
+            f' {psi0.shape}.'
         )
 
     if tsave.ndim != 1:
         raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
 
-    if exp_ops is not None and not all(isop(op) for op in exp_ops):
+    if exp_ops is not None and any(op.shape[-1] != op.shape[-2] for op in exp_ops):
         raise ValueError(
             'Operators in `exp_ops` must have shape (n, n), but got shapes'
-            f'{[op.shape for op in exp_ops]}.'
+            f' {[op.shape for op in exp_ops]}.'
         )

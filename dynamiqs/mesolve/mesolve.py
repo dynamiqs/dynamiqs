@@ -15,7 +15,7 @@ from ..options import Options
 from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
-from ..utils.utils import isdm, isket, isop, todm
+from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
@@ -181,35 +181,35 @@ def _check_mesolve_args(
     tsave: Array,
     exp_ops: Array | None,
 ):
-    if not isop(H):
+    if H.shape[-1] != H.shape[-2]:
         raise ValueError(
             f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
         )
 
-    if not all(isop(L) for L in jump_ops):
+    if any(L.shape[-1] != L.shape[-2] for L in jump_ops):
         raise ValueError(
             'Jump operators in `jump_ops` must have shape (..., n, n), but got shapes'
-            f'{[L.shape for L in jump_ops]}.'
+            f' {[L.shape for L in jump_ops]}.'
         )
     if len(jump_ops) == 0:
         warnings.warn(
             'Calling `mesolve` without jump operators does not fallback to `sesolve`.'
-            'If you want to solve a Schrodinger equation, consider using `sesolve`'
-            'instead.',
+            ' If you want to solve a Schrodinger equation, consider using `sesolve`'
+            ' instead.',
             stacklevel=2,
         )
 
-    if not isket(rho0) and not isdm(rho0):
+    if rho0.shape[-1] != 1 and rho0.shape[-1] != rho0.shape[-2]:
         raise ValueError(
             'Initial state `rho0` must have shape (..., n, 1) or (..., n, n), but got'
-            f'shape {rho0.shape}.'
+            f' shape {rho0.shape}.'
         )
 
     if tsave.ndim != 1:
         raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
 
-    if exp_ops is not None and not all(isop(op) for op in exp_ops):
+    if exp_ops is not None and any(op.shape[-1] != op.shape[-2] for op in exp_ops):
         raise ValueError(
             'Operators in `exp_ops` must have shape (n, n), but got shapes'
-            f'{[op.shape for op in exp_ops]}.'
+            f' {[op.shape for op in exp_ops]}.'
         )
