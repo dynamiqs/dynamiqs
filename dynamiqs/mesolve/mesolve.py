@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import partial
 
 import jax
@@ -107,6 +108,13 @@ def mesolve(
         raise ValueError(
             'Jump operators in `jump_ops` must have shape (..., n, n), but got shapes'
             f'{[L.shape for L in jump_ops]}.'
+        )
+    if len(jump_ops) == 0:
+        warnings.warn(
+            'Calling `mesolve` without jump operators does not fallback to `sesolve`.'
+            'If you want to solve a Schrodinger equation, consider using `sesolve`'
+            'instead.',
+            stacklevel=2,
         )
 
     if not isket(rho0) and not isdm(rho0):
