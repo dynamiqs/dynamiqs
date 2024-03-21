@@ -44,7 +44,7 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
         def norm_below_rand(state, **kwargs):
             psi = jnp.squeeze(state.y[0:-1])
             r = jnp.squeeze(state.y[-1])
-            return (jnp.conj(psi) @ psi) < r
+            return jnp.all(jnp.conj(psi) @ psi) < r or state.tprev >= self.t1
         self.discrete_terminating_event = dx.DiscreteTerminatingEvent(Partial(norm_below_rand))
 
 

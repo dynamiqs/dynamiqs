@@ -47,7 +47,7 @@ class DiffraxSolver(BaseSolver):
                 self.terms,
                 self.diffrax_solver,
                 t0=self.t0,
-                t1=self.ts[-1],
+                t1=self.t1,
                 dt0=self.dt0,
                 y0=self.y0,
                 saveat=saveat,

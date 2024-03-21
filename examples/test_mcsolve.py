@@ -3,7 +3,7 @@ import os
 
 import dynamiqs as dq
 import jax.numpy as jnp
-from dynamiqs import timecallable
+from dynamiqs import timecallable, Options
 import matplotlib.pyplot as plt
 from dynamiqs.solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 
@@ -23,6 +23,8 @@ exp_ops = []
 
 jump_ops = [1.0 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)), ]
 
+options = Options(t0=tsave[0], t1=tsave[-1])
+
 # run simulation
 result = dq.mcsolve(
     timecallable(H_func, args=(omega, omega, amp)),
@@ -31,6 +33,7 @@ result = dq.mcsolve(
     tsave,
     exp_ops=exp_ops,
     solver=Euler(dt=0.001),
+    options=options,
 )
 
 # fig, ax = plt.subplots()
