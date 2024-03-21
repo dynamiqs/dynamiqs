@@ -33,6 +33,10 @@ class BaseSolver(AbstractSolver):
     def t0(self) -> Scalar:
         return self.ts[0] if self.options.t0 is None else self.options.t0
 
+    @property
+    def t1(self) -> Scalar:
+        return self.ts[-1] if self.options.t1 is None else self.options.t1
+
     def save(self, y: Array) -> dict[str, Array]:
         saved = {}
         if self.options.save_states:
@@ -52,7 +56,7 @@ class BaseSolver(AbstractSolver):
         extra = saved.get('extra')
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
-        saved = Saved(ysave, Esave, extra)
+        saved = Saved(ysave, ylast, Esave, extra)
         return Result(
             self.ts, self.solver, self.gradient, self.options, saved, infos=infos, final_time=final_time,
         )

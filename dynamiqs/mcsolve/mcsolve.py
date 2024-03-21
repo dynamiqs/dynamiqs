@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 from equinox.internal import while_loop
@@ -13,7 +14,7 @@ from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result
+from ..result import Result, Saved, MCResult
 from ..solver import Dopri5, Dopri8, Euler, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.utils import unit, dag
@@ -98,6 +99,10 @@ def mcsolve(
             - **options** _(Options)_ -- Options used.
     """
     # === convert arguments
+    if options.save_extra is not None:
+        raise RuntimeError("extra save arguments not yet supported for mcsolve")
+    if options.t1 is None:
+        options = eqx.tree_at(lambda opt: opt.t1, options, tsave[-1],)
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
     psi0 = jnp.asarray(psi0, dtype=cdtype())
@@ -134,7 +139,7 @@ def _vmap_mcsolve(
         False,
     )
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0, 0)
+    out_axes = MCResult(None, 0, 0, 0)
     f = compute_vmap(_mcsolve, options.cartesian_batching, is_batched, out_axes)
     return f(H, jump_ops, psi0, tsave, ntraj, key, exp_ops, solver, gradient, options)
 
@@ -150,13 +155,14 @@ def _mcsolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> MCResult:
     key_1, key_2, key_3 = jax.random.split(key, num=3)
     # simulate no-jump trajectory
     rand0 = jnp.zeros(shape=(1, 1))
-    no_jump_state = _single_traj(H, jump_ops, psi0, tsave, key_1, rand0, exp_ops, solver, gradient, options)
+    no_jump_result = _single_traj(H, jump_ops, psi0, tsave, key_1, rand0, exp_ops, solver, gradient, options)
     # extract the no-jump probability
-    no_jump_state_sq = jnp.squeeze(no_jump_state[0:-1])
+    # TODO want to keep the rands around in the Result containers?
+    no_jump_state_sq = jnp.squeeze(no_jump_result.final_state[0:-1])
     p_nojump = jnp.conj(no_jump_state_sq) @ no_jump_state_sq
     # split key into ntraj keys
     # TODO split earlier so that not reusing key for different batch dimensions
@@ -166,14 +172,13 @@ def _mcsolve(
     # with their keys, which come along for the ride so that we can draw further random
     # numbers for which jumps to apply
     traj_keys = jax.random.split(key_3, num=ntraj)
-    run_trajs = jax.vmap(_single_traj, in_axes=(None, None, None, None, 0, 0, None, None, None, None),
-                         out_axes=0)
-    psis = run_trajs(H, jump_ops, psi0, tsave, traj_keys, random_numbers, exp_ops, solver, gradient, options)
-    #TODO return values don't fit into Result container
-    return no_jump_state, psis, p_nojump
+    run_trajs = jax.vmap(_single_traj, in_axes=(None, None, None, None, 0, 0, None, None, None, None),)
+    jump_results = run_trajs(H, jump_ops, psi0, tsave, traj_keys, random_numbers, exp_ops, solver, gradient, options)
+    mcresult = MCResult(tsave, no_jump_result, jump_results, p_nojump)
+    return mcresult
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+#@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _single_traj(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -187,55 +192,74 @@ def _single_traj(
     options: Options,
 ):
     def while_cond(t_state_key_solver):
-        t, state, key, solver, prev_results = t_state_key_solver
-        return t < tsave[-1]
+        t, prev_tsave, prev_key, prev_solver, prev_options, prev_results = t_state_key_solver
+        return t < prev_options.t1
 
     def while_body(t_state_key_solver):
-        t, state, key, solver, prev_results = t_state_key_solver
-        next_r_key, sample_key, next_loop_key = jax.random.split(key, num=3)
+        t, prev_tsave, prev_key, prev_solver, prev_options, prev_result = t_state_key_solver
+        next_r_key, sample_key, next_loop_key = jax.random.split(prev_key, num=3)
         solvers = {
             Euler: MCEuler,
             Dopri5: MCDopri5,
             Dopri8: MCDopri8,
             Tsit5: MCTsit5,
         }
-        solver_class = get_solver_class(solvers, solver)
-        solver.assert_supports_gradient(gradient)
-        # new tsave array that has the same spacing as the old one
-        new_tsave = compute_new_tsave(t, tsave)
-        mcsolver = solver_class(new_tsave, state, H, exp_ops, solver, gradient, options, jump_ops)
+        solver_class = get_solver_class(solvers, prev_solver)
+        prev_solver.assert_supports_gradient(gradient)
+        prev_state = prev_result.final_state
+        mcsolver = solver_class(prev_tsave, prev_state, H, exp_ops, prev_solver, gradient, prev_options, jump_ops)
         # solve until jump
-        res = mcsolver.run()
-        new_res = {"states": res.states, "expects": res.expects}
-        t_jump = res.final_time[0]
-        t_jump_idx = jnp.searchsorted(tsave, t_jump, side="right")
-        concatenated_res = add_results(prev_results, new_res, t_jump_idx)
-        state_before_jump = res.states[-1]
+        new_result = mcsolver.run()
+        # in the next round want to keep saving at the same instances in time, not
+        # affected by the specific time a jump occurs
+        t_jump = new_result.final_time[0]
+        # want to use OG tsave here
+        new_start_index = jnp.searchsorted(tsave, t_jump, side="right")
+        # start saving at the next time after a jump
+        new_tsave_start_time = tsave[new_start_index + 1]
+        # want new_tsave to have the same shape as tsave but starting
+        # at the closest save time after a jump
+        new_tsave = (tsave - tsave[0]) + new_tsave_start_time
+        # update t0 in options, since it does not necessarily coincide with new_tsave[0]
+        new_options = eqx.tree_at(lambda opt: opt.t0, prev_options, t_jump)
+        concatenated_res = add_results(prev_result, new_result, new_start_index, new_options)
+        state_before_jump = new_result.final_state
         # peel off the state, excluding the random number
         psi_before_jump = state_before_jump[0:-1]
         # randomly sample one jump operator
         jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
         # only apply a jump if the solve terminated before the end
-        mask = jnp.where(t_jump < tsave[-1], jnp.array([1.0, ]), jnp.array([0.0, ]))
+        mask = jnp.where(t_jump < new_options.t1, jnp.array([1.0, ]), jnp.array([0.0, ]))
         # renormalize the state if a jump is applied
         psi = unit(mask * jump_op @ psi_before_jump) + (1 - mask) * psi_before_jump
         # new random key for the next round of the while loop
         r = jax.random.uniform(next_r_key, shape=(1, 1))
-        state = jnp.concatenate((psi, r))
-        return t_jump, state, next_loop_key, solver, concatenated_res
+        new_state = jnp.concatenate((psi, r))
+        concatenated_res.final_state = new_state
+        return t_jump, new_tsave, next_loop_key, prev_solver, new_options, concatenated_res
 
     initial_state = jnp.concatenate((psi0, rand))
-    n = initial_state.shape[0]
-    nT = tsave.shape[0]
-    # TODO needs to be adjusted if only the final state is kept
-    initial_results = {"states": jnp.zeros(shape=(nT, n, 1), dtype=cdtype())}
-    if exp_ops is not None:
+    # initialize arrays for future concatenation
+    if options.save_states:
+        n = initial_state.shape[0]
+        nT = tsave.shape[0]
+        ysave = jnp.full(shape=(nT, n, 1), fill_value=jnp.inf, dtype=cdtype())
+    else:
+        ysave = initial_state
+    if exp_ops is not None and len(exp_ops) > 0:
         nE = len(exp_ops)
-        initial_results["expects"] = jnp.zeros(shape=(nT, nE,), dtype=cdtype())
-    # TODO don't need to carry around both final_state and final_results
-    _, final_state, _, _, final_results = while_loop(
-        while_cond, while_body, (tsave[0], initial_state, key, solver, initial_results),
-        kind="checkpointed", max_steps=10
+        nT = tsave.shape[0]
+        Esave = jnp.full(shape=(nT, nE), fill_value=jnp.inf, dtype=cdtype())
+    else:
+        Esave = None
+    saved = Saved(ysave, initial_state, Esave, None)
+    initial_result = Result(
+        tsave, solver, gradient, options, saved, tsave[0], None,
+    )
+
+    _, _, _, _, _, final_results = while_loop(
+        while_cond, while_body, (tsave[0], tsave, key, solver, options, initial_result),
+        kind="checkpointed", max_steps=100
     )
     return final_results
 
@@ -254,40 +278,30 @@ def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
     return jnp.squeeze(jnp.take(Ls, sample_idx, axis=0), axis=0)
 
 
-def compute_new_tsave(t, old_tsave):
-    dt = old_tsave[1] - old_tsave[0]
-    nT = old_tsave.shape
-    new_start_index = jnp.searchsorted(old_tsave, t, side="right")
-    new_start_time = old_tsave[new_start_index]
-    return new_start_time + jnp.arange(nT - new_start_index) * dt, new_start_index
-
-
-def add_results(old_res, new_res, new_start_index):
-    concatenated_save = {}
-    if "states" in new_res.keys():
-        concatenated_save["states"] = _concatenate_by_zero_padding(
-            old_res["states"], new_res["states"], new_start_index
+def add_results(old_res, new_res, new_start_index, options):
+    """ add results from two different runs, where old_res results from
+     a simulation that experienced a jump. diffrax convention is that
+     all result arrays are filled with jnp.infs for those values beyond
+     the time where a jump occured.
+     """
+    if options.save_states:
+        concatenated_states = _add_inf_arrays(
+            old_res.states, new_res.states, new_start_index, axis=-3
         )
-    if "expects" in new_res.keys():
-        concatenated_save["expects"] = _concatenate_by_zero_padding(
-            old_res["expects"], new_res["expects"], new_start_index
+        # worried about accessing protected attribute...
+        new_res = eqx.tree_at(lambda res: res._saved.ysave, new_res, concatenated_states)
+    if old_res.expects is not None:
+        concatenated_expects = _add_inf_arrays(
+            old_res.expects, new_res.expects, new_start_index, axis=-2
         )
-    return concatenated_save
+        new_res = eqx.tree_at(lambda res: res._saved.Esave, new_res, concatenated_expects)
+    return new_res
 
 
-def _concatenate_by_zero_padding(big_array_with_infs, replacement_array, insert_idx):
-    # ndim = big_array_with_infs.ndim
-    shape = big_array_with_infs.shape
-    zero_pad = jnp.zeros(shape=(insert_idx, *shape[1:-2]), dtype=cdtype())
-    # if ndim == 2:
-    #     zero_pad = jnp.zeros(shape=(insert_idx,), dtype=cdtype())
-    # elif ndim == 3:
-    #     zero_pad = jnp.zeros(shape=(insert_idx, shape[1], shape[2]), dtype=cdtype())
-    # else:
-    #     raise RuntimeError("should be a list of kets or expectation values")
-    inf_mask = jnp.isinf(big_array_with_infs)
-    # replace infs with zeros so that we can replace those values
-    # with those in replacement_array
-    filtered_old_ysave = jnp.where(inf_mask, 0.0, big_array_with_infs)
-    padded_new_ysave = jnp.stack((zero_pad, replacement_array))
-    return filtered_old_ysave + padded_new_ysave
+def _add_inf_arrays(old_array_with_infs, replacement_array, t_idx, axis=-3):
+    inf_mask = jnp.isinf(old_array_with_infs)
+    # for states roll along the third-to-last axis, as states has shape ... nt, n, 1
+    # for expects roll along the second-to-last axis, as expects has shape ... nt, nE
+    rolled_new_states = jnp.roll(replacement_array, shift=t_idx, axis=axis)
+    new_array = jnp.where(inf_mask, rolled_new_states, old_array_with_infs)
+    return new_array
