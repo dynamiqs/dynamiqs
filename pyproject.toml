@@ -13,7 +13,7 @@ dependencies = [
     "jaxtyping",
     "diffrax>=0.5.0",  # for complex support
     "equinox",
-    "imageio",
+    "imageio>=2.32.0", # for gif support
     "cmasher",
     "ipython",
 ]
