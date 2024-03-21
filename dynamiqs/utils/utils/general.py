@@ -26,6 +26,7 @@ __all__ = [
     'isbra',
     'isdm',
     'isop',
+    'isherm',
     'toket',
     'tobra',
     'todm',
@@ -33,6 +34,7 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'eigenstates',
 ]
 
 
@@ -556,6 +558,27 @@ def isop(x: ArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
+def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+    r"""Returns True if the array is Hermitian.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Array.
+        rtol: Relative tolerance of the check.
+        atol: Absolute tolerance of the check.
+
+    Returns:
+        True if `x` is Hermitian, False otherwise.
+
+    Examples:
+        >>> dq.isherm(jnp.eye(3))
+        Array(True, dtype=bool)
+        >>> dq.isherm([[0, 1j], [1j, 0]])
+        Array(False, dtype=bool)
+    """
+    x = jnp.asarray(x)
+    return jnp.allclose(x, dag(x), rtol=rtol, atol=atol)
+
+
 def toket(x: ArrayLike) -> Array:
     r"""Returns the ket representation of a pure quantum state.
 
@@ -797,6 +820,50 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_cpu(x, y)
     else:
         return _dm_fidelity_gpu(x, y)
+
+
+def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
+    r"""Returns the eigenvalues and eigenvectors of an operator or super-operator.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Operator or super-operator.
+        lower_first: If True, eigenvalues are sorted ascendingly (low to high). If
+            False, eigenvalues are sorted descendingly (high to low). Defaults to True.
+
+    Returns:
+        Tuple `(vals, vecs)` where `vals` is an array of eigenvalues of shape
+            _(..., n)_, and `vecs` is the corresponding array of eigenvectors of shape
+            _(..., n, n)_. Each element `vecs[..., :, i]` is the eigenvector
+            corresponding to eigenvalue `vals[..., i]`.
+    """
+    x = jnp.asarray(x)
+    if x.shape[-1] != x.shape[-2]:
+        raise ValueError('Argument `x` must be a square matrix.')
+
+    def _eigenstates_herm(x: Array, lower_first: bool = True) -> tuple[Array, Array]:
+        P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
+        P, D = jax.lax.cond(
+            lower_first,
+            lambda P, D: (P, D),
+            lambda P, D: (jnp.flip(P, axis=-1), jnp.flip(D, axis=-1)),
+            P,
+            D,
+        )
+        return D.astype(x.dtype), P
+
+    def _eigenstates_non_herm(
+        x: Array, lower_first: bool = True
+    ) -> tuple[Array, Array]:
+        D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
+        idx = jnp.argsort(D, axis=-1)
+        idx = jax.lax.cond(lower_first, lambda x: x, lambda x: x[..., ::-1], idx)
+        D = jnp.take_along_axis(D, idx, axis=-1)
+        P = jnp.take_along_axis(P, idx[..., None, :], axis=-1)
+        return D, P
+
+    return jax.lax.cond(
+        isherm(x), _eigenstates_herm, _eigenstates_non_herm, x, lower_first
+    )
 
 
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:

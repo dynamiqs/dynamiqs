@@ -81,9 +81,9 @@
       {% endif %}
         <div class="md-header__slack">
             <a
-            href="{{ config.slack_url }}"
+            href="{{ config.extra.social[1].link }}"
             title="{{ lang.t('slack') }}"
-            class="md-slack"
+            class="md-source"
           >
             <div class="md-slack__icon md-icon">
               {% set icon = "fontawesome/brands/slack" %}

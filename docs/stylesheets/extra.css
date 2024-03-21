@@ -220,7 +220,7 @@ html .md-typeset .quote> :last-child {
   margin: 0.5em 0em 0.64em;
 }
 
-.md-typeset .doc-function {
+.md-content__inner.md-typeset {
   padding-bottom: 2.5em;
 }
 

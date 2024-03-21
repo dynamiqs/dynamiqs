@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import diffrax as dx
-from jaxtyping import PyTree, Scalar
 
 from ..core.abstract_solver import SESolver
 from ..core.diffrax_solver import (
@@ -11,25 +10,14 @@ from ..core.diffrax_solver import (
     EulerSolver,
     Tsit5Solver,
 )
-from ..time_array import TimeArray
-
-
-class SchrodingerTerm(dx.ODETerm):
-    H: TimeArray  # (n, n)
-    vector_field: callable[[Scalar, PyTree, PyTree], PyTree]
-
-    def __init__(self, H: TimeArray):
-        self.H = H
-
-    def vector_field(self, t: Scalar, psi: PyTree, _args: PyTree) -> PyTree:
-        return -1j * self.H(t) @ psi
 
 
 class SEDiffraxSolver(DiffraxSolver, SESolver):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.term = SchrodingerTerm(self.H)
-        self.discrete_terminating_event = None
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define Schrödinger term d|psi>/dt = - i H |psi>
+        vector_field = lambda t, y, _: -1j * self.H(t) @ y
+        return dx.ODETerm(vector_field)
 
 
 class SEEuler(SEDiffraxSolver, EulerSolver):

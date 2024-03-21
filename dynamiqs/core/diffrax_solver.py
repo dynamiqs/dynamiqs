@@ -13,16 +13,15 @@ from .abstract_solver import BaseSolver
 
 
 class DiffraxSolver(BaseSolver):
-    diffrax_solver: dx.AbstractSolver
-    stepsize_controller: dx.AbstractAdaptiveStepSizeController
-    dt0: float | None
-    max_steps: int
-    term: dx.ODETerm
+    stepsize_controller: dx.AbstractVar[dx.AbstractStepSizeController]
+    dt0: dx.AbstractVar[float | None]
+    max_steps: dx.AbstractVar[int]
+    diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
+    terms: dx.AbstractVar[dx.AbstractTerm]
     discrete_terminating_event: dx.DiscreteTerminatingEvent | None
 
     def __init__(self, *args):
-        # this dummy init is needed because of the way the class hierarchy is set up,
-        # to have subsequent init working properly
+        # pass all init arguments to `BaseSolver`
         super().__init__(*args)
 
     def run(self) -> PyTree:
@@ -45,7 +44,7 @@ class DiffraxSolver(BaseSolver):
 
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
-                self.term,
+                self.terms,
                 self.diffrax_solver,
                 t0=self.t0,
                 t1=self.t1,
@@ -60,9 +59,8 @@ class DiffraxSolver(BaseSolver):
 
         # === collect and return results
         save_a, save_b = solution.ys
-        saved = save_a
-        ylast = save_b[0]  # (n, m)
-        return self.result(saved, ylast, solution.ts[-1], infos=self.infos(solution.stats))
+        saved = self.collect_saved(save_a, save_b[0])
+        return self.result(saved, solution.ts[-1], infos=self.infos(solution.stats))
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -81,18 +79,19 @@ class FixedSolver(DiffraxSolver):
                 )
             return f'{self.nsteps} steps'
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.stepsize_controller = dx.ConstantStepSize()
-        self.dt0 = self.solver.dt
-        self.max_steps = 100_000  # TODO: fix hard-coded max_steps
+    stepsize_controller: dx.AbstractStepSizeController = dx.ConstantStepSize()
+    max_steps: int = 100_000  # TODO: fix hard-coded max_steps
+
+    @property
+    def dt0(self) -> float:
+        return self.solver.dt
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
         return self.Infos(stats['num_steps'])
 
 
 class EulerSolver(FixedSolver):
-    diffrax_solver = dx.Euler()
+    diffrax_solver: dx.AbstractSolver = dx.Euler()
 
 
 class AdaptiveSolver(DiffraxSolver):
@@ -113,17 +112,21 @@ class AdaptiveSolver(DiffraxSolver):
                 f' {self.nrejected} rejected)'
             )
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.stepsize_controller = dx.PIDController(
+    dt0 = None
+
+    @property
+    def stepsize_controller(self) -> dx.AbstractStepSizeController:
+        return dx.PIDController(
             rtol=self.solver.rtol,
             atol=self.solver.atol,
             safety=self.solver.safety_factor,
             factormin=self.solver.min_factor,
             factormax=self.solver.max_factor,
         )
-        self.dt0 = None
-        self.max_steps = self.solver.max_steps
+
+    @property
+    def max_steps(self) -> int:
+        return self.solver.max_steps
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
         return self.Infos(

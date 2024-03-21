@@ -20,11 +20,11 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
+        - TimeArray
         - constant
         - pwc
         - modulated
         - timecallable
-        - TimeArray
 
 ### Solvers (dq.solver)
 
@@ -52,7 +52,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
 
-### Result
+### Results
 
 ::: dynamiqs.result
     options:

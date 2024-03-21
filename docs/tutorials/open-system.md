@@ -101,7 +101,7 @@ Also called the **quantum-jump** approach.
 
 ## Using dynamiqs
 
-You can create the state, Hamiltonian and jump operators using any array-like object (Python lists, NumPy and JAX arrays, QuTiP Qobjs). Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+You can create the state, Hamiltonian and jump operators using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
 import jax.numpy as jnp

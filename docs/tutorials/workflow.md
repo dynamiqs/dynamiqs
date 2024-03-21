@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ## 1. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like objects, e.g. [NumPy](https://numpy.org/) or [JAX](https://jax.readthedocs.io/) arrays, Python lists, or [QuTiP](http://qutip.org/) Qobjs.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like objects.
 
 Here, we will use [`dq.fock()`][dynamiqs.fock] to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz()`][dynamiqs.sigmaz] and [`dq.sigmax()`][dynamiqs.sigmax] to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
@@ -62,7 +62,7 @@ solver = dq.solver.Dopri5(rtol=1e-6, atol=1e-8)
 
 ## 3. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of the [`Result`][dynamiqs.Result] class. This object contains the computed states, the observables, and various information about the solver.
+We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of the [`SEResult`][dynamiqs.SEResult] class. This object contains the computed states, the observables, and various information about the solver.
 
 ```python
 # run simulation
@@ -76,11 +76,11 @@ print(result)
 ```
 
 ```text
-`result` is of type <class 'dynamiqs.result.Result'>.
+`result` is of type <class 'dynamiqs.result.SEResult'>.
 `result` has the following attributes:
 ['Esave', '_abc_impl', 'expects', 'gradient', 'options', 'solver', 'states', 'to_numpy', 'to_qutip', 'tsave', 'ysave']
 
-==== Result ====
+==== SEResult ====
 Solver  : Dopri5
 States  : Array complex64 (101, 2, 1) | 1.58 Kb
 Expects : Array complex64 (1, 101) | 0.79 Kb
