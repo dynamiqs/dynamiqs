@@ -126,6 +126,10 @@ def sinm(x: ArrayLike) -> Array:
     Notes:
         This function uses `jax.scipy.linalg.expm`.
 
+    Notes:
+        For better performance, consider using [`dq.sincosm()`][dynamiqs.sincosm] if you
+        wish to compute both the sine and cosine of the same array.
+
     Examples:
         >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
         Array([[0.-0.j, 1.-0.j],
@@ -146,6 +150,10 @@ def cosm(x: ArrayLike) -> Array:
 
     Notes:
         This function uses `jax.scipy.linalg.expm`.
+
+    Notes:
+        For better performance, consider using [`dq.sincosm()`][dynamiqs.sincosm] if you
+        wish to compute both the sine and cosine of the same array.
 
     Examples:
         >>> dq.cosm(jnp.pi * dq.sigmax())
