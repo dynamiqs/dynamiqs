@@ -95,7 +95,7 @@ def sincosm(x: ArrayLike) -> tuple[Array, Array]:
         x _(array_like of shape (..., n, n))_: Square matrix.
 
     Returns:
-        `sin, cos` _(arrays of shape (..., n, n))_: sine and cosine of `x`.
+        _(tuple with two arrays of shape (..., n, n))_ Sine and cosine of `x`.
 
     Notes:
         This function uses `jax.scipy.linalg.expm`.
@@ -121,7 +121,7 @@ def sinm(x: ArrayLike) -> Array:
         x _(array_like of shape (..., n, n))_: Square matrix.
 
     Returns:
-        _(array of shape (..., n, n))_: sine of `x`.
+        _(array of shape (..., n, n))_ Sine of `x`.
 
     Notes:
         This function uses `jax.scipy.linalg.expm`.
@@ -142,7 +142,7 @@ def cosm(x: ArrayLike) -> Array:
         x _(array_like of shape (..., n, n))_: Square matrix.
 
     Returns:
-        _(array of shape (..., n, n))_: cosine of `x`.
+        _(array of shape (..., n, n))_ Cosine of `x`.
 
     Notes:
         This function uses `jax.scipy.linalg.expm`.
