@@ -4,9 +4,9 @@ from .wigner import *
 __all__ = [
     'dag',
     'mpow',
-    'sincosm',
     'sinm',
     'cosm',
+    'sincosm',
     'tracemm',
     'trace',
     'ptrace',
