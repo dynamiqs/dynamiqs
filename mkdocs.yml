@@ -186,7 +186,7 @@ nav:
               - coherent_dm: python_api/utils/states/coherent_dm.md
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
-              - mpow: python_api/utils/utils/mpow.md
+              - powm: python_api/utils/utils/powm.md
               - sinm: python_api/utils/utils/sinm.md
               - cosm: python_api/utils/utils/cosm.md
               - sincosm: python_api/utils/utils/sincosm.md

@@ -42,10 +42,10 @@ Array([[0.+0.j, 1.+0.j],
        [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
-Likewise, you should use `dq.mpow()` instead of `**` (element-wise power) to compute the power of a matrix:
+Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to compute the power of a matrix:
 
 ```pycon
->>> dq.mpow(sx, 2)  # correct
+>>> dq.powm(sx, 2)  # correct
 Array([[1.+0.j, 0.+0.j],
        [0.+0.j, 1.+0.j]], dtype=complex64)
 >>> sx**2  # incorrect

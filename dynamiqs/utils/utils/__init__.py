@@ -3,7 +3,7 @@ from .wigner import *
 
 __all__ = [
     'dag',
-    'mpow',
+    'powm',
     'sinm',
     'cosm',
     'sincosm',
