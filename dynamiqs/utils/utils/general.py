@@ -89,7 +89,7 @@ def mpow(x: ArrayLike, n: int) -> Array:
 
 
 def sincosm(x: ArrayLike) -> tuple[Array, Array]:
-    """Returns the sine and cosine of an array.
+    r"""Returns the sine and cosine of an array.
 
     Args:
         x _(array_like of shape (..., n, n))_: Square matrix.
@@ -98,7 +98,14 @@ def sincosm(x: ArrayLike) -> tuple[Array, Array]:
         _(tuple with two arrays of shape (..., n, n))_ Sine and cosine of `x`.
 
     Notes:
-        This function uses `jax.scipy.linalg.expm`.
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the sine and cosine of a matrix $A$:
+        $$
+            \begin{aligned}
+                \sin(A) &= \frac{e^{iA} - e^{-iA}}{2i} \\\\
+                \cos(A) &= \frac{e^{iA} + e^{-iA}}{2}
+            \end{aligned}
+        $$
 
     Examples:
         >>> sin, cos = dq.sincosm(0.25 * jnp.pi * dq.sigmax())
@@ -115,7 +122,7 @@ def sincosm(x: ArrayLike) -> tuple[Array, Array]:
 
 
 def sinm(x: ArrayLike) -> Array:
-    """Returns the sine of an array.
+    r"""Returns the sine of an array.
 
     Args:
         x _(array_like of shape (..., n, n))_: Square matrix.
@@ -124,7 +131,11 @@ def sinm(x: ArrayLike) -> Array:
         _(array of shape (..., n, n))_ Sine of `x`.
 
     Notes:
-        This function uses `jax.scipy.linalg.expm`.
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the sine of a matrix $A$:
+        $$
+            \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
+        $$
 
     Notes:
         For better performance, consider using [`dq.sincosm()`][dynamiqs.sincosm] if you
@@ -140,7 +151,7 @@ def sinm(x: ArrayLike) -> Array:
 
 
 def cosm(x: ArrayLike) -> Array:
-    """Returns the cosine of an array.
+    r"""Returns the cosine of an array.
 
     Args:
         x _(array_like of shape (..., n, n))_: Square matrix.
@@ -149,7 +160,11 @@ def cosm(x: ArrayLike) -> Array:
         _(array of shape (..., n, n))_ Cosine of `x`.
 
     Notes:
-        This function uses `jax.scipy.linalg.expm`.
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the cosine of a matrix $A$:
+        $$
+            \cos(A) = \frac{e^{iA} + e^{-iA}}{2}
+        $$
 
     Notes:
         For better performance, consider using [`dq.sincosm()`][dynamiqs.sincosm] if you
