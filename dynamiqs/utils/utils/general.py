@@ -13,6 +13,9 @@ from ..._utils import on_cpu
 __all__ = [
     'dag',
     'mpow',
+    'sincosm',
+    'sinm',
+    'cosm',
     'tracemm',
     'trace',
     'ptrace',
@@ -35,9 +38,6 @@ __all__ = [
     'overlap',
     'fidelity',
     'eigenstates',
-    'sincosm',
-    'sinm',
-    'cosm',
 ]
 
 
