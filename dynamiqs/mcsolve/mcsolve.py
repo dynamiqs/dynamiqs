@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from functools import partial
-
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -14,7 +12,7 @@ from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result, Saved, MCResult
+from ..result import Result, Saved, MCResult, FinalSaved
 from ..solver import Dopri5, Dopri8, Euler, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.utils import unit, dag
@@ -99,10 +97,6 @@ def mcsolve(
             - **options** _(Options)_ -- Options used.
     """
     # === convert arguments
-    if options.save_extra is not None:
-        raise RuntimeError("extra save arguments not yet supported for mcsolve")
-    if options.t1 is None:
-        options = eqx.tree_at(lambda opt: opt.t1, options, tsave[-1],)
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
     psi0 = jnp.asarray(psi0, dtype=cdtype())
@@ -192,11 +186,11 @@ def _single_traj(
     options: Options,
 ):
     def while_cond(t_state_key_solver):
-        t, prev_tsave, prev_key, prev_solver, prev_options, prev_results = t_state_key_solver
-        return t < prev_options.t1
+        t, prev_tsave, prev_key, prev_solver, prev_results = t_state_key_solver
+        return t < tsave[-1]
 
     def while_body(t_state_key_solver):
-        t, prev_tsave, prev_key, prev_solver, prev_options, prev_result = t_state_key_solver
+        t, prev_tsave, prev_key, prev_solver, prev_result = t_state_key_solver
         next_r_key, sample_key, next_loop_key = jax.random.split(prev_key, num=3)
         solvers = {
             Euler: MCEuler,
@@ -207,36 +201,36 @@ def _single_traj(
         solver_class = get_solver_class(solvers, prev_solver)
         prev_solver.assert_supports_gradient(gradient)
         prev_state = prev_result.final_state
-        mcsolver = solver_class(prev_tsave, prev_state, H, exp_ops, prev_solver, gradient, prev_options, jump_ops)
+        mcsolver = solver_class(prev_tsave, prev_state, H, exp_ops, prev_solver, gradient, options, jump_ops)
         # solve until jump
         new_result = mcsolver.run()
         # in the next round want to keep saving at the same instances in time, not
         # affected by the specific time a jump occurs
-        t_jump = new_result.final_time[0]
+        t_jump = new_result.final_time
         # want to use OG tsave here
         new_start_index = jnp.searchsorted(tsave, t_jump, side="right")
         # start saving at the next time after a jump
-        new_tsave_start_time = tsave[new_start_index + 1]
-        # want new_tsave to have the same shape as tsave but starting
-        # at the closest save time after a jump
-        new_tsave = (tsave - tsave[0]) + new_tsave_start_time
-        # update t0 in options, since it does not necessarily coincide with new_tsave[0]
-        new_options = eqx.tree_at(lambda opt: opt.t0, prev_options, t_jump)
-        concatenated_res = add_results(prev_result, new_result, new_start_index, new_options)
+        new_tsave = jnp.where(tsave < t_jump, jnp.inf, tsave)
+        concatenated_res = add_results(prev_result, new_result, new_start_index, options)
         state_before_jump = new_result.final_state
         # peel off the state, excluding the random number
         psi_before_jump = state_before_jump[0:-1]
         # randomly sample one jump operator
         jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
         # only apply a jump if the solve terminated before the end
-        mask = jnp.where(t_jump < new_options.t1, jnp.array([1.0, ]), jnp.array([0.0, ]))
+        mask = jnp.where(t_jump < tsave[-1], jnp.array([1.0, ]), jnp.array([0.0, ]))
         # renormalize the state if a jump is applied
         psi = unit(mask * jump_op @ psi_before_jump) + (1 - mask) * psi_before_jump
         # new random key for the next round of the while loop
         r = jax.random.uniform(next_r_key, shape=(1, 1))
         new_state = jnp.concatenate((psi, r))
-        concatenated_res.final_state = new_state
-        return t_jump, new_tsave, next_loop_key, prev_solver, new_options, concatenated_res
+        concatenated_res = eqx.tree_at(
+            lambda res: res.final_state, concatenated_res, new_state
+        )
+        concatenated_res = eqx.tree_at(
+            lambda res: res.infos, concatenated_res, None
+        )
+        return t_jump, new_tsave, next_loop_key, prev_solver, concatenated_res
 
     initial_state = jnp.concatenate((psi0, rand))
     # initialize arrays for future concatenation
@@ -252,13 +246,13 @@ def _single_traj(
         Esave = jnp.full(shape=(nT, nE), fill_value=jnp.inf, dtype=cdtype())
     else:
         Esave = None
-    saved = Saved(ysave, initial_state, Esave, None)
+    saved = FinalSaved(ysave, Esave, None, initial_state)
     initial_result = Result(
         tsave, solver, gradient, options, saved, tsave[0], None,
     )
 
-    _, _, _, _, _, final_results = while_loop(
-        while_cond, while_body, (tsave[0], tsave, key, solver, options, initial_result),
+    _, _, _, _, final_results = while_loop(
+        while_cond, while_body, (tsave[0], tsave, key, solver, initial_result),
         kind="checkpointed", max_steps=100
     )
     return final_results

@@ -37,6 +37,10 @@ class Saved(eqx.Module):
     extra: PyTree | None
 
 
+class FinalSaved(Saved):
+    ylast: Array | None
+
+
 class Result(eqx.Module):
     """Result of the integration.
 
@@ -57,7 +61,7 @@ class Result(eqx.Module):
     solver: Solver
     gradient: Gradient | None
     options: Options
-    _saved: Saved
+    _saved: FinalSaved
     final_time: Array
     infos: PyTree | None = None
 
@@ -67,10 +71,7 @@ class Result(eqx.Module):
 
     @property
     def final_state(self) -> Array:
-        if self.options.save_states:
-            return self._saved.ysave[..., -1, :, :]
-        else:
-            return self._saved.ysave
+        return self._saved.ylast
 
     @property
     def expects(self) -> Array | None:

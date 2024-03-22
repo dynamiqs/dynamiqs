@@ -1,5 +1,4 @@
 from jax.tree_util import Partial
-from typing import Callable
 
 import diffrax as dx
 import jax.numpy as jnp
@@ -13,39 +12,29 @@ from ..core.diffrax_solver import (
     EulerSolver,
     Tsit5Solver,
 )
-from ..time_array import TimeArray
 from ..utils.utils import dag
 
 
-class MonteCarloTerm(dx.ODETerm):
-    H: TimeArray  # (n, n)
-    Ls: list[TimeArray]  # (nL, n, n)
-    vector_field: Callable[[Scalar, PyTree, PyTree], PyTree]
-
-    def __init__(self, H: TimeArray, Ls: TimeArray):
-        self.H = H
-        self.Ls = Ls
-
-    def vector_field(self, t: Scalar, state: PyTree, _args: PyTree) -> PyTree:
-        Ls = jnp.stack([L(t) for L in self.Ls])
-        Lsd = dag(Ls)
-        LdL = (Lsd @ Ls).sum(axis=0)
-        psi = state[0:-1]
-        r = state[-1][..., None]
-        new_state = -1j * (self.H(t) - 1j * 0.5 * LdL) @ psi
-        return jnp.concatenate((new_state, r))
-
-
 class MCDiffraxSolver(DiffraxSolver, MCSolver):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.term = MonteCarloTerm(H=self.H, Ls=self.Ls)
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        def vector_field(t: Scalar, state: PyTree, _args: PyTree) -> PyTree:
+            Ls = jnp.stack([L(t) for L in self.Ls])
+            Lsd = dag(Ls)
+            LdL = (Lsd @ Ls).sum(axis=0)
+            psi = state[0:-1]
+            r = state[-1][..., None]
+            new_state = -1j * (self.H(t) - 1j * 0.5 * LdL) @ psi
+            return jnp.concatenate((new_state, r))
+        return dx.ODETerm(vector_field)
 
+    @property
+    def discrete_terminating_event(self):
         def norm_below_rand(state, **kwargs):
             psi = jnp.squeeze(state.y[0:-1])
             r = jnp.squeeze(state.y[-1])
-            return jnp.all(jnp.conj(psi) @ psi) < r or state.tprev >= self.t1
-        self.discrete_terminating_event = dx.DiscreteTerminatingEvent(Partial(norm_below_rand))
+            return jnp.all(jnp.conj(psi) @ psi) < r
+        return dx.DiscreteTerminatingEvent(Partial(norm_below_rand))
 
 
 class MCEuler(MCDiffraxSolver, EulerSolver):
