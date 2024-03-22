@@ -9,7 +9,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..gradient import Gradient
 from ..options import Options
-from ..result import MEResult, Result, Saved, SEResult
+from ..result import MEResult, Result, Saved, SEResult, FinalSaved
 from ..solver import Solver
 from ..time_array import TimeArray
 from ..utils.utils import expect
@@ -29,7 +29,6 @@ class BaseSolver(AbstractSolver):
     solver: Solver
     gradient: Gradient | None
     options: Options
-    discrete_terminating_event: DiscreteTerminatingEvent | None = None
 
     @property
     def t0(self) -> Scalar:
@@ -63,11 +62,15 @@ class BaseSolver(AbstractSolver):
             Esave = Esave.swapaxes(-1, -2)
             saved = eqx.tree_at(lambda x: x.Esave, saved, Esave)
 
-        return saved
+        return FinalSaved(saved.ysave, saved.Esave, saved.extra, ylast)
 
     @abstractmethod
     def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
         pass
+
+    @property
+    def discrete_terminating_event(self):
+        return None
 
 
 class SESolver(BaseSolver):
