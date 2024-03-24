@@ -6,6 +6,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
+from jax.scipy.linalg import expm
 from jaxtyping import ArrayLike
 
 from ..._utils import on_cpu
@@ -109,7 +110,7 @@ def sinm(x: ArrayLike) -> Array:
                [1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    return -0.5j * (jax.scipy.linalg.expm(1j * x) - jax.scipy.linalg.expm(-1j * x))
+    return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
 def cosm(x: ArrayLike) -> Array:
@@ -134,7 +135,7 @@ def cosm(x: ArrayLike) -> Array:
                [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    return 0.5 * (jax.scipy.linalg.expm(1j * x) + jax.scipy.linalg.expm(-1j * x))
+    return 0.5 * (expm(1j * x) + expm(-1j * x))
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
