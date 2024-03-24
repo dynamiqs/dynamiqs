@@ -15,7 +15,6 @@ __all__ = [
     'powm',
     'sinm',
     'cosm',
-    'sincosm',
     'tracemm',
     'trace',
     'ptrace',
@@ -104,10 +103,6 @@ def sinm(x: ArrayLike) -> Array:
             \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
         $$
 
-    Notes:
-        For better performance, consider using [`dq.sincosm()`][dynamiqs.sincosm] if you
-        wish to compute both the sine and cosine of the same array.
-
     Examples:
         >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
         Array([[0.-0.j, 1.-0.j],
@@ -133,10 +128,6 @@ def cosm(x: ArrayLike) -> Array:
             \cos(A) = \frac{e^{iA} + e^{-iA}}{2}
         $$
 
-    Notes:
-        For better performance, consider using [`dq.sincosm()`][dynamiqs.sincosm] if you
-        wish to compute both the sine and cosine of the same array.
-
     Examples:
         >>> dq.cosm(jnp.pi * dq.sigmax())
         Array([[-1.+0.j,  0.+0.j],
@@ -144,39 +135,6 @@ def cosm(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     return 0.5 * (jax.scipy.linalg.expm(1j * x) + jax.scipy.linalg.expm(-1j * x))
-
-
-def sincosm(x: ArrayLike) -> tuple[Array, Array]:
-    r"""Returns the sine and cosine of an array.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Square matrix.
-
-    Returns:
-        _(tuple with two arrays of shape (..., n, n))_ Sine and cosine of `x`.
-
-    Notes:
-        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
-        to compute the sine and cosine of a matrix $A$:
-        $$
-            \begin{aligned}
-                \sin(A) &= \frac{e^{iA} - e^{-iA}}{2i} \\\\
-                \cos(A) &= \frac{e^{iA} + e^{-iA}}{2}
-            \end{aligned}
-        $$
-
-    Examples:
-        >>> sin, cos = dq.sincosm(0.25 * jnp.pi * dq.sigmax())
-        >>> (sin + cos) * jnp.sqrt(2)
-        Array([[1.+0.j, 1.+0.j],
-               [1.+0.j, 1.+0.j]], dtype=complex64)
-    """
-    x = jnp.asarray(x)
-    exp_ip = jax.scipy.linalg.expm(1j * x)
-    exp_im = jax.scipy.linalg.expm(-1j * x)
-    sin_x = -0.5j * (exp_ip - exp_im)
-    cos_x = 0.5 * (exp_ip + exp_im)
-    return sin_x, cos_x
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:

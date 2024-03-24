@@ -6,7 +6,6 @@ __all__ = [
     'powm',
     'sinm',
     'cosm',
-    'sincosm',
     'tracemm',
     'trace',
     'ptrace',
