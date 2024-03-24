@@ -105,7 +105,7 @@ def _plot_hinton(
     # squares areas
     areas = areas.T.flatten()
     # squares colors
-    cmap = mpl.colormaps.get_cmap(cmap)
+    cmap = mpl.colormaps[cmap]
     colors = cmap(colors.T).reshape(-1, 4)
     _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 

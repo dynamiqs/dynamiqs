@@ -209,7 +209,7 @@ def bra_ticks(axis: Axis):
 
 
 def sample_cmap(name: str, n: int, alpha: float = 1.0) -> np.ndarray:
-    sampled_cmap = matplotlib.colormaps.get_cmap(name)(np.linspace(0, 1, n))
+    sampled_cmap = matplotlib.colormaps[name](np.linspace(0, 1, n))
     sampled_cmap[:, -1] = alpha
     return sampled_cmap
 

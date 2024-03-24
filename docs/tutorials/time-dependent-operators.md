@@ -6,7 +6,7 @@ This tutorial explains how to define time-dependent Hamiltonians – and more ge
     dynamiqs uses JAX arrays, which are different from QuTiP quantum objects. See [The sharp bits 🔪](../getting_started/sharp-bits.md) page for more details, briefly:
 
     - use `x + 2 * dq.eye(n)` instead of `x + 2`
-    - use `x @ y` instead of `x * y`, and `dq.mpow(x, 4)` instead of `x**4`
+    - use `x @ y` instead of `x * y`, and `dq.powm(x, 4)` instead of `x**4`
     - use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()`
 
 ```python
