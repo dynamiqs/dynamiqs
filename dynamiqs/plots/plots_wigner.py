@@ -340,7 +340,8 @@ def plot_wigner_gif(
             frames.append(frame)
 
         # loop=0: loop the GIF forever
-        iio.v3.imwrite(filename, frames, format='GIF', fps=fps, loop=0)
+        duration = gif_duration * 1e3  # in ms
+        iio.v3.imwrite(filename, frames, format='GIF', duration=duration, loop=0)
         if display:
             ipy.display(ipy.Image(filename))
     finally:
