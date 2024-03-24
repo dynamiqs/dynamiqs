@@ -4,8 +4,8 @@ from .wigner import *
 __all__ = [
     'dag',
     'powm',
-    'sinm',
     'cosm',
+    'sinm',
     'tracemm',
     'trace',
     'ptrace',

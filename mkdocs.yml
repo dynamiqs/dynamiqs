@@ -187,8 +187,8 @@ nav:
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
               - powm: python_api/utils/utils/powm.md
-              - sinm: python_api/utils/utils/sinm.md
               - cosm: python_api/utils/utils/cosm.md
+              - sinm: python_api/utils/utils/sinm.md
               - tracemm: python_api/utils/utils/tracemm.md
               - trace: python_api/utils/utils/trace.md
               - ptrace: python_api/utils/utils/ptrace.md

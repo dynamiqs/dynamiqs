@@ -14,8 +14,8 @@ from ..._utils import on_cpu
 __all__ = [
     'dag',
     'powm',
-    'sinm',
     'cosm',
+    'sinm',
     'tracemm',
     'trace',
     'ptrace',
@@ -88,31 +88,6 @@ def powm(x: ArrayLike, n: int) -> Array:
     return jnp.linalg.matrix_power(x, n)
 
 
-def sinm(x: ArrayLike) -> Array:
-    r"""Returns the sine of an array.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Square matrix.
-
-    Returns:
-        _(array of shape (..., n, n))_ Sine of `x`.
-
-    Notes:
-        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
-        to compute the sine of a matrix $A$:
-        $$
-            \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
-        $$
-
-    Examples:
-        >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
-        Array([[0.-0.j, 1.-0.j],
-               [1.-0.j, 0.-0.j]], dtype=complex64)
-    """
-    x = jnp.asarray(x)
-    return -0.5j * (expm(1j * x) - expm(-1j * x))
-
-
 def cosm(x: ArrayLike) -> Array:
     r"""Returns the cosine of an array.
 
@@ -136,6 +111,31 @@ def cosm(x: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     return 0.5 * (expm(1j * x) + expm(-1j * x))
+
+
+def sinm(x: ArrayLike) -> Array:
+    r"""Returns the sine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_ Sine of `x`.
+
+    Notes:
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the sine of a matrix $A$:
+        $$
+            \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
+        $$
+
+    Examples:
+        >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
+        Array([[0.-0.j, 1.-0.j],
+               [1.-0.j, 0.-0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
