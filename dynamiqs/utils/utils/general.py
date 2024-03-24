@@ -6,13 +6,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
+from jax.scipy.linalg import expm
 from jaxtyping import ArrayLike
 
 from ..._utils import on_cpu
 
 __all__ = [
     'dag',
-    'mpow',
+    'powm',
+    'cosm',
+    'sinm',
     'tracemm',
     'trace',
     'ptrace',
@@ -63,7 +66,7 @@ def dag(x: ArrayLike) -> Array:
     return x.mT.conj()
 
 
-def mpow(x: ArrayLike, n: int) -> Array:
+def powm(x: ArrayLike, n: int) -> Array:
     """Returns the $n$-th matrix power of an array.
 
     Args:
@@ -77,12 +80,62 @@ def mpow(x: ArrayLike, n: int) -> Array:
         This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
-        >>> dq.mpow(dq.sigmax(), 2)
+        >>> dq.powm(dq.sigmax(), 2)
         Array([[1.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
     return jnp.linalg.matrix_power(x, n)
+
+
+def cosm(x: ArrayLike) -> Array:
+    r"""Returns the cosine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_ Cosine of `x`.
+
+    Notes:
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the cosine of a matrix $A$:
+        $$
+            \cos(A) = \frac{e^{iA} + e^{-iA}}{2}
+        $$
+
+    Examples:
+        >>> dq.cosm(jnp.pi * dq.sigmax())
+        Array([[-1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    return 0.5 * (expm(1j * x) + expm(-1j * x))
+
+
+def sinm(x: ArrayLike) -> Array:
+    r"""Returns the sine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_ Sine of `x`.
+
+    Notes:
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the sine of a matrix $A$:
+        $$
+            \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
+        $$
+
+    Examples:
+        >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
+        Array([[0.-0.j, 1.-0.j],
+               [1.-0.j, 0.-0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
