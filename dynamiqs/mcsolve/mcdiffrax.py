@@ -1,4 +1,7 @@
+import jax
 from jax.tree_util import Partial
+
+from functools import partial
 
 import diffrax as dx
 import jax.numpy as jnp
@@ -31,10 +34,11 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
     @property
     def discrete_terminating_event(self):
         def norm_below_rand(state, **kwargs):
-            psi = jnp.squeeze(state.y[0:-1])
-            r = jnp.squeeze(state.y[-1])
-            return jnp.all(jnp.conj(psi) @ psi) < r
-        return dx.DiscreteTerminatingEvent(Partial(norm_below_rand))
+            psi = state.y[0:-1]
+            r = state.y[-1][0]
+            prob = jnp.einsum("id,id->", jnp.conj(psi), psi)**2
+            return prob < r
+        return dx.DiscreteTerminatingEvent(norm_below_rand)
 
 
 class MCEuler(MCDiffraxSolver, EulerSolver):
