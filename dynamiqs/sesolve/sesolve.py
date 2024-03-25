@@ -147,22 +147,30 @@ def _sesolve(
 
 
 def _check_sesolve_args(H: TimeArray, psi0: Array, tsave: Array, exp_ops: Array | None):
+    # === check H shape
     if H.shape[-1] != H.shape[-2]:
         raise ValueError(
-            f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
+            'Argument `H` must have shape (nH?, n, n), but has shape'
+            f' H.shape={H.shape}.'
         )
 
+    # === check psi0 shape
     if psi0.shape[-1] != 1:
         raise ValueError(
-            'Initial state `psi0` must have shape (..., n, 1), but got shape'
-            f' {psi0.shape}.'
+            'Argument `psi0` must have shape (npsi0?, n, 1), but has shape'
+            f' psi0.shape={psi0.shape}.'
         )
 
+    # === check tsave shape
     if tsave.ndim != 1:
-        raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
-
-    if exp_ops is not None and any(op.shape[-1] != op.shape[-2] for op in exp_ops):
         raise ValueError(
-            'Operators in `exp_ops` must have shape (n, n), but got shapes'
-            f' {[op.shape for op in exp_ops]}.'
+            'Argument `tsave` must have shape (ntsave,), but has shape'
+            f' tsave.shape={tsave.shape}.'
+        )
+
+    # === check exp_ops shape
+    if exp_ops is not None and exp_ops.shape[-1] != exp_ops.shape[-2]:
+        raise ValueError(
+            'Argument `exp_ops` must have shape (nE, n, n), but has shape'
+            f' exp_ops.shape={exp_ops.shape}.'
         )

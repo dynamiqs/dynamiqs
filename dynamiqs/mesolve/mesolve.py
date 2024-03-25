@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import warnings
+import logging
 from functools import partial
 
 import jax
@@ -181,35 +181,43 @@ def _check_mesolve_args(
     tsave: Array,
     exp_ops: Array | None,
 ):
+    # === check H shape
     if H.shape[-1] != H.shape[-2]:
         raise ValueError(
-            f'Hamiltonian `H` must have shape (..., n, n), but got shape {H.shape}.'
+            'Argument `H` must have shape (nH?, n, n), but has shape'
+            f' H.shape={H.shape}.'
+        )
+
+    # === check jump_ops shape
+    if len(jump_ops) == 0:
+        logging.warn(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
         )
 
     if any(L.shape[-1] != L.shape[-2] for L in jump_ops):
         raise ValueError(
-            'Jump operators in `jump_ops` must have shape (..., n, n), but got shapes'
+            'Argument `jump_ops` must have shape (nL, n, n), but elements have shape'
             f' {[L.shape for L in jump_ops]}.'
         )
-    if len(jump_ops) == 0:
-        warnings.warn(
-            'Calling `mesolve` without jump operators does not fallback to `sesolve`.'
-            ' If you want to solve a Schrodinger equation, consider using `sesolve`'
-            ' instead.',
-            stacklevel=2,
-        )
 
+    # === check rho0 shape
     if rho0.shape[-1] != 1 and rho0.shape[-1] != rho0.shape[-2]:
         raise ValueError(
-            'Initial state `rho0` must have shape (..., n, 1) or (..., n, n), but got'
-            f' shape {rho0.shape}.'
+            'Argument `rho0` must have shape (nrho0?, n, 1) or (nrho0?, n, n), but has'
+            f' shape rho0.shape={rho0.shape}.'
         )
 
+    # === check tsave shape
     if tsave.ndim != 1:
-        raise ValueError(f'Time array `tsave` must be 1D, but got shape {tsave.shape}.')
-
-    if exp_ops is not None and any(op.shape[-1] != op.shape[-2] for op in exp_ops):
         raise ValueError(
-            'Operators in `exp_ops` must have shape (n, n), but got shapes'
-            f' {[op.shape for op in exp_ops]}.'
+            'Argument `tsave` must have shape (ntsave,), but has shape'
+            f' tsave.shape={tsave.shape}.'
+        )
+
+    # === check exp_ops shape
+    if exp_ops is not None and exp_ops.shape[-1] != exp_ops.shape[-2]:
+        raise ValueError(
+            'Argument `exp_ops` must have shape (nE, n, n), but has shape'
+            f' exp_ops.shape={exp_ops.shape}.'
         )
