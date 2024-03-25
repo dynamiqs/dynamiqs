@@ -90,12 +90,7 @@ class MCSolver(BaseSolver):
         return Result(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
 
     def save(self, y: PyTree) -> Saved:
-        ysave, Esave, extra = None, None, None
-        if self.options.save_states:
-            ysave = y
-        if self.Es is not None and len(self.Es) > 0:
-            Esave = expect(self.Es, y[..., 0:-1, :])
-        if self.options.save_extra is not None:
-            extra = self.options.save_extra(y)
+        return super().save(y[0: -1])
 
-        return Saved(ysave, Esave, extra)
+    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+        return super().collect_saved(saved, ylast[0: -1])

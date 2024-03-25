@@ -134,6 +134,7 @@ class MCResult(eqx.Module):
     _no_jump_res: Result
     _jump_res: Result
     no_jump_prob: float
+    expects: Array | None
 
     @property
     def no_jump_states(self) -> Array:
@@ -150,16 +151,6 @@ class MCResult(eqx.Module):
     @property
     def final_jump_states(self) -> Array:
         return self._jump_res.final_state
-
-    @property
-    def expects(self) -> Array | None:
-        if self._no_jump_res.expects is not None:
-            jump_expects = self._jump_res.expects
-            #TODO which axis will this be in general, if there is batching?
-            no_jump_expects = jnp.mean(self._no_jump_res.expects, axis=-3)
-            return self.no_jump_prob * jump_expects + (1 - self.no_jump_prob) * no_jump_expects
-        else:
-            return None
 
     @property
     def extra(self) -> PyTree | None:
