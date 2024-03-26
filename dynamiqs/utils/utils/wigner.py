@@ -9,9 +9,10 @@ from jax import Array, lax
 from jax.scipy.linalg import toeplitz
 from jaxtyping import ArrayLike
 
+from ..._checks import check_shape
 from ..._utils import cdtype
 from ..operators import eye
-from .general import isdm, isket, todm
+from .general import isket, todm
 
 __all__ = ['wigner']
 
@@ -47,6 +48,7 @@ def wigner(
                 distribution at all (x, p) points.
     """
     state = jnp.asarray(state)
+    check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
     xvec = jnp.linspace(-xmax, xmax, npixels)
     yvec = jnp.linspace(-ymax, ymax, npixels)
@@ -57,13 +59,8 @@ def wigner(
     elif method == 'fft':
         if isket(state):
             w, yvec = _wigner_fft_psi(state, xvec, g)
-        elif isdm(state):
-            w, yvec = _wigner_fft_dm(state, xvec, g)
         else:
-            raise ValueError(
-                'Argument `state` must be a ket or density matrix, but has shape'
-                f' {state.shape}.'
-            )
+            w, yvec = _wigner_fft_dm(state, xvec, g)
     else:
         raise ValueError(
             f'Method "{method}" is not supported (supported: "clenshaw", "fft").'

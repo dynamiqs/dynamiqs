@@ -7,6 +7,7 @@ import numpy as np
 from jax.typing import ArrayLike
 from qutip import Qobj
 
+from .._checks import check_shape
 from .utils import isbra, isket, isop
 from .utils.general import _hdim
 
@@ -18,7 +19,8 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
     quantum objects if it has more than two dimensions).
 
     Args:
-        x: Array-like object.
+        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+            density matrix or operator.
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
             Hilbert space of the composite system, defaults to `None` (a single system
             with the same dimension as `x`).
@@ -69,6 +71,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
     x = np.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if x.ndim > 2:
         return [to_qutip(sub_x) for sub_x in x]
