@@ -18,6 +18,7 @@ _cases = {
     '(n,)': lambda x: x.ndim == 1,
     '(N, n, 1)': lambda x: x.ndim == 3 and x.shape[-1] == 1,
     '(N, n, n)': lambda x: x.ndim == 3 and x.shape[-2] == x.shape[-1],
+    '(?, n, 1)': lambda x: 2 <= x.ndim <= 3 and x.shape[-1] == 1,
     '(?, n, n)': lambda x: 2 <= x.ndim <= 3 and x.shape[-2] == x.shape[-1],
     '(..., n^2, 1)': lambda x: x.ndim >= 2
     and _is_perfect_square(x.shape[-2])
@@ -60,7 +61,7 @@ def check_shape(
 
 def check_times(x: Array, argname: str, allow_empty: bool = False):
     # check that an array of time is valid (it must be a 1D array sorted in strictly
-    # ascending order and containing only positive values)
+    # ascending order)
 
     if x.ndim != 1:
         raise ValueError(
@@ -72,5 +73,3 @@ def check_times(x: Array, argname: str, allow_empty: bool = False):
         raise ValueError(
             f'Argument {argname} must be sorted in strictly ascending order.'
         )
-    if not jnp.all(x >= 0):
-        raise ValueError(f'Argument {argname} must contain positive values only.')
