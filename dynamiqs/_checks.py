@@ -59,9 +59,8 @@ def check_shape(
 
 
 def check_times(x: Array, argname: str, allow_empty: bool = False):
-    # check that a time-array is valid (it must be a 1D array sorted in strictly
+    # check that an array of time is valid (it must be a 1D array sorted in strictly
     # ascending order and containing only positive values)
-    # check_shape(x, argname, '(n,)', subs={'n': f'n{argname}'})
 
     if x.ndim != 1:
         raise ValueError(
