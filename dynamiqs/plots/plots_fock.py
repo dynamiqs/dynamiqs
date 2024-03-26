@@ -6,7 +6,7 @@ from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
-from .._checks import check_shape, check_time_array
+from .._checks import check_shape, check_times
 from ..utils.utils import isdm, isket
 from .utils import (
     add_colorbar,
@@ -124,7 +124,7 @@ def plot_fock_evolution(
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
     if times is not None:
-        check_time_array(times, 'times')
+        check_times(times, 'times')
 
     x = jnp.arange(len(states)) if times is None else times
     n = states[0].shape[0]

@@ -58,7 +58,7 @@ def check_shape(
     )
 
 
-def check_time_array(x: Array, argname: str, allow_empty: bool = False):
+def check_times(x: Array, argname: str, allow_empty: bool = False):
     # check that a time-array is valid (it must be a 1D array sorted in strictly
     # ascending order and containing only positive values)
     # check_shape(x, argname, '(n,)', subs={'n': f'n{argname}'})

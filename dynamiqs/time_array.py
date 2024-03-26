@@ -11,7 +11,7 @@ from jax import Array, lax
 from jax.tree_util import Partial
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
-from ._checks import check_shape, check_time_array
+from ._checks import check_shape, check_times
 from ._utils import cdtype, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
@@ -68,7 +68,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     """
     # times
     times = jnp.asarray(times)
-    check_time_array(times, 'times')
+    check_times(times, 'times')
 
     # values
     values = jnp.asarray(values, dtype=cdtype())

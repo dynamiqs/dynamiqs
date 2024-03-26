@@ -4,7 +4,7 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 
-from .._checks import check_time_array
+from .._checks import check_times
 from .utils import colors, optional_ax
 
 __all__ = ['plot_pwc_pulse']
@@ -37,7 +37,7 @@ def plot_pwc_pulse(
     """
     times = jnp.asarray(times)  # (n + 1)
     values = jnp.asarray(values)  # (n)
-    check_time_array(times, 'times')
+    check_times(times, 'times')
 
     # format times and values, for example:
     # times  = [0, 1, 2, 3] -> [0, 1, 1, 2, 2, 3]
