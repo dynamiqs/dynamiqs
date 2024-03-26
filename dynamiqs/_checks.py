@@ -6,26 +6,28 @@ from jax import Array
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
 
+_cases = {
+    '(..., n, 1)': lambda x: x.ndim >= 2 and x.shape[-1] == 1,
+    '(..., 1, n)': lambda x: x.ndim >= 2 and x.shape[-2] == 1,
+    '(..., n, n)': lambda x: x.ndim >= 2 and x.shape[-2] == x.shape[-1],
+    '(N, ..., n, n)': lambda x: x.ndim >= 3 and x.shape[-2] == x.shape[-1],
+    '(..., n)': lambda x: x.ndim >= 1,
+    '(n, 1)': lambda x: x.ndim == 2 and x.shape[-1] == 1,
+    '(1, n)': lambda x: x.ndim == 2 and x.shape[-2] == 1,
+    '(n, n)': lambda x: x.ndim == 2 and x.shape[-2] == x.shape[-1],
+    '(n,)': lambda x: x.ndim == 1,
+    '(N, n, 1)': lambda x: x.ndim == 3 and x.shape[-1] == 1,
+    '(N, n, n)': lambda x: x.ndim == 3 and x.shape[-2] == x.shape[-1],
+    '(?, n, n)': lambda x: 2 <= x.ndim <= 3 and x.shape[-2] == x.shape[-1],
+    '(..., n^2, 1)': lambda x: x.ndim >= 2
+    and _is_perfect_square(x.shape[-2])
+    and x.shape[-1] == 1,
+}
+
+
 def has_shape(x: Array, shape: str) -> bool:
-    cases = {
-        '(..., n, 1)': lambda x: x.ndim >= 2 and x.shape[-1] == 1,
-        '(..., 1, n)': lambda x: x.ndim >= 2 and x.shape[-2] == 1,
-        '(..., n, n)': lambda x: x.ndim >= 2 and x.shape[-2] == x.shape[-1],
-        '(N, ..., n, n)': lambda x: x.ndim >= 3 and x.shape[-2] == x.shape[-1],
-        '(..., n)': lambda x: x.ndim >= 1,
-        '(n, 1)': lambda x: x.ndim == 2 and x.shape[-1] == 1,
-        '(1, n)': lambda x: x.ndim == 2 and x.shape[-2] == 1,
-        '(n, n)': lambda x: x.ndim == 2 and x.shape[-2] == x.shape[-1],
-        '(n,)': lambda x: x.ndim == 1,
-        '(N, n, 1)': lambda x: x.ndim == 3 and x.shape[-1] == 1,
-        '(N, n, n)': lambda x: x.ndim == 3 and x.shape[-2] == x.shape[-1],
-        '(?, n, n)': lambda x: 2 <= x.ndim <= 3 and x.shape[-2] == x.shape[-1],
-        '(..., n^2, 1)': lambda x: x.ndim >= 2
-        and _is_perfect_square(x.shape[-2])
-        and x.shape[-1] == 1,
-    }
-    if shape in cases:
-        return cases[shape](x)
+    if shape in _cases:
+        return _cases[shape](x)
     else:
         raise ValueError(f'Unknown shape specification `{shape}`.')
 
