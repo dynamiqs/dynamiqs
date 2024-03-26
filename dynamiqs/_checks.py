@@ -35,6 +35,10 @@ def has_shape(x: Array, shape: str) -> bool:
 def check_shape(
     x: Array, argname: str, *shapes: str, subs: dict[str, str] | None = None
 ):
+    # subs is used to replace symbols in the error message, this can be used to e.g.
+    # specify a shape (?, n, n) but print an error message with (nH?, n, n), by passing
+    # subs={'?': 'nH?'} to replace the '?' by 'nH?' in the shape specification
+
     for shape in shapes:
         if has_shape(x, shape):
             return
