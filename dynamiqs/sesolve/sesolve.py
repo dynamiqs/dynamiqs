@@ -7,6 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
@@ -148,29 +149,14 @@ def _sesolve(
 
 def _check_sesolve_args(H: TimeArray, psi0: Array, tsave: Array, exp_ops: Array | None):
     # === check H shape
-    if H.shape[-1] != H.shape[-2]:
-        raise ValueError(
-            'Argument `H` must have shape (nH?, n, n), but has shape'
-            f' H.shape={H.shape}.'
-        )
+    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
 
     # === check psi0 shape
-    if psi0.shape[-1] != 1:
-        raise ValueError(
-            'Argument `psi0` must have shape (npsi0?, n, 1), but has shape'
-            f' psi0.shape={psi0.shape}.'
-        )
+    check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
 
     # === check tsave shape
-    if tsave.ndim != 1:
-        raise ValueError(
-            'Argument `tsave` must have shape (ntsave,), but has shape'
-            f' tsave.shape={tsave.shape}.'
-        )
+    check_times(tsave, 'tsave')
 
     # === check exp_ops shape
-    if exp_ops is not None and exp_ops.shape[-1] != exp_ops.shape[-2]:
-        raise ValueError(
-            'Argument `exp_ops` must have shape (nE, n, n), but has shape'
-            f' exp_ops.shape={exp_ops.shape}.'
-        )
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})

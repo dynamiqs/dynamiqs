@@ -8,6 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
@@ -182,11 +183,7 @@ def _check_mesolve_args(
     exp_ops: Array | None,
 ):
     # === check H shape
-    if H.shape[-1] != H.shape[-2]:
-        raise ValueError(
-            'Argument `H` must have shape (nH?, n, n), but has shape'
-            f' H.shape={H.shape}.'
-        )
+    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
 
     # === check jump_ops shape
     if len(jump_ops) == 0:
@@ -195,29 +192,15 @@ def _check_mesolve_args(
             ' solve the Schrödinger equation.'
         )
 
-    if any(L.shape[-1] != L.shape[-2] for L in jump_ops):
-        raise ValueError(
-            'Argument `jump_ops` must have shape (nL, n, n), but elements have shape'
-            f' {[L.shape for L in jump_ops]}.'
-        )
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
 
     # === check rho0 shape
-    if rho0.shape[-1] != 1 and rho0.shape[-1] != rho0.shape[-2]:
-        raise ValueError(
-            'Argument `rho0` must have shape (nrho0?, n, 1) or (nrho0?, n, n), but has'
-            f' shape rho0.shape={rho0.shape}.'
-        )
+    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
 
     # === check tsave shape
-    if tsave.ndim != 1:
-        raise ValueError(
-            'Argument `tsave` must have shape (ntsave,), but has shape'
-            f' tsave.shape={tsave.shape}.'
-        )
+    check_times(tsave, 'tsave')
 
     # === check exp_ops shape
-    if exp_ops is not None and exp_ops.shape[-1] != exp_ops.shape[-2]:
-        raise ValueError(
-            'Argument `exp_ops` must have shape (nE, n, n), but has shape'
-            f' exp_ops.shape={exp_ops.shape}.'
-        )
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
