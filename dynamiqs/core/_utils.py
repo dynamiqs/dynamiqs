@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import jax
+import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
-from .._utils import obj_type_str
+from .._utils import cdtype, obj_type_str
 from ..solver import Solver
-from ..time_array import TimeArray, constant
+from ..time_array import ConstantTimeArray, TimeArray
 from .abstract_solver import AbstractSolver
 
 
@@ -14,7 +15,9 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
         return x
     else:
         try:
-            return constant(x)
+            # same as dq.constant() but not checking the shape
+            array = jnp.asarray(x, dtype=cdtype())
+            return ConstantTimeArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
                 f'Argument must be an array-like or a time-array object, but has type'
