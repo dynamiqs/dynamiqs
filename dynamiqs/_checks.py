@@ -18,6 +18,7 @@ _cases = {
     '(n,)': lambda x: x.ndim == 1,
     '(N, n, 1)': lambda x: x.ndim == 3 and x.shape[-1] == 1,
     '(N, n, n)': lambda x: x.ndim == 3 and x.shape[-2] == x.shape[-1],
+    '(?, n, 1)': lambda x: 2 <= x.ndim <= 3 and x.shape[-1] == 1,
     '(?, n, n)': lambda x: 2 <= x.ndim <= 3 and x.shape[-2] == x.shape[-1],
     '(..., n^2, 1)': lambda x: x.ndim >= 2
     and _is_perfect_square(x.shape[-2])
