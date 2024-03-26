@@ -4,6 +4,7 @@ from abc import abstractmethod
 
 from diffrax import DiscreteTerminatingEvent
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
@@ -12,7 +13,7 @@ from ..options import Options
 from ..result import MEResult, Result, Saved, SEResult, FinalSaved
 from ..solver import Solver
 from ..time_array import TimeArray
-from ..utils.utils import expect
+from ..utils.utils import expect, unit
 
 
 class AbstractSolver(eqx.Module):
@@ -87,12 +88,10 @@ class MESolver(BaseSolver):
 
 class MCSolver(BaseSolver):
     Ls: list[Array | TimeArray] | None = None
+    rand: float = 0.0
 
     def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
         return Result(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
 
     def save(self, y: PyTree) -> Saved:
-        return super().save(y[0: -1])
-
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
-        return super().collect_saved(saved, ylast[0: -1])
+        return super().save(unit(y))

@@ -155,14 +155,17 @@ def _mcsolve(
 ) -> MCResult:
     key_1, key_2, key_3 = jax.random.split(key, num=3)
     # simulate no-jump trajectory
-    rand0 = jnp.zeros(shape=(1, 1))
+    rand0 = 0.0
     no_jump_result = _single_traj(H, jump_ops, psi0, tsave, rand0, exp_ops, solver, gradient, options)
     # extract the no-jump probability
     no_jump_state = no_jump_result.final_state
-    p_nojump = jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state)**2
+    p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))**2
+    # normalize no-jump trajectory
+    # no_jump_states = unit(no_jump_result.states)
+    # no_jump_result = eqx.tree_at(lambda res: res._saved.ysave, no_jump_result, no_jump_states)
     # split key into ntraj keys
     # TODO split earlier so that not reusing key for different batch dimensions
-    random_numbers = jax.random.uniform(key_2, shape=(ntraj, 1, 1), minval=p_nojump)
+    random_numbers = jax.random.uniform(key_2, shape=(ntraj,), minval=p_nojump)
     # run all single trajectories at once
     # 0 indicates the dimension to vmap over. Here that is the random numbers along
     # with their keys, which come along for the ride so that we can draw further random
@@ -180,7 +183,7 @@ def _mcsolve(
     return mcresult
 
 
-#@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _single_traj(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -200,8 +203,7 @@ def _single_traj(
     }
     solver_class = get_solver_class(solvers, solver)
     solver.assert_supports_gradient(gradient)
-    state = jnp.concatenate((psi0, rand))
-    mcsolver = solver_class(tsave, state, H, exp_ops, solver, gradient, options, jump_ops)
+    mcsolver = solver_class(tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand)
     return mcsolver.run()
 
 
@@ -226,13 +228,13 @@ def _jump_trajs(
     # tsave_after_jump will have spacings not consistent with tsave, but
     # we will interpolate later to extract the states at the times specified
     # by tsave
-    tsave_after_jump = jnp.linspace(t_jump, tsave[-1], len(tsave))
     psi_before_jump = res_before_jump.final_state
     # select a random jump operator
     jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
     psi = unit(jump_op @ psi_before_jump)
+    tsave_after_jump = jnp.linspace(t_jump, tsave[-1], len(tsave))
     # in this implementation, only perform a single jump
-    rand0 = jnp.zeros(shape=(1, 1))
+    rand0 = 0.0
     res_after_jump = _single_traj(
         H, jump_ops, psi, tsave_after_jump, rand0, exp_ops, solver, gradient, options
     )
