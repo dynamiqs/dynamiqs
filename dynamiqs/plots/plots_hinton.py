@@ -12,6 +12,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
+from .._checks import check_shape
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['plot_hinton']
@@ -105,7 +106,7 @@ def _plot_hinton(
     # squares areas
     areas = areas.T.flatten()
     # squares colors
-    cmap = mpl.colormaps.get_cmap(cmap)
+    cmap = mpl.colormaps[cmap]
     colors = cmap(colors.T).reshape(-1, 4)
     _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 
@@ -188,11 +189,7 @@ def plot_hinton(
         ![plot_hinton_large](/figs-code/plot_hinton_large.png){.fig}
     """  # noqa: E501
     x = jnp.asarray(x)
-
-    if x.ndim != 2 or x.shape[0] != x.shape[1]:
-        raise ValueError(
-            f'Argument `x` must be a 2D square array, but has shape {x.shape}.'
-        )
+    check_shape(x, 'x', '(n, n)')
 
     # set different defaults, areas and colors for real matrix, positive real matrix
     # and complex matrix

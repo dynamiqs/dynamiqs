@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 
+from .._checks import check_shape
 from ..utils import wigner
 from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
@@ -34,6 +35,7 @@ def plot_wigner_data(
     clear: bool = False,
 ):
     w = jnp.asarray(wigner)
+    check_shape(w, 'wigner', '(n, n)')
 
     # set plot norm
     vmin = -vmax
@@ -124,6 +126,7 @@ def plot_wigner(
         ![plot_wigner_4legged](/figs-code/plot_wigner_4legged.png){.fig-half}
     """
     state = jnp.asarray(state)
+    check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
     _, _, w = wigner(state, xmax, ymax, npixels)
@@ -195,6 +198,7 @@ def plot_wigner_mosaic(
         ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
     """
     states = jnp.asarray(states)
+    check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
     if nstates < n:
@@ -305,6 +309,7 @@ def plot_wigner_gif(
         ![plot_wigner_gif_kerr](/figs-code/wigner-kerr.gif){.fig-half}
     """
     states = jnp.asarray(states)
+    check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
@@ -340,7 +345,10 @@ def plot_wigner_gif(
             frames.append(frame)
 
         # loop=0: loop the GIF forever
-        iio.v3.imwrite(filename, frames, format='GIF', fps=fps, loop=0)
+        frame_duration_ms = 1000 * 1 / fps
+        iio.v3.imwrite(
+            filename, frames, format='GIF', duration=frame_duration_ms, loop=0
+        )
         if display:
             ipy.display(ipy.Image(filename))
     finally:

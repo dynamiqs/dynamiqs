@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 import jax
@@ -7,6 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
@@ -94,9 +96,14 @@ def mesolve(
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = jnp.asarray(rho0, dtype=cdtype())
-    rho0 = todm(rho0)
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
+    # === check arguments
+    _check_mesolve_args(H, jump_ops, rho0, tsave, exp_ops)
+
+    # === convert rho0 to density matrix
+    rho0 = todm(rho0)
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
@@ -166,3 +173,34 @@ def _mesolve(
 
     # === return result
     return result  # noqa: RET504
+
+
+def _check_mesolve_args(
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+):
+    # === check H shape
+    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
+
+    # === check jump_ops shape
+    if len(jump_ops) == 0:
+        logging.warn(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
+        )
+
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
+
+    # === check rho0 shape
+    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+
+    # === check tsave shape
+    check_times(tsave, 'tsave')
+
+    # === check exp_ops shape
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})

@@ -53,7 +53,9 @@ class BaseSolver(AbstractSolver):
     def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
         # if save_states is False save only last state
         if not self.options.save_states:
-            saved = eqx.tree_at(lambda x: x.ysave, saved, ylast)
+            saved = eqx.tree_at(
+                lambda x: x.ysave, saved, ylast, is_leaf=lambda x: x is None
+            )
 
         # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
         Esave = saved.Esave

@@ -6,13 +6,17 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
+from jax.scipy.linalg import expm
 from jaxtyping import ArrayLike
 
+from ..._checks import check_shape
 from ..._utils import on_cpu
 
 __all__ = [
     'dag',
-    'mpow',
+    'powm',
+    'cosm',
+    'sinm',
     'tracemm',
     'trace',
     'ptrace',
@@ -60,10 +64,11 @@ def dag(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     return x.mT.conj()
 
 
-def mpow(x: ArrayLike, n: int) -> Array:
+def powm(x: ArrayLike, n: int) -> Array:
     """Returns the $n$-th matrix power of an array.
 
     Args:
@@ -77,12 +82,65 @@ def mpow(x: ArrayLike, n: int) -> Array:
         This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
-        >>> dq.mpow(dq.sigmax(), 2)
+        >>> dq.powm(dq.sigmax(), 2)
         Array([[1.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     return jnp.linalg.matrix_power(x, n)
+
+
+def cosm(x: ArrayLike) -> Array:
+    r"""Returns the cosine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_ Cosine of `x`.
+
+    Notes:
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the cosine of a matrix $A$:
+        $$
+            \cos(A) = \frac{e^{iA} + e^{-iA}}{2}
+        $$
+
+    Examples:
+        >>> dq.cosm(jnp.pi * dq.sigmax())
+        Array([[-1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    return 0.5 * (expm(1j * x) + expm(-1j * x))
+
+
+def sinm(x: ArrayLike) -> Array:
+    r"""Returns the sine of an array.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+
+    Returns:
+        _(array of shape (..., n, n))_ Sine of `x`.
+
+    Notes:
+        This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
+        to compute the sine of a matrix $A$:
+        $$
+            \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
+        $$
+
+    Examples:
+        >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
+        Array([[0.-0.j, 1.-0.j],
+               [1.-0.j, 0.-0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
@@ -117,6 +175,8 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
+    check_shape(x, 'x', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, n)')
     return (x * y.mT).sum((-2, -1))
 
 
@@ -135,6 +195,7 @@ def trace(x: ArrayLike) -> Array:
         Array(3., dtype=float32)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     return x.trace(axis1=-1, axis2=-2)
 
 
@@ -178,6 +239,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         (20, 20)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     # convert keep and dims to numpy arrays
     keep = np.asarray([keep] if isinstance(keep, int) else keep)  # e.g. [1, 2]
@@ -219,15 +281,10 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         x = x.reshape(*bshape, *dims)  # e.g. (..., 20, 2, 5)
         eq = f'...{eq1},...{eq2}'  # e.g. '...abc,...ade'
         x = jnp.einsum(eq, x, x.conj())  # e.g. (..., 2, 5, 2, 5)
-    elif isdm(x):
+    else:
         x = x.reshape(*bshape, *dims, *dims)  # e.g. (..., 20, 2, 5, 20, 2, 5)
         eq = f'...{eq1}{eq2}'  # e.g. '...abcade'
         x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
-    else:
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {x.shape}.'
-        )
 
     nkeep = np.prod(dims[keep])  # e.g. 10
     return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
@@ -310,6 +367,8 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
     """
     O = jnp.asarray(O)
     x = jnp.asarray(x)
+    check_shape(O, 'O', '(?, n, n)', subs={'?': 'nO?'})
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     f = _expect_single
     if O.ndim > 2:
@@ -323,16 +382,11 @@ def _expect_single(O: Array, x: Array) -> Array:
         return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
     elif isbra(x):
         return (x @ O @ dag(x)).squeeze((-1, -2))
-    elif isdm(x):
-        return tracemm(O, x)  # tr(Ox)
     else:
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {x.shape}.'
-        )
+        return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: ArrayLike, eps=1e-15) -> Array:
+def norm(x: ArrayLike) -> Array:
     r"""Returns the norm of a ket, bra or density matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
@@ -341,7 +395,6 @@ def norm(x: ArrayLike, eps=1e-15) -> Array:
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
             density matrix.
-        eps _(float)_: tolerance in case the vector is zero to prevent nans
 
     Returns:
         _(array of shape (...))_ Real-valued norm of `x`.
@@ -361,19 +414,15 @@ def norm(x: ArrayLike, eps=1e-15) -> Array:
         Array(3., dtype=float32)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if isket(x) or isbra(x):
-        return jnp.linalg.norm(x, axis=(-1, -2)).real + eps
-    elif isdm(x):
-        return trace(x).real + eps
+        return jnp.linalg.norm(x, axis=(-1, -2)).real
     else:
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {x.shape}.'
-        )
+        return trace(x).real
 
 
-def unit(x: ArrayLike, eps=1e-15) -> Array:
+def unit(x: ArrayLike) -> Array:
     r"""Normalize a ket, bra or density matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
@@ -381,7 +430,6 @@ def unit(x: ArrayLike, eps=1e-15) -> Array:
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
             density matrix.
-        eps _(float)_: tolerance in case the vector is zero to prevent nans
 
     Returns:
         _(array of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Normalized ket,
@@ -396,8 +444,9 @@ def unit(x: ArrayLike, eps=1e-15) -> Array:
         Array(1., dtype=float32)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
-    return x / norm(x, eps=eps)[..., None, None]
+    return x / norm(x)[..., None, None]
 
 
 def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
@@ -427,6 +476,8 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
     """
     L = jnp.asarray(L)
     rho = jnp.asarray(rho)
+    check_shape(L, 'L', '(..., n, n)')
+    check_shape(rho, 'rho', '(..., n, n)')
 
     Ldag = dag(L)
     LdagL = Ldag @ L
@@ -470,6 +521,9 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     rho = jnp.asarray(rho)
+    check_shape(H, 'H', '(..., n, n)')
+    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
+    check_shape(rho, 'rho', '(..., n, n)')
 
     return -1j * (H @ rho - rho @ H) + dissipator(jump_ops, rho).sum(0)
 
@@ -576,6 +630,7 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         Array(False, dtype=bool)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     return jnp.allclose(x, dag(x), rtol=rtol, atol=atol)
 
 
@@ -598,13 +653,12 @@ def toket(x: ArrayLike) -> Array:
                [0.+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
         return dag(x)
-    elif isket(x):
-        return x
     else:
-        raise ValueError(f'Argument `x` must be a ket or bra, but has shape {x.shape}.')
+        return x
 
 
 def tobra(x: ArrayLike) -> Array:
@@ -626,13 +680,12 @@ def tobra(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
         return x
-    elif isket(x):
-        return dag(x)
     else:
-        raise ValueError(f'Argument `x` must be a ket or bra, but has shape {x.shape}.')
+        return dag(x)
 
 
 def todm(x: ArrayLike) -> Array:
@@ -661,16 +714,12 @@ def todm(x: ArrayLike) -> Array:
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if isbra(x) or isket(x):
         return proj(x)
-    elif isdm(x):
-        return x
     else:
-        raise ValueError(
-            'Argument `x` must be a ket, bra or density matrix, but has shape'
-            f' {x.shape}.'
-        )
+        return x
 
 
 def proj(x: ArrayLike) -> Array:
@@ -693,13 +742,12 @@ def proj(x: ArrayLike) -> Array:
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
         return dag(x) @ x
-    elif isket(x):
-        return x @ dag(x)
     else:
-        raise ValueError(f'Argument `x` must be a ket or bra, but has shape {x.shape}.')
+        return x @ dag(x)
 
 
 def braket(x: ArrayLike, y: ArrayLike) -> Array:
@@ -720,11 +768,8 @@ def braket(x: ArrayLike, y: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
-
-    if not isket(x):
-        raise ValueError(f'Argument `x` must be a ket but has shape {x.shape}.')
-    if not isket(y):
-        raise ValueError(f'Argument `y` must be a ket but has shape {y.shape}.')
+    check_shape(x, 'x', '(..., n, 1)')
+    check_shape(y, 'y', '(..., n, 1)')
 
     return (dag(x) @ y).squeeze((-1, -2))
 
@@ -758,15 +803,8 @@ def overlap(x: ArrayLike, y: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
-
-    if not isket(x) and not isdm(x):
-        raise ValueError(
-            f'Argument `x` must be a ket or density matrix, but has shape {x.shape}.'
-        )
-    if not isket(y) and not isdm(y):
-        raise ValueError(
-            f'Argument `y` must be a ket or density matrix, but has shape {y.shape}.'
-        )
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 
     if isket(x) and isket(y):
         return jnp.abs((dag(x) @ y).squeeze((-1, -2))) ** 2
@@ -813,6 +851,8 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 
     if isket(x) or isket(y):
         return overlap(x, y)
@@ -837,8 +877,7 @@ def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
             corresponding to eigenvalue `vals[..., i]`.
     """
     x = jnp.asarray(x)
-    if x.shape[-1] != x.shape[-2]:
-        raise ValueError('Argument `x` must be a square matrix.')
+    check_shape(x, 'x', '(..., n, n)')
 
     def _eigenstates_herm(x: Array, lower_first: bool = True) -> tuple[Array, Array]:
         P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
