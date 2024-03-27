@@ -21,7 +21,7 @@ from ..time_array import TimeArray
 from ..utils.utils import unit, dag
 from .mcdiffrax import MCDopri5, MCDopri8, MCEuler, MCTsit5
 
-__all__ = ['mcsolve']
+__all__ = ["mcsolve"]
 
 
 def mcsolve(
@@ -105,7 +105,9 @@ def mcsolve(
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
-    return _vmap_mcsolve(H, jump_ops, psi0, tsave, ntraj, key, exp_ops, solver, gradient, options)
+    return _vmap_mcsolve(
+        H, jump_ops, psi0, tsave, ntraj, key, exp_ops, solver, gradient, options
+    )
 
 
 def _vmap_mcsolve(
@@ -156,7 +158,9 @@ def _mcsolve(
     key_1, key_2, key_3 = jax.random.split(key, num=3)
     # simulate no-jump trajectory
     rand0 = 0.0
-    no_jump_result = _single_traj(H, jump_ops, psi0, tsave, rand0, exp_ops, solver, gradient, options)
+    no_jump_result = _single_traj(
+        H, jump_ops, psi0, tsave, rand0, exp_ops, solver, gradient, options
+    )
     # extract the no-jump probability
     no_jump_state = no_jump_result.final_state
     p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))
@@ -164,8 +168,22 @@ def _mcsolve(
     random_numbers = jax.random.uniform(key_2, shape=(ntraj,), minval=p_nojump)
     # run all single trajectories at once
     traj_keys = jax.random.split(key_3, num=ntraj)
-    f = jax.vmap(loop_over_jumps, in_axes=(None, None, None, None, 0, 0, None, None, None, None),)
-    jump_results = f(H, jump_ops, psi0, tsave, traj_keys, random_numbers, exp_ops, solver, gradient, options)
+    f = jax.vmap(
+        loop_over_jumps,
+        in_axes=(None, None, None, None, 0, 0, None, None, None, None),
+    )
+    jump_results = f(
+        H,
+        jump_ops,
+        psi0,
+        tsave,
+        traj_keys,
+        random_numbers,
+        exp_ops,
+        solver,
+        gradient,
+        options,
+    )
     if no_jump_result.expects is not None:
         jump_expects = jnp.mean(jump_results.expects, axis=0)
         no_jump_expects = no_jump_result.expects
@@ -196,7 +214,9 @@ def _single_traj(
     }
     solver_class = get_solver_class(solvers, solver)
     solver.assert_supports_gradient(gradient)
-    mcsolver = solver_class(tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand)
+    mcsolver = solver_class(
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand
+    )
     return mcsolver.run()
 
 
@@ -225,8 +245,18 @@ def loop_over_jumps(
         # tsave_after_jump has spacings not consistent with tsave, but
         # we will interpolate later
         new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
-        next_result = _jump_trajs(H, jump_ops, new_psi0, new_tsave, next_key,
-                                  new_rand, exp_ops, solver, gradient, options)
+        next_result = _jump_trajs(
+            H,
+            jump_ops,
+            new_psi0,
+            new_tsave,
+            next_key,
+            new_rand,
+            exp_ops,
+            solver,
+            gradient,
+            options,
+        )
         result = interpolate_states_and_expects(
             tsave, new_tsave, prev_result, next_result, new_t0, options
         )
@@ -234,11 +264,16 @@ def loop_over_jumps(
 
     # solve until the first jump occurs. Enter the while loop for additional jumps
     key_1, key_2 = jax.random.split(key)
-    initial_result = _jump_trajs(H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options)
+    initial_result = _jump_trajs(
+        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
+    )
 
     _, _, final_result = while_loop(
-        while_cond, while_body, (initial_result.final_time, key_2, initial_result),
-        kind="bounded", max_steps=100,
+        while_cond,
+        while_body,
+        (initial_result.final_time, key_2, initial_result),
+        kind="bounded",
+        max_steps=100,
     )
     return final_result
 
@@ -271,27 +306,36 @@ def _jump_trajs(
 
 
 def interpolate_states_and_expects(
-    tsave,
-    tsave_after_jump,
-    results_before_jump,
-    results_after_jump,
-    t_jump,
-    options
+    tsave, tsave_after_jump, results_before_jump, results_after_jump, t_jump, options
 ):
     """create a cubic spline of the states and expectation values from after a jump. The tsave
-        used after a jump likely does not correspond in terms of spacing and knots to the tsave from
-        before the jump, so we use this spline to obtain the states and expectation values at
-        the requested locations."""
+    used after a jump likely does not correspond in terms of spacing and knots to the tsave from
+    before the jump, so we use this spline to obtain the states and expectation values at
+    the requested locations."""
     if options.save_states:
         states = _interpolate_intermediate_results(
-            tsave, tsave_after_jump, results_before_jump.states, results_after_jump.states, t_jump, expand_axis_dims=(1, 2)
+            tsave,
+            tsave_after_jump,
+            results_before_jump.states,
+            results_after_jump.states,
+            t_jump,
+            expand_axis_dims=(1, 2),
         )
-        results_after_jump = eqx.tree_at(lambda res: res._saved.ysave, results_after_jump, states)
+        results_after_jump = eqx.tree_at(
+            lambda res: res._saved.ysave, results_after_jump, states
+        )
     if results_before_jump.expects is not None:
-        before_expects = results_before_jump.expects.swapaxes(-1, -2)  # (nE, nt) -> (nt, nE)
+        before_expects = results_before_jump.expects.swapaxes(
+            -1, -2
+        )  # (nE, nt) -> (nt, nE)
         after_expects = results_after_jump.expects.swapaxes(-1, -2)
         expects = _interpolate_intermediate_results(
-            tsave, tsave_after_jump, before_expects, after_expects, t_jump, expand_axis_dims=(1, )
+            tsave,
+            tsave_after_jump,
+            before_expects,
+            after_expects,
+            t_jump,
+            expand_axis_dims=(1,),
         )
         results_after_jump = eqx.tree_at(
             lambda res: res._saved.Esave, results_after_jump, expects.swapaxes(-1, -2)
@@ -333,11 +377,9 @@ def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
     Ls = jnp.stack([L(t) for L in jump_ops])
     Lsd = dag(Ls)
     # i, j, k: hilbert dim indices; e: jump ops; d: index of dimension 1
-    probs = jnp.einsum("id,eij,ejk,kd->e",
-                       jnp.conj(psi), Lsd, Ls, psi
-                       )
+    probs = jnp.einsum("id,eij,ejk,kd->e", jnp.conj(psi), Lsd, Ls, psi)
     # for categorical we pass in the log of the probabilities
-    logits = jnp.log(jnp.real(probs / (jnp.sum(probs)+eps)))
+    logits = jnp.log(jnp.real(probs / (jnp.sum(probs) + eps)))
     # randomly sample the index of a single jump operator
     sample_idx = jax.random.categorical(key, logits, shape=(1,))
     # extract that jump operator and squeeze size 1 dims
