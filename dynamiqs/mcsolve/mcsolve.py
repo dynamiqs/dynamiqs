@@ -160,18 +160,11 @@ def _mcsolve(
     # extract the no-jump probability
     no_jump_state = no_jump_result.final_state
     p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))
-    # normalize no-jump trajectory
-    # no_jump_states = unit(no_jump_result.states)
-    # no_jump_result = eqx.tree_at(lambda res: res._saved.ysave, no_jump_result, no_jump_states)
-    # split key into ntraj keys
     # TODO split earlier so that not reusing key for different batch dimensions
     random_numbers = jax.random.uniform(key_2, shape=(ntraj,), minval=p_nojump)
     # run all single trajectories at once
-    # 0 indicates the dimension to vmap over. Here that is the random numbers along
-    # with their keys, which come along for the ride so that we can draw further random
-    # numbers for which jumps to apply
     traj_keys = jax.random.split(key_3, num=ntraj)
-    f = jax.vmap(_jump_trajs, in_axes=(None, None, None, None, 0, 0, None, None, None, None),)
+    f = jax.vmap(loop_over_jumps, in_axes=(None, None, None, None, 0, 0, None, None, None, None),)
     jump_results = f(H, jump_ops, psi0, tsave, traj_keys, random_numbers, exp_ops, solver, gradient, options)
     if no_jump_result.expects is not None:
         jump_expects = jnp.mean(jump_results.expects, axis=0)
@@ -183,7 +176,7 @@ def _mcsolve(
     return mcresult
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+#@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _single_traj(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -207,6 +200,49 @@ def _single_traj(
     return mcsolver.run()
 
 
+def loop_over_jumps(
+    H: ArrayLike | TimeArray,
+    jump_ops: list[ArrayLike | TimeArray],
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    key: PRNGKey,
+    rand: float,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+):
+    def while_cond(t_state_key_solver):
+        t, _, _ = t_state_key_solver
+        return t < tsave[-1]
+
+    def while_body(t_state_key_solver):
+        t, prev_key, prev_result = t_state_key_solver
+        jump_key, next_key, loop_key = jax.random.split(prev_key, num=3)
+        new_rand = jax.random.uniform(jump_key)
+        new_t0 = prev_result.final_time
+        new_psi0 = prev_result.final_state
+        # tsave_after_jump has spacings not consistent with tsave, but
+        # we will interpolate later
+        new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
+        next_result = _jump_trajs(H, jump_ops, new_psi0, new_tsave, next_key,
+                                  new_rand, exp_ops, solver, gradient, options)
+        result = interpolate_states_and_expects(
+            tsave, new_tsave, prev_result, next_result, new_t0, options
+        )
+        return next_result.final_time, loop_key, result
+
+    # solve until the first jump occurs. Enter the while loop for additional jumps
+    key_1, key_2 = jax.random.split(key)
+    initial_result = _jump_trajs(H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options)
+
+    _, _, final_result = while_loop(
+        while_cond, while_body, (initial_result.final_time, key_2, initial_result),
+        kind="bounded", max_steps=100,
+    )
+    return final_result
+
+
 def _jump_trajs(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -226,21 +262,11 @@ def _jump_trajs(
     )
     t_jump = res_before_jump.final_time
     psi_before_jump = res_before_jump.final_state
-    # tsave_after_jump has spacings not consistent with tsave, but
-    # we will interpolate later
-    tsave_after_jump = jnp.linspace(t_jump, tsave[-1], len(tsave))
     # select and apply a random jump operator, renormalize
     jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
     psi = unit(jump_op @ psi_before_jump)
-    # in this implementation, only perform a single jump
-    rand0 = 0.0
-    res_after_jump = _single_traj(
-        H, jump_ops, psi, tsave_after_jump, rand0, exp_ops, solver, gradient, options
-    )
-    # collect the before jump and after jump results together
-    result = interpolate_states_and_expects(
-        tsave, tsave_after_jump, res_before_jump, res_after_jump, t_jump, options
-    )
+    # save this state as the new final state
+    result = eqx.tree_at(lambda res: res._saved.ylast, res_before_jump, psi)
     return result
 
 
@@ -253,16 +279,23 @@ def interpolate_states_and_expects(
     options
 ):
     if options.save_states:
+        # replace infs with nans to avoid cubic splining to infinity
+        after_jump_states = jnp.where(
+            jnp.isinf(results_after_jump.states), jnp.nan, results_after_jump.states
+        )
         states = _interpolate_intermediate_results(
-            tsave, tsave_after_jump, results_before_jump.states, results_after_jump.states, t_jump, expand_axis_dims=(1, 2)
+            tsave, tsave_after_jump, results_before_jump.states, after_jump_states, t_jump, expand_axis_dims=(1, 2)
         )
         # worried about accessing protected attribute...
         results_after_jump = eqx.tree_at(lambda res: res._saved.ysave, results_after_jump, states)
     if results_before_jump.expects is not None:
         before_expects = results_before_jump.expects.swapaxes(-1, -2)
         after_expects = results_after_jump.expects.swapaxes(-1, -2)
+        after_expects_w_nans = jnp.where(
+            jnp.isinf(after_expects), jnp.nan, after_expects
+        )
         expects = _interpolate_intermediate_results(
-            tsave, tsave_after_jump, before_expects, after_expects, t_jump, expand_axis_dims=(1, )
+            tsave, tsave_after_jump, before_expects, after_expects_w_nans, t_jump, expand_axis_dims=(1, )
         )
         results_after_jump = eqx.tree_at(
             lambda res: res._saved.Esave, results_after_jump, expects.swapaxes(-1, -2)
