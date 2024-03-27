@@ -37,7 +37,7 @@ class BaseSolver(AbstractSolver):
 
     @property
     def t1(self) -> Scalar:
-        return self.ts[-1]
+        return self.ts[-1] if self.options.t1 is None else self.options.t1
 
     def save(self, y: PyTree) -> Saved:
         ysave, Esave, extra = None, None, None

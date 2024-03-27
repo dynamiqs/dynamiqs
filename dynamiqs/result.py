@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
@@ -62,7 +63,7 @@ class Result(eqx.Module):
     options: Options
     _saved: FinalSaved
     final_time: Array
-    infos: PyTree | None
+    infos: PyTree | None = None
 
     @property
     def states(self) -> Array:
@@ -179,6 +180,7 @@ class SEResult(Result):
 
     Attributes:
         states _(array of shape (nH?, npsi0?, ntsave, n, 1))_: Saved states.
+        final_state _(array of shape (nH?, npsi0?, n, 1))_: Saved final state
         expects _(array of shape (nH?, npsi0?, nE, ntsave) or None)_: Saved expectation
             values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -188,6 +190,7 @@ class SEResult(Result):
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
+        final_time _(Array)_: final solution time
     """
 
 
@@ -196,6 +199,7 @@ class MEResult(Result):
 
     Attributes:
         states _(array of shape (nH?, nrho0?, ntsave, n, n))_: Saved states.
+        final_state _(array of shape (nH?, nrho0?, n, n))_: Saved final state
         expects _(array of shape (nH?, nrho0?, nE, ntsave) or None)_: Saved expectation
             values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -205,4 +209,5 @@ class MEResult(Result):
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
+        final_time _(Array)_: final solution time
     """

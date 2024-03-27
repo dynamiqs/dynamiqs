@@ -20,6 +20,7 @@ class Options(eqx.Module):
             batch dimensions, otherwise the batching is performed over a single
             shared batched dimension.
         t0: Initial time. If `None`, defaults to the first time in `tsave`.
+        t1: Final time. If `None`, defaults to the last time in `tsave`.
         save_extra _(function, optional)_: A function with signature
             `f(Array) -> PyTree` that takes a state as input and returns a PyTree.
             This can be used to save additional arbitrary data during the
@@ -30,6 +31,7 @@ class Options(eqx.Module):
     verbose: bool = True
     cartesian_batching: bool = True
     t0: ScalarLike | None = None
+    t1: ScalarLike | None
     save_extra: callable[[Array], PyTree] | None = None
 
     def __init__(
@@ -38,12 +40,14 @@ class Options(eqx.Module):
         verbose: bool = True,
         cartesian_batching: bool = True,
         t0: ScalarLike | None = None,
+        t1: ScalarLike | None = None,
         save_extra: callable[[Array], PyTree] | None = None,
     ):
         self.save_states = save_states
         self.verbose = verbose
         self.cartesian_batching = cartesian_batching
         self.t0 = t0
+        self.t1 = t1
 
         # make `save_extra` a valid Pytree with `jax.tree_util.Partial`
         if save_extra is not None:
