@@ -159,7 +159,7 @@ def _mcsolve(
     no_jump_result = _single_traj(H, jump_ops, psi0, tsave, rand0, exp_ops, solver, gradient, options)
     # extract the no-jump probability
     no_jump_state = no_jump_result.final_state
-    p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))**2
+    p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))
     # normalize no-jump trajectory
     # no_jump_states = unit(no_jump_result.states)
     # no_jump_result = eqx.tree_at(lambda res: res._saved.ysave, no_jump_result, no_jump_states)
@@ -225,14 +225,13 @@ def _jump_trajs(
         H, jump_ops, psi0, tsave, rand, exp_ops, solver, gradient, options
     )
     t_jump = res_before_jump.final_time
-    # tsave_after_jump will have spacings not consistent with tsave, but
-    # we will interpolate later to extract the states at the times specified
-    # by tsave
     psi_before_jump = res_before_jump.final_state
-    # select a random jump operator
+    # tsave_after_jump has spacings not consistent with tsave, but
+    # we will interpolate later
+    tsave_after_jump = jnp.linspace(t_jump, tsave[-1], len(tsave))
+    # select and apply a random jump operator, renormalize
     jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
     psi = unit(jump_op @ psi_before_jump)
-    tsave_after_jump = jnp.linspace(t_jump, tsave[-1], len(tsave))
     # in this implementation, only perform a single jump
     rand0 = 0.0
     res_after_jump = _single_traj(
