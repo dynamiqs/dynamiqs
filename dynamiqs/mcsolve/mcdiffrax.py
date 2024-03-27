@@ -34,7 +34,7 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
     def discrete_terminating_event(self):
         def norm_below_rand(state, **kwargs):
             psi = state.y
-            prob = jnp.abs(jnp.einsum("id,id->", jnp.conj(psi), psi))**2
+            prob = jnp.abs(jnp.einsum("id,id->", jnp.conj(psi), psi))
             return prob < self.rand
         return dx.DiscreteTerminatingEvent(norm_below_rand)
 
