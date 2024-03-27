@@ -194,7 +194,7 @@ def _mcsolve(
     return mcresult
 
 
-#@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _single_traj(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
