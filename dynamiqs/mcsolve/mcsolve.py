@@ -278,24 +278,20 @@ def interpolate_states_and_expects(
     t_jump,
     options
 ):
+    """create a cubic spline of the states and expectation values from after a jump. The tsave
+        used after a jump likely does not correspond in terms of spacing and knots to the tsave from
+        before the jump, so we use this spline to obtain the states and expectation values at
+        the requested locations."""
     if options.save_states:
-        # replace infs with nans to avoid cubic splining to infinity
-        after_jump_states = jnp.where(
-            jnp.isinf(results_after_jump.states), jnp.nan, results_after_jump.states
-        )
         states = _interpolate_intermediate_results(
-            tsave, tsave_after_jump, results_before_jump.states, after_jump_states, t_jump, expand_axis_dims=(1, 2)
+            tsave, tsave_after_jump, results_before_jump.states, results_after_jump.states, t_jump, expand_axis_dims=(1, 2)
         )
-        # worried about accessing protected attribute...
         results_after_jump = eqx.tree_at(lambda res: res._saved.ysave, results_after_jump, states)
     if results_before_jump.expects is not None:
-        before_expects = results_before_jump.expects.swapaxes(-1, -2)
+        before_expects = results_before_jump.expects.swapaxes(-1, -2)  # (nE, nt) -> (nt, nE)
         after_expects = results_after_jump.expects.swapaxes(-1, -2)
-        after_expects_w_nans = jnp.where(
-            jnp.isinf(after_expects), jnp.nan, after_expects
-        )
         expects = _interpolate_intermediate_results(
-            tsave, tsave_after_jump, before_expects, after_expects_w_nans, t_jump, expand_axis_dims=(1, )
+            tsave, tsave_after_jump, before_expects, after_expects, t_jump, expand_axis_dims=(1, )
         )
         results_after_jump = eqx.tree_at(
             lambda res: res._saved.Esave, results_after_jump, expects.swapaxes(-1, -2)
@@ -311,28 +307,36 @@ def _interpolate_intermediate_results(
     t_jump,
     expand_axis_dims=(1, 2),
 ):
-    """create a cubic spline of the states and expectation values from after a jump. The tsave
-    used after a jump likely does not correspond in terms of spacing and knots to the tsave from
-    before the jump, so we use this spline to obtain the states and expectation values at
-    the requested locations."""
-    coeffs = dx.backward_hermite_coefficients(tsave_after_jump, results_after_jump)
+    # replace infs with nans to avoid cubic splining to infinity
+    results_after_jump_nan = jnp.where(
+        jnp.isinf(results_after_jump), jnp.nan, results_after_jump
+    )
+    coeffs = dx.backward_hermite_coefficients(tsave_after_jump, results_after_jump_nan)
     cubic_spline = dx.CubicInterpolation(tsave_after_jump, coeffs)
     f = jax.vmap(cubic_spline.evaluate, in_axes=(0,))
     # this spline will be evaluated outside of the range it was fitted in (before t_jump). No
     # matter, that bad data is replaced by data from results_before_jump
-    post_jump_states = f(original_tsave)
+    post_jump_values = f(original_tsave)
     mask = jnp.expand_dims(original_tsave < t_jump, axis=expand_axis_dims)
-    results = jnp.where(mask, results_before_jump, post_jump_states)
+    results = jnp.where(mask, results_before_jump, post_jump_values)
     return results
 
 
 def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
+    """given a state psi at time t that should experience a jump,
+    randomly sample one jump operator from among the provided jump_ops.
+    The probability that a certain jump operator is selected is weighted
+    by the probability that such a jump can occur. For instance for a qubit
+    experiencing amplitude damping, if it is in the ground state then
+    there is probability zero of experiencing an amplitude damping event.
+    """
     Ls = jnp.stack([L(t) for L in jump_ops])
     Lsd = dag(Ls)
     # i, j, k: hilbert dim indices; e: jump ops; d: index of dimension 1
     probs = jnp.einsum("id,eij,ejk,kd->e",
                        jnp.conj(psi), Lsd, Ls, psi
                        )
+    # for categorical we pass in the log of the probabilities
     logits = jnp.log(jnp.real(probs / (jnp.sum(probs)+eps)))
     # randomly sample the index of a single jump operator
     sample_idx = jax.random.categorical(key, logits, shape=(1,))
