@@ -9,7 +9,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult']
+__all__ = ['SEResult', 'MEResult', 'MCResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -122,12 +122,7 @@ class MCResult(eqx.Module):
         jump_states _(Array)_: Saved states for jump trajectories
         final_jump_states _(Array)_: Saved final states for jump trajectories
         expects _(Array, optional)_: Saved expectation values.
-        extra _(PyTree, optional)_: Extra data saved.
         tsave _(Array)_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-        final_time _(Array)_: final solution time
     """
 
     tsave: Array
@@ -152,10 +147,6 @@ class MCResult(eqx.Module):
     def final_jump_states(self) -> Array:
         return self._jump_res.final_state
 
-    @property
-    def extra(self) -> PyTree | None:
-        raise NotImplementedError
-
     def __str__(self) -> str:
         parts = {
             'No-jump result': str(self._no_jump_res),
@@ -167,12 +158,6 @@ class MCResult(eqx.Module):
         parts = {k: v for k, v in parts.items() if v is not None}
         parts_str = '\n'.join(f'{k}: {v}' for k, v in parts.items())
         return '==== MCResult ====\n' + parts_str
-
-    def to_qutip(self) -> Result:
-        raise NotImplementedError
-
-    def to_numpy(self) -> Result:
-        raise NotImplementedError
 
 
 class SEResult(Result):

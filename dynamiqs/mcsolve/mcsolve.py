@@ -11,6 +11,7 @@ from jax.random import PRNGKey
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
@@ -105,6 +106,10 @@ def mcsolve(
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
+    # === check arguments
+    _check_mcsolve_args(H, jump_ops, psi0, tsave, exp_ops)
+
     return _vmap_mcsolve(
         H, jump_ops, psi0, tsave, ntraj, key, exp_ops, solver, gradient, options
     )
@@ -121,7 +126,7 @@ def _vmap_mcsolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> MCResult:
     # === vectorize function
     # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
     # below we will have another layer of vectorization over ntraj
@@ -233,11 +238,11 @@ def loop_over_jumps(
     options: Options,
 ):
     def while_cond(t_state_key_solver):
-        t, _, _ = t_state_key_solver
-        return t < tsave[-1]
+        prev_result, prev_key = t_state_key_solver
+        return prev_result.final_time < tsave[-1]
 
     def while_body(t_state_key_solver):
-        t, prev_key, prev_result = t_state_key_solver
+        prev_result, prev_key = t_state_key_solver
         jump_key, next_key, loop_key = jax.random.split(prev_key, num=3)
         new_rand = jax.random.uniform(jump_key)
         new_t0 = prev_result.final_time
@@ -260,7 +265,7 @@ def loop_over_jumps(
         result = interpolate_states_and_expects(
             tsave, new_tsave, prev_result, next_result, new_t0, options
         )
-        return next_result.final_time, loop_key, result
+        return result, loop_key
 
     # solve until the first jump occurs. Enter the while loop for additional jumps
     key_1, key_2 = jax.random.split(key)
@@ -268,12 +273,10 @@ def loop_over_jumps(
         H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
     )
 
-    _, _, final_result = while_loop(
+    final_result, _ = jax.lax.while_loop(
         while_cond,
         while_body,
-        (initial_result.final_time, key_2, initial_result),
-        kind="bounded",
-        max_steps=100,
+        (initial_result, key_2),
     )
     return final_result
 
@@ -291,7 +294,7 @@ def _jump_trajs(
     options: Options,
 ):
     rand_key, sample_key = jax.random.split(key)
-    # solve until jump
+    # solve until jump or tsave[-1]
     res_before_jump = _single_traj(
         H, jump_ops, psi0, tsave, rand, exp_ops, solver, gradient, options
     )
@@ -299,7 +302,10 @@ def _jump_trajs(
     psi_before_jump = res_before_jump.final_state
     # select and apply a random jump operator, renormalize
     jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
-    psi = unit(jump_op @ psi_before_jump)
+    # if t = tsave[-1], this is reason for solver termination (no jump)
+    psi = jnp.where(
+        t_jump < tsave[-1], unit(jump_op @ psi_before_jump), psi_before_jump
+    )
     # save this state as the new final state
     result = eqx.tree_at(lambda res: res._saved.ylast, res_before_jump, psi)
     return result
@@ -384,3 +390,34 @@ def sample_jump_ops(t, psi, jump_ops, key, eps=1e-15):
     sample_idx = jax.random.categorical(key, logits, shape=(1,))
     # extract that jump operator and squeeze size 1 dims
     return jnp.squeeze(jnp.take(Ls, sample_idx, axis=0), axis=0)
+
+
+def _check_mcsolve_args(
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    psi0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+):
+    # === check H shape
+    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
+
+    # === check jump_ops shape
+    if len(jump_ops) == 0:
+        logging.warning(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
+        )
+
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
+
+    # === check rho0 shape
+    check_shape(psi0, 'rho0', '(?, n, 1)', subs={'?': 'npsi0?'})
+
+    # === check tsave shape
+    check_times(tsave, 'tsave')
+
+    # === check exp_ops shape
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
