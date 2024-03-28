@@ -1,44 +1,52 @@
-import os
-#os.environ["JAX_TRACEBACK_FILTERING"] = "off"
-
 import dynamiqs as dq
 import jax.numpy as jnp
-from dynamiqs import timecallable, Options
+from dynamiqs import timecallable, unit
+from dynamiqs.solver import Tsit5
+from jax.random import PRNGKey
 import matplotlib.pyplot as plt
-from dynamiqs.solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
+
 
 omega = 2.0 * jnp.pi * 1.0
-amp = 2.0 * jnp.pi * 0.5
+amp = 2.0 * jnp.pi * 0.0
 
 
 def H_func(t, omega, omega_d, amp):
     return -0.5 * omega * dq.sigmaz() + jnp.cos(omega_d * t) * amp * dq.sigmax()
 
-tsave = jnp.linspace(0, 1.0, 101)
+tsave = jnp.linspace(0, 1.0, 41)
+jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)),]
+exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)), dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1))]
 
-# exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)),
-#            dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1))
-#            ]
-exp_ops = []
+initial_states = [dq.basis(2, 1),]
 
-jump_ops = [1.0 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)), ]
-
-options = Options(t0=tsave[0], t1=tsave[-1])
-
-# run simulation
+num_traj = 31
 result = dq.mcsolve(
     timecallable(H_func, args=(omega, omega, amp)),
     jump_ops,
-    dq.basis(2, 0),
+    initial_states,
+    tsave,
+    ntraj=num_traj,
+    key=PRNGKey(4242434),
+    exp_ops=exp_ops,
+    solver=Tsit5(),
+)
+result_me = dq.mesolve(
+timecallable(H_func, args=(omega, omega, amp)),
+    jump_ops,
+    initial_states,
     tsave,
     exp_ops=exp_ops,
-    solver=Euler(dt=0.001),
-    options=options,
+    solver=Tsit5(),
 )
 
-# fig, ax = plt.subplots()
-# plt.plot(tsave, result.expects[0], label="0")
-# plt.plot(tsave, result.expects[1], label="1")
-# plt.show()
-#
-print(result)
+fig, ax = plt.subplots()
+plt.plot(tsave, jnp.real(result.expects[1, 0]), label="0")
+plt.plot(tsave, jnp.real(result.expects[1, 1]), label="1")
+plt.plot(tsave, jnp.real(result_me.expects[1, 0]), ls="--", label="me 0")
+plt.plot(tsave, jnp.real(result_me.expects[1, 1]), ls="--", label="me 1")
+ax.set_ylabel("population")
+ax.set_xlabel("time [ns]")
+ax.legend()
+plt.show()
+
+print(0)
