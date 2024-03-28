@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from equinox.internal import while_loop
 from jax.random import PRNGKey
 from jax import Array
 from jaxtyping import ArrayLike
@@ -16,7 +16,7 @@ from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result, Saved, MCResult
+from ..result import Result, MCResult
 from ..solver import Dopri5, Dopri8, Euler, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.utils import unit, dag
@@ -211,6 +211,7 @@ def _single_traj(
     gradient: Gradient | None,
     options: Options,
 ):
+    """function that actually performs the time evolution"""
     solvers = {
         Euler: MCEuler,
         Dopri5: MCDopri5,
@@ -237,6 +238,7 @@ def loop_over_jumps(
     gradient: Gradient | None,
     options: Options,
 ):
+    """loop over jumps until the simulation reaches the final time"""
     def while_cond(t_state_key_solver):
         prev_result, prev_key = t_state_key_solver
         return prev_result.final_time < tsave[-1]
@@ -293,6 +295,8 @@ def _jump_trajs(
     gradient: Gradient | None,
     options: Options,
 ):
+    """for the jump trajectories, call _single_traj and then apply a
+    jump if t < tsave[-1]"""
     rand_key, sample_key = jax.random.split(key)
     # solve until jump or tsave[-1]
     res_before_jump = _single_traj(
