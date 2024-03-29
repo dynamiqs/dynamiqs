@@ -11,9 +11,9 @@ from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import (
     _astimearray,
-    compute_timearray_batching,
     compute_vmap,
     get_solver_class,
+    is_timearray_batched,
 )
 from ..gradient import Gradient
 from ..options import Options
@@ -111,8 +111,15 @@ def _vmap_sesolve(
 ) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
-    is_batched_H = compute_timearray_batching(H)
-    is_batched = (is_batched_H, psi0.ndim > 2, False, False, False, False, False)
+    is_batched = (
+        is_timearray_batched(H),
+        psi0.ndim > 2,
+        False,
+        False,
+        False,
+        False,
+        False,
+    )
 
     # the result is vectorized over `saved`
     out_axes = SEResult(None, None, None, None, 0, 0)

@@ -10,7 +10,12 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
-from ..core._utils import _astimearray, compute_vmap, get_solver_class
+from ..core._utils import (
+    _astimearray,
+    compute_vmap,
+    get_solver_class,
+    is_timearray_batched,
+)
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
@@ -124,8 +129,8 @@ def _vmap_mesolve(
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (
-        H.ndim > 2,
-        [jump_op.ndim > 2 for jump_op in jump_ops],
+        is_timearray_batched(H),
+        [is_timearray_batched(jump_op) for jump_op in jump_ops],
         rho0.ndim > 2,
         False,
         False,
@@ -133,9 +138,11 @@ def _vmap_mesolve(
         False,
         False,
     )
+
     # the result is vectorized over `saved`
     out_axes = MEResult(None, None, None, None, 0, 0)
 
+    # compute vectorized function with given batching strategy
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function

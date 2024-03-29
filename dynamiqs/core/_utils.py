@@ -83,14 +83,12 @@ def compute_vmap(
     return f
 
 
-def compute_timearray_batching(tarray: TimeArray) -> TimeArray:
+def is_timearray_batched(tarray: TimeArray) -> TimeArray:
     # This function finds all batched arrays within a given TimeArray.
     # To do so, it goes down the PyTree and identifies batched fields depending
     # on the type of TimeArray.
     if isinstance(tarray, SummedTimeArray):
-        return SummedTimeArray(
-            [compute_timearray_batching(arr) for arr in tarray.timearrays]
-        )
+        return SummedTimeArray([is_timearray_batched(arr) for arr in tarray.timearrays])
     elif isinstance(tarray, ConstantTimeArray):
         return ConstantTimeArray(tarray.x.ndim > 2)
     elif isinstance(tarray, PWCTimeArray):
