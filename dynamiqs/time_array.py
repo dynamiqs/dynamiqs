@@ -45,9 +45,6 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
     $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant array.
 
-    Warning:
-        Batching is not yet supported for PWC time-arrays, this will be fixed soon.
-
     Notes:
         The argument `times` argument must be sorted in ascending order, but does not
         need to be evenly spaced.
@@ -94,10 +91,6 @@ def modulated(
     time-dependent scalar. The function $f$ is defined by passing a Python function
     with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
     _(...)_ for any time $t$.
-
-    Warning:
-        Batching is not yet supported for modulated time-arrays, this will be fixed
-        soon.
 
     Args:
         f _(function returning array of shape (...))_: Function with signature
