@@ -87,7 +87,8 @@ def sesolve(
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === check arguments
-    _check_sesolve_args(H, psi0, tsave, exp_ops)
+    _check_sesolve_args(H, psi0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
@@ -147,15 +148,12 @@ def _sesolve(
     return result  # noqa: RET504
 
 
-def _check_sesolve_args(H: TimeArray, psi0: Array, tsave: Array, exp_ops: Array | None):
+def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
     # === check H shape
     check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
 
     # === check psi0 shape
     check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
-
-    # === check tsave shape
-    check_times(tsave, 'tsave')
 
     # === check exp_ops shape
     if exp_ops is not None:
