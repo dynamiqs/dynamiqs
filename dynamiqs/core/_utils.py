@@ -94,8 +94,10 @@ def is_timearray_batched(tarray: TimeArray) -> TimeArray:
     elif isinstance(tarray, PWCTimeArray):
         return PWCTimeArray(False, tarray.values.ndim > 1, False)
     elif isinstance(tarray, ModulatedTimeArray):
-        return ModulatedTimeArray(False, False, (arg.ndim > 0 for arg in tarray.args))
+        return ModulatedTimeArray(
+            False, False, tuple(arg.ndim > 0 for arg in tarray.args)
+        )
     elif isinstance(tarray, CallableTimeArray):
-        return CallableTimeArray(False, (arg.ndim > 0 for arg in tarray.args))
+        return CallableTimeArray(False, tuple(arg.ndim > 0 for arg in tarray.args))
     else:
         raise TypeError(f'Unsupported TimeArray type: {type(tarray).__name__}')

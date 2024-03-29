@@ -328,7 +328,7 @@ class ConstantTimeArray(TimeArray):
         if isinstance(other, get_args(ArrayLike)):
             return ConstantTimeArray(jnp.asarray(other, dtype=cdtype()) + self.array)
         elif isinstance(other, ConstantTimeArray):
-            return ConstantTimeArray(self.array + other.x)
+            return ConstantTimeArray(self.array + other.array)
         elif isinstance(other, TimeArray):
             return SummedTimeArray([self, other])
         else:
