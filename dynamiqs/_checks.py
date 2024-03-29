@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import jax.numpy as jnp
+import equinox as eqx
 from jax import Array
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
@@ -59,9 +59,14 @@ def check_shape(
     )
 
 
-def check_times(x: Array, argname: str, allow_empty: bool = False):
+def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
     # check that an array of time is valid (it must be a 1D array sorted in strictly
     # ascending order)
+
+    # this function should be used as e.g. `x = check_times(x, 'x')`, and the returned
+    # value should be used, otherwise the final check will be removed as part of dead
+    # code elimination, see https://docs.kidger.site/equinox/api/errors/ for more
+    # details
 
     if x.ndim != 1:
         raise ValueError(
@@ -69,7 +74,10 @@ def check_times(x: Array, argname: str, allow_empty: bool = False):
         )
     if not allow_empty and len(x) == 0:
         raise ValueError(f'Argument {argname} must contain at least one element.')
-    if not jnp.all(jnp.diff(x) > 0):
-        raise ValueError(
-            f'Argument {argname} must be sorted in strictly ascending order.'
-        )
+
+    # this check is written to be JIT-compatible
+    return eqx.error_if(
+        x,
+        x[1:] < x[:-1],
+        f'Argument {argname} must be sorted in strictly ascending order.',
+    )

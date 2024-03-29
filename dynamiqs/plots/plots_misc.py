@@ -37,7 +37,7 @@ def plot_pwc_pulse(
     """
     times = jnp.asarray(times)  # (n + 1)
     values = jnp.asarray(values)  # (n)
-    check_times(times, 'times')
+    times = check_times(times, 'times')
 
     # format times and values, for example:
     # times  = [0, 1, 2, 3] -> [0, 1, 1, 2, 2, 3]

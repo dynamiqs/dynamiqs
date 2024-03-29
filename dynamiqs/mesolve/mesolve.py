@@ -100,7 +100,8 @@ def mesolve(
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === check arguments
-    _check_mesolve_args(H, jump_ops, rho0, tsave, exp_ops)
+    _check_mesolve_args(H, jump_ops, rho0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
 
     # === convert rho0 to density matrix
     rho0 = todm(rho0)
@@ -176,11 +177,7 @@ def _mesolve(
 
 
 def _check_mesolve_args(
-    H: TimeArray,
-    jump_ops: list[TimeArray],
-    rho0: Array,
-    tsave: Array,
-    exp_ops: Array | None,
+    H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
     # === check H shape
     check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
@@ -197,9 +194,6 @@ def _check_mesolve_args(
 
     # === check rho0 shape
     check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
-
-    # === check tsave shape
-    check_times(tsave, 'tsave')
 
     # === check exp_ops shape
     if exp_ops is not None:
