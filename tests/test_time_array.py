@@ -4,12 +4,16 @@ import jax
 import jax.numpy as jnp
 import pytest
 
+from dynamiqs import basis, dag, destroy, sesolve
 from dynamiqs.time_array import (
     CallableTimeArray,
     ConstantTimeArray,
     ModulatedTimeArray,
     PWCTimeArray,
     SummedTimeArray,
+    modulated,
+    pwc,
+    timecallable,
 )
 
 
@@ -69,6 +73,23 @@ class TestConstantTimeArray:
         x = 1 + self.x
         assert isinstance(x, ConstantTimeArray)
         assert_equal(x(0.0), [2, 3])
+
+    def test_batching(self):
+        # generic arrays
+        a = destroy(4)
+        H0 = a + dag(a)
+        psi0 = basis(4, 0)
+        times = jnp.linspace(0.0, 1.0, 11)
+
+        # constant time array
+        H_cte = jnp.stack([H0, 2 * H0])
+
+        # test sesolve output shape
+        result = sesolve(H_cte, psi0, times)
+        assert result.states.shape == (2, 11, 4, 1)
+
+        result = sesolve(H0 + H_cte, psi0, times)
+        assert result.states.shape == (2, 11, 4, 1)
 
 
 class TestCallableTimeArray:
@@ -150,6 +171,26 @@ class TestCallableTimeArray:
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [0, 1])
         assert_equal(x(1.0), [1, 3])
+
+    def test_batching(self):
+        # generic arrays
+        a = destroy(4)
+        H0 = a + dag(a)
+        psi0 = basis(4, 0)
+        times = jnp.linspace(0.0, 1.0, 11)
+
+        # callable time array
+        omegas = jnp.linspace(0.0, 1.0, 5)
+        H_cal = timecallable(
+            lambda t, omega: jnp.cos(t * omega[..., None, None]) * H0, args=(omegas,)
+        )
+
+        # test sesolve output shape
+        result = sesolve(H_cal, psi0, times)
+        assert result.states.shape == (5, 11, 4, 1)
+
+        result = sesolve(H0 + H_cal, psi0, times)
+        assert result.states.shape == (5, 11, 4, 1)
 
 
 class TestPWCTimeArray:
@@ -234,6 +275,24 @@ class TestPWCTimeArray:
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
+    def test_batching(self):
+        # generic arrays
+        a = destroy(4)
+        H0 = a + dag(a)
+        psi0 = basis(4, 0)
+        times = jnp.linspace(0.0, 1.0, 11)
+
+        # pwc time array
+        values = jnp.arange(3 * 10).reshape(3, 10)
+        H_pwc = pwc(times, values, H0)
+
+        # test sesolve output shape
+        result = sesolve(H_pwc, psi0, times)
+        assert result.states.shape == (3, 11, 4, 1)
+
+        result = sesolve(H0 + H_pwc, psi0, times)
+        assert result.states.shape == (3, 11, 4, 1)
+
 
 class TestModulatedTimeArray:
     @pytest.fixture(autouse=True)
@@ -299,3 +358,21 @@ class TestModulatedTimeArray:
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
+
+    def test_batching(self):
+        # generic arrays
+        a = destroy(4)
+        H0 = a + dag(a)
+        psi0 = basis(4, 0)
+        times = jnp.linspace(0.0, 1.0, 11)
+
+        # modulated time array
+        deltas = jnp.linspace(0.0, 1.0, 4)
+        H_mod = modulated(lambda t, delta: jnp.cos(t * delta), H0, args=(deltas,))
+
+        # test sesolve output shape
+        result = sesolve(H_mod, psi0, times)
+        assert result.states.shape == (4, 11, 4, 1)
+
+        result = sesolve(H0 + H_mod, psi0, times)
+        assert result.states.shape == (4, 11, 4, 1)
