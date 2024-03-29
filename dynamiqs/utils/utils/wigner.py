@@ -17,7 +17,7 @@ from .general import isket, todm
 __all__ = ['wigner']
 
 
-@partial(jax.jit, static_argnames=('npixels', 'method'))
+@partial(jax.jit, static_argnames=('npixels', 'method', 'xvec', 'yvec'))
 @partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
 def wigner(
     state: ArrayLike,
@@ -25,6 +25,8 @@ def wigner(
     ymax: float = 6.2832,
     npixels: int = 200,
     method: Literal['clenshaw', 'fft'] = 'clenshaw',
+    xvec: ArrayLike = None,
+    yvec: ArrayLike = None,
     g: float = 2.0,
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
@@ -50,8 +52,11 @@ def wigner(
     state = jnp.asarray(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
-    xvec = jnp.linspace(-xmax, xmax, npixels)
-    yvec = jnp.linspace(-ymax, ymax, npixels)
+    if xvec is None:
+        xvec = jnp.linspace(-xmax, xmax, npixels)
+
+    if yvec is None:
+        yvec = jnp.linspace(-ymax, ymax, npixels)
 
     if method == 'clenshaw':
         state = todm(state)
