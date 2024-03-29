@@ -140,7 +140,7 @@ def spost(x: ArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     Id = eye(n)
-    return _bkron(dag(x), Id)
+    return _bkron(x.mT, Id)
 
 
 def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
