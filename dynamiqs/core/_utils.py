@@ -6,7 +6,14 @@ from jaxtyping import ArrayLike
 
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver
-from ..time_array import ConstantTimeArray, TimeArray
+from ..time_array import (
+    CallableTimeArray,
+    ConstantTimeArray,
+    ModulatedTimeArray,
+    PWCTimeArray,
+    SummedTimeArray,
+    TimeArray,
+)
 from .abstract_solver import AbstractSolver
 
 
@@ -67,10 +74,30 @@ def compute_vmap(
                     in_axes = jax.tree_util.tree_map(lambda _: None, leaves)
                     in_axes[n - 1 - i] = 0
                     in_axes = jax.tree_util.tree_unflatten(treedef, in_axes)
-                    f = jax.vmap(f, in_axes=in_axes, out_axes=0)
+                    f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
         else:
             # map over all batched dimensions at once
             in_axes = jax.tree_util.tree_map(lambda x: 0 if x else None, is_batched)
             f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
+
+
+def compute_timearray_batching(tarray: TimeArray) -> TimeArray:
+    # This function finds all batched arrays within a given TimeArray.
+    # To do so, it goes down the PyTree and identifies batched fields depending
+    # on the type of TimeArray.
+    if isinstance(tarray, SummedTimeArray):
+        return SummedTimeArray(
+            [compute_timearray_batching(arr) for arr in tarray.timearrays]
+        )
+    elif isinstance(tarray, ConstantTimeArray):
+        return ConstantTimeArray(tarray.x.ndim > 2)
+    elif isinstance(tarray, PWCTimeArray):
+        return PWCTimeArray(False, tarray.values.ndim > 1, False)
+    elif isinstance(tarray, ModulatedTimeArray):
+        return ModulatedTimeArray(False, False, (arg.ndim > 0 for arg in tarray.args))
+    elif isinstance(tarray, CallableTimeArray):
+        return CallableTimeArray(False, (arg.ndim > 0 for arg in tarray.args))
+    else:
+        raise TypeError(f'Unsupported TimeArray type: {type(tarray).__name__}')
