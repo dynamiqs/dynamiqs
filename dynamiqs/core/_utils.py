@@ -90,7 +90,7 @@ def is_timearray_batched(tarray: TimeArray) -> TimeArray:
     if isinstance(tarray, SummedTimeArray):
         return SummedTimeArray([is_timearray_batched(arr) for arr in tarray.timearrays])
     elif isinstance(tarray, ConstantTimeArray):
-        return ConstantTimeArray(tarray.x.ndim > 2)
+        return ConstantTimeArray(tarray.array.ndim > 2)
     elif isinstance(tarray, PWCTimeArray):
         return PWCTimeArray(False, tarray.values.ndim > 1, False)
     elif isinstance(tarray, ModulatedTimeArray):

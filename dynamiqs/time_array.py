@@ -295,40 +295,40 @@ class TimeArray(eqx.Module):
 
 
 class ConstantTimeArray(TimeArray):
-    x: Array
+    array: Array
 
     @property
     def dtype(self) -> np.dtype:
-        return self.x.dtype
+        return self.array.dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.x.shape
+        return self.array.shape
 
     @property
     def mT(self) -> TimeArray:
-        return ConstantTimeArray(self.x.mT)
+        return ConstantTimeArray(self.array.mT)
 
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
-        return self.x
+        return self.array
 
     def reshape(self, *args: int) -> TimeArray:
-        return ConstantTimeArray(self.x.reshape(*args))
+        return ConstantTimeArray(self.array.reshape(*args))
 
     def conj(self) -> TimeArray:
-        return ConstantTimeArray(self.x.conj())
+        return ConstantTimeArray(self.array.conj())
 
     def __neg__(self) -> TimeArray:
-        return ConstantTimeArray(-self.x)
+        return ConstantTimeArray(-self.array)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        return ConstantTimeArray(self.x * y)
+        return ConstantTimeArray(self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
-            return ConstantTimeArray(jnp.asarray(other, dtype=cdtype()) + self.x)
+            return ConstantTimeArray(jnp.asarray(other, dtype=cdtype()) + self.array)
         elif isinstance(other, ConstantTimeArray):
-            return ConstantTimeArray(self.x + other.x)
+            return ConstantTimeArray(self.array + other.x)
         elif isinstance(other, TimeArray):
             return SummedTimeArray([self, other])
         else:
