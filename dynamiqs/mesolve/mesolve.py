@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 import jax
@@ -7,11 +8,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result
+from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.utils import todm
@@ -31,7 +33,7 @@ def mesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> Result:
+) -> MEResult:
     r"""Solve the Lindblad master equation.
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
@@ -64,44 +66,45 @@ def mesolve(
         more details.
 
     Args:
-        H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
+        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
         jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
             jump operators.
-        rho0 _(array-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
-        tsave _(array-like of shape (nt,))_: Times at which the states and expectation
-            values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
-            from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        rho0 _(array-like of shape (nrho0?, n, 1) or (nrho0?, n, n))_: Initial state.
+        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+            expectation values are saved. The equation is solved from `tsave[0]` to
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
+            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Euler`][dynamiqs.solver.Euler],
+            [`Rouchon1`][dynamiqs.solver.Rouchon1],
+            [`Rouchon2`][dynamiqs.solver.Rouchon2],
+            [`Propagator`][dynamiqs.solver.Propagator]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`][dynamiqs.Result] object holding the result of the Lindblad master
-            equation integration. It has the following attributes:
-
-            - **states** _(array of shape (bH?, brho?, nt, n, n))_ -- Saved states.
-            - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
-                expectation values.
-            - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
-                specified in `options`.
-            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
-                resolution.
-            - **tsave** _(array of shape (nt,))_ -- Times for which states and
-                expectation values were saved.
-            - **solver** _(Solver)_ -- Solver used.
-            - **gradient** _(Gradient)_ -- Gradient used.
-            - **options** _(Options)_ -- Options used.
+        [`dq.MEResult`][dynamiqs.MEResult] object holding the result of the Lindblad
+            master  equation integration. Use the attributes `states` and `expects`
+            to access saved quantities, more details in
+            [`dq.MEResult`][dynamiqs.MEResult].
     """
     # === convert arguments
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = jnp.asarray(rho0, dtype=cdtype())
-    rho0 = todm(rho0)
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
+    # === check arguments
+    _check_mesolve_args(H, jump_ops, rho0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
+
+    # === convert rho0 to density matrix
+    rho0 = todm(rho0)
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
@@ -118,7 +121,7 @@ def _vmap_mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> MEResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (
@@ -132,7 +135,7 @@ def _vmap_mesolve(
         False,
     )
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0, 0)
+    out_axes = MEResult(None, None, None, None, 0, 0)
 
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
@@ -149,7 +152,7 @@ def _mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> MEResult:
     # === select solver class
     solvers = {
         Euler: MEEuler,
@@ -171,3 +174,27 @@ def _mesolve(
 
     # === return result
     return result  # noqa: RET504
+
+
+def _check_mesolve_args(
+    H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
+):
+    # === check H shape
+    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
+
+    # === check jump_ops shape
+    if len(jump_ops) == 0:
+        logging.warn(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
+        )
+
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
+
+    # === check rho0 shape
+    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+
+    # === check exp_ops shape
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})

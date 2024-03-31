@@ -4,7 +4,7 @@ version = "0.2.0"
 requires-python = ">=3.9"
 description = "Quantum systems simulation with JAX."
 dependencies = [
-    "qutip",
+    "qutip>=4.0,<5.0",
     "numpy",
     "matplotlib",
     "tqdm",
@@ -14,7 +14,7 @@ dependencies = [
     "diffrax>=0.5.0",  # for complex support
     "equinox",
     "imageio",
-    "cmasher",
+    "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
 ]
 

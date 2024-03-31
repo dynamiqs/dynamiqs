@@ -155,7 +155,9 @@ nav:
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
           - Options: python_api/options/Options.md
-          - Result: python_api/result/Result.md
+          - Results:
+              - SEResult: python_api/result/SEResult.md
+              - MEResult: python_api/result/MEResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
@@ -184,7 +186,9 @@ nav:
               - coherent_dm: python_api/utils/states/coherent_dm.md
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
-              - mpow: python_api/utils/utils/mpow.md
+              - powm: python_api/utils/utils/powm.md
+              - cosm: python_api/utils/utils/cosm.md
+              - sinm: python_api/utils/utils/sinm.md
               - tracemm: python_api/utils/utils/tracemm.md
               - trace: python_api/utils/utils/trace.md
               - ptrace: python_api/utils/utils/ptrace.md
@@ -198,6 +202,7 @@ nav:
               - isbra: python_api/utils/utils/isbra.md
               - isdm: python_api/utils/utils/isdm.md
               - isop: python_api/utils/utils/isop.md
+              - isherm: python_api/utils/utils/isherm.md
               - toket: python_api/utils/utils/toket.md
               - tobra: python_api/utils/utils/tobra.md
               - todm: python_api/utils/utils/todm.md
@@ -205,6 +210,7 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
+              - eigenstates: python_api/utils/utils/eigenstates.md
               - wigner: python_api/utils/utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md

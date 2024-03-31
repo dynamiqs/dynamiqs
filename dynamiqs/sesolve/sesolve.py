@@ -7,11 +7,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
-from ..result import Result
+from ..result import SEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
@@ -29,7 +30,7 @@ def sesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> Result:
+) -> SEResult:
     r"""Solve the Schrödinger equation.
 
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
@@ -56,39 +57,38 @@ def sesolve(
         more details.
 
     Args:
-        H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        psi0 _(array-like of shape (bpsi?, n, 1))_: Initial state.
-        tsave _(array-like of shape (nt,))_: Times at which the states and expectation
-            values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
-            from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
+        psi0 _(array-like of shape (npsi0?, n, 1))_: Initial state.
+        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+            expectation values are saved. The equation is solved from `tsave[0]` to
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5].
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
+            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Euler`][dynamiqs.solver.Euler],
+            [`Propagator`][dynamiqs.solver.Propagator]).
+
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.Result`][dynamiqs.Result] object holding the result of the
-            Schrödinger equation integration. It has the following attributes:
-
-            - **states** _(array of shape (bH?, bpsi?, nt, n, 1))_ -- Saved states.
-            - **expects** _(array of shape (bH?, bpsi?, nE, nt), optional)_ -- Saved
-                expectation values.
-            - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
-                specified in `options`.
-            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
-                resolution.
-            - **tsave** _(array of shape (nt,))_ -- Times for which results were saved.
-            - **solver** _(Solver)_ -- Solver used.
-            - **gradient** _(Gradient)_ -- Gradient used.
-            - **options** _(Options)_ -- Options used.
+        [`dq.SEResult`][dynamiqs.SEResult] object holding the result of the
+            Schrödinger equation integration. Use the attributes `states` and `expects`
+            to access saved quantities, more details in
+            [`dq.SEResult`][dynamiqs.SEResult].
     """
     # === convert arguments
     H = _astimearray(H)
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+
+    # === check arguments
+    _check_sesolve_args(H, psi0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays
@@ -104,12 +104,12 @@ def _vmap_sesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
     is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
     # the result is vectorized over `saved`
-    out_axes = Result(None, None, None, None, 0, 0)
+    out_axes = SEResult(None, None, None, None, 0, 0)
     f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
@@ -124,7 +124,7 @@ def _sesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> Result:
+) -> SEResult:
     # === select solver class
     solvers = {
         Euler: SEEuler,
@@ -146,3 +146,15 @@ def _sesolve(
 
     # === return result
     return result  # noqa: RET504
+
+
+def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
+    # === check H shape
+    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
+
+    # === check psi0 shape
+    check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
+
+    # === check exp_ops shape
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})

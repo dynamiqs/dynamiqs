@@ -3,7 +3,9 @@ from .wigner import *
 
 __all__ = [
     'dag',
-    'mpow',
+    'powm',
+    'cosm',
+    'sinm',
     'tracemm',
     'trace',
     'ptrace',
@@ -17,6 +19,7 @@ __all__ = [
     'isbra',
     'isdm',
     'isop',
+    'isherm',
     'toket',
     'tobra',
     'todm',
@@ -24,5 +27,6 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'eigenstates',
     'wigner',
 ]

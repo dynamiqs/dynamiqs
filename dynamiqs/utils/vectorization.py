@@ -5,6 +5,7 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape
 from .operators import eye
 from .utils import dag
 from .utils.general import _bkron
@@ -49,6 +50,7 @@ def operator_to_vector(x: ArrayLike) -> Array:
                [4.+4.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
     return x.mT.reshape(*bshape, -1, 1)
 
@@ -83,6 +85,7 @@ def vector_to_operator(x: ArrayLike) -> Array:
                [2.+2.j, 4.+4.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n^2, 1)')
     bshape = x.shape[:-2]
     n = int(np.sqrt(x.shape[-2]))
     return x.reshape(*bshape, n, n).mT
@@ -108,6 +111,7 @@ def spre(x: ArrayLike) -> Array:
         (9, 9)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     Id = eye(n)
     return _bkron(Id, x)
@@ -133,9 +137,10 @@ def spost(x: ArrayLike) -> Array:
         (9, 9)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
     Id = eye(n)
-    return _bkron(dag(x), Id)
+    return _bkron(x.mT, Id)
 
 
 def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
@@ -160,6 +165,8 @@ def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
+    check_shape(x, 'x', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, n)')
     return _bkron(y.mT, x)
 
 
@@ -186,6 +193,7 @@ def sdissipator(L: ArrayLike) -> Array:
         _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
     """
     L = jnp.asarray(L)
+    check_shape(L, 'L', '(..., n, n)')
     Ldag = dag(L)
     LdagL = Ldag @ L
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
@@ -224,4 +232,6 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
     """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
+    check_shape(H, 'H', '(..., n, n)')
+    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
     return -1j * (spre(H) - spost(H)) + sdissipator(jump_ops).sum(0)
