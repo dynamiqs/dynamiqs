@@ -877,7 +877,7 @@ def entropy_vn(x: ArrayLike) -> Array:
     Examples:
         >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
         >>> dq.entropy_vn(rho)
-        tensor(0.693)
+        Array(0.693, dtype=float32)
         >>> psis = [dq.fock(16, i) for i in range(5)]
         >>> dq.entropy_vn(psis).shape
         (5,)
