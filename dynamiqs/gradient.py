@@ -8,7 +8,8 @@ __all__ = ['Autograd', 'CheckpointAutograd']
 
 
 class Gradient(eqx.Module):
-    pass
+    def __str__(self) -> str:
+        return tree_str_inline(self)
 
 
 class Autograd(Gradient):
@@ -26,9 +27,6 @@ class Autograd(Gradient):
     # dummy init to have the signature in the documentation
     def __init__(self):
         pass
-
-    def __str__(self) -> str:
-        return tree_str_inline(self)
 
 
 class CheckpointAutograd(Gradient):
