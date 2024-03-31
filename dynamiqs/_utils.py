@@ -57,5 +57,5 @@ def cdtype() -> jnp.complex64 | jnp.complex128:
         raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')
 
 
-def tree_str_inline(pytree: PyTree) -> str:
-    return eqx.tree_pformat(pytree, indent=0).replace('\n', '').replace(',', ', ')
+def tree_str_inline(x: PyTree) -> str:
+    return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
