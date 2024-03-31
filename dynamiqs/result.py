@@ -68,7 +68,6 @@ class Result(eqx.Module):
                 eqx.tree_pformat(self.extra) if self.extra is not None else None
             ),
             'Infos   ': self.infos if self.infos is not None else None,
-            'Options ': self.options,
         }
 
     def __str__(self) -> str:
