@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import ClassVar
 
 import equinox as eqx
-from _utils import tree_str_inline
 
+from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = ['Propagator', 'Euler', 'Rouchon1', 'Rouchon2', 'Dopri5', 'Dopri8', 'Tsit5']

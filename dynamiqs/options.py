@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax
-from _utils import tree_str_inline
 from jax import Array
 from jaxtyping import PyTree, Scalar
+
+from ._utils import tree_str_inline
 
 __all__ = ['Options']
 
