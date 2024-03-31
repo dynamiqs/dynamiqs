@@ -58,4 +58,5 @@ def cdtype() -> jnp.complex64 | jnp.complex128:
 
 
 def tree_str_inline(x: PyTree) -> str:
+    # return an inline formatting of a pytree as a string
     return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
