@@ -22,8 +22,8 @@ def wigner(
     xmax: float = 6.2832,
     ymax: float = 6.2832,
     npixels: int = 200,
-    xvec: ArrayLike = None,
-    yvec: ArrayLike = None,
+    xvec: ArrayLike | None = None,
+    yvec: ArrayLike | None = None,
     g: float = 2.0,
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
@@ -33,6 +33,8 @@ def wigner(
         xmax: Maximum value of x.
         ymax: Maximum value of p.
         npixels: Number of pixels in each direction.
+        xvec: List of x coordinates to compute wigner elements on. If none, `xvec = jnp.linspace(-xmax, xmax, npixels)`.
+        yvec: List of y coordinates to compute wigner elements on. If none, `yvec = jnp.linspace(-ymax, ymax, npixels)`.
         g: Scaling factor of Wigner quadratures, such that `a = 0.5 * g * (x + i * p)`.
 
     Returns:
