@@ -366,7 +366,7 @@ def check_state_device_type(state: ArrayLike) -> ArrayLike:
         logging.warning(
             "Wigner function is not supported yet for f64 on GPU. "
             "Dynamiqs will copy the state to the CPU to compute the wigner function. "
-            "Performance penalty is expected. If this is a problem for you, open an"
+            "Performance penalty is expected. If this is a problem for you, open an "
             "issue at https://github.com/dynamiqs/dynamiqs/issues"
         )
         state = jax.device_put(state, jax.devices(backend="cpu")[0])
