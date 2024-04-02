@@ -65,7 +65,6 @@ def dag(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     return x.mT.conj()
 
 
