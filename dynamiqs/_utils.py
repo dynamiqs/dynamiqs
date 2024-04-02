@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import Array
+from jaxtyping import Array, PyTree
 
 
 def type_str(type: Any) -> str:  # noqa: A002
@@ -37,3 +38,8 @@ def cdtype() -> jnp.complex64 | jnp.complex128:
         return jnp.complex128
     else:
         raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')
+
+
+def tree_str_inline(x: PyTree) -> str:
+    # return an inline formatting of a pytree as a string
+    return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')

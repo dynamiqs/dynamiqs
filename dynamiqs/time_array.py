@@ -68,7 +68,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     """
     # times
     times = jnp.asarray(times)
-    check_times(times, 'times')
+    times = check_times(times, 'times')
 
     # values
     values = jnp.asarray(values, dtype=cdtype())
