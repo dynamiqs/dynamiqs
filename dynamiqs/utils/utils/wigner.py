@@ -8,7 +8,6 @@ from jax import Array, lax
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ..._utils import cdtype
 from ..operators import eye
 from .general import todm
 
@@ -33,15 +32,19 @@ def wigner(
         xmax: Maximum value of x.
         ymax: Maximum value of p.
         npixels: Number of pixels in each direction.
-        xvec: List of x coordinates to compute wigner elements on. If none, `xvec = jnp.linspace(-xmax, xmax, npixels)`.
-        yvec: List of y coordinates to compute wigner elements on. If none, `yvec = jnp.linspace(-ymax, ymax, npixels)`.
+        xvec: List of x coordinates to compute wigner elements on. If none,
+            `xvec = jnp.linspace(-xmax, xmax, npixels)`.
+        yvec: List of y coordinates to compute wigner elements on.
+            If none, `yvec = jnp.linspace(-ymax, ymax, npixels)`.
         g: Scaling factor of Wigner quadratures, such that `a = 0.5 * g * (x + i * p)`.
 
     Returns:
         A tuple `(xvec, yvec, w)` where
 
             - xvec: Array of shape _(npixels)_ containing x values
+                or `xvec` if provided in argument
             - yvec: Array of shape _(npixels)_ containing p values
+                or `yvec` if provided in argument
             - w: Array of shape _(npixels, npixels)_ containing the wigner
                 distribution at all (x, p) points.
     """
@@ -50,9 +53,13 @@ def wigner(
 
     if xvec is None:
         xvec = jnp.linspace(-xmax, xmax, npixels)
+    else:
+        check_shape(xvec, 'xvec', '(n,)')
 
     if yvec is None:
         yvec = jnp.linspace(-ymax, ymax, npixels)
+    else:
+        check_shape(yvec, 'yvec', '(n,)')
 
     state = todm(state)
     w = _wigner_clenshaw(state, xvec, yvec, g)
@@ -133,23 +140,3 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
     return lax.cond(n - i == 1, n_1, lambda: lax.cond(n - i == 2, n_2, n_other))
-
-
-def _fock_to_position(n: int, positions: Array) -> Array:
-    """Compute the change-of-basis matrix from the Fock basis to the position basis of
-    an oscillator of dimension n, as evaluated at the specific position values provided.
-    """
-    n_positions = positions.shape[0]
-    U = jnp.zeros((n, n_positions), dtype=cdtype())
-    U = U.at[0].set(jnp.pi ** (-0.25) * jnp.exp(-0.5 * positions**2))
-
-    if n == 1:
-        return U
-
-    U = U.at[1].set(jnp.sqrt(2.0) * positions * U[0, :])
-    for k in range(2, n):
-        U = U.at[k].set(
-            jnp.sqrt(2.0 / k) * positions * U[k - 1, :]
-            - jnp.sqrt(1.0 - 1.0 / k) * U[k - 2, :]
-        )
-    return U
