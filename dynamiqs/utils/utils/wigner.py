@@ -60,8 +60,8 @@ def wigner(
     if not on_cpu(state) and state.dtype == jnp.complex128:
         logging.warning(
             'Wigner computation is not yet supported on GPU for double precision '
-            '(float64). The `states` array will be copied to the CPU to compute the '
-            'wigner distribution. Performance penalty is expected. If this is a '
+            '(float64). The `state` array will be copied to the CPU to compute the '
+            'Wigner distribution. Performance penalty is expected. If this is a '
             "problem for you, don't hesitate to "
             'open an issue on GitHub: https://github.com/dynamiqs/dynamiqs/issues/new.'
         )
