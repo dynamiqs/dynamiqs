@@ -52,7 +52,7 @@ def wigner(
                 `xvec` if specified.
             - **yvec** _(array of shape (npixels,) or (nyvec,))_ -- $y$ coordinates, or
                 `yvec` if specified.
-            - **w** _(array of shape (..., npixels, npixels) or (..., nxvec, nyvec))_ -- Wigner distribution.
+            - **w** _(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))_ -- Wigner distribution.
     """  # noqa: E501
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
