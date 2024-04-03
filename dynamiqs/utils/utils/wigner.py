@@ -56,7 +56,7 @@ def wigner(
     """  # noqa: E501
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
-    # transfer_state_to_cpu_if_f64
+    # === transfer state to CPU if float64
     if not on_cpu(state) and state.dtype == jnp.complex128:
         logging.warning(
             'Wigner computation is not yet supported on GPU for double precision '
@@ -67,19 +67,14 @@ def wigner(
         )
         state = jax.device_put(state, jax.devices(backend='cpu')[0])
 
+    # === convert state to density matrix
     state = todm(state)
 
-    if xvec is None:
-        xvec = jnp.linspace(-xmax, xmax, npixels)
-    else:
-        xvec = jnp.asarray(xvec)
-        check_shape(xvec, 'xvec', '(n,)', subs={'n': 'nxvec'})
-
-    if yvec is None:
-        yvec = jnp.linspace(-ymax, ymax, npixels)
-    else:
-        yvec = jnp.asarray(yvec)
-        check_shape(yvec, 'yvec', '(n,)', subs={'n': 'nyvec'})
+    # === prepare xvec and yvec
+    xvec = jnp.linspace(-xmax, xmax, npixels) if xvec is None else jnp.asarray(xvec)
+    check_shape(xvec, 'xvec', '(n,)', subs={'n': 'nxvec'})
+    yvec = jnp.linspace(-ymax, ymax, npixels) if yvec is None else jnp.asarray(yvec)
+    check_shape(yvec, 'yvec', '(n,)', subs={'n': 'nyvec'})
 
     return xvec, yvec, _wigner(state, xvec, yvec, g)
 
