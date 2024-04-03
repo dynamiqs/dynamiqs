@@ -44,15 +44,13 @@ __all__ = [
 
 
 def dag(x: ArrayLike) -> Array:
-    r"""Returns the adjoint (complex conjugate transpose) of a ket, bra, density matrix
-    or operator.
+    r"""Returns the adjoint (complex conjugate transpose) of a matrix.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
-            density matrix or operator.
+        x _(array_like of shape (..., m, n))_: Matrix.
 
     Returns:
-       _(array of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Adjoint of `x`.
+       _(array of shape (..., n, m))_ Adjoint of `x`.
 
     Notes:
         This function is equivalent to `x.mT.conj()`.
@@ -65,7 +63,7 @@ def dag(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
+    check_shape(x, 'x', '(..., m, n)')
     return x.mT.conj()
 
 
