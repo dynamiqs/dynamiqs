@@ -5,6 +5,7 @@ requires-python = ">=3.9"
 description = "Quantum systems simulation with JAX."
 dependencies = [
     "qutip>=4.0,<5.0",
+    "scipy<=1.12",  # fix QuTiP unspecified dependency on scipy
     "numpy",
     "matplotlib",
     "tqdm",
