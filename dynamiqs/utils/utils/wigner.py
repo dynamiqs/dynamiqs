@@ -70,13 +70,10 @@ def wigner(
 
 @partial(jax.jit)
 @partial(jnp.vectorize, signature='(n,m)->(k,l)', excluded={1, 2, 3})
-def _wigner(
-    state: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float = 2.0
-) -> Array:
+def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
     """Compute the wigner distribution of a density matrix using the iterative method
     of QuTiP based on the Clenshaw summation algorithm.
     """
-    state = jnp.asarray(state)
     n = state.shape[-1]
 
     x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
