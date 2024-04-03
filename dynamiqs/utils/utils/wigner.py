@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from functools import partial
+import functools as ft
+import logging
 
 import jax
 import jax.numpy as jnp
@@ -14,12 +15,10 @@ from .general import todm
 __all__ = ['wigner']
 
 
-@partial(jax.jit, static_argnames=('npixels', 'xvec', 'yvec'))
-@partial(jnp.vectorize, signature='(n,m)->(k),(l),(k,l)', excluded={1, 2, 3})
 def wigner(
     state: ArrayLike,
-    xmax: float = 6.2832,
-    ymax: float = 6.2832,
+    xmax: float = 6.0,
+    ymax: float = 6.0,
     npixels: int = 200,
     xvec: ArrayLike | None = None,
     yvec: ArrayLike | None = None,
@@ -48,47 +47,47 @@ def wigner(
             - w: Array of shape _(npixels, npixels)_ containing the wigner
                 distribution at all (x, p) points.
     """
-    state = jnp.asarray(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
+    check_state_device_type(state)
 
     if xvec is None:
         xvec = jnp.linspace(-xmax, xmax, npixels)
     else:
+        xvec = jnp.asarray(xvec)
         check_shape(xvec, 'xvec', '(n,)')
 
     if yvec is None:
         yvec = jnp.linspace(-ymax, ymax, npixels)
     else:
+        yvec = jnp.asarray(yvec)
         check_shape(yvec, 'yvec', '(n,)')
 
-    state = todm(state)
-    w = _wigner_clenshaw(state, xvec, yvec, g)
-
-    return xvec, yvec, w
+    return xvec, yvec, _wigner(state, xvec, yvec, g)
 
 
-def _wigner_clenshaw(
-    rho: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float
+@ft.partial(jax.jit)
+@ft.partial(jnp.vectorize, signature='(n,m)->(k,l)', excluded={1, 2, 3})
+def _wigner(
+    state: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float = 2.0
 ) -> Array:
     """Compute the wigner distribution of a density matrix using the iterative method
     of QuTiP based on the Clenshaw summation algorithm.
     """
-    rho = jnp.asarray(rho)
-    xvec = jnp.asarray(xvec)
-    yvec = jnp.asarray(yvec)
-    n = rho.shape[-1]
+    state = jnp.asarray(state)
+    state = todm(state)
+    n = state.shape[-1]
 
     x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
     a = 0.5 * g * (x + 1.0j * p)
     a2 = jnp.abs(a) ** 2
 
-    w = 2 * rho[0, -1] * jnp.ones_like(a)
-    rho = rho * (2 * jnp.ones((n, n)) - eye(n))
+    w = 2 * state[0, -1] * jnp.ones_like(a)
+    state = state * (2 * jnp.ones((n, n)) - eye(n))
 
     def loop(i: int, w: Array) -> Array:
         i = n - 2 - i
         w = w * (2 * a * (i + 1) ** (-0.5))
-        return w + (_laguerre_series(i, 4 * a2, rho, n))
+        return w + (_laguerre_series(i, 4 * a2, state, n))
 
     w = lax.fori_loop(0, n - 1, loop, w)
 
@@ -140,3 +139,15 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
     return lax.cond(n - i == 1, n_1, lambda: lax.cond(n - i == 2, n_2, n_other))
+
+
+def check_state_device_type(state: ArrayLike) -> ArrayLike:
+    if next(iter(state.devices())).platform == 'gpu' and state.dtype == jnp.complex128:
+        logging.warning(
+            'Wigner-related functions are not yet supported for double precision (f64) '
+            'on GPU. The `state` array will be copied to the CPU to compute the wigner '
+            'function. Performance penalty is expected. If this is a problem for you, '
+            'open an issue at https://github.com/dynamiqs/dynamiqs/issues'
+        )
+        state = jax.device_put(state, jax.devices(backend='cpu')[0])
+    return state

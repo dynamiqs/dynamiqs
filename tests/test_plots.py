@@ -4,7 +4,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, todm
-from dynamiqs.utils.utils.wigner import _diag_element
+from dynamiqs.utils.utils.wigner import _diag_element, wigner
 
 # TODO : add comparison with analytical wigner for coherent states and cat states
 
@@ -49,3 +49,9 @@ class TestPlots:
                     f' got "{x}"'
                 )
                 assert x == y, err_msg
+
+    def test_wigner_psi_xvec_yvec(self):
+        vec = np.linspace(-5, 5, 10)
+        wigner(self.psis[0], xvec=vec)
+        wigner(self.psis[0], yvec=vec)
+        wigner(self.psis[0], xvec=vec, yvec=vec)
