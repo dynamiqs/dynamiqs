@@ -51,6 +51,8 @@ def wigner(
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
     check_state_device_type(state)
 
+    state = todm(state)
+
     if xvec is None:
         xvec = jnp.linspace(-xmax, xmax, npixels)
     else:
@@ -75,7 +77,6 @@ def _wigner(
     of QuTiP based on the Clenshaw summation algorithm.
     """
     state = jnp.asarray(state)
-    state = todm(state)
     n = state.shape[-1]
 
     x, p = jnp.meshgrid(xvec, yvec, indexing='ij')
