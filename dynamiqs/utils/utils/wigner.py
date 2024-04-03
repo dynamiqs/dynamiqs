@@ -26,27 +26,28 @@ def wigner(
 ) -> tuple[Array, Array, Array]:
     r"""Compute the Wigner distribution of a ket or density matrix.
 
+    The Wigner distribution is computed on a grid of coordinates $(x, y)$.
+
     Args:
         state _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        xmax: Maximum value of x.
-        ymax: Maximum value of p.
+        xmax: Maximum absolute value of the $x$ coordinate.
+        ymax: Maximum absolute value of the $y$ coordinate.
         npixels: Number of pixels in each direction.
-        xvec: List of x coordinates to compute wigner elements on. If none,
-            `xvec = jnp.linspace(-xmax, xmax, npixels)`.
-        yvec: List of y coordinates to compute wigner elements on.
-            If none, `yvec = jnp.linspace(-ymax, ymax, npixels)`.
-        g: Scaling factor of Wigner quadratures, such that `a = 0.5 * g * (x + i * p)`.
+        xvec _(array_like of shape (nxvec,), optional)_: $x$ coordinates. If `None`,
+            defaults to `xvec = jnp.linspace(-xmax, xmax, npixels)`.
+        yvec _(array_like of shape (nyvec,), optional)_: $y$ coordinates. If `None`,
+            defaults to `yvec = jnp.linspace(-ymax, ymax, npixels)`.
+        g: Scaling factor of Wigner quadratures, such that $a = g(x + iy)/2$.
 
     Returns:
         A tuple `(xvec, yvec, w)` where
 
-            - xvec: Array of shape _(npixels)_ containing x values
-                or `xvec` if provided in argument
-            - yvec: Array of shape _(npixels)_ containing p values
-                or `yvec` if provided in argument
-            - w: Array of shape _(npixels, npixels)_ containing the wigner
-                distribution at all (x, p) points.
-    """
+            - **xvec** _(array of shape (npixels,) or (nxvec,))_ -- $x$ coordinates, or
+                `xvec` if specified.
+            - **yvec** _(array of shape (npixels,) or (nyvec,))_ -- $y$ coordinates, or
+                `yvec` if specified.
+            - **w** _(array of shape (..., npixels, npixels) or (..., nxvec, nyvec))_ -- Wigner distribution.
+    """  # noqa: E501
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
     check_state_device_type(state)
 
@@ -54,13 +55,13 @@ def wigner(
         xvec = jnp.linspace(-xmax, xmax, npixels)
     else:
         xvec = jnp.asarray(xvec)
-        check_shape(xvec, 'xvec', '(n,)')
+        check_shape(xvec, 'xvec', '(n,)', subs={'n': 'nxvec'})
 
     if yvec is None:
         yvec = jnp.linspace(-ymax, ymax, npixels)
     else:
         yvec = jnp.asarray(yvec)
-        check_shape(yvec, 'yvec', '(n,)')
+        check_shape(yvec, 'yvec', '(n,)', subs={'n': 'nyvec'})
 
     return xvec, yvec, _wigner(state, xvec, yvec, g)
 
