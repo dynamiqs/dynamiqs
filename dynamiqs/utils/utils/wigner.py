@@ -9,6 +9,7 @@ from jax import Array, lax
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
+from ..._utils import on_cpu
 from ..operators import eye
 from .general import todm
 
@@ -27,6 +28,11 @@ def wigner(
     r"""Compute the Wigner distribution of a ket or density matrix.
 
     The Wigner distribution is computed on a grid of coordinates $(x, y)$.
+
+    Warning:
+        Wigner computation is not yet supported on GPU for double precision (float64).
+        If this is needed don't hesitate to
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Args:
         state _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
@@ -49,7 +55,17 @@ def wigner(
             - **w** _(array of shape (..., npixels, npixels) or (..., nxvec, nyvec))_ -- Wigner distribution.
     """  # noqa: E501
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
-    check_state_device_type(state)
+
+    # transfer_state_to_cpu_if_f64
+    if not on_cpu(state) and state.dtype == jnp.complex128:
+        logging.warning(
+            'Wigner computation is not yet supported on GPU for double precision '
+            '(float64). The `states` array will be copied to the CPU to compute the '
+            'wigner distribution. Performance penalty is expected. If this is a '
+            "problem for you, don't hesitate to "
+            'open an issue on GitHub: https://github.com/dynamiqs/dynamiqs/issues/new.'
+        )
+        state = jax.device_put(state, jax.devices(backend='cpu')[0])
 
     state = todm(state)
 
@@ -138,15 +154,3 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
     return lax.cond(n - i == 1, n_1, lambda: lax.cond(n - i == 2, n_2, n_other))
-
-
-def check_state_device_type(state: ArrayLike) -> ArrayLike:
-    if next(iter(state.devices())).platform == 'gpu' and state.dtype == jnp.complex128:
-        logging.warning(
-            'Wigner-related functions are not yet supported for double precision (f64) '
-            'on GPU. The `state` array will be copied to the CPU to compute the wigner '
-            'function. Performance penalty is expected. If this is a problem for you, '
-            'open an issue at https://github.com/dynamiqs/dynamiqs/issues'
-        )
-        state = jax.device_put(state, jax.devices(backend='cpu')[0])
-    return state
