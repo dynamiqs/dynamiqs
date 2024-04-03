@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._checks import check_shape, check_times
+from .._checks import check_shape, check_times_monotonic
 from .._utils import cdtype
 from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
@@ -88,7 +88,7 @@ def sesolve(
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
-    tsave = check_times(tsave, 'tsave')
+    tsave = check_times_monotonic(tsave, 'tsave')
 
     # we implement the jitted vmap in another function to pre-convert QuTiP objects
     # (which are not JIT-compatible) to JAX arrays

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
@@ -80,4 +81,27 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
         x,
         x[1:] < x[:-1],
         f'Argument {argname} must be sorted in strictly ascending order.',
+    )
+
+
+def check_times_monotonic(x: Array, argname: str, allow_empty: bool = False) -> Array:
+    # check that an array of time is valid (it must be a 1D array sorted monotonically)
+
+    # this function should be used as e.g. `x = check_times_monotonic(x, 'x')`, and the
+    # returned value should be used, otherwise the final check will be removed as part
+    # of dead code elimination, see https://docs.kidger.site/equinox/api/errors/ for
+    # more details
+
+    if x.ndim != 1:
+        raise ValueError(
+            f'Argument {argname} must be a 1D array, but is a {x.ndim}D array.'
+        )
+    if not allow_empty and len(x) == 0:
+        raise ValueError(f'Argument {argname} must contain at least one element.')
+
+    # this check is written to be JIT-compatible
+    return eqx.error_if(
+        x,
+        jnp.any(x[1:] < x[:-1]) and not jnp.all(x[1:] < x[:-1]),
+        f'Argument {argname} must be sorted monotonically.',
     )
