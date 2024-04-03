@@ -19,7 +19,7 @@ def wigner(
     state: ArrayLike,
     xmax: float = 6.0,
     ymax: float = 6.0,
-    npixels: int = 200,
+    npixels: int = 201,
     xvec: ArrayLike | None = None,
     yvec: ArrayLike | None = None,
     g: float = 2.0,
