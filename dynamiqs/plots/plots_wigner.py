@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 import pathlib
 import shutil
 
 import imageio as iio
 import IPython.display as ipy
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.typing import ArrayLike
@@ -127,6 +129,7 @@ def plot_wigner(
     """
     state = jnp.asarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
+    state = check_state_device_type(state)
 
     ymax = xmax if ymax is None else ymax
     _, _, w = wigner(state, xmax, ymax, npixels)
@@ -199,6 +202,7 @@ def plot_wigner_mosaic(
     """
     states = jnp.asarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
+    states = check_state_device_type(states)
 
     nstates = len(states)
     if nstates < n:
@@ -310,6 +314,7 @@ def plot_wigner_gif(
     """
     states = jnp.asarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
+    states = check_state_device_type(states)
 
     ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
@@ -354,3 +359,15 @@ def plot_wigner_gif(
     finally:
         if tmpdir.exists():
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def check_state_device_type(state: ArrayLike) -> ArrayLike:
+    if next(iter(state.devices())).platform == 'gpu' and state.dtype == jnp.complex128:
+        logging.warning(
+            'Wigner-related functions are not yet supported for double precision (f64) '
+            'on GPU. The `state` array will be copied to the CPU to compute the wigner '
+            'function. Performance penalty is expected. If this is a problem for you, '
+            'open an issue at https://github.com/dynamiqs/dynamiqs/issues'
+        )
+        state = jax.device_put(state, jax.devices(backend='cpu')[0])
+    return state
