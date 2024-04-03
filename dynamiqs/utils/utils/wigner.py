@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import functools as ft
 import logging
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -66,8 +66,8 @@ def wigner(
     return xvec, yvec, _wigner(state, xvec, yvec, g)
 
 
-@ft.partial(jax.jit)
-@ft.partial(jnp.vectorize, signature='(n,m)->(k,l)', excluded={1, 2, 3})
+@partial(jax.jit)
+@partial(jnp.vectorize, signature='(n,m)->(k,l)', excluded={1, 2, 3})
 def _wigner(
     state: ArrayLike, xvec: ArrayLike, yvec: ArrayLike, g: float = 2.0
 ) -> Array:
