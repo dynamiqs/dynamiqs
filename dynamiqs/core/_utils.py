@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver
@@ -47,8 +47,8 @@ def get_solver_class(
 def compute_vmap(
     f: callable,
     cartesian_batching: bool,
-    is_batched: list[bool | list[bool]],
-    out_axes: list[int | None],
+    is_batched: PyTree[bool],
+    out_axes: PyTree[int | None],
 ) -> callable:
     # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
     # argument `is_batched` indicates for each argument of `f` whether it is batched.
