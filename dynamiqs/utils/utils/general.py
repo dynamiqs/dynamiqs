@@ -38,20 +38,19 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
+    'entropy_vn',
     'eigenstates',
 ]
 
 
 def dag(x: ArrayLike) -> Array:
-    r"""Returns the adjoint (complex conjugate transpose) of a ket, bra, density matrix
-    or operator.
+    r"""Returns the adjoint (complex conjugate transpose) of a matrix.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
-            density matrix or operator.
+        x _(array_like of shape (..., m, n))_: Matrix.
 
     Returns:
-       _(array of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Adjoint of `x`.
+       _(array of shape (..., n, m))_ Adjoint of `x`.
 
     Notes:
         This function is equivalent to `x.mT.conj()`.
@@ -64,7 +63,7 @@ def dag(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
+    check_shape(x, 'x', '(..., m, n)')
     return x.mT.conj()
 
 
@@ -860,6 +859,38 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_cpu(x, y)
     else:
         return _dm_fidelity_gpu(x, y)
+
+
+def entropy_vn(x: ArrayLike) -> Array:
+    r"""Returns the Von Neumann entropy of a ket or density matrix.
+
+    It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
+
+    Args:
+        x _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued Von Neumann entropy.
+
+    Examples:
+        >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        >>> dq.entropy_vn(rho)
+        Array(0.693, dtype=float32)
+        >>> psis = [dq.fock(16, i) for i in range(5)]
+        >>> dq.entropy_vn(psis).shape
+        (5,)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+
+    if isket(x):
+        return jnp.zeros(x.shape[:-2])
+
+    # compute sum(w_i log(w_i)) where w_i are rho's eigenvalues
+    w = jnp.linalg.eigvalsh(x)
+    # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
+    w = jnp.where(w <= 0, 1.0, w)
+    return -(w * jnp.log(w)).sum(-1)
 
 
 def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
