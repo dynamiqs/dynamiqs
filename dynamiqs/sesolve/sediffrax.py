@@ -4,6 +4,7 @@ import diffrax as dx
 
 from ..core.abstract_solver import SESolver
 from ..core.diffrax_solver import (
+    Bosh3Solver,
     DiffraxSolver,
     Dopri5Solver,
     Dopri8Solver,
@@ -33,4 +34,8 @@ class SEDopri8(SEDiffraxSolver, Dopri8Solver):
 
 
 class SETsit5(SEDiffraxSolver, Tsit5Solver):
+    pass
+
+
+class SEBosh3(SEDiffraxSolver, Bosh3Solver):
     pass

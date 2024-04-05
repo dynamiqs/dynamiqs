@@ -142,3 +142,7 @@ class Dopri8Solver(AdaptiveSolver):
 
 class Tsit5Solver(AdaptiveSolver):
     diffrax_solver = dx.Tsit5()
+
+
+class Bosh3Solver(AdaptiveSolver):
+    diffrax_solver = dx.Bosh3()

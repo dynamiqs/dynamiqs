@@ -5,6 +5,7 @@ import jax.numpy as jnp
 
 from ..core.abstract_solver import MESolver
 from ..core.diffrax_solver import (
+    Bosh3Solver,
     DiffraxSolver,
     Dopri5Solver,
     Dopri8Solver,
@@ -59,4 +60,8 @@ class MEDopri8(MEDiffraxSolver, Dopri8Solver):
 
 
 class METsit5(MEDiffraxSolver, Tsit5Solver):
+    pass
+
+
+class MEBosh3(MEDiffraxSolver, Bosh3Solver):
     pass

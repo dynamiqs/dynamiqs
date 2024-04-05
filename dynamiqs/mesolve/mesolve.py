@@ -19,10 +19,10 @@ from ..core._utils import (
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
+from ..solver import Bosh3, Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import TimeArray
 from ..utils.utils import todm
-from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
+from .mediffrax import MEBosh3, MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
 __all__ = ['mesolve']
@@ -83,7 +83,7 @@ def mesolve(
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
             [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
-            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Dopri8`][dynamiqs.solver.Dopri8], [`Bosh3`][dynamiqs.solver.Bosh3],
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
@@ -166,6 +166,7 @@ def _mesolve(
         Dopri5: MEDopri5,
         Dopri8: MEDopri8,
         Tsit5: METsit5,
+        Bosh3: MEBosh3,
         Propagator: MEPropagator,
     }
     solver_class = get_solver_class(solvers, solver)

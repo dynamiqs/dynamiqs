@@ -35,6 +35,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - Tsit5
         - Dopri5
         - Dopri8
+        - Bosh3
         - Euler
         - Rouchon1
         - Rouchon2

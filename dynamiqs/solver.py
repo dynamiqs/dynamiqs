@@ -7,7 +7,16 @@ import equinox as eqx
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
-__all__ = ['Propagator', 'Euler', 'Rouchon1', 'Rouchon2', 'Dopri5', 'Dopri8', 'Tsit5']
+__all__ = [
+    'Propagator',
+    'Euler',
+    'Rouchon1',
+    'Rouchon2',
+    'Dopri5',
+    'Dopri8',
+    'Tsit5',
+    'Bosh3',
+]
 
 
 _TupleGradient = tuple[type[Gradient], ...]
@@ -23,7 +32,10 @@ class Solver(eqx.Module):
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
 
     @classmethod
-    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:  # noqa: ANN102
+    def assert_supports_gradient(
+        cls,  # noqa: ANN102
+        gradient: Gradient | None,
+    ) -> None:
         if gradient is not None and not cls.supports_gradient(gradient):
             support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
             raise ValueError(
@@ -245,6 +257,41 @@ class Tsit5(_ODEAdaptiveStep):
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Tsit5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Tsit5).
+
+    Args:
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+    ):
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+
+
+class Bosh3(_ODEAdaptiveStep):
+    """Dormand-Prince method of order 5 (adaptive step size ODE solver).
+
+    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    library, see [`diffrax.Bosh3`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Bosh3).
 
     Args:
         rtol: Relative tolerance.
