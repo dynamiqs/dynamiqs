@@ -45,3 +45,48 @@ def test_batching(cartesian_batching):
     else:
         assert result.states.shape == (nH, ntsave, n, 1)
         assert result.expects.shape == (nH, nEs, ntsave)
+
+
+def test_timearray_batching():
+    # generic arrays
+    a = dq.destroy(4)
+    H0 = a + dq.dag(a)
+    psi0 = dq.basis(4, 0)
+    times = jnp.linspace(0.0, 1.0, 11)
+
+    # == constant time array
+    H_cte = jnp.stack([H0, 2 * H0])
+
+    result = dq.sesolve(H_cte, psi0, times)
+    assert result.states.shape == (2, 11, 4, 1)
+    result = dq.sesolve(H0 + H_cte, psi0, times)
+    assert result.states.shape == (2, 11, 4, 1)
+
+    # == pwc time array
+    values = jnp.arange(3 * 10).reshape(3, 10)
+    H_pwc = dq.pwc(times, values, H0)
+
+    result = dq.sesolve(H_pwc, psi0, times)
+    assert result.states.shape == (3, 11, 4, 1)
+    result = dq.sesolve(H0 + H_pwc, psi0, times)
+    assert result.states.shape == (3, 11, 4, 1)
+
+    # == modulated time array
+    deltas = jnp.linspace(0.0, 1.0, 4)
+    H_mod = dq.modulated(lambda t, delta: jnp.cos(t * delta), H0, args=(deltas,))
+
+    result = dq.sesolve(H_mod, psi0, times)
+    assert result.states.shape == (4, 11, 4, 1)
+    result = dq.sesolve(H0 + H_mod, psi0, times)
+    assert result.states.shape == (4, 11, 4, 1)
+
+    # == callable time array
+    omegas = jnp.linspace(0.0, 1.0, 5)
+    H_cal = dq.timecallable(
+        lambda t, omega: jnp.cos(t * omega[..., None, None]) * H0, args=(omegas,)
+    )
+
+    result = dq.sesolve(H_cal, psi0, times)
+    assert result.states.shape == (5, 11, 4, 1)
+    result = dq.sesolve(H0 + H_cal, psi0, times)
+    assert result.states.shape == (5, 11, 4, 1)
