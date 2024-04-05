@@ -190,11 +190,6 @@ def _check_mesolve_args(
     exp_ops: Array | None,
 ):
     check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
-    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
-    check_times(tsave, 'tsave')
-
-    if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
 
     for i, L in enumerate(jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
@@ -204,3 +199,9 @@ def _check_mesolve_args(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
+
+    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+    check_times(tsave, 'tsave')
+
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
