@@ -211,7 +211,6 @@ nav:
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
               - entropy_vn: python_api/utils/utils/entropy_vn.md
-              - eigenstates: python_api/utils/utils/eigenstates.md
               - wigner: python_api/utils/utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
