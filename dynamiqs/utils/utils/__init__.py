@@ -28,6 +28,5 @@ __all__ = [
     'overlap',
     'fidelity',
     'entropy_vn',
-    'eigenstates',
     'wigner',
 ]

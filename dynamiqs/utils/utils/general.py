@@ -39,7 +39,6 @@ __all__ = [
     'overlap',
     'fidelity',
     'entropy_vn',
-    'eigenstates',
 ]
 
 
@@ -891,49 +890,6 @@ def entropy_vn(x: ArrayLike) -> Array:
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
-
-
-def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
-    r"""Returns the eigenvalues and eigenvectors of an operator or super-operator.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Operator or super-operator.
-        lower_first: If True, eigenvalues are sorted ascendingly (low to high). If
-            False, eigenvalues are sorted descendingly (high to low). Defaults to True.
-
-    Returns:
-        Tuple `(vals, vecs)` where `vals` is an array of eigenvalues of shape
-            _(..., n)_, and `vecs` is the corresponding array of eigenvectors of shape
-            _(..., n, n)_. Each element `vecs[..., :, i]` is the eigenvector
-            corresponding to eigenvalue `vals[..., i]`.
-    """
-    x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, n)')
-
-    def _eigenstates_herm(x: Array, lower_first: bool = True) -> tuple[Array, Array]:
-        P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
-        P, D = jax.lax.cond(
-            lower_first,
-            lambda P, D: (P, D),
-            lambda P, D: (jnp.flip(P, axis=-1), jnp.flip(D, axis=-1)),
-            P,
-            D,
-        )
-        return D.astype(x.dtype), P
-
-    def _eigenstates_non_herm(
-        x: Array, lower_first: bool = True
-    ) -> tuple[Array, Array]:
-        D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
-        idx = jnp.argsort(D, axis=-1)
-        idx = jax.lax.cond(lower_first, lambda x: x, lambda x: x[..., ::-1], idx)
-        D = jnp.take_along_axis(D, idx, axis=-1)
-        P = jnp.take_along_axis(P, idx[..., None, :], axis=-1)
-        return D, P
-
-    return jax.lax.cond(
-        isherm(x), _eigenstates_herm, _eigenstates_non_herm, x, lower_first
-    )
 
 
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
