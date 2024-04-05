@@ -139,7 +139,7 @@ def _vmap_mesolve(
         False,
     )
 
-    # the result is vectorized over `saved`
+    # the result is vectorized over `_saved` and `infos`
     out_axes = MEResult(None, None, None, None, 0, 0)
 
     # compute vectorized function with given batching strategy
