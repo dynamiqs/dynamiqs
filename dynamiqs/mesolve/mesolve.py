@@ -10,7 +10,12 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
-from ..core._utils import _astimearray, compute_vmap, get_solver_class
+from ..core._utils import (
+    _astimearray,
+    compute_vmap,
+    get_solver_class,
+    is_timearray_batched,
+)
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
@@ -125,8 +130,8 @@ def _vmap_mesolve(
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     is_batched = (
-        H.ndim > 2,
-        [jump_op.ndim > 2 for jump_op in jump_ops],
+        is_timearray_batched(H),
+        [is_timearray_batched(jump_op) for jump_op in jump_ops],
         rho0.ndim > 2,
         False,
         False,
@@ -134,9 +139,11 @@ def _vmap_mesolve(
         False,
         False,
     )
-    # the result is vectorized over `saved`
+
+    # the result is vectorized over `_saved` and `infos`
     out_axes = MEResult(None, None, None, None, 0, 0)
 
+    # compute vectorized function with given batching strategy
     f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
@@ -179,20 +186,17 @@ def _mesolve(
 def _check_mesolve_args(
     H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
-    # === check H shape
     check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
 
-    # === check jump_ops shape
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
+
     if len(jump_ops) == 0:
         logging.warn(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
-    for i, L in enumerate(jump_ops):
-        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
-
-    # === check rho0 shape
     check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
 
     # === check exp_ops shape

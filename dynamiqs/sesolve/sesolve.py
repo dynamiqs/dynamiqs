@@ -9,7 +9,12 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
-from ..core._utils import _astimearray, compute_vmap, get_solver_class
+from ..core._utils import (
+    _astimearray,
+    compute_vmap,
+    get_solver_class,
+    is_timearray_batched,
+)
 from ..gradient import Gradient
 from ..options import Options
 from ..result import SEResult
@@ -107,9 +112,20 @@ def _vmap_sesolve(
 ) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
-    is_batched = (H.ndim > 2, psi0.ndim > 2, False, False, False, False, False)
+    is_batched = (
+        is_timearray_batched(H),
+        psi0.ndim > 2,
+        False,
+        False,
+        False,
+        False,
+        False,
+    )
+
     # the result is vectorized over `saved`
     out_axes = SEResult(None, None, None, None, 0, 0)
+
+    # compute vectorized function with given batching strategy
     f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
 
     # === apply vectorized function
@@ -151,8 +167,6 @@ def _sesolve(
 def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
     # === check H shape
     check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
-
-    # === check psi0 shape
     check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
 
     # === check exp_ops shape

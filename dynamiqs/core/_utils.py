@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver
-from ..time_array import ConstantTimeArray, TimeArray
+from ..time_array import (
+    CallableTimeArray,
+    ConstantTimeArray,
+    ModulatedTimeArray,
+    PWCTimeArray,
+    SummedTimeArray,
+    TimeArray,
+)
 from .abstract_solver import AbstractSolver
 
 
@@ -40,8 +47,8 @@ def get_solver_class(
 def compute_vmap(
     f: callable,
     cartesian_batching: bool,
-    is_batched: list[bool | list[bool]],
-    out_axes: list[int | None],
+    is_batched: PyTree[bool],
+    out_axes: PyTree[int | None],
 ) -> callable:
     # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
     # argument `is_batched` indicates for each argument of `f` whether it is batched.
@@ -67,10 +74,30 @@ def compute_vmap(
                     in_axes = jax.tree_util.tree_map(lambda _: None, leaves)
                     in_axes[n - 1 - i] = 0
                     in_axes = jax.tree_util.tree_unflatten(treedef, in_axes)
-                    f = jax.vmap(f, in_axes=in_axes, out_axes=0)
+                    f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
         else:
             # map over all batched dimensions at once
             in_axes = jax.tree_util.tree_map(lambda x: 0 if x else None, is_batched)
             f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
+
+
+def is_timearray_batched(tarray: TimeArray) -> TimeArray:
+    # This function finds all batched arrays within a given TimeArray.
+    # To do so, it goes down the PyTree and identifies batched fields depending
+    # on the type of TimeArray.
+    if isinstance(tarray, SummedTimeArray):
+        return SummedTimeArray([is_timearray_batched(arr) for arr in tarray.timearrays])
+    elif isinstance(tarray, ConstantTimeArray):
+        return ConstantTimeArray(tarray.array.ndim > 2)
+    elif isinstance(tarray, PWCTimeArray):
+        return PWCTimeArray(False, tarray.values.ndim > 1, False)
+    elif isinstance(tarray, ModulatedTimeArray):
+        return ModulatedTimeArray(
+            False, False, tuple(arg.ndim > 0 for arg in tarray.args)
+        )
+    elif isinstance(tarray, CallableTimeArray):
+        return CallableTimeArray(False, tuple(arg.ndim > 0 for arg in tarray.args))
+    else:
+        raise TypeError(f'Unsupported TimeArray type: {type(tarray).__name__}')
