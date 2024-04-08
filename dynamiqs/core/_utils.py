@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
@@ -27,7 +28,7 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
             return ConstantTimeArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                f'Argument must be an array-like or a time-array object, but has type'
+                'Argument must be an array-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 
@@ -101,3 +102,30 @@ def is_timearray_batched(tarray: TimeArray) -> TimeArray:
         return CallableTimeArray(False, tuple(arg.ndim > 0 for arg in tarray.args))
     else:
         raise TypeError(f'Unsupported TimeArray type: {type(tarray).__name__}')
+
+
+def callable_to_pytree(f: callable[[float], PyTree]) -> PyTree:
+    """Turns the function `f` from a callable that retuns a tree
+    into a tree of callables.
+
+    Example:
+        ```
+            def f(t):
+                return dict(a=t, b=2*t)
+
+            f(1.0) # dict(a=1.0, b=2.0)
+
+            tree = callable_to_pytree(f)
+            tree["a"](1.0) # 1.0
+            tree["b"](1.0) # 2.0
+        ```
+    """
+    new_jaxpr = []
+    closed_jaxpr = jax.make_jaxpr(f)(0.0)
+    structure = jtu.tree_structure(jax.eval_shape(f, 0.0))
+    for i in range(len(closed_jaxpr.jaxpr.outvars)):
+        c_jaxpr = closed_jaxpr.jaxpr.replace(outvars=[closed_jaxpr.jaxpr.outvars[i]])
+        c_jaxpr = jax.core.ClosedJaxpr(c_jaxpr, closed_jaxpr.consts)
+        c_fun = jax.core.jaxpr_as_fun(c_jaxpr)
+        new_jaxpr.append(c_fun)
+    return jtu.tree_unflatten(structure, new_jaxpr)
