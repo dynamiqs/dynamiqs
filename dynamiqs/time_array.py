@@ -12,7 +12,7 @@ from jax.tree_util import Partial
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
-from ._utils import cdtype, obj_type_str
+from ._utils import cdtype, expand_as_broadcastable, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -400,19 +400,23 @@ class ModulatedTimeArray(TimeArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        f_shape = jax.eval_shape(self.f, 0.0, *self.args).shape
+        f_shape = jax.eval_shape(self._call_f, 0.0).shape
         return (*f_shape, *self.array.shape)
 
     @property
     def mT(self) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array.mT, self.args)
 
+    def _call_f(self, t: float) -> Array:
+        args = expand_as_broadcastable(self.args)
+        return self.f(t, *args)
+
     def __call__(self, t: float) -> Array:
-        values = self.f(t, *self.args)
+        values = self._call_f(t)
         return values.reshape(*values.shape, 1, 1) * self.array
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f_shape = jax.eval_shape(self.f, 0.0, *self.args).shape
+        f_shape = jax.eval_shape(self._call_f, 0.0).shape
         new_f_shape, new_array_shape = _split_shape(
             new_shape, f_shape, self.array.shape
         )
@@ -445,19 +449,23 @@ class CallableTimeArray(TimeArray):
 
     @property
     def dtype(self) -> np.dtype:
-        return jax.eval_shape(self.f, 0.0, *self.args).dtype
+        return jax.eval_shape(self._call_f, 0.0).dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return jax.eval_shape(self.f, 0.0, *self.args).shape
+        return jax.eval_shape(self._call_f, 0.0).shape
 
     @property
     def mT(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).mT)
         return CallableTimeArray(f, self.args)
 
+    def _call_f(self, t: float) -> Array:
+        args = expand_as_broadcastable(self.args)
+        return self.f(t, *args)
+
     def __call__(self, t: float) -> Array:
-        return self.f(t, *self.args)
+        return self._call_f(t)
 
     def reshape(self, *new_shape: int) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_shape))
