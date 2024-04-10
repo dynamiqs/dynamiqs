@@ -4,6 +4,7 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 
+from .._checks import check_times
 from .utils import colors, optional_ax
 
 __all__ = ['plot_pwc_pulse']
@@ -19,15 +20,16 @@ def plot_pwc_pulse(
     real_color: str = colors['blue'],
     imag_color: str = colors['purple'],
 ):
-    """Plot a piecewise-constant pulse.
+    """Plot a piecewise constant pulse.
 
     Warning:
         Documentation redaction in progress.
 
     Examples:
         >>> n = 20
-        >>> times = np.linspace(0, 1.0, n+1)
-        >>> values = dq.rand_complex(n, seed=42)
+        >>> times = np.linspace(0, 1.0, n + 1)
+        >>> key = jax.random.PRNGKey(42)
+        >>> values = dq.rand_complex(key, n)
         >>> dq.plot_pwc_pulse(times, values)
         >>> renderfig('plot_pwc_pulse')
 
@@ -35,6 +37,7 @@ def plot_pwc_pulse(
     """
     times = jnp.asarray(times)  # (n + 1)
     values = jnp.asarray(values)  # (n)
+    times = check_times(times, 'times')
 
     # format times and values, for example:
     # times  = [0, 1, 2, 3] -> [0, 1, 1, 2, 2, 3]

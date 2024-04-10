@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-from collections import namedtuple
 from typing import Any
 
-import diffrax as dx
-from jax import numpy as jnp
-from jaxtyping import Array
-
-from .gradient import Adjoint, Autograd
-from .utils import dag, isket
+import equinox as eqx
+import jax.numpy as jnp
+from jaxtyping import Array, ArrayLike, PyTree
 
 
-def type_str(type: Any) -> str:
+def type_str(type: Any) -> str:  # noqa: A002
     if type.__module__ in ('builtins', '__main__'):
         return f'`{type.__name__}`'
     else:
@@ -22,73 +18,46 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def check_time_array(x: Array, arg_name: str, allow_empty: bool = False):
-    # check that a time array is valid (it must be a 1D array sorted in strictly
-    # ascending order and containing only positive values)
-    if x.ndim != 1:
-        raise ValueError(
-            f'Argument `{arg_name}` must be a 1D array, but is a {x.ndim}D array.'
-        )
-    if not allow_empty and len(x) == 0:
-        raise ValueError(f'Argument `{arg_name}` must contain at least one element.')
-    if not jnp.all(jnp.diff(x) > 0):
-        raise ValueError(
-            f'Argument `{arg_name}` must be sorted in strictly ascending order.'
-        )
-    if not jnp.all(x >= 0):
-        raise ValueError(f'Argument `{arg_name}` must contain positive values only.')
+def on_cpu(x: Array) -> str:
+    # TODO: this is a temporary solution, it won't work when we have multiple devices
+    return x.devices().pop().device_kind == 'cpu'
 
 
-def bexpect(O: Array, x: Array) -> Array:
-    # batched over O
-    if isket(x):
-        return jnp.einsum('ij,bjk,kl->b', dag(x), O, x)  # <x|O|x>
-    return jnp.einsum('bij,ji->b', O, x)  # tr(Ox)
+def _get_default_dtype() -> jnp.float32 | jnp.float64:
+    default_dtype = jnp.array(0.0).dtype
+    return jnp.float64 if default_dtype == jnp.float64 else jnp.float32
 
 
-SolverArgs = namedtuple('SolverArgs', ['save_states', 'exp_ops'])
+def cdtype() -> jnp.complex64 | jnp.complex128:
+    # the default dtype for complex arrays is determined by the default floating point
+    # dtype
+    dtype = _get_default_dtype()
+    if dtype is jnp.float32:
+        return jnp.complex64
+    elif dtype is jnp.float64:
+        return jnp.complex128
+    else:
+        raise ValueError(f'Data type `{dtype.dtype}` is not yet supported.')
 
 
-def save_fn(_t, y, args: SolverArgs):
-    res = {}
-    if args.save_states:
-        res['states'] = y
-    if args.exp_ops is not None and len(args.exp_ops) > 0:
-        res['expects'] = bexpect(args.exp_ops, y)
-    return res
+def tree_str_inline(x: PyTree) -> str:
+    # return an inline formatting of a pytree as a string
+    return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
 
 
-def _get_solver_class(solver, solvers):
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers.keys())
-        raise ValueError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
-        )
-    solver_class = solvers[type(solver)]
-    return solver_class
+def expand_as_broadcastable(arrays: tuple[ArrayLike, ...]) -> tuple[ArrayLike, ...]:
+    arrays = tuple([jnp.asarray(arr) for arr in arrays])
+    expanded_arrays = []
 
+    # number of dimensions of the expanded arrays
+    num_dims = sum([arr.ndim for arr in arrays])
 
-def _get_adjoint_class(gradient, solver):
-    if gradient is None:
-        return dx.RecursiveCheckpointAdjoint
+    # loop over the arrays and expand them
+    k = 0
+    for arr in arrays:
+        new_shape = [-1 if i in range(k, k + arr.ndim) else 1 for i in range(num_dims)]
+        new_arr = arr.reshape(new_shape)
+        expanded_arrays.append(new_arr)
+        k += arr.ndim
 
-    adjoints = {
-        Autograd: dx.RecursiveCheckpointAdjoint,
-        Adjoint: dx.BacksolveAdjoint,
-    }
-    if not isinstance(gradient, tuple(adjoints.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in adjoints.keys())
-        raise ValueError(
-            f'Gradient of type `{type(gradient).__name__}` is not supported'
-            f' (supported gradient types: {supported_str}).'
-        )
-    elif not solver.supports_gradient(gradient):
-        support_str = ', '.join(f'`{x.__name__}`' for x in solver.SUPPORTED_GRADIENT)
-        raise ValueError(
-            f'Solver `{type(solver).__name__}` does not support gradient'
-            f' `{type(gradient).__name__}` (supported gradient types: {support_str}).'
-        )
-
-    gradient_class = adjoints[type(gradient)]
-    return gradient_class
+    return tuple(expanded_arrays)

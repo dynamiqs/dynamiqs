@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from typing import Any
-
+import equinox as eqx
 from jax import Array
+from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
 from .solver import Solver
+
+__all__ = ['SEResult', 'MEResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -24,96 +25,61 @@ def memory_str(x: Array) -> str:
         return f'{mem / 1024**3:.2f} Gb'
 
 
-def array_str(x: Array) -> str:
-    return f'Array {tuple(x.shape)} | {memory_str(x)}'
+def array_str(x: Array | None) -> str | None:
+    return None if x is None else f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
-class Result:
-    def __init__(
-        self,
-        options: Options,
-        ysave: Array,
-        tsave: Array,
-        Esave: Array | None,
-        Lmsave: Array | None = None,
-        tmeas: Array | None = None,
-    ):
-        self._options = options
-        self.ysave = ysave
-        self.tsave = tsave
-        self.Esave = Esave
-        self.Lmsave = Lmsave
-        self.tmeas = tmeas
-        self.start_time: float | None = None
-        self.end_time: float | None = None
+# the Saved object holds quantities saved during the equation integration
+class Saved(eqx.Module):
+    ysave: Array
+    Esave: Array | None
+    extra: PyTree | None
 
-    @property
-    def solver(self) -> Solver:
-        return self._options.solver
 
-    @property
-    def gradient(self) -> Gradient:
-        return self._options.gradient
-
-    @property
-    def options(self) -> dict[str, Any]:
-        return self._options.options
+class Result(eqx.Module):
+    tsave: Array
+    solver: Solver
+    gradient: Gradient | None
+    options: Options
+    _saved: Saved
+    infos: PyTree | None
 
     @property
     def states(self) -> Array:
-        # alias for ysave
-        return self.ysave
-
-    @property
-    def times(self) -> Array:
-        # alias for tsave
-        return self.tsave
+        return self._saved.ysave
 
     @property
     def expects(self) -> Array | None:
-        # alias for Esave
-        return self.Esave
+        return self._saved.Esave
 
     @property
-    def measurements(self) -> Array | None:
-        # alias for Lmsave
-        return self.Lmsave
+    def extra(self) -> PyTree | None:
+        return self._saved.extra
 
-    @property
-    def start_datetime(self) -> datetime | None:
-        if self.start_time is None:
-            return None
-        return datetime.fromtimestamp(self.start_time)
-
-    @property
-    def end_datetime(self) -> datetime | None:
-        if self.end_time is None:
-            return None
-        return datetime.fromtimestamp(self.end_time)
-
-    @property
-    def total_time(self) -> timedelta | None:
-        if self.start_datetime is None or self.end_datetime is None:
-            return None
-        return self.end_datetime - self.start_datetime
+    def _str_parts(self) -> dict[str, str]:
+        return {
+            'Solver  ': type(self.solver).__name__,
+            'Gradient': (
+                type(self.gradient).__name__ if self.gradient is not None else None
+            ),
+            'States  ': array_str(self.states),
+            'Expects ': array_str(self.expects),
+            'Extra   ': (
+                eqx.tree_pformat(self.extra) if self.extra is not None else None
+            ),
+            'Infos   ': self.infos if self.infos is not None else None,
+        }
 
     def __str__(self) -> str:
-        parts = {
-            'Solver': type(self.solver).__name__,
-            'Gradient': type(self.gradient).__name__ if self.gradient else None,
-            'Start': self.start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-            'End': self.end_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-            'Total time': f'{self.total_time.total_seconds():.2f} s',
-            'States': array_str(self.states),
-            'Expects': array_str(self.expects) if self.expects is not None else None,
-            'Measurements': (
-                array_str(self.measurements) if self.measurements is not None else None
-            ),
-        }
+        parts = self._str_parts()
+
+        # remove None values
         parts = {k: v for k, v in parts.items() if v is not None}
-        padding = max(len(k) for k in parts.keys()) + 1
+
+        # pad to align colons
+        padding = max(len(k) for k in parts) + 1
         parts_str = '\n'.join(f'{k:<{padding}}: {v}' for k, v in parts.items())
-        return '==== Result ====\n' + parts_str
+        return f'==== {self.__class__.__name__} ====\n' + parts_str
 
     def to_qutip(self) -> Result:
         raise NotImplementedError
@@ -121,8 +87,36 @@ class Result:
     def to_numpy(self) -> Result:
         raise NotImplementedError
 
-    def save(self, filename: str):
-        raise NotImplementedError
 
-    def load(self, filename: str) -> Result:
-        raise NotImplementedError
+class SEResult(Result):
+    """Result of the Schrödinger equation integration.
+
+    Attributes:
+        states _(array of shape (nH?, npsi0?, ntsave, n, 1))_: Saved states.
+        expects _(array of shape (nH?, npsi0?, nE, ntsave) or None)_: Saved expectation
+            values, if specified by `exp_ops`.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options`.
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+    """
+
+
+class MEResult(Result):
+    """Result of the Lindblad master equation integration.
+
+    Attributes:
+        states _(array of shape (nH?, nrho0?, ntsave, n, n))_: Saved states.
+        expects _(array of shape (nH?, nrho0?, nE, ntsave) or None)_: Saved expectation
+            values, if specified by `exp_ops`.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options`.
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+    """

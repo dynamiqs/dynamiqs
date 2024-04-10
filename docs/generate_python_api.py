@@ -1,5 +1,6 @@
 """Automatically generate the Python API documentation pages by parsing the public
-functions from `__all__`."""
+functions from `__all__`.
+"""
 
 import re
 from pathlib import Path
@@ -7,20 +8,28 @@ from pathlib import Path
 import mkdocs_gen_files
 
 PATHS_TO_PARSE = [
-    'dynamiqs/utils/operators.py',
-    'dynamiqs/utils/states.py',
-    'dynamiqs/utils/utils.py',
-    'dynamiqs/utils/array_types.py',
-    'dynamiqs/utils/wigners.py',
-    'dynamiqs/utils/vectorization.py',
-    'dynamiqs/utils/optimal_control.py',
-    'dynamiqs/plots/namespace.py',
+    # files
+    ('dynamiqs/utils/operators.py', 'dq'),
+    ('dynamiqs/utils/states.py', 'dq'),
+    ('dynamiqs/utils/jax_utils.py', 'dq'),
+    ('dynamiqs/utils/vectorization.py', 'dq'),
+    ('dynamiqs/utils/optimal_control.py', 'dq'),
+    ('dynamiqs/utils/random.py', 'dq'),
+    ('dynamiqs/time_array.py', 'dq'),
+    ('dynamiqs/solver.py', 'dq.solver'),
+    ('dynamiqs/gradient.py', 'dq.gradient'),
+    ('dynamiqs/solvers.py', 'dq'),
+    ('dynamiqs/result.py', 'dq'),
+    ('dynamiqs/options.py', 'dq'),
+    # directories
+    ('dynamiqs/plots', 'dq'),
+    ('dynamiqs/utils/utils', 'dq'),
 ]
 
 
 def get_elements_from_all(file_path):
     """Parse a file to find all elements of the `__all__` attribute."""
-    with open(file_path, 'r') as f:
+    with Path.open(file_path) as f:
         contents = f.read()
 
         # capture list assigned to __all__ with a regular expression (the `[^\]]+` part
@@ -38,14 +47,18 @@ def get_elements_from_all(file_path):
             return []
 
 
-# generate a documentation file for each function of each file
-for path in PATHS_TO_PARSE:
-    # start with e.g. 'dynamiqs/utils/operators.py'
+# generate a documentation file for each function of each file/directory
+for path, namespace in PATHS_TO_PARSE:
+    # start with e.g. 'dynamiqs/utils/operators.py' or 'dynamiqs/plots'
     src_path = Path(path)
-    # convert to e.g 'python_api/utils/operators'
+    # convert to e.g 'python_api/utils/operators' or 'python_api/plots'
     doc_path = Path('python_api', *src_path.parts[1:]).with_suffix('')
-    # convert to e.g 'dynamiqs.utils.operators'
+    # convert to e.g 'dynamiqs.utils.operators' or 'dynamiqs.plots'
     identifier = src_path.with_suffix('').as_posix().replace('/', '.')
+
+    # for a directory, we get the functions from the `__init__.py` file
+    if src_path.is_dir():
+        src_path = src_path / '__init__.py'
 
     # loop over all functions in file
     for function in get_elements_from_all(src_path):
@@ -56,5 +69,7 @@ for path in PATHS_TO_PARSE:
         with mkdocs_gen_files.open(doc_path_function, 'w') as f:
             module = identifier.split('.')[0]
             print(f'::: {identifier}.{function}', file=f)
+            print('    options:', file=f)
+            print(f'        namespace: {namespace}', file=f)
 
         mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)

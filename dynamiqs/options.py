@@ -1,61 +1,60 @@
 from __future__ import annotations
 
-from typing import Any
+import equinox as eqx
+import jax
+from jax import Array
+from jaxtyping import PyTree, ScalarLike
 
-import jax.numpy as jnp
 
-from .gradient import Gradient
-from .solver import Solver
-from .utils.array_types import dtype_complex_to_real, get_cdtype
+from _utils import tree_str_inline
 from .progress_bar import TqdmProgressBar
 
+__all__ = ['Options']
 
-class Options:
+
+class Options(eqx.Module):
+    """Generic options for the quantum solvers.
+
+    Args:
+        save_states: If `True`, the state is saved at every time in `tsave`,
+            otherwise only the final state is returned.
+        verbose: If `True`, print information about the integration, otherwise
+            nothing is printed.
+        cartesian_batching: If `True`, batched arguments are treated as separated
+            batch dimensions, otherwise the batching is performed over a single
+            shared batched dimension.
+        t0: Initial time. If `None`, defaults to the first time in `tsave`.
+        save_extra _(function, optional)_: A function with signature
+            `f(Array) -> PyTree` that takes a state as input and returns a PyTree.
+            This can be used to save additional arbitrary data during the
+            integration.
+    """
+
+    save_states: bool = True
+    verbose: bool = True
+    cartesian_batching: bool = True
+    t0: ScalarLike | None = None
+    save_extra: callable[[Array], PyTree] | None = None
+
     def __init__(
         self,
-        solver: Solver,
-        gradient: Gradient | None,
-        options: dict[str, Any] | None,
-    ):
-        if options is None:
-            options = {}
-
-        self.solver = solver
-        self.gradient = gradient
-        self.options = SharedOptions(**options)
-
-    def __getattr__(self, name: str) -> Any:
-        if name in dir(self.solver):
-            return getattr(self.solver, name)
-        elif name in dir(self.gradient):
-            return getattr(self.gradient, name)
-        elif name in dir(self.options):
-            return getattr(self.options, name)
-        else:
-            raise AttributeError(
-                f'Attribute `{name}` not found in `{type(self).__name__}`.'
-            )
-
-
-class SharedOptions:
-    def __init__(
-        self,
-        *,
         save_states: bool = True,
         verbose: bool = True,
-        dtype: jnp.complex64 | jnp.complex128 | None = None,
         cartesian_batching: bool = True,
         progress_bar: AbstractProgressBar = TqdmProgressBar(),
+        t0: ScalarLike | None = None,
+        save_extra: callable[[Array], PyTree] | None = None,
     ):
-        # save_states (bool, optional): If `True`, the state is saved at every
-        #     time value. If `False`, only the final state is stored and returned.
-        #     Defaults to `True`.
-        # dtype (jax.numpy.dtype, optional): Complex data type to which all
-        #     complex-valued arrays are converted. `tsave` is also converted to a real
-        #     data type of the corresponding precision.
         self.save_states = save_states
         self.verbose = verbose
-        self.cdtype = get_cdtype(dtype)
-        self.rdtype = dtype_complex_to_real(self.cdtype)
         self.cartesian_batching = cartesian_batching
         self.progress_bar = progress_bar
+        self.t0 = t0
+
+        # make `save_extra` a valid Pytree with `jax.tree_util.Partial`
+        if save_extra is not None:
+            save_extra = jax.tree_util.Partial(save_extra)
+        self.save_extra = save_extra
+
+    def __str__(self) -> str:
+        return tree_str_inline(self)

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape
 from .operators import eye
-from .utils import _bkron, dag
+from .utils import dag
+from .utils.general import _bkron
 
 __all__ = [
     'operator_to_vector',
@@ -36,19 +39,20 @@ def operator_to_vector(x: ArrayLike) -> Array:
         _(array of shape (..., n^2, 1))_ Vectorized operator.
 
     Examples:
-        >>> A = jnp.array([[1, 2], [3, 4]])
+        >>> A = jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
         >>> A
-        Array([[1, 2],
-               [3, 4]], dtype=int32)
+        Array([[1.+1.j, 2.+2.j],
+               [3.+3.j, 4.+4.j]], dtype=complex64)
         >>> dq.operator_to_vector(A)
-        Array([[1],
-               [3],
-               [2],
-               [4]], dtype=int32)
+        Array([[1.+1.j],
+               [3.+3.j],
+               [2.+2.j],
+               [4.+4.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
-    return dag(x).reshape(*bshape, -1, 1)
+    return x.mT.reshape(*bshape, -1, 1)
 
 
 def vector_to_operator(x: ArrayLike) -> Array:
@@ -70,20 +74,21 @@ def vector_to_operator(x: ArrayLike) -> Array:
         _(array of shape (..., n, n))_ Operator.
 
     Examples:
-        >>> Avec = jnp.array([[1], [2], [3], [4]])
+        >>> Avec = jnp.array([[1 + 1j], [2 + 2j], [3 + 3j], [4 + 4j]])
         >>> Avec
-        Array([[1],
-               [2],
-               [3],
-               [4]], dtype=int32)
+        Array([[1.+1.j],
+               [2.+2.j],
+               [3.+3.j],
+               [4.+4.j]], dtype=complex64)
         >>> dq.vector_to_operator(Avec)
-        Array([[1, 3],
-               [2, 4]], dtype=int32)
+        Array([[1.+1.j, 3.+3.j],
+               [2.+2.j, 4.+4.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    batch_sizes = x.shape[:-2]
-    n = int(jnp.sqrt(x.shape[-2]))
-    return x.reshape(*batch_sizes, n, n).mT
+    check_shape(x, 'x', '(..., n^2, 1)')
+    bshape = x.shape[:-2]
+    n = int(np.sqrt(x.shape[-2]))
+    return x.reshape(*bshape, n, n).mT
 
 
 def spre(x: ArrayLike) -> Array:
@@ -106,9 +111,10 @@ def spre(x: ArrayLike) -> Array:
         (9, 9)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
-    I = eye(n)
-    return _bkron(I, x)
+    Id = eye(n)
+    return _bkron(Id, x)
 
 
 def spost(x: ArrayLike) -> Array:
@@ -131,9 +137,10 @@ def spost(x: ArrayLike) -> Array:
         (9, 9)
     """
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
-    I = eye(n)
-    return _bkron(dag(x), I)
+    Id = eye(n)
+    return _bkron(x.mT, Id)
 
 
 def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
@@ -158,6 +165,8 @@ def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
+    check_shape(x, 'x', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, n)')
     return _bkron(y.mT, x)
 
 
@@ -184,6 +193,7 @@ def sdissipator(L: ArrayLike) -> Array:
         _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
     """
     L = jnp.asarray(L)
+    check_shape(L, 'L', '(..., n, n)')
     Ldag = dag(L)
     LdagL = Ldag @ L
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
@@ -219,7 +229,9 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
-    """  # noqa: E501
+    """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
+    check_shape(H, 'H', '(..., n, n)')
+    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
     return -1j * (spre(H) - spost(H)) + sdissipator(jump_ops).sum(0)

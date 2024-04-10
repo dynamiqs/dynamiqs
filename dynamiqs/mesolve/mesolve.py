@@ -1,123 +1,204 @@
 from __future__ import annotations
 
-import warnings
-from typing import Any
+import logging
+from functools import partial
 
-import diffrax as dx
+import jax
 import jax.numpy as jnp
-import numpy as np
+from jax import Array
 from jaxtyping import ArrayLike
 
-from .._utils import SolverArgs, _get_adjoint_class, _get_solver_class, save_fn
-from ..gradient import Autograd, Gradient
+from .._checks import check_shape, check_times
+from .._utils import cdtype
+from ..core._utils import (
+    _astimearray,
+    compute_vmap,
+    get_solver_class,
+    is_timearray_batched,
+)
+from ..gradient import Gradient
 from ..options import Options
-from ..result import Result
-from ..solver import Dopri5, Rouchon1, Solver, _stepsize_controller
-from ..time_array import TimeArray, totime
+from ..result import MEResult
+from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
+from ..time_array import TimeArray
 from ..utils.utils import todm
-from .lindblad_term import LindbladTerm
-from .rouchon import Rouchon1Solver
+from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
+from .mepropagator import MEPropagator
+
+__all__ = ['mesolve']
 
 
 def mesolve(
-    H: ArrayLike,
-    jump_ops: ArrayLike,
+    H: ArrayLike | TimeArray,
+    jump_ops: list[ArrayLike | TimeArray],
     rho0: ArrayLike,
     tsave: ArrayLike,
     *,
-    exp_ops: ArrayLike | None = None,
-    solver: Solver = Dopri5(),
-    gradient: Gradient = Autograd(),
-    options: dict[str, Any] | None = None,
-):
-    # === options
-    options = Options(solver=solver, gradient=gradient, options=options)
+    exp_ops: list[ArrayLike] | None = None,
+    solver: Solver = Tsit5(),  # noqa: B008
+    gradient: Gradient | None = None,
+    options: Options = Options(),  # noqa: B008
+) -> MEResult:
+    r"""Solve the Lindblad master equation.
 
-    # === solver class
-    solvers = {Dopri5: dx.Dopri5, Rouchon1: Rouchon1Solver}
-    solver_class = _get_solver_class(solver, solvers)
+    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
+    starting from an initial state $\rho_0$, according to the Lindblad master
+    equation ($\hbar=1$)
+    $$
+        \frac{\dd\rho(t)}{\dt} = -i[H(t), \rho(t)]
+        + \sum_{k=1}^N \left(
+            L_k(t) \rho(t) L_k^\dag(t)
+            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
+            - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
+        \right),
+    $$
+    where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
+    collection of jump operators at time $t$.
 
-    # === adjoint class
-    adjoint_class = _get_adjoint_class(gradient, solver)
+    Quote: Time-dependent Hamiltonian or jump operators
+        If the Hamiltonian or the jump operators depend on time, they can be converted
+        to time-arrays using [`dq.constant()`][dynamiqs.constant],
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable]. See
+        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        tutorial for more details.
 
-    # === stepsize controller
-    stepsize_controller, dt = _stepsize_controller(solver)
+    Quote: Running multiple simulations concurrently
+        The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
+        matrix `rho0` can be batched to solve multiple master equations concurrently.
+        All other arguments are common to every batch. See the
+        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
+        more details.
 
-    # === solve differential equation with diffrax
-    H = totime(H)
-    Ls = [totime(L) for L in jump_ops]
-    Ls = format_L(Ls)
-    term = LindbladTerm(H=H, Ls=Ls)
-    if exp_ops is not None:
-        exp_ops = jnp.asarray(exp_ops)
-    else:
-        exp_ops = jnp.empty(0)
+    Args:
+        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
+        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
+            jump operators.
+        rho0 _(array-like of shape (nrho0?, n, 1) or (nrho0?, n, n))_: Initial state.
+        tsave _(array-like of shape (ntsave,))_: Times at which the states and
+            expectation values are saved. The equation is solved from `tsave[0]` to
+            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
+            operators for which the expectation value is computed.
+        solver: Solver for the integration. Defaults to
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
+            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Euler`][dynamiqs.solver.Euler],
+            [`Rouchon1`][dynamiqs.solver.Rouchon1],
+            [`Rouchon2`][dynamiqs.solver.Rouchon2],
+            [`Propagator`][dynamiqs.solver.Propagator]).
+        gradient: Algorithm used to compute the gradient.
+        options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
-    # todo: remove once complex support is stabilized in diffrax
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', UserWarning)
-        solution = dx.diffeqsolve(
-            term,
-            solver_class(),
-            t0=tsave[0],
-            t1=tsave[-1],
-            dt0=dt,
-            y0=todm(rho0),
-            args=SolverArgs(save_states=options.save_states, exp_ops=exp_ops),
-            saveat=dx.SaveAt(ts=tsave, fn=save_fn),
-            stepsize_controller=stepsize_controller,
-            adjoint=adjoint_class(),
-            progress_meter=options.progress_bar,
-        )
+    Returns:
+        [`dq.MEResult`][dynamiqs.MEResult] object holding the result of the Lindblad
+            master  equation integration. Use the attributes `states` and `expects`
+            to access saved quantities, more details in
+            [`dq.MEResult`][dynamiqs.MEResult].
+    """
+    # === convert arguments
+    H = _astimearray(H)
+    jump_ops = [_astimearray(L) for L in jump_ops]
+    rho0 = jnp.asarray(rho0, dtype=cdtype())
+    tsave = jnp.asarray(tsave)
+    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
-    ysave = None
-    if options.save_states:
-        ysave = solution.ys['states']
+    # === check arguments
+    _check_mesolve_args(H, jump_ops, rho0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
 
-    Esave = None
-    if 'expects' in solution.ys:
-        Esave = jnp.stack(solution.ys['expects'].T, axis=0)
+    # === convert rho0 to density matrix
+    rho0 = todm(rho0)
 
-    return Result(
-        options,
-        ysave=ysave,
-        Esave=Esave,
-        tsave=solution.ts,
+    # we implement the jitted vmap in another function to pre-convert QuTiP objects
+    # (which are not JIT-compatible) to JAX arrays
+    return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+
+
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _vmap_mesolve(
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> MEResult:
+    # === vectorize function
+    # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
+    is_batched = (
+        is_timearray_batched(H),
+        [is_timearray_batched(jump_op) for jump_op in jump_ops],
+        rho0.ndim > 2,
+        False,
+        False,
+        False,
+        False,
+        False,
     )
 
+    # the result is vectorized over `_saved` and `infos`
+    out_axes = MEResult(None, None, None, None, 0, 0)
 
-def format_L(Ls: list[TimeArray]) -> list[TimeArray]:
-    # Format a list of TimeArrays of individual shape (n, n) or (?, n, n) into a list of
-    # TimeArrays of shape (bL, n, n) where bL is a common batch size. An error is
-    # raised if all batched dimensions `?` do not match.
-    n = Ls[0].shape[-1]
-    Ls = [L.reshape(-1, n, n) for L in Ls]  # [(?, n, n)] with ? = 1 if not batched
+    # compute vectorized function with given batching strategy
+    f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
 
-    bL = common_batch_size([L.shape[0] for L in Ls])
-    if bL is None:
-        L_shapes = [tuple(L.shape) for L in Ls]
-        raise ValueError(
-            'Argument `jump_ops` should be a list of 2D arrays or 3D arrays with the'
-            ' same batch size, but got a list of arrays with incompatible shapes'
-            f' {L_shapes}.'
+    # === apply vectorized function
+    return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+
+
+def _mesolve(
+    H: TimeArray,
+    jump_ops: list[TimeArray],
+    rho0: Array,
+    tsave: Array,
+    exp_ops: Array | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> MEResult:
+    # === select solver class
+    solvers = {
+        Euler: MEEuler,
+        Dopri5: MEDopri5,
+        Dopri8: MEDopri8,
+        Tsit5: METsit5,
+        Propagator: MEPropagator,
+    }
+    solver_class = get_solver_class(solvers, solver)
+
+    # === check gradient is supported
+    solver.assert_supports_gradient(gradient)
+
+    # === init solver
+    solver = solver_class(tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops)
+
+    # === run solver
+    result = solver.run()
+
+    # === return result
+    return result  # noqa: RET504
+
+
+def _check_mesolve_args(
+    H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
+):
+    check_shape(H, 'H', '(..., n, n)')
+
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
+
+    if len(jump_ops) == 0:
+        logging.warn(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
         )
 
-    Ls_formatted = []
-    for L in Ls:
-        if L.ndim == 3:
-            Ls_formatted.append(L if bL > 1 else L.reshape(n, n))
-        elif L.ndim == 2:
-            Ls_formatted.append(L.repeat(bL, 0) if bL > 1 else L)
-        else:
-            raise Exception(f'Unexpected dimension {L.ndim}.')
+    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
 
-    return Ls_formatted
-
-
-def common_batch_size(dims: list[int]) -> int | None:
-    # If `dims` is a list with two values 1 and x, returns x. If it contains only
-    # 1, returns 1. Otherwise, returns `None`.
-    bs = np.unique(dims)
-    if (1 not in bs and len(bs) > 1) or len(bs) > 2:
-        return None
-    return bs.max().item()
+    # === check exp_ops shape
+    if exp_ops is not None:
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})

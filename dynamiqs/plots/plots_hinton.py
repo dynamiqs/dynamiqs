@@ -4,14 +4,15 @@ from itertools import product
 
 import jax.numpy as jnp
 import matplotlib as mpl
-import matplotlib.patches as patches
 import numpy as np
 from jax import Array
 from jax.typing import ArrayLike
+from matplotlib import patches
 from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
+from .._checks import check_shape
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['plot_hinton']
@@ -105,7 +106,7 @@ def _plot_hinton(
     # squares areas
     areas = areas.T.flatten()
     # squares colors
-    cmap = mpl.colormaps.get_cmap(cmap)
+    cmap = mpl.colormaps[cmap]
     colors = cmap(colors.T).reshape(-1, 4)
     _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 
@@ -125,7 +126,7 @@ def plot_hinton(
     cmap: str | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
-    colorbar: 'bool' = True,
+    colorbar: bool = True,
     allticks: bool = False,
     tickslabel: list[str] | None = None,
     ecolor: str = 'white',
@@ -151,18 +152,14 @@ def plot_hinton(
 
         ![plot_hinton_hamiltonian](/figs-code/plot_hinton_hamiltonian.png){.fig-half}
 
-        >>> cnot = jnp.array(
-        ...     [[1, 0, 0, 0],
-        ...      [0, 1, 0, 0],
-        ...      [0, 0, 0, 1],
-        ...      [0, 0, 1, 0]],
-        ...  )
+        >>> cnot = jnp.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
         >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
         ![plot_hinton_cnot](/figs-code/plot_hinton_cnot.png){.fig-half}
 
-        >>> x = dq.rand_complex((16, 16))
+        >>> key = jax.random.PRNGKey(42)
+        >>> x = dq.rand_complex(key, (16, 16))
         >>> dq.plot_hinton(x)
         >>> renderfig('plot_hinton_rand_complex')
 
@@ -192,11 +189,7 @@ def plot_hinton(
         ![plot_hinton_large](/figs-code/plot_hinton_large.png){.fig}
     """  # noqa: E501
     x = jnp.asarray(x)
-
-    if x.ndim != 2 or x.shape[0] != x.shape[1]:
-        raise ValueError(
-            f'Argument `x` must be a 2D square array, but has shape {x.shape}.'
-        )
+    check_shape(x, 'x', '(n, n)')
 
     # set different defaults, areas and colors for real matrix, positive real matrix
     # and complex matrix

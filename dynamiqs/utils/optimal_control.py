@@ -1,124 +1,19 @@
 from __future__ import annotations
 
-import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape
+from .._utils import cdtype
 from ..utils.operators import displace
 from ..utils.states import fock
 from ..utils.utils import tensor, tobra
-from .array_types import dtype_complex_to_real, get_cdtype, get_rdtype
 
-__all__ = ['rand_real', 'rand_complex', 'snap_gate', 'cd_gate']
-
-
-def rand_real(
-    shape: int | tuple[int, ...],
-    *,
-    min: float = 0.0,
-    max: float = 1.0,
-    seed: int = 0,
-    dtype: jnp.float32 | jnp.float64 | None = None,
-) -> Array:
-    r"""Returns an array filled with uniformly distributed random real numbers.
-
-    Each element of the returned array is sampled uniformly in
-    $[\text{min}, \text{max})$.
-
-    Args:
-        shape _(int or tuple of ints)_: Shape of the returned array.
-        min: Minimum (inclusive) value.
-        max: Maximum (exclusive) value.
-        seed: Seed for the random number generator.
-        dtype: Complex data type of the returned array.
-
-    Returns:
-        _(array of shape (*shape))_ Array filled with random real numbers.
-
-    Examples:
-        >>> dq.rand_real((2, 5), max=5.0, seed=42)
-        Array([[3.22 , 1.613, 0.967, 4.432, 4.21 ],
-               [0.96 , 1.726, 1.262, 3.16 , 3.274]], dtype=float32)
-    """
-    dtype = get_rdtype(dtype)
-    shape = (shape,) if isinstance(shape, int) else shape
-
-    # define PRNG key from seed
-    key = jax.random.PRNGKey(seed)
-
-    # sample uniformly in [min, max)
-    return jax.random.uniform(key, shape=shape, dtype=dtype, minval=min, maxval=max)
+__all__ = ['snap_gate', 'cd_gate']
 
 
-def rand_complex(
-    shape: int | tuple[int, ...],
-    *,
-    rmax: float = 1.0,
-    seed: int = 0,
-    dtype: jnp.complex64 | jnp.complex128 | None = None,
-) -> Array:
-    r"""Returns an array filled with random complex numbers uniformly distributed in
-    the complex plane.
-
-    Each element of the returned array is sampled uniformly in the disk of radius
-    $\text{rmax}$.
-
-    Notes-: Uniform sampling in the complex plane
-        Here are three common options to generate random complex numbers,
-        `dq.rand_complex()` returns the last one:
-
-        ```python
-        _, (ax0, ax1, ax2) = dq.gridplot(3, sharex=True, sharey=True)
-        ax0.set(xlim=(-1.1, 1.1), ylim=(-1.1, 1.1))
-
-        n = 10_000
-
-        # option 1: uniformly distributed real and imaginary part
-        x = np.random.rand(n) * 2 - 1 + 1j * (np.random.rand(n) * 2 - 1)
-        ax0.scatter(x.real, x.imag, s=1.0)
-
-        # option 2: uniformly distributed magnitude and phase
-        x = np.random.rand(n) * np.exp(1j * 2 * np.pi * np.random.rand(n))
-        ax1.scatter(x.real, x.imag, s=1.0)
-
-        # option 3: uniformly distributed in a disk (in dynamiqs)
-        x = dq.rand_complex(n)
-        ax2.scatter(x.real, x.imag, s=1.0)
-        renderfig('rand_complex')
-        ```
-
-        ![rand_complex](/figs-code/rand_complex.png){.fig}
-
-    Args:
-        shape _(int or tuple of ints)_: Shape of the returned array.
-        rmax: Maximum magnitude.
-        seed: Seed for the random number generator.
-        dtype: Complex data type of the returned array.
-
-    Returns:
-        _(array of shape (*shape))_ Array filled with random complex numbers.
-
-    Examples:
-        >>> dq.rand_complex((2, 3), rmax=5.0, seed=42)
-        Array([[ 1.341+4.17j ,  3.978-0.979j, -2.592-0.946j],
-               [-4.428+1.744j, -0.53 +1.668j,  2.582+0.65j ]], dtype=complex64)
-    """
-    cdtype = get_cdtype(dtype)
-    rdtype = dtype_complex_to_real(cdtype)
-    shape = (shape,) if isinstance(shape, int) else shape
-
-    # define PRNG key from seed
-    key = jax.random.PRNGKey(seed)
-
-    # sample uniformly in the unit L2 ball and scale
-    x = rmax * jax.random.ball(key, 2, shape=shape, dtype=rdtype)
-    return x[..., 0] + 1j * x[..., 1]
-
-
-def snap_gate(
-    phase: ArrayLike, *, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array:
+def snap_gate(phase: ArrayLike) -> Array:
     r"""Returns a SNAP gate.
 
     The *selective number-dependent arbitrary phase* (SNAP) gate imparts a different
@@ -131,7 +26,6 @@ def snap_gate(
     Args:
         phase _(array_like of shape (..., n))_: Phase for each Fock state. The last
             dimension of the array _n_ defines the Hilbert space dimension.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (..., n, n))_ SNAP gate operator.
@@ -144,17 +38,15 @@ def snap_gate(
         >>> dq.snap_gate([[0, 1, 2], [2, 3, 4]]).shape
         (2, 3, 3)
     """
-    cdtype = get_cdtype(dtype)
-    rdtype = dtype_complex_to_real(cdtype)
-    phase = jnp.asarray(phase, dtype=rdtype)
+    phase = jnp.asarray(phase, dtype=cdtype())
+    check_shape(phase, 'phase', '(..., n)')
+
     # batched construct diagonal array
     bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
     return bdiag(jnp.exp(1j * phase))
 
 
-def cd_gate(
-    dim: int, alpha: ArrayLike, *, dtype: jnp.complex64 | jnp.complex128 | None = None
-) -> Array:
+def cd_gate(dim: int, alpha: ArrayLike) -> Array:
     r"""Returns a conditional displacement gate.
 
     The *conditional displacement* (CD) gate displaces an oscillator conditioned on
@@ -168,7 +60,6 @@ def cd_gate(
     Args:
         dim: Dimension of the oscillator Hilbert space.
         alpha _(array_like of shape (...))_: Displacement amplitude.
-        dtype: Complex data type of the returned array.
 
     Returns:
         _(array of shape (..., n, n))_ CD gate operator (acting on the oscillator + TLS
@@ -182,11 +73,10 @@ def cd_gate(
                [ 0.   +0.j, -0.05 +0.j,  0.   +0.j,  0.999+0.j]], dtype=complex64)
         >>> dq.cd_gate(3, [0.1, 0.2]).shape
         (2, 6, 6)
-    """  # noqa: E501
-    dtype = get_cdtype(dtype)
-    alpha = jnp.asarray(alpha, dtype=dtype)
-    g = fock(2, 0, dtype=dtype)  # (2, 1)
-    e = fock(2, 1, dtype=dtype)  # (2, 1)
-    disp_plus = displace(dim, alpha / 2, dtype=dtype)  # (..., dim, dim)
-    disp_minus = displace(dim, -alpha / 2, dtype=dtype)  # (..., dim, dim)
+    """
+    alpha = jnp.asarray(alpha, dtype=cdtype())
+    g = fock(2, 0)  # (2, 1)
+    e = fock(2, 1)  # (2, 1)
+    disp_plus = displace(dim, alpha / 2)  # (..., dim, dim)
+    disp_minus = displace(dim, -alpha / 2)  # (..., dim, dim)
     return tensor(disp_plus, g @ tobra(g)) + tensor(disp_minus, e @ tobra(e))
