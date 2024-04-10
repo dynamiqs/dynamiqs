@@ -186,10 +186,10 @@ def _mesolve(
 def _check_mesolve_args(
     H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
-    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
+    check_shape(H, 'H', '(..., n, n)')
 
     for i, L in enumerate(jump_ops):
-        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     if len(jump_ops) == 0:
         logging.warn(
