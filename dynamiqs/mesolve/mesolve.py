@@ -186,8 +186,10 @@ def _mesolve(
 def _check_mesolve_args(
     H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
+    # === check H shape
     check_shape(H, 'H', '(..., n, n)')
 
+    # === check jump_ops
     for i, L in enumerate(jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
@@ -197,6 +199,7 @@ def _check_mesolve_args(
             ' solve the Schrödinger equation.'
         )
 
+    # === check rho0 shape
     check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
 
     # === check exp_ops shape
