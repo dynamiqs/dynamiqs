@@ -105,7 +105,7 @@ class _ODEAdaptiveStep(_ODESolver):
 
 # === public solvers options
 class Euler(_ODEFixedStep):
-    """Euler method (fixed step size ODE solver).
+    """Euler method (fixed step size ODE/SDE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
