@@ -54,7 +54,7 @@ def rand_complex(
         `dq.rand_complex()` returns the last one:
 
         ```python
-        _, (ax0, ax1, ax2) = dq.gridplot(3, sharex=True, sharey=True)
+        _, (ax0, ax1, ax2) = dq.gridplot(3, sharexy=True)
         ax0.set(xlim=(-1.1, 1.1), ylim=(-1.1, 1.1))
 
         n = 10_000

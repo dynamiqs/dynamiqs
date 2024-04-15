@@ -77,7 +77,13 @@ def optional_ax(func: callable) -> callable:
 
 
 def gridplot(
-    n: int, nrows: int = 1, *, w: float = 4.0, h: float | None = None, **kwargs
+    n: int,
+    nrows: int = 1,
+    *,
+    w: float = 4.0,
+    h: float | None = None,
+    sharexy: bool = False,
+    **kwargs,
 ) -> tuple[Figure, Iterable[Axes]]:
     """Returns a figure and a list of subplots organised in a grid.
 
@@ -106,7 +112,7 @@ def gridplot(
 
         by
 
-        >>> _, axs = dq.gridplot(6, 2, sharex=True, sharey=True)  # 6 subplots, 2 rows
+        >>> _, axs = dq.gridplot(6, 2, sharexy=True)  # 6 subplots, 2 rows
         >>> for y in ys:
         ...     next(axs).plot(x, y)
         [...]
@@ -117,6 +123,10 @@ def gridplot(
     h = w if h is None else h
     ncols = ceil(n / nrows)
     figsize = (w * ncols, h * nrows)
+
+    if sharexy:
+        kwargs['sharex'] = True
+        kwargs['sharey'] = True
 
     fig, axs = plt.subplots(
         nrows, ncols, figsize=figsize, constrained_layout=True, **kwargs
