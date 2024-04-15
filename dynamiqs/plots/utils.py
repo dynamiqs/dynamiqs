@@ -85,7 +85,7 @@ def gridplot(
     sharexy: bool = False,
     **kwargs,
 ) -> tuple[Figure, Iterable[Axes]]:
-    """Returns a figure and a list of subplots organised in a grid.
+    """Returns a figure and an iterator of subplots organised in a grid.
 
     Warning:
         Documentation redaction in progress.
