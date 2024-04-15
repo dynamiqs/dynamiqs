@@ -243,3 +243,4 @@ nav:
               - plot_fock_evolution: python_api/plots/plot_fock_evolution.md
               - plot_hinton: python_api/plots/plot_hinton.md
               - gridplot: python_api/plots/gridplot.md
+              - mplstyle: python_api/plots/mplstyle.md
