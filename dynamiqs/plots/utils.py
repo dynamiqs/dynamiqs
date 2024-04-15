@@ -157,11 +157,10 @@ def mplstyle(*, usetex: bool = False):
     Examples:
         >>> x = np.linspace(0, 2 * np.pi, 101)
         >>> ys = [np.sin(x), np.sin(2 * x), np.sin(3 * x)]
+        >>> default_mpl_style()
 
         Before (default Matplotlib style):
 
-        >>> import matplotlib as mpl
-        >>> mpl.rcParams.update(mpl.rcParamsDefault)
         >>> fig, ax = plt.subplots(1, 1)
         >>> for y in ys:
         ...     ax.plot(x, y)
