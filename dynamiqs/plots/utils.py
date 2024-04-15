@@ -80,7 +80,7 @@ def gridplot(
     n: int,
     nrows: int = 1,
     *,
-    w: float = 4.0,
+    w: float = 3.0,
     h: float | None = None,
     sharexy: bool = False,
     **kwargs,
