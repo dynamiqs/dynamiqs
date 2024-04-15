@@ -14,4 +14,5 @@ __all__ = [
     'plot_fock_evolution',
     'plot_hinton',
     'gridplot',
+    'mplstyle',
 ]
