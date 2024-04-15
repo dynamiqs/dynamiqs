@@ -149,7 +149,42 @@ colors = {
 
 
 def mplstyle(*, usetex: bool = False):
-    """Set custom Matplotlib style."""
+    r"""Set custom Matplotlib style.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Examples:
+        >>> x = np.linspace(0, 2 * np.pi, 101)
+        >>> ys = [np.sin(x), np.sin(2 * x), np.sin(3 * x)]
+
+        Before (default Matplotlib style):
+
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update(mpl.rcParamsDefault)
+        >>> fig, ax = plt.subplots(1, 1)
+        >>> for y in ys:
+        ...     ax.plot(x, y)
+        [...]
+        >>> ax.set(xlabel=r'$x$', ylabel=r'$\sin(x)$')
+        [...]
+        >>> renderfig('mplstyle_before')
+
+        ![mplstyle_before](/figs-code/mplstyle_before.png){.fig}
+
+        After (dynamiqs Matplotlib style):
+
+        >>> dq.mplstyle()
+        >>> fig, ax = plt.subplots(1, 1)
+        >>> for y in ys:
+        ...     ax.plot(x, y)
+        [...]
+        >>> ax.set(xlabel=r'$x$', ylabel=r'$\sin(x)$')
+        [...]
+        >>> renderfig('mplstyle_after')
+
+        ![mplstyle_after](/figs-code/mplstyle_after.png){.fig}
+    """
     plt.rcParams.update(
         {
             # xtick
