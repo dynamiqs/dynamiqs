@@ -79,34 +79,49 @@ def optional_ax(func: callable) -> callable:
 def gridplot(
     n: int, nrows: int = 1, *, w: float = 4.0, h: float | None = None, **kwargs
 ) -> tuple[Figure, Iterable[Axes]]:
-    """Return an iterator on `Axes` objects organised in a grid fashion.
+    """Returns a figure and a list of subplots organised in a grid.
+
+    Warning:
+        Documentation redaction in progress.
+
+    Notes:
+        This method is a shortcut to Matplotlib
+        [`plt.subplots()`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots).
 
     Examples:
-        Replace
-        ```
-        ages = [0, 1, 2, 3, 4, 5]
-        fig, axs = plt.subplots(2, 3, figsize=(3 * 4.0, 2 * 3.0))
+        For example, to plot six different curves:
 
-        for i, age in enumerate(ages):
-            axs[i // 3][i % 3].plot([1, 2], [1, 2], label=f'{age}')
+        >>> x = np.linspace(0, 1, 101)
+        >>> ys = [np.sin(f * 2 * np.pi * x) for f in range(6)]  # (6, 101)
 
-        fig.tight_layout()
-        ```
+        Replace the usual Matplotlib code
+
+        >>> fig, axs = plt.subplots(
+        ...     2, 3, figsize=(3 * 3.0, 2 * 3.0), sharex=True, sharey=True
+        ... )
+        >>> for i, y in enumerate(ys):
+        ...     axs[i // 3][i % 3].plot(x, y)
+        [...]
+        >>> fig.tight_layout()
+
         by
-        ```
-        ages = [0, 1, 2, 3, 4, 5]
-        fig, axs = dq.gridplot(6, 2, w=4.0, h=3.0)  # 6 plots, 2 rows
 
-        for age in ages:
-            next(axs).plot([1, 2], [1, 2], label=f'{age}')
-        ```
+        >>> _, axs = dq.gridplot(6, 2, sharex=True, sharey=True)  # 6 subplots, 2 rows
+        >>> for y in ys:
+        ...     next(axs).plot(x, y)
+        [...]
+        >>> renderfig('gridplot')
+
+        ![gridplot](/figs-code/gridplot.png){.fig}
     """
     h = w if h is None else h
     ncols = ceil(n / nrows)
     figsize = (w * ncols, h * nrows)
+
     fig, axs = plt.subplots(
         nrows, ncols, figsize=figsize, constrained_layout=True, **kwargs
     )
+
     return fig, iter(axs.flatten())
 
 
