@@ -9,10 +9,10 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
-from jaxtyping import ArrayLike, PyTree, ScalarLike
+from jaxtyping import ArrayLike, ScalarLike
 
 from ._checks import check_shape, check_times
-from ._utils import cdtype, expand_as_broadcastable, obj_type_str
+from ._utils import cdtype, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -82,14 +82,12 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     return PWCTimeArray(times, values, array)
 
 
-def modulated(
-    f: callable[[float, ...], Array], array: ArrayLike, *, args: tuple[PyTree] = ()
-) -> ModulatedTimeArray:
+def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> CallableTimeArray:
     r"""Instantiate a modulated time-array.
 
     A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
     time-dependent scalar. The function $f$ is defined by passing a Python function
-    with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
+    with signature `f(t: float) -> Array` that returns an array of shape
     _(...)_ for any time $t$.
 
     Args:
@@ -97,7 +95,6 @@ def modulated(
             `f(t: float, *args: PyTree) -> Array` that returns the modulating factor
             $f(t)$.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
-        args: Other positional arguments passed to the function $f$.
 
     Returns:
         _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
@@ -113,28 +110,23 @@ def modulated(
     check_shape(array, 'array', '(n, n)')
 
     # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary:
-    # (1) to make f a Pytree, and
-    # (2) to avoid jitting again every time the args change.
-    f = Partial(f)
+    # This is necessary to make f a Pytree
+    f = Partial(lambda t: f(t) * array)
 
-    return ModulatedTimeArray(f, array, args)
+    return CallableTimeArray(f)
 
 
-def timecallable(
-    f: callable[[float, ...], Array], *, args: tuple[PyTree] = ()
-) -> CallableTimeArray:
+def timecallable(f: callable[[float, ...], Array]) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
     time-dependent operator. The function $f$ is defined by passing a Python function
-    with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
+    with signature `f(t: float) -> Array` that returns an array of shape
     _(..., n, n)_ for any time $t$.
 
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
-            `(t: float, *args: PyTree) -> Array` that returns the array $f(t)$.
-        args: Other positional arguments passed to the function $f$.
+            `(t: float) -> Array` that returns the array $f(t)$.
 
     Returns:
         _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
@@ -146,11 +138,9 @@ def timecallable(
         )
 
     # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary:
-    # (1) to make f a Pytree, and
-    # (2) to avoid jitting again every time the args change.
+    # This is necessary to make f a Pytree
     f = Partial(f)
-    return CallableTimeArray(f, args)
+    return CallableTimeArray(f)
 
 
 def _split_shape(
@@ -246,6 +236,14 @@ class TimeArray(eqx.Module):
         """
 
     @abstractmethod
+    def broadcast_to(self, shape: tuple[int, ...]) -> TimeArray:
+        """Returns the time array broadcasted to a particular shape
+
+        Returns:
+            New time-array object with shape broadcasted to `shape`
+        """
+
+    @abstractmethod
     def __call__(self, t: ScalarLike) -> Array:
         """Returns the time-array evaluated at a given time.
 
@@ -311,6 +309,9 @@ class ConstantTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
 
+    def broadcast_to(self, shape: tuple[int, ...]) -> TimeArray:
+        return ConstantTimeArray(jnp.broadcast_to(self.array, shape))
+
     def __neg__(self) -> TimeArray:
         return ConstantTimeArray(-self.array)
 
@@ -373,6 +374,11 @@ class PWCTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
+    def broadcast_to(self, shape: tuple[int, ...]) -> TimeArray:
+        return PWCTimeArray(
+            self.times, self.values, jnp.broadcast_to(self.array, shape)
+        )
+
     def __neg__(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values, -self.array)
 
@@ -389,99 +395,44 @@ class PWCTimeArray(TimeArray):
             return NotImplemented
 
 
-class ModulatedTimeArray(TimeArray):
-    f: callable[[float, ...], Array]  # (...)
-    array: Array  # (n, n)
-    args: tuple[PyTree]
-
-    @property
-    def dtype(self) -> np.dtype:
-        return self.array.dtype
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        f_shape = jax.eval_shape(self._call_f, 0.0).shape
-        return (*f_shape, *self.array.shape)
-
-    @property
-    def mT(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array.mT, self.args)
-
-    def _call_f(self, t: float) -> Array:
-        args = expand_as_broadcastable(self.args)
-        return self.f(t, *args)
-
-    def __call__(self, t: float) -> Array:
-        values = self._call_f(t)
-        return values.reshape(*values.shape, 1, 1) * self.array
-
-    def reshape(self, *new_shape: int) -> TimeArray:
-        f_shape = jax.eval_shape(self._call_f, 0.0).shape
-        new_f_shape, new_array_shape = _split_shape(
-            new_shape, f_shape, self.array.shape
-        )
-        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
-        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape), self.args)
-
-    def conj(self) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).conj())
-        return ModulatedTimeArray(f, self.array.conj(), self.args)
-
-    def __neg__(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, -self.array, self.args)
-
-    def __mul__(self, y: ArrayLike) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array * y, self.args)
-
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([self, other])
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
-        else:
-            return NotImplemented
-
-
 class CallableTimeArray(TimeArray):
     f: callable[[float, ...], Array]
-    args: tuple[PyTree]
 
     @property
     def dtype(self) -> np.dtype:
-        return jax.eval_shape(self._call_f, 0.0).dtype
+        return jax.eval_shape(self.f, 0.0).dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return jax.eval_shape(self._call_f, 0.0).shape
+        return jax.eval_shape(self.f, 0.0).shape
 
     @property
     def mT(self) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).mT)
-        return CallableTimeArray(f, self.args)
-
-    def _call_f(self, t: float) -> Array:
-        args = expand_as_broadcastable(self.args)
-        return self.f(t, *args)
+        f = Partial(lambda t: self.f(t).mT)
+        return CallableTimeArray(f)
 
     def __call__(self, t: float) -> Array:
-        return self._call_f(t)
+        return self.f(t)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_shape))
-        return CallableTimeArray(f, self.args)
+        f = Partial(lambda t: self.f(t).reshape(*new_shape))
+        return CallableTimeArray(f)
 
     def conj(self) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).conj())
-        return CallableTimeArray(f, self.args)
+        f = Partial(lambda t: self.f(t).conj())
+        return CallableTimeArray(f)
+
+    def broadcast_to(self, shape: tuple[int, ...]) -> TimeArray:
+        f = Partial(lambda t: jnp.broadcast_to(self.f(t), shape))
+        return CallableTimeArray(f)
 
     def __neg__(self) -> TimeArray:
-        f = Partial(lambda t, *args: -self.f(t, *args))
-        return CallableTimeArray(f, self.args)
+        f = Partial(lambda t: -self.f(t))
+        return CallableTimeArray(f)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args) * y)
-        return CallableTimeArray(f, self.args)
+        f = Partial(lambda t: self.f(t) * y)
+        return CallableTimeArray(f)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
@@ -514,9 +465,9 @@ class SummedTimeArray(TimeArray):
         )
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        return SummedTimeArray(
-            [tarray.reshape(*new_shape) for tarray in self.timearrays]
-        )
+        return SummedTimeArray([
+            tarray.reshape(*new_shape) for tarray in self.timearrays
+        ])
 
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])

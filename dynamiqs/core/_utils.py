@@ -9,7 +9,6 @@ from ..solver import Solver
 from ..time_array import (
     CallableTimeArray,
     ConstantTimeArray,
-    ModulatedTimeArray,
     PWCTimeArray,
     SummedTimeArray,
     TimeArray,
@@ -27,7 +26,7 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
             return ConstantTimeArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                f'Argument must be an array-like or a time-array object, but has type'
+                'Argument must be an array-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 
@@ -93,10 +92,6 @@ def is_timearray_batched(tarray: TimeArray) -> TimeArray:
         return ConstantTimeArray(tarray.array.ndim > 2)
     elif isinstance(tarray, PWCTimeArray):
         return PWCTimeArray(False, tarray.values.ndim > 1, False)
-    elif isinstance(tarray, ModulatedTimeArray):
-        return ModulatedTimeArray(
-            False, False, tuple(arg.ndim > 0 for arg in tarray.args)
-        )
     elif isinstance(tarray, CallableTimeArray):
         return CallableTimeArray(False, tuple(arg.ndim > 0 for arg in tarray.args))
     else:
