@@ -38,20 +38,18 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
-    'eigenstates',
+    'entropy_vn',
 ]
 
 
 def dag(x: ArrayLike) -> Array:
-    r"""Returns the adjoint (complex conjugate transpose) of a ket, bra, density matrix
-    or operator.
+    r"""Returns the adjoint (complex conjugate transpose) of a matrix.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
-            density matrix or operator.
+        x _(array_like of shape (..., m, n))_: Matrix.
 
     Returns:
-       _(array of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Adjoint of `x`.
+       _(array of shape (..., n, m))_ Adjoint of `x`.
 
     Notes:
         This function is equivalent to `x.mT.conj()`.
@@ -64,7 +62,7 @@ def dag(x: ArrayLike) -> Array:
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
+    check_shape(x, 'x', '(..., m, n)')
     return x.mT.conj()
 
 
@@ -862,49 +860,6 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_gpu(x, y)
 
 
-def eigenstates(x: ArrayLike, lower_first: bool = True) -> tuple[Array, Array]:
-    r"""Returns the eigenvalues and eigenvectors of an operator or super-operator.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Operator or super-operator.
-        lower_first: If True, eigenvalues are sorted ascendingly (low to high). If
-            False, eigenvalues are sorted descendingly (high to low). Defaults to True.
-
-    Returns:
-        Tuple `(vals, vecs)` where `vals` is an array of eigenvalues of shape
-            _(..., n)_, and `vecs` is the corresponding array of eigenvectors of shape
-            _(..., n, n)_. Each element `vecs[..., :, i]` is the eigenvector
-            corresponding to eigenvalue `vals[..., i]`.
-    """
-    x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, n)')
-
-    def _eigenstates_herm(x: Array, lower_first: bool = True) -> tuple[Array, Array]:
-        P, D = jax.lax.linalg.eigh(x, sort_eigenvalues=True)
-        P, D = jax.lax.cond(
-            lower_first,
-            lambda P, D: (P, D),
-            lambda P, D: (jnp.flip(P, axis=-1), jnp.flip(D, axis=-1)),
-            P,
-            D,
-        )
-        return D.astype(x.dtype), P
-
-    def _eigenstates_non_herm(
-        x: Array, lower_first: bool = True
-    ) -> tuple[Array, Array]:
-        D, P = jax.lax.linalg.eig(x, compute_left_eigenvectors=False)
-        idx = jnp.argsort(D, axis=-1)
-        idx = jax.lax.cond(lower_first, lambda x: x, lambda x: x[..., ::-1], idx)
-        D = jnp.take_along_axis(D, idx, axis=-1)
-        P = jnp.take_along_axis(P, idx[..., None, :], axis=-1)
-        return D, P
-
-    return jax.lax.cond(
-        isherm(x), _eigenstates_herm, _eigenstates_non_herm, x, lower_first
-    )
-
-
 def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
@@ -954,3 +909,35 @@ def _sqrtm_gpu(x: Array) -> Array:
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
+
+
+def entropy_vn(x: ArrayLike) -> Array:
+    r"""Returns the Von Neumann entropy of a ket or density matrix.
+
+    It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
+
+    Args:
+        x _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued Von Neumann entropy.
+
+    Examples:
+        >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        >>> dq.entropy_vn(rho)
+        Array(0.693, dtype=float32)
+        >>> psis = [dq.fock(16, i) for i in range(5)]
+        >>> dq.entropy_vn(psis).shape
+        (5,)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+
+    if isket(x):
+        return jnp.zeros(x.shape[:-2])
+
+    # compute sum(w_i log(w_i)) where w_i are rho's eigenvalues
+    w = jnp.linalg.eigvalsh(x)
+    # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
+    w = jnp.where(w <= 0, 1.0, w)
+    return -(w * jnp.log(w)).sum(-1)

@@ -210,7 +210,7 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-              - eigenstates: python_api/utils/utils/eigenstates.md
+              - entropy_vn: python_api/utils/utils/entropy_vn.md
               - wigner: python_api/utils/utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
@@ -243,3 +243,4 @@ nav:
               - plot_fock_evolution: python_api/plots/plot_fock_evolution.md
               - plot_hinton: python_api/plots/plot_hinton.md
               - gridplot: python_api/plots/gridplot.md
+              - mplstyle: python_api/plots/mplstyle.md

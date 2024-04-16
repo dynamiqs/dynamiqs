@@ -5,6 +5,8 @@ import jax
 from jax import Array
 from jaxtyping import PyTree, ScalarLike
 
+from ._utils import tree_str_inline
+
 __all__ = ['Options']
 
 
@@ -53,3 +55,6 @@ class Options(eqx.Module):
         if save_extra is not None:
             save_extra = jax.tree_util.Partial(save_extra)
         self.save_extra = save_extra
+
+    def __str__(self) -> str:
+        return tree_str_inline(self)

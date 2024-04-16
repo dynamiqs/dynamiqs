@@ -36,7 +36,7 @@ class PropagatorSolver(BaseSolver):
             )
 
         # extract the constant array from the `ConstantTimeArray` object
-        self.H = self.H.x
+        self.H = self.H.array
 
     def run(self) -> PyTree:
         # === solve differential equation
@@ -78,4 +78,4 @@ class MEPropagatorSolver(PropagatorSolver, MESolver):
             )
 
         # extract the constant arrays from the `ConstantTimeArray` objects
-        self.Ls = [L.x for L in self.Ls]
+        self.Ls = [L.array for L in self.Ls]
