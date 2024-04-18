@@ -55,9 +55,9 @@ class CatCNOT:
         # === prepare qutip arguments
         # convert arrays to qutip objects
         dims = [N, N]
-        H = dq.to_qutip(H, dims=dims, data_format=qutip_data_format)
+        H = dq.to_qutip(H, dims=dims).to(qutip_data_format)
         psi0 = dq.to_qutip(psi0, dims=dims)
-        c_ops = [dq.to_qutip(jump_ops[0], dims=dims, data_format=qutip_data_format)]
+        c_ops = [dq.to_qutip(jump_ops[0], dims=dims).to(qutip_data_format)]
 
         # init arguments
         self.args_qutip = (H, psi0, tsave, c_ops)
