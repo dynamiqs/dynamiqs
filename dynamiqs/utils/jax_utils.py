@@ -14,7 +14,11 @@ from .utils.general import _hdim
 __all__ = ['to_qutip', 'set_device', 'set_precision']
 
 
-def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
+def to_qutip(
+    x: ArrayLike,
+    dims: tuple[int, ...] | None = None,
+    data_format: Literal['dense', 'csr', 'dia'] = 'dense',
+) -> Qobj | list[Qobj]:
     r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
     quantum objects if it has more than two dimensions).
 
@@ -24,6 +28,8 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
             Hilbert space of the composite system, defaults to `None` (a single system
             with the same dimension as `x`).
+        data_format _(string 'dense', 'csr', or 'dia')_: Data format of the QuTiP
+            quantum object. Defaults to 'dense'.
 
     Returns:
         QuTiP quantum object or list of QuTiP quantum objects.
@@ -83,7 +89,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
             dims = [[1] * len(dims), dims]
         elif isop(x):  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
             dims = [dims, dims]
-        return Qobj(x, dims=dims)
+        return Qobj(x, dims=dims).to(data_format)
 
 
 def set_device(device: Literal['cpu', 'gpu', 'tpu']):

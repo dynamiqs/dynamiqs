@@ -26,7 +26,7 @@ class CatCNOT:
         nbar: float = 4.0,
         num_tsave: int = 100,
         N: int = 16,
-        qutip_data_format: Literal["dense", "csr", "dia"] = "dia",
+        qutip_data_format: Literal['dense', 'csr', 'dia'] = 'dia',
     ):
         # === prepare generic objects
         # time evolution
