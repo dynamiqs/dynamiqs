@@ -33,7 +33,7 @@ class DrivenCavity(BenchModel):
         # initial state
         psi0 = qt.coherent(N, alpha0)
 
-        self.kwargs_qutip = {"H": H, "psi0": psi0, "tlist": tlist}
+        self.kwargs_qutip = {'H': H, 'psi0': psi0, 'tlist': tlist}
         self.fn_qutip = qt.sesolve
 
     def init_dynamiqs(
@@ -57,5 +57,5 @@ class DrivenCavity(BenchModel):
         # initial state
         psi0 = dq.coherent(N, alpha0)
 
-        self.kwargs_dynamiqs = {"H": H, "psi0": psi0, "tsave": tsave}
+        self.kwargs_dynamiqs = {'H': H, 'psi0': psi0, 'tsave': tsave}
         self.fn_dynamiqs = dq.sesolve

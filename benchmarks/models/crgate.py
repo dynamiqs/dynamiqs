@@ -53,7 +53,7 @@ class CrossResonanceGate(BenchModel):
         # initial state
         psi0 = qt.tensor(qt.basis(2, 1), qt.basis(2, 1))
 
-        self.kwargs_qutip = {"H": H, "psi0": psi0, "tlist": tlist}
+        self.kwargs_qutip = {'H': H, 'psi0': psi0, 'tlist': tlist}
         self.fn_qutip = qt.sesolve
 
     def init_dynamiqs(
@@ -86,5 +86,5 @@ class CrossResonanceGate(BenchModel):
         # initial state
         psi0 = dq.tensor(dq.basis(2, 1), dq.basis(2, 1))
 
-        self.kwargs_dynamiqs = {"H": H, "psi0": psi0, "tsave": tsave}
+        self.kwargs_dynamiqs = {'H': H, 'psi0': psi0, 'tsave': tsave}
         self.fn_dynamiqs = dq.sesolve

@@ -44,7 +44,7 @@ class CatCNOT(BenchModel):
         plus = (qt.coherent(N, alpha) + qt.coherent(N, -alpha)).unit()
         psi0 = qt.tensor(plus, plus)
 
-        self.kwargs_qutip = {"H": H, "rho0": psi0, "tlist": tlist, "c_ops": c_ops}
+        self.kwargs_qutip = {'H': H, 'rho0': psi0, 'tlist': tlist, 'c_ops': c_ops}
         self.fn_qutip = qt.mesolve
 
     def init_dynamiqs(
@@ -76,9 +76,9 @@ class CatCNOT(BenchModel):
         psi0 = dq.tensor(plus, plus)
 
         self.kwargs_dynamiqs = {
-            "H": H,
-            "jump_ops": jump_ops,
-            "rho0": psi0,
-            "tsave": tsave,
+            'H': H,
+            'jump_ops': jump_ops,
+            'rho0': psi0,
+            'tsave': tsave,
         }
         self.fn_dynamiqs = dq.mesolve
