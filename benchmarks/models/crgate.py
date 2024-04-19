@@ -3,13 +3,13 @@ from __future__ import annotations
 import jax.numpy as jnp
 import numpy as np
 import qutip as qt
-from qutip.solver.result import Result as qtResult
 
 import dynamiqs as dq
-from dynamiqs.result import Result as dqResult
+
+from .bench_model import BenchModel
 
 
-class CrossResonanceGate:
+class CrossResonanceGate(BenchModel):
     """Model of a cross-resonance gate between two qubits, in the lab frame.
 
     For more details on the model, see [Magesan, Easwar, and Jay M. Gambetta.
@@ -23,7 +23,7 @@ class CrossResonanceGate:
         every save.
     """
 
-    def __init__(
+    def init_qutip(
         self,
         omega_1: float = 4.0,
         omega_2: float = 6.0,
@@ -31,10 +31,42 @@ class CrossResonanceGate:
         eps: float = 0.4,
         num_tsave: int = 100,
     ):
-        # === prepare generic objects
+        # time evolution
+        gate_time = 0.5 * np.pi * abs(omega_2 - omega_1) / (J * eps)
+        tlist = np.linspace(0.0, gate_time, num_tsave)
+
+        # operators
+        sz1 = qt.tensor(qt.sigmaz(), qt.qeye(2))
+        sz2 = qt.tensor(qt.qeye(2), qt.sigmaz())
+        sp1 = qt.tensor(qt.sigmap(), qt.qeye(2))
+        sp2 = qt.tensor(qt.qeye(2), qt.sigmap())
+        sm1 = qt.tensor(qt.sigmam(), qt.qeye(2))
+        sm2 = qt.tensor(qt.qeye(2), qt.sigmam())
+
+        # Hamiltonian
+        omega_d = omega_2 - J**2 / (omega_1 - omega_2)
+        H0 = 0.5 * omega_1 * sz1 + 0.5 * omega_2 * sz2 + J * (sp1 * sm2 + sm1 * sp2)
+        Hd = eps * (sp1 + sm1)
+        fd = lambda t: np.cos(omega_d * t)
+        H = [H0, [Hd, fd]]
+
+        # initial state
+        psi0 = qt.tensor(qt.basis(2, 1), qt.basis(2, 1))
+
+        self.kwargs_qutip = {"H": H, "psi0": psi0, "tlist": tlist}
+        self.fn_qutip = qt.sesolve
+
+    def init_dynamiqs(
+        self,
+        omega_1: float = 4.0,
+        omega_2: float = 6.0,
+        J: float = 0.4,
+        eps: float = 0.4,
+        num_tsave: int = 100,
+    ):
         # time evolution
         gate_time = 0.5 * jnp.pi * abs(omega_2 - omega_1) / (J * eps)
-        tsave = np.linspace(0.0, gate_time, num_tsave)
+        tsave = jnp.linspace(0.0, gate_time, num_tsave)
 
         # operators
         sz1 = dq.tensor(dq.sigmaz(), dq.eye(2))
@@ -48,34 +80,11 @@ class CrossResonanceGate:
         omega_d = omega_2 - J**2 / (omega_1 - omega_2)
         H0 = 0.5 * omega_1 * sz1 + 0.5 * omega_2 * sz2 + J * (sp1 @ sm2 + sm1 @ sp2)
         Hd = eps * (sp1 + sm1)
+        fd = lambda t: jnp.cos(omega_d * t)
+        H = H0 + dq.modulated(fd, Hd)
 
         # initial state
         psi0 = dq.tensor(dq.basis(2, 1), dq.basis(2, 1))
 
-        # === prepare dynamiqs arguments
-        fd = lambda t: jnp.cos(omega_d * t)
-        H = H0 + dq.modulated(fd, Hd)
-        self.args_dynamiqs = (H, psi0, tsave)
-
-        # === prepare qutip arguments
-        dims = [2, 2]
-        H0 = dq.to_qutip(H0, dims=dims)
-        Hd = dq.to_qutip(Hd, dims=dims)
-        fd = lambda t: np.cos(omega_d * t)
-        H = [H0, [Hd, fd]]
-        psi0 = dq.to_qutip(psi0, dims=dims)
-        self.args_qutip = (H, psi0, tsave)
-
-    def run_dynamiqs(self) -> dqResult:
-        return dq.sesolve(*self.args_dynamiqs)
-
-    def run_qutip(self) -> qtResult:
-        return qt.sesolve(*self.args_qutip)
-
-    def check_equal(self) -> bool:
-        states_dynamiqs = self.run_dynamiqs().states
-        states_qutip = self.run_qutip().states
-        states_qutip = jnp.stack(
-            [states_qutip[i].full() for i in range(len(states_qutip))]
-        )
-        return jnp.allclose(states_dynamiqs, states_qutip, atol=1e-4)
+        self.kwargs_dynamiqs = {"H": H, "psi0": psi0, "tsave": tsave}
+        self.fn_dynamiqs = dq.sesolve

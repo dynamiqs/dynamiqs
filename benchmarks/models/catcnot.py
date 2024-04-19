@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import jax.numpy as jnp
 import numpy as np
 import qutip as qt
-from qutip.solver.result import Result as qtResult
 
 import dynamiqs as dq
-from dynamiqs.result import Result as dqResult
+
+from .bench_model import BenchModel
 
 
-class CatCNOT:
+class CatCNOT(BenchModel):
     """Model of a CNOT between dissipative cat qubits.
 
     For more details on the model, see [Guillaud, Jérémie, and Mazyar Mirrahimi.
@@ -19,20 +17,48 @@ class CatCNOT:
     9.4 (2019): 041053.]
     """
 
-    def __init__(
+    def init_qutip(
         self,
         kappa_2: float = 1.0,
         g_cnot: float = 0.3,
         nbar: float = 4.0,
         num_tsave: int = 100,
         N: int = 16,
-        qutip_data_format: Literal['dense', 'csr', 'dia'] = 'dia',
     ):
-        # === prepare generic objects
+        # time evolution
+        alpha = np.sqrt(nbar)
+        gate_time = np.pi / (4 * alpha * g_cnot)
+        tlist = np.linspace(0.0, gate_time, num_tsave)
+
+        # operators
+        ac = qt.tensor(qt.destroy(N), qt.qeye(N))
+        at = qt.tensor(qt.qeye(N), qt.destroy(N))
+
+        # Hamiltonian
+        H = g_cnot * (ac + ac.dag()) * (at.dag() * at - nbar)
+
+        # collapse operators
+        c_ops = [np.sqrt(kappa_2) * (ac**2 - nbar)]
+
+        # initial state
+        plus = (qt.coherent(N, alpha) + qt.coherent(N, -alpha)).unit()
+        psi0 = qt.tensor(plus, plus)
+
+        self.kwargs_qutip = {"H": H, "rho0": psi0, "tlist": tlist, "c_ops": c_ops}
+        self.fn_qutip = qt.mesolve
+
+    def init_dynamiqs(
+        self,
+        kappa_2: float = 1.0,
+        g_cnot: float = 0.3,
+        nbar: float = 4.0,
+        num_tsave: int = 100,
+        N: int = 16,
+    ):
         # time evolution
         alpha = jnp.sqrt(nbar)
         gate_time = jnp.pi / (4 * alpha * g_cnot)
-        tsave = np.linspace(0.0, gate_time, num_tsave)
+        tsave = jnp.linspace(0.0, gate_time, num_tsave)
 
         # operators
         ac = dq.tensor(dq.destroy(N), dq.eye(N))
@@ -49,29 +75,10 @@ class CatCNOT:
         plus = dq.unit(dq.coherent(N, alpha) + dq.coherent(N, -alpha))
         psi0 = dq.tensor(plus, plus)
 
-        # === prepare dynamiqs arguments
-        self.args_dynamiqs = (H, jump_ops, psi0, tsave)
-
-        # === prepare qutip arguments
-        # convert arrays to qutip objects
-        dims = [N, N]
-        H = dq.to_qutip(H, dims=dims).to(qutip_data_format)
-        psi0 = dq.to_qutip(psi0, dims=dims)
-        c_ops = [dq.to_qutip(jump_ops[0], dims=dims).to(qutip_data_format)]
-
-        # init arguments
-        self.args_qutip = (H, psi0, tsave, c_ops)
-
-    def run_dynamiqs(self) -> dqResult:
-        return dq.mesolve(*self.args_dynamiqs)
-
-    def run_qutip(self) -> qtResult:
-        return qt.mesolve(*self.args_qutip)
-
-    def check_equal(self) -> bool:
-        states_dynamiqs = self.run_dynamiqs().states
-        states_qutip = self.run_qutip().states
-        states_qutip = jnp.stack(
-            [states_qutip[i].full() for i in range(len(states_qutip))]
-        )
-        return jnp.allclose(states_dynamiqs, states_qutip, atol=1e-4)
+        self.kwargs_dynamiqs = {
+            "H": H,
+            "jump_ops": jump_ops,
+            "rho0": psi0,
+            "tsave": tsave,
+        }
+        self.fn_dynamiqs = dq.mesolve
