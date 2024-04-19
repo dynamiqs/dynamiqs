@@ -32,10 +32,10 @@ class CatCNOT(BenchModel):
 
         # operators
         ac = qt.tensor(qt.destroy(N), qt.qeye(N))
-        at = qt.tensor(qt.qeye(N), qt.destroy(N))
+        nt = qt.tensor(qt.qeye(N), qt.num(N))
 
         # Hamiltonian
-        H = g_cnot * (ac + ac.dag()) * (at.dag() * at - nbar)
+        H = g_cnot * (ac + ac.dag()) * (nt - nbar)
 
         # collapse operators
         c_ops = [np.sqrt(kappa_2) * (ac**2 - nbar)]
@@ -62,11 +62,11 @@ class CatCNOT(BenchModel):
 
         # operators
         ac = dq.tensor(dq.destroy(N), dq.eye(N))
-        at = dq.tensor(dq.eye(N), dq.destroy(N))
+        nt = dq.tensor(dq.eye(N), dq.number(N))
         i = dq.tensor(dq.eye(N), dq.eye(N))
 
         # Hamiltonian
-        H = g_cnot * (ac + dq.dag(ac)) @ (dq.dag(at) @ at - nbar * i)
+        H = g_cnot * (ac + dq.dag(ac)) @ (nt - nbar * i)
 
         # jump operator
         jump_ops = [jnp.sqrt(kappa_2) * (ac @ ac - nbar * i)]

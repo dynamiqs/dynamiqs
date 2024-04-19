@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from math import ceil
 from timeit import Timer
 from typing import Literal
 
+import jax
 import jax.numpy as jnp
 import qutip as qt
 from jaxtyping import Array
@@ -14,7 +16,9 @@ import dynamiqs as dq
 class BenchModel(ABC):
     def __init__(self, *args, **kwargs):
         self.init_qutip(*args, **kwargs)
-        self.init_dynamiqs(*args, **kwargs)
+        with jax.default_matmul_precision('float32'):
+            # use float32 instead of tensorfloat32 for initialisation precision on GPU
+            self.init_dynamiqs(*args, **kwargs)
 
     @abstractmethod
     def init_qutip(self, *args, **kwargs):
@@ -28,7 +32,7 @@ class BenchModel(ABC):
         self,
         library: Literal['dynamiqs', 'qutip'],
         backend: Literal['cpu', 'gpu'],
-        repeat: int = 5,
+        max_repeat: int = 13,
         tmin: float = 0.05,
     ) -> float:
         """Benchmark the model and returns the runtime in seconds."""
@@ -49,7 +53,7 @@ class BenchModel(ABC):
         if library == 'dynamiqs':
             fn()
 
-        return _auto_timeit(fn, repeat=repeat, tmin=tmin)
+        return _auto_timeit(fn, max_repeat=max_repeat, tmin=tmin)
 
     def check_args(self):
         """Check that all input arguments are equal between qutip and dynamiqs."""
@@ -120,17 +124,22 @@ class BenchModel(ABC):
             raise TypeError(f'Invalid type for qutip operator: {type(op)}')
 
 
-def _auto_timeit(fn: callable, repeat: int = 5, tmin: float = 0.05) -> float:
-    """Run timeit for at least `tmin` seconds to get a reliable runtime benchmark. This
-    is similar behavior as the `%timeit` ipython magic.
-    """
+def _auto_timeit(fn: callable, max_repeat: int = 13, tmin: float = 0.05) -> float:
+    """Automatically determine the number of iterations and repetitions for timeit."""
     timer = Timer(fn)
+
+    # determiner number of repetitions per run
     n = 1
     t = timer.timeit(number=n)
     while t < tmin:
         n *= 10
         t = timer.timeit(number=n)
 
+    # determine number of runs with some heuristic that makes sure the
+    # benchmark is neither too short or too long
+    repeat = min(max_repeat, ceil(2 * max_repeat * tmin / t))
+
+    # repeat the benchmark and return the average runtime
     for _ in range(repeat - 1):
         t += timer.timeit(number=n)
 

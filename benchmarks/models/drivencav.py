@@ -26,9 +26,10 @@ class DrivenCavity(BenchModel):
 
         # operators
         a = qt.destroy(N)
+        n = qt.num(N)
 
         # Hamiltonian
-        H = delta * a.dag() * a + eta * (a + a.dag())
+        H = delta * n + eta * (a + a.dag())
 
         # initial state
         psi0 = qt.coherent(N, alpha0)
@@ -50,9 +51,10 @@ class DrivenCavity(BenchModel):
 
         # operators
         a = dq.destroy(N)
+        n = dq.number(N)
 
         # Hamiltonian
-        H = delta * dq.dag(a) @ a + eta * (a + dq.dag(a))
+        H = delta * n + eta * (a + dq.dag(a))
 
         # initial state
         psi0 = dq.coherent(N, alpha0)
