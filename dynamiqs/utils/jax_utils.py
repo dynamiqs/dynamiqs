@@ -103,25 +103,33 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu']):
     jax.config.update('jax_default_device', jax.devices(device)[0])
 
 
-def set_precision(precision: Literal['simple', 'double']):
-    """Configure the default floating point precision.
+def set_precision(
+    precision: Literal['simple', 'double'],
+    matmul_precision: Literal['low', 'high', 'highest'] = 'high',
+):
+    """Configure the default floating point precision and matmul precision.
 
-    The option `'simple'` sets default precision to `float32` and `complex64`, and the
-    option `'double'` sets default precision to `float64` and `complex128`.
+    The option `precision='simple'` sets default precision to `float32` and
+    `complex64`, and the option `precision='double'` sets default precision to
+    `float64` and `complex128`.
+
+    The argument `matmul_precision` sets the default precision for matrix
+    multiplications on GPUs and TPUs. With `'low'`, the matmul precision is reduced to
+    `bfloat16` (fastest but least accurate). With `'high'`, the precision is reduced to
+    `bfloat16_3x` (faster but less accurate). With `'highest'`, the precision is
+    kept at `float32` or `float64` if applicable (slowest but most accurate).
 
     Notes:
-        This function is equivalent to
-        ```
-        if precision == 'simple':
-            jax.config.update('jax_enable_x64', False)
-        elif precision == 'double':
-            jax.config.update('jax_enable_x64', True)
-        ```
+        This function is equivalent to setting both the `jax_enable_x64` and
+        `jax_default_matmul_precision` global configuration options.
 
-    See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
+    See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision),
+    and [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html).
 
     Args:
         precision _(string 'simple' or 'double')_: Default precision.
+        matmul_precision _(string 'low', 'high', or 'highest')_: Default precision
+            for matrix multiplications on GPUs and TPUs.
     """
     if precision == 'simple':
         jax.config.update('jax_enable_x64', False)
@@ -131,4 +139,16 @@ def set_precision(precision: Literal['simple', 'double']):
         raise ValueError(
             f"Argument `x` should be a string 'simple' or 'double', but is"
             f" '{precision}'."
+        )
+
+    if matmul_precision == 'low':
+        jax.config.update('jax_default_matmul_precision', 'bfloat16')
+    elif matmul_precision == 'high':
+        jax.config.update('jax_default_matmul_precision', 'bfloat16_3x')
+    elif matmul_precision == 'highest':
+        jax.config.update('jax_default_matmul_precision', 'float32')
+    else:
+        raise ValueError(
+            f"Argument `matmul_precision` should be a string 'default', 'high', or"
+            f" 'highest', but is '{matmul_precision}'."
         )
