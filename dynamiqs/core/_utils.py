@@ -43,7 +43,7 @@ class BatchedCallable(eqx.Module):
         (*self.indices,) = jnp.indices(shape[:-2])
 
     def __call__(self, t: float) -> Array:
-        return self.f(t)[*self.indices]
+        return self.f(t)[*self.indices[:1]]
 
     @property
     def ndim(self) -> int:
@@ -63,10 +63,7 @@ def get_solver_class(
 
 
 def compute_vmap(
-    f: callable,
-    cartesian_batching: bool,
-    n_batch: [int],
-    out_axes: PyTree[int | None],
+    f: callable, cartesian_batching: bool, n_batch: [int], out_axes: PyTree[int | None]
 ) -> callable:
     # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
     # argument `is_batched` indicates for each argument of `f` whether it is batched.
@@ -92,7 +89,6 @@ def compute_vmap(
                     in_axes = jtu.tree_map(lambda _: None, leaves)
                     in_axes[i] = 0
                     in_axes = jtu.tree_unflatten(treedef, in_axes)
-                    print(in_axes)
                     for _ in range(leaf):
                         f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
         else:

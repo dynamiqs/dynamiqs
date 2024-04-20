@@ -108,15 +108,7 @@ def _vmap_sesolve(
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
 
-    n_batch = (
-        H.ndim - 2,
-        psi0.ndim - 2,
-        0,
-        0,
-        0,
-        0,
-        0,
-    )
+    n_batch = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = SEResult(None, None, None, None, 0, 0)
@@ -165,7 +157,7 @@ def _sesolve(
 def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)')
-    check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
+    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'?': 'npsi0?'})
 
     # === check exp_ops shape
     if exp_ops is not None:

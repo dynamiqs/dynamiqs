@@ -195,7 +195,7 @@ def _check_mesolve_args(
         )
 
     # === check rho0 shape
-    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
 
     # === check exp_ops shape
     if exp_ops is not None:

@@ -72,8 +72,8 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     values = jnp.asarray(values, dtype=cdtype())
     if values.shape[-1] != times.shape[-1] - 1:
         raise TypeError(
-            'Argument `values` must have shape `(..., times.shape[-1]-1)`, but has shape'
-            f' `{values.shape}.'
+            'Argument `values` must have shape `(..., times.shape[-1]-1)`, but '
+            f'has shape `{values.shape}.'
         )
 
     # array
@@ -328,11 +328,6 @@ class PWCTimeArray(TimeArray):
     values: Array = eqx.field(static=True)  # (..., nv)
     array: Array = eqx.field(static=True)  # (..., n, n)
 
-    def __init__(self, times, values, array):
-        self.times = times
-        self.values = values
-        self.array = array
-
     @property
     def dtype(self) -> np.dtype:
         return self.array.dtype
@@ -347,9 +342,7 @@ class PWCTimeArray(TimeArray):
 
     def reshape(self, *new_shape: int) -> TimeArray:
         new_values_shape, new_array_shape = _split_shape(
-            new_shape,
-            self.values.shape[:-1],
-            self.array.shape,
+            new_shape, self.values.shape[:-1], self.array.shape
         )
 
         return PWCTimeArray(
@@ -373,8 +366,7 @@ class PWCTimeArray(TimeArray):
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
-        result = value.reshape(*value.shape, 1, 1) * self.array
-        return result
+        return value.reshape(*value.shape, 1, 1) * self.array
 
     def __neg__(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values, -self.array)
@@ -394,10 +386,6 @@ class PWCTimeArray(TimeArray):
 
 class CallableTimeArray(TimeArray):
     f: callable[[float], Array]
-
-    def __init__(self, f: callable[[float], Array]):
-        shape = jax.eval_shape(f, 0.0).shape
-        self.f = f
 
     @property
     def dtype(self) -> np.dtype:
@@ -446,7 +434,6 @@ class SummedTimeArray(TimeArray):
 
     def __init__(self, timearrays: list[TimeArray]):
         self.timearrays = timearrays
-        shape = jax.eval_shape(jtu.Partial(eval_timearrays_sum, timearrays), 0.0).shape
 
     @property
     def dtype(self) -> np.dtype:
@@ -487,12 +474,10 @@ class SummedTimeArray(TimeArray):
             return NotImplemented
 
 
-def eval_timearrays_sum(timearrays, t):
+def eval_timearrays_sum(timearrays: [TimeArray], t: float) -> TimeArray:
     return jtu.tree_reduce(
         jnp.add,
         jtu.tree_map(
-            lambda x: x(t),
-            timearrays,
-            is_leaf=lambda x: isinstance(x, TimeArray),
+            lambda x: x(t), timearrays, is_leaf=lambda x: isinstance(x, TimeArray)
         ),
     )
