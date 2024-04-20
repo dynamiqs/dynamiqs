@@ -104,7 +104,7 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu']):
 
 
 def set_precision(precision: Literal['simple', 'double']):
-    """Configure the default floating point precision and matmul precision.
+    """Configure the default floating point precision.
 
     The option `precision='simple'` sets default precision to `float32` and
     `complex64`, and the option `precision='double'` sets default precision to
