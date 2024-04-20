@@ -43,7 +43,7 @@ class BatchedCallable(eqx.Module):
         (*self.indices,) = jnp.indices(shape[:-2])
 
     def __call__(self, t: float) -> Array:
-        return self.f(t)[*self.indices[:1]]
+        return self.f(t)[self.indices[0]]
 
     @property
     def ndim(self) -> int:
