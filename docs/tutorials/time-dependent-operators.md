@@ -155,7 +155,7 @@ Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> type(H)
-<class 'dynamiqs.time_array.ModulatedTimeArray'>
+<class 'dynamiqs.time_array.CallableTimeArray'>
 >>> H.shape
 (2, 2)
 ```
@@ -173,9 +173,9 @@ Array([[0.+0.j, 1.+0.j],
 ??? Note "Function with additional arguments"
     To define a modulated time-array with additional arguments, you can use the optional `args` parameter of [`dq.modulated()`][dynamiqs.modulated]:
     ```python
-    f = lambda t, omega: jnp.cos(omega * t)
+    f = lambda t: jnp.cos(omegas * t)
     omega = 1.0
-    H = dq.modulated(f, dq.sigmax(), args=(omega,))
+    H = dq.modulated(f, dq.sigmax())
     ```
 
 ### Arbitrary time-dependent operators
@@ -218,9 +218,9 @@ Array([[1., 0.],
 ??? Note "Function with additional arguments"
     To define a callable time-array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`][dynamiqs.timecallable]:
     ```python
-    f = lambda t, x: x * jnp.array([[t, 0], [0, 1 - t]])
     x = 1.0
-    H = dq.timecallable(f, args=(x,))
+    f = lambda t: x * jnp.array([[t, 0], [0, 1 - t]])
+    H = dq.timecallable(f)
     ```
 
 ## Batching and differentiation with time-arrays
@@ -229,7 +229,7 @@ For modulated and arbitrary time-dependent operators, any array that is batched 
 
 For example to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched or differentiated over the parameter $\omega$:
 ```python
-f = lambda t, omega: jnp.cos(omega * t)
 omegas = jnp.linspace(0.0, 2.0, 10)
-H = dq.modulated(f, dq.sigmax(), args=(omegas,))
+f = lambda t: jnp.cos(omegas * t)
+H = dq.modulated(f, dq.sigmax())
 ```
