@@ -155,7 +155,7 @@ Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> type(H)
-<class 'dynamiqs.time_array.CallableTimeArray'>
+<class 'dynamiqs.time_array.ModulatedTimeArray'>
 >>> H.shape
 (2, 2)
 ```

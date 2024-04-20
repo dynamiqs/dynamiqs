@@ -117,8 +117,9 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> CallableTim
 
     # Pass `f` through `jax.tree_util.Partial`.
     # This is necessary to make f a Pytree
+    f = Partial(f)
 
-    return CallableTimeArray(Partial(lambda t: f(t)[..., None, None] * array))
+    return ModulatedTimeArray(f, array)
 
 
 def timecallable(f: callable[[float, ...], Array]) -> CallableTimeArray:
@@ -418,6 +419,55 @@ class CallableTimeArray(TimeArray):
     def __mul__(self, y: ArrayLike) -> TimeArray:
         f = Partial(lambda t: self.f(t) * y)
         return CallableTimeArray(f)
+
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
+
+
+class ModulatedTimeArray(TimeArray):
+    f: callable[[float, ...], Array]  # (...)
+    array: Array  # (n, n)
+
+    @property
+    def dtype(self) -> np.dtype:
+        return self.array.dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        f_shape = jax.eval_shape(self.f, 0.0).shape
+        return (*f_shape, *self.array.shape)
+
+    @property
+    def mT(self) -> TimeArray:
+        return ModulatedTimeArray(self.f, self.array.mT)
+
+    def __call__(self, t: float) -> Array:
+        values = self.f(t)
+        return values.reshape(*values.shape, 1, 1) * self.array
+
+    def reshape(self, *new_shape: int) -> TimeArray:
+        f_shape = jax.eval_shape(self.f, 0.0).shape
+        new_f_shape, new_array_shape = _split_shape(
+            new_shape, f_shape, self.array.shape
+        )
+        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
+        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape))
+
+    def conj(self) -> TimeArray:
+        f = Partial(lambda t, *args: self.f(t, *args).conj())
+        return ModulatedTimeArray(f, self.array.conj())
+
+    def __neg__(self) -> TimeArray:
+        return ModulatedTimeArray(self.f, -self.array)
+
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return ModulatedTimeArray(self.f, self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
