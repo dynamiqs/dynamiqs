@@ -68,10 +68,8 @@ def test_timearray_batching():
 
     result = dq.sesolve(H_pwc, psi0, times)
     assert result.states.shape == (3, 11, 4, 1)
-
-    # todo: fixme
-    # result = dq.sesolve(H0 + H_pwc, psi0, times)
-    # assert result.states.shape == (3, 11, 4, 1)
+    result = dq.sesolve(H0 + H_pwc, psi0, times)
+    assert result.states.shape == (3, 11, 4, 1)
 
     # == modulated time array
     deltas = jnp.linspace(0.0, 1.0, 4)
@@ -79,10 +77,8 @@ def test_timearray_batching():
 
     result = dq.sesolve(H_mod, psi0, times)
     assert result.states.shape == (4, 11, 4, 1)
-
-    # todo: fixme
-    # result = dq.sesolve(H0 + H_mod, psi0, times)
-    # assert result.states.shape == (4, 11, 4, 1)
+    result = dq.sesolve(H0 + H_mod, psi0, times)
+    assert result.states.shape == (4, 11, 4, 1)
 
     # == callable time array
     omegas = jnp.linspace(0.0, 1.0, 5)
@@ -90,7 +86,5 @@ def test_timearray_batching():
 
     result = dq.sesolve(H_cal, psi0, times)
     assert result.states.shape == (5, 11, 4, 1)
-
-    # todo: fixme
-    # result = dq.sesolve(H0 + H_cal, psi0, times)
-    # assert result.states.shape == (5, 11, 4, 1)
+    result = dq.sesolve(H0 + H_cal, psi0, times)
+    assert result.states.shape == (5, 11, 4, 1)
