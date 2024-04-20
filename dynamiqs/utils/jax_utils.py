@@ -160,6 +160,6 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest'] = '
         jax.config.update('jax_default_matmul_precision', 'float32')
     else:
         raise ValueError(
-            f"Argument `matmul_precision` should be a string 'default', 'high', or"
+            f"Argument `matmul_precision` should be a string 'low', 'high', or"
             f" 'highest', but is '{matmul_precision}'."
         )
