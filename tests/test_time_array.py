@@ -7,9 +7,10 @@ import pytest
 from dynamiqs.time_array import (
     CallableTimeArray,
     ConstantTimeArray,
-    ModulatedTimeArray,
     PWCTimeArray,
     SummedTimeArray,
+    modulated,
+    timecallable,
 )
 
 
@@ -75,7 +76,7 @@ class TestCallableTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         f = lambda t: t * jnp.array([1, 2])
-        self.x = CallableTimeArray(f, ())
+        self.x = timecallable(f)
 
     @pytest.mark.skip('broken test')
     def test_jit(self):
@@ -98,7 +99,7 @@ class TestCallableTimeArray:
 
     def test_conj(self):
         f = lambda t: t * jnp.array([1 + 1j, 2 + 2j])
-        x = CallableTimeArray(f, ())
+        x = CallableTimeArray(f)
         x = x.conj()
         assert_equal(x(1.0), [1 - 1j, 2 - 2j])
 
@@ -242,7 +243,7 @@ class TestModulatedTimeArray:
         eps = lambda t: (0.5 * t + 1.0j) * one
         array = jnp.array([[1, 2], [3, 4]])
 
-        self.x = ModulatedTimeArray(eps, array, ())
+        self.x = modulated(eps, array)
 
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
