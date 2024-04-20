@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import Array, ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver
@@ -31,6 +32,23 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
             ) from e
 
 
+class BatchedCallable(eqx.Module):
+    f: callable[[float], Array]
+    indices: list[Array]
+
+    def __init__(self, f: callable[[float], Array]):
+        shape = jax.eval_shape(f, 0.0).shape
+        self.f = f
+        (*self.indices,) = jnp.indices(shape[:-2])
+
+    def __call__(self, t: float) -> Array:
+        return self.f(t)[*self.indices]
+
+    @property
+    def ndim(self) -> int:
+        return jax.eval_shape(self.f, 0.0).ndim
+
+
 def get_solver_class(
     solvers: dict[Solver, AbstractSolver], solver: Solver
 ) -> AbstractSolver:
@@ -46,7 +64,7 @@ def get_solver_class(
 def compute_vmap(
     f: callable,
     cartesian_batching: bool,
-    is_batched: PyTree[bool],
+    n_batch: [int],
     out_axes: PyTree[int | None],
 ) -> callable:
     # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
@@ -59,25 +77,36 @@ def compute_vmap(
     # - If `cartesian_batching` is False, we directly map f over all batched arguments
     #   and apply vmap once.
 
-    leaves, treedef = jax.tree_util.tree_flatten(is_batched)
-    n = len(leaves)
-    if any(leaves):
+    if any(n > 0 for n in n_batch):
         if cartesian_batching:
             # map over each batched dimension separately
             # note: we apply the successive vmaps in reverse order, so the output
             # batched dimensions are in the correct order
-            for i, leaf in enumerate(reversed(leaves)):
-                if leaf:
+            for i, c_n_batch in reversed(list(enumerate(n_batch))):
+                if c_n_batch > 0:
                     # build the `in_axes` argument with the same structure as
                     # `is_batched`, but with 0 at the `leaf` position
-                    in_axes = jax.tree_util.tree_map(lambda _: None, leaves)
-                    in_axes[n - 1 - i] = 0
-                    in_axes = jax.tree_util.tree_unflatten(treedef, in_axes)
-                    f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+                    in_axes = [None] * len(n_batch)
+                    in_axes[i] = 0
+                    for _ in range(c_n_batch):
+                        f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
         else:
             # map over all batched dimensions at once
-            in_axes = jax.tree_util.tree_map(lambda x: 0 if x else None, is_batched)
-            f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+            n = None
+            for cn in n_batch:
+                if cn == 0:
+                    pass
+                elif n is None:
+                    n = cn
+                elif cn != n:
+                    raise ValueError(
+                        f"All objects must have the same "
+                        f"batching dimension but got {cn} and {n}"
+                    )
+
+            in_axes = [0 if x > 0 else None for x in n_batch]
+            for _ in range(n):
+                f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
 
