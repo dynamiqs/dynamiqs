@@ -7,7 +7,6 @@ import pytest
 from dynamiqs.time_array import (
     ConstantTimeArray,
     SummedTimeArray,
-    constant,
     modulated,
     pwc,
     timecallable,
@@ -21,7 +20,7 @@ def assert_equal(x, y):
 class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        self.x = constant(jnp.array([1, 2]))
+        self.x = ConstantTimeArray(jnp.array([1, 2]))
 
     @pytest.mark.skip('broken test')
     def test_jit(self):
@@ -38,7 +37,7 @@ class TestConstantTimeArray:
         assert_equal(x(0.0), [[1, 2]])
 
     def test_conj(self):
-        x = constant(jnp.array([1 + 1j, 2 + 2j]))
+        x = ConstantTimeArray(jnp.array([1 + 1j, 2 + 2j]))
         x = x.conj()
         assert_equal(x(0.0), [1 - 1j, 2 - 2j])
 

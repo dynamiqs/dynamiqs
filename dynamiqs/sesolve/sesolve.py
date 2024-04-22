@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
-from ..core._utils import BatchedCallable, _astimearray, compute_vmap, get_solver_class
+from ..core._utils import _astimearray, compute_vmap, get_solver_class
 from ..gradient import Gradient
 from ..options import Options
 from ..result import SEResult
@@ -114,7 +114,7 @@ def _vmap_sesolve(
     out_axes = SEResult(None, None, None, None, 0, 0)
 
     if H.ndim > 2:
-        H = BatchedCallable(H)
+        H = H.as_batched_callable()
     # compute vectorized function with given batching strategy
     f = compute_vmap(_sesolve, options.cartesian_batching, n_batch, out_axes)
 

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
-from jaxtyping import Array, ArrayLike, PyTree
+from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver
@@ -31,23 +30,6 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
                 'Argument must be an array-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
-
-
-class BatchedCallable(eqx.Module):
-    f: callable[[float], Array]
-    indices: list[Array]
-
-    def __init__(self, f: callable[[float], Array]):
-        shape = jax.eval_shape(f, 0.0).shape
-        self.f = f
-        (*self.indices,) = jnp.indices(shape[:-2])
-
-    def __call__(self, t: float) -> Array:
-        return self.f(t)[self.indices[0]]
-
-    @property
-    def ndim(self) -> int:
-        return jax.eval_shape(self.f, 0.0).ndim
 
 
 def get_solver_class(

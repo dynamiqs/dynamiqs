@@ -242,6 +242,14 @@ class TimeArray(eqx.Module):
         """
 
     @abstractmethod
+    def as_batched_callable(self) -> callable:
+        """Returns the time array under the form of a callable that is vmappable.
+
+        Returns:
+            The vmappable callable.
+        """
+
+    @abstractmethod
     def __call__(self, t: ScalarLike) -> Array:
         """Returns the time-array evaluated at a given time.
 
@@ -304,6 +312,9 @@ class ConstantTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
 
+    def as_batched_callable(self) -> callable:
+        return self
+
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.array
 
@@ -325,9 +336,9 @@ class ConstantTimeArray(TimeArray):
 
 
 class PWCTimeArray(TimeArray):
-    times: Array = eqx.field(static=True)  # (..., nv+1,)
-    values: Array = eqx.field(static=True)  # (..., nv)
-    array: Array = eqx.field(static=True)  # (..., n, n)
+    times: Array  # (..., nv+1,)
+    values: Array  # (..., nv)
+    array: Array  # (..., n, n)
 
     @property
     def dtype(self) -> np.dtype:
@@ -354,6 +365,12 @@ class PWCTimeArray(TimeArray):
 
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
+
+    def as_batched_callable(self) -> callable:
+        times = jnp.broadcast_to(self.times, self.values.shape[:-1] + self.times.shape)
+        values = self.values
+        array = jnp.broadcast_to(self.array, values.shape[:-1] + self.array.shape)
+        return PWCTimeArray(times, values, array)
 
     def __call__(self, t: float) -> Array:
         def _zero(_: float) -> Array:
@@ -409,6 +426,9 @@ class CallableTimeArray(TimeArray):
         f = Partial(lambda t: self.f(t).conj())
         return CallableTimeArray(f)
 
+    def as_batched_callable(self) -> callable:
+        return BatchedCallable(self)
+
     def __call__(self, t: float) -> Array:
         return self.f(t)
 
@@ -447,10 +467,6 @@ class ModulatedTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array.mT)
 
-    def __call__(self, t: float) -> Array:
-        values = self.f(t)
-        return values.reshape(*values.shape, 1, 1) * self.array
-
     def reshape(self, *new_shape: int) -> TimeArray:
         f_shape = jax.eval_shape(self.f, 0.0).shape
         new_f_shape, new_array_shape = _split_shape(
@@ -462,6 +478,13 @@ class ModulatedTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).conj())
         return ModulatedTimeArray(f, self.array.conj())
+
+    def as_batched_callable(self) -> callable:
+        return BatchedCallable(self)
+
+    def __call__(self, t: float) -> Array:
+        values = self.f(t)
+        return values.reshape(*values.shape, 1, 1) * self.array
 
     def __neg__(self) -> TimeArray:
         return ModulatedTimeArray(self.f, -self.array)
@@ -505,6 +528,9 @@ class SummedTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
 
+    def as_batched_callable(self) -> callable:
+        return BatchedCallable(self)
+
     def __call__(self, t: float) -> Array:
         return eval_timearrays_sum(self.timearrays, t)
 
@@ -531,3 +557,20 @@ def eval_timearrays_sum(timearrays: [TimeArray], t: float) -> TimeArray:
             lambda x: x(t), timearrays, is_leaf=lambda x: isinstance(x, TimeArray)
         ),
     )
+
+
+class BatchedCallable(eqx.Module):
+    f: callable[[float], Array]
+    indices: list[Array]
+
+    def __init__(self, f: callable[[float], Array]):
+        shape = jax.eval_shape(f, 0.0).shape
+        self.f = f
+        (*self.indices,) = jnp.indices(shape[:-2])
+
+    def __call__(self, t: float) -> Array:
+        return self.f(t)[self.indices[0]]
+
+    @property
+    def ndim(self) -> int:
+        return jax.eval_shape(self.f, 0.0).ndim
