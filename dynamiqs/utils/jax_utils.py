@@ -106,9 +106,10 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu']):
 def set_precision(precision: Literal['simple', 'double']):
     """Configure the default floating point precision.
 
-    The option `precision='simple'` sets default precision to `float32` and
-    `complex64`, and the option `precision='double'` sets default precision to
-    `float64` and `complex128`.
+    Two options are available:
+
+    - `'simple'` sets default precision to `float32` and `complex64` (default setting),
+    - `'double'` sets default precision to `float64` and `complex128`.
 
     Notes:
         This function is equivalent to
@@ -137,15 +138,18 @@ def set_precision(precision: Literal['simple', 'double']):
 def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
     """Configure the default precision for matrix multiplications on GPUs and TPUs.
 
-    With `matmul_precision='low'`, the matmul precision is reduced to `bfloat16`
-    (fastest but least accurate). With `matmul_precision='high'`, the precision is
-    reduced to `bfloat16_3x` (faster but less accurate). With
-    `matmul_precision='highest'`, the precision is kept at `float32` or `float64` if
-    applicable (slowest but most accurate).
+    Some devices allow trading off accuracy for speed when performing matrix
+    multiplications (matmul). Three options are available:
+
+    - `'low'` reduces matmul precision to `bfloat16` (fastest but least accurate),
+    - `'high'` reduces matmul precision to `bfloat16_3x` (faster but less accurate),
+    - `'highest'` keeps matmul precision to the default floating point precision
+        `float32` or `float64` (slowest but most accurate, default setting).
 
     Notes:
         This function is equivalent to setting `jax_default_matmul_precision` in
-        `jax.config`. See [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html).
+        `jax.config`. See [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html)
+        and [JAX documentation on the different available options](https://jax.readthedocs.io/en/latest/jax.lax.html#jax.lax.Precision).
 
     Args:
         matmul_precision _(string 'low', 'high', or 'highest')_: Default precision
