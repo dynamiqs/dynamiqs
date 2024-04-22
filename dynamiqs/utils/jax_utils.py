@@ -134,7 +134,7 @@ def set_precision(precision: Literal['simple', 'double']):
         )
 
 
-def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest'] = 'high'):
+def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
     """Configure the default precision for matrix multiplications on GPUs and TPUs.
 
     With `matmul_precision='low'`, the matmul precision is reduced to `bfloat16`
