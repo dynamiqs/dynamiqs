@@ -142,9 +142,10 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
     multiplications (matmul). Three options are available:
 
     - `'low'` reduces matmul precision to `bfloat16` (fastest but least accurate),
-    - `'high'` reduces matmul precision to `bfloat16_3x` (faster but less accurate),
-    - `'highest'` keeps matmul precision to the default floating point precision
-        `float32` or `float64` (slowest but most accurate, default setting).
+    - `'high'` reduces matmul precision to `bfloat16_3x` or `tensorfloat32` if available
+        (faster but less accurate),
+    - `'highest'` keeps matmul precision to `float32` or `float64` as applicable
+        (slowest but most accurate, default setting).
 
     Notes:
         This function is equivalent to setting `jax_default_matmul_precision` in
@@ -156,12 +157,11 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
             for matrix multiplications on GPUs and TPUs.
     """
     if matmul_precision == 'low':
-        jax.config.update('jax_default_matmul_precision', 'bfloat16')
+        jax.config.update('jax_default_matmul_precision', 'fastest')
     elif matmul_precision == 'high':
-        jax.config.update('jax_default_matmul_precision', 'bfloat16_3x')
+        jax.config.update('jax_default_matmul_precision', 'high')
     elif matmul_precision == 'highest':
-        # this allows to use float32 or float64 if applicable
-        jax.config.update('jax_default_matmul_precision', 'float32')
+        jax.config.update('jax_default_matmul_precision', 'highest')
     else:
         raise ValueError(
             f"Argument `matmul_precision` should be a string 'low', 'high', or"
