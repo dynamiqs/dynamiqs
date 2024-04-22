@@ -63,13 +63,13 @@ class CatCNOT(BenchModel):
         # operators
         ac = dq.tensor(dq.destroy(N), dq.eye(N))
         nt = dq.tensor(dq.eye(N), dq.number(N))
-        i = dq.tensor(dq.eye(N), dq.eye(N))
+        I = dq.tensor(dq.eye(N), dq.eye(N))
 
         # Hamiltonian
-        H = g_cnot * (ac + dq.dag(ac)) @ (nt - nbar * i)
+        H = g_cnot * (ac + dq.dag(ac)) @ (nt - nbar * I)
 
         # jump operator
-        jump_ops = [jnp.sqrt(kappa_2) * (ac @ ac - nbar * i)]
+        jump_ops = [jnp.sqrt(kappa_2) * (ac @ ac - nbar * I)]
 
         # initial state
         plus = dq.unit(dq.coherent(N, alpha) + dq.coherent(N, -alpha))
