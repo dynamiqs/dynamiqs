@@ -1,3 +1,3 @@
-from .catcnot import CatCNOT
-from .crgate import CrossResonanceGate
-from .drivencav import DrivenCavity
+from .cat_cnot import CatCNOT
+from .cross_resonance_gate import CrossResonanceGate
+from .driven_cavity import DrivenCavity
