@@ -129,7 +129,7 @@ def set_precision(precision: Literal['simple', 'double']):
         jax.config.update('jax_enable_x64', True)
     else:
         raise ValueError(
-            f"Argument `x` should be a string 'simple' or 'double', but is"
+            f"Argument `precision` should be a string 'simple' or 'double', but is"
             f" '{precision}'."
         )
 
