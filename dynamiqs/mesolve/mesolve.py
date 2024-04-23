@@ -189,13 +189,13 @@ def _check_mesolve_args(
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     if len(jump_ops) == 0:
-        logging.warn(
+        logging.warning(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
     # === check rho0 shape
-    check_shape(rho0, 'rho0', '(..., n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...nrho0'})
 
     # === check exp_ops shape
     if exp_ops is not None:

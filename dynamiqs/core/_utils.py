@@ -7,13 +7,7 @@ from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver
-from ..time_array import (
-    CallableTimeArray,
-    ConstantTimeArray,
-    PWCTimeArray,
-    SummedTimeArray,
-    TimeArray,
-)
+from ..time_array import ConstantTimeArray, TimeArray
 from .abstract_solver import AbstractSolver
 
 
@@ -45,10 +39,14 @@ def get_solver_class(
 
 
 def compute_vmap(
-    f: callable, cartesian_batching: bool, n_batch: [int], out_axes: PyTree[int | None]
+    f: callable,
+    cartesian_batching: bool,
+    n_batch: PyTree[int],
+    out_axes: PyTree[int | None],
 ) -> callable:
     # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
-    # argument `is_batched` indicates for each argument of `f` whether it is batched.
+    # argument `n_batch` indicates for each argument of `f` the number of batching
+    # dimensions it has.
     # There are two possible strategies to vectorize `f`:
     # - If `cartesian_batching` is True, we want to apply `f` to every possible
     #   combination of the arguments batched dimension (the cartesian product). To do
@@ -81,19 +79,3 @@ def compute_vmap(
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
-
-
-def is_timearray_batched(tarray: TimeArray) -> TimeArray:
-    # This function finds all batched arrays within a given TimeArray.
-    # To do so, it goes down the PyTree and identifies batched fields depending
-    # on the type of TimeArray.
-    if isinstance(tarray, SummedTimeArray):
-        return SummedTimeArray([is_timearray_batched(arr) for arr in tarray.timearrays])
-    elif isinstance(tarray, ConstantTimeArray):
-        return ConstantTimeArray(tarray.array.ndim > 2)
-    elif isinstance(tarray, PWCTimeArray):
-        return PWCTimeArray(False, tarray.values.ndim > 1, False)
-    elif isinstance(tarray, CallableTimeArray):
-        return CallableTimeArray(False, tuple(arg.ndim > 0 for arg in tarray.args))
-    else:
-        raise TypeError(f'Unsupported TimeArray type: {type(tarray).__name__}')

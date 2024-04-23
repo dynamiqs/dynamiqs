@@ -88,7 +88,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     return PWCTimeArray(times, values, array)
 
 
-def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> CallableTimeArray:
+def modulated(f: callable[[float], Array], array: ArrayLike) -> CallableTimeArray:
     r"""Instantiate a modulated time-array.
 
     A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
@@ -98,7 +98,7 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> CallableTim
 
     Args:
         f _(function returning array of shape (...))_: Function with signature
-            `f(t: float, *args: PyTree) -> Array` that returns the modulating factor
+            `f(t: float) -> Array` that returns the modulating factor
             $f(t)$.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
 
@@ -122,7 +122,7 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> CallableTim
     return ModulatedTimeArray(f, array)
 
 
-def timecallable(f: callable[[float, ...], Array]) -> CallableTimeArray:
+def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
@@ -242,7 +242,7 @@ class TimeArray(eqx.Module):
         """
 
     @abstractmethod
-    def as_batched_callable(self) -> callable:
+    def as_batched_callable(self) -> callable[[float], Array]:
         """Returns the time array under the form of a callable that is vmappable.
 
         Returns:
@@ -336,9 +336,9 @@ class ConstantTimeArray(TimeArray):
 
 
 class PWCTimeArray(TimeArray):
-    times: Array  # (..., nv+1,)
+    times: Array  # (nv+1,)
     values: Array  # (..., nv)
-    array: Array  # (..., n, n)
+    array: Array  # (n, n)
 
     @property
     def dtype(self) -> np.dtype:
@@ -402,6 +402,58 @@ class PWCTimeArray(TimeArray):
             return NotImplemented
 
 
+class ModulatedTimeArray(TimeArray):
+    f: callable[[float, ...], Array]  # (...)
+    array: Array  # (n, n)
+
+    @property
+    def dtype(self) -> np.dtype:
+        return self.array.dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        f_shape = jax.eval_shape(self.f, 0.0).shape
+        return (*f_shape, *self.array.shape)
+
+    @property
+    def mT(self) -> TimeArray:
+        return ModulatedTimeArray(self.f, self.array.mT)
+
+    def reshape(self, *new_shape: int) -> TimeArray:
+        f_shape = jax.eval_shape(self.f, 0.0).shape
+        new_f_shape, new_array_shape = _split_shape(
+            new_shape, f_shape, self.array.shape
+        )
+        f = Partial(lambda t: self.f(t).reshape(*new_f_shape))
+        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape))
+
+    def conj(self) -> TimeArray:
+        f = Partial(lambda t: self.f(t).conj())
+        return ModulatedTimeArray(f, self.array.conj())
+
+    def as_batched_callable(self) -> callable:
+        return BatchedCallable(self)
+
+    def __call__(self, t: float) -> Array:
+        values = self.f(t)
+        return values.reshape(*values.shape, 1, 1) * self.array
+
+    def __neg__(self) -> TimeArray:
+        return ModulatedTimeArray(self.f, -self.array)
+
+    def __mul__(self, y: ArrayLike) -> TimeArray:
+        return ModulatedTimeArray(self.f, self.array * y)
+
+    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
+        if isinstance(other, get_args(ArrayLike)):
+            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
+            return SummedTimeArray([self, other])
+        elif isinstance(other, TimeArray):
+            return SummedTimeArray([self, other])
+        else:
+            return NotImplemented
+
+
 class CallableTimeArray(TimeArray):
     f: callable[[float], Array]
 
@@ -439,58 +491,6 @@ class CallableTimeArray(TimeArray):
     def __mul__(self, y: ArrayLike) -> TimeArray:
         f = Partial(lambda t: self.f(t) * y)
         return CallableTimeArray(f)
-
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([self, other])
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
-        else:
-            return NotImplemented
-
-
-class ModulatedTimeArray(TimeArray):
-    f: callable[[float, ...], Array]  # (...)
-    array: Array  # (n, n)
-
-    @property
-    def dtype(self) -> np.dtype:
-        return self.array.dtype
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        f_shape = jax.eval_shape(self.f, 0.0).shape
-        return (*f_shape, *self.array.shape)
-
-    @property
-    def mT(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array.mT)
-
-    def reshape(self, *new_shape: int) -> TimeArray:
-        f_shape = jax.eval_shape(self.f, 0.0).shape
-        new_f_shape, new_array_shape = _split_shape(
-            new_shape, f_shape, self.array.shape
-        )
-        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
-        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape))
-
-    def conj(self) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).conj())
-        return ModulatedTimeArray(f, self.array.conj())
-
-    def as_batched_callable(self) -> callable:
-        return BatchedCallable(self)
-
-    def __call__(self, t: float) -> Array:
-        values = self.f(t)
-        return values.reshape(*values.shape, 1, 1) * self.array
-
-    def __neg__(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, -self.array)
-
-    def __mul__(self, y: ArrayLike) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
