@@ -31,7 +31,6 @@ def mcsolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
-    ntraj: int = 10,
     key: PRNGKey = PRNGKey(42),
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
@@ -111,7 +110,7 @@ def mcsolve(
     _check_mcsolve_args(H, jump_ops, psi0, tsave, exp_ops)
 
     return _vmap_mcsolve(
-        H, jump_ops, psi0, tsave, ntraj, key, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, key, exp_ops, solver, gradient, options
     )
 
 
@@ -120,7 +119,6 @@ def _vmap_mcsolve(
     jump_ops: list[TimeArray],
     psi0: Array,
     tsave: Array,
-    ntraj: int,
     key: PRNGKey,
     exp_ops: Array | None,
     solver: Solver,
@@ -140,12 +138,11 @@ def _vmap_mcsolve(
         False,
         False,
         False,
-        False,
     )
     # the result is vectorized over `saved`
     out_axes = MCResult(None, 0, 0, 0, 0)
     f = compute_vmap(_mcsolve, options.cartesian_batching, is_batched, out_axes)
-    return f(H, jump_ops, psi0, tsave, ntraj, key, exp_ops, solver, gradient, options)
+    return f(H, jump_ops, psi0, tsave, key, exp_ops, solver, gradient, options)
 
 
 def _mcsolve(
@@ -153,13 +150,13 @@ def _mcsolve(
     jump_ops: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
     tsave: ArrayLike,
-    ntraj: int,
     key: PRNGKey,
     exp_ops: Array | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
 ) -> MCResult:
+    ntraj = options.ntraj
     key_1, key_2, key_3 = jax.random.split(key, num=3)
     # simulate no-jump trajectory
     rand0 = 0.0
