@@ -6,6 +6,7 @@ from typing import get_args
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 import numpy as np
 from jax import Array, lax
 from jax.tree_util import Partial
@@ -496,6 +497,21 @@ class CallableTimeArray(TimeArray):
 class SummedTimeArray(TimeArray):
     timearrays: list[TimeArray]
 
+    def __init__(self, timearrays: list[TimeArray]):
+        self.timearrays = self._merge_constants(timearrays)
+
+    def _merge_constants(self, timearrays: list[TimeArray]) -> list[TimeArray]:
+        mask = [isinstance(tarray, ConstantTimeArray) for tarray in timearrays]
+        if sum(mask) >= 2:
+            constant_array = jtu.tree_reduce(
+                jnp.add, jtu.tree_map(lambda x: x.array, timearrays[mask])
+            )
+            constant_timearray = ConstantTimeArray(constant_array)
+            timedep_timearrays = timearrays[~mask]
+            return [constant_timearray, *timedep_timearrays]
+        else:
+            return timearrays
+
     @property
     def dtype(self) -> np.dtype:
         return self.timearrays[0].dtype
@@ -509,9 +525,7 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray([tarray.mT for tarray in self.timearrays])
 
     def __call__(self, t: float) -> Array:
-        return jax.tree_util.tree_reduce(
-            jnp.add, [tarray(t) for tarray in self.timearrays]
-        )
+        return jtu.tree_reduce(jnp.add, [tarray(t) for tarray in self.timearrays])
 
     def reshape(self, *new_shape: int) -> TimeArray:
         return SummedTimeArray(
