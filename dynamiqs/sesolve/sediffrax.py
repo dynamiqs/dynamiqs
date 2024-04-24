@@ -16,7 +16,8 @@ class SEDiffraxSolver(DiffraxSolver, SESolver):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Schrödinger term d|psi>/dt = - i H |psi>
-        vector_field = lambda t, y, _: -1j * self.H(t) @ y
+        Hnh = -1j * self.H
+        vector_field = lambda t, y, _: Hnh(t) @ y
         return dx.ODETerm(vector_field)
 
 

@@ -11,6 +11,7 @@ from ..core.diffrax_solver import (
     EulerSolver,
     Tsit5Solver,
 )
+from ..time_array import ConstantTimeArray
 from ..utils.utils import dag
 
 
@@ -36,12 +37,37 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
 
-        def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            Ls = jnp.stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
-            return tmp + dag(tmp)
+        # time-dependent jump operators
+        Ls_tdp = [L for L in self.Ls if not isinstance(L, ConstantTimeArray)]
+
+        # static jump operators
+        Ls_t_stc = jnp.stack(
+            [L.array for L in self.Ls if isinstance(L, ConstantTimeArray)]
+        )
+        Lsd_t_stc = dag(Ls_t_stc)
+        LdL_t_stc = (Lsd_t_stc @ Ls_t_stc).sum(0)
+
+        # non-Hermitian Hamiltonian
+        # It is made of the static and time-dependent parts of the Hamiltonian,
+        # and of the static jump operators. The time-dependent jump operators
+        # are added later in the vector field.
+        Hnh = -1j * self.H - 0.5 * LdL_t_stc
+
+        if len(Ls_tdp) == 0:
+
+            def vector_field(t, y, _):  # noqa: ANN001, ANN202
+                tmp = Hnh(t) @ y + 0.5 * (Ls_t_stc @ y @ Lsd_t_stc).sum(0)
+                return tmp + dag(tmp)
+        else:
+
+            def vector_field(t, y, _):  # noqa: ANN001, ANN202
+                Ls_t_tdp = jnp.stack([L(t) for L in Ls_tdp])
+                Lsd_t_tdp = dag(Ls_t_tdp)
+                LdL_t_tdp = (Ls_t_tdp @ Lsd_t_tdp).sum(0)
+                Ls_t = jnp.concatenate([Ls_t_stc, Ls_t_tdp])
+                Lsd_t = jnp.concatenate([Lsd_t_stc, Lsd_t_tdp])
+                tmp = (Hnh(t) - 0.5 * LdL_t_tdp) @ y + 0.5 * (Ls_t @ y @ Lsd_t).sum(0)
+                return tmp + dag(tmp)
 
         return dx.ODETerm(vector_field)
 
