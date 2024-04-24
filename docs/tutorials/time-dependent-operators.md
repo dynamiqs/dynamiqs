@@ -199,7 +199,7 @@ Array([[0.+0.j, 1.+0.j],
     >>> def pulse(t, omega, amplitude=1.0):
     ...     return amplitude * jnp.cos(omega * t)
     >>> # create function with correct signature (t: float) -> Array
-    >>> f = functools.partial(pulse, 1.0, amplitude=5.0)
+    >>> f = functools.partial(pulse, omega=1.0, amplitude=5.0)
     >>> H = dq.modulated(f, dq.sigmax())
     ```
 
@@ -257,6 +257,6 @@ Array([[1., 0.],
     >>> def func(t, a, amplitude=1.0):
     ...     return amplitude * jnp.array([[t, a], [a, 1 - t]])
     >>> # create function with correct signature (t: float) -> Array
-    >>> f = functools.partial(func, 1.0, amplitude=5.0)
+    >>> f = functools.partial(func, a=1.0, amplitude=5.0)
     >>> H = dq.timecallable(f)
     ```
