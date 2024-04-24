@@ -62,7 +62,7 @@ def sesolve(
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of nE array-like, each of shape (n, n), optional)_: List of
+        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
