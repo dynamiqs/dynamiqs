@@ -66,14 +66,14 @@ def mesolve(
         more details.
 
     Args:
-        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
-            jump operators.
-        rho0 _(array-like of shape (nrho0?, n, 1) or (nrho0?, n, n))_: Initial state.
+        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of nL array-like or time-array, each of shape (...Lk, n, n))_:
+            List of jump operators.
+        rho0 _(array-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
+        exp_ops _(list of nE array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
@@ -182,11 +182,11 @@ def _check_mesolve_args(
     H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
     # === check H shape
-    check_shape(H, 'H', '(..., n, n)')
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check jump_ops
+    # === check jump_ops shape
     for i, L in enumerate(jump_ops):
-        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(jump_ops) == 0:
         logging.warning(
@@ -195,7 +195,7 @@ def _check_mesolve_args(
         )
 
     # === check rho0 shape
-    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...nrho0'})
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
 
     # === check exp_ops shape
     if exp_ops is not None:
