@@ -96,7 +96,7 @@ In dynamiqs, PWC operators are defined by three array-like objects:
 - `values`: the constant values $(c_0, \ldots, c_{N-1})$ for each time interval, of shape _(..., N)_,
 - `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
 
-To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object.
+To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
 !!! Notes
     The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
@@ -148,7 +148,7 @@ In dynamiqs, modulated operators are defined by:
 - `f`: a Python function with signature `f(t: float, *args: PyTree) -> Array` that returns the modulating factor $f(t)$ for any time $t$, as an array of shape _(...)_,
 - `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
 
-To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object.
+To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
 Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
 ```python
@@ -190,7 +190,7 @@ In dynamiqs, arbitrary time-dependent operators are defined by:
 
 - `f`: a Python function with signature `f(t: float, *args: PyTree) -> Array` that returns the operator $f(t)$ for any time $t$, as an array of shape _(..., n, n)_.
 
-To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object.
+To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
 Let's define the arbitrary time-dependent operator $H=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
 ```pycon

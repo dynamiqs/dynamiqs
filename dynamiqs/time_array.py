@@ -28,7 +28,8 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
         array _(array_like of shape (..., n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O_0$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O_0$ for any time $t$.
     """
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(..., n, n)')
@@ -62,7 +63,8 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
         array _(array_like of shape (n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O(t)$ for any time $t$.
     """
     # times
     times = jnp.asarray(times)
@@ -103,7 +105,8 @@ def modulated(f: callable[[float], Array], array: ArrayLike) -> CallableTimeArra
         array _(array_like of shape (n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
@@ -135,7 +138,8 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
             `(t: float) -> Array` that returns the array $f(t)$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
