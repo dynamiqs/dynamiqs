@@ -133,6 +133,11 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     with signature `f(t: float) -> Array` that returns an array of shape
     _(..., n, n)_ for any time $t$.
 
+    Warning: The function `f` must return a JAX array (not an array-like object!)
+        An error is raised if the function `f` does not return a JAX array. This error
+        concerns any other array-like objects. This is enforced to avoid costly
+        conversions at every time step of the numerical integration.
+
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
             `(t: float) -> Array` that returns the array $f(t)$.

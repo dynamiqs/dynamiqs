@@ -213,7 +213,6 @@ Array([[1., 0.],
 ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
-    An error is raised if the function `f` does not return a JAX array. This error includes other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Function with additional arguments"
     To define a callable time-array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`][dynamiqs.timecallable]:
@@ -221,6 +220,7 @@ Array([[1., 0.],
     x = 1.0
     f = lambda t: x * jnp.array([[t, 0], [0, 1 - t]])
     H = dq.timecallable(f)
+    An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
     ```
 
 ## Batching and differentiation with time-arrays
