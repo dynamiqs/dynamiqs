@@ -135,6 +135,18 @@ Array([[ 0.+0.j,  0.+0.j],
        [ 0.+0.j, -0.+0.j]], dtype=complex64)
 ```
 
+??? Notes "Batching"
+    The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
+    ```pycon
+    >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
+    >>> times = jnp.array([0.0, 1.0, 2.0])
+    >>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
+    >>> array = dq.sigmaz()
+    >>> H = dq.pwc(times, values, array)
+    >>> H.shape
+    (11, 2, 2)
+    ```
+
 ### Modulated operators
 
 A modulated operator is defined by
@@ -170,12 +182,14 @@ Array([[0.+0.j, 1.+0.j],
        [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
-??? Note "Function with additional arguments"
-    To define a modulated time-array with additional arguments, you can use the optional `args` parameter of [`dq.modulated()`][dynamiqs.modulated]:
-    ```python
-    f = lambda t: jnp.cos(omegas * t)
-    omega = 1.0
-    H = dq.modulated(f, dq.sigmax())
+??? Notes "Batching"
+    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    ```pycon
+    >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
+    >>> f = lambda t: jnp.cos(omegas * t)
+    >>> H = dq.modulated(f, dq.sigmax())
+    >>> H.shape
+    (11, 2, 2)
     ```
 
 ### Arbitrary time-dependent operators
@@ -213,23 +227,14 @@ Array([[1., 0.],
 ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
-
-??? Note "Function with additional arguments"
-    To define a callable time-array with additional arguments, you can use the optional `args` parameter of [`dq.timecallable()`][dynamiqs.timecallable]:
-    ```python
-    x = 1.0
-    f = lambda t: x * jnp.array([[t, 0], [0, 1 - t]])
-    H = dq.timecallable(f)
     An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
+
+??? Notes "Batching"
+    The batching of the returned time-array is specified by the array returned by `f`. For example, to define am arbitrary time-dependent operator batched over a parameter $\theta$:
+    ```pycon
+    >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
+    >>> f = lambda t: thetas[:, None, None] * jnp.array([[t, 0], [0, 1 - t]])
+    >>> H = dq.timecallable(f)
+    >>> H.shape
+    (11, 2, 2)
     ```
-
-## Batching and differentiation with time-arrays
-
-For modulated and arbitrary time-dependent operators, any array that is batched or differentiated over should be passed as an additional `*args` argument to [`dq.modulated()`][dynamiqs.modulated] and [`dq.timecallable()`][dynamiqs.timecallable].
-
-For example to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched or differentiated over the parameter $\omega$:
-```python
-omegas = jnp.linspace(0.0, 2.0, 10)
-f = lambda t: jnp.cos(omegas * t)
-H = dq.modulated(f, dq.sigmax())
-```
