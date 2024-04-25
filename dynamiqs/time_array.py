@@ -142,30 +142,6 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     return CallableTimeArray(f)
 
 
-def _split_shape(
-    shape: tuple[int, ...], shape_1: tuple[int, ...], shape_2: tuple[int, ...]
-) -> tuple[tuple[int, ...], tuple[int, ...]]:
-    """Split `shape` in two shapes of the same total size as `shape_1` and `shape_2`."""
-    # convert all to jnp arrays
-    _shape = jnp.array(shape)
-    _shape_1 = jnp.array(shape_1)
-    _shape_2 = jnp.array(shape_2)
-
-    # find total sizes
-    _size = jnp.prod(_shape)
-    _size_1 = jnp.prod(_shape_1)
-    _size_2 = jnp.prod(_shape_2)
-
-    # check if shape is compatible with shape_1 and shape_2
-    if _size != _size_1 * _size_2:
-        raise ValueError('The shape is not compatible with the shape_1 and shape_2.')
-
-    # find where to split shape
-    cumprod = jnp.cumprod(jnp.concatenate([jnp.array([1]), _shape]))
-    idx = jnp.where(cumprod == _size_1)[0][-1]
-    return shape[:idx], shape[idx:]
-
-
 class TimeArray(eqx.Module):
     r"""Base class for time-dependent arrays.
 
@@ -347,14 +323,8 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values, self.array.mT)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        new_values_shape, new_array_shape = _split_shape(
-            new_shape, self.values.shape[:-1], self.array.shape
-        )
-
         return PWCTimeArray(
-            self.times,
-            self.values.reshape(*new_values_shape, self.values.shape[-1]),
-            self.array.reshape(*new_array_shape),
+            self.times, self.values.reshape(*new_shape[:-2]), self.array
         )
 
     def conj(self) -> TimeArray:
@@ -411,12 +381,8 @@ class ModulatedTimeArray(TimeArray):
         return ModulatedTimeArray(self.f, self.array.mT)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f_shape = jax.eval_shape(self.f, 0.0).shape
-        new_f_shape, new_array_shape = _split_shape(
-            new_shape, f_shape, self.array.shape
-        )
-        f = jtu.Partial(lambda t: self.f(t).reshape(*new_f_shape))
-        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape))
+        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape[:-2]))
+        return ModulatedTimeArray(f, self.array)
 
     def conj(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).conj())
