@@ -10,7 +10,12 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
-from ..core._utils import _astimearray, compute_vmap, get_solver_class
+from ..core._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    _flat_vectorize,
+    get_solver_class,
+)
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
@@ -106,13 +111,15 @@ def mesolve(
     # === convert rho0 to density matrix
     rho0 = todm(rho0)
 
-    # we implement the jitted vmap in another function to pre-convert QuTiP objects
-    # (which are not JIT-compatible) to JAX arrays
-    return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    return _vectorized_mesolve(
+        H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options
+    )
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
-def _vmap_mesolve(
+def _vectorized_mesolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
     rho0: Array,
@@ -139,7 +146,10 @@ def _vmap_mesolve(
     out_axes = MEResult(None, None, None, None, 0, 0)
 
     # compute vectorized function with given batching strategy
-    f = compute_vmap(_mesolve, options.cartesian_batching, n_batch, out_axes)
+    if options.cartesian_batching:
+        f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
+    else:
+        f = _flat_vectorize(_mesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
