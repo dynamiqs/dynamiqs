@@ -11,9 +11,9 @@ from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import (
     _astimearray,
-    compute_vmap,
+    _cartesian_vectorize,
+    _flat_vectorize,
     get_solver_class,
-    is_timearray_batched,
 )
 from ..gradient import Gradient
 from ..options import Options
@@ -95,13 +95,13 @@ def sesolve(
     _check_sesolve_args(H, psi0, exp_ops)
     tsave = check_times(tsave, 'tsave')
 
-    # we implement the jitted vmap in another function to pre-convert QuTiP objects
-    # (which are not JIT-compatible) to JAX arrays
-    return _vmap_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    return _vectorized_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
-def _vmap_sesolve(
+def _vectorized_sesolve(
     H: TimeArray,
     psi0: Array,
     tsave: Array,
@@ -112,21 +112,19 @@ def _vmap_sesolve(
 ) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
-    is_batched = (
-        is_timearray_batched(H),
-        psi0.ndim > 2,
-        False,
-        False,
-        False,
-        False,
-        False,
-    )
+    n_batch = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = SEResult(None, None, None, None, 0, 0)
 
+    if H.ndim > 2:
+        H = H.as_batched_callable()
+
     # compute vectorized function with given batching strategy
-    f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
+    if options.cartesian_batching:
+        f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
+    else:
+        f = _flat_vectorize(_sesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)
@@ -167,7 +165,7 @@ def _sesolve(
 def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)')
-    check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
+    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...npsi0?'})
 
     # === check exp_ops shape
     if exp_ops is not None:

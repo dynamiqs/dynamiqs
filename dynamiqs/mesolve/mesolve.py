@@ -12,9 +12,9 @@ from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import (
     _astimearray,
-    compute_vmap,
+    _cartesian_vectorize,
+    _flat_vectorize,
     get_solver_class,
-    is_timearray_batched,
 )
 from ..gradient import Gradient
 from ..options import Options
@@ -111,13 +111,15 @@ def mesolve(
     # === convert rho0 to density matrix
     rho0 = todm(rho0)
 
-    # we implement the jitted vmap in another function to pre-convert QuTiP objects
-    # (which are not JIT-compatible) to JAX arrays
-    return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    return _vectorized_mesolve(
+        H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options
+    )
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
-def _vmap_mesolve(
+def _vectorized_mesolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
     rho0: Array,
@@ -129,22 +131,25 @@ def _vmap_mesolve(
 ) -> MEResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
-    is_batched = (
-        is_timearray_batched(H),
-        [is_timearray_batched(jump_op) for jump_op in jump_ops],
-        rho0.ndim > 2,
-        False,
-        False,
-        False,
-        False,
-        False,
+    n_batch = (
+        H.ndim - 2,
+        [jump_op.ndim - 2 for jump_op in jump_ops],
+        rho0.ndim - 2,
+        0,
+        0,
+        0,
+        0,
+        0,
     )
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = MEResult(None, None, None, None, 0, 0)
 
     # compute vectorized function with given batching strategy
-    f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
+    if options.cartesian_batching:
+        f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
+    else:
+        f = _flat_vectorize(_mesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
@@ -194,13 +199,13 @@ def _check_mesolve_args(
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     if len(jump_ops) == 0:
-        logging.warn(
+        logging.warning(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
     # === check rho0 shape
-    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...nrho0'})
 
     # === check exp_ops shape
     if exp_ops is not None:
