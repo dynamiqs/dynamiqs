@@ -302,14 +302,14 @@ class ConstantTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ConstantTimeArray(self.array.mT)
 
-    def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
-        return self.array
-
     def reshape(self, *args: int) -> TimeArray:
         return ConstantTimeArray(self.array.reshape(*args))
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
+
+    def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
+        return self.array
 
     def __neg__(self) -> TimeArray:
         return ConstantTimeArray(-self.array)
@@ -345,20 +345,6 @@ class PWCTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array.mT)
 
-    def __call__(self, t: float) -> Array:
-        def _zero(_: float) -> Array:
-            return jnp.zeros_like(self.values[..., 0])  # (...)
-
-        def _pwc(t: float) -> Array:
-            idx = jnp.searchsorted(self.times, t, side='right') - 1
-            return self.values[..., idx]  # (...)
-
-        value = lax.cond(
-            jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
-        )
-
-        return value.reshape(*value.shape, 1, 1) * self.array
-
     def reshape(self, *new_shape: int) -> TimeArray:
         new_values_shape, new_array_shape = _split_shape(
             new_shape, self.values.shape[:-1], self.array.shape
@@ -372,6 +358,20 @@ class PWCTimeArray(TimeArray):
 
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
+
+    def __call__(self, t: float) -> Array:
+        def _zero(_: float) -> Array:
+            return jnp.zeros_like(self.values[..., 0])  # (...)
+
+        def _pwc(t: float) -> Array:
+            idx = jnp.searchsorted(self.times, t, side='right') - 1
+            return self.values[..., idx]  # (...)
+
+        value = lax.cond(
+            jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
+        )
+
+        return value.reshape(*value.shape, 1, 1) * self.array
 
     def __neg__(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values, -self.array)
@@ -411,10 +411,6 @@ class ModulatedTimeArray(TimeArray):
         args = expand_as_broadcastable(self.args)
         return self.f(t, *args)
 
-    def __call__(self, t: float) -> Array:
-        values = self._call_f(t)
-        return values.reshape(*values.shape, 1, 1) * self.array
-
     def reshape(self, *new_shape: int) -> TimeArray:
         f_shape = jax.eval_shape(self._call_f, 0.0).shape
         new_f_shape, new_array_shape = _split_shape(
@@ -426,6 +422,10 @@ class ModulatedTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).conj())
         return ModulatedTimeArray(f, self.array.conj(), self.args)
+
+    def __call__(self, t: float) -> Array:
+        values = self._call_f(t)
+        return values.reshape(*values.shape, 1, 1) * self.array
 
     def __neg__(self) -> TimeArray:
         return ModulatedTimeArray(self.f, -self.array, self.args)
@@ -464,9 +464,6 @@ class CallableTimeArray(TimeArray):
         args = expand_as_broadcastable(self.args)
         return self.f(t, *args)
 
-    def __call__(self, t: float) -> Array:
-        return self._call_f(t)
-
     def reshape(self, *new_shape: int) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_shape))
         return CallableTimeArray(f, self.args)
@@ -474,6 +471,9 @@ class CallableTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         f = Partial(lambda t, *args: self.f(t, *args).conj())
         return CallableTimeArray(f, self.args)
+
+    def __call__(self, t: float) -> Array:
+        return self._call_f(t)
 
     def __neg__(self) -> TimeArray:
         f = Partial(lambda t, *args: -self.f(t, *args))
@@ -508,11 +508,6 @@ class SummedTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return SummedTimeArray([tarray.mT for tarray in self.timearrays])
 
-    def __call__(self, t: float) -> Array:
-        return jax.tree_util.tree_reduce(
-            jnp.add, [tarray(t) for tarray in self.timearrays]
-        )
-
     def reshape(self, *new_shape: int) -> TimeArray:
         return SummedTimeArray(
             [tarray.reshape(*new_shape) for tarray in self.timearrays]
@@ -520,6 +515,11 @@ class SummedTimeArray(TimeArray):
 
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
+
+    def __call__(self, t: float) -> Array:
+        return jax.tree_util.tree_reduce(
+            jnp.add, [tarray(t) for tarray in self.timearrays]
+        )
 
     def __neg__(self) -> TimeArray:
         return SummedTimeArray([-tarray for tarray in self.timearrays])
