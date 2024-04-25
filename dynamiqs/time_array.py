@@ -191,7 +191,8 @@ class TimeArray(eqx.Module):
 
     # Subclasses should implement:
     # - the properties: dtype, shape, mT
-    # - the methods: __call__, reshape, conj, __neg__, __mul__, __add__
+    # - the methods: reshape, conj, as_batched_callable, __call__, __neg__, __mul__,
+    #   __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Array`, `ConstantTimeArray` and the subclass type itself.
@@ -236,10 +237,10 @@ class TimeArray(eqx.Module):
 
     @abstractmethod
     def as_batched_callable(self) -> callable[[float], Array]:
-        """Returns the time array under the form of a callable that is vmappable.
+        """Returns the time-array as a vmap-compatible callable.
 
         Returns:
-            The vmappable callable.
+            A callable that can be used with `jax.vmap`.
         """
 
     @abstractmethod
@@ -305,7 +306,7 @@ class ConstantTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
 
-    def as_batched_callable(self) -> callable:
+    def as_batched_callable(self) -> callable[[float], Array]:
         return self
 
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
@@ -359,7 +360,7 @@ class PWCTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
-    def as_batched_callable(self) -> callable:
+    def as_batched_callable(self) -> callable[[float], Array]:
         return self
 
     def __call__(self, t: float) -> Array:
@@ -421,7 +422,7 @@ class ModulatedTimeArray(TimeArray):
         f = jtu.Partial(lambda t: self.f(t).conj())
         return ModulatedTimeArray(f, self.array.conj())
 
-    def as_batched_callable(self) -> callable:
+    def as_batched_callable(self) -> callable[[float], Array]:
         return BatchedCallable(self)
 
     def __call__(self, t: float) -> Array:
@@ -468,7 +469,7 @@ class CallableTimeArray(TimeArray):
         f = jtu.Partial(lambda t: self.f(t).conj())
         return CallableTimeArray(f)
 
-    def as_batched_callable(self) -> callable:
+    def as_batched_callable(self) -> callable[[float], Array]:
         return BatchedCallable(self)
 
     def __call__(self, t: float) -> Array:
@@ -518,7 +519,7 @@ class SummedTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
 
-    def as_batched_callable(self) -> callable:
+    def as_batched_callable(self) -> callable[[float], Array]:
         return BatchedCallable(self)
 
     def __call__(self, t: float) -> Array:
