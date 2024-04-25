@@ -69,20 +69,15 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 
     # values
     values = jnp.asarray(values, dtype=cdtype())
-    if values.shape[-1] != times.shape[-1] - 1:
+    if values.shape[-1] != len(times) - 1:
         raise TypeError(
-            'Argument `values` must have shape `(..., times.shape[-1]-1)`, but '
-            f'has shape `{values.shape}.'
+            'Argument `values` must have shape `(..., len(time)-1)`, but has shape'
+            f' `{values.shape}.'
         )
 
     # array
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
-
-    # if values.ndim > 1:
-    #     values_batching = values.shape[:-1]
-    #     times = jnp.broadcast_to(times, values_batching + times.shape)
-    #     array = jnp.broadcast_to(array, values_batching + array.shape)
 
     return PWCTimeArray(times, values, array)
 
@@ -344,7 +339,7 @@ class PWCTimeArray(TimeArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return *self.values.shape[:-1], *self.array.shape[-2:]
+        return *self.values.shape[:-1], *self.array.shape
 
     @property
     def mT(self) -> TimeArray:
@@ -365,10 +360,7 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
     def as_batched_callable(self) -> callable:
-        times = jnp.broadcast_to(self.times, self.values.shape[:-1] + self.times.shape)
-        values = self.values
-        array = jnp.broadcast_to(self.array, values.shape[:-1] + self.array.shape)
-        return PWCTimeArray(times, values, array)
+        return self
 
     def __call__(self, t: float) -> Array:
         def _zero(_: float) -> Array:
