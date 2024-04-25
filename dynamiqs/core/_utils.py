@@ -38,44 +38,97 @@ def get_solver_class(
     return solvers[type(solver)]
 
 
-def compute_vmap(
-    f: callable,
-    cartesian_batching: bool,
-    n_batch: PyTree[int],
-    out_axes: PyTree[int | None],
+def _flat_vectorize(
+    f: callable, n_batch: PyTree[int], out_axes: PyTree[int | None]
 ) -> callable:
-    # This function vectorizes `f` by applying jax.vmap over batched dimensions. The
-    # argument `n_batch` indicates for each argument of `f` the number of batching
-    # dimensions it has.
-    # There are two possible strategies to vectorize `f`:
-    # - If `cartesian_batching` is True, we want to apply `f` to every possible
-    #   combination of the arguments batched dimension (the cartesian product). To do
-    #   so, we essentially wrap f with multiple vmap applications, one for each batched
-    #   dimension.
-    # - If `cartesian_batching` is False, we directly map f over all batched arguments
-    #   and apply vmap once.
+    """Returns a vectorized function mapped over multiple axes (similarly to
+    `jnp.vectorize`).
 
-    # we use tree_utils to handle nested batching such as `jump_ops`
+    The function is mapped on multiple axes, according to numpy broadcasting rules. This
+    is achieved by nesting calls to `jax.vmap` for each leading dimensions specified by
+    `n_batch`.
+
+    Args:
+        `n_batch`: PyTree indicating, for each argument of `f`, the number of leading
+            dimensions that should be mapped over.
+        `out_axes`: Equivalent of `out_axes` of `jax.vmap`.
+
+    Examples:
+        >>> import jax.numpy as jnp
+        >>> from dynamiqs.core._utils import _flat_vectorize
+        >>>
+        >>> def func(x, y):
+        ...     return x.T @ y.T
+        >>>
+        >>> n = 2
+        >>> x = jnp.ones((3, 4, n, n))
+
+        >>> y = jnp.ones((n, n))
+        >>> f = _flat_vectorize(func, (2, 0), 0)
+        >>> f(x, y).shape
+        (3, 4, 2, 2)
+
+        >>> y = jnp.ones((4, n, n))
+        >>> f = _flat_vectorize(func, (2, 1), 0)
+        >>> f(x, y).shape
+        (3, 4, 2, 2)
+
+        >>> y = jnp.ones((3, 1, n, n))
+        >>> f = _flat_vectorize(func, (2, 2), 0)
+        >>> f(x, y).shape
+        (3, 4, 2, 2)
+    """
+    # todo: fix
+    in_axes = jtu.tree_map(lambda x: 0 if x > 0 else None, n_batch)
+    n = jtu.tree_reduce(max, n_batch)
+
+    for _ in range(n):
+        f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+
+    return f
+
+
+def _cartesian_vectorize(
+    f: callable, n_batch: PyTree[int], out_axes: PyTree[int | None]
+) -> callable:
+    """Returns a vectorized function mapped over all combinations of specified axes.
+
+    The function is mapped on every combinations of axes (the cartesian product). This
+    is achieved by nesting calls to `jax.vmap` for each argument and for each leading
+    dimensions specified by `n_batch`.
+
+    Args:
+        `n_batch`: PyTree indicating, for each argument of `f`, the number of leading
+            dimensions that should be mapped over.
+        `out_axes`: Equivalent of `out_axes` of `jax.vmap`.
+
+    Examples:
+        >>> import jax.numpy as jnp
+        >>> from dynamiqs.core._utils import _cartesian_vectorize
+        >>>
+        >>> def func(x, y):
+        ...     return x.T @ y.T
+        >>>
+        >>> n = 2
+        >>> x = jnp.ones((3, 4, 5, n, n))
+        >>> y = jnp.ones((6, 7, n, n))
+        >>> f = _cartesian_vectorize(func, (3, 3), 0)
+        >>> f(x, y).shape
+        (3, 4, 5, 6, 7, 2, 2)
+    """
+    # we use `jax.tree_util` to handle nested batching (such as `jump_ops`)
     leaves, treedef = jtu.tree_flatten(n_batch)
-    if any(leaf > 0 for leaf in leaves):
-        if cartesian_batching:
-            # map over each batched dimension separately
-            # note: we apply the successive vmaps in reverse order, so the output
-            # batched dimensions are in the correct order
-            for i, leaf in reversed(list(enumerate(leaves))):
-                if leaf > 0:
-                    # build the `in_axes` argument with the same structure as
-                    # `is_batched`, but with 0 at the `leaf` position
-                    in_axes = jtu.tree_map(lambda _: None, leaves)
-                    in_axes[i] = 0
-                    in_axes = jtu.tree_unflatten(treedef, in_axes)
-                    for _ in range(leaf):
-                        f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
-        else:
-            # map over all batched dimensions at once
-            in_axes = jtu.tree_map(lambda x: 0 if x > 0 else None, n_batch)
-            n = jtu.tree_reduce(max, n_batch)
-            for _ in range(n):
+
+    # note: we apply the successive vmaps in reverse order, so the output
+    # dimensions are in the correct order
+    for i, leaf in reversed(list(enumerate(leaves))):
+        if leaf > 0:
+            # build the `in_axes` argument with the same structure as `n_batch`,
+            # but with 0 at the `leaf` position
+            in_axes = jtu.tree_map(lambda _: None, leaves)
+            in_axes[i] = 0
+            in_axes = jtu.tree_unflatten(treedef, in_axes)
+            for _ in range(leaf):
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
