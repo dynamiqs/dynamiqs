@@ -9,7 +9,6 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from jax import Array, lax
-from jax.tree_util import Partial
 from jaxtyping import ArrayLike, ScalarLike
 
 from ._checks import check_shape, check_times
@@ -115,9 +114,8 @@ def modulated(f: callable[[float], Array], array: ArrayLike) -> CallableTimeArra
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
-    # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary to make f a Pytree
-    f = Partial(f)
+    # make `f` a valid Pytree with `Partial`
+    f = jtu.Partial(f)
 
     return ModulatedTimeArray(f, array)
 
@@ -143,9 +141,9 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
-    # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary to make f a Pytree
-    f = Partial(f)
+    # make `f` a valid Pytree with `Partial`
+    f = jtu.Partial(f)
+
     return CallableTimeArray(f)
 
 
@@ -424,11 +422,11 @@ class ModulatedTimeArray(TimeArray):
         new_f_shape, new_array_shape = _split_shape(
             new_shape, f_shape, self.array.shape
         )
-        f = Partial(lambda t: self.f(t).reshape(*new_f_shape))
+        f = jtu.Partial(lambda t: self.f(t).reshape(*new_f_shape))
         return ModulatedTimeArray(f, self.array.reshape(*new_array_shape))
 
     def conj(self) -> TimeArray:
-        f = Partial(lambda t: self.f(t).conj())
+        f = jtu.Partial(lambda t: self.f(t).conj())
         return ModulatedTimeArray(f, self.array.conj())
 
     def as_batched_callable(self) -> callable:
@@ -467,15 +465,15 @@ class CallableTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        f = Partial(lambda t: self.f(t).mT)
+        f = jtu.Partial(lambda t: self.f(t).mT)
         return CallableTimeArray(f)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = Partial(lambda t: self.f(t).reshape(*new_shape))
+        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape))
         return CallableTimeArray(f)
 
     def conj(self) -> TimeArray:
-        f = Partial(lambda t: self.f(t).conj())
+        f = jtu.Partial(lambda t: self.f(t).conj())
         return CallableTimeArray(f)
 
     def as_batched_callable(self) -> callable:
@@ -485,11 +483,11 @@ class CallableTimeArray(TimeArray):
         return self.f(t)
 
     def __neg__(self) -> TimeArray:
-        f = Partial(lambda t: -self.f(t))
+        f = jtu.Partial(lambda t: -self.f(t))
         return CallableTimeArray(f)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = Partial(lambda t: self.f(t) * y)
+        f = jtu.Partial(lambda t: self.f(t) * y)
         return CallableTimeArray(f)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
