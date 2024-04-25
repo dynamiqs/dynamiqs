@@ -16,7 +16,7 @@ def test_batching(cartesian_batching, nH, npsi0, nL1, nL2):
     nL1 = nL1 if cartesian_batching else nH
     nL2 = nL2 if cartesian_batching else nH
     npsi0 = npsi0 if cartesian_batching else nH
-    nEs = 7
+    nE = 7
 
     options = dq.options.Options(cartesian_batching=cartesian_batching)
 
@@ -24,14 +24,14 @@ def test_batching(cartesian_batching, nH, npsi0, nL1, nL2):
     k1, k2, k3, k4, k5 = jax.random.split(jax.random.PRNGKey(42), 5)
     H = dq.rand_herm(k1, (*nH, n, n))
     Ls = [dq.rand_herm(k2, (*nL1, n, n)), dq.rand_herm(k3, (*nL2, n, n))]
-    exp_ops = dq.rand_complex(k4, (nEs, n, n))
+    exp_ops = dq.rand_complex(k4, (nE, n, n))
     psi0 = dq.rand_ket(k5, (*npsi0, n, 1))
     tsave = jnp.linspace(0, 0.01, ntsave)
 
     result = dq.mesolve(H, Ls, psi0, tsave, exp_ops=exp_ops, options=options)
     if cartesian_batching:
         assert result.states.shape == (*nH, *nL1, *nL2, *npsi0, ntsave, n, n)
-        assert result.expects.shape == (*nH, *nL1, *nL2, *npsi0, nEs, ntsave)
+        assert result.expects.shape == (*nH, *nL1, *nL2, *npsi0, nE, ntsave)
     else:
         assert result.states.shape == (*nH, ntsave, n, n)
-        assert result.expects.shape == (*nH, nEs, ntsave)
+        assert result.expects.shape == (*nH, nE, ntsave)
