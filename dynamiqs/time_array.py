@@ -163,7 +163,7 @@ def _split_shape(
     # find where to split shape
     cumprod = jnp.cumprod(jnp.concatenate([jnp.array([1]), _shape]))
     idx = jnp.where(cumprod == _size_1)[0][-1]
-    return (shape[:idx], shape[idx:])
+    return shape[:idx], shape[idx:]
 
 
 class TimeArray(eqx.Module):
@@ -404,7 +404,7 @@ class ModulatedTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         f_shape = jax.eval_shape(self.f, 0.0).shape
-        return (*f_shape, *self.array.shape)
+        return *f_shape, *self.array.shape
 
     @property
     def mT(self) -> TimeArray:
