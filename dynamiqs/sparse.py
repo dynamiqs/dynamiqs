@@ -20,22 +20,6 @@ class SparseDIA:
             end = min(N, N + offset)
             out += jnp.diag(diag[start:end], k=offset)
         return out
-    
-    def to_sparse(self, matrix) -> Array:
-        """Turn a NxN sparse matrix into the amazing SparseDIA format"""
-        diagonals_with_offsets = {}
-        
-        # there are 2N-1 offsets in a NxN matrix
-        offset_range = 2 * matrix.shape[0] - 1
-        offset_center = offset_range // 2
-
-        for offset in range(-offset_center, offset_center + 1):
-            diagonal = jnp.diagonal(matrix, offset=offset)
-            if jnp.any(diagonal != 0):
-                diagonals_with_offsets[offset] = diagonal
-
-        return diagonals_with_offsets
-
 
     @functools.partial(jax.jit, static_argnums=(0,1))
     def _matmul(
@@ -60,11 +44,11 @@ class SparseDIA:
                     jnp.transpose(diag[start:end, None] * jnp.transpose(matrix[:, top:bottom]))
                 )
         return out
-    
+
     @functools.partial(jax.jit, static_argnums=(0,1))
     def _diamul(self, matrix) -> Array:
         N = matrix.diags.shape[1]
-        
+
         vector_list = []
         offset_list = []
 
@@ -72,7 +56,7 @@ class SparseDIA:
             for matrix_offset, matrix_diag in zip(matrix.offsets, matrix.diags):
 
                 out_diag = jnp.zeros_like(diag)
-                
+
                 sA, sB = max(0, -matrix_offset), max(0, matrix_offset)
                 eA, eB = min(N, N-matrix_offset), min(N, N+matrix_offset)
 
@@ -84,13 +68,33 @@ class SparseDIA:
 
                 vector_list.append(out_diag)
                 offset_list.append(new_offset)
-        
-        out = jnp.vstack(vector_list)
-        
-        return out, offset_list 
 
-        
-    
+        out = jnp.vstack(vector_list)
+
+        return out, offset_list
+
+
+    @functools.partial(jax.jit, static_argnums=(0,1))
+    def _diaadd(self, matrix):
+
+        self_offsets = list(self.offsets)
+        matrix_offsets = list(matrix.offsets)
+
+        offset_to_diag = {offset: diag for offset, diag in zip(self_offsets, self.diags)}
+
+        # Update the diagonals for existing offsets
+        for offset, diag in zip(matrix_offsets, matrix.diags):
+            if offset in offset_to_diag:
+                offset_to_diag[offset] += diag
+            else:
+                offset_to_diag[offset] = diag
+
+        # Extract sorted offsets and corresponding diagonals
+        new_offsets = sorted(offset_to_diag.keys())
+        new_diagonals = jnp.array([offset_to_diag[offset] for offset in new_offsets])
+
+        return new_diagonals, new_offsets
+
 
     def _dag(self):
         """Returns the hermitian conjugate, call to_dense() to visualize."""
@@ -111,6 +115,7 @@ class SparseDIA:
 
         return matrix
 
+    """ DUNDER METHODS """    
     def __matmul__(self, matrix):
         if isinstance(matrix, Array):
             return self._matmul(direction="left", matrix=matrix)
@@ -135,15 +140,41 @@ class SparseDIA:
 
             
             return SparseDIA(result, tuple([offset.item() for offset in unique_offsets]))
-        
+
     def __rmatmul__(self, matrix):
         if isinstance(matrix, Array):
             return self._matmul(direction="right", matrix=matrix)
-        
+    
     def __getitem__(self, index):
         dense = self.to_dense()
         return dense[index]
-    
+
     def __add__(self, matrix):
         if isinstance(matrix, Array):
             return self._add(matrix)
+        
+        elif isinstance(matrix, SparseDIA):
+            diags, offsets = self._diaadd(matrix=matrix)
+
+            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
+
+    def __radd__(self, matrix):
+        return self._add(matrix)
+    
+
+""" UTILITY FUNCTIONS """
+
+def to_sparse(matrix) -> Array:
+        """Turn a NxN sparse matrix into the amazing SparseDIA format"""
+        diagonals_with_offsets = {}
+
+        # there are 2N-1 offsets in a NxN matrix
+        offset_range = 2 * matrix.shape[0] - 1
+        offset_center = offset_range // 2
+
+        for offset in range(-offset_center, offset_center + 1):
+            diagonal = jnp.diagonal(matrix, offset=offset)
+            if jnp.any(diagonal != 0):
+                diagonals_with_offsets[offset] = diagonal
+
+        return diagonals_with_offsets
