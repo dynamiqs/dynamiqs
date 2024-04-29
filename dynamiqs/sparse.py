@@ -35,7 +35,7 @@ class SparseDIA:
             end = min(N, N + offset)
             top = max(0, -offset)
             bottom = top + end - start
-            if direction=="left":
+            if direction=='left':
                 out = out.at[top:bottom, :].add(
                     diag[start:end, None] * matrix[start:end, :]
                 )
@@ -115,10 +115,10 @@ class SparseDIA:
 
         return matrix
 
-    """ DUNDER METHODS """    
+    """ DUNDER METHODS """
     def __matmul__(self, matrix):
         if isinstance(matrix, Array):
-            return self._matmul(direction="left", matrix=matrix)
+            return self._matmul(direction='left', matrix=matrix)
 
         elif isinstance(matrix, SparseDIA):
             diags, offsets = self._diamul(matrix=matrix)
@@ -138,13 +138,13 @@ class SparseDIA:
             for i, offset in enumerate(unique_offsets):
                 result = result.at[i].set(jnp.sum(diags[indices == i], axis=0))
 
-            
+
             return SparseDIA(result, tuple([offset.item() for offset in unique_offsets]))
 
     def __rmatmul__(self, matrix):
         if isinstance(matrix, Array):
-            return self._matmul(direction="right", matrix=matrix)
-    
+            return self._matmul(direction='right', matrix=matrix)
+
     def __getitem__(self, index):
         dense = self.to_dense()
         return dense[index]
@@ -152,7 +152,7 @@ class SparseDIA:
     def __add__(self, matrix):
         if isinstance(matrix, Array):
             return self._add(matrix)
-        
+
         elif isinstance(matrix, SparseDIA):
             diags, offsets = self._diaadd(matrix=matrix)
 
@@ -160,21 +160,37 @@ class SparseDIA:
 
     def __radd__(self, matrix):
         return self._add(matrix)
-    
+
 
 """ UTILITY FUNCTIONS """
 
-def to_sparse(matrix) -> Array:
-        """Turn a NxN sparse matrix into the amazing SparseDIA format"""
-        diagonals_with_offsets = {}
+def to_sparse(matrix):
+    """Turn a NxN sparse matrix into the amazing SparseDIA format with zero padding"""
 
-        # there are 2N-1 offsets in a NxN matrix
-        offset_range = 2 * matrix.shape[0] - 1
-        offset_center = offset_range // 2
+    diagonals = []
+    offsets = []
+    
+    n = matrix.shape[0]  # size of the NxN matrix
+    offset_range = 2 * n - 1
+    offset_center = offset_range // 2
 
-        for offset in range(-offset_center, offset_center + 1):
-            diagonal = jnp.diagonal(matrix, offset=offset)
-            if jnp.any(diagonal != 0):
-                diagonals_with_offsets[offset] = diagonal
+    for offset in range(-offset_center, offset_center + 1):
+        diagonal = jnp.diagonal(matrix, offset=offset)
+        if jnp.any(diagonal != 0):
+            # Calculate padding length
+            if offset > 0:  # positive offset, pad zeros to the left
+                padding = (offset, 0)
+            elif offset < 0:  # negative offset, pad zeros to the right
+                padding = (0, -offset)
+            else:
+                padding = (0, 0)  # no padding needed for the main diagonal
 
-        return diagonals_with_offsets
+            # Apply padding
+            padded_diagonal = jnp.pad(diagonal, padding, mode='constant', constant_values=0)
+            diagonals.append(padded_diagonal)
+            offsets.append(offset)
+
+    diagonals = jnp.array(diagonals)
+    offsets = tuple(offsets)
+    
+    return SparseDIA(diagonals, offsets)
