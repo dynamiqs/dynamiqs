@@ -27,7 +27,8 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
         array _(array_like of shape (..., n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O_0$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O_0$ for any time $t$.
     """
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(..., n, n)')
@@ -61,7 +62,8 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
         array _(array_like of shape (n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O(t)$ for any time $t$.
     """
     # times
     times = jnp.asarray(times)
@@ -97,7 +99,8 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
         array _(array_like of shape (n, n))_: Constant array $O_0$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
+        _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
@@ -129,13 +132,19 @@ def timecallable(
     with signature `f(t: float, *args: PyTree) -> Array` that returns an array of shape
     _(..., n, n)_ for any time $t$.
 
+    Warning: The function `f` must return a JAX array (not an array-like object!)
+        An error is raised if the function `f` does not return a JAX array. This error
+        concerns any other array-like objects. This is enforced to avoid costly
+        conversions at every time step of the numerical integration.
+
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
             `(t: float, *args: PyTree) -> Array` that returns the array $f(t)$.
         args: Other positional arguments passed to the function $f$.
 
     Returns:
-        _(time-array object)_ Callable object returning $O(t)$ for any time $t$.
+       _(time-array object of shape (..., n, n) when called)_ Callable object
+            returning $O(t)$ for any time $t$.
     """
     # check f is callable
     if not callable(f):
