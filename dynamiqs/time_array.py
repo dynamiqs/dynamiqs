@@ -6,9 +6,9 @@ from typing import get_args
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 import numpy as np
 from jax import Array, lax
-from jax.tree_util import Partial
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
@@ -113,7 +113,7 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
     # This is necessary:
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
-    f = Partial(f)
+    f = jtu.Partial(f)
     f = BatchedCallable(f)
 
     return ModulatedTimeArray(f, array)
@@ -147,7 +147,7 @@ def timecallable(
     # This is necessary:
     # (1) to make f a Pytree, and
     # (2) to avoid jitting again every time the args change.
-    f = Partial(f)
+    f = jtu.Partial(f)
     f = BatchedCallable(f)
     return CallableTimeArray(f)
 
@@ -423,11 +423,11 @@ class ModulatedTimeArray(TimeArray):
         new_f_shape, new_array_shape = _split_shape(
             new_shape, f_shape, self.array.shape
         )
-        f = Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
+        f = jtu.Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
         return ModulatedTimeArray(f, self.array.reshape(*new_array_shape), self.args)
 
     def conj(self) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).conj())
+        f = jtu.Partial(lambda t, *args: self.f(t, *args).conj())
         return ModulatedTimeArray(f, self.array.conj(), self.args)
 
     def in_axes(self):
@@ -466,15 +466,15 @@ class CallableTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args).mT)
+        f = jtu.Partial(lambda t, *args: self.f(t, *args).mT)
         return CallableTimeArray(f)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t).reshape(*new_shape))
+        f = jtu.Partial(lambda t, *args: self.f(t).reshape(*new_shape))
         return CallableTimeArray(f)
 
     def conj(self) -> TimeArray:
-        f = Partial(lambda t: self.f(t).conj())
+        f = jtu.Partial(lambda t: self.f(t).conj())
         return CallableTimeArray(f)
 
     def in_axes(self):
@@ -484,11 +484,11 @@ class CallableTimeArray(TimeArray):
         return self.f(t)
 
     def __neg__(self) -> TimeArray:
-        f = Partial(lambda t, *args: -self.f(t, *args))
+        f = jtu.Partial(lambda t, *args: -self.f(t, *args))
         return CallableTimeArray(f)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = Partial(lambda t, *args: self.f(t, *args) * y)
+        f = jtu.Partial(lambda t, *args: self.f(t, *args) * y)
         return CallableTimeArray(f)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
@@ -525,8 +525,13 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
 
     def in_axes(self) -> PWCTimeArray:
-        # todo: jtu.tree_map(lambda x: x.in_axes(), self.timearrays)
-        raise NotImplementedError
+        return SummedTimeArray(
+            jtu.tree_map(
+                lambda x: x.in_axes(),
+                self.timearrays,
+                is_leaf=lambda x: isinstance(x, TimeArray),
+            )
+        )
 
     def __call__(self, t: float) -> Array:
         return jax.tree_util.tree_reduce(
