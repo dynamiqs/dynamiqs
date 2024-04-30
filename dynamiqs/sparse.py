@@ -22,7 +22,7 @@ class SparseDIA:
         return out
 
     @functools.partial(jax.jit, static_argnums=(0,1))
-    def _matmul(
+    def _matmul_dense(
         self,
         direction: str,
         matrix: Array,  # If matrix is a vector need to input as column vector.
@@ -46,7 +46,7 @@ class SparseDIA:
         return out
 
     @functools.partial(jax.jit, static_argnums=(0,1))
-    def _diamul(self, matrix) -> Array:
+    def _matmul_dia(self, matrix) -> Array:
         N = matrix.diags.shape[1]
 
         vector_list = []
@@ -75,21 +75,18 @@ class SparseDIA:
 
 
     @functools.partial(jax.jit, static_argnums=(0,1))
-    def _diaadd(self, matrix):
-
+    def _add_dia(self, matrix):
         self_offsets = list(self.offsets)
         matrix_offsets = list(matrix.offsets)
 
         offset_to_diag = {offset: diag for offset, diag in zip(self_offsets, self.diags)}
 
-        # Update the diagonals for existing offsets
         for offset, diag in zip(matrix_offsets, matrix.diags):
             if offset in offset_to_diag:
                 offset_to_diag[offset] += diag
             else:
                 offset_to_diag[offset] = diag
 
-        # Extract sorted offsets and corresponding diagonals
         new_offsets = sorted(offset_to_diag.keys())
         new_diagonals = jnp.array([offset_to_diag[offset] for offset in new_offsets])
 
@@ -102,48 +99,55 @@ class SparseDIA:
         self.diags = jnp.conjugate(self.diags)
 
     @functools.partial(jax.jit, static_argnums=(0,))
-    def _add(self, matrix: Array) -> Array:
+    def _add_dense(self, matrix: Array) -> Array:
         """Sparse + Dense only using information about diagonals & offsets."""
         N = matrix.shape[0]
         for offset, diag in zip(self.offsets, self.diags):
-            start = max(0, abs(offset))
-            end = min(N, N + abs(offset))
-            i = jnp.arange(end - start) if offset > 0 else jnp.arange(start, end)
-            j = jnp.arange(start, end) if offset > 0 else jnp.arange(end - start)
+            start = max(0, offset)
+            end = min(N, N + offset)
+
+            s = max(0, abs(offset))
+            e = min(N, N+abs(offset))
+
+            i = jnp.arange(e - s) if offset > 0 else jnp.arange(s, e)
+            j = jnp.arange(s, e) if offset > 0 else jnp.arange(e - s)
 
             matrix = matrix.at[i, j].add(diag[start:end])
 
         return matrix
+    
 
-    """ DUNDER METHODS """
+    def _cleanup(self, diags, offsets):
+        diags = jnp.array(diags)
+        offsets = jnp.array(offsets)
+        mask = jnp.any(diags != 0, axis=1)
+        diags = diags[mask]
+        offsets = offsets[mask]
+        unique_offsets, indices = jnp.unique(offsets, return_inverse=True)
+        result = jnp.zeros((len(unique_offsets), diags.shape[1]))
+
+        for i, offset in enumerate(unique_offsets):
+            result = result.at[i].set(jnp.sum(diags[indices == i], axis=0))
+
+        return result, tuple([offset.item() for offset in unique_offsets])
+
+
     def __matmul__(self, matrix):
         if isinstance(matrix, Array):
-            return self._matmul(direction='left', matrix=matrix)
+            return self._matmul_dense(direction='left', matrix=matrix)
 
         elif isinstance(matrix, SparseDIA):
-            diags, offsets = self._diamul(matrix=matrix)
-            # offsets = tuple([offset.item() for offset in offsets])
-            # return SparseDIA(diags, offsets)
-
-            diags = jnp.array(diags)
-            offsets = jnp.array(offsets)
-
-            mask = jnp.any(diags != 0, axis=1)
-            diags = diags[mask]
-            offsets = offsets[mask]
-
-            unique_offsets, indices = jnp.unique(offsets, return_inverse=True)
-            result = jnp.zeros((len(unique_offsets), diags.shape[1]))
-
-            for i, offset in enumerate(unique_offsets):
-                result = result.at[i].set(jnp.sum(diags[indices == i], axis=0))
-
-
-            return SparseDIA(result, tuple([offset.item() for offset in unique_offsets]))
+            diags, offsets = self._matmul_dia(matrix=matrix)
+            diags, offsets = self._cleanup(diags, offsets)
+            return SparseDIA(diags, offsets)
+        
+        return NotImplemented
 
     def __rmatmul__(self, matrix):
         if isinstance(matrix, Array):
-            return self._matmul(direction='right', matrix=matrix)
+            return self._matmul_dense(direction='right', matrix=matrix)
+        
+        return NotImplemented
 
     def __getitem__(self, index):
         dense = self.to_dense()
@@ -151,16 +155,20 @@ class SparseDIA:
 
     def __add__(self, matrix):
         if isinstance(matrix, Array):
-            return self._add(matrix)
+            out = self._add_dense(matrix)
+            return out
 
         elif isinstance(matrix, SparseDIA):
-            diags, offsets = self._diaadd(matrix=matrix)
-
+            diags, offsets = self._add_dia(matrix=matrix)
             return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
 
-    def __radd__(self, matrix):
-        return self._add(matrix)
+        return NotImplemented
 
+    def __radd__(self, matrix):
+        if isinstance(matrix, Array):
+            return self._add_dense(matrix)
+
+        return NotImplemented
 
 """ UTILITY FUNCTIONS """
 
@@ -170,22 +178,20 @@ def to_sparse(matrix):
     diagonals = []
     offsets = []
     
-    n = matrix.shape[0]  # size of the NxN matrix
+    n = matrix.shape[0]
     offset_range = 2 * n - 1
     offset_center = offset_range // 2
 
     for offset in range(-offset_center, offset_center + 1):
         diagonal = jnp.diagonal(matrix, offset=offset)
         if jnp.any(diagonal != 0):
-            # Calculate padding length
-            if offset > 0:  # positive offset, pad zeros to the left
+            if offset > 0:
                 padding = (offset, 0)
-            elif offset < 0:  # negative offset, pad zeros to the right
+            elif offset < 0:
                 padding = (0, -offset)
             else:
-                padding = (0, 0)  # no padding needed for the main diagonal
+                padding = (0, 0)
 
-            # Apply padding
             padded_diagonal = jnp.pad(diagonal, padding, mode='constant', constant_values=0)
             diagonals.append(padded_diagonal)
             offsets.append(offset)
