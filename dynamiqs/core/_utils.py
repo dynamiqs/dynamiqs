@@ -93,7 +93,7 @@ def _cartesian_vectorize(
 ) -> callable:
     """Returns a vectorized function mapped over all combinations of specified axes.
 
-    The function is mapped on every combinations of axes (the cartesian product). This
+    The function is mapped on every combination of axes (the cartesian product). This
     is achieved by nesting calls to `jax.vmap` for each argument and for each leading
     dimensions specified by `n_batch`.
 
@@ -121,14 +121,23 @@ def _cartesian_vectorize(
 
     # note: we apply the successive vmaps in reverse order, so the output
     # dimensions are in the correct order
+    print("")
+    print("n_batch: ", n_batch)
+    print("leaves: ", leaves)
+    print(treedef)
     for i, leaf in reversed(list(enumerate(leaves))):
-        if leaf > 0:
+        print(f"leaf {leaf}")
+        # todo: go back to leaf > 0
+        if leaf is not None and leaf > 0:
             # build the `in_axes` argument with the same structure as `n_batch`,
             # but with 0 at the `leaf` position
+            print(f"vmap axis {i}")
             in_axes = jtu.tree_map(lambda _: None, leaves)
             in_axes[i] = 0
             in_axes = jtu.tree_unflatten(treedef, in_axes)
+            print("in_axes: ", in_axes)
             for _ in range(leaf):
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+        print("")
 
     return f
