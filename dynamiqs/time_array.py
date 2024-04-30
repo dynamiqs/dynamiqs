@@ -416,19 +416,19 @@ class ModulatedTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array.mT, self.args)
+        return ModulatedTimeArray(self.f, self.array.mT)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f_shape = jax.eval_shape(self._call_f, 0.0).shape
+        f_shape = jax.eval_shape(self.f, 0.0).shape
         new_f_shape, new_array_shape = _split_shape(
             new_shape, f_shape, self.array.shape
         )
-        f = jtu.Partial(lambda t, *args: self.f(t, *args).reshape(*new_f_shape))
-        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape), self.args)
+        f = jtu.Partial(lambda t: self.f(t).reshape(*new_f_shape))
+        return ModulatedTimeArray(f, self.array.reshape(*new_array_shape))
 
     def conj(self) -> TimeArray:
-        f = jtu.Partial(lambda t, *args: self.f(t, *args).conj())
-        return ModulatedTimeArray(f, self.array.conj(), self.args)
+        f = jtu.Partial(lambda t: self.f(t).conj())
+        return ModulatedTimeArray(f, self.array.conj())
 
     def in_axes(self):
         return ModulatedTimeArray(f=self.f.ndim, array=0)
@@ -438,10 +438,10 @@ class ModulatedTimeArray(TimeArray):
         return values.reshape(*values.shape, 1, 1) * self.array
 
     def __neg__(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, -self.array, self.args)
+        return ModulatedTimeArray(self.f, -self.array)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array * y, self.args)
+        return ModulatedTimeArray(self.f, self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
