@@ -369,7 +369,7 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
     def in_axes(self) -> PWCTimeArray:
-        return PWCTimeArray(None, self.values.ndim - 1, None)
+        return PWCTimeArray(0, self.values.ndim - 1, 0)
 
     def __call__(self, t: float) -> Array:
         def _zero(_: float) -> Array:
@@ -431,7 +431,7 @@ class ModulatedTimeArray(TimeArray):
         return ModulatedTimeArray(f, self.array.conj(), self.args)
 
     def in_axes(self):
-        return ModulatedTimeArray(f=self.f.ndim, array=None)
+        return ModulatedTimeArray(f=self.f.ndim, array=0)
 
     def __call__(self, t: float) -> Array:
         values = self.f(t)

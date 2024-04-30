@@ -112,33 +112,21 @@ def _vectorized_sesolve(
 ) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
-    # todo: rename
+    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
+    # this leaf should be vmapped on.
     n_batch = (H.in_axes(), psi0.ndim - 2, 0, 0, 0, 0, 0)
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = SEResult(None, None, None, None, 0, 0)
-    n_batch = (H.in_axes(),)
 
     # compute vectorized function with given batching strategy
-
-    # debug:
-    f = jax.tree_util.Partial(
-        _sesolve,
-        psi0=psi0,
-        tsave=tsave,
-        exp_ops=exp_ops,
-        solver=solver,
-        gradient=gradient,
-        options=options,
-    )
-
     if options.cartesian_batching:
-        f = _cartesian_vectorize(f, n_batch, out_axes)
+        f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
     else:
-        f = _flat_vectorize(f, n_batch, out_axes)
+        f = _flat_vectorize(_sesolve, n_batch, out_axes)
 
     # === apply vectorized function
-    return f(H)  # psi0, tsave, exp_ops, solver, gradient, options)
+    return f(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
 def _sesolve(
