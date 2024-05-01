@@ -908,7 +908,9 @@ def _sqrtm_gpu(x: Array) -> Array:
     w, v = jnp.linalg.eigh(x)
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
-    return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
+    # numerical trick to compute 'v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()' faster with
+    # broadcasting
+    return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
 
 
 def entropy_vn(x: ArrayLike) -> Array:
