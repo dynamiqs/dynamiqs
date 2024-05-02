@@ -4,16 +4,8 @@ import jax.numpy as jnp
 from dynamiqs.sparse import *
 
 
-def assert_equal(arr1, arr2, arr3, arr4, rtol=1e-05, atol=1e-08):
-    close12 = jnp.allclose(arr1, arr2, rtol=rtol, atol=atol)
-    close13 = jnp.allclose(arr1, arr3, rtol=rtol, atol=atol)
-    close14 = jnp.allclose(arr1, arr4, rtol=rtol, atol=atol)
-
-    return close12 & close13 & close14
-
-
 class TestSparseDIA:
-    def test_matmul(self):
+    def test_matmul(self, rtol=1e-05, atol=1e-08):
         N = 4
         keyA, keyB = jax.random.PRNGKey(1), jax.random.PRNGKey(2)
         matrixA = jax.random.normal(keyA, (N, N))
@@ -22,16 +14,16 @@ class TestSparseDIA:
         sparseA = to_sparse(matrixA)
         sparseB = to_sparse(matrixB)
 
-        out_dia_dia = sparseA @ sparseB
+        out_dia_dia = (sparseA @ sparseB).to_dense()
         out_dia_dense = sparseA @ matrixB
         out_dense_dia = matrixA @ sparseB
         out_dense_dense = matrixA @ matrixB
 
-        assert assert_equal(
-            out_dia_dia.to_dense(), out_dia_dense, out_dense_dia, out_dense_dense
-        )
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    def test_add(self):
+    def test_add(self, rtol=1e-05, atol=1e-08):
         N = 4
         keyA, keyB = jax.random.PRNGKey(1), jax.random.PRNGKey(2)
         matrixA = jax.random.normal(keyA, (N, N))
@@ -40,17 +32,17 @@ class TestSparseDIA:
         sparseA = to_sparse(matrixA)
         sparseB = to_sparse(matrixB)
 
-        out_dia_dia = sparseA + sparseB
+        out_dia_dia = (sparseA + sparseB).to_dense()
         out_dia_dense = sparseA + matrixB
         out_dense_dia = matrixA + sparseB
         out_dense_dense = matrixA + matrixB
 
-        assert assert_equal(
-            out_dia_dia.to_dense(), out_dia_dense, out_dense_dia, out_dense_dense
-        )
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    def test_transform(self):
+    def test_transform(self, rtol=1e-05, atol=1e-08):
         N = 4
         key = jax.random.PRNGKey(1)
         matrix = jax.random.normal(key, (N, N))
-        assert jnp.allclose(matrix, to_sparse(matrix).to_dense())
+        assert jnp.allclose(matrix, to_sparse(matrix).to_dense(), rtol=rtol, atol=atol)
