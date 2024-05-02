@@ -107,8 +107,9 @@ class SparseDIA:
 
     def _dag(self) -> 'SparseDIA':
         """Returns the hermitian conjugate, call to_dense() to visualize."""
-        self.offsets = tuple(-1 * jnp.array(self.offsets))
-        self.diags = jnp.conjugate(self.diags)
+        dag_offsets = tuple(int(o) for o in -1 * jnp.array(self.offsets))
+        dag_diags = jnp.conjugate(self.diags)
+        return SparseDIA(dag_diags, dag_offsets)
 
     @functools.partial(jax.jit, static_argnums=(0,))
     def _add_dense(self, matrix: Array) -> Array:
