@@ -15,28 +15,29 @@ __all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
 
 def fock(dim: int, number: ArrayLike) -> Array:
-    r"""Returns the ket of a Fock state or the ket of a tensor product of Fock states.
+    r"""Returns the ket of a Fock state.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        number _(int or tuple of ints)_: Fock state number of each mode.
+        dim: Dimension of the Hilbert space.
+        number _(array-like of integers of shape (...))_: Fock state number.
 
     Returns:
-        _(array of shape (n, 1))_ Ket of the Fock state or tensor product of Fock
-            states.
+        _(array of shape (..., dim, 1))_ Ket of the Fock state, or array of kets of
+            Fock states if batched.
 
     Examples:
         >>> dq.fock(3, 1)
         Array([[0.+0.j],
                [1.+0.j],
                [0.+0.j]], dtype=complex64)
-        >>> dq.fock((3, 2), (1, 0))
-        Array([[0.+0.j],
-               [0.+0.j],
-               [1.+0.j],
-               [0.+0.j],
-               [0.+0.j],
-               [0.+0.j]], dtype=complex64)
+        >>> dq.fock(3, (1, 0))
+        Array([[[0.+0.j],
+                [1.+0.j],
+                [0.+0.j]],
+        <BLANKLINE>
+               [[1.+0.j],
+                [0.+0.j],
+                [0.+0.j]]], dtype=complex64)
     """
     # check `dim` is an integer
     dim = jnp.asarray(dim)
