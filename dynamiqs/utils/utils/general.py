@@ -161,21 +161,21 @@ def trace(x: ArrayLike) -> Array:
 
 
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
-    r"""Return $\tr{xy}$ (using a fast implementation).
+    r"""Return the trace of a matrix multiplication using a fast implementation.
 
-    The trace is computed as `(x * y).sum()` where `*` is the element-wise product.
-    For two matrices A and B:
+    The trace is computed as `sum(x * y.T)` where `*` is the element-wise product,
+    instead of `trace(x @ y)` where `@` is the matrix product. Indeed, we have:
 
     $$
-        \tr{AB} = \sum_i (AB)_{ii}
-                = \sum_i \sum_j A_{ij} B_{ji}
-                = \sum_i \sum_j A_{ij} (B^\intercal)_{ij}
-                = \sum_i \sum_j (A * B^\intercal)_{ij}
+        \tr{xy} = \sum_i (xy)_{ii}
+                = \sum_{i,j} x_{ij} y_{ji}
+                = \sum_{i,j} x_{ij} (y^\intercal)_{ij}
+                = \sum_{i,j} (x * y^\intercal)_{ij}
     $$
 
-    Notes:
+    Notes: Time complexity
         The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
-        instead of $\mathcal{O}(n^3)$ with the naïve formula.
+        instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Args:
         x _(array_like of shape (..., n, n))_: Array.
