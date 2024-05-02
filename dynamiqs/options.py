@@ -33,6 +33,7 @@ class Options(eqx.Module):
                   accounts for relative phases. If not, use incoherent
                   definition
         ntraj: number of trajectories for mcsolve
+        one_jump_only: should we do mcsolve with only a single jump
     """
 
     save_states: bool = True
@@ -45,6 +46,7 @@ class Options(eqx.Module):
     epochs: int
     coherent: bool
     ntraj: int
+    one_jump_only: bool
 
     def __init__(
         self,
@@ -58,6 +60,7 @@ class Options(eqx.Module):
         epochs: int = 1000,
         coherent: bool = True,
         ntraj: int = 10,
+        one_jump_only: bool = True
     ):
         self.save_states = save_states
         self.verbose = verbose
@@ -68,6 +71,7 @@ class Options(eqx.Module):
         self.epochs = epochs
         self.coherent = coherent
         self.ntraj = ntraj
+        self.one_jump_only = one_jump_only
 
         # make `save_extra` a valid Pytree with `jax.tree_util.Partial`
         if save_extra is not None:
