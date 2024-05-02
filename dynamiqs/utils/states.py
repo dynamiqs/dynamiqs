@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from math import prod
-
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
@@ -9,7 +7,7 @@ from jaxtyping import ArrayLike
 
 from .._utils import cdtype
 from .operators import displace
-from .utils import tensor, todm
+from .utils import todm
 
 __all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
@@ -62,30 +60,30 @@ def fock(dim: int, number: ArrayLike) -> Array:
     return kets
 
 
-def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
-    r"""Returns the density matrix of a Fock state or the density matrix of a tensor
-    product of Fock states.
+def fock_dm(dim: int, number: ArrayLike) -> Array:
+    r"""Returns the density matrix of a Fock state.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        number _(int or tuple of ints)_: Fock state number of each mode.
+        dim: Dimension of the Hilbert space.
+        number _(array-like of integers of shape (...))_: Fock state number.
 
     Returns:
-        _(array of shape (n, n))_ Density matrix of the Fock state or tensor product of
-            Fock states.
+        _(array of shape (..., dim, dim))_ Density matrix of the Fock state, or array of
+            density matrices of Fock states if batched.
 
     Examples:
         >>> dq.fock_dm(3, 1)
         Array([[0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
-        >>> dq.fock_dm((3, 2), (1, 0))
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        >>> dq.fock_dm(3, (1, 0))
+        Array([[[0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j]],
+        <BLANKLINE>
+               [[1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j]]], dtype=complex64)
     """
     return todm(fock(dim, number))
 
@@ -100,16 +98,16 @@ def basis_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array
     return fock_dm(dim, number)
 
 
-def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
-    r"""Returns the ket of a coherent state, or the ket of a tensor product of coherent
-    states.
+def coherent(dim: int, alpha: ArrayLike) -> Array:
+    r"""Returns the ket of a coherent state.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alpha _(array_like)_: Coherent state amplitude of each mode.
+        dim: Dimension of the Hilbert space.
+        alpha _(array-like of shape (...))_: Coherent state amplitude.
 
     Returns:
-        _(array of shape (n, 1))_ Ket of the coherent state.
+        _(array of shape (..., dim, 1))_ Ket of the coherent state, or array of kets of
+            coherent states if batched.
 
     Examples:
         >>> dq.coherent(4, 0.5)
@@ -117,45 +115,36 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
                [0.441+0.j],
                [0.156+0.j],
                [0.047+0.j]], dtype=complex64)
-        >>> dq.coherent((2, 3), (0.5, 0.5j))
-        Array([[ 0.775+0.j   ],
-               [ 0.   +0.386j],
-               [-0.146+0.j   ],
-               [ 0.423+0.j   ],
-               [ 0.   +0.211j],
-               [-0.08 +0.j   ]], dtype=complex64)
+        >>> dq.coherent(4, (0.5, 0.5j))
+        Array([[[ 0.882+0.j   ],
+                [ 0.441+0.j   ],
+                [ 0.156+0.j   ],
+                [ 0.047+0.j   ]],
+        <BLANKLINE>
+               [[ 0.882+0.j   ],
+                [ 0.   +0.441j],
+                [-0.156+0.j   ],
+                [ 0.   -0.047j]]], dtype=complex64)
     """
-    # convert inputs to tuples by default, and check dimensions match
-    dim = (dim,) if isinstance(dim, int) else dim
-    alpha = jnp.asarray(alpha, dtype=cdtype())
+    # check `dim` is an integer
+    dim = jnp.asarray(dim)
+    if not jnp.issubdtype(dim.dtype, jnp.integer) and dim.ndim == 0:
+        raise TypeError('Argument `dim` must be an integer.')
 
-    if alpha.ndim == 0:
-        alpha = alpha[..., None]
-    elif alpha.ndim > 1:
-        raise ValueError(
-            'Argument `alpha` must be a 0-D or 1-D array-like object, but is'
-            f' a {alpha.ndim}-D object.'
-        )
-    if len(dim) != len(alpha):
-        raise ValueError(
-            'Arguments `alpha` must have the same length as `dim` of length'
-            f' {len(dim)}, but has length {len(alpha)}.'
-        )
-
-    kets = [displace(d, a) @ fock(d, 0) for d, a in zip(dim, alpha)]
-    return tensor(*kets)
+    # compute all kets
+    return displace(dim, alpha) @ fock(dim, 0)
 
 
-def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
-    r"""Returns the density matrix of a coherent state, or the density matrix of a
-    tensor product of coherent states.
+def coherent_dm(dim: int, alpha: ArrayLike) -> Array:
+    r"""Returns the density matrix of a coherent state.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alpha _(array_like)_: Coherent state amplitude of each mode.
+        dim: Dimension of the Hilbert space.
+        alpha _(array-like of shape (...))_: Coherent state amplitude.
 
     Returns:
-        _(array of shape (n, n))_ Density matrix of the coherent state.
+        _(array of shape (..., dim, dim))_ Density matrix of the coherent state, or
+            array of density matrices of coherent states if batched.
 
     Examples:
         >>> dq.coherent_dm(4, 0.5)
@@ -163,12 +152,15 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
                [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
                [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
                [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]], dtype=complex64)
-        >>> dq.coherent_dm((2, 3), (0.5, 0.5))
-        Array([[0.6  +0.j, 0.299+0.j, 0.113+0.j, 0.328+0.j, 0.163+0.j, 0.062+0.j],
-               [0.299+0.j, 0.149+0.j, 0.056+0.j, 0.163+0.j, 0.081+0.j, 0.031+0.j],
-               [0.113+0.j, 0.056+0.j, 0.021+0.j, 0.062+0.j, 0.031+0.j, 0.012+0.j],
-               [0.328+0.j, 0.163+0.j, 0.062+0.j, 0.179+0.j, 0.089+0.j, 0.034+0.j],
-               [0.163+0.j, 0.081+0.j, 0.031+0.j, 0.089+0.j, 0.044+0.j, 0.017+0.j],
-               [0.062+0.j, 0.031+0.j, 0.012+0.j, 0.034+0.j, 0.017+0.j, 0.006+0.j]],      dtype=complex64)
+        >>> dq.coherent_dm(4, (0.5, 0.5j))
+        Array([[[ 0.779+0.j   ,  0.389+0.j   ,  0.137+0.j   ,  0.042+0.j   ],
+                [ 0.389+0.j   ,  0.195+0.j   ,  0.069+0.j   ,  0.021+0.j   ],
+                [ 0.137+0.j   ,  0.069+0.j   ,  0.024+0.j   ,  0.007+0.j   ],
+                [ 0.042+0.j   ,  0.021+0.j   ,  0.007+0.j   ,  0.002+0.j   ]],
+        <BLANKLINE>
+               [[ 0.779+0.j   ,  0.   -0.389j, -0.137-0.j   ,  0.   +0.042j],
+                [ 0.   +0.389j,  0.195+0.j   ,  0.   -0.069j, -0.021+0.j   ],
+                [-0.137+0.j   ,  0.   +0.069j,  0.024+0.j   , -0.   -0.007j],
+                [ 0.   -0.042j, -0.021-0.j   , -0.   +0.007j,  0.002+0.j   ]]],      dtype=complex64)
     """  # noqa: E501
     return todm(coherent(dim, alpha))
