@@ -133,16 +133,6 @@ def _vectorized_mesolve(
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
-    # n_batch = (
-    #     H.in_axes(),
-    #     [jump_op.in_axes() for jump_op in jump_ops],
-    #     rho0.ndim - 2,
-    #     0,
-    #     0,
-    #     0,
-    #     0,
-    #     0,
-    # )
     n_batch = (
         H.in_axes(),
         [jump_op.in_axes() for jump_op in jump_ops],
