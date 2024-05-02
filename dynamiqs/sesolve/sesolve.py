@@ -19,7 +19,7 @@ from ..gradient import Gradient
 from ..options import Options
 from ..result import SEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
-from ..time_array import TimeArray
+from ..time_array import Shape, TimeArray
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
@@ -114,7 +114,15 @@ def _vectorized_sesolve(
     # we vectorize over H and psi0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
-    n_batch = (H.in_axes(), psi0.ndim - 2, 0, 0, 0, 0, 0)
+    n_batch = (
+        H.in_axes(),
+        Shape(psi0.shape[:-2]),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+    )
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = SEResult(None, None, None, None, 0, 0)
@@ -124,6 +132,9 @@ def _vectorized_sesolve(
         f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
     else:
         f = _flat_vectorize(_sesolve, n_batch, out_axes)
+        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
+        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
 
     # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)

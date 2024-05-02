@@ -20,7 +20,7 @@ from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
-from ..time_array import TimeArray
+from ..time_array import Shape, TimeArray
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
@@ -133,15 +133,25 @@ def _vectorized_mesolve(
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
+    # n_batch = (
+    #     H.in_axes(),
+    #     [jump_op.in_axes() for jump_op in jump_ops],
+    #     rho0.ndim - 2,
+    #     0,
+    #     0,
+    #     0,
+    #     0,
+    #     0,
+    # )
     n_batch = (
         H.in_axes(),
         [jump_op.in_axes() for jump_op in jump_ops],
-        rho0.ndim - 2,
-        0,
-        0,
-        0,
-        0,
-        0,
+        Shape(rho0.shape[:-2]),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
     )
 
     # the result is vectorized over `_saved` and `infos`
