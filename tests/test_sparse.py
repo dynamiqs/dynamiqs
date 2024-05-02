@@ -16,10 +16,8 @@ class TestSparseDIA:
     def test_matmul(self):
         N = 4
         keyA, keyB = jax.random.PRNGKey(1), jax.random.PRNGKey(2)
-        matrixA, matrixB = (
-            jax.random.normal(keyA, (N, N)),
-            jax.random.normal(keyB, (N, N)),
-        )
+        matrixA = jax.random.normal(keyA, (N, N))
+        matrixB = jax.random.normal(keyB, (N, N))
 
         sparseA = to_sparse(matrixA)
         sparseB = to_sparse(matrixB)
@@ -36,10 +34,8 @@ class TestSparseDIA:
     def test_add(self):
         N = 4
         keyA, keyB = jax.random.PRNGKey(1), jax.random.PRNGKey(2)
-        matrixA, matrixB = (
-            jax.random.normal(keyA, (N, N)),
-            jax.random.normal(keyB, (N, N)),
-        )
+        matrixA = jax.random.normal(keyA, (N, N))
+        matrixB = jax.random.normal(keyB, (N, N))
 
         sparseA = to_sparse(matrixA)
         sparseB = to_sparse(matrixB)
@@ -53,5 +49,8 @@ class TestSparseDIA:
             out_dia_dia.to_dense(), out_dia_dense, out_dense_dia, out_dense_dense
         )
 
-    def test_transform(self, matrix):
+    def test_transform(self):
+        N = 4
+        key = jax.random.PRNGKey(1)
+        matrix = jax.random.normal(key, (N, N))
         assert jnp.allclose(matrix, to_sparse(matrix).to_dense())

@@ -90,9 +90,7 @@ class SparseDIA:
         self_offsets = list(self.offsets)
         matrix_offsets = list(matrix.offsets)
 
-        offset_to_diag = {
-            offset: diag for offset, diag in zip(self_offsets, self.diags)
-        }
+        offset_to_diag = dict(zip(self_offsets, self.diags))
 
         for offset, diag in zip(matrix_offsets, matrix.diags):
             if offset in offset_to_diag:
@@ -129,7 +127,7 @@ class SparseDIA:
 
         return matrix
 
-    def _cleanup(self, diags: Array, offsets: tuple[int])  -> tuple[Array, tuple[int]]:
+    def _cleanup(self, diags: Array, offsets: tuple[int]) -> tuple[Array, tuple[int]]:
         diags = jnp.asarray(diags)
         offsets = jnp.asarray(offsets)
         mask = jnp.any(diags != 0, axis=1)
@@ -138,7 +136,7 @@ class SparseDIA:
         unique_offsets, indices = jnp.unique(offsets, return_inverse=True)
         result = jnp.zeros((len(unique_offsets), diags.shape[1]))
 
-        for i, offset in enumerate(unique_offsets):
+        for i in range(len(unique_offsets)):
             result = result.at[i].set(jnp.sum(diags[indices == i], axis=0))
 
         return result, tuple([offset.item() for offset in unique_offsets])
@@ -155,6 +153,8 @@ class SparseDIA:
             diags, offsets = self._mul_dia(matrix)
             return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
 
+        return NotImplemented
+
     def __rmul__(self, matrix: Array) -> Array:
         if isinstance(matrix, Array):
             sparse_matrix = to_sparse(matrix)
@@ -163,7 +163,11 @@ class SparseDIA:
                 diags, tuple([offset.item() for offset in offsets])
             ).to_dense()
 
-    def __matmul__(self, matrix: Union[Array, 'SparseDIA']) -> Union[Array, 'SparseDIA']:
+        return NotImplemented
+
+    def __matmul__(
+        self, matrix: Union[Array, 'SparseDIA']
+    ) -> Union[Array, 'SparseDIA']:
         if isinstance(matrix, Array):
             return self._matmul_dense(left_matmul=True, matrix=matrix)
 
@@ -187,7 +191,6 @@ class SparseDIA:
     def __add__(self, matrix: Union[Array, 'SparseDIA']) -> Union[Array, 'SparseDIA']:
         if isinstance(matrix, Array):
             return self._add_dense(matrix)
-
 
         elif isinstance(matrix, SparseDIA):
             diags, offsets = self._add_dia(matrix=matrix)

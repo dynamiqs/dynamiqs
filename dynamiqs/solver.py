@@ -28,7 +28,6 @@ class Solver(eqx.Module):
             )
 
 
-
 # === propagator solvers options
 class Propagator(Solver):
     SUPPORTED_GRADIENT = (Autograd,)
