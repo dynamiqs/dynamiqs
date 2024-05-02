@@ -284,9 +284,8 @@ class TimeArray(eqx.Module):
     def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
-    # def __repr__(self) -> str:
-    #     return f'{type(self).__name__}'
-    # return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
     def __str__(self) -> str:
         return self.__repr__()
