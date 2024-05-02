@@ -3,8 +3,9 @@ from __future__ import annotations
 from math import prod
 
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
-from jax.typing import ArrayLike
+from jaxtyping import ArrayLike
 
 from .._utils import cdtype
 from .operators import displace
@@ -13,7 +14,7 @@ from .utils import tensor, todm
 __all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
 
-def fock(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
+def fock(dim: int, number: ArrayLike) -> Array:
     r"""Returns the ket of a Fock state or the ket of a tensor product of Fock states.
 
     Args:
@@ -37,22 +38,27 @@ def fock(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
                [0.+0.j],
                [0.+0.j]], dtype=complex64)
     """
-    # convert integer inputs to tuples by default, and check dimensions match
-    dim = (dim,) if isinstance(dim, int) else dim
-    number = (number,) if isinstance(number, int) else number
-    if len(dim) != len(number):
-        raise ValueError(
-            'Arguments `number` must have the same length as `dim` of length'
-            f' {len(dim)}, but has length {len(number)}.'
+    # check `dim` is an integer
+    dim = jnp.asarray(dim)
+    if not jnp.issubdtype(dim.dtype, jnp.integer) and dim.ndim == 0:
+        raise TypeError('Argument `dim` must be an integer.')
+
+    # check if number is an integer or an array-like of integers
+    number = jnp.asarray(number)
+    if not jnp.issubdtype(number.dtype, jnp.integer):
+        raise TypeError(
+            'Argument `number` must be an integer, or an array-like of' 'integers.'
         )
 
-    # compute the required basis state
-    n = 0
-    for d, s in zip(dim, number):
-        n = d * n + s
-    ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
-    ket = ket.at[n].set(1.0)
-    return ket  # noqa: RET504
+    # check if all numbers are within [0, dim)
+    if jnp.any(jnp.logical_or(number < 0, number >= dim)):
+        raise ValueError('Fock state number must be in the range [0, dim).')
+
+    # compute all kets
+    kets = jnp.zeros((*number.shape, dim, 1), dtype=cdtype())
+    for idx, n in np.ndenumerate(number):
+        kets = kets.at[(*idx, n, 0)].set(1.0)
+    return kets
 
 
 def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
