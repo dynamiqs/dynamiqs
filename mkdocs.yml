@@ -189,8 +189,8 @@ nav:
               - powm: python_api/utils/utils/powm.md
               - cosm: python_api/utils/utils/cosm.md
               - sinm: python_api/utils/utils/sinm.md
-              - tracemm: python_api/utils/utils/tracemm.md
               - trace: python_api/utils/utils/trace.md
+              - tracemm: python_api/utils/utils/tracemm.md
               - ptrace: python_api/utils/utils/ptrace.md
               - tensor: python_api/utils/utils/tensor.md
               - expect: python_api/utils/utils/expect.md

@@ -17,8 +17,8 @@ __all__ = [
     'powm',
     'cosm',
     'sinm',
-    'tracemm',
     'trace',
+    'tracemm',
     'ptrace',
     'tensor',
     'expect',
@@ -141,6 +141,25 @@ def sinm(x: ArrayLike) -> Array:
     return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
+def trace(x: ArrayLike) -> Array:
+    r"""Returns the trace of an array along its last two dimensions.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Array.
+
+    Returns:
+        _(array of shape (...))_ Trace of `x`.
+
+    Examples:
+        >>> x = jnp.ones((3, 3))
+        >>> dq.trace(x)
+        Array(3., dtype=float32)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    return x.trace(axis1=-1, axis2=-2)
+
+
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
     r"""Return $\tr{xy}$ (using a fast implementation).
 
@@ -176,25 +195,6 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     return (x * y.mT).sum((-2, -1))
-
-
-def trace(x: ArrayLike) -> Array:
-    r"""Returns the trace of an array along its last two dimensions.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Array.
-
-    Returns:
-        _(array of shape (...))_ Trace of `x`.
-
-    Examples:
-        >>> x = jnp.ones((3, 3))
-        >>> dq.trace(x)
-        Array(3., dtype=float32)
-    """
-    x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, n)')
-    return x.trace(axis1=-1, axis2=-2)
 
 
 def _hdim(x: ArrayLike) -> int:
