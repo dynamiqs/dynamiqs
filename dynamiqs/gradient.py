@@ -21,10 +21,7 @@ class Autograd(Gradient):
             [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
             option.
         """
-        super().__init__()
-
-    def __str__(self) -> str:
-        return eqx.tree_pformat(self, indent=0).replace('\n', '').replace(',', ', ')
+    
 
 
 class CheckpointAutograd(Gradient):

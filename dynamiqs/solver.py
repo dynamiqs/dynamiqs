@@ -27,8 +27,6 @@ class Solver(eqx.Module):
                 f' {support_str}).'
             )
 
-    def __str__(self) -> str:
-        return eqx.tree_pformat(self, indent=0).replace('\n', '').replace(',', ', ')
 
 
 # === propagator solvers options

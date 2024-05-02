@@ -105,7 +105,7 @@ class SparseDIA:
 
         return new_diagonals, new_offsets
 
-    def _dag(self):
+    def _dag(self) -> 'SparseDIA':
         """Returns the hermitian conjugate, call to_dense() to visualize."""
         self.offsets = tuple(-1 * jnp.array(self.offsets))
         self.diags = jnp.conjugate(self.diags)
