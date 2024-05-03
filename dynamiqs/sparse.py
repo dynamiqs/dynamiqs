@@ -155,6 +155,10 @@ class SparseDIA:
             diags, offsets = self._mul_dia(other)
             return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
 
+        elif isinstance(other, float):
+            diags, offsets = other * self.diags, self.offsets
+            return SparseDIA(diags, offsets)
+
         return NotImplemented
 
     def __rmul__(self, other: Array) -> Array:
@@ -164,6 +168,10 @@ class SparseDIA:
             return SparseDIA(
                 diags, tuple([offset.item() for offset in offsets])
             ).to_dense()
+
+        elif isinstance(other, float):
+            diags, offsets = other * self.diags, self.offsets
+            return SparseDIA(diags, offsets)
 
         return NotImplemented
 
