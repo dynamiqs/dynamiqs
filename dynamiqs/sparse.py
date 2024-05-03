@@ -3,15 +3,33 @@ from __future__ import annotations
 import functools
 from typing import Self
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jaxtyping import Array
 
 
-class SparseDIA:
-    def __init__(self, diags: Array, offsets: tuple[int]):
+class SparseDIA(eqx.Module):
+    diags: jax.Array
+    offsets: tuple[int] = eqx.field(static=True)
+
+    def __init__(self, diags: jax.Array, offsets: tuple[int]):
         self.offsets = offsets
         self.diags = diags
+
+    def _cleanup(self, diags: Array, offsets: tuple[int]) -> tuple[Array, tuple[int]]:
+        diags = jnp.asarray(diags)
+        offsets = jnp.asarray(offsets)
+        mask = jnp.any(diags != 0, axis=1)
+        diags = diags[mask]
+        offsets = offsets[mask]
+        unique_offsets, indices = jnp.unique(offsets, return_inverse=True)
+        result = jnp.zeros((len(unique_offsets), diags.shape[1]))
+
+        for i in range(len(unique_offsets)):
+            result = result.at[i].set(jnp.sum(diags[indices == i], axis=0))
+
+        return result, tuple([offset.item() for offset in unique_offsets])
 
     def to_dense(self) -> Array:
         """Turn any set of diagonals & offsets in a full NxN matrix."""
@@ -23,28 +41,7 @@ class SparseDIA:
             out += jnp.diag(diag[start:end], k=offset)
         return out
 
-    @functools.partial(jax.jit, static_argnums=(0, 1))
-    def _matmul_dense(self, left_matmul: bool, other: Array) -> Array:
-        N = other.shape[0]
-        out = jnp.zeros_like(other)
-        for offset, diag in zip(self.offsets, self.diags):
-            start = max(0, offset)
-            end = min(N, N + offset)
-            top = max(0, -offset)
-            bottom = top + end - start
-            if left_matmul:
-                out = out.at[top:bottom, :].add(
-                    diag[start:end, None] * other[start:end, :]
-                )
-            else:
-                out = out.at[:, start:end].add(
-                    jnp.transpose(
-                        diag[start:end, None] * jnp.transpose(other[:, top:bottom])
-                    )
-                )
-        return out
-
-    @functools.partial(jax.jit, static_argnums=(0, 1))
+    @jax.jit
     def _matmul_dia(self, other: Self) -> tuple[Array, list[Array]]:
         N = other.diags.shape[1]
 
@@ -69,25 +66,28 @@ class SparseDIA:
 
         return out_diags, out_offsets
 
-    @functools.partial(jax.jit, static_argnums=(0, 1))
-    def _mul_dia(self, other: Self) -> tuple[Array, list[Array]]:
-        out_diags = []
-        out_offsets = []
+    @functools.partial(jax.jit, static_argnums=(1,))
+    def _matmul_dense(self, left_matmul: bool, other: Array) -> Array:
+        N = other.shape[0]
+        out = jnp.zeros_like(other)
+        for offset, diag in zip(self.offsets, self.diags):
+            start = max(0, offset)
+            end = min(N, N + offset)
+            top = max(0, -offset)
+            bottom = top + end - start
+            if left_matmul:
+                out = out.at[top:bottom, :].add(
+                    diag[start:end, None] * other[start:end, :]
+                )
+            else:
+                out = out.at[:, start:end].add(
+                    jnp.transpose(
+                        diag[start:end, None] * jnp.transpose(other[:, top:bottom])
+                    )
+                )
+        return out
 
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            for other_offset, other_diag in zip(other.offsets, other.diags):
-                if self_offset != other_offset:
-                    continue
-                out_diag = jnp.zeros_like(self_diag)
-                out_diag = out_diag.at[:].add(self_diag * other_diag)
-                out_diags.append(out_diag)
-                out_offsets.append(other_offset)
-
-        out_diags = jnp.vstack(out_diags)
-
-        return out_diags, out_offsets
-
-    @functools.partial(jax.jit, static_argnums=(0, 1))
+    @jax.jit
     def _add_dia(self, other: Self) -> tuple[Array, list[Array]]:
         self_offsets = list(self.offsets)
         other_offsets = list(other.offsets)
@@ -105,13 +105,7 @@ class SparseDIA:
 
         return out_diags, out_offsets
 
-    def dag(self) -> Self:
-        """Returns the hermitian conjugate, call to_dense() to visualize."""
-        out_offsets = tuple(int(o) for o in -1 * jnp.array(self.offsets))
-        out_diags = jnp.conjugate(self.diags)
-        return SparseDIA(out_diags, out_offsets)
-
-    @functools.partial(jax.jit, static_argnums=(0,))
+    @jax.jit
     def _add_dense(self, other: Array) -> Array:
         """Sparse + Dense only using information about diagonals & offsets."""
         N = other.shape[0]
@@ -129,19 +123,58 @@ class SparseDIA:
 
         return other
 
-    def _cleanup(self, diags: Array, offsets: tuple[int]) -> tuple[Array, tuple[int]]:
-        diags = jnp.asarray(diags)
-        offsets = jnp.asarray(offsets)
-        mask = jnp.any(diags != 0, axis=1)
-        diags = diags[mask]
-        offsets = offsets[mask]
-        unique_offsets, indices = jnp.unique(offsets, return_inverse=True)
-        result = jnp.zeros((len(unique_offsets), diags.shape[1]))
+    @jax.jit
+    def _mul_dia(self, other: Self) -> tuple[Array, list[Array]]:
+        out_diags = []
+        out_offsets = []
 
-        for i in range(len(unique_offsets)):
-            result = result.at[i].set(jnp.sum(diags[indices == i], axis=0))
+        for self_offset, self_diag in zip(self.offsets, self.diags):
+            for other_offset, other_diag in zip(other.offsets, other.diags):
+                if self_offset != other_offset:
+                    continue
+                out_diag = jnp.zeros_like(self_diag)
+                out_diag = out_diag.at[:].add(self_diag * other_diag)
+                out_diags.append(out_diag)
+                out_offsets.append(other_offset)
 
-        return result, tuple([offset.item() for offset in unique_offsets])
+        out_diags = jnp.vstack(out_diags)
+
+        return out_diags, out_offsets
+
+    ### DUNDERS ###
+
+    def __matmul__(self, other: Array | Self) -> Array | Self:
+        if isinstance(other, Array):
+            return self._matmul_dense(left_matmul=True, other=other)
+
+        elif isinstance(other, SparseDIA):
+            diags, offsets = self._matmul_dia(other=other)
+            diags, offsets = self._cleanup(diags, offsets)
+            return SparseDIA(diags, offsets)
+
+        return NotImplemented
+
+    def __rmatmul__(self, other: Array) -> Array:
+        if isinstance(other, Array):
+            return self._matmul_dense(left_matmul=False, other=other)
+
+        return NotImplemented
+
+    def __add__(self, other: Array | Self) -> Array | Self:
+        if isinstance(other, Array):
+            return self._add_dense(other)
+
+        elif isinstance(other, SparseDIA):
+            diags, offsets = self._add_dia(other=other)
+            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
+
+        return NotImplemented
+
+    def __radd__(self, other: Array) -> Array:
+        if isinstance(other, Array):
+            return self._add_dense(other)
+
+        return NotImplemented
 
     def __mul__(self, other: Array | Self) -> Array | Self:
         if isinstance(other, Array):
@@ -175,43 +208,6 @@ class SparseDIA:
 
         return NotImplemented
 
-    def __matmul__(self, other: Array | Self) -> Array | Self:
-        if isinstance(other, Array):
-            return self._matmul_dense(left_matmul=True, other=other)
-
-        elif isinstance(other, SparseDIA):
-            diags, offsets = self._matmul_dia(other=other)
-            diags, offsets = self._cleanup(diags, offsets)
-            return SparseDIA(diags, offsets)
-
-        return NotImplemented
-
-    def __rmatmul__(self, other: Array) -> Array:
-        if isinstance(other, Array):
-            return self._matmul_dense(left_matmul=False, other=other)
-
-        return NotImplemented
-
-    # def __getitem__(self, index):
-    #     dense = self.to_dense()
-    #     return dense[index]
-
-    def __add__(self, other: Array | Self) -> Array | Self:
-        if isinstance(other, Array):
-            return self._add_dense(other)
-
-        elif isinstance(other, SparseDIA):
-            diags, offsets = self._add_dia(other=other)
-            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
-
-        return NotImplemented
-
-    def __radd__(self, other: Array) -> Array:
-        if isinstance(other, Array):
-            return self._add_dense(other)
-
-        return NotImplemented
-
 
 def to_sparse(other: Array) -> Self:
     r"""Returns the input matrix in the SparseDIA format.
@@ -228,7 +224,6 @@ def to_sparse(other: Array) -> Self:
             object.offsets: tuple of integers that represents the
                             respective offsets of the diagonals
 
-    !!! PROVIDE AN INLINE EXAMPLE !!!
     """
     diagonals = []
     offsets = []
