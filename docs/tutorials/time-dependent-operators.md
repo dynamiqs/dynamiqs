@@ -3,7 +3,7 @@
 This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
 
 !!! Warning "Differences with QuTiP"
-dynamiqs uses JAX arrays, which are different from QuTiP quantum objects. See [The sharp bits 🔪](../getting_started/sharp-bits.md) page for more details, briefly:
+    dynamiqs uses JAX arrays, which are different from QuTiP quantum objects. See [The sharp bits 🔪](../getting_started/sharp-bits.md) page for more details, briefly:
 
     - use `x + 2 * dq.eye(n)` instead of `x + 2`
     - use `x @ y` instead of `x * y`, and `dq.powm(x, 4)` instead of `x**4`
@@ -54,7 +54,7 @@ for any time $t$, where $O_0$ is a constant operator.
 In dynamiqs, constant operators can either be defined with array-like objects or as [`TimeArray`][dynamiqs.TimeArray] objects (using the [`dq.constant()`][dynamiqs.constant] function).
 
 !!! Notes
-Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
+    Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
 
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
@@ -86,7 +86,7 @@ H = dq.constant(dq.sigmaz())
 
 A piecewise constant (PWC) operator takes constant values over some time intervals. It is defined by
 $$
-O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
+    O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
 $$
 where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant operator.
 
@@ -99,7 +99,7 @@ In dynamiqs, PWC operators are defined by three array-like objects:
 To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
 !!! Notes
-The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
+    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
 
 Let's define a PWC operator:
 ```pycon
@@ -151,7 +151,7 @@ The batching of the returned time-array is specified by `values`. For example, t
 
 A modulated operator is defined by
 $$
-O(t) = f(t) O_0
+    O(t) = f(t) O_0
 $$
 where $f(t)$ is an time-dependent scalar.
 
@@ -183,7 +183,7 @@ Array([[0.+0.j, 1.+0.j],
 ```
 
 ??? Notes "Batching"
-The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
 ```pycon
 >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
 >>> f = lambda t: jnp.cos(omegas * t)
