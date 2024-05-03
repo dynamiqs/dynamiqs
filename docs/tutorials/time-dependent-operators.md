@@ -47,7 +47,7 @@ Finally, time-arrays also support common utility functions, such as `.conj()`, o
 
 A constant operator is defined by
 $$
-O(t) = O_0
+    O(t) = O_0
 $$
 for any time $t$, where $O_0$ is a constant operator.
 
@@ -207,7 +207,7 @@ To define a modulated operator with a function that takes arguments other than t
 
 An arbitrary time-dependent operator is defined by
 $$
-O(t) = f(t)
+    O(t) = f(t)
 $$
 where $f(t)$ is a time-dependent operator.
 
