@@ -112,10 +112,7 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
-    # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary:
-    # (1) to make f a Pytree, and
-    # (2) to avoid jitting again every time the args change.
+    # make `f` a valid Pytree with `Partial`
     f = jtu.Partial(f)
     f = BatchedCallable(f)
 
@@ -149,10 +146,7 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
-    # Pass `f` through `jax.tree_util.Partial`.
-    # This is necessary:
-    # (1) to make f a Pytree, and
-    # (2) to avoid jitting again every time the args change.
+    # make `f` a valid Pytree with `Partial`
     f = jtu.Partial(f)
     f = BatchedCallable(f)
     return CallableTimeArray(f)
@@ -187,7 +181,8 @@ class TimeArray(eqx.Module):
 
     # Subclasses should implement:
     # - the properties: dtype, shape, mT
-    # - the methods: __call__, reshape, conj, __neg__, __mul__, __add__
+    # - the methods: reshape, broadcast_to, conj, in_axes, __call__, __neg__, __mul__,
+    #   __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Array`, `ConstantTimeArray` and the subclass type itself.
@@ -236,7 +231,7 @@ class TimeArray(eqx.Module):
 
     @abstractmethod
     def conj(self) -> TimeArray:
-        """Computes element-wise complex conjugate of the time-array.
+        """Returns the element-wise complex conjugate of the time-array.
 
         Returns:
             New time-array object with element-wise complex conjuguated values.
@@ -348,7 +343,7 @@ class PWCTimeArray(TimeArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return (*self.values.shape[:-1], *self.array.shape)
+        return *self.values.shape[:-1], *self.array.shape
 
     @property
     def mT(self) -> TimeArray:
@@ -415,7 +410,7 @@ class ModulatedTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         f_shape = jax.eval_shape(self.f, 0.0).shape
-        return (*f_shape, *self.array.shape)
+        return *f_shape, *self.array.shape
 
     @property
     def mT(self) -> TimeArray:
