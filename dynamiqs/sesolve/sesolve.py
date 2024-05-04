@@ -181,4 +181,4 @@ def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})

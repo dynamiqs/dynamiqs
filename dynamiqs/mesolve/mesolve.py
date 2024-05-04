@@ -211,4 +211,4 @@ def _check_mesolve_args(
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
