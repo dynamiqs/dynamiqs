@@ -136,16 +136,16 @@ Array([[ 0.+0.j,  0.+0.j],
 ```
 
 ??? Notes "Batching"
-The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
-```pycon
->>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
->>> times = jnp.array([0.0, 1.0, 2.0])
->>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
->>> array = dq.sigmaz()
->>> H = dq.pwc(times, values, array)
->>> H.shape
-(11, 2, 2)
-```
+    The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
+    ```pycon
+    >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
+    >>> times = jnp.array([0.0, 1.0, 2.0])
+    >>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
+    >>> array = dq.sigmaz()
+    >>> H = dq.pwc(times, values, array)
+    >>> H.shape
+    (11, 2, 2)
+    ```
 
 ### Modulated operators
 
@@ -184,24 +184,24 @@ Array([[0.+0.j, 1.+0.j],
 
 ??? Notes "Batching"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
-```pycon
->>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
->>> f = lambda t: jnp.cos(omegas * t)
->>> H = dq.modulated(f, dq.sigmax())
->>> H.shape
-(11, 2, 2)
-```
+    ```pycon
+    >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
+    >>> f = lambda t: jnp.cos(omegas * t)
+    >>> H = dq.modulated(f, dq.sigmax())
+    >>> H.shape
+    (11, 2, 2)
+    ```
 
 ??? Notes "Function with additional arguments"
-To define a modulated operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
-```pycon
->>> import functools
->>> def pulse(t, omega, amplitude=1.0):
-...     return amplitude * jnp.cos(omega * t)
->>> # create function with correct signature (t: float) -> Array
->>> f = functools.partial(pulse, omega=1.0, amplitude=5.0)
->>> H = dq.modulated(f, dq.sigmax())
-```
+    To define a modulated operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
+    ```pycon
+    >>> import functools
+    >>> def pulse(t, omega, amplitude=1.0):
+    ...     return amplitude * jnp.cos(omega * t)
+    >>> # create function with correct signature (t: float) -> Array
+    >>> f = functools.partial(pulse, omega=1.0, amplitude=5.0)
+    >>> H = dq.modulated(f, dq.sigmax())
+    ```
 
 ### Arbitrary time-dependent operators
 
@@ -238,25 +238,25 @@ Array([[1., 0.],
 ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
-An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
+    An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Notes "Batching"
-The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
-```pycon
->>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
->>> f = lambda t: thetas[:, None, None] * jnp.array([[t, 0], [0, 1 - t]])
->>> H = dq.timecallable(f)
->>> H.shape
-(11, 2, 2)
-```
+    The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
+    ```pycon
+    >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
+    >>> f = lambda t: thetas[:, None, None] * jnp.array([[t, 0], [0, 1 - t]])
+    >>> H = dq.timecallable(f)
+    >>> H.shape
+    (11, 2, 2)
+    ```
 
 ??? Notes "Function with additional arguments"
-To define an arbitrary time-dependent operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
-```pycon
->>> import functools
->>> def func(t, a, amplitude=1.0):
-...     return amplitude * jnp.array([[t, a], [a, 1 - t]])
->>> # create function with correct signature (t: float) -> Array
->>> f = functools.partial(func, a=1.0, amplitude=5.0)
->>> H = dq.timecallable(f)
-```
+    To define an arbitrary time-dependent operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
+    ```pycon
+    >>> import functools
+    >>> def func(t, a, amplitude=1.0):
+    ...     return amplitude * jnp.array([[t, a], [a, 1 - t]])
+    >>> # create function with correct signature (t: float) -> Array
+    >>> f = functools.partial(func, a=1.0, amplitude=5.0)
+    >>> H = dq.timecallable(f)
+    ```

@@ -47,9 +47,9 @@ def mesolve(
     $$
         \frac{\dd\rho(t)}{\dt} = -i[H(t), \rho(t)]
         + \sum_{k=1}^N \left(
-         L_k(t) \rho(t) L_k^\dag(t)
-         - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
-         - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
+            L_k(t) \rho(t) L_k^\dag(t)
+            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
+            - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
         \right),
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
