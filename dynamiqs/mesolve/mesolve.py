@@ -133,6 +133,22 @@ def _vectorized_mesolve(
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
+
+    # the result is vectorized over `_saved` and `infos`
+    out_axes = MEResult(None, None, None, None, 0, 0)
+
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(
+            H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
+        )
+
+        def broadcast(x: TimeArray) -> TimeArray:
+            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
+
+        H = broadcast(H)
+        jump_ops = list(map(broadcast, jump_ops))
+        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
+
     n_batch = (
         H.in_axes(),
         [jump_op.in_axes() for jump_op in jump_ops],
@@ -143,9 +159,6 @@ def _vectorized_mesolve(
         Shape(),
         Shape(),
     )
-
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = MEResult(None, None, None, None, 0, 0)
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:

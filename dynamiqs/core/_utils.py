@@ -66,10 +66,7 @@ def _cartesian_vectorize(
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
     # Only the second to last batch terms are taken into account in order to
     # have proper batching of SummedTimeArrays (see below).
-    leaves, treedef = jtu.tree_flatten(
-        (None,) + n_batch[1:],
-        is_leaf=is_shape,
-    )
+    leaves, treedef = jtu.tree_flatten((None,) + n_batch[1:], is_leaf=is_shape)
 
     # note: we apply the successive vmaps in reverse order, so the output
     # dimensions are in the correct order
@@ -85,12 +82,6 @@ def _cartesian_vectorize(
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     # We flat vectorize on the first n_batch term, which is the
-    # Hamilonian. This prevents performing the Carthesian product
-    # on all terms fo the sum Hamiltonian.
-    f = _flat_vectorize(
-        f,
-        n_batch[:1] + (None,) * len(n_batch[1:]),
-        out_axes,
-    )
-
-    return f
+    # Hamilonian. This prevents performing the Cartesian product
+    # on all terms for the sum Hamiltonian.
+    return _flat_vectorize(f, n_batch[:1] + (None,) * len(n_batch[1:]), out_axes)

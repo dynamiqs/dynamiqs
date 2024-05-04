@@ -112,6 +112,12 @@ def _vectorized_sesolve(
 ) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
+
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
+        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
+
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
     n_batch = (
@@ -132,9 +138,6 @@ def _vectorized_sesolve(
         f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
     else:
         f = _flat_vectorize(_sesolve, n_batch, out_axes)
-        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
-        H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
-        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
 
     # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)

@@ -32,7 +32,8 @@ def test_batching(cartesian_batching, nH, npsi0):
         assert result.expects.shape == (*nH, nE, ntsave)
 
 
-@pytest.mark.parametrize(('nH', 'npsi0'), [((3,), (4, 3)), ((4, 3), (3,))])
+@pytest.mark.parametrize(('nH'), [(), (3,), (4, 3)])
+@pytest.mark.parametrize(('npsi0'), [(), (3,), (4, 3)])
 def test_non_carthesian_batching_broacasting(nH, npsi0):
     n = 8
     nE = 7
