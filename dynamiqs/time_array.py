@@ -138,7 +138,6 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
             `(t: float) -> Array` that returns the array $f(t)$.
-        args: Other positional arguments passed to the function $f$.
 
     Returns:
        _(time-array object of shape (..., n, n) when called)_ Callable object
