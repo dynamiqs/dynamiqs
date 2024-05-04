@@ -11,6 +11,7 @@ from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import (
     _astimearray,
+    catch_xla_runtime_error,
     compute_vmap,
     get_solver_class,
     is_timearray_batched,
@@ -100,6 +101,7 @@ def sesolve(
     return _vmap_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
+@catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vmap_sesolve(
     H: TimeArray,

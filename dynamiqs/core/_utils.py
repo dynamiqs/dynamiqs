@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import functools
+
 import jax
 import jax.numpy as jnp
+from jax._src.lib import xla_client
 from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
-from ..solver import Solver
+from ..solver import Solver, _ODEAdaptiveStep
 from ..time_array import (
     CallableTimeArray,
     ConstantTimeArray,
@@ -30,6 +33,39 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
                 f'Argument must be an array-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
+
+
+def catch_xla_runtime_error(func: callable) -> callable:
+    # Decorator to catch `XlaRuntimeError`` exceptions, and set a more friendly
+    # exception message. Note that this will not work for jitted function, as the
+    # exception code will be traced out.
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):  # noqa: ANN202
+        try:
+            return func(*args, **kwargs)
+        except xla_client.XlaRuntimeError as e:
+            # === `max_steps` reached error
+            eqx_max_steps_error_msg = (
+                'EqxRuntimeError: The maximum number of solver steps was reached. '
+            )
+            if eqx_max_steps_error_msg in str(e):
+                default_max_steps = _ODEAdaptiveStep.max_steps
+                raise RuntimeError(
+                    'The maximum number of solver steps has been reached (the default'
+                    f' value is `max_steps={default_max_steps:_}`). Try increasing'
+                    ' `max_steps` with the `solver` argument, e.g.'
+                    ' `solver=dq.solver.Tsit5(max_steps=1_000_000)`.'
+                ) from e
+            # === other errors
+            raise RuntimeError(
+                'An internal JAX error interrupted the execution, please report this to'
+                ' the dynamiqs developers by opening an issue on GitHub or sending a'
+                ' message on dynamiqs Slack (links available at'
+                ' https://www.dynamiqs.org/getting_started/lets-talk.html).'
+            ) from e
+
+    return wrapper
 
 
 def get_solver_class(
