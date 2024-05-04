@@ -95,3 +95,24 @@ def test_timearray_batching():
     assert result.states.shape == (5, 11, 4, 1)
     result = dq.sesolve(H0 + H_cal, psi0, times)
     assert result.states.shape == (5, 11, 4, 1)
+
+
+def test_sum_batching():
+    a = dq.destroy(3)
+    omegas = jnp.linspace(0, 2 * jnp.pi, 5)
+
+    # some batched constant Hamiltonian of shape (5, 3, 3)
+    H0 = omegas[..., None, None] * dq.dag(a) @ a
+
+    # some batched modulated Hamiltonian of shape (5, 3, 3)
+    H1 = dq.modulated(lambda t: jnp.cos(omegas * t), a + dq.dag(a))
+
+    # sum of both Hamiltonians, also of shape (5, 3, 3)
+    H = H0 + H1
+
+    # run sesolve
+    psi0 = dq.fock(3, 0)
+    tsave = jnp.linspace(0, 2 * jnp.pi, 100)
+    result = dq.sesolve(H, psi0, tsave)
+
+    assert result.states.shape == (5, 100, 3, 1)

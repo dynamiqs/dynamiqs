@@ -400,7 +400,7 @@ class PWCTimeArray(TimeArray):
 
 
 class ModulatedTimeArray(TimeArray):
-    f: callable[[float], Array]  # (...)
+    f: BatchedCallable  # (...)
     array: Array  # (n, n)
 
     @property
