@@ -565,5 +565,5 @@ class BatchedCallable(eqx.Module):
         return self.f(t)[tuple(self.indices)]
 
     @property
-    def shape(self) -> int:
+    def shape(self) -> tuple[int, ...]:
         return jax.eval_shape(self.f, 0.0).shape
