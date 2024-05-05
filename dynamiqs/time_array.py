@@ -279,9 +279,6 @@ class TimeArray(eqx.Module):
     def __repr__(self) -> str:
         return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
-    def __str__(self) -> str:
-        return self.__repr__()
-
 
 class ConstantTimeArray(TimeArray):
     array: Array
