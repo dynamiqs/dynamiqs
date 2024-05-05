@@ -7,18 +7,25 @@ import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+from equinox.internal import while_loop
 from jax.random import PRNGKey
 from jax import Array
 from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
-from ..core._utils import _astimearray, compute_vmap, get_solver_class
+from ..core._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    _flat_vectorize,
+    catch_xla_runtime_error,
+    get_solver_class,
+)
 from ..gradient import Gradient
 from ..options import Options
 from ..result import Result, MCResult
 from ..solver import Dopri5, Dopri8, Euler, Solver, Tsit5
-from ..time_array import TimeArray
+from ..time_array import TimeArray, Shape
 from ..utils.utils import unit, dag
 from .mcdiffrax import MCDopri5, MCDopri8, MCEuler, MCTsit5
 
@@ -109,12 +116,13 @@ def mcsolve(
     # === check arguments
     _check_mcsolve_args(H, jump_ops, psi0, tsave, exp_ops)
 
-    return _vmap_mcsolve(
+    return _vectorized_mcsolve(
         H, jump_ops, psi0, tsave, key, exp_ops, solver, gradient, options
     )
 
 
-def _vmap_mcsolve(
+@catch_xla_runtime_error
+def _vectorized_mcsolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
     psi0: Array,
@@ -128,20 +136,41 @@ def _vmap_mcsolve(
     # === vectorize function
     # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
     # below we will have another layer of vectorization over ntraj
-    is_batched = (
-        H.ndim > 2,
-        [jump_op.ndim > 2 for jump_op in jump_ops],
-        psi0.ndim > 2,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
+
+    out_axes = MCResult(None, 0, 0, 0, 0)
+
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(
+            H.shape[:-2], psi0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
+        )
+
+        def broadcast(x: TimeArray) -> TimeArray:
+            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
+
+        H = broadcast(H)
+        jump_ops = list(map(broadcast, jump_ops))
+        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
+
+    n_batch = (
+        H.in_axes,
+        [jump_op.in_axes for jump_op in jump_ops],
+        Shape(psi0.shape[:-2]),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
     )
     # the result is vectorized over `saved`
-    out_axes = MCResult(None, 0, 0, 0, 0)
-    f = compute_vmap(_mcsolve, options.cartesian_batching, is_batched, out_axes)
+
+    # compute vectorized function with given batching strategy
+    if options.cartesian_batching:
+        f = _cartesian_vectorize(_mcsolve, n_batch, out_axes)
+    else:
+        f = _flat_vectorize(_mcsolve, n_batch, out_axes)
+
+    # === apply vectorized function
     return f(H, jump_ops, psi0, tsave, key, exp_ops, solver, gradient, options)
 
 
@@ -307,10 +336,12 @@ def loop_over_jumps(
         H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
     )
 
-    final_result, _ = jax.lax.while_loop(
+    final_result, _ = while_loop(
         while_cond,
         while_body,
         (initial_result, key_2),
+        max_steps=100,
+        kind="checkpointed",
     )
     return final_result
 

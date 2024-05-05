@@ -136,8 +136,8 @@ def _vectorized_mesolve(
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
 
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = MEResult(None, None, None, None, 0, 0)
+    # the result is vectorized over `_saved` and `infos` and final_time
+    out_axes = MEResult(None, None, None, None, 0, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(
