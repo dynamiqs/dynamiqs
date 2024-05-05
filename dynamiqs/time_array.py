@@ -557,13 +557,13 @@ class BatchedCallable(eqx.Module):
     # this class turns a callable into a PyTree that is vmap-compatible
 
     f: callable[[float], Array]
-    indices: Array
+    indices: list[Array]
 
     def __init__(self, f: callable[[float], Array]):
         # make f a valid PyTree with `Partial`
         self.f = jtu.Partial(f)
         shape = jax.eval_shape(f, 0.0).shape
-        self.indices = jnp.indices(shape)
+        self.indices = list(jnp.indices(shape))
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)[tuple(self.indices)]
