@@ -120,6 +120,15 @@ class QArray(eqx.Module):
         """
         return QArray(unit(self.inner), self.dims)
 
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Shape of the quantum state.
+
+        Returns:
+            tuple[int, ...]: The shape of the quantum state.
+        """
+        return self.inner.shape
+
     def __add__(self, other: ScalarLike | ArrayLike | QArray) -> QArray:
         if isinstance(other, QArray):
             if self.dims != other.dims:
