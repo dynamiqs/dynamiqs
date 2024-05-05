@@ -9,7 +9,7 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from jax import Array, lax
-from jaxtyping import ArrayLike, ScalarLike
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, obj_type_str
@@ -236,7 +236,7 @@ class TimeArray(eqx.Module):
         """
 
     @abstractmethod
-    def in_axes(self):
+    def in_axes(self) -> PyTree[int]:
         """Returns the `in_axes` arguments that should be passed to vmap in order
         to vmap the TimeArray correctly.
         """
@@ -307,7 +307,7 @@ class ConstantTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
 
-    def in_axes(self) -> tuple[int, ...]:
+    def in_axes(self) -> PyTree[int]:
         return ConstantTimeArray(Shape(self.array.shape[:-2]))
 
     def __call__(self, _t: ScalarLike) -> Array:
@@ -364,7 +364,7 @@ class PWCTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
-    def in_axes(self) -> PWCTimeArray:
+    def in_axes(self) -> PyTree[int]:
         return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
 
     def __call__(self, t: float) -> Array:
@@ -426,7 +426,7 @@ class ModulatedTimeArray(TimeArray):
         f = jtu.Partial(lambda t: self.f(t).conj())
         return ModulatedTimeArray(f, self.array.conj())
 
-    def in_axes(self) -> ModulatedTimeArray:
+    def in_axes(self) -> PyTree[int]:
         return ModulatedTimeArray(f=Shape(self.f.shape), array=Shape())
 
     def __call__(self, t: float) -> Array:
@@ -477,7 +477,7 @@ class CallableTimeArray(TimeArray):
         f = jtu.Partial(lambda t: self.f(t).conj())
         return CallableTimeArray(f)
 
-    def in_axes(self) -> CallableTimeArray:
+    def in_axes(self) -> PyTree[int]:
         return CallableTimeArray(f=Shape(self.f.shape[:-2]))
 
     def __call__(self, t: float) -> Array:
@@ -533,7 +533,7 @@ class SummedTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
 
-    def in_axes(self) -> PWCTimeArray:
+    def in_axes(self) -> PyTree[int]:
         return SummedTimeArray(
             jtu.tree_map(
                 lambda x: x.in_axes(),
