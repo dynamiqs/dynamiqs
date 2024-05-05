@@ -207,10 +207,10 @@ class TimeArray(eqx.Module):
 
     @abstractmethod
     def reshape(self, *new_shape: int) -> TimeArray:
-        """Gives a new shape to an array without changing its data.
+        """Returns a reshaped copy of a time-array.
 
         Args:
-            *new_shape: New shape.
+            *new_shape: New shape, which must match the original size.
 
         Returns:
             New time-array object with the given shape.
@@ -218,14 +218,13 @@ class TimeArray(eqx.Module):
 
     @abstractmethod
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        """Broadcast a time-array to a new shape.
+        """Broadcasts a time-array to a new shape.
 
         Args:
-            new_shape: The new shape should be compatible with the original shape.
+            *new_shape: New shape, which must be compatible with the original shape.
 
         Returns:
             New time-array object with the given shape.
-
         """
 
     @abstractmethod
