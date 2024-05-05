@@ -549,6 +549,8 @@ class SummedTimeArray(TimeArray):
 
 
 class BatchedCallable(eqx.Module):
+    # this class turns a callable into a PyTree that is vmap-compatible
+
     f: callable[[float], Array]
     indices: Array
 
