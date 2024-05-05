@@ -10,8 +10,8 @@ omega = 2.0 * jnp.pi * 1.0
 amp = 2.0 * jnp.pi * 0.0
 
 
-def H_func(t, omega, omega_d, amp):
-    return -0.5 * omega * dq.sigmaz() + jnp.cos(omega_d * t) * amp * dq.sigmax()
+def H_func(t):
+    return -0.5 * omega * dq.sigmaz() + jnp.cos(omega * t) * amp * dq.sigmax()
 
 tsave = jnp.linspace(0, 1.0, 41)
 jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)),]
@@ -20,18 +20,19 @@ exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)), dq.basis(2, 1) @ dq.tobra(
 initial_states = [dq.basis(2, 1),]
 
 num_traj = 31
+options = dq.Options(ntraj=num_traj)
 result = dq.mcsolve(
-    timecallable(H_func, args=(omega, omega, amp)),
+    timecallable(H_func),
     jump_ops,
     initial_states,
     tsave,
-    ntraj=num_traj,
     key=PRNGKey(4242434),
     exp_ops=exp_ops,
     solver=Tsit5(),
+    options=options
 )
 result_me = dq.mesolve(
-timecallable(H_func, args=(omega, omega, amp)),
+    timecallable(H_func),
     jump_ops,
     initial_states,
     tsave,
