@@ -112,8 +112,7 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
-    # make `f` a valid Pytree with `Partial`
-    f = jtu.Partial(f)
+    # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
     return ModulatedTimeArray(f, array)
@@ -146,9 +145,9 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
-    # make `f` a valid Pytree with `Partial`
-    f = jtu.Partial(f)
+    # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
+
     return CallableTimeArray(f)
 
 
@@ -570,6 +569,9 @@ class BatchedCallable(eqx.Module):
     indices: list[Array]
 
     def __init__(self, f: callable[[float], Array]):
+        # make f a valid PyTree with `Partial`
+        f = jtu.Partial(f)
+
         shape = jax.eval_shape(f, 0.0).shape
         self.f = f
         (*self.indices,) = jnp.indices(shape)
