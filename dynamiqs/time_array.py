@@ -348,18 +348,14 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values, self.array.mT)
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        return PWCTimeArray(
-            self.times,
-            self.values.reshape(*new_shape[:-2] + self.values.shape[-1:]),
-            self.array,
-        )
+        new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = self.values.reshape(*new_shape)
+        return PWCTimeArray(self.times, values, self.array)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        return PWCTimeArray(
-            self.times,
-            jnp.broadcast_to(self.values, new_shape[:-2] + self.values.shape[-1:]),
-            self.array,
-        )
+        new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = jnp.broadcast_to(self.values, new_shape)
+        return PWCTimeArray(self.times, values, self.array)
 
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
