@@ -121,7 +121,7 @@ def _vectorized_sesolve(
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
     n_batch = (
-        H.in_axes(),
+        H.in_axes,
         Shape(psi0.shape[:-2]),
         Shape(),
         Shape(),

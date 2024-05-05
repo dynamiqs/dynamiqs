@@ -150,8 +150,8 @@ def _vectorized_mesolve(
         rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
 
     n_batch = (
-        H.in_axes(),
-        [jump_op.in_axes() for jump_op in jump_ops],
+        H.in_axes,
+        [jump_op.in_axes for jump_op in jump_ops],
         Shape(rho0.shape[:-2]),
         Shape(),
         Shape(),

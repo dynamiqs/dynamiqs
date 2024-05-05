@@ -179,9 +179,8 @@ class TimeArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT
-    # - the methods: reshape, broadcast_to, conj, in_axes, __call__, __neg__, __mul__,
-    #   __add__
+    # - the properties: dtype, shape, mT, in_axes
+    # - the methods: reshape, broadcast_to, conj, __call__, __neg__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Array`, `ConstantTimeArray` and the subclass type itself.
@@ -199,6 +198,13 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def mT(self) -> TimeArray:
+        pass
+
+    @property
+    @abstractmethod
+    def in_axes(self) -> PyTree[int]:
+        # returns the `in_axes` arguments that should be passed to vmap in order
+        # to vmap the TimeArray correctly
         pass
 
     @property
@@ -233,12 +239,6 @@ class TimeArray(eqx.Module):
 
         Returns:
             New time-array object with element-wise complex conjuguated values.
-        """
-
-    @abstractmethod
-    def in_axes(self) -> PyTree[int]:
-        """Returns the `in_axes` arguments that should be passed to vmap in order
-        to vmap the TimeArray correctly.
         """
 
     @abstractmethod
@@ -298,6 +298,10 @@ class ConstantTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ConstantTimeArray(self.array.mT)
 
+    @property
+    def in_axes(self) -> PyTree[int]:
+        return ConstantTimeArray(Shape(self.array.shape[:-2]))
+
     def reshape(self, *new_shape: int) -> TimeArray:
         return ConstantTimeArray(self.array.reshape(*new_shape))
 
@@ -306,9 +310,6 @@ class ConstantTimeArray(TimeArray):
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
-
-    def in_axes(self) -> PyTree[int]:
-        return ConstantTimeArray(Shape(self.array.shape[:-2]))
 
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.array
@@ -347,6 +348,10 @@ class PWCTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array.mT)
 
+    @property
+    def in_axes(self) -> PyTree[int]:
+        return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
+
     def reshape(self, *new_shape: int) -> TimeArray:
         new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
         values = self.values.reshape(*new_shape)
@@ -359,9 +364,6 @@ class PWCTimeArray(TimeArray):
 
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
-
-    def in_axes(self) -> PyTree[int]:
-        return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
 
     def __call__(self, t: ScalarLike) -> Array:
         def _zero(_: float) -> Array:
@@ -409,6 +411,10 @@ class ModulatedTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array.mT)
 
+    @property
+    def in_axes(self) -> PyTree[int]:
+        return ModulatedTimeArray(Shape(self.f.shape), Shape())
+
     def reshape(self, *new_shape: int) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape[:-2]))
         return ModulatedTimeArray(f, self.array)
@@ -420,9 +426,6 @@ class ModulatedTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).conj())
         return ModulatedTimeArray(f, self.array.conj())
-
-    def in_axes(self) -> PyTree[int]:
-        return ModulatedTimeArray(Shape(self.f.shape), Shape())
 
     def __call__(self, t: ScalarLike) -> Array:
         values = self.f(t)
@@ -460,6 +463,10 @@ class CallableTimeArray(TimeArray):
         f = jtu.Partial(lambda t: self.f(t).mT)
         return CallableTimeArray(f)
 
+    @property
+    def in_axes(self) -> PyTree[int]:
+        return CallableTimeArray(Shape(self.f.shape[:-2]))
+
     def reshape(self, *new_shape: int) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape))
         return CallableTimeArray(f)
@@ -471,9 +478,6 @@ class CallableTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).conj())
         return CallableTimeArray(f)
-
-    def in_axes(self) -> PyTree[int]:
-        return CallableTimeArray(Shape(self.f.shape[:-2]))
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
@@ -511,6 +515,10 @@ class SummedTimeArray(TimeArray):
     def mT(self) -> TimeArray:
         return SummedTimeArray([tarray.mT for tarray in self.timearrays])
 
+    @property
+    def in_axes(self) -> PyTree[int]:
+        return SummedTimeArray([tarray.in_axes for tarray in self.timearrays])
+
     def reshape(self, *new_shape: int) -> TimeArray:
         return SummedTimeArray(
             [tarray.reshape(*new_shape) for tarray in self.timearrays]
@@ -523,9 +531,6 @@ class SummedTimeArray(TimeArray):
 
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
-
-    def in_axes(self) -> PyTree[int]:
-        return SummedTimeArray([tarray.in_axes() for tarray in self.timearrays])
 
     def __call__(self, t: ScalarLike) -> Array:
         return jax.tree_util.tree_reduce(
