@@ -403,8 +403,7 @@ class ModulatedTimeArray(TimeArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        f_shape = jax.eval_shape(self.f, 0.0).shape
-        return *f_shape, *self.array.shape
+        return *self.f.shape, *self.array.shape
 
     @property
     def mT(self) -> TimeArray:
@@ -450,11 +449,11 @@ class CallableTimeArray(TimeArray):
 
     @property
     def dtype(self) -> np.dtype:
-        return jax.eval_shape(self.f, 0.0).dtype
+        return self.f.dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return jax.eval_shape(self.f, 0.0).shape
+        return self.f.shape
 
     @property
     def mT(self) -> TimeArray:
@@ -563,6 +562,10 @@ class BatchedCallable(eqx.Module):
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)[tuple(self.indices)]
+
+    @property
+    def dtype(self) -> tuple[int, ...]:
+        return jax.eval_shape(self.f, 0.0).dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
