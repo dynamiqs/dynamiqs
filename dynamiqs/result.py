@@ -89,12 +89,12 @@ class Result(eqx.Module):
 
 
 class SEResult(Result):
-    """Result of the Schrödinger equation integration.
+    r"""Result of the Schrödinger equation integration.
 
     Attributes:
-        states _(array of shape (nH?, npsi0?, ntsave, n, 1))_: Saved states.
-        expects _(array of shape (nH?, npsi0?, nE, ntsave) or None)_: Saved expectation
-            values, if specified by `exp_ops`.
+        states _(array of shape (..., ntsave, n, 1))_: Saved states.
+        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
+            expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options`.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
@@ -102,6 +102,36 @@ class SEResult(Result):
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
+
+    Notes-: Result of running multiple simulations concurrently
+        The resulting states and expectation values are batched according to the
+        leading dimensions of the Hamiltonian `H` and initial state `psi0` :
+
+        - If the option `cartesian_batching = True` (default value), the results
+          leading dimensions are
+          ```
+          ... = ...H, ...psi0
+          ```
+          For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `psi0` has shape _(4, n, 1)_,
+
+            then `states` has shape _(2, 3, 4, ntsave, n, 1)_.
+
+        - If the option `cartesian_batching = False`, the results leading dimensions are
+          ```
+          ... = ...H = ...psi0  # (once broadcasted)
+          ```
+          For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `psi0` has shape _(3, n, 1)_,
+
+            then `states` has shape _(2, 3, ntsave, n, 1)_.
+
+        See the [Batching simulations](../../tutorials/batching-simulations.md)
+        tutorial for more details.
     """
 
 
@@ -109,9 +139,9 @@ class MEResult(Result):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (nH?, nrho0?, ntsave, n, n))_: Saved states.
-        expects _(array of shape (nH?, nrho0?, nE, ntsave) or None)_: Saved expectation
-            values, if specified by `exp_ops`.
+        states _(array of shape (..., ntsave, n, n))_: Saved states.
+        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
+            expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options`.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
@@ -119,4 +149,37 @@ class MEResult(Result):
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
+
+    Notes-: Result of running multiple simulations concurrently
+        The resulting states and expectation values are batched according to the
+        leading dimensions of the Hamiltonian `H`, jump operators `jump_ops` and initial
+        state `rho0`:
+
+        - If the option `cartesian_batching = True` (default value), the results leading
+          dimensions are
+          ```
+          ... = ...H, ...L0, ...L1, (...), ...rho0
+          ```
+          For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+            - `rho0` has shape _(7, n, n)_,
+
+            then `states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
+
+        - If the option `cartesian_batching = False`, the results leading dimensions are
+          ```
+          ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
+          ```
+          For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+            - `rho0` has shape _(3, n, n)_,
+
+            then `states` has shape _(2, 3, ntsave, n, n)_.
+
+        See the [Batching simulations](../../tutorials/batching-simulations.md)
+        tutorial for more details.
     """

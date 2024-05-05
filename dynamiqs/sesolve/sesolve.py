@@ -11,15 +11,15 @@ from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import (
     _astimearray,
-    compute_vmap,
+    _cartesian_vectorize,
+    _flat_vectorize,
     get_solver_class,
-    is_timearray_batched,
 )
 from ..gradient import Gradient
 from ..options import Options
 from ..result import SEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
-from ..time_array import TimeArray
+from ..time_array import Shape, TimeArray
 from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
 from .sepropagator import SEPropagator
 
@@ -62,12 +62,12 @@ def sesolve(
         more details.
 
     Args:
-        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
-        psi0 _(array-like of shape (npsi0?, n, 1))_: Initial state.
+        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        psi0 _(array-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
+        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
@@ -95,13 +95,13 @@ def sesolve(
     _check_sesolve_args(H, psi0, exp_ops)
     tsave = check_times(tsave, 'tsave')
 
-    # we implement the jitted vmap in another function to pre-convert QuTiP objects
-    # (which are not JIT-compatible) to JAX arrays
-    return _vmap_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    return _vectorized_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
-def _vmap_sesolve(
+def _vectorized_sesolve(
     H: TimeArray,
     psi0: Array,
     tsave: Array,
@@ -112,21 +112,32 @@ def _vmap_sesolve(
 ) -> SEResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
-    is_batched = (
-        is_timearray_batched(H),
-        psi0.ndim > 2,
-        False,
-        False,
-        False,
-        False,
-        False,
+
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
+        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
+
+    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
+    # this leaf should be vmapped on.
+    n_batch = (
+        H.in_axes,
+        Shape(psi0.shape[:-2]),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
     )
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = SEResult(None, None, None, None, 0, 0)
 
     # compute vectorized function with given batching strategy
-    f = compute_vmap(_sesolve, options.cartesian_batching, is_batched, out_axes)
+    if options.cartesian_batching:
+        f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
+    else:
+        f = _flat_vectorize(_sesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)
@@ -166,9 +177,11 @@ def _sesolve(
 
 def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
     # === check H shape
-    check_shape(H, 'H', '(..., n, n)')
-    check_shape(psi0, 'psi0', '(?, n, 1)', subs={'?': 'npsi0?'})
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
+
+    # === check psi0 shape
+    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
