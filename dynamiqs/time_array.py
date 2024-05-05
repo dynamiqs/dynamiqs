@@ -567,7 +567,3 @@ class BatchedCallable(eqx.Module):
     @property
     def shape(self) -> int:
         return jax.eval_shape(self.f, 0.0).shape
-
-    @property
-    def ndim(self) -> int:
-        return jax.eval_shape(self.f, 0.0).ndim
