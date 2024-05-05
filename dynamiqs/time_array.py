@@ -446,7 +446,7 @@ class ModulatedTimeArray(TimeArray):
 
 
 class CallableTimeArray(TimeArray):
-    f: callable[[float, ...], Array]
+    f: BatchedCallable  # (..., n, n)
 
     @property
     def dtype(self) -> np.dtype:
