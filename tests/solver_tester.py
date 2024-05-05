@@ -5,6 +5,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+import jax.tree_util as jtu
 
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
@@ -57,11 +58,9 @@ class SolverTester:
         def assert_allclose(pytree1, pytree2):
             # assert two pytrees are equal
             f = partial(jnp.allclose, rtol=rtol, atol=atol)
-            allclose_tree = jax.tree_util.tree_map(f, pytree1, pytree2)
+            allclose_tree = jtu.tree_map(f, pytree1, pytree2)
             # reduce the tree to a single boolean value
-            all_true = jax.tree_util.tree_reduce(
-                lambda x, y: x and y, allclose_tree, True
-            )
+            all_true = jtu.tree_reduce(lambda x, y: x and y, allclose_tree, True)
             assert all_true, f'Pytrees are not close enough: \n{pytree1}\n{pytree2}'
 
         # === test gradients depending on final ysave
