@@ -423,7 +423,7 @@ class ModulatedTimeArray(TimeArray):
         return ModulatedTimeArray(f, self.array.conj())
 
     def in_axes(self) -> PyTree[int]:
-        return ModulatedTimeArray(f=Shape(self.f.shape), array=Shape())
+        return ModulatedTimeArray(Shape(self.f.shape), Shape())
 
     def __call__(self, t: ScalarLike) -> Array:
         values = self.f(t)
@@ -474,7 +474,7 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f)
 
     def in_axes(self) -> PyTree[int]:
-        return CallableTimeArray(f=Shape(self.f.shape[:-2]))
+        return CallableTimeArray(Shape(self.f.shape[:-2]))
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
