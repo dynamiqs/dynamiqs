@@ -164,7 +164,7 @@ In dynamiqs, modulated operators are defined by:
 
 To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
-Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
+Let's define the modulated operator $H(t)=\cos(2\pi t)\sigma_x$:
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
@@ -183,7 +183,7 @@ Array([[0.+0.j, 1.+0.j],
 ```
 
 ??? Notes "Batching"
-    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: jnp.cos(omegas * t)
@@ -217,7 +217,7 @@ In dynamiqs, arbitrary time-dependent operators are defined by:
 
 To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
-Let's define the arbitrary time-dependent operator $H=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
+Let's define the arbitrary time-dependent operator $H(t)=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
 ```pycon
 >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
 >>> H = dq.timecallable(f)
