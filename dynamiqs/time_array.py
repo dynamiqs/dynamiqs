@@ -519,24 +519,14 @@ class SummedTimeArray(TimeArray):
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
         return SummedTimeArray(
-            jtu.tree_map(
-                lambda x: x.broadcast_to(*new_shape),
-                self.timearrays,
-                is_leaf=lambda x: isinstance(x, TimeArray),
-            )
+            [tarray.broadcast_to(*new_shape) for tarray in self.timearrays]
         )
 
     def conj(self) -> TimeArray:
         return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
 
     def in_axes(self) -> PyTree[int]:
-        return SummedTimeArray(
-            jtu.tree_map(
-                lambda x: x.in_axes(),
-                self.timearrays,
-                is_leaf=lambda x: isinstance(x, TimeArray),
-            )
-        )
+        return SummedTimeArray([tarray.in_axes() for tarray in self.timearrays])
 
     def __call__(self, t: ScalarLike) -> Array:
         return jax.tree_util.tree_reduce(
