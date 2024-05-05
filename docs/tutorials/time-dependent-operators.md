@@ -107,10 +107,8 @@ Let's define a PWC operator:
 >>> values = jnp.array([3.0, -2.0])
 >>> array = dq.sigmaz()
 >>> H = dq.pwc(times, values, array)
->>> type(H)
-<class 'dynamiqs.time_array.PWCTimeArray'>
->>> H.shape
-(2, 2)
+>>> H
+PWCTimeArray(shape=(2, 2), dtype=complex64)
 ```
 
 The returned object can be called at different times:
@@ -163,13 +161,11 @@ In dynamiqs, modulated operators are defined by:
 To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
 Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
-```python
+```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
->>> type(H)
-<class 'dynamiqs.time_array.ModulatedTimeArray'>
->>> H.shape
-(2, 2)
+>>> H
+ModulatedTimeArray(shape=(2, 2), dtype=complex64)
 ```
 
 The returned object can be called at different times:
@@ -221,10 +217,8 @@ Let's define the arbitrary time-dependent operator $H=\begin{pmatrix}t & 0\\0 & 
 ```pycon
 >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
 >>> H = dq.timecallable(f)
->>> type(H)
-<class 'dynamiqs.time_array.CallableTimeArray'>
->>> H.shape
-(2, 2)
+>>> H
+CallableTimeArray(shape=(2, 2), dtype=float32)
 ```
 
 The returned object can be called at different times:
