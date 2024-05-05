@@ -17,8 +17,8 @@ __all__ = [
     'powm',
     'cosm',
     'sinm',
-    'tracemm',
     'trace',
+    'tracemm',
     'ptrace',
     'tensor',
     'expect',
@@ -141,22 +141,41 @@ def sinm(x: ArrayLike) -> Array:
     return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
+def trace(x: ArrayLike) -> Array:
+    r"""Returns the trace of an array along its last two dimensions.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Array.
+
+    Returns:
+        _(array of shape (...))_ Trace of `x`.
+
+    Examples:
+        >>> x = jnp.ones((3, 3))
+        >>> dq.trace(x)
+        Array(3., dtype=float32)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    return x.trace(axis1=-1, axis2=-2)
+
+
 def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
-    r"""Return $\tr{xy}$ (using a fast implementation).
+    r"""Return the trace of a matrix multiplication using a fast implementation.
 
-    The trace is computed as `(x * y).sum()` where `*` is the element-wise product.
-    For two matrices A and B:
+    The trace is computed as `sum(x * y.T)` where `*` is the element-wise product,
+    instead of `trace(x @ y)` where `@` is the matrix product. Indeed, we have:
 
     $$
-        \tr{AB} = \sum_i (AB)_{ii}
-                = \sum_i \sum_j A_{ij} B_{ji}
-                = \sum_i \sum_j A_{ij} (B^\intercal)_{ij}
-                = \sum_i \sum_j (A * B^\intercal)_{ij}
+        \tr{xy} = \sum_i (xy)_{ii}
+                = \sum_{i,j} x_{ij} y_{ji}
+                = \sum_{i,j} x_{ij} (y^\intercal)_{ij}
+                = \sum_{i,j} (x * y^\intercal)_{ij}
     $$
 
-    Notes:
+    Notes: Time complexity
         The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
-        instead of $\mathcal{O}(n^3)$ with the naïve formula.
+        instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Args:
         x _(array_like of shape (..., n, n))_: Array.
@@ -176,25 +195,6 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     return (x * y.mT).sum((-2, -1))
-
-
-def trace(x: ArrayLike) -> Array:
-    r"""Returns the trace of an array along its last two dimensions.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Array.
-
-    Returns:
-        _(array of shape (...))_ Trace of `x`.
-
-    Examples:
-        >>> x = jnp.ones((3, 3))
-        >>> dq.trace(x)
-        Array(3., dtype=float32)
-    """
-    x = jnp.asarray(x)
-    check_shape(x, 'x', '(..., n, n)')
-    return x.trace(axis1=-1, axis2=-2)
 
 
 def _hdim(x: ArrayLike) -> int:
@@ -908,7 +908,9 @@ def _sqrtm_gpu(x: Array) -> Array:
     w, v = jnp.linalg.eigh(x)
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
-    return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
+    # numerical trick to compute 'v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()' faster with
+    # broadcasting
+    return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
 
 
 def entropy_vn(x: ArrayLike) -> Array:

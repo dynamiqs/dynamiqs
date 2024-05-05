@@ -11,7 +11,7 @@ from .._checks import check_shape
 from .utils import isbra, isket, isop
 from .utils.general import _hdim
 
-__all__ = ['to_qutip', 'set_device', 'set_precision']
+__all__ = ['to_qutip', 'set_device', 'set_precision', 'set_matmul_precision']
 
 
 def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
@@ -106,8 +106,10 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu']):
 def set_precision(precision: Literal['simple', 'double']):
     """Configure the default floating point precision.
 
-    The option `'simple'` sets default precision to `float32` and `complex64`, and the
-    option `'double'` sets default precision to `float64` and `complex128`.
+    Two options are available:
+
+    - `'simple'` sets default precision to `float32` and `complex64` (default setting),
+    - `'double'` sets default precision to `float64` and `complex128`.
 
     Notes:
         This function is equivalent to
@@ -117,8 +119,7 @@ def set_precision(precision: Literal['simple', 'double']):
         elif precision == 'double':
             jax.config.update('jax_enable_x64', True)
         ```
-
-    See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
+         See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
 
     Args:
         precision _(string 'simple' or 'double')_: Default precision.
@@ -129,6 +130,40 @@ def set_precision(precision: Literal['simple', 'double']):
         jax.config.update('jax_enable_x64', True)
     else:
         raise ValueError(
-            f"Argument `x` should be a string 'simple' or 'double', but is"
+            f"Argument `precision` should be a string 'simple' or 'double', but is"
             f" '{precision}'."
+        )
+
+
+def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
+    """Configure the default precision for matrix multiplications on GPUs and TPUs.
+
+    Some devices allow trading off accuracy for speed when performing matrix
+    multiplications (matmul). Three options are available:
+
+    - `'low'` reduces matmul precision to `bfloat16` (fastest but least accurate),
+    - `'high'` reduces matmul precision to `bfloat16_3x` or `tensorfloat32` if available
+        (faster but less accurate),
+    - `'highest'` keeps matmul precision to `float32` or `float64` as applicable
+        (slowest but most accurate, default setting).
+
+    Notes:
+        This function is equivalent to setting `jax_default_matmul_precision` in
+        `jax.config`. See [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html)
+        and [JAX documentation on the different available options](https://jax.readthedocs.io/en/latest/jax.lax.html#jax.lax.Precision).
+
+    Args:
+        matmul_precision _(string 'low', 'high', or 'highest')_: Default precision
+            for matrix multiplications on GPUs and TPUs.
+    """
+    if matmul_precision == 'low':
+        jax.config.update('jax_default_matmul_precision', 'fastest')
+    elif matmul_precision == 'high':
+        jax.config.update('jax_default_matmul_precision', 'high')
+    elif matmul_precision == 'highest':
+        jax.config.update('jax_default_matmul_precision', 'highest')
+    else:
+        raise ValueError(
+            f"Argument `matmul_precision` should be a string 'low', 'high', or"
+            f" 'highest', but is '{matmul_precision}'."
         )

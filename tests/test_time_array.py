@@ -5,11 +5,11 @@ import jax.numpy as jnp
 import pytest
 
 from dynamiqs.time_array import (
-    CallableTimeArray,
     ConstantTimeArray,
-    ModulatedTimeArray,
-    PWCTimeArray,
     SummedTimeArray,
+    modulated,
+    pwc,
+    timecallable,
 )
 
 
@@ -35,6 +35,10 @@ class TestConstantTimeArray:
     def test_reshape(self):
         x = self.x.reshape(1, 2)
         assert_equal(x(0.0), [[1, 2]])
+
+    def test_broadcast(self):
+        x = self.x.broadcast_to(2, 2)
+        assert_equal(x(0.0), [[1, 2], [1, 2]])
 
     def test_conj(self):
         x = ConstantTimeArray(jnp.array([1 + 1j, 2 + 2j]))
@@ -75,7 +79,7 @@ class TestCallableTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         f = lambda t: t * jnp.array([1, 2])
-        self.x = CallableTimeArray(f, ())
+        self.x = timecallable(f)
 
     @pytest.mark.skip('broken test')
     def test_jit(self):
@@ -96,9 +100,14 @@ class TestCallableTimeArray:
         assert_equal(x(0.0), [[0, 0]])
         assert_equal(x(1.0), [[1, 2]])
 
+    def test_broadcast(self):
+        x = self.x.broadcast_to(2, 2)
+        assert_equal(x(0.0), [[0, 0], [0, 0]])
+        assert_equal(x(1.0), [[1, 2], [1, 2]])
+
     def test_conj(self):
         f = lambda t: t * jnp.array([1 + 1j, 2 + 2j])
-        x = CallableTimeArray(f, ())
+        x = timecallable(f)
         x = x.conj()
         assert_equal(x(1.0), [1 - 1j, 2 - 2j])
 
@@ -159,7 +168,7 @@ class TestPWCTimeArray:
         values = jnp.array([1, 10, 100])
         array = jnp.array([[1, 2], [3, 4]])
 
-        self.x = PWCTimeArray(times, values, array)  # shape at t: (2, 2)
+        self.x = pwc(times, values, array)  # shape at t: (2, 2)
 
     @pytest.mark.skip('broken test')
     def test_jit(self):
@@ -186,6 +195,11 @@ class TestPWCTimeArray:
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(-0.1), [[[0, 0], [0, 0]]])
         assert_equal(x(0.0), [[[1, 2], [3, 4]]])
+
+    def test_broadcast(self):
+        x = self.x.broadcast_to(2, 2, 2)
+        assert_equal(x(-0.1), [[[0, 0], [0, 0]], [[0, 0], [0, 0]]])
+        assert_equal(x(0.0), [[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
 
     def test_conj(self):
         x = self.x.conj()
@@ -242,7 +256,7 @@ class TestModulatedTimeArray:
         eps = lambda t: (0.5 * t + 1.0j) * one
         array = jnp.array([[1, 2], [3, 4]])
 
-        self.x = ModulatedTimeArray(eps, array, ())
+        self.x = modulated(eps, array)
 
     def test_call(self):
         assert_equal(self.x(0.0), [[1.0j, 2.0j], [3.0j, 4.0j]])
@@ -252,6 +266,19 @@ class TestModulatedTimeArray:
         x = self.x.reshape(1, 2, 2)
         assert_equal(x(0.0), [[[1.0j, 2.0j], [3.0j, 4.0j]]])
         assert_equal(x(2.0), [[[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]]])
+
+    def test_broadcast(self):
+        x = self.x.broadcast_to(2, 2, 2)
+        assert_equal(
+            x(0.0), [[[1.0j, 2.0j], [3.0j, 4.0j]], [[1.0j, 2.0j], [3.0j, 4.0j]]]
+        )
+        assert_equal(
+            x(2.0),
+            [
+                [[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]],
+                [[1.0 + 5.0j, 2.0 + 6.0j], [3.0 + 7.0j, 4.0 + 8.0j]],
+            ],
+        )
 
     def test_conj(self):
         x = self.x.conj()
