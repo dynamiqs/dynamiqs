@@ -5,54 +5,50 @@ import pytest
 import dynamiqs as dq
 
 
-@pytest.mark.parametrize('cartesian_batching', [True, False])
+def rand_sesolve_args(n, nH, npsi0, nEs):
+    kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
+    H = dq.rand_herm(kH, (*nH, n, n))
+    psi0 = dq.rand_ket(kpsi0, (*npsi0, n, 1))
+    Es = dq.rand_complex(kEs, (nEs, n, n))
+    return H, psi0, Es
+
+
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
-@pytest.mark.parametrize('npsi0', [(), (5,), (5, 6)])
-def test_batching(cartesian_batching, nH, npsi0):
-    n = 8
-    ntsave = 11
-    npsi0 = npsi0 if cartesian_batching else nH
-    nE = 7
-
-    options = dq.options.Options(cartesian_batching=cartesian_batching)
-
-    # create random objects
-    k1, k2, k3 = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.rand_herm(k1, (*nH, n, n))
-    exp_ops = dq.rand_complex(k2, (nE, n, n))
-    psi0 = dq.rand_ket(k3, (*npsi0, n, 1))
-    tsave = jnp.linspace(0, 0.01, ntsave)
-
-    result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops, options=options)
-    if cartesian_batching:
-        assert result.states.shape == (*nH, *npsi0, ntsave, n, 1)
-        assert result.expects.shape == (*nH, *npsi0, nE, ntsave)
-    else:
-        assert result.states.shape == (*nH, ntsave, n, 1)
-        assert result.expects.shape == (*nH, nE, ntsave)
-
-
-@pytest.mark.parametrize(('nH'), [(), (3,), (4, 3)])
-@pytest.mark.parametrize(('npsi0'), [(), (3,), (4, 3)])
-def test_non_carthesian_batching_broacasting(nH, npsi0):
-    n = 8
-    nE = 7
+@pytest.mark.parametrize('npsi0', [(), (5,)])
+def test_cartesian_batching(nH, npsi0):
+    n = 2
+    nEs = 7
     ntsave = 11
 
-    options = dq.options.Options(cartesian_batching=False)
-
-    # create random objects
-    k1, k2, k3 = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.rand_herm(k1, (*nH, n, n))
-    exp_ops = dq.rand_complex(k2, (nE, n, n))
-    psi0 = dq.rand_ket(k3, (*npsi0, n, 1))
+    # run sesolve
+    H, psi0, Es = rand_sesolve_args(n, nH, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
+    result = dq.sesolve(H, psi0, tsave, exp_ops=Es)
 
-    broadcast_shape = jnp.broadcast_shapes(psi0.shape[:-2], H.shape[:-2])
+    # check result shape
+    assert result.states.shape == (*nH, *npsi0, ntsave, n, 1)
+    assert result.expects.shape == (*nH, *npsi0, nEs, ntsave)
 
-    result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops, options=options)
+
+# H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
+# compatible broadcastable shape
+@pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
+def test_flat_batching(npsi0):
+    n = 2
+    nH = (3, 4)
+    nEs = 6
+    ntsave = 11
+
+    # run sesolve
+    H, psi0, Es = rand_sesolve_args(n, nH, npsi0, nEs)
+    tsave = jnp.linspace(0, 0.01, ntsave)
+    options = dq.Options(cartesian_batching=False)
+    result = dq.sesolve(H, psi0, tsave, exp_ops=Es, options=options)
+
+    # check result shape
+    broadcast_shape = jnp.broadcast_shapes(nH, npsi0)
     assert result.states.shape == (*broadcast_shape, ntsave, n, 1)
-    assert result.expects.shape == (*broadcast_shape, nE, ntsave)
+    assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
 def test_timearray_batching():
