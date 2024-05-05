@@ -310,7 +310,7 @@ class ConstantTimeArray(TimeArray):
     def in_axes(self) -> PyTree[int]:
         return ConstantTimeArray(Shape(self.array.shape[:-2]))
 
-    def __call__(self, _t: ScalarLike) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.array
 
     def __neg__(self) -> TimeArray:
@@ -367,7 +367,7 @@ class PWCTimeArray(TimeArray):
     def in_axes(self) -> PyTree[int]:
         return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:
         def _zero(_: float) -> Array:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
@@ -429,7 +429,7 @@ class ModulatedTimeArray(TimeArray):
     def in_axes(self) -> PyTree[int]:
         return ModulatedTimeArray(f=Shape(self.f.shape), array=Shape())
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:
         values = self.f(t)
         return values.reshape(*values.shape, 1, 1) * self.array
 
@@ -480,7 +480,7 @@ class CallableTimeArray(TimeArray):
     def in_axes(self) -> PyTree[int]:
         return CallableTimeArray(f=Shape(self.f.shape[:-2]))
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
 
     def __neg__(self) -> TimeArray:
@@ -542,7 +542,7 @@ class SummedTimeArray(TimeArray):
             )
         )
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:
         return jax.tree_util.tree_reduce(
             jnp.add, [tarray(t) for tarray in self.timearrays]
         )
@@ -575,7 +575,7 @@ class BatchedCallable(eqx.Module):
         self.f = f
         (*self.indices,) = jnp.indices(shape)
 
-    def __call__(self, t: float) -> Array:
+    def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)[tuple(self.indices)]
 
     @property
