@@ -550,15 +550,13 @@ class SummedTimeArray(TimeArray):
 
 class BatchedCallable(eqx.Module):
     f: callable[[float], Array]
-    indices: list[Array]
+    indices: Array
 
     def __init__(self, f: callable[[float], Array]):
         # make f a valid PyTree with `Partial`
-        f = jtu.Partial(f)
-
+        self.f = jtu.Partial(f)
         shape = jax.eval_shape(f, 0.0).shape
-        self.f = f
-        (*self.indices,) = jnp.indices(shape)
+        self.indices = jnp.indices(shape)
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)[tuple(self.indices)]
