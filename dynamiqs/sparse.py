@@ -13,10 +13,6 @@ class SparseDIA(eqx.Module):
     diags: jax.Array
     offsets: tuple[int] = eqx.field(static=True)
 
-    def __init__(self, diags: jax.Array, offsets: tuple[int]):
-        self.offsets = offsets
-        self.diags = diags
-
     def _cleanup(self, diags: Array, offsets: tuple[int]) -> tuple[Array, tuple[int]]:
         diags = jnp.asarray(diags)
         offsets = jnp.asarray(offsets)
