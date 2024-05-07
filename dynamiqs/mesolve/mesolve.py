@@ -16,6 +16,7 @@ from ..core._utils import (
     _flat_vectorize,
     catch_xla_runtime_error,
     get_solver_class,
+    squeeze_ones,
 )
 from ..gradient import Gradient
 from ..options import Options
@@ -133,23 +134,17 @@ def _vectorized_mesolve(
 ) -> MEResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(
+            H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
+        )
+        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
+
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = MEResult(None, None, None, None, 0, 0)
-
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(
-            H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
-        )
-
-        def broadcast(x: TimeArray) -> TimeArray:
-            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
-
-        H = broadcast(H)
-        jump_ops = list(map(broadcast, jump_ops))
-        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
 
     n_batch = (
         H.in_axes,
@@ -167,6 +162,8 @@ def _vectorized_mesolve(
         f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
     else:
         f = _flat_vectorize(_mesolve, n_batch, out_axes)
+        H = squeeze_ones(H)
+        jump_ops = list(map(squeeze_ones, jump_ops))
 
     # === apply vectorized function
     return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)

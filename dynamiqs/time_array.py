@@ -222,6 +222,21 @@ class TimeArray(eqx.Module):
             New time-array object with the given shape.
         """
 
+    def squeeze(self, axis: int) -> TimeArray:
+        """Squeeze a time-array.
+
+        Args:
+            axis: Axis to squeeze.
+
+        Returns:
+        New time-array object with squeezed_shape
+        """
+        if axis >= self.ndim:
+            raise ValueError(
+                f'Cannot squeeze axis {axis} from a time-array with {self.ndim} axes.'
+            )
+        return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
+
     @abstractmethod
     def broadcast_to(self, *new_shape: int) -> TimeArray:
         """Broadcasts a time-array to a new shape.

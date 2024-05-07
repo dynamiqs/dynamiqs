@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import functools
+import functools as ft
 
 import jax
 import jax.numpy as jnp
@@ -34,7 +34,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
     # exception message. Note that this will not work for jitted function, as the
     # exception code will be traced out.
 
-    @functools.wraps(func)
+    @ft.wraps(func)
     def wrapper(*args, **kwargs):  # noqa: ANN202
         try:
             return func(*args, **kwargs)
@@ -84,11 +84,22 @@ def _flat_vectorize(
     # todo: write doc
     broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
-    in_axes = jtu.tree_map(
-        lambda x: 0 if len(x) > 0 else None, n_batch, is_leaf=is_shape
-    )
 
-    for _ in range(len(broadcast_shape)):
+    def tree_map_fn(i: int, x: tuple[int, ...]) -> int | None:
+        """Args:
+            i: the index in `broadcast_shape`.
+            x: the shape of the leaf.
+
+        Returns:
+            The in axes for the vmap function.
+        """
+        if len(x) <= i or x[len(x) - i - 1] == 1:
+            return None
+        else:
+            return 0
+
+    for i in range(len(broadcast_shape)):
+        in_axes = jtu.tree_map(ft.partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
         f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     return f
@@ -121,3 +132,11 @@ def _cartesian_vectorize(
     # Hamilonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
     return _flat_vectorize(f, n_batch[:1] + (None,) * len(n_batch[1:]), out_axes)
+
+
+def squeeze_ones(x: TimeArray) -> TimeArray:
+    shape = x.shape
+    for i, s in reversed(list(enumerate(shape))):
+        if s == 1:
+            x = x.squeeze(i)
+    return x
