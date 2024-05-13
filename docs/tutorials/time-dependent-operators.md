@@ -18,29 +18,29 @@ import jax.numpy as jnp
 
 In dynamiqs, time-dependent operators are defined with [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
 $$
-    H_z(t)=\cos(2\pi t)\sigma_z
+    H_x(t)=\cos(2\pi t)\sigma_x
 $$
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
->>> Hz = dq.modulated(f, dq.sigmaz())  # initialize a modulated time-array
->>> Hz(1.0)
-Array([[ 1.+0.j,  0.+0.j],
-       [ 0.+0.j, -1.+0.j]], dtype=complex64)
->>> Hz.shape
+>>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-array
+>>> Hx(1.0)
+Array([[0.+0.j, 1.+0.j],
+       [1.+0.j, 0.+0.j]], dtype=complex64)
+>>> Hx.shape
 (2, 2)
 ```
 
 Time-arrays support common arithmetic operations with scalars, regular arrays and other time-array objects. For example to define the Hamiltonian
 $$
-    H(t) = \sigma_y - 3 H_z(t) + \sin(\pi t)\sigma_x
+    H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
 ```pycon
->>> f = lambda t: jnp.sin(jnp.pi * t)
->>> Hx = dq.modulated(f, dq.sigmax())
->>> H = dq.sigmay() - 3 * Hz + Hx
->>> H(0.0)
-Array([[-3.+0.j,  0.-1.j],
-       [ 0.+1.j,  3.+0.j]], dtype=complex64)
+>>> g = lambda t: jnp.sin(jnp.pi * t)
+>>> Hy = dq.modulated(g, dq.sigmay())
+>>> H = dq.sigmaz() + 2 * Hx - Hy
+>>> H(1.0)
+Array([[ 1.+0.j,  2.-0.j],
+       [ 2.+0.j, -1.+0.j]], dtype=complex64)
 ```
 
 Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeArray`][dynamiqs.TimeArray] API page.
