@@ -1,8 +1,10 @@
 # Tutorials
 
+Learn **dynamiqs** through tutorials for beginners and advanced users. For a detailed documentation of all classes and functions, refer to the [API reference](../python_api/index.md).
+
 ## Learn the Basics
 
-Familiarize yourself with dynamiqs. Learn how to run simulations of quantum differential equations, define time-dependent objects, batch over many parameters, or compute gradients.
+Familiarize yourself with dynamiqs. Learn how to simulate quantum systems, define time-dependent operators, run multiple simulations simultaneously, or compute gradients.
 
 - [Workflow in dynamiqs](workflow.md)
 - [Time-dependent operators](time-dependent-operators.md)
