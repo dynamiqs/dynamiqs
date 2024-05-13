@@ -6,8 +6,8 @@ Familiarize yourself with dynamiqs. Learn how to run simulations of quantum diff
 
 - [Workflow in dynamiqs](workflow.md)
 - [Time-dependent operators](time-dependent-operators.md)
-- [Closed systems](closed-system.md)
-- [Open systems](open-system.md)
+- [Closed systems](closed-systems.md)
+- [Open systems](open-systems.md)
 - [Batching simulations](batching-simulations.md)
 - [Computing gradients](computing-gradients.md)
 
