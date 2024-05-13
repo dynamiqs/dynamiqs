@@ -16,7 +16,6 @@ from ..core._utils import (
     _flat_vectorize,
     catch_xla_runtime_error,
     get_solver_class,
-    squeeze_ones,
 )
 from ..gradient import Gradient
 from ..options import Options
@@ -162,8 +161,8 @@ def _vectorized_mesolve(
         f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
     else:
         f = _flat_vectorize(_mesolve, n_batch, out_axes)
-        H = squeeze_ones(H)
-        jump_ops = list(map(squeeze_ones, jump_ops))
+        H = H.squeeze()
+        jump_ops = [x.squeeze() for x in jump_ops]
 
     # === apply vectorized function
     return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)

@@ -132,11 +132,3 @@ def _cartesian_vectorize(
     # Hamilonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
     return _flat_vectorize(f, n_batch[:1] + (None,) * len(n_batch[1:]), out_axes)
-
-
-def squeeze_ones(x: TimeArray) -> TimeArray:
-    shape = x.shape
-    for i, s in reversed(list(enumerate(shape))):
-        if s == 1:
-            x = x.squeeze(i)
-    return x

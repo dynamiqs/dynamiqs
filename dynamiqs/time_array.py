@@ -222,15 +222,23 @@ class TimeArray(eqx.Module):
             New time-array object with the given shape.
         """
 
-    def squeeze(self, axis: int) -> TimeArray:
+    def squeeze(self, axis: int | None = None) -> TimeArray:
         """Squeeze a time-array.
 
         Args:
-            axis: Axis to squeeze.
+            axis: Axis to squeeze. If `none`, all axes with dimension 1 are squeezed.
 
         Returns:
-        New time-array object with squeezed_shape
+            New time-array object with squeezed_shape
         """
+        if axis is None:
+            shape = self.shape
+            x = self
+            for i, s in reversed(list(enumerate(shape))):
+                if s == 1:
+                    x = x.squeeze(i)
+            return x
+
         if axis >= self.ndim:
             raise ValueError(
                 f'Cannot squeeze axis {axis} from a time-array with {self.ndim} axes.'
