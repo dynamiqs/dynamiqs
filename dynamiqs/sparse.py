@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import functools
-from typing import Self
 
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jaxtyping import Array
+
+__all__ = ['SparseDIA', 'to_sparse']
 
 
 class SparseDIA(eqx.Module):
@@ -38,7 +39,7 @@ class SparseDIA(eqx.Module):
         return out
 
     @jax.jit
-    def _matmul_dia(self, other: Self) -> tuple[Array, list[Array]]:
+    def _matmul_dia(self, other: SparseDIA) -> tuple[Array, list[Array]]:
         N = other.diags.shape[1]
 
         out_diags = []
@@ -84,7 +85,7 @@ class SparseDIA(eqx.Module):
         return out
 
     @jax.jit
-    def _add_dia(self, other: Self) -> tuple[Array, list[Array]]:
+    def _add_dia(self, other: SparseDIA) -> tuple[Array, list[Array]]:
         self_offsets = list(self.offsets)
         other_offsets = list(other.offsets)
 
@@ -120,7 +121,7 @@ class SparseDIA(eqx.Module):
         return other
 
     @jax.jit
-    def _mul_dia(self, other: Self) -> tuple[Array, list[Array]]:
+    def _mul_dia(self, other: SparseDIA) -> tuple[Array, list[Array]]:
         out_diags = []
         out_offsets = []
 
@@ -139,7 +140,7 @@ class SparseDIA(eqx.Module):
 
     ### DUNDERS ###
 
-    def __matmul__(self, other: Array | Self) -> Array | Self:
+    def __matmul__(self, other: Array | SparseDIA) -> Array | SparseDIA:
         if isinstance(other, Array):
             return self._matmul_dense(left_matmul=True, other=other)
 
@@ -156,7 +157,7 @@ class SparseDIA(eqx.Module):
 
         return NotImplemented
 
-    def __add__(self, other: Array | Self) -> Array | Self:
+    def __add__(self, other: Array | SparseDIA) -> Array | SparseDIA:
         if isinstance(other, Array):
             return self._add_dense(other)
 
@@ -172,7 +173,7 @@ class SparseDIA(eqx.Module):
 
         return NotImplemented
 
-    def __mul__(self, other: Array | Self) -> Array | Self:
+    def __mul__(self, other: Array | SparseDIA) -> Array | SparseDIA:
         if isinstance(other, Array):
             sparse_matrix = to_sparse(other)
             diags, offsets = self._mul_dia(sparse_matrix)
@@ -205,7 +206,7 @@ class SparseDIA(eqx.Module):
         return NotImplemented
 
 
-def to_sparse(other: Array) -> Self:
+def to_sparse(other: Array) -> SparseDIA:
     r"""Returns the input matrix in the SparseDIA format.
 
     This should be used when a user wants to turn a dense matrix that
