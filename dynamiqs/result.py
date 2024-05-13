@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult']
+__all__ = ['SEResult', 'MEResult', 'SMEResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -183,3 +183,48 @@ class MEResult(Result):
         See the [Batching simulations](../../tutorials/batching-simulations.md)
         tutorial for more details.
     """
+
+
+class SMESaved(Saved):
+    Isave: Array
+    wiener: PyTree
+
+
+class SMEResult(Result):
+    """Result of the SME integration.
+
+    Attributes:
+        states _(array of shape (nH?, nrho0?, ntrajs, ntsave, n, n))_: Saved states.
+        measurements _(array of shape (nH?, nrho0?, ntrajs, nLm, ntmeas-1))_: Saved
+            measurements.
+        expects _(array of shape (nH?, nrho0?, ntrajs, nE, ntsave) or None)_: Saved
+            expectation values, if specified by `exp_ops`.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options`.
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        tmeas _(array of shape (ntmeas,))_: Times for which measurements were saved.
+        keys _(list of PRNG key, of shape (ntrajs,))_: PRNG random keys used to sample
+            the Wiener processes.
+        wiener _(PyTree)_: Sampled Wiener processes.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+    """
+
+    tmeas: Array
+    keys: PRNGKeyArray
+
+    @property
+    def measurements(self) -> Array:
+        return self._saved.Isave
+
+    @property
+    def wiener(self) -> Array:
+        return self._saved.wiener
+
+    def _str_parts(self) -> dict[str, str]:
+        parts = super()._str_parts()
+        parts = list(parts.items())
+        parts.insert(3, ('Measurements', array_str(self.measurements)))
+        return dict(parts)

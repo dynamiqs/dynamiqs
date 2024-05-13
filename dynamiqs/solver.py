@@ -7,7 +7,16 @@ import equinox as eqx
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
-__all__ = ['Propagator', 'Euler', 'Rouchon1', 'Rouchon2', 'Dopri5', 'Dopri8', 'Tsit5']
+__all__ = [
+    'Propagator',
+    'Euler',
+    'Rouchon1',
+    'Rouchon2',
+    'Dopri5',
+    'Dopri8',
+    'Tsit5',
+    'Milstein',
+]
 
 
 _TupleGradient = tuple[type[Gradient], ...]
@@ -96,7 +105,7 @@ class _ODEAdaptiveStep(_ODESolver):
 
 # === public solvers options
 class Euler(_ODEFixedStep):
-    """Euler method (fixed step size ODE solver).
+    """Euler method (fixed step size ODE/SDE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
@@ -259,6 +268,43 @@ class Tsit5(_ODEAdaptiveStep):
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
     """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+    ):
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+
+
+class Milstein(_ODEAdaptiveStep):
+    """Milstein method (adaptive step size SDE solver).
+
+    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    library, see [`diffrax.ItoMilstein`](https://docs.kidger.site/diffrax/api/solvers/sde_solvers/#diffrax.ItoMilstein).
+
+    Args:
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+        safety_factor: Safety factor for adaptive step sizing.
+        min_factor: Minimum factor for adaptive step sizing.
+        max_factor: Maximum factor for adaptive step sizing.
+        max_steps: Maximum number of steps.
+
+    Notes: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+    """
+
+    # https://docs.kidger.site/diffrax/api/solvers/sde_solvers/#diffrax.ItoMilstein
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
 
