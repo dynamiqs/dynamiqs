@@ -13,6 +13,7 @@ from ..core._utils import (
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
+    catch_xla_runtime_error,
     get_solver_class,
 )
 from ..gradient import Gradient
@@ -100,6 +101,7 @@ def sesolve(
     return _vectorized_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
+@catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_sesolve(
     H: TimeArray,
