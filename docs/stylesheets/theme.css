@@ -58,10 +58,6 @@ Description: Color theme of the dynamiqs documentation
   --md-example-fg-color: #3E517A;
   --md-example-bg-color: #c9cfde;
 
-  /* Quote color shades */
-  --md-quote-fg-color: #9e9e9e;
-  --md-quote-bg-color: #9e9e9e1a;
-
   /* Home page */
   --homepage-gradient:  linear-gradient(to right bottom, #d15540, #d86854, #de7a68, #e38b7c, #e79d90);
   --homepage-button-hover-color: #ed9487;
@@ -75,12 +71,15 @@ Description: Color theme of the dynamiqs documentation
 
 [data-md-color-scheme="slate"] {
   /* Background */
-  --md-default-bg-color-base: 50, 52, 57;
-  --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #444950;
+  --md-default-bg-color-base: 40, 42, 47;
+  --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: rgb(62, 66, 72);
   --md-code-bg-color: var(--md-default-bg-header-color);
 
+  /* Primary font color */
+  --md-default-fg-color: #ececec;
+
   /* Code highlight */
-  --md-code-fg-color: #d5d7e2;
+  --md-code-fg-color: #e2e3e9;
   --md-code-hl-constant-color: #ed7764;
   --md-code-hl-number-color: #e56395;
   --md-code-hl-color: #0b4f6c;
@@ -96,19 +95,18 @@ Description: Color theme of the dynamiqs documentation
 
   /* Warning color shades */
   --md-warning-fg-color: #e293b1;
-  --md-warning-bg-color: #523b45;
+  --md-warning-bg-color: #3e2e34;
 
   /* Note color shades */
   --md-note-fg-color: #249897;
-  --md-note-bg-color: #334545;
+  --md-note-bg-color: #2d3737;
 
   /* Example color shades */
   --md-example-fg-color: #54658b;
   --md-example-bg-color: #333e49;
 
-  /* Quote color shades */
-  --md-quote-fg-color: #9e9e9e;
-  --md-quote-bg-color: #9e9e9e1a;
+  /* Shadow */
+  --md-shadow-z1: 0 0.2rem 0.5rem #0000002d, 0 0 0.05rem #0000001a;
 
   /* Home page */
   --homepage-gradient: linear-gradient(to right bottom, #ae4635, #bd5c4b, #cc7261, #da8778, #e79d90);

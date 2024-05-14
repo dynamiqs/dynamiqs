@@ -56,7 +56,7 @@ def mesolve(
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
     collection of jump operators at time $t$.
 
-    Quote: Time-dependent Hamiltonian or jump operators
+    Notes-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
         to time-arrays using [`dq.constant()`][dynamiqs.constant],
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
@@ -64,7 +64,7 @@ def mesolve(
         the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
         tutorial for more details.
 
-    Quote: Running multiple simulations concurrently
+    Notes-: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
         matrix `rho0` can be batched to solve multiple master equations concurrently.
         All other arguments are common to every batch. See the
