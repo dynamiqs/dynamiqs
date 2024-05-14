@@ -6,7 +6,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jax.scipy.linalg import expm
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
@@ -15,6 +14,7 @@ from ..._utils import on_cpu
 __all__ = [
     'dag',
     'powm',
+    'expm',
     'cosm',
     'sinm',
     'trace',
@@ -87,6 +87,32 @@ def powm(x: ArrayLike, n: int) -> Array:
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return jnp.linalg.matrix_power(x, n)
+
+
+def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
+    """Returns the matrix exponential of an array.
+
+    The exponential is computed using the scaling-and-squaring approximation method.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+        max_squarings: Number of squarings.
+
+    Returns:
+        _(array of shape (..., n, n))_ Matrix exponential of `x`.
+
+    Notes:
+        This function is equivalent to
+        `jnp.scipy.linalg.expm(x, max_squarings=max_squarings)`.
+
+    Examples:
+        >>> dq.expm(dq.sigmaz())
+        Array([[2.718+0.j, 0.   +0.j],
+               [0.   +0.j, 0.368+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    return jax.scipy.linalg.expm(x, max_squarings=max_squarings)
 
 
 def cosm(x: ArrayLike) -> Array:
