@@ -34,7 +34,9 @@ __all__ = ['QArray', 'DenseQArray']
 
 # a decorator that takes a class method f and returns g(f(x))
 def pack_dims(method: callable) -> callable:
-    def wrapper(self, *args, **kwargs):
+    """Decorator to return a new QArray with the same dimensions as the original one."""
+
+    def wrapper(self: QArray, *args, **kwargs) -> callable:
         return self.__class__(method(self, *args, **kwargs), dims=self.dims)
 
     return wrapper
@@ -50,7 +52,6 @@ class QArray(eqx.Module):
     dims: tuple[int, ...]
 
     @property
-    @abstractmethod
     @abstractmethod
     def dtype(self) -> jnp.dtype:
         """Data type of the quantum state.
@@ -139,6 +140,9 @@ class QArray(eqx.Module):
     @abstractmethod
     def reshape(self, *new_shape: int) -> QArray:
         """Reshape the quantum state.
+
+        Args:
+            new_shape: New shape of the quantum state.
 
         Returns:
             The reshaped quantum state.
@@ -267,6 +271,7 @@ class QArray(eqx.Module):
         """
         return qt.Qobj(self.to_numpy(), dims=self.dims)
 
+    @abstractmethod
     def to_jax(self) -> Array:
         """Convert the quantum state to a JAX array.
 
@@ -275,7 +280,10 @@ class QArray(eqx.Module):
         """
 
     def __repr__(self) -> str:
-        return f'{type(self).__name__}(shape={self.shape}, dims={self.dims}, dtype={self.dtype})'
+        return (
+            f'{type(self).__name__}(shape={self.shape}, '
+            f'dims={self.dims}, dtype={self.dtype})'
+        )
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -476,8 +484,9 @@ class DenseQArray(QArray):
             return DenseQArray(self.data + other.data, self.dims)
         elif isinstance(other, ScalarLike):
             warnings.warn(
-                '"+" between a scalar and a DenseQArray performs element-wise addition. '
-                'If you want to perform addition with an operator, use "x + 2 * x.I"',
+                '"+" between a scalar and a DenseQArray performs '
+                'element-wise addition. If you want to perform addition '
+                'with an operator, use "x + 2 * x.I"',
                 stacklevel=2,
             )
         return DenseQArray(self.data + other, self.dims)
@@ -492,8 +501,9 @@ class DenseQArray(QArray):
             return DenseQArray(self.data - other.data, self.dims)
         elif isinstance(other, ScalarLike):
             warnings.warn(
-                '"-" between a scalar and a DenseQArray performs element-wise addition. '
-                'If you want to perform addition with an operator, use "x - 2 * x.I"',
+                '"-" between a scalar and a DenseQArray performs '
+                'element-wise addition. If you want to perform addition '
+                'with an operator, use "x - 2 * x.I"',
                 stacklevel=2,
             )
         return DenseQArray(self.data - other, self.dims)
@@ -501,9 +511,9 @@ class DenseQArray(QArray):
     def __mul__(self, other: ScalarLike | ArrayLike | DenseQArray) -> DenseQArray:
         if isinstance(other, (ArrayLike, DenseQArray)):
             warnings.warn(
-                '"*" between a DenseQArray and another DenseQArray or an Array performs '
-                'element-wise multiplication. If you wanted to perform matrix '
-                'multiplication, use "@" operator',
+                '"*" between a DenseQArray and another DenseQArray '
+                'or an Array performs element-wise multiplication. If you '
+                'wanted to perform matrix multiplication, use "@" operator',
                 stacklevel=2,
             )
 
