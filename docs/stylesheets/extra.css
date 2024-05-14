@@ -145,7 +145,7 @@ Description: Extra CSS for the dynamiqs documentation
 .md-typeset details.info,
 .md-typeset .admonition.example,
 .md-typeset details.example {
-  margin: 1.1em 0;
+  margin: 1.0em 0;
 }
 
 .md-typeset .admonition,
@@ -158,8 +158,17 @@ Description: Extra CSS for the dynamiqs documentation
 
 /* Page spacing */
 .md-typeset {
-  line-height: 1.4;
+  line-height: 1.35;
   font-size: 0.7rem;
+}
+
+p {
+  margin: 0.5em 0;
+}
+
+.katex-display {
+    /* margin: 1em 0; */
+    margin: 0.75em 0;
 }
 
 .md-nav {
@@ -288,7 +297,8 @@ article.md-typeset h1 {
 }
 
 .md-typeset h3 {
-  font-size: 1.0em;
+  font-size: 1.05em;
+  margin-bottom: 0;
   font-weight: 600;
 }
 
