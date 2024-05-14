@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from diffrax import DiscreteTerminatingEvent
+from diffrax import Event
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
+from optimistix import AbstractRootFinder
 
 from ..gradient import Gradient
 from ..options import Options
@@ -70,7 +71,7 @@ class BaseSolver(AbstractSolver):
         pass
 
     @property
-    def discrete_terminating_event(self):
+    def event(self):
         return None
 
 
@@ -89,6 +90,7 @@ class MESolver(BaseSolver):
 class MCSolver(BaseSolver):
     Ls: list[Array | TimeArray] | None = None
     rand: float = 0.0
+    root_finder: AbstractRootFinder | None = None
 
     def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
         return Result(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
