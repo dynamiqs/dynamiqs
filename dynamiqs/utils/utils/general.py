@@ -51,7 +51,7 @@ def dag(x: ArrayLike) -> Array:
     Returns:
        _(array of shape (..., n, m))_ Adjoint of `x`.
 
-    Notes:
+    Notes-: Equivalent JAX syntax
         This function is equivalent to `x.mT.conj()`.
 
     Examples:
@@ -76,7 +76,7 @@ def powm(x: ArrayLike, n: int) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Matrix power of `x`.
 
-    Notes:
+    Notes-: Equivalent JAX syntax
         This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
@@ -101,7 +101,7 @@ def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Matrix exponential of `x`.
 
-    Notes:
+    Notes-: Equivalent JAX syntax
         This function is equivalent to
         `jnp.scipy.linalg.expm(x, max_squarings=max_squarings)`.
 
@@ -124,7 +124,7 @@ def cosm(x: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Cosine of `x`.
 
-    Notes:
+    Notes-: Computing the matrix cosine
         This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
         to compute the cosine of a matrix $A$:
         $$
@@ -150,7 +150,7 @@ def sinm(x: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Sine of `x`.
 
-    Notes:
+    Notes-: Computing the matrix sine
         This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
         to compute the sine of a matrix $A$:
         $$
@@ -199,7 +199,7 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
                 = \sum_{i,j} (x * y^\intercal)_{ij}
     $$
 
-    Notes: Time complexity
+    Notes-: Time complexity
         The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
         instead of $\mathcal{O}(n^3)$ with the naive formula.
 
@@ -247,7 +247,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         ValueError: If `dims` does not match the shape of `x`, or if `keep` is
             incompatible with `dims`.
 
-    Notes:
+    Notes-: Returned quantum type
         The returned object is always a density matrix, even if the input is a ket or a
         bra.
 
@@ -520,7 +520,7 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
     (see [`dq.dissipator()`][dynamiqs.dissipator]).
 
-    Notes:
+    Notes-: Lindbladian and Liouvillian
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
@@ -715,7 +715,7 @@ def tobra(x: ArrayLike) -> Array:
 def todm(x: ArrayLike) -> Array:
     r"""Returns the density matrix representation of a quantum state.
 
-    Note:
+    Notes-: Alias of `dq.proj()`
         This function is an alias of [`dq.proj()`][dynamiqs.proj]. If `x` is already a
         density matrix, it is returned directly.
 

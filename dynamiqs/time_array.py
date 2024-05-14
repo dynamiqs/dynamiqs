@@ -46,14 +46,6 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
     $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant array.
 
-    Notes:
-        The argument `times` argument must be sorted in ascending order, but does not
-        need to be evenly spaced.
-
-    Notes:
-        If the returned time-array is called for a time $t$ which does not belong to any
-        time intervals, the returned array is null.
-
     Args:
         times _(array_like of shape (N+1,))_: Time points $t_k$ defining the boundaries
             of the time intervals, where _N_ is the number of time intervals.
@@ -61,9 +53,17 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
             interval.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
 
+    Notes-: `times` sorting
+        The argument `times` argument must be sorted in ascending order, but does not
+        need to be evenly spaced.
+
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
+
+    Notes-: Default return
+        If the returned time-array is called for a time $t$ which does not belong to any
+        time intervals, the returned array is null.
     """
     # times
     times = jnp.asarray(times)
@@ -168,7 +168,7 @@ class TimeArray(eqx.Module):
             dimensions.
         ndim _(int)_: Number of dimensions.
 
-    Notes:
+    Notes-: Arithmetic operation support
         Time-arrays support elementary operations:
 
         - negation (`__neg__`),

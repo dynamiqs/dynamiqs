@@ -90,7 +90,7 @@ def gridplot(
     Warning:
         Documentation redaction in progress.
 
-    Notes:
+    Notes-: Shortcut to Matplotlib `plt.subplots()`
         This method is a shortcut to Matplotlib
         [`plt.subplots()`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots).
 
