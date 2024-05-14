@@ -17,7 +17,7 @@ $$
 
 with $\alpha_0,\dots,\alpha_{n-1}\in\mathbb{C}$ and such that $\sum |\alpha_i|^2=1$ (the state is a unit vector).
 
-!!! Example "Example for a two-level system"
+??? Example "Example for a two-level system"
     For a two-level system, $\ket\psi=\begin{pmatrix}\alpha_0\\\alpha_1\end{pmatrix}$ with $|\alpha_0|^2+|\alpha_1|^2=1$.
 
 Numerically, each coefficient of the state is stored as a complex number represented by two real numbers (the real and the imaginary parts), stored either
@@ -35,7 +35,7 @@ $$
 $$
 where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
 
-!!! Example "Example for a two-level system"
+??? Example "Example for a two-level system"
     The Hamiltonian of a two-level system with energy difference $\omega$ is $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$.
 
 ## Solving the Schrödinger equation numerically
@@ -61,7 +61,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 [^2]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
-!!! Example "Example for a two-level system"
+??? Example "Example for a two-level system"
     For $H=-\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
     $$
         U(t) = e^{-iHt} = \begin{pmatrix}e^{i\omega t/2} & 0 \\\\ 0 & e^{-i\omega t/2}\end{pmatrix}.

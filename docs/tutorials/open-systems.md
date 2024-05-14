@@ -8,7 +8,7 @@ The quantum state that describes an open quantum system is a **density matrix** 
 
 [^1]: Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
 
-!!! Example "Example for a two-level system"
+??? Example "Example for a two-level system"
     For a two-level system, $\rho=\begin{pmatrix}a & b\\ c & d\end{pmatrix}$ with $a,d\in\R^+$ and $b,c\in\mathbb{C}$ with $b^*=c$ (Hermitian matrix), $a+d=1$ (unit trace) and all its eigenvalues are positive (positive semi-definite).
 
 Numerically, each coefficient of the state is stored as a complex number represented by two real numbers (the real and the imaginary parts), stored either
@@ -26,7 +26,7 @@ $$
 $$
 where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
 
-!!! Example "Example for a two-level system"
+??? Example "Example for a two-level system"
     For example, $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$ and a single jump operator $L=\sqrt\gamma\sigma_-=\begin{pmatrix}0&0\\\sqrt\gamma&0\end{pmatrix}$.
 
 We can also write
@@ -37,7 +37,7 @@ where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (sometimes
 
 [^2]: A superoperator is a linear map that takes an operator and returns an operator.
 
-!!! Example "Example for a two-level system"
+??? Example "Example for a two-level system"
     For example, for $H=-\frac{\omega}{2}\sigma_z$ and a single jump operator $L=\sqrt\gamma\sigma_-$, the Liouvillian in vectorized form is a $4\times4$ matrix:
     $$
         \mathcal{L} = \begin{pmatrix}
