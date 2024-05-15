@@ -58,7 +58,7 @@ for any time $t$, where $O_0$ is a constant operator.
 In dynamiqs, constant operators can either be defined with array-like objects or as [`TimeArray`][dynamiqs.TimeArray] objects (using the [`dq.constant()`][dynamiqs.constant] function).
 
 !!! Note
-    Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
+    Common operators are available as utility functions, see the list of available operators in the [Python API](../../python_api/index.md#operators).
 
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
