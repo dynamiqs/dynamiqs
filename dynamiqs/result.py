@@ -158,7 +158,7 @@ class MEResult(Result):
         - If the option `cartesian_batching = True` (default value), the results leading
           dimensions are
           ```
-          ... = ...H, ...L0, ...L1, ...Ln, ...rho0
+          ... = ...H, ...L0, ...L1, (...), ...rho0
           ```
           For example if:
 
@@ -170,7 +170,7 @@ class MEResult(Result):
 
         - If the option `cartesian_batching = False`, the results leading dimensions are
           ```
-          ... = ...H = ...L0 = ...L1 = ...Ln = ...rho0  # (once broadcasted)
+          ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
           ```
           For example if:
 

@@ -92,7 +92,7 @@ def plot_wigner(
     Warning:
         Documentation redaction in progress.
 
-    Notes-: Colormap
+    Note:
         Choose a diverging colormap `cmap` for better results.
 
     Warning:
@@ -264,7 +264,7 @@ def plot_wigner_gif(
         This function creates files in the current working directory under
         `.tmp/dynamiqs`.
 
-    Notes-: Display in Jupyter
+    Note:
         By default, the GIF is displayed in Jupyter notebook environments.
 
     See [`dq.plot_wigner()`][dynamiqs.plot_wigner] for more details.

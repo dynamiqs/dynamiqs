@@ -156,10 +156,16 @@ Description: Extra CSS for the dynamiqs documentation
     border-bottom: none;
 }
 
+.md-typeset .admonition-title:before,
+.md-typeset summary:before {
+  height:0.9rem;
+  width:0.9rem;
+}
+
 /* Page spacing */
 .md-typeset {
   line-height: 1.35;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
 }
 
 p {
@@ -167,12 +173,7 @@ p {
 }
 
 .katex-display {
-    /* margin: 1em 0; */
     margin: 0.75em 0;
-}
-
-.md-nav {
-    line-height: 1.2;
 }
 
 .md-typeset .doc-heading {
@@ -284,14 +285,14 @@ p {
 
 /* Header sizes */
 article.md-typeset h1 {
-  font-size: 1.6em;
-  letter-spacing: 0.02em;
+  font-size: 2em;
+  letter-spacing: -0.01em;
   font-family: var(--md-header-font-family);
-  color: var(--md-typeset-color);
+  color: var(--md-header-main-color);
 }
 
 .md-typeset h2 {
-  font-size: 1.3em;
+  font-size: 1.55em;
   letter-spacing: 0.01em;
   font-family: var(--md-header-font-family);
 }

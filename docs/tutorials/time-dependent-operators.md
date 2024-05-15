@@ -57,7 +57,7 @@ for any time $t$, where $O_0$ is a constant operator.
 
 In dynamiqs, constant operators can either be defined with array-like objects or as [`TimeArray`][dynamiqs.TimeArray] objects (using the [`dq.constant()`][dynamiqs.constant] function).
 
-??? Notes "Common operators"
+!!! Note
     Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
 
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
@@ -102,7 +102,7 @@ In dynamiqs, PWC operators are defined by three array-like objects:
 
 To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
-??? Notes "Sorting of `times`"
+!!! Note
     The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
 
 Let's define a PWC operator:
@@ -238,7 +238,7 @@ Array([[1., 0.],
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
     An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
-??? Notes "Batching callable time-arrays"
+??? Notes "Batching arbitrary time-dependent operators"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)

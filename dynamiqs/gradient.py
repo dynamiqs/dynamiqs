@@ -18,7 +18,7 @@ class Autograd(Gradient):
     With this option, the gradient is computed by automatically differentiating
     through the internals of the solver.
 
-    Notes-: Fallback for Diffrax-based solvers
+    Note:
         For Diffrax-based solvers, this falls back to the
         [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
         option.
@@ -38,7 +38,7 @@ class CheckpointAutograd(Gradient):
     that a checkpointing scheme is used to reduce the memory usage of the
     backpropagation.
 
-    Notes-: Preferred backpropagation method
+    Note:
         For most problems this is the preferred technique for backpropagating
         through the quantum solvers.
 
@@ -49,7 +49,7 @@ class CheckpointAutograd(Gradient):
         is something you need.
 
 
-    Notes-: Fallback for Diffrax-based solvers
+    Note:
         For Diffrax-based solvers, this falls back to the
         [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
         option.

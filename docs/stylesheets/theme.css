@@ -12,7 +12,9 @@ Description: Color theme of the dynamiqs documentation
   --md-accent-fg-color: #cc5d4c;
   --md-accent-fg-color--light: #cd9a92;
   --md-accent-fg-color--dark: #66190e;
-  --md-header-font-family: 'Tahoma';
+
+  /* Header font */
+  --md-header-font-family: -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
 
   /* Default admonition color shades */
   --md-admonition-fg-color: var(--md-note-fg-color);
@@ -27,6 +29,9 @@ Description: Color theme of the dynamiqs documentation
   /* Background */
   --md-default-bg-color-base: 255, 255, 255;
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #f5f5f5;
+
+  /* Header color */
+  --md-header-main-color: #000000a5;
 
   /* Code highlight */
   --md-code-fg-color: #39464b;
@@ -71,9 +76,12 @@ Description: Color theme of the dynamiqs documentation
 
 [data-md-color-scheme="slate"] {
   /* Background */
-  --md-default-bg-color-base: 40, 42, 47;
+  --md-default-bg-color-base: 50, 52, 57;
   --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: rgb(62, 66, 72);
   --md-code-bg-color: var(--md-default-bg-header-color);
+
+  /* Header color */
+  --md-header-main-color: #ffffffc8;
 
   /* Primary font color */
   --md-default-fg-color: #ececec;
@@ -95,17 +103,17 @@ Description: Color theme of the dynamiqs documentation
 
   /* Warning color shades */
   --md-warning-fg-color: #e293b1;
-  --md-warning-bg-color: #3e2e34;
+  --md-warning-bg-color: #533b44;
 
   /* Note color shades */
   --md-note-fg-color: #249897;
-  --md-note-bg-color: #2d3737;
+  --md-note-bg-color: #354949;
 
   /* Example color shades */
   --md-example-fg-color: #54658b;
   --md-example-bg-color: #333e49;
 
-  /* Shadow */
+  /* Admonition shadow */
   --md-shadow-z1: 0 0.2rem 0.5rem #0000002d, 0 0 0.05rem #0000001a;
 
   /* Home page */
