@@ -1,12 +1,5 @@
 {{ log.debug("Rendering admonition") }}
-{% if section.value.kind.startswith('quote') %}
-    <div class="{{ section.value.kind }}">
-        <div class="quote-title">{{ section.title|convert_markdown(heading_level, html_id, strip_paragraph=True) }}</div>
-        {{ section.value.contents|convert_markdown(heading_level, html_id) }}
-    </div>
-{% else %}
-    <details class="{{ section.value.kind.rstrip('-') }}" {% if section.value.kind.endswith('-') %} {% else %} open {% endif %}>
-        <summary>{{ section.title|convert_markdown(heading_level, html_id, strip_paragraph=True) }}</summary>
-        {{ section.value.contents|convert_markdown(heading_level, html_id) }}
-    </details>
-{% endif %}
+<details class="{{ section.value.kind.rstrip('-') }}" {% if section.value.kind.endswith('-') %} {% else %} open {% endif %}>
+    <summary>{{ section.title|convert_markdown(heading_level, html_id, strip_paragraph=True) }}</summary>
+    {{ section.value.contents|convert_markdown(heading_level, html_id) }}
+</details>

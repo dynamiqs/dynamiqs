@@ -89,7 +89,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
 def set_device(device: Literal['cpu', 'gpu', 'tpu']):
     """Configure the default device.
 
-    Notes:
+    Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
         jax.config.update('jax_default_device', jax.devices(device)[0])
@@ -111,7 +111,7 @@ def set_precision(precision: Literal['simple', 'double']):
     - `'simple'` sets default precision to `float32` and `complex64` (default setting),
     - `'double'` sets default precision to `float64` and `complex128`.
 
-    Notes:
+    Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
         if precision == 'simple':
@@ -147,7 +147,7 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
     - `'highest'` keeps matmul precision to `float32` or `float64` as applicable
         (slowest but most accurate, default setting).
 
-    Notes:
+    Note-: Equivalent JAX syntax
         This function is equivalent to setting `jax_default_matmul_precision` in
         `jax.config`. See [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html)
         and [JAX documentation on the different available options](https://jax.readthedocs.io/en/latest/jax.lax.html#jax.lax.Precision).

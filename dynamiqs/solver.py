@@ -64,7 +64,7 @@ class Propagator(Solver):
         The propagator method only supports constant Hamiltonian and jump
         operators. Piecewise-constant problems will also be supported in the future.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
     """
@@ -107,7 +107,7 @@ class Euler(_ODEFixedStep):
     Args:
         dt _(float)_: Fixed time step.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
@@ -126,7 +126,7 @@ class Rouchon1(_ODEFixedStep):
     Warning:
         This solver has not been ported to JAX yet.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
@@ -157,7 +157,7 @@ class Rouchon2(_ODEFixedStep):
     Warning:
         This solver has not been ported to JAX yet.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
@@ -184,7 +184,7 @@ class Dopri5(_ODEAdaptiveStep):
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
@@ -219,7 +219,7 @@ class Dopri8(_ODEAdaptiveStep):
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
@@ -254,7 +254,7 @@ class Tsit5(_ODEAdaptiveStep):
         max_factor: Maximum factor for adaptive step sizing.
         max_steps: Maximum number of steps.
 
-    Notes: Supported gradients
+    Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].

@@ -49,7 +49,7 @@ def rand_complex(
     Each element of the returned array is sampled uniformly in the disk of radius
     $\text{rmax}$.
 
-    Notes-: Uniform sampling in the complex plane
+    Note-: Uniform sampling in the complex plane
         Here are three common options to generate random complex numbers,
         `dq.rand_complex()` returns the last one:
 
