@@ -51,7 +51,7 @@ def dag(x: ArrayLike) -> Array:
     Returns:
        _(array of shape (..., n, m))_ Adjoint of `x`.
 
-    Notes-: Equivalent JAX syntax
+    Note-: Equivalent JAX syntax
         This function is equivalent to `x.mT.conj()`.
 
     Examples:
@@ -76,7 +76,7 @@ def powm(x: ArrayLike, n: int) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Matrix power of `x`.
 
-    Notes-: Equivalent JAX syntax
+    Note-: Equivalent JAX syntax
         This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
@@ -101,7 +101,7 @@ def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Matrix exponential of `x`.
 
-    Notes-: Equivalent JAX syntax
+    Note-: Equivalent JAX syntax
         This function is equivalent to
         `jnp.scipy.linalg.expm(x, max_squarings=max_squarings)`.
 

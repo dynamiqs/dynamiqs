@@ -168,7 +168,7 @@ class TimeArray(eqx.Module):
             dimensions.
         ndim _(int)_: Number of dimensions.
 
-    Notes: Arithmetic operation support
+    Note: Arithmetic operation support
         Time-arrays support elementary operations:
 
         - negation (`__neg__`),

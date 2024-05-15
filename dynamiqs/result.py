@@ -103,7 +103,7 @@ class SEResult(Result):
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
 
-    Notes-: Result of running multiple simulations concurrently
+    Note-: Result of running multiple simulations concurrently
         The resulting states and expectation values are batched according to the
         leading dimensions of the Hamiltonian `H` and initial state `psi0` :
 
@@ -150,7 +150,7 @@ class MEResult(Result):
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
 
-    Notes-: Result of running multiple simulations concurrently
+    Note-: Result of running multiple simulations concurrently
         The resulting states and expectation values are batched according to the
         leading dimensions of the Hamiltonian `H`, jump operators `jump_ops` and initial
         state `rho0`:

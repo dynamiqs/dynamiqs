@@ -137,7 +137,7 @@ Array([[ 0.+0.j,  0.+0.j],
        [ 0.+0.j, -0.+0.j]], dtype=complex64)
 ```
 
-??? Notes "Batching PWC operators"
+??? Note "Batching PWC operators"
     The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
@@ -182,7 +182,7 @@ Array([[0.+0.j, 1.+0.j],
        [1.+0.j, 0.+0.j]], dtype=complex64)
 ```
 
-??? Notes "Batching modulated operators"
+??? Note "Batching modulated operators"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
@@ -192,7 +192,7 @@ Array([[0.+0.j, 1.+0.j],
     (11, 2, 2)
     ```
 
-??? Notes "Function with additional arguments"
+??? Note "Function with additional arguments"
     To define a modulated operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
     ```pycon
     >>> import functools
@@ -238,7 +238,7 @@ Array([[1., 0.],
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
     An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
-??? Notes "Batching arbitrary time-dependent operators"
+??? Note "Batching arbitrary time-dependent operators"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
@@ -248,7 +248,7 @@ Array([[1., 0.],
     (11, 2, 2)
     ```
 
-??? Notes "Function with additional arguments"
+??? Note "Function with additional arguments"
     To define an arbitrary time-dependent operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
     ```pycon
     >>> import functools
