@@ -3,6 +3,7 @@ site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
 repo_name: dynamiqs
+docs_dir: docs
 theme:
   name: material
   custom_dir: docs/overrides
@@ -61,7 +62,7 @@ plugins:
         on_env: "docs.hooks:on_env"
   - gen-files:
       scripts:
-        - docs/generate_api.py
+        - docs/generate_python_api.py
   - mkdocstrings:
       default_handler: python
       custom_templates: docs/templates
