@@ -86,15 +86,16 @@ def smesolve(
         If the Hamiltonian or the jump operators depend on time, they can be converted
         to time-arrays using [`dq.constant()`][dynamiqs.constant],
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See
-        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        [`dq.timecallable()`][dynamiqs.timecallable]. See the
+        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
 
     Note-: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
         matrix `rho0` can be batched to solve multiple SMEs concurrently. All other
         arguments are common to every batch. See the
-        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for
         more details.
 
     Args:

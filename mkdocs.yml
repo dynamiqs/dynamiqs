@@ -3,9 +3,10 @@ site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
 repo_name: dynamiqs
+docs_dir: 'docs/content'
 theme:
   name: material
-  custom_dir: docs/overrides
+  custom_dir: docs/site/overrides
   features:
     - navigation.tabs
     - navigation.sections
@@ -58,13 +59,13 @@ plugins:
       draggable: false
   - mkdocs-simple-hooks:
       hooks:
-        on_env: "docs.hooks:on_env"
+        on_env: "docs.site.hooks:on_env"
   - gen-files:
       scripts:
-        - docs/generate_python_api.py
+        - docs/content/python_api/generate_python_api.py
   - mkdocstrings:
       default_handler: python
-      custom_templates: docs/templates
+      custom_templates: docs/site/templates
       handlers:
         python:
           options:
@@ -112,24 +113,20 @@ validation:
     unrecognized_links: warn
 nav:
   - Home: index.md
-  - Getting started:
-      - getting_started/index.md
-      - What is dynamiqs?: getting_started/whatis.md
-      - Installation: getting_started/installation.md
-      - Basic examples: getting_started/examples.md
-      - The sharp bits 🔪: getting_started/sharp-bits.md
-      - Contributing: getting_started/contributing.md
-      - Let's talk!: getting_started/lets-talk.md
-      - Citing dynamiqs: getting_started/citing.md
-  - Tutorials:
-      - tutorials/index.md
-      - Basics:
-          - Workflow in dynamiqs: tutorials/workflow.md
-          - tutorials/time-dependent-operators.md
-          - tutorials/closed-systems.md
-          - tutorials/open-systems.md
-          - tutorials/batching-simulations.md
-          - tutorials/computing-gradients.md
+  - Documentation:
+      - documentation/index.md
+      - Getting started:
+          - What is dynamiqs?: documentation/getting_started/whatis.md
+          - Installation: documentation/getting_started/installation.md
+          - Basic examples: documentation/getting_started/examples.md
+          - The sharp bits 🔪: documentation/getting_started/sharp-bits.md
+      - Learn the basics:
+          - Workflow in dynamiqs: documentation/basics/workflow.md
+          - Time-dependent operators: documentation/basics/time-dependent-operators.md
+          - Closed systems: documentation/basics/closed-systems.md
+          - Open systems: documentation/basics/open-systems.md
+          - Batching simulations: documentation/basics/batching-simulations.md
+          - Computing gradients: documentation/basics/computing-gradients.md
   - Python API:
       - python_api/index.md
       - Quantum solvers:
@@ -246,3 +243,8 @@ nav:
               - plot_hinton: python_api/plots/plot_hinton.md
               - gridplot: python_api/plots/gridplot.md
               - mplstyle: python_api/plots/mplstyle.md
+  - Community:
+      - community/index.md
+      - Contributing: community/contributing.md
+      - Let's talk!: community/lets-talk.md
+      - Citing dynamiqs: community/citing.md

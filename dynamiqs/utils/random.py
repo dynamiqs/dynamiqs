@@ -74,7 +74,7 @@ def rand_complex(
         renderfig('rand_complex')
         ```
 
-        ![rand_complex](/figs-code/rand_complex.png){.fig}
+        ![rand_complex](/figs_code/rand_complex.png){.fig}
 
     Args:
         key: A PRNG key used as the random key.
