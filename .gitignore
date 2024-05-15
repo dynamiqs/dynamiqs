@@ -30,10 +30,10 @@ dist/
 site/
 
 # doctest generated figures
-docs/figs_code/**
-!docs/figs_code/.gitkeep
-docs/figs_docs/**
-!docs/figs_docs/.gitkeep
+docs/content/figs_code/**
+!docs/content/figs_code/.gitkeep
+docs/content/figs_docs/**
+!docs/content/figs_docs/.gitkeep
 
 # temporary directiry
 .tmp/**

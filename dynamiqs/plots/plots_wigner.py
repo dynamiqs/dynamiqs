@@ -282,7 +282,7 @@ def plot_wigner_gif(
         ...     fps=25,  # 25 frames per second
         ...     xmax=4.0,
         ...     ymax=2.0,
-        ...     filename='docs/figs_code/wigner-cat.gif',
+        ...     filename='docs/content/figs_code/wigner-cat.gif',
         ...     dpi=150,
         ...     display=False,
         ... )
@@ -301,7 +301,7 @@ def plot_wigner_gif(
         ...     fps=25,
         ...     xmax=4.0,
         ...     clear=True,
-        ...     filename='docs/figs_code/wigner-kerr.gif',
+        ...     filename='docs/content/figs_code/wigner-kerr.gif',
         ...     dpi=150,
         ...     display=False,
         ... )
