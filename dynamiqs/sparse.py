@@ -12,7 +12,7 @@ __all__ = ['SparseDIA', 'to_sparse']
 
 class SparseDIA(eqx.Module):
     diags: jax.Array
-    offsets: tuple[int] = eqx.field(static=True)
+    offsets: tuple[int, ...] = eqx.field(static=True)
 
     @property
     def ndim(self) -> int:
