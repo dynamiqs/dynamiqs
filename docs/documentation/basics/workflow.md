@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ## I. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [API documentation](../../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like object.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [Python API](../../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like object.
 
 Here, we will use [`dq.fock()`][dynamiqs.fock] to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz()`][dynamiqs.sigmaz] and [`dq.sigmax()`][dynamiqs.sigmax] to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
@@ -45,7 +45,7 @@ In dynamiqs, all quantum objects are defined directly with [JAX arrays](https://
 
 Next, we define the scope of the simulation. This includes the total duration of time evolution, the observables we want to measure and how often we measure them. Observables are defined similarly to the Hamiltonian, using arrays and dynamiqs utility functions. The total duration and how often measurements are performed is defined in a single object named `tsave`. It is an arbitrary array of time points, of which `tsave[-1]` specifies the total duration of time evolution.
 
-We also need to specify the solver and options related to it, namely the method of integration and the eventual related parameters. The list of available solvers and their parameters is available in the [API documentation](../../python_api/index.md).
+We also need to specify the solver and options related to it, namely the method of integration and the eventual related parameters. The list of available solvers and their parameters is available in the [Python API](../../python_api/index.md).
 
 ```python
 # define sampling times

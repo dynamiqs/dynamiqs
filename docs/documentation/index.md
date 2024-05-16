@@ -1,6 +1,6 @@
 # Documentation
 
-Welcome to the dynamiqs documentation! This guide is an overview and explains the important features of dynamiqs, from installation and basic examples to advanced tutorials. Details are found in the [API reference](../python_api/index.md).
+Welcome to the dynamiqs documentation! This page will guide you through learning dynamiqs, from installation and basic examples to advanced tutorials. You can also find a list of available functions and classes in the [Python API](../python_api/index.md).
 
 ## Getting started
 
@@ -13,7 +13,7 @@ First time using dynamiqs? Get to know the library and run your first simulation
 
 ## Learn the basics
 
-Familiarize yourself with dynamiqs. Learn how to simulate quantum systems, define time-dependent operators, run multiple simulations simultaneously, or compute gradients.
+Familiarize yourself with dynamiqs. Learn how to simulate quantum systems, define time-dependent operators, run multiple simulations concurrently, and compute gradients.
 
 - [Workflow in dynamiqs](basics/workflow.md)
 - [Time-dependent operators](basics/time-dependent-operators.md)
