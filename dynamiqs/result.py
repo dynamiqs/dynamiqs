@@ -130,7 +130,8 @@ class SEResult(Result):
 
             then `states` has shape _(2, 3, ntsave, n, 1)_.
 
-        See the [Batching simulations](../../tutorials/batching-simulations.md)
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
 
@@ -180,6 +181,7 @@ class MEResult(Result):
 
             then `states` has shape _(2, 3, ntsave, n, n)_.
 
-        See the [Batching simulations](../../tutorials/batching-simulations.md)
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """

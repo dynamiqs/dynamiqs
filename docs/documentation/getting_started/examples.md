@@ -1,6 +1,6 @@
 # Basic examples
 
-First time using dynamiqs? Below are a few basic examples to help you get started. For a more complete set of tutorials, check out our [Tutorials](../tutorials/index.md) section.
+First time using dynamiqs? Below are a few basic examples to help you get started.
 
 ## Simulate a lossy quantum harmonic oscillator
 
