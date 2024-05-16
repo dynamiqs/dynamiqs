@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import diffrax as dx
-import jax.numpy as jnp
 from jaxtyping import PyTree, Scalar
 
 from ..core.abstract_solver import MESolver
@@ -26,12 +25,13 @@ class LindbladTerm(dx.ODETerm):
         self.Ls = Ls
 
     def vector_field(self, t: Scalar, rho: PyTree, _args: PyTree) -> PyTree:
-        Ls = jnp.stack([L(t) for L in self.Ls])
-        Lsd = dag(Ls)
-        LdL = (Lsd @ Ls).sum(axis=0)
-        # drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
-        #         = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
-        out = (-1j * self.H(t) - 0.5 * LdL) @ rho + 0.5 * (Ls @ rho @ Lsd).sum(0)
+        Ls = [L(t) for L in self.Ls]
+
+        sum_Ldag_L = sum([dag(L) @ L for L in Ls])
+        jump_term = sum([L @ rho @ dag(L) for L in Ls])
+
+        out = (-1j * self.H(t) - 0.5 * sum_Ldag_L) @ rho + 0.5 * jump_term
+
         return out + dag(out)
 
 

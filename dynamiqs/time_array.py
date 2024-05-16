@@ -12,11 +12,12 @@ from jax.tree_util import Partial
 from jaxtyping import ArrayLike, PyTree, Scalar
 
 from ._utils import cdtype, check_time_array, obj_type_str
+from .sparse import SparseDIA
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
 
-def constant(array: ArrayLike) -> ConstantTimeArray:
+def constant(array: ArrayLike | SparseDIA) -> ConstantTimeArray:
     r"""Instantiate a constant time-array.
 
     A constant time-array is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
@@ -28,6 +29,9 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
     Returns:
         _(time-array object)_ Callable object returning $O_0$ for any time $t$.
     """
+    if isinstance(array, SparseDIA):
+        return ConstantTimeArray(array)
+
     array = jnp.asarray(array, dtype=cdtype())
     return ConstantTimeArray(array)
 
@@ -76,6 +80,9 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
             f' `{values.shape}.'
         )
 
+    if isinstance(array, SparseDIA):
+        return PWCTimeArray(times, values, array)
+
     # array
     array = jnp.asarray(array, dtype=cdtype())
     if array.ndim != 2 or array.shape[-1] != array.shape[-2]:
@@ -115,6 +122,10 @@ def modulated(
         raise TypeError(
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
+
+    if isinstance(array, SparseDIA):
+        f = Partial(f)
+        return ModulatedTimeArray(f, array, args)
 
     # array
     array = jnp.asarray(array, dtype=cdtype())

@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from ..._utils import on_cpu
+from ...sparse import SparseDIA
 
 __all__ = [
     'dag',
@@ -36,7 +37,7 @@ __all__ = [
 ]
 
 
-def dag(x: ArrayLike) -> Array:
+def dag(x: ArrayLike | SparseDIA) -> Array | SparseDIA:
     r"""Returns the adjoint (complex conjugate transpose) of a ket, bra, density matrix
     or operator.
 
@@ -57,8 +58,11 @@ def dag(x: ArrayLike) -> Array:
         >>> dq.dag(dq.fock(2, 0))
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
-    return x.mT.conj()
+    if isinstance(x, SparseDIA):
+        return x.dag()
+    else:
+        x = jnp.asarray(x)
+        return x.mT.conj()
 
 
 def mpow(x: ArrayLike, n: int) -> Array:

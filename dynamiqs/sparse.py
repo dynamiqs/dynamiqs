@@ -14,12 +14,32 @@ class SparseDIA(eqx.Module):
     diags: jax.Array
     offsets: tuple[int] = eqx.field(static=True)
 
+    @property
+    def ndim(self) -> int:
+        return len(self.diags.shape)
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return self.diags.shape
+
+    def dag(self) -> SparseDIA:
+        dag_offsets = []
+        dag_diags = []
+
+        for diag, offset in zip(self.diags, self.offsets):
+            dag_offsets.append(-1 * offset)
+            dag_diags.append(jnp.roll(diag, -offset))
+
+        dag_diags = jnp.vstack(dag_diags)
+
+        return SparseDIA(dag_diags, dag_offsets)
+
     def _cleanup(self, diags: Array, offsets: tuple[int]) -> tuple[Array, tuple[int]]:
         diags = jnp.asarray(diags)
         offsets = jnp.asarray(offsets)
         mask = jnp.any(diags != 0, axis=1)
-        diags = diags[mask]
-        offsets = offsets[mask]
+        diags = jnp.where(mask[:, None], diags, 0)
+        offsets = jnp.where(mask, offsets, -1)
         unique_offsets, indices = jnp.unique(offsets, return_inverse=True)
         result = jnp.zeros((len(unique_offsets), diags.shape[1]))
 
@@ -38,7 +58,27 @@ class SparseDIA(eqx.Module):
             out += jnp.diag(diag[start:end], k=offset)
         return out
 
-    @jax.jit
+    @functools.partial(jax.jit, static_argnums=(1,))
+    def _matmul_dense(self, left_matmul: bool, other: Array) -> Array:
+        N = other.shape[0]
+        out = jnp.zeros_like(other)
+        for offset, diag in zip(self.offsets, self.diags):
+            start = max(0, offset)
+            end = min(N, N + offset)
+            top = max(0, -offset)
+            bottom = top + end - start
+            if left_matmul:
+                out = out.at[top:bottom, :].add(
+                    diag[start:end, None] * other[start:end, :]
+                )
+            else:
+                out = out.at[:, start:end].add(
+                    jnp.transpose(
+                        diag[start:end, None] * jnp.transpose(other[:, top:bottom])
+                    )
+                )
+        return out
+
     def _matmul_dia(self, other: SparseDIA) -> tuple[Array, list[Array]]:
         N = other.diags.shape[1]
 
@@ -63,28 +103,24 @@ class SparseDIA(eqx.Module):
 
         return out_diags, out_offsets
 
-    @functools.partial(jax.jit, static_argnums=(1,))
-    def _matmul_dense(self, left_matmul: bool, other: Array) -> Array:
+    @jax.jit
+    def _add_dense(self, other: Array) -> Array:
+        """Sparse + Dense only using information about diagonals & offsets."""
         N = other.shape[0]
-        out = jnp.zeros_like(other)
         for offset, diag in zip(self.offsets, self.diags):
             start = max(0, offset)
             end = min(N, N + offset)
-            top = max(0, -offset)
-            bottom = top + end - start
-            if left_matmul:
-                out = out.at[top:bottom, :].add(
-                    diag[start:end, None] * other[start:end, :]
-                )
-            else:
-                out = out.at[:, start:end].add(
-                    jnp.transpose(
-                        diag[start:end, None] * jnp.transpose(other[:, top:bottom])
-                    )
-                )
-        return out
 
-    @jax.jit
+            s = max(0, abs(offset))
+            e = min(N, N + abs(offset))
+
+            i = jnp.arange(e - s) if offset > 0 else jnp.arange(s, e)
+            j = jnp.arange(s, e) if offset > 0 else jnp.arange(e - s)
+
+            other = other.at[i, j].add(diag[start:end])
+
+        return other
+
     def _add_dia(self, other: SparseDIA) -> tuple[Array, list[Array]]:
         self_offsets = list(self.offsets)
         other_offsets = list(other.offsets)
@@ -103,22 +139,29 @@ class SparseDIA(eqx.Module):
         return out_diags, out_offsets
 
     @jax.jit
-    def _add_dense(self, other: Array) -> Array:
-        """Sparse + Dense only using information about diagonals & offsets."""
-        N = other.shape[0]
-        for offset, diag in zip(self.offsets, self.diags):
-            start = max(0, offset)
-            end = min(N, N + offset)
+    def _mul_dense(self, other: Array) -> SparseDIA:
+        out_diags = []
+        out_offsets = []
 
-            s = max(0, abs(offset))
-            e = min(N, N + abs(offset))
+        for self_offset, self_diag in zip(self.offsets, self.diags):
+            other_diag = jnp.diagonal(other, self_offset)
 
-            i = jnp.arange(e - s) if offset > 0 else jnp.arange(s, e)
-            j = jnp.arange(s, e) if offset > 0 else jnp.arange(e - s)
+            if self_offset > 0:
+                padding = (self_offset, 0)
+            elif self_offset < 0:
+                padding = (0, -self_offset)
+            else:
+                padding = (0, 0)
 
-            other = other.at[i, j].add(diag[start:end])
+            other_diag = jnp.pad(
+                other_diag, padding, mode='constant', constant_values=0
+            )
+            out_diag = other_diag * self_diag
+            out_diags.append(out_diag)
+            out_offsets.append(self_offset)
 
-        return other
+        out_diags = jnp.vstack(out_diags)
+        return out_diags, out_offsets
 
     @jax.jit
     def _mul_dia(self, other: SparseDIA) -> tuple[Array, list[Array]]:
@@ -140,14 +183,17 @@ class SparseDIA(eqx.Module):
 
     ### DUNDERS ###
 
+    def __call__(self) -> Array:
+        return self
+
     def __matmul__(self, other: Array | SparseDIA) -> Array | SparseDIA:
         if isinstance(other, Array):
             return self._matmul_dense(left_matmul=True, other=other)
 
         elif isinstance(other, SparseDIA):
             diags, offsets = self._matmul_dia(other=other)
-            diags, offsets = self._cleanup(diags, offsets)
-            return SparseDIA(diags, offsets)
+            # diags, offsets = self._cleanup(diags, offsets)
+            return SparseDIA(diags, tuple(offsets))
 
         return NotImplemented
 
@@ -157,13 +203,19 @@ class SparseDIA(eqx.Module):
 
         return NotImplemented
 
-    def __add__(self, other: Array | SparseDIA) -> Array | SparseDIA:
+    def __add__(self, other: Array | SparseDIA | complex) -> Array | SparseDIA:
         if isinstance(other, Array):
             return self._add_dense(other)
 
         elif isinstance(other, SparseDIA):
             diags, offsets = self._add_dia(other=other)
-            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
+            return SparseDIA(diags, tuple(offsets))
+
+        elif isinstance(other, (int, float, complex)):
+            if other == 0:
+                return self
+            else:
+                return self.__add__(other)
 
         return NotImplemented
 
@@ -171,21 +223,53 @@ class SparseDIA(eqx.Module):
         if isinstance(other, Array):
             return self._add_dense(other)
 
+        elif isinstance(other, (int, float, complex)):
+            if other == 0:
+                return self
+            else:
+                return self.__add__(other)
+
+        return NotImplemented
+
+    def __sub__(self, other: Array | SparseDIA) -> Array | SparseDIA:
+        if isinstance(other, Array):
+            return self._add_dense(-1 * other)
+
+        elif isinstance(other, SparseDIA):
+            new_other = SparseDIA(-1 * other.diags, other.offsets)
+            diags, offsets = self._add_dia(other=new_other)
+            return SparseDIA(diags, tuple(offsets))
+
+        elif isinstance(other, (int, float, complex)):
+            if other == 0:
+                return self
+            else:
+                return self.__add__(other)
+
+        return NotImplemented
+
+    def __rsub__(self, other: Array) -> Array:
+        if isinstance(other, Array):
+            return self._add_dense(-1 * other)
+
+        elif isinstance(other, (int, float, complex)):
+            if other == 0:
+                return self
+            else:
+                return self.__add__(other)
+
         return NotImplemented
 
     def __mul__(self, other: Array | SparseDIA) -> Array | SparseDIA:
         if isinstance(other, Array):
-            sparse_matrix = to_sparse(other)
-            diags, offsets = self._mul_dia(sparse_matrix)
-            return SparseDIA(
-                diags, tuple([offset.item() for offset in offsets])
-            ).to_dense()
+            diags, offsets = self._mul_dense(other)
+            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
 
         elif isinstance(other, SparseDIA):
             diags, offsets = self._mul_dia(other)
             return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
 
-        elif isinstance(other, float):
+        elif isinstance(other, (complex, float)):
             diags, offsets = other * self.diags, self.offsets
             return SparseDIA(diags, offsets)
 
@@ -193,13 +277,13 @@ class SparseDIA(eqx.Module):
 
     def __rmul__(self, other: Array) -> Array:
         if isinstance(other, Array):
-            sparse_matrix = to_sparse(other)
-            diags, offsets = self._mul_dia(sparse_matrix)
-            return SparseDIA(
-                diags, tuple([offset.item() for offset in offsets])
-            ).to_dense()
-
-        elif isinstance(other, float):
+            if other.shape == (1, 1):
+                diags, offsets = other * self.diags, self.offsets
+                return SparseDIA(diags, offsets)
+            else:
+                diags, offsets = self._mul_dense(other)
+                return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
+        elif isinstance(other, (complex, float)):
             diags, offsets = other * self.diags, self.offsets
             return SparseDIA(diags, offsets)
 
@@ -228,6 +312,10 @@ def to_sparse(other: Array) -> SparseDIA:
     n = other.shape[0]
     offset_range = 2 * n - 1
     offset_center = offset_range // 2
+
+    # maybe the best way is to check all conditions but for now stick to 'not Array'
+    if not isinstance(other, Array):
+        other = jnp.asarray(other.array)
 
     for offset in range(-offset_center, offset_center + 1):
         diagonal = jnp.diagonal(other, offset=offset)
