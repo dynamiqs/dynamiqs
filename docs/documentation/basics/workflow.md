@@ -110,6 +110,6 @@ plt.legend(('Analytical', 'dynamiqs'))
 renderfig('workflow')
 ```
 
-![workflow](/figs-docs/workflow.png){.fig}
+![workflow](/figs_docs/workflow.png){.fig}
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.

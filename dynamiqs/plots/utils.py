@@ -118,7 +118,7 @@ def gridplot(
         [...]
         >>> renderfig('gridplot')
 
-        ![gridplot](/figs-code/gridplot.png){.fig}
+        ![gridplot](/figs_code/gridplot.png){.fig}
     """
     h = w if h is None else h
     ncols = ceil(n / nrows)
@@ -169,7 +169,7 @@ def mplstyle(*, usetex: bool = False):
         [...]
         >>> renderfig('mplstyle_before')
 
-        ![mplstyle_before](/figs-code/mplstyle_before.png){.fig}
+        ![mplstyle_before](/figs_code/mplstyle_before.png){.fig}
 
         After (dynamiqs Matplotlib style):
 
@@ -182,7 +182,7 @@ def mplstyle(*, usetex: bool = False):
         [...]
         >>> renderfig('mplstyle_after')
 
-        ![mplstyle_after](/figs-code/mplstyle_after.png){.fig}
+        ![mplstyle_after](/figs_code/mplstyle_after.png){.fig}
     """
     plt.rcParams.update(
         {

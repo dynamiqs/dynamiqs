@@ -33,7 +33,7 @@ def _mpl_backend():
 @pytest.fixture()
 def renderfig():
     def savefig_docs(figname):
-        filename = f'docs/figs-docs/{figname}.png'
+        filename = f'docs/figs_docs/{figname}.png'
         plt.gcf().savefig(filename, bbox_inches='tight', dpi=300)
         plt.close()
 
