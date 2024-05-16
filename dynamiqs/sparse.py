@@ -10,6 +10,7 @@ from .qarray import QArray
 class SparseQArray(QArray):
     diags: Array
     offsets: tuple[int, ...] = eqx.field(static=True)
+    dims: tuple[int, ...] = eqx.field(static=True)
 
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
@@ -17,21 +18,17 @@ class SparseQArray(QArray):
         if isinstance(other, ScalarLike):
             if other == 0:
                 return self
-            else:
-                return self.to_dense() + other
+            return self.to_dense() + other
         elif isinstance(other, ArrayLike):
             return self.to_dense() + other
         elif isinstance(other, SparseQArray):
-            return self._add_dia(other)
+            _check_compatible_dims(self.dims, other.dims)
+            return self._add_sparse(other)
 
         return NotImplemented
 
-    def __radd__(self, other: Array) -> Array:
-        return self + other
-
-    def _add_dia(self, other: SparseQArray) -> SparseQArray:
+    def _add_sparse(self, other: SparseQArray) -> SparseQArray:
         out_offsets_diags = dict(zip(self.offsets, self.diags))
-
         for other_offset, other_diag in zip(other.offsets, other.diags):
             if other_offset in out_offsets_diags:
                 out_offsets_diags[other_offset] += other_diag
@@ -39,9 +36,12 @@ class SparseQArray(QArray):
                 out_offsets_diags[other_offset] = other_diag
 
         out_offsets = tuple(sorted(out_offsets_diags.keys()))
-        out_diags = jnp.array([out_offsets_diags[offset] for offset in out_offsets])
+        out_diags = jnp.stack([out_offsets_diags[offset] for offset in out_offsets])
 
-        return SparseQArray(out_diags, out_offsets)
+        return SparseQArray(out_diags, out_offsets, self.dims)
+
+    def __radd__(self, other: Array) -> Array:
+        return self + other
 
     def __sub__(
         self, other: ScalarLike | ArrayLike | SparseQArray
@@ -49,21 +49,17 @@ class SparseQArray(QArray):
         if isinstance(other, ScalarLike):
             if other == 0:
                 return self
-            else:
-                return self.to_dense() - other
+            return self.to_dense() - other
         elif isinstance(other, ArrayLike):
             return self.to_dense() - other
         elif isinstance(other, SparseQArray):
-            return self._sub_dia(other)
+            _check_compatible_dims(self.dims, other.dims)
+            return self._sub_sparse(other)
 
         return NotImplemented
 
-    def __rsub__(self, other: Array) -> Array:
-        return -self + other
-
-    def _sub_dia(self, other: SparseQArray) -> SparseQArray:
+    def _sub_sparse(self, other: SparseQArray) -> SparseQArray:
         out_offsets_diags = dict(zip(self.offsets, self.diags))
-
         for other_offset, other_diag in zip(other.offsets, other.diags):
             if other_offset in out_offsets_diags:
                 out_offsets_diags[other_offset] -= other_diag
@@ -73,28 +69,29 @@ class SparseQArray(QArray):
         out_offsets = tuple(sorted(out_offsets_diags.keys()))
         out_diags = jnp.array([out_offsets_diags[offset] for offset in out_offsets])
 
-        return SparseQArray(out_diags, out_offsets)
+        return SparseQArray(out_diags, out_offsets, self.dims)
+
+    def __rsub__(self, other: Array) -> Array:
+        return -self + other
 
     def __mul__(self, other: Array | SparseQArray) -> Array | SparseQArray:
         if isinstance(other, ScalarLike):
             if other == 0:
-                empty_diags = jnp.empty(0, self.shape[-1])
-                return SparseQArray(empty_diags, ())
-            return SparseQArray(other * self.diags, self.offsets)
+                diags = jnp.empty(0, self.shape[-1])
+                offsets = ()
+                return SparseQArray(diags, offsets, self.dims)
+            return SparseQArray(other * self.diags, self.offsets, self.dims)
         elif isinstance(other, Array):
             return self._mul_dense(other)
         elif isinstance(other, SparseQArray):
-            return self._mul_dia(other)
+            _check_compatible_dims(self.dims, other.dims)
+            return self._mul_sparse(other)
 
         return NotImplemented
 
-    def __rmul__(self, other: ArrayLike) -> Array:
-        return self * other
-
     def _mul_dense(self, other: Array) -> SparseQArray:
-        out_diags = jnp.zeros_like(self.diags)
         N = other.shape[0]
-
+        out_diags = jnp.zeros_like(self.diags)
         for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
             start = max(0, self_offset)
             end = min(N, N + self_offset)
@@ -103,11 +100,10 @@ class SparseQArray(QArray):
                 other_diag * self_diag[start:end]
             )
 
-        return SparseQArray(out_diags, self.offsets)
+        return SparseQArray(out_diags, self.offsets, self.dims)
 
-    def _mul_dia(self, other: SparseQArray) -> SparseQArray:
+    def _mul_sparse(self, other: SparseQArray) -> SparseQArray:
         out_diags, out_offsets = [], []
-
         for self_offset, self_diag in zip(self.offsets, self.diags):
             for other_offset, other_diag in zip(other.offsets, other.diags):
                 if self_offset != other_offset:
@@ -115,4 +111,14 @@ class SparseQArray(QArray):
                 out_diags.append(self_diag * other_diag)
                 out_offsets.append(other_offset)
 
-        return SparseQArray(jnp.stack(out_diags), tuple(out_offsets))
+        return SparseQArray(jnp.stack(out_diags), tuple(out_offsets), self.dims)
+
+    def __rmul__(self, other: ArrayLike) -> Array:
+        return self * other
+
+
+def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+    if dims1 != dims2:
+        raise ValueError(
+            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        )
