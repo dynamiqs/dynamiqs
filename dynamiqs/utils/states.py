@@ -271,24 +271,35 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     tensor product of coherent states.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alpha _(array_like)_: Coherent state amplitude of each mode.
+        dim: Dimension of the Hilbert space of each mode.
+        alpha _(array-like of shape (...) or (..., len(dim)))_): Coherent state
+            amplitude of each mode, with last dimension matching the length of `dim` if
+            `dim` is a tuple.
 
     Returns:
-        _(array of shape (n, n))_ Density matrix of the coherent state.
+        _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
+            state or tensor product of coherent states.
 
     Examples:
+        Single-mode coherent states:
         >>> dq.coherent_dm(4, 0.5)
         Array([[0.779+0.j, 0.389+0.j, 0.137+0.j, 0.042+0.j],
                [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
                [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
                [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]], dtype=complex64)
-        >>> dq.coherent_dm((2, 3), (0.5, 0.5))
-        Array([[0.6  +0.j, 0.299+0.j, 0.113+0.j, 0.328+0.j, 0.163+0.j, 0.062+0.j],
-               [0.299+0.j, 0.149+0.j, 0.056+0.j, 0.163+0.j, 0.081+0.j, 0.031+0.j],
-               [0.113+0.j, 0.056+0.j, 0.021+0.j, 0.062+0.j, 0.031+0.j, 0.012+0.j],
-               [0.328+0.j, 0.163+0.j, 0.062+0.j, 0.179+0.j, 0.089+0.j, 0.034+0.j],
-               [0.163+0.j, 0.081+0.j, 0.031+0.j, 0.089+0.j, 0.044+0.j, 0.017+0.j],
-               [0.062+0.j, 0.031+0.j, 0.012+0.j, 0.034+0.j, 0.017+0.j, 0.006+0.j]],      dtype=complex64)
-    """  # noqa: E501
+
+        Multi-mode coherent states:
+        >>> dq.coherent_dm((2, 3), (0.5, 0.5j)).shape
+        (6, 6)
+
+        Batched single-mode coherent states:
+        >>> alpha = jnp.array([0.5, 0.5j])
+        >>> dq.coherent_dm(4, alpha).shape
+        (2, 4, 4)
+
+        Batched multi-mode coherent states:
+        >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
+        >>> dq.coherent_dm((4, 6), alpha).shape
+        (2, 24, 24)
+    """
     return todm(coherent(dim, alpha))
