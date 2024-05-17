@@ -135,25 +135,50 @@ def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
     product of Fock states.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        number _(int or tuple of ints)_: Fock state number of each mode.
+        dim: Dimension of the Hilbert space of each mode.
+        number _(integer array-like of shape (...) or (..., len(dim)))_): Fock state
+            number of each mode, with last dimension matching the length of `dim` if
+            `dim` is a tuple.
 
     Returns:
-        _(array of shape (n, n))_ Density matrix of the Fock state or tensor product of
-            Fock states.
+        _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the Fock state
+            or tensor product of Fock states.
 
     Examples:
-        >>> dq.fock_dm(3, 1)
+        Single-mode Fock states:
+        >>> dq.fock(3, 1)
         Array([[0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
-        >>> dq.fock_dm((3, 2), (1, 0))
+
+        Multi-mode Fock states:
+        >>> dq.fock((3, 2), (1, 0))
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+
+        Batched single-mode Fock states:
+        >>> number = jnp.array([0, 1, 2])
+        >>> dq.fock(3, number)
+        Array([[[1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j]],
+        <BLANKLINE>
+               [[0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j]],
+        <BLANKLINE>
+               [[0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 1.+0.j]]], dtype=complex64)
+
+        Batched multi-mode Fock states:
+        >>> number = [(0, 0), (0, 1), (1, 1), (2, 0)]
+        >>> dq.fock((3, 2), number).shape
+        (4, 6, 6)
     """
     return todm(fock(dim, number))
 
