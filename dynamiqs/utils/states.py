@@ -198,18 +198,24 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     states.
 
     Args:
-        dim _(int or tuple of ints)_: Dimension of the Hilbert space of each mode.
-        alpha _(array_like)_: Coherent state amplitude of each mode.
+        dim: Dimension of the Hilbert space of each mode.
+        alpha _(array-like of shape (...) or (..., len(dim)))_): Coherent state
+            amplitude of each mode, with last dimension matching the length of `dim` if
+            `dim` is a tuple.
 
     Returns:
-        _(array of shape (n, 1))_ Ket of the coherent state.
+        _(array of shape (..., prod(dim), 1))_ Ket of the coherent state or
+            tensor product of coherent states.
 
     Examples:
+        Single-mode coherent states:
         >>> dq.coherent(4, 0.5)
         Array([[0.882+0.j],
                [0.441+0.j],
                [0.156+0.j],
                [0.047+0.j]], dtype=complex64)
+
+        Multi-mode coherent states:
         >>> dq.coherent((2, 3), (0.5, 0.5j))
         Array([[ 0.775+0.j   ],
                [ 0.   +0.386j],
@@ -217,24 +223,45 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
                [ 0.423+0.j   ],
                [ 0.   +0.211j],
                [-0.08 +0.j   ]], dtype=complex64)
+
+        Batched single-mode coherent states:
+        >>> alpha = jnp.array([0.5, 0.5j])
+        >>> dq.coherent(4, alpha)
+        Array([[[ 0.882+0.j   ],
+                [ 0.441+0.j   ],
+                [ 0.156+0.j   ],
+                [ 0.047+0.j   ]],
+        <BLANKLINE>
+               [[ 0.882+0.j   ],
+                [ 0.   +0.441j],
+                [-0.156+0.j   ],
+                [ 0.   -0.047j]]], dtype=complex64)
+
+        Batched multi-mode coherent states:
+        >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
+        >>> dq.coherent((4, 6), alpha).shape
+        (2, 24, 1)
     """
-    # convert inputs to tuples by default, and check dimensions match
-    dim = (dim,) if isinstance(dim, int) else dim
-    alpha = jnp.asarray(alpha, dtype=cdtype())
+    # check if dim is an integer or tuple of integers
+    dim = jnp.asarray(dim)
+    dim = dim[None] if dim.ndim == 0 else dim
+    if not jnp.issubdtype(dim.dtype, jnp.integer) and not dim.ndim == 1:
+        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
-    if alpha.ndim == 0:
-        alpha = alpha[..., None]
-    elif alpha.ndim > 1:
+    # convert alpha to an array-like object of shape (..., len(dim))
+    alpha = jnp.asarray(alpha)
+    alpha = alpha[None] if alpha.ndim == 0 else alpha
+    alpha = alpha[..., None] if len(dim) == 1 and alpha.shape[-1] != 1 else alpha
+
+    # check alpha and dim shapes match
+    if dim.shape[-1] != alpha.shape[-1]:
         raise ValueError(
-            'Argument `alpha` must be a 0-D or 1-D array-like object, but is'
-            f' a {alpha.ndim}-D object.'
-        )
-    if len(dim) != len(alpha):
-        raise ValueError(
-            'Arguments `alpha` must have the same length as `dim` of length'
-            f' {len(dim)}, but has length {len(alpha)}.'
+            'Arguments `alpha` and `dim` must have compatible shapes, but got'
+            f' dim.shape={dim.shape}, and alpha.shape={alpha.shape}.'
         )
 
+    # compute all kets
+    alpha = alpha.swapaxes(0, -1)  # (len(dim), ...)
     kets = [displace(d, a) @ fock(d, 0) for d, a in zip(dim, alpha)]
     return tensor(*kets)
 
