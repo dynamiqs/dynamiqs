@@ -146,13 +146,13 @@ def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
 
     Examples:
         Single-mode Fock states:
-        >>> dq.fock(3, 1)
+        >>> dq.fock_dm(3, 1)
         Array([[0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
 
         Multi-mode Fock states:
-        >>> dq.fock((3, 2), (1, 0))
+        >>> dq.fock_dm((3, 2), (1, 0))
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -162,7 +162,7 @@ def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
 
         Batched single-mode Fock states:
         >>> number = jnp.array([0, 1, 2])
-        >>> dq.fock(3, number)
+        >>> dq.fock_dm(3, number)
         Array([[[1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j]],
@@ -177,7 +177,7 @@ def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
 
         Batched multi-mode Fock states:
         >>> number = [(0, 0), (0, 1), (1, 1), (2, 0)]
-        >>> dq.fock((3, 2), number).shape
+        >>> dq.fock_dm((3, 2), number).shape
         (4, 6, 6)
     """
     return todm(fock(dim, number))
