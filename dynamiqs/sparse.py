@@ -12,6 +12,9 @@ class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     dims: tuple[int, ...] = eqx.field(static=True)
 
+    def to_dense(self) -> Array:
+        return to_dense(self)
+
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
     ) -> Array | SparseQArray:
@@ -122,3 +125,21 @@ def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
         raise ValueError(
             f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
+
+
+def to_dense(sparse: SparseQArray) -> Array:
+    r"""Returns the input matrix in the Dense format.
+
+    Parameters:
+        sparse: A sparse matrix, containing diagonals and their offsets.
+
+    Returns:
+        Array: A dense matrix representation of the input sparse matrix.
+    """
+    N = sparse.dims[0]
+    out = jnp.zeros((N, N))
+    for offset, diag in zip(sparse.offsets, sparse.diags):
+        start = max(0, offset)
+        end = min(N, N + offset)
+        out += jnp.diag(diag[start:end], k=offset)
+    return out
