@@ -41,6 +41,7 @@ def plot_fock(
     ymax: float | None = 1.0,
     color: str = colors['blue'],
     alpha: float = 1.0,
+    label: str = '',
 ):
     """Plot the photon number population of a state.
 
@@ -75,7 +76,7 @@ def plot_fock(
     y = _populations(state)
 
     # plot
-    ax.bar(x, y, color=color, alpha=alpha)
+    ax.bar(x, y, color=color, alpha=alpha, label=label)
     if ymax is not None:
         ax.set_ylim(ymax=ymax)
     ax.set(xlim=(0 - 0.5, n - 0.5))
@@ -83,6 +84,10 @@ def plot_fock(
     # set x ticks
     integer_ticks(ax.xaxis, n, all=allxticks)
     ket_ticks(ax.xaxis)
+
+    # turn legend on
+    if label != '':
+        ax.legend()
 
 
 @optional_ax
