@@ -22,7 +22,6 @@ In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the
 >>> sz - 2 * I  # correct
 Array([[-1.+0.j,  0.+0.j],
        [ 0.+0.j, -3.+0.j]], dtype=complex64)
-
 >>> sz - 2  # incorrect
 Array([[-1.+0.j, -2.+0.j],
        [-2.+0.j, -3.+0.j]], dtype=complex64)
