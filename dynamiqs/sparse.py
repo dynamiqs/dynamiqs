@@ -4,13 +4,34 @@ import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import Array, ArrayLike, ScalarLike
 
-from .qarray import QArray
+from .qarray import QArray, pack_dims
 
 
 class SparseQArray(QArray):
     diags: Array
     offsets: tuple[int, ...] = eqx.field(static=True)
     dims: tuple[int, ...] = eqx.field(static=True)
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return self.diags.shape
+
+    @property
+    def ndim(self) -> int:
+        return len(self.dims)
+
+    @property
+    @pack_dims
+    def mT(self) -> SparseQArray:
+        N = self.dims[0]
+        out_diags = jnp.zeros_like(self.diags)
+        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+            start = max(0, self_offset)
+            end = min(N, N + self_offset)
+            out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
+                self_diag[start:end]
+            )
+        return SparseQArray(out_diags, -1 * self.offsets, self.dims)
 
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
