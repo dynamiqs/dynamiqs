@@ -140,7 +140,7 @@ def plot_fock_evolution(
     if logscale:
         norm = LogNorm(vmin=logvmin, vmax=1.0, clip=True)
         # stepped cmap
-        ncolors = int(jnp.log10(1 / logvmin))
+        ncolors = jnp.round(jnp.log10(1 / logvmin)).astype(int)
         clist = sample_cmap(cmap, ncolors + 2)[1:-1]  # remove extremal colors
         cmap = ListedColormap(clist)
     else:
