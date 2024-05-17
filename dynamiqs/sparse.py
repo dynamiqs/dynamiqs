@@ -191,4 +191,4 @@ def to_sparse(other: ArrayLike) -> SparseQArray:
     diagonals = jnp.array(diagonals)
     offsets = tuple(offsets)
 
-    return SparseQArray(diagonals, offsets, N)
+    return SparseQArray(diagonals, offsets, (N, N))
