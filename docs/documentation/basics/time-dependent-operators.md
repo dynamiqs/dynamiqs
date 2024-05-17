@@ -108,8 +108,8 @@ To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dyna
 
 Let's define a PWC operator:
 ```pycon
->>> times = jnp.array([0.0, 1.0, 2.0])
->>> values = jnp.array([3.0, -2.0])
+>>> times = [0.0, 1.0, 2.0]
+>>> values = [3.0, -2.0]
 >>> array = dq.sigmaz()
 >>> H = dq.pwc(times, values, array)
 >>> H
@@ -158,7 +158,7 @@ The returned object can be called at different times:
     The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
-    >>> times = jnp.array([0.0, 1.0, 2.0])
+    >>> times = [0.0, 1.0, 2.0]
     >>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
     >>> array = dq.sigmaz()
     >>> H = dq.pwc(times, values, array)
