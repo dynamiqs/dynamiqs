@@ -37,7 +37,7 @@ def plot_fock(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
-    allxticks: bool = True,
+    allxticks: bool = False,
     ymax: float | None = 1.0,
     color: str = colors['blue'],
     alpha: float = 1.0,
@@ -95,7 +95,7 @@ def plot_fock_evolution(
     logscale: bool = False,
     logvmin: float = 1e-4,
     colorbar: bool = True,
-    allyticks: bool = True,
+    allyticks: bool = False,
 ):
     """Plot the photon number population of state as a function of time.
 
