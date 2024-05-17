@@ -110,17 +110,17 @@ def plot_fock_evolution(
     Examples:
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> psi0 = dq.coherent(16, 0.0)
+        >>> psi0 = dq.coherent(n, 0.0)
         >>> H = 2.0 * (a + dq.dag(a))
         >>> tsave = np.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_fock_evolution(result.states)
+        >>> dq.plot_fock_evolution(result.states, times=tsave)
         >>> renderfig('plot_fock_evolution')
 
         ![plot_fock_evolution](/figs_code/plot_fock_evolution.png){.fig}
 
         Use the log scale option to visualise low populations:
-        >>> dq.plot_fock_evolution(result.states, logscale=True, logvmin=1e-5)
+        >>> dq.plot_fock_evolution(result.states, times=tsave, logscale=True)
         >>> renderfig('plot_fock_evolution_log')
 
         ![plot_fock_evolution_log](/figs_code/plot_fock_evolution_log.png){.fig}
