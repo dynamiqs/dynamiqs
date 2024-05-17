@@ -7,7 +7,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array
 
-__all__ = ['SparseDIA', 'to_sparse']
+__all__ = ['SparseDIA', 'to_sparse', 'to_dense']
 
 
 class SparseDIA(eqx.Module):
@@ -49,14 +49,7 @@ class SparseDIA(eqx.Module):
         return result, tuple([offset.item() for offset in unique_offsets])
 
     def to_dense(self) -> Array:
-        """Turn any set of diagonals & offsets in a full NxN matrix."""
-        N = self.diags.shape[1]
-        out = jnp.zeros((N, N))
-        for offset, diag in zip(self.offsets, self.diags):
-            start = max(0, offset)
-            end = min(N, N + offset)
-            out += jnp.diag(diag[start:end], k=offset)
-        return out
+        return to_dense(self)
 
     @functools.partial(jax.jit, static_argnums=(1,))
     def _matmul_dense(self, left_matmul: bool, other: Array) -> Array:
@@ -290,6 +283,24 @@ class SparseDIA(eqx.Module):
         return NotImplemented
 
 
+def to_dense(sparse: SparseDIA) -> Array:
+    r"""Returns the input matrix in the Dense format.
+
+    Parameters:
+        sparse: A sparse matrix, containing diagonals and their offsets.
+
+    Returns:
+        Array: A dense matrix representation of the input sparse matrix.
+    """
+    N = sparse.diags.shape[1]
+    out = jnp.zeros((N, N))
+    for offset, diag in zip(sparse.offsets, sparse.diags):
+        start = max(0, offset)
+        end = min(N, N + offset)
+        out += jnp.diag(diag[start:end], k=offset)
+    return out
+
+
 def to_sparse(other: Array) -> SparseDIA:
     r"""Returns the input matrix in the SparseDIA format.
 
@@ -304,7 +315,6 @@ def to_sparse(other: Array) -> SparseDIA:
             object.diags: Array where each row is a diagonal.
             object.offsets: tuple of integers that represents the
                             respective offsets of the diagonals
-
     """
     diagonals = []
     offsets = []
