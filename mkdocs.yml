@@ -95,6 +95,8 @@ markdown_extensions:
   - attr_list
   - footnotes
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 extra_javascript:
   - javascripts/katex.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js

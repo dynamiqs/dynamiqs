@@ -62,29 +62,30 @@ In dynamiqs, constant operators can either be defined with array-like objects or
 
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
-```python
-# Python lists
-H = [[1, 0], [0, -1]]
-
-# NumPy arrays
-import numpy as np
-H = np.array([[1, 0], [0, -1]])
-
-# JAX arrays
-import jax.numpy as jnp
-H = jnp.array([[1, 0], [0, -1]])
-
-# QuTiP Qobjs
-import qutip as qt
-H = qt.sigmaz()
-
-# dynamiqs utility function
-import dynamiqs as dq
-H = dq.sigmaz()
-
-# constant time-array
-H = dq.constant(dq.sigmaz())
-```
+=== "dynamiqs"
+    ```python
+    import dynamiqs as dq
+    H = dq.sigmaz()
+    ```
+=== "NumPy array"
+    ```python
+    import numpy as np
+    H = np.array([[1, 0], [0, -1]])
+    ```
+=== "JAX array"
+    ```python
+    import jax.numpy as jnp
+    H = jnp.array([[1, 0], [0, -1]])
+    ```
+=== "QuTiP Qobj"
+    ```python
+    import qutip as qt
+    H = qt.sigmaz()
+    ```
+=== "Python list"
+    ```python
+    H = [[1, 0], [0, -1]]
+    ```
 
 ### Piecewise constant operators
 
@@ -116,26 +117,42 @@ PWCTimeArray(shape=(2, 2), dtype=complex64)
 ```
 
 The returned object can be called at different times:
-```pycon
->>> H(-1.0)
-Array([[ 0.+0.j,  0.+0.j],
-       [ 0.+0.j, -0.+0.j]], dtype=complex64)
->>> H(0.0)
-Array([[ 3.+0.j,  0.+0.j],
-       [ 0.+0.j, -3.+0.j]], dtype=complex64)
->>> H(0.5)
-Array([[ 3.+0.j,  0.+0.j],
-       [ 0.+0.j, -3.+0.j]], dtype=complex64)
->>> H(1.0)
-Array([[-2.+0.j, -0.+0.j],
-       [-0.+0.j,  2.-0.j]], dtype=complex64)
->>> H(1.5)
-Array([[-2.+0.j, -0.+0.j],
-       [-0.+0.j,  2.-0.j]], dtype=complex64)
->>> H(2.0)
-Array([[ 0.+0.j,  0.+0.j],
-       [ 0.+0.j, -0.+0.j]], dtype=complex64)
-```
+=== "$t = -1.0$"
+    ```pycon
+    >>> H(-1.0)
+    Array([[ 0.+0.j,  0.+0.j],
+           [ 0.+0.j, -0.+0.j]], dtype=complex64)
+    ```
+=== "$t=0.0$"
+    ```pycon
+    >>> H(0.0)
+    Array([[ 3.+0.j,  0.+0.j],
+           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    ```
+=== "$t=0.5$"
+    ```pycon
+    >>> H(0.5)
+    Array([[ 3.+0.j,  0.+0.j],
+           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    ```
+=== "$t=1.0$"
+    ```pycon
+    >>> H(1.0)
+    Array([[-2.+0.j, -0.+0.j],
+           [-0.+0.j,  2.-0.j]], dtype=complex64)
+    ```
+=== "$t=1.5$"
+    ```pycon
+    >>> H(1.5)
+    Array([[-2.+0.j, -0.+0.j],
+           [-0.+0.j,  2.-0.j]], dtype=complex64)
+    ```
+=== "$t=2.0$"
+    ```pycon
+    >>> H(2.0)
+    Array([[ 0.+0.j,  0.+0.j],
+           [ 0.+0.j, -0.+0.j]], dtype=complex64)
+    ```
 
 ??? Note "Batching PWC operators"
     The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
@@ -173,14 +190,18 @@ ModulatedTimeArray(shape=(2, 2), dtype=complex64)
 ```
 
 The returned object can be called at different times:
-```pycon
->>> H(0.5)
-Array([[-0.+0.j, -1.+0.j],
-       [-1.+0.j, -0.+0.j]], dtype=complex64)
->>> H(1.0)
-Array([[0.+0.j, 1.+0.j],
-       [1.+0.j, 0.+0.j]], dtype=complex64)
-```
+=== "$t = 0.5$"
+    ```pycon
+    >>> H(0.5)
+    Array([[-0.+0.j, -1.+0.j],
+           [-1.+0.j, -0.+0.j]], dtype=complex64)
+    ```
+=== "$t=1.0$"
+    ```pycon
+    >>> H(1.0)
+    Array([[0.+0.j, 1.+0.j],
+           [1.+0.j, 0.+0.j]], dtype=complex64)
+    ```
 
 ??? Note "Batching modulated operators"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
@@ -226,14 +247,18 @@ CallableTimeArray(shape=(2, 2), dtype=float32)
 ```
 
 The returned object can be called at different times:
-```pycon
->>> H(0.5)
-Array([[0.5, 0. ],
-       [0. , 0.5]], dtype=float32)
->>> H(1.0)
-Array([[1., 0.],
-       [0., 0.]], dtype=float32)
-```
+=== "$t = 0.5$"
+    ```pycon
+    >>> H(0.5)
+    Array([[0.5, 0. ],
+           [0. , 0.5]], dtype=float32)
+    ```
+=== "$t=1.0$"
+    ```pycon
+    >>> H(1.0)
+    Array([[1., 0.],
+           [0., 0.]], dtype=float32)
+    ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
     An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
