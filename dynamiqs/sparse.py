@@ -6,6 +6,8 @@ from jaxtyping import Array, ArrayLike, ScalarLike
 
 from .qarray import QArray
 
+__all__ = ['SparseQArray', 'to_dense', 'to_sparse']
+
 
 class SparseQArray(QArray):
     diags: Array
@@ -143,3 +145,50 @@ def to_dense(sparse: SparseQArray) -> Array:
         end = min(N, N + offset)
         out += jnp.diag(diag[start:end], k=offset)
     return out
+
+
+def to_sparse(other: ArrayLike) -> SparseQArray:
+    r"""Returns the input matrix in the SparseDIA format.
+
+    This should be used when a user wants to turn a dense matrix that
+    presents sparse features in the SparseDIA custom format.
+
+    Args:
+        other: NxN matrix to turn from dense to SparseDIA format.
+
+    Returns:
+        SparseDIA object which has 2 main attributes:
+            object.diags: Array where each row is a diagonal.
+            object.offsets: tuple of integers that represents the
+                            respective offsets of the diagonals
+    """
+    diagonals = []
+    offsets = []
+
+    N = other.shape[0]
+    offset_range = 2 * N - 1
+    offset_center = offset_range // 2
+
+    if not isinstance(other, Array):
+        other = jnp.asarray(other.array)
+
+    for offset in range(-offset_center, offset_center + 1):
+        diagonal = jnp.diagonal(other, offset=offset)
+        if jnp.any(diagonal != 0):
+            if offset > 0:
+                padding = (offset, 0)
+            elif offset < 0:
+                padding = (0, -offset)
+            else:
+                padding = (0, 0)
+
+            padded_diagonal = jnp.pad(
+                diagonal, padding, mode='constant', constant_values=0
+            )
+            diagonals.append(padded_diagonal)
+            offsets.append(offset)
+
+    diagonals = jnp.array(diagonals)
+    offsets = tuple(offsets)
+
+    return SparseQArray(diagonals, offsets)
