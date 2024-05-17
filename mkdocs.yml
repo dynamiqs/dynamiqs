@@ -51,6 +51,9 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
+  - exclude:
+      glob:
+        - glossary.md
   - glightbox:
       effect: fade
       slide_effect: slide
@@ -90,7 +93,7 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.snippets:
       auto_append:
-        - includes/glossary.md
+        - docs/glossary.md
   - abbr
   - attr_list
   - footnotes
@@ -101,7 +104,7 @@ extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
 watch:
   - dynamiqs
-  - includes
+  - docs/glossary.md
 validation:
   nav:
     omitted_files: warn
