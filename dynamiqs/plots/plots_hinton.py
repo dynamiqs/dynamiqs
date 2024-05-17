@@ -152,7 +152,7 @@ def plot_hinton(
 
         ![plot_hinton_hamiltonian](/figs_code/plot_hinton_hamiltonian.png){.fig-half}
 
-        >>> cnot = jnp.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+        >>> cnot = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
