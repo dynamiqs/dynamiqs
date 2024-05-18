@@ -31,7 +31,7 @@ Batching in dynamiqs is achieved by passing arrays of Hamiltonians, initial stat
     print(f'Shape of result.states: {result.states.shape}')
     ```
 
-    ```
+    ```text title="Output"
     Shape of result.states: (20, 2, 10, 2, 1)
     ```
 
@@ -81,7 +81,8 @@ tsave = jnp.linspace(0., 1., 10)
 result = dq.sesolve(H, psi0, tsave)
 print(result.states.shape)
 ```
-```text
+
+```text title="Output"
 (3, 10, 2, 1)
 ```
 
@@ -96,7 +97,8 @@ H = deltas[:, None, None] * dq.sigmax()  # (20, 2, 2)
 result = dq.sesolve(H, psi0, tsave)
 print(result.states.shape)
 ```
-```text
+
+```text title="Output"
 (20, 10, 2, 1)
 ```
 
@@ -115,7 +117,8 @@ H = dq.sigmax()
 result = dq.sesolve(H, psis, tsave)
 print(result.states.shape)
 ```
-```text
+
+```text title="Output"
 (3, 10, 16, 1)
 ```
 
@@ -261,7 +264,7 @@ def run_unbatched():
 %timeit run_unbatched()
 ```
 
-```text
+```text title="Output"
 44.1 ms ± 2.66 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 2.59 s ± 52.8 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
