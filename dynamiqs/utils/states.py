@@ -3,7 +3,6 @@ from __future__ import annotations
 from math import prod
 
 import jax.numpy as jnp
-import numpy as np
 from jax import Array
 from jax.typing import ArrayLike
 
@@ -91,17 +90,19 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
         )
 
     # compute all kets
-    number = number.swapaxes(0, -1)  # (len(dim), ...)
-    batch_shape = number.shape[1:]
-    kets = jnp.zeros((*batch_shape, prod(dim), 1), dtype=cdtype())
-    indices = jnp.zeros(batch_shape, dtype=jnp.int32)
-    for d, ns in zip(dim, number):
-        indices = d * indices + ns
+    _vectorized_fock = jnp.vectorize(_fock, signature='(ndim),(ndim)->(prod_ndim,1)')
+    return _vectorized_fock(dim, number)
 
-    for batch_idx, index in np.ndenumerate(indices):
-        kets = kets.at[(*batch_idx, index, 0)].set(1.0)
 
-    return kets
+def _fock(dim: Array, number: Array) -> Array:
+    # return the tensor product of Fock states |n0> x |n1> x ... x |nf> where dim has
+    # shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
+    # this is the unbatched version of fock()
+    idx = 0
+    for d, n in zip(dim, number):
+        idx = d * idx + n
+    ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
+    return ket.at[idx].set(1.0)
 
 
 def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
