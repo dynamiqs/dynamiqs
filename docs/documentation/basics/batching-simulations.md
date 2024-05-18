@@ -28,7 +28,7 @@ Batching in dynamiqs is achieved by passing arrays of Hamiltonians, initial stat
     result = dq.sesolve(H, psis, tsave)
 
     # the computed states are stored in a batched array of kets
-    print(f"Shape of result.states: {result.states.shape}")
+    print(f'Shape of result.states: {result.states.shape}')
     ```
 
     ```
