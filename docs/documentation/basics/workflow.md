@@ -34,7 +34,7 @@ print(f"State of type {type(psi0)} and shape {psi0.shape}.")
 print(f"Hamiltonian of type {type(H)} and shape {H.shape}.")
 ```
 
-```text
+```text title="Output"
 State of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 1).
 Hamiltonian of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 2).
 ```
@@ -75,7 +75,7 @@ print(f"{[attr for attr in dir(result) if not attr.startswith('__')]}\n")
 print(result)
 ```
 
-```text
+```text title="Output"
 `result` is of type <class 'dynamiqs.result.SEResult'>.
 `result` has the following attributes:
 ['Esave', '_abc_impl', 'expects', 'gradient', 'options', 'solver', 'states', 'to_numpy', 'to_qutip', 'tsave', 'ysave']
