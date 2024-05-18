@@ -130,7 +130,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
     return kets
 
 
-def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
+def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
     r"""Returns the density matrix of a Fock state or the density matrix of a tensor
     product of Fock states.
 
@@ -183,12 +183,12 @@ def fock_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
     return todm(fock(dim, number))
 
 
-def basis(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
+def basis(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
     """Alias of [`dq.fock()`][dynamiqs.fock]."""
     return fock(dim, number)
 
 
-def basis_dm(dim: int | tuple[int, ...], number: int | tuple[int, ...]) -> Array:
+def basis_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
     """Alias of [`dq.fock_dm()`][dynamiqs.fock_dm]."""
     return fock_dm(dim, number)
 
