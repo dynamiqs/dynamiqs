@@ -56,7 +56,7 @@ def smesolve(
     $0\leq\eta_k\leq1$ ($\eta_k=0$ for purely dissipative loss channels) and
     $\dd W_k(t)$ are independent Wiener processes.
 
-    Notes:
+    Note-: Diffusive vs. jump SME
         In quantum optics the _diffusive_ SME corresponds to homodyne or heterodyne
         detection schemes, as opposed to the _jump_ SME which corresponds to photon
         counting schemes. No solver for the jump SME is provided yet, if this is needed
@@ -68,7 +68,7 @@ def smesolve(
         \dd y_k(t) =\sqrt{\eta_k} \tr{(L_k(t) + L_k(t)^\dag) \rho(t)} \dt + \dd W_k(t).
     $$
 
-    Notes:
+    Note-: Signal normalisation
         Sometimes the signals are defined with a different but equivalent normalisation
         $\dd y_k'(t) = \dd y_k(t)/(2\sqrt{\eta_k})$.
 
@@ -82,19 +82,20 @@ def smesolve(
     defines `len(tmeas) - 1` intervals. By default, `tmeas = tsave`, so the signals
     are averaged between the times at which the states are saved.
 
-    Quote: Time-dependent Hamiltonian or jump operators
+    Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
         to time-arrays using [`dq.constant()`][dynamiqs.constant],
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See
-        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        [`dq.timecallable()`][dynamiqs.timecallable]. See the
+        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
 
-    Quote: Running multiple simulations concurrently
+    Note-: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
         matrix `rho0` can be batched to solve multiple SMEs concurrently. All other
         arguments are common to every batch. See the
-        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for
         more details.
 
     Args:

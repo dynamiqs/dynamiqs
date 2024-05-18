@@ -14,10 +14,10 @@ Documentation is available on our website, <https://www.dynamiqs.org>; see the [
 
 The main features of **dynamiqs** are:
 
-- Running simulations on **GPUs** with high-performance
-- Executing many simulations **concurrently** by batching over Hamiltonians, initial states or jump operators
-- Computing **gradients** of arbitrary functions with respect to arbitrary parameters of the system
-- Full **compatibility** with the [JAX](https://jax.readthedocs.io/en/latest/index.html) ecosystem with a [QuTiP](https://qutip.org/)-like API
+- Running simulations on **CPUs** and **GPUs** with high-performance.
+- Executing many simulations **concurrently** by batching over Hamiltonians, initial states or jump operators.
+- Computing **gradients** of arbitrary functions with respect to arbitrary parameters of the system.
+- Full **compatibility** with the [JAX](https://jax.readthedocs.io/en/latest/index.html) ecosystem with a [QuTiP](https://qutip.org/)-like API.
 
 We hope that this library will prove useful to the community for e.g. simulation of large quantum systems, gradient-based parameter estimation or quantum optimal control. The library is designed for large-scale problems, but also runs efficiently on CPUs for smaller problems.
 

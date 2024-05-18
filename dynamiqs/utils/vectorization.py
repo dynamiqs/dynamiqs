@@ -220,7 +220,7 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
         \right).
     $$
 
-    Notes:
+    Note:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
