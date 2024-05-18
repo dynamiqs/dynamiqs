@@ -62,32 +62,33 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
         >>> dq.fock((3, 2), number).shape
         (4, 6, 1)
     """
-    # check if dim is an integer or tuple of integers
     dim = jnp.asarray(dim)
-    dim = dim[None] if dim.ndim == 0 else dim
-    check_type_int(dim, 'dim')
-    if not dim.ndim == 1:
-        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
-
-    # check if number is an integer array-like object
     number = jnp.asarray(number)
-    number = number[None] if number.ndim == 0 else number
-    number = number[..., None] if len(dim) == 1 and number.shape[-1] != 1 else number
+    check_type_int(dim, 'dim')
     check_type_int(number, 'number')
 
-    # check number and dim shapes match
-    if dim.shape[-1] != number.shape[-1]:
+    # check if dim is a single value or a tuple
+    if dim.ndim > 1:
+        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
+
+    # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
+    if dim.ndim == 0:
+        dim = dim[None]
+        number = number[..., None]
+
+    # check if number has shape (..., len(ndim))
+    if number.shape[-1] != dim.shape[-1]:
         raise ValueError(
-            'Arguments `number` and `dim` must have compatible shapes, but got'
-            f' dim.shape={dim.shape}, and number.shape={number.shape}.'
+            'Argument `number` must have shape `(...)` or `(..., len(dim))`, but'
+            f' has shape number.shape={number.shape}.'
         )
 
-    # check if all numbers are within [0, dim)
-    for i, d in enumerate(dim):
-        if jnp.any(jnp.logical_or(number[..., i] < 0, number[..., i] >= d)):
-            raise ValueError(
-                'Fock state number must be in the range [0, dim) for each mode.'
-            )
+    # check if 0 <= number[..., i] < dim[i] for all i
+    if jnp.any(dim - number <= 0):
+        raise ValueError(
+            'Argument `number` must be in the range [0, dim[i]) for each mode i:'
+            ' 0 <= number[..., i] < dim[i].'
+        )
 
     # compute all kets
     number = number.swapaxes(0, -1)  # (len(dim), ...)
@@ -210,22 +211,24 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         >>> dq.coherent((4, 6), alpha).shape
         (2, 24, 1)
     """
-    # check if dim is an integer or tuple of integers
     dim = jnp.asarray(dim)
-    dim = dim[None] if dim.ndim == 0 else dim
-    if not jnp.issubdtype(dim.dtype, jnp.integer) and not dim.ndim == 1:
+    alpha = jnp.asarray(alpha)
+    check_type_int(dim, 'dim')
+
+    # check if dim is a single value or a tuple
+    if dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
-    # convert alpha to an array-like object of shape (..., len(dim))
-    alpha = jnp.asarray(alpha)
-    alpha = alpha[None] if alpha.ndim == 0 else alpha
-    alpha = alpha[..., None] if len(dim) == 1 and alpha.shape[-1] != 1 else alpha
+    # if dim is an integer, convert shapes dim: () -> (1,) and alpha: (...) -> (..., 1)
+    if dim.ndim == 0:
+        dim = dim[None]
+        alpha = alpha[..., None]
 
-    # check alpha and dim shapes match
-    if dim.shape[-1] != alpha.shape[-1]:
+    # check if alpha has shape (..., len(ndim))
+    if alpha.shape[-1] != dim.shape[-1]:
         raise ValueError(
-            'Arguments `alpha` and `dim` must have compatible shapes, but got'
-            f' dim.shape={dim.shape}, and alpha.shape={alpha.shape}.'
+            'Argument `alpha` must have shape `(...)` or `(..., len(dim))`, but'
+            f' has shape alpha.shape={alpha.shape}.'
         )
 
     # compute all kets
