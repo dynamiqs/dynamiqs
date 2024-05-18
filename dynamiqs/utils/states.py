@@ -7,6 +7,7 @@ import numpy as np
 from jax import Array
 from jax.typing import ArrayLike
 
+from .._checks import check_type_int
 from .._utils import cdtype
 from .operators import displace
 from .utils import tensor, todm
@@ -64,15 +65,15 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
     # check if dim is an integer or tuple of integers
     dim = jnp.asarray(dim)
     dim = dim[None] if dim.ndim == 0 else dim
-    if not jnp.issubdtype(dim.dtype, jnp.integer) and not dim.ndim == 1:
+    check_type_int(dim, 'dim')
+    if not dim.ndim == 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # check if number is an integer array-like object
     number = jnp.asarray(number)
     number = number[None] if number.ndim == 0 else number
     number = number[..., None] if len(dim) == 1 and number.shape[-1] != 1 else number
-    if not jnp.issubdtype(number.dtype, jnp.integer):
-        raise ValueError('Argument `number` must be an integer array-like object.')
+    check_type_int(number, 'number')
 
     # check number and dim shapes match
     if dim.shape[-1] != number.shape[-1]:
