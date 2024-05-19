@@ -7,6 +7,7 @@ from typing import Iterable
 
 __all__ = [
     "format_pulse_param",
+    "format_pulse_params",
     "flat",
     "raised_cosine_envelope",
     "raised_cosine_drag_envelope",
@@ -21,17 +22,27 @@ def format_pulse_param(parameter: float | ArrayLike) -> ArrayLike:
     return jnp.atleast_1d(parameter)
 
 
+def format_pulse_params(parameters: Iterable[float | ArrayLike]) -> list[ArrayLike]:
+    # Transforms N parameters into unsqueezed shape (len(param), 1, ..., 1) for explicit
+    # vectorization. Keep the sequential order of the parameters.
+    parameters = [format_pulse_param(param) for param in parameters]
+    N_params = len(parameters)
+    return [
+        jnp.expand_dims(param, list(range(0, idx)) + list(range(idx + 1, N_params)))
+        for idx, param in enumerate(parameters)
+    ]
+
+
+def _flat(t: float | Array, /, pad_times: Array, hold_times: Array) -> Array:
+    nonzero_times = (t > pad_times) & (t <= pad_times + hold_times)
+    return jnp.where(nonzero_times, 1, 0)
+
+
 def flat(
     t: float | Array, /, pad_times: float | Array, hold_times: float | Array
 ) -> Array:
-    t = format_pulse_param(t)
-    pad_times = format_pulse_param(pad_times)
-    hold_times = format_pulse_param(hold_times)
-    t = t.reshape(len(t), 1, 1)
-    pad_times = pad_times.reshape(1, len(pad_times), 1)
-    hold_times = hold_times.reshape(1, 1, len(hold_times))
-    nonzero_times = (t > pad_times) & (t <= pad_times + hold_times)
-    return jnp.squeeze(jnp.where(nonzero_times, 1, 0))
+    t, pad_times, hold_times = format_pulse_params([t, pad_times, hold_times])
+    return jnp.squeeze(_flat(t, pad_times=pad_times, hold_times=hold_times))
 
 
 def _raised_cosine_envelope(
@@ -41,7 +52,7 @@ def _raised_cosine_envelope(
     carrier_freqs: Array,
     carrier_phases: Array,
 ) -> Array:
-    return jnp.squeeze(
+    return (
         (1 - jnp.cos(2 * jnp.pi / gate_times * t))
         / 2
         * jnp.cos(carrier_freqs * t + carrier_phases)
@@ -77,25 +88,39 @@ def raised_cosine_envelope(
             len(carrier_phases)?
         )
     """
-    t = format_pulse_param(t)
-    gate_times = format_pulse_param(gate_times)
-    carrier_freqs = format_pulse_param(carrier_freqs)
-    carrier_phases = format_pulse_param(carrier_phases)
-    t = t.reshape(len(t), 1, 1, 1)
-    gate_times = gate_times.reshape(1, len(gate_times), 1, 1)
-    carrier_freqs = carrier_freqs.reshape(1, 1, len(carrier_freqs), 1)
-    carrier_phases = carrier_phases.reshape(1, 1, 1, len(carrier_phases))
-    # return jnp.squeeze(
-    #     (1 - jnp.cos(2 * jnp.pi / gate_times * t))
-    #     / 2
-    #     * jnp.cos(carrier_freqs * t + carrier_phases)
-    # )
-    return _raised_cosine_envelope(
-        t,
-        gate_times=gate_times,
-        carrier_freqs=carrier_freqs,
-        carrier_phases=carrier_phases,
+    t, gate_times, carrier_freqs, carrier_phases = format_pulse_params(
+        [t, gate_times, carrier_freqs, carrier_phases]
     )
+    return jnp.squeeze(
+        _raised_cosine_envelope(
+            t,
+            gate_times=gate_times,
+            carrier_freqs=carrier_freqs,
+            carrier_phases=carrier_phases,
+        )
+    )
+
+
+def _raised_cosine_drag_envelope(
+    t: float | Array,
+    /,
+    gate_times: Array,
+    carrier_freqs: Array,
+    carrier_phases: Array,
+    drag_params: Array,
+) -> Array:
+    in_phase_envelope = (
+        (1 - jnp.cos(2 * jnp.pi / gate_times * t))
+        / 2
+        * jnp.cos(carrier_freqs * t + carrier_phases)
+    )
+    quadrature_envelope = (
+        drag_params
+        * jnp.sin(2 * jnp.pi / gate_times * t)
+        * (jnp.pi / gate_times)
+        * jnp.sin(carrier_freqs * t + carrier_phases)
+    )
+    return in_phase_envelope + quadrature_envelope
 
 
 def raised_cosine_drag_envelope(
@@ -130,25 +155,15 @@ def raised_cosine_drag_envelope(
             len(drag_params)?
         )
     """
-    t = format_pulse_param(t)
-    gate_times = format_pulse_param(gate_times)
-    carrier_freqs = format_pulse_param(carrier_freqs)
-    carrier_phases = format_pulse_param(carrier_phases)
-    drag_params = format_pulse_param(drag_params)
-    t = t.reshape(len(t), 1, 1, 1, 1)
-    gate_times = gate_times.reshape(1, len(gate_times), 1, 1, 1)
-    carrier_freqs = carrier_freqs.reshape(1, 1, len(carrier_freqs), 1, 1)
-    carrier_phases = carrier_phases.reshape(1, 1, 1, len(carrier_phases), 1)
-    drag_params = drag_params.reshape(1, 1, 1, 1, len(drag_params))
-    in_phase_envelope = (
-        (1 - jnp.cos(2 * jnp.pi / gate_times * t))
-        / 2
-        * jnp.cos(carrier_freqs * t + carrier_phases)
+    t, gate_times, carrier_freqs, carrier_phases, drag_params = format_pulse_params(
+        [t, gate_times, carrier_freqs, carrier_phases, drag_params]
     )
-    quadrature_envelope = (
-        drag_params
-        * jnp.sin(2 * jnp.pi / gate_times * t)
-        * (jnp.pi / gate_times)
-        * jnp.sin(carrier_freqs * t + carrier_phases)
+    return jnp.squeeze(
+        _raised_cosine_drag_envelope(
+            t,
+            gate_times=gate_times,
+            carrier_freqs=carrier_freqs,
+            carrier_phases=carrier_phases,
+            drag_params=drag_params,
+        )
     )
-    return jnp.squeeze(in_phase_envelope + quadrature_envelope)
