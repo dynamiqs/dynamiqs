@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import diffrax as dx
 import equinox as eqx
 
@@ -10,8 +12,9 @@ __all__ = [
 
 
 class AbstractProgressMeter(eqx.Module):
+    @abstractmethod
     def to_diffrax(self) -> dx.AbstractProgressMeter:
-        return dx.AbstractProgressMeter()
+        pass
 
 
 class NoProgressMeter(AbstractProgressMeter):
