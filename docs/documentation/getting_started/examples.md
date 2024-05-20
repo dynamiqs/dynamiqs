@@ -1,6 +1,6 @@
 # Basic examples
 
-First time using dynamiqs? Below are a few basic examples to help you get started. For a more complete set of tutorials, check out our [Tutorials](../tutorials/index.md) section.
+First time using dynamiqs? Below are a few basic examples to help you get started.
 
 ## Simulate a lossy quantum harmonic oscillator
 
@@ -28,7 +28,7 @@ result = dq.mesolve(H, jump_ops, psi0, tsave)
 print(result)
 ```
 
-```text
+```text title="Output"
 ==== MEResult ====
 Solver  : Tsit5
 States  : Array complex64 (101, 128, 128) | 12.62 Mb
@@ -72,7 +72,7 @@ print(f'Gradient w.r.t. kappa={grads[1]:.2f}')
 print(f'Gradient w.r.t. alpha={grads[2]:.2f}')
 ```
 
-```text
+```text title="Output"
 Gradient w.r.t. omega=0.00
 Gradient w.r.t. kappa=-0.90
 Gradient w.r.t. alpha=1.81

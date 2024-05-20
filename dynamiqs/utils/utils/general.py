@@ -6,7 +6,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jax.scipy.linalg import expm
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
@@ -15,10 +14,11 @@ from ..._utils import on_cpu
 __all__ = [
     'dag',
     'powm',
+    'expm',
     'cosm',
     'sinm',
-    'tracemm',
     'trace',
+    'tracemm',
     'ptrace',
     'tensor',
     'expect',
@@ -51,7 +51,7 @@ def dag(x: ArrayLike) -> Array:
     Returns:
        _(array of shape (..., n, m))_ Adjoint of `x`.
 
-    Notes:
+    Note-: Equivalent JAX syntax
         This function is equivalent to `x.mT.conj()`.
 
     Examples:
@@ -76,7 +76,7 @@ def powm(x: ArrayLike, n: int) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Matrix power of `x`.
 
-    Notes:
+    Note-: Equivalent JAX syntax
         This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
@@ -89,6 +89,32 @@ def powm(x: ArrayLike, n: int) -> Array:
     return jnp.linalg.matrix_power(x, n)
 
 
+def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
+    """Returns the matrix exponential of an array.
+
+    The exponential is computed using the scaling-and-squaring approximation method.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Square matrix.
+        max_squarings: Number of squarings.
+
+    Returns:
+        _(array of shape (..., n, n))_ Matrix exponential of `x`.
+
+    Note-: Equivalent JAX syntax
+        This function is equivalent to
+        `jnp.scipy.linalg.expm(x, max_squarings=max_squarings)`.
+
+    Examples:
+        >>> dq.expm(dq.sigmaz())
+        Array([[2.718+0.j, 0.   +0.j],
+               [0.   +0.j, 0.368+0.j]], dtype=complex64)
+    """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    return jax.scipy.linalg.expm(x, max_squarings=max_squarings)
+
+
 def cosm(x: ArrayLike) -> Array:
     r"""Returns the cosine of an array.
 
@@ -98,7 +124,7 @@ def cosm(x: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Cosine of `x`.
 
-    Notes:
+    Note:
         This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
         to compute the cosine of a matrix $A$:
         $$
@@ -124,7 +150,7 @@ def sinm(x: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Sine of `x`.
 
-    Notes:
+    Note:
         This function uses [`jax.scipy.linalg.expm()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html)
         to compute the sine of a matrix $A$:
         $$
@@ -139,43 +165,6 @@ def sinm(x: ArrayLike) -> Array:
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return -0.5j * (expm(1j * x) - expm(-1j * x))
-
-
-def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
-    r"""Return $\tr{xy}$ (using a fast implementation).
-
-    The trace is computed as `(x * y).sum()` where `*` is the element-wise product.
-    For two matrices A and B:
-
-    $$
-        \tr{AB} = \sum_i (AB)_{ii}
-                = \sum_i \sum_j A_{ij} B_{ji}
-                = \sum_i \sum_j A_{ij} (B^\intercal)_{ij}
-                = \sum_i \sum_j (A * B^\intercal)_{ij}
-    $$
-
-    Notes:
-        The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
-        instead of $\mathcal{O}(n^3)$ with the naïve formula.
-
-    Args:
-        x _(array_like of shape (..., n, n))_: Array.
-        y _(array_like of shape (..., n, n))_: Array.
-
-    Returns:
-        _(array of shape (...))_ Trace of `x @ y`.
-
-    Examples:
-        >>> x = jnp.ones((3, 3))
-        >>> y = jnp.ones((3, 3))
-        >>> dq.tracemm(x, y)
-        Array(9., dtype=float32)
-    """
-    x = jnp.asarray(x)
-    y = jnp.asarray(y)
-    check_shape(x, 'x', '(..., n, n)')
-    check_shape(y, 'y', '(..., n, n)')
-    return (x * y.mT).sum((-2, -1))
 
 
 def trace(x: ArrayLike) -> Array:
@@ -195,6 +184,43 @@ def trace(x: ArrayLike) -> Array:
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return x.trace(axis1=-1, axis2=-2)
+
+
+def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
+    r"""Return the trace of a matrix multiplication using a fast implementation.
+
+    The trace is computed as `sum(x * y.T)` where `*` is the element-wise product,
+    instead of `trace(x @ y)` where `@` is the matrix product. Indeed, we have:
+
+    $$
+        \tr{xy} = \sum_i (xy)_{ii}
+                = \sum_{i,j} x_{ij} y_{ji}
+                = \sum_{i,j} x_{ij} (y^\intercal)_{ij}
+                = \sum_{i,j} (x * y^\intercal)_{ij}
+    $$
+
+    Note:
+        The resulting time complexity for $n\times n$ matrices is $\mathcal{O}(n^2)$
+        instead of $\mathcal{O}(n^3)$ with the naive formula.
+
+    Args:
+        x _(array_like of shape (..., n, n))_: Array.
+        y _(array_like of shape (..., n, n))_: Array.
+
+    Returns:
+        _(array of shape (...))_ Trace of `x @ y`.
+
+    Examples:
+        >>> x = jnp.ones((3, 3))
+        >>> y = jnp.ones((3, 3))
+        >>> dq.tracemm(x, y)
+        Array(9., dtype=float32)
+    """
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    check_shape(x, 'x', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, n)')
+    return (x * y.mT).sum((-2, -1))
 
 
 def _hdim(x: ArrayLike) -> int:
@@ -221,7 +247,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         ValueError: If `dims` does not match the shape of `x`, or if `keep` is
             incompatible with `dims`.
 
-    Notes:
+    Note:
         The returned object is always a density matrix, even if the input is a ket or a
         bra.
 
@@ -494,7 +520,7 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     (arbitrary operators) and $\mathcal{D}[L]$ is the Lindblad dissipation superoperator
     (see [`dq.dissipator()`][dynamiqs.dissipator]).
 
-    Notes:
+    Note:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
@@ -908,7 +934,9 @@ def _sqrtm_gpu(x: Array) -> Array:
     w, v = jnp.linalg.eigh(x)
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
-    return v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()
+    # numerical trick to compute 'v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()' faster with
+    # broadcasting
+    return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
 
 
 def entropy_vn(x: ArrayLike) -> Array:

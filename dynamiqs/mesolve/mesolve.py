@@ -12,15 +12,16 @@ from .._checks import check_shape, check_times
 from .._utils import cdtype
 from ..core._utils import (
     _astimearray,
-    compute_vmap,
+    _cartesian_vectorize,
+    _flat_vectorize,
+    catch_xla_runtime_error,
     get_solver_class,
-    is_timearray_batched,
 )
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
-from ..time_array import TimeArray
+from ..time_array import Shape, TimeArray
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
@@ -55,30 +56,30 @@ def mesolve(
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
     collection of jump operators at time $t$.
 
-    Quote: Time-dependent Hamiltonian or jump operators
+    Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
         to time-arrays using [`dq.constant()`][dynamiqs.constant],
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See
-        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        [`dq.timecallable()`][dynamiqs.timecallable]. See the
+        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
 
-    Quote: Running multiple simulations concurrently
+    Note-: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
         matrix `rho0` can be batched to solve multiple master equations concurrently.
         All other arguments are common to every batch. See the
-        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
-        more details.
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (nH?, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
-            jump operators.
-        rho0 _(array-like of shape (nrho0?, n, 1) or (nrho0?, n, n))_: Initial state.
+        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
+            List of jump operators.
+        rho0 _(array-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
+        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
@@ -96,7 +97,7 @@ def mesolve(
             master  equation integration. Use the attributes `states` and `expects`
             to access saved quantities, more details in
             [`dq.MEResult`][dynamiqs.MEResult].
-    """
+    """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
@@ -111,13 +112,16 @@ def mesolve(
     # === convert rho0 to density matrix
     rho0 = todm(rho0)
 
-    # we implement the jitted vmap in another function to pre-convert QuTiP objects
-    # (which are not JIT-compatible) to JAX arrays
-    return _vmap_mesolve(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    return _vectorized_mesolve(
+        H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options
+    )
 
 
+@catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
-def _vmap_mesolve(
+def _vectorized_mesolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
     rho0: Array,
@@ -129,22 +133,40 @@ def _vmap_mesolve(
 ) -> MEResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
-    is_batched = (
-        is_timearray_batched(H),
-        [is_timearray_batched(jump_op) for jump_op in jump_ops],
-        rho0.ndim > 2,
-        False,
-        False,
-        False,
-        False,
-        False,
-    )
+    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
+    # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
     out_axes = MEResult(None, None, None, None, 0, 0)
 
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(
+            H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
+        )
+
+        def broadcast(x: TimeArray) -> TimeArray:
+            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
+
+        H = broadcast(H)
+        jump_ops = list(map(broadcast, jump_ops))
+        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
+
+    n_batch = (
+        H.in_axes,
+        [jump_op.in_axes for jump_op in jump_ops],
+        Shape(rho0.shape[:-2]),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+        Shape(),
+    )
+
     # compute vectorized function with given batching strategy
-    f = compute_vmap(_mesolve, options.cartesian_batching, is_batched, out_axes)
+    if options.cartesian_batching:
+        f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
+    else:
+        f = _flat_vectorize(_mesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
@@ -186,19 +208,22 @@ def _mesolve(
 def _check_mesolve_args(
     H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
-    check_shape(H, 'H', '(..., n, n)')
+    # === check H shape
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
+    # === check jump_ops shape
     for i, L in enumerate(jump_ops):
-        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(jump_ops) == 0:
-        logging.warn(
+        logging.warning(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
-    check_shape(rho0, 'rho0', '(?, n, 1)', '(?, n, n)', subs={'?': 'nrho0?'})
+    # === check rho0 shape
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})

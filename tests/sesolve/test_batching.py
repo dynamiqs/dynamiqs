@@ -5,46 +5,50 @@ import pytest
 import dynamiqs as dq
 
 
-@pytest.mark.parametrize('cartesian_batching', [True, False])
-def test_batching(cartesian_batching):
-    n = 8
+def rand_sesolve_args(n, nH, npsi0, nEs):
+    kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
+    H = dq.rand_herm(kH, (*nH, n, n))
+    psi0 = dq.rand_ket(kpsi0, (*npsi0, n, 1))
+    Es = dq.rand_complex(kEs, (nEs, n, n))
+    return H, psi0, Es
+
+
+@pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
+@pytest.mark.parametrize('npsi0', [(), (5,)])
+def test_cartesian_batching(nH, npsi0):
+    n = 2
+    nEs = 7
     ntsave = 11
-    nH = 3
-    npsi0 = 4 if cartesian_batching else nH
-    nEs = 5
 
-    options = dq.options.Options(cartesian_batching=cartesian_batching)
-
-    # create random objects
-    k1, k2, k3 = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.rand_herm(k1, (nH, n, n))
-    exp_ops = dq.rand_complex(k2, (nEs, n, n))
-    psi0 = dq.rand_ket(k3, (npsi0, n, 1))
+    # run sesolve
+    H, psi0, Es = rand_sesolve_args(n, nH, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
+    result = dq.sesolve(H, psi0, tsave, exp_ops=Es)
 
-    # no batching
-    result = dq.sesolve(H[0], psi0[0], tsave, exp_ops=exp_ops, options=options)
-    assert result.states.shape == (ntsave, n, 1)
-    assert result.expects.shape == (nEs, ntsave)
+    # check result shape
+    assert result.states.shape == (*nH, *npsi0, ntsave, n, 1)
+    assert result.expects.shape == (*nH, *npsi0, nEs, ntsave)
 
-    # H batched
-    result = dq.sesolve(H, psi0[0], tsave, exp_ops=exp_ops, options=options)
-    assert result.states.shape == (nH, ntsave, n, 1)
-    assert result.expects.shape == (nH, nEs, ntsave)
 
-    # psi0 batched
-    result = dq.sesolve(H[0], psi0, tsave, exp_ops=exp_ops, options=options)
-    assert result.states.shape == (npsi0, ntsave, n, 1)
-    assert result.expects.shape == (npsi0, nEs, ntsave)
+# H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
+# compatible broadcastable shape
+@pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
+def test_flat_batching(npsi0):
+    n = 2
+    nH = (3, 4)
+    nEs = 6
+    ntsave = 11
 
-    # H and psi0 batched
-    result = dq.sesolve(H, psi0, tsave, exp_ops=exp_ops, options=options)
-    if cartesian_batching:
-        assert result.states.shape == (nH, npsi0, ntsave, n, 1)
-        assert result.expects.shape == (nH, npsi0, nEs, ntsave)
-    else:
-        assert result.states.shape == (nH, ntsave, n, 1)
-        assert result.expects.shape == (nH, nEs, ntsave)
+    # run sesolve
+    H, psi0, Es = rand_sesolve_args(n, nH, npsi0, nEs)
+    tsave = jnp.linspace(0, 0.01, ntsave)
+    options = dq.Options(cartesian_batching=False)
+    result = dq.sesolve(H, psi0, tsave, exp_ops=Es, options=options)
+
+    # check result shape
+    broadcast_shape = jnp.broadcast_shapes(nH, npsi0)
+    assert result.states.shape == (*broadcast_shape, ntsave, n, 1)
+    assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
 def test_timearray_batching():
@@ -73,7 +77,7 @@ def test_timearray_batching():
 
     # == modulated time array
     deltas = jnp.linspace(0.0, 1.0, 4)
-    H_mod = dq.modulated(lambda t, delta: jnp.cos(t * delta), H0, args=(deltas,))
+    H_mod = dq.modulated(lambda t: jnp.cos(t * deltas), H0)
 
     result = dq.sesolve(H_mod, psi0, times)
     assert result.states.shape == (4, 11, 4, 1)
@@ -82,11 +86,30 @@ def test_timearray_batching():
 
     # == callable time array
     omegas = jnp.linspace(0.0, 1.0, 5)
-    H_cal = dq.timecallable(
-        lambda t, omega: jnp.cos(t * omega[..., None, None]) * H0, args=(omegas,)
-    )
+    H_cal = dq.timecallable(lambda t: jnp.cos(t * omegas[..., None, None]) * H0)
 
     result = dq.sesolve(H_cal, psi0, times)
     assert result.states.shape == (5, 11, 4, 1)
     result = dq.sesolve(H0 + H_cal, psi0, times)
     assert result.states.shape == (5, 11, 4, 1)
+
+
+def test_sum_batching():
+    a = dq.destroy(3)
+    omegas = jnp.linspace(0, 2 * jnp.pi, 5)
+
+    # some batched constant Hamiltonian of shape (5, 3, 3)
+    H0 = omegas[..., None, None] * dq.dag(a) @ a
+
+    # some batched modulated Hamiltonian of shape (5, 3, 3)
+    H1 = dq.modulated(lambda t: jnp.cos(omegas * t), a + dq.dag(a))
+
+    # sum of both Hamiltonians, also of shape (5, 3, 3)
+    H = H0 + H1
+
+    # run sesolve
+    psi0 = dq.fock(3, 0)
+    tsave = jnp.linspace(0, 2 * jnp.pi, 100)
+    result = dq.sesolve(H, psi0, tsave)
+
+    assert result.states.shape == (5, 100, 3, 1)
