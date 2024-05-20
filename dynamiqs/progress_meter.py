@@ -15,15 +15,15 @@ class AbstractProgressMeter(eqx.Module):
 
 
 class NoProgressMeter(AbstractProgressMeter):
-    def into_diffrax(self) -> dx.NoProgressMeter:
+    def into_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.NoProgressMeter()
 
 
 class TextProgressMeter(AbstractProgressMeter):
-    def into_diffrax(self) -> dx.TextProgressMeter:
+    def into_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.TextProgressMeter()
 
 
 class TqdmProgressMeter(AbstractProgressMeter):
-    def into_diffrax(self) -> dx.TqdmProgressMeter:
+    def into_diffrax(self) -> dx.AbstractProgressMeter:
         return dx.TqdmProgressMeter()
