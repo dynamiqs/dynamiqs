@@ -53,7 +53,7 @@ class DiffraxSolver(BaseSolver):
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
                 max_steps=self.max_steps,
-                progress_meter=self.options.progress_bar.into_diffrax(),
+                progress_meter=self.options.progress_bar.to_diffrax(),
             )
 
         # === collect and return results
