@@ -17,6 +17,7 @@ dependencies = [
     "imageio",
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
+    "tqdm",
 ]
 
 [build-system]
