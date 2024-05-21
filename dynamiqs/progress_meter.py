@@ -32,7 +32,7 @@ class _DiffraxTqdmProgressMeter(dx.TqdmProgressMeter):
     @staticmethod
     def _init_bar() -> tqdm.tqdm:
         bar_format = (
-            '|{bar}| {percentage:4.1f}% ◆ total {elapsed} ◆ remaining {remaining}'
+            '|{bar}| {percentage:5.1f}% ◆ total {elapsed} ◆ remaining {remaining}'
         )
         return tqdm.tqdm(total=100, unit='%', bar_format=bar_format)
 
