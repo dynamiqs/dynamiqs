@@ -275,19 +275,20 @@ def one_jump_only(
     rand: float,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
     key_1, key_2 = jax.random.split(key)
     before_jump_result = _jump_trajs(
-        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
     )
     new_t0 = before_jump_result.final_time
     new_psi0 = before_jump_result.final_state
     new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
     # don't allow another jump
     after_jump_result = _jump_trajs(
-        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, gradient, options
+        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, root_finder, gradient, options
     )
     result = interpolate_states_and_expects(
         tsave, new_tsave, before_jump_result, after_jump_result, new_t0, options
@@ -304,6 +305,7 @@ def loop_over_jumps(
     rand: float,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
@@ -330,6 +332,7 @@ def loop_over_jumps(
             new_rand,
             exp_ops,
             solver,
+            root_finder,
             gradient,
             options,
         )
@@ -341,7 +344,7 @@ def loop_over_jumps(
     # solve until the first jump occurs. Enter the while loop for additional jumps
     key_1, key_2 = jax.random.split(key)
     initial_result = _jump_trajs(
-        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
     )
 
     final_result, _ = while_loop(
@@ -363,6 +366,7 @@ def _jump_trajs(
     rand: float,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
@@ -371,7 +375,7 @@ def _jump_trajs(
     rand_key, sample_key = jax.random.split(key)
     # solve until jump or tsave[-1]
     res_before_jump = _single_traj(
-        H, jump_ops, psi0, tsave, rand, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, rand, exp_ops, solver, root_finder, gradient, options
     )
     t_jump = res_before_jump.final_time
     psi_before_jump = res_before_jump.final_state

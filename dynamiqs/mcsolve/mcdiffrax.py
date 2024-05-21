@@ -32,9 +32,8 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
 
     @property
     def event(self):
-        def norm_below_rand(state, **kwargs):
-            psi = state.y
-            prob = jnp.abs(jnp.einsum("id,id->", jnp.conj(psi), psi))
+        def norm_below_rand(t, y, *args, **kwargs):
+            prob = jnp.abs(jnp.einsum("id,id->", jnp.conj(y), y))
             return prob - self.rand
         return dx.Event(norm_below_rand, self.root_finder)
 
