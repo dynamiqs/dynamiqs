@@ -13,6 +13,27 @@ from .filters import prepare_gaussian_params, gaussian_filter_closure_func
 __all__ = ["flat_top_gaussian", "raised_cosine", "raised_cosine_gaussian_filtered"]
 
 
+def gaussian_filtered_func(
+    pixel_times: Array,
+    pixel_amplitudes: Array,
+    gaussian_std: float | Array,
+):
+    pixel_times, pixel_sizes, timescale = prepare_gaussian_params(
+        pixel_times=pixel_times,
+        pixel_amplitudes=pixel_amplitudes,
+        gaussian_std=gaussian_std,
+    )
+
+    # Shape (batch_filter?, ...all_amplitudes_dim)
+    return Partial(
+        gaussian_filter_closure_func,
+        pixel_times=pixel_times,
+        pixel_sizes=pixel_sizes,
+        pixel_amplitudes=pixel_amplitudes,
+        timescale=timescale,
+    )
+
+
 def flat_top_gaussian(
     pixel_times: Array,
     hold_amplitudes: float | Array,
@@ -35,19 +56,11 @@ def flat_top_gaussian(
         * _flat(pixel_times_expanded, pad_times=pad_times, hold_times=hold_times)
     )
 
-    pixel_times, pixel_sizes, timescale = prepare_gaussian_params(
+    # Shape (batch_filter?, batch_pad?, batch_hold?, batch_amp?)
+    return gaussian_filtered_func(
         pixel_times=pixel_times,
         pixel_amplitudes=pixel_amplitudes,
         gaussian_std=gaussian_std,
-    )
-
-    # Shape (batch_filter?, batch_pad?, batch_hold?, batch_amp?)
-    return Partial(
-        gaussian_filter_closure_func,
-        pixel_times=pixel_times,
-        pixel_sizes=pixel_sizes,
-        pixel_amplitudes=pixel_amplitudes,
-        timescale=timescale,
     )
 
 
@@ -112,17 +125,10 @@ def raised_cosine_gaussian_filtered(
             carrier_phases=carrier_phases,
         )
     )
-    # Shape (Npix, time_dim?, freq_dim?, phase_dim?, amp_dim)
-    pixel_times, pixel_sizes, timescale = prepare_gaussian_params(
+
+    # Shape (batch_filter?, batch_amp?, batch_time?, batch_freq?, batch_phase?)
+    return gaussian_filtered_func(
         pixel_times=pixel_times,
         pixel_amplitudes=pixel_amplitudes,
         gaussian_std=gaussian_std,
-    )
-    # Shape (batch_filter?, batch_amp?, batch_time?, batch_freq?, batch_phase?)
-    return Partial(
-        gaussian_filter_closure_func,
-        pixel_times=pixel_times,
-        pixel_sizes=pixel_sizes,
-        pixel_amplitudes=pixel_amplitudes,
-        timescale=timescale,
     )

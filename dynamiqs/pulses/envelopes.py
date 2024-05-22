@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike
 from typing import Iterable
 
 __all__ = [
@@ -13,18 +12,27 @@ __all__ = [
     "raised_cosine_drag_envelope",
 ]
 
+FloatOrComplex = float | complex
+PulseParamType = float | complex | Array
 
-def format_pulse_param(parameter: float | ArrayLike) -> ArrayLike:
-    if type(parameter) is not float and len(parameter.shape) > 1:
+
+def format_pulse_param(parameter: PulseParamType) -> Array:
+    if (
+        type(parameter) is not float
+        and type(parameter) is not complex
+        and len(parameter.shape) > 1
+    ):
         raise ValueError(
             f"Parameter needs to be a 1D array or a float, but got shape {parameter.shape}"
         )
     return jnp.atleast_1d(parameter)
 
 
-def format_pulse_params(parameters: Iterable[float | ArrayLike]) -> list[ArrayLike]:
+def format_pulse_params(parameters: Iterable[PulseParamType]) -> list[Array]:
     # Transforms N parameters into unsqueezed shape (len(param), 1, ..., 1) for explicit
     # vectorization. Keep the sequential order of the parameters.
+    # E.g. with parameters = [jnp.arange(3), 1.2, jnp.arange(7)], the return formated
+    # parameters will be shapes (3, 1, 1), (1, 1, 1), and (1, 1, 7), respectively.
     parameters = [format_pulse_param(param) for param in parameters]
     N_params = len(parameters)
     return [
@@ -39,7 +47,7 @@ def _flat(t: float | Array, /, pad_times: Array, hold_times: Array) -> Array:
 
 
 def flat(
-    t: float | Array, /, pad_times: float | Array, hold_times: float | Array
+    t: float | Array, /, pad_times: PulseParamType, hold_times: PulseParamType
 ) -> Array:
     t, pad_times, hold_times = format_pulse_params([t, pad_times, hold_times])
     return jnp.squeeze(_flat(t, pad_times=pad_times, hold_times=hold_times))
@@ -62,9 +70,9 @@ def _raised_cosine_envelope(
 def raised_cosine_envelope(
     t: float | Array,
     /,
-    gate_times: float | Array,
-    carrier_freqs: float | Array,
-    carrier_phases: float | Array = 0.0,
+    gate_times: PulseParamType,
+    carrier_freqs: PulseParamType,
+    carrier_phases: PulseParamType = 0.0,
 ) -> Array:
     """
     raised_cosine_pulse A simple cosine envelope that starts and end at 0 amplitude at t=0.0
@@ -126,10 +134,10 @@ def _raised_cosine_drag_envelope(
 def raised_cosine_drag_envelope(
     t: float | Array,
     /,
-    gate_times: float | Array,
-    carrier_freqs: float | Array,
-    carrier_phases: float | Array = 0.0,
-    drag_params: float | Array = 0.0,
+    gate_times: PulseParamType,
+    carrier_freqs: PulseParamType,
+    carrier_phases: PulseParamType = 0.0,
+    drag_params: PulseParamType = 0.0,
 ) -> Array:
     """
     raised_cosine_drag A simple cosine envelope with "quadrature" DRAG pulse that starts
