@@ -31,7 +31,7 @@ class SparseQArray(QArray):
             out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
                 self_diag[start:end]
             )
-        return SparseQArray(out_diags, -1 * self.offsets, self.dims)
+        return SparseQArray(out_diags, tuple(-x for x in self.offsets), self.dims)
 
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
