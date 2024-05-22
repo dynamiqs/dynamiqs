@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 from jaxtyping import Array, ArrayLike, ScalarLike
 
@@ -32,6 +33,22 @@ class SparseQArray(QArray):
                 self_diag[start:end]
             )
         return SparseQArray(out_diags, tuple(-x for x in self.offsets), self.dims)
+
+    @pack_dims
+    def conj(self) -> SparseQArray:
+        return SparseQArray(self.diags.conj(), self.offset, self.dims)
+
+    @pack_dims
+    def dag(self) -> SparseQArray:
+        return self.mT.conj()
+
+    def trace(self) -> ScalarLike:
+        main_diag_mask = jnp.asarray(self.offsets) == 0
+        return jax.lax.cond(
+            jnp.any(main_diag_mask),
+            lambda: jnp.sum(self.diags[jnp.argmax(main_diag_mask)]).astype(jnp.float32),
+            lambda: jnp.array(0.0, dtype=jnp.float32),
+        )
 
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
