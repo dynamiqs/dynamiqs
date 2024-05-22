@@ -7,6 +7,7 @@ from .envelopes import (
     format_pulse_params,
     _flat,
     _raised_cosine_envelope,
+    PulseParamType,
 )
 from .filters import prepare_gaussian_params, gaussian_filter_closure_func
 
@@ -16,7 +17,7 @@ __all__ = ["flat_top_gaussian", "raised_cosine", "raised_cosine_gaussian_filtere
 def gaussian_filtered_func(
     pixel_times: Array,
     pixel_amplitudes: Array,
-    gaussian_std: float | Array,
+    gaussian_std: PulseParamType,
 ):
     pixel_times, pixel_sizes, timescale = prepare_gaussian_params(
         pixel_times=pixel_times,
@@ -36,10 +37,10 @@ def gaussian_filtered_func(
 
 def flat_top_gaussian(
     pixel_times: Array,
-    hold_amplitudes: float | Array,
-    pad_times: float | Array,
-    hold_times: float | Array,
-    gaussian_std: float | Array,
+    hold_amplitudes: PulseParamType,
+    pad_times: PulseParamType,
+    hold_times: PulseParamType,
+    gaussian_std: PulseParamType,
 ) -> callable[[float], Array]:
     # hold_amplitudes = format_pulse_param(hold_amplitudes)
     # pixel_amplitudes = flat(pixel_times, pad_times=pad_times, hold_times=hold_times)
@@ -65,10 +66,10 @@ def flat_top_gaussian(
 
 
 def raised_cosine(
-    amplitudes: float | Array,
-    gate_times: float | Array,
-    carrier_freqs: float | Array,
-    carrier_phases: float | Array,
+    amplitudes: PulseParamType,
+    gate_times: PulseParamType,
+    carrier_freqs: PulseParamType,
+    carrier_phases: PulseParamType,
 ) -> callable[[float], Array]:
     amplitudes, gate_times, carrier_freqs, carrier_phases = format_pulse_params(
         (amplitudes, gate_times, carrier_freqs, carrier_phases)
@@ -104,11 +105,11 @@ def raised_cosine(
 
 def raised_cosine_gaussian_filtered(
     pixel_times: Array,
-    amplitudes: float | Array,
-    gate_times: float | Array,
-    carrier_freqs: float | Array,
-    carrier_phases: float | Array,
-    gaussian_std: float | Array,
+    amplitudes: PulseParamType,
+    gate_times: PulseParamType,
+    carrier_freqs: PulseParamType,
+    carrier_phases: PulseParamType,
+    gaussian_std: PulseParamType,
 ) -> callable[[float], Array]:
     pixel_times_expanded, amplitudes, gate_times, carrier_freqs, carrier_phases = (
         format_pulse_params(
