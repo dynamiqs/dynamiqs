@@ -13,6 +13,7 @@ from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, obj_type_str
+from .sparse import SparseQArray
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -30,6 +31,9 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O_0$ for any time $t$.
     """
+    if isinstance(array, SparseQArray):
+        return ConstantTimeArray(array)
+
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(..., n, n)')
     return ConstantTimeArray(array)
@@ -77,6 +81,9 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
             f' `{values.shape}.'
         )
 
+    if isinstance(array, SparseQArray):
+        return PWCTimeArray(times, values, array)
+
     # array
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
@@ -107,6 +114,10 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
         raise TypeError(
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
+
+    if isinstance(array, SparseQArray):
+        f = BatchedCallable(f)
+        return ModulatedTimeArray(f, array)
 
     # array
     array = jnp.asarray(array, dtype=cdtype())

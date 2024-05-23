@@ -6,6 +6,8 @@ from jaxtyping import Array, ArrayLike, ScalarLike
 
 from .qarray import QArray
 
+__all__ = ['SparseQArray']
+
 
 class SparseQArray(QArray):
     diags: Array
