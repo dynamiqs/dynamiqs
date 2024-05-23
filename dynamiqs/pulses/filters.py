@@ -6,7 +6,7 @@ from jax.scipy.special import erf
 
 from .envelopes import PulseParamType
 
-__all__ = ["prepare_gaussian_params", "gaussian_filter_closure_func"]
+__all__ = ['prepare_gaussian_params', 'gaussian_filter_closure_func']
 
 
 def prepare_gaussian_params(
@@ -16,7 +16,7 @@ def prepare_gaussian_params(
 
     Since the Gaussian filter is taking a derivative in the discrete time dimension `p`,
     the `pixel_times` and `pixel_sizes` need to be of shape `p+1`. This function self-
-    consistently does this expansion. Additionnaly, it adds a dimension `s` for batching
+    consistently does this expansion. Additionally, it adds a dimension `s` for batching
     over the Gaussian widths.
 
     Args:
@@ -87,5 +87,5 @@ def gaussian_filter_closure_func(
         erf((t - (pixel_times - pixel_sizes / 2)) * timescale), axis=0
     )
     erfs = erfs / jnp.sum(erfs, axis=0)
-    output_amps = jnp.einsum("ps,p...->s...", erfs, pixel_amplitudes)
+    output_amps = jnp.einsum('ps,p...->s...', erfs, pixel_amplitudes)
     return jnp.squeeze(output_amps)

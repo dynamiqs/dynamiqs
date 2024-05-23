@@ -6,11 +6,11 @@ import jax.numpy as jnp
 from jax import Array
 
 __all__ = [
-    "format_pulse_param",
-    "format_pulse_params",
-    "flat",
-    "raised_cosine_envelope",
-    "raised_cosine_drag_envelope",
+    'format_pulse_param',
+    'format_pulse_params',
+    'flat_envelope',
+    'raised_cosine_envelope',
+    'raised_cosine_drag_envelope',
 ]
 
 FloatOrComplex = float | complex
@@ -34,8 +34,8 @@ def format_pulse_param(parameter: PulseParamType) -> Array:
     """
     if isinstance(parameter, FloatOrComplex) and len(parameter.shape) > 1:
         raise ValueError(
-            "Parameter needs to be a 1D array or a float, but got shape "
-            f"{parameter.shape}."
+            'Parameter needs to be a 1D array or a float, but got shape '
+            f'{parameter.shape}.'
         )
     return jnp.atleast_1d(parameter)
 

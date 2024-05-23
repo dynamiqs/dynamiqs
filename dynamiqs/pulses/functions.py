@@ -12,7 +12,7 @@ from .envelopes import (
 )
 from .filters import gaussian_filter_closure_func, prepare_gaussian_params
 
-__all__ = ["flat_top_gaussian", "raised_cosine", "raised_cosine_gaussian_filtered"]
+__all__ = ['flat_top_gaussian', 'raised_cosine', 'raised_cosine_gaussian_filtered']
 
 
 def gaussian_filtered_func(
