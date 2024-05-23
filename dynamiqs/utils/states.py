@@ -19,8 +19,9 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array_like of shape (...) or (..., len(dim)))_: Number of particles
-            for each mode, of integer type.
+        number _(array_like of shape (...) or (..., len(dim)))_: Fock state number
+            for each mode, of integer type. If `dim` is a tuple, the last dimension of
+            `number` should match the length of `dim`.
 
     Returns:
         _(array of shape (..., prod(dim), 1))_ Ket of the Fock state or tensor product
@@ -33,7 +34,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                [1.+0.j],
                [0.+0.j]], dtype=complex64)
 
-        Batched single-mode Fock states $\{\ket{0}, \ket{1}, \ket{2}\}$:
+        Batched single-mode Fock states $\{\ket{0}\!, \ket{1}\!, \ket{2}\}$:
         >>> dq.fock(3, [0, 1, 2])
         Array([[[1.+0.j],
                 [0.+0.j],
@@ -47,7 +48,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                 [0.+0.j],
                 [1.+0.j]]], dtype=complex64)
 
-        Multi-mode Fock state $\ket{10}$:
+        Multi-mode Fock state $\ket{1,0}$:
         >>> dq.fock((3, 2), (1, 0))
         Array([[0.+0.j],
                [0.+0.j],
@@ -56,7 +57,8 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                [0.+0.j],
                [0.+0.j]], dtype=complex64)
 
-        Batched multi-mode Fock states $\{\ket{00}, \ket{01}, \ket{11}, \ket{20}\}$:
+        Batched multi-mode Fock states $\{\ket{0,0}\!, \ket{0,1}\!, \ket{1,1}\!,
+        \ket{2,0}\}$:
         >>> number = [(0, 0), (0, 1), (1, 1), (2, 0)]
         >>> dq.fock((3, 2), number).shape
         (4, 6, 1)
@@ -110,8 +112,9 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array_like of shape (...) or (..., len(dim)))_: Number of particles
-            for each mode, of integer type.
+        number _(array_like of shape (...) or (..., len(dim)))_: Fock state number
+            for each mode, of integer type. If `dim` is a tuple, the last dimension of
+            `number` should match the length of `dim`.
 
     Returns:
         _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the Fock state
@@ -124,7 +127,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                [0.+0.j, 1.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
 
-        Batched single-mode Fock states $\{\ket{0}, \ket{1}, \ket{2}\}$:
+        Batched single-mode Fock states $\{\ket{0}\!, \ket{1}\!, \ket{2}\}$:
         >>> dq.fock_dm(3, [0, 1, 2])
         Array([[[1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j],
@@ -138,7 +141,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                 [0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1.+0.j]]], dtype=complex64)
 
-        Multi-mode Fock state $\ket{10}$:
+        Multi-mode Fock state $\ket{1,0}$:
         >>> dq.fock_dm((3, 2), (1, 0))
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -147,7 +150,8 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
 
-        Batched multi-mode Fock states $\{\ket{00}, \ket{01}, \ket{11}, \ket{20}\}$:
+        Batched multi-mode Fock states $\{\ket{0,0}\!, \ket{0,1}\!, \ket{1,1}\!,
+        \ket{2,0}\}$:
         >>> number = [(0, 0), (0, 1), (1, 1), (2, 0)]
         >>> dq.fock_dm((3, 2), number).shape
         (4, 6, 6)
@@ -171,21 +175,22 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     Args:
         dim: Hilbert space dimension of each mode.
         alpha _(array_like of shape (...) or (..., len(dim)))_: Coherent state
-            amplitude for each mode.
+            amplitude for each mode. If `dim` is a tuple, the last dimension of
+            `number` should match the length of `dim`.
 
     Returns:
         _(array of shape (..., prod(dim), 1))_ Ket of the coherent state or tensor
             product of coherent states.
 
     Examples:
-        Single-mode coherent state $\ket{0.5}$:
+        Single-mode coherent state $\ket{\alpha}$:
         >>> dq.coherent(4, 0.5)
         Array([[0.882+0.j],
                [0.441+0.j],
                [0.156+0.j],
                [0.047+0.j]], dtype=complex64)
 
-        Batched single-mode coherent states $\{\ket{0.5}, \ket{0.5i}\}$:
+        Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
         >>> dq.coherent(4, [0.5, 0.5j])
         Array([[[ 0.882+0.j   ],
                 [ 0.441+0.j   ],
@@ -197,7 +202,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
                 [-0.156+0.j   ],
                 [ 0.   -0.047j]]], dtype=complex64)
 
-        Multi-mode coherent state $\ket{0.5}\otimes\ket{0.5i}$:
+        Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
         >>> dq.coherent((2, 3), (0.5, 0.5j))
         Array([[ 0.775+0.j   ],
                [ 0.   +0.386j],
@@ -206,8 +211,8 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
                [ 0.   +0.211j],
                [-0.08 +0.j   ]], dtype=complex64)
 
-        Batched multi-mode coherent states $\{\ket{0.5}\otimes\ket{0.5i},
-        \ket{0.5i}\otimes\ket{0.5}\}$:
+        Batched multi-mode coherent states $\{\ket{\alpha_0}\otimes\ket{\beta_0}\!,
+        \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
         >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
         >>> dq.coherent((4, 6), alpha).shape
         (2, 24, 1)
@@ -245,30 +250,31 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     Args:
         dim: Hilbert space dimension of each mode.
         alpha _(array_like of shape (...) or (..., len(dim)))_: Coherent state
-            amplitude for each mode.
+            amplitude for each mode. If `dim` is a tuple, the last dimension of
+            `number` should match the length of `dim`.
 
     Returns:
         _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
             state or tensor product of coherent states.
 
     Examples:
-        Single-mode coherent state $\ket{0.5}$:
+        Single-mode coherent state $\ket{\alpha}$:
         >>> dq.coherent_dm(4, 0.5)
         Array([[0.779+0.j, 0.389+0.j, 0.137+0.j, 0.042+0.j],
                [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
                [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
                [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]], dtype=complex64)
 
-        Batched single-mode coherent states $\{\ket{0.5}, \ket{0.5i}\}$:
+        Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
         >>> dq.coherent_dm(4, [0.5, 0.5j]).shape
         (2, 4, 4)
 
-        Multi-mode coherent state $\ket{0.5}\otimes\ket{0.5i}$:
+        Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
         >>> dq.coherent_dm((2, 3), (0.5, 0.5j)).shape
         (6, 6)
 
-        Batched multi-mode coherent states $\{\ket{0.5}\otimes\ket{0.5i},
-        \ket{0.5i}\otimes\ket{0.5}\}$:
+        Batched multi-mode coherent states $\{\ket{\alpha_0}\otimes\ket{\beta_0}\!,
+        \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
         >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
         >>> dq.coherent_dm((4, 6), alpha).shape
         (2, 24, 24)
