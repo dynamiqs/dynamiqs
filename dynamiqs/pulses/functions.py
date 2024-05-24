@@ -36,7 +36,7 @@ def gaussian_filtered_func(
             arbitrary time `t`. The array returned by this function has shape
             (gaussian_std?, *pixel_amplitudes.shape).
     """
-    pixel_times, pixel_sizes, timescale = prepare_gaussian_params(
+    mid_pixel_times, timescale = prepare_gaussian_params(
         pixel_times=pixel_times,
         pixel_amplitudes=pixel_amplitudes,
         gaussian_std=gaussian_std,
@@ -45,8 +45,7 @@ def gaussian_filtered_func(
     # Shape (batch_filter?, ...all_amplitudes_dim)
     return Partial(
         gaussian_filter_closure_func,
-        pixel_times=pixel_times,
-        pixel_sizes=pixel_sizes,
+        mid_pixel_times=mid_pixel_times,
         pixel_amplitudes=pixel_amplitudes,
         timescale=timescale,
     )

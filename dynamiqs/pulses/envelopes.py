@@ -32,7 +32,7 @@ def format_pulse_param(parameter: PulseParamType) -> Array:
     Returns:
         _(array of shape (n))_ Formatted pulse parameter, where `n = len(parameter)`.
     """
-    if isinstance(parameter, FloatOrComplex) and len(parameter.shape) > 1:
+    if not isinstance(parameter, FloatOrComplex) and len(parameter.shape) > 1:
         raise ValueError(
             'Parameter needs to be a 1D array or a float, but got shape '
             f'{parameter.shape}.'
