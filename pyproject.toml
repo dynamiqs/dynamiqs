@@ -88,7 +88,7 @@ convention = "google"
 
 [tool.codespell]
 skip = ".git,*.ipynb"
-ignore-words-list = "ket, braket"
+ignore-words-list = "ket, braket, SME"
 
 # === taskipy tasks definition ===
 
