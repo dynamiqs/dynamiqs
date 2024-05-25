@@ -176,7 +176,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         dim: Hilbert space dimension of each mode.
         alpha _(array_like of shape (...) or (..., len(dim)))_: Coherent state
             amplitude for each mode. If `dim` is a tuple, the last dimension of
-            `number` should match the length of `dim`.
+            `alpha` should match the length of `dim`.
 
     Returns:
         _(array of shape (..., prod(dim), 1))_ Ket of the coherent state or tensor
@@ -251,7 +251,7 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         dim: Hilbert space dimension of each mode.
         alpha _(array_like of shape (...) or (..., len(dim)))_: Coherent state
             amplitude for each mode. If `dim` is a tuple, the last dimension of
-            `number` should match the length of `dim`.
+            `alpha` should match the length of `dim`.
 
     Returns:
         _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
