@@ -25,8 +25,8 @@ class Options(eqx.Module):
         progress_bar: Progress bar indicating how far the solve has progressed. Defaults
             to a [tqdm](https://github.com/tqdm/tqdm) progress bar. Pass `None` for no
             output, see other options in [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-            If gradients are computed, the progress bar only displays the advancement
-            for the forward pass.
+            If gradients are computed, the progress bar only displays during the forward
+            pass.
         t0: Initial time. If `None`, defaults to the first time in `tsave`.
         save_extra _(function, optional)_: A function with signature
             `f(Array) -> PyTree` that takes a state as input and returns a PyTree.
