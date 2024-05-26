@@ -34,6 +34,12 @@ __all__ = [
 def eye(*dims: int) -> Array:
     r"""Returns the identity operator.
 
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
+    identity operator of the composite Hilbert space of dimension $n=\prod n_k$:
+    $$
+        I_n = I_{n_1}\otimes\dots\otimes I_{n_N}.
+    $$
+
     Args:
         *dims: Hilbert space dimension of each subsystem.
 
@@ -63,6 +69,12 @@ def eye(*dims: int) -> Array:
 
 def zero(*dims: int) -> Array:
     r"""Returns the null operator.
+
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
+    null operator of the composite Hilbert space of dimension $n=\prod n_k$:
+    $$
+        0_n = 0_{n_1}\otimes\dots\otimes 0_{n_N}.
+    $$
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
@@ -94,6 +106,14 @@ def zero(*dims: int) -> Array:
 def destroy(*dims: int) -> Array | tuple[Array, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
+
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns a
+    tuple with _len(dims)_ operators $(A_1,\dots,A_N)$, where $A_k$ is the annihilation
+    operator acting on the $k$-th subsystem within the composite Hilbert space of
+    dimension $n=\prod n_k$:
+    $$
+        A_k = I_{n_1} \otimes\dots\otimes a_{n_k} \otimes\dots\otimes I_{n_N}.
+    $$
 
     Args:
         *dims: Hilbert space dimension of each mode.
@@ -146,6 +166,14 @@ def _destroy_single(dim: int) -> Array:
 def create(*dims: int) -> Array | tuple[Array, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
+
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns a
+    tuple with _len(dims)_ operators $(A_1^\dag,\dots,A_N^\dag)$, where $A_k^\dag$ is
+    the creation operator acting on the $k$-th subsystem within the composite Hilbert
+    space of dimension $n=\prod n_k$:
+    $$
+        A_k^\dag = I_{n_1} \otimes\dots\otimes a_{n_k}^\dag \otimes\dots\otimes I_{n_N}.
+    $$
 
     Args:
         *dims: Hilbert space dimension of each mode.
