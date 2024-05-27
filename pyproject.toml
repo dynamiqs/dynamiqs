@@ -12,11 +12,12 @@ dependencies = [
     "jax",
     "jaxlib",
     "jaxtyping",
-    "diffrax>=0.5.0",  # for complex support
+    "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
     "imageio",
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
+    "tqdm",
 ]
 
 [build-system]
@@ -38,6 +39,7 @@ dev = [
     "mkdocs-section-index",
     "mkdocs-simple-hooks",
     "mkdocs-glightbox",
+    "mkdocs-exclude",
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
 ]
@@ -87,7 +89,7 @@ convention = "google"
 
 [tool.codespell]
 skip = ".git,*.ipynb"
-ignore-words-list = "ket, braket"
+ignore-words-list = "ket, braket, SME"
 
 # === taskipy tasks definition ===
 
@@ -112,11 +114,11 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs-code/*.png && pytest dynamiqs'
+cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs_code/*.png && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs-docs/*.png && pytest docs'
+cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs_docs/*.png && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]

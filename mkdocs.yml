@@ -3,6 +3,7 @@ site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
 repo_name: dynamiqs
+docs_dir: docs
 theme:
   name: material
   custom_dir: docs/overrides
@@ -30,7 +31,7 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
     # palette toggle for dark mode
-    - media: "(prefers-color-scheme: dark)"
+    - media: "(prefers-color-scheme: light)"
       scheme: slate
       primary: custom
       accent: custom
@@ -50,6 +51,9 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
+  - exclude:
+      glob:
+        - glossary.md
   - glightbox:
       effect: fade
       slide_effect: slide
@@ -89,18 +93,23 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.snippets:
       auto_append:
-        - includes/glossary.md
+        - docs/glossary.md
   - abbr
   - attr_list
   - footnotes
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 extra_javascript:
   - javascripts/katex.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
 watch:
   - dynamiqs
-  - includes
+  - docs/glossary.md
 validation:
   nav:
     omitted_files: warn
@@ -112,24 +121,20 @@ validation:
     unrecognized_links: warn
 nav:
   - Home: index.md
-  - Getting started:
-      - getting_started/index.md
-      - What is dynamiqs?: getting_started/whatis.md
-      - Installation: getting_started/installation.md
-      - Basic examples: getting_started/examples.md
-      - The sharp bits 🔪: getting_started/sharp-bits.md
-      - Contributing: getting_started/contributing.md
-      - Let's talk!: getting_started/lets-talk.md
-      - Citing dynamiqs: getting_started/citing.md
-  - Tutorials:
-      - tutorials/index.md
-      - Basics:
-          - Workflow in dynamiqs: tutorials/workflow.md
-          - tutorials/time-dependent-operators.md
-          - tutorials/closed-system.md
-          - tutorials/open-system.md
-          - tutorials/batching-simulations.md
-          - tutorials/computing-gradients.md
+  - Documentation:
+      - documentation/index.md
+      - Getting started:
+          - What is dynamiqs?: documentation/getting_started/whatis.md
+          - Installation: documentation/getting_started/installation.md
+          - Basic examples: documentation/getting_started/examples.md
+          - The sharp bits 🔪: documentation/getting_started/sharp-bits.md
+      - Learn the basics:
+          - Workflow in dynamiqs: documentation/basics/workflow.md
+          - Time-dependent operators: documentation/basics/time-dependent-operators.md
+          - Closed systems: documentation/basics/closed-systems.md
+          - Open systems: documentation/basics/open-systems.md
+          - Batching simulations: documentation/basics/batching-simulations.md
+          - Computing gradients: documentation/basics/computing-gradients.md
   - Python API:
       - python_api/index.md
       - Quantum solvers:
@@ -187,6 +192,7 @@ nav:
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
               - powm: python_api/utils/utils/powm.md
+              - expm: python_api/utils/utils/expm.md
               - cosm: python_api/utils/utils/cosm.md
               - sinm: python_api/utils/utils/sinm.md
               - trace: python_api/utils/utils/trace.md
@@ -245,3 +251,8 @@ nav:
               - plot_hinton: python_api/plots/plot_hinton.md
               - gridplot: python_api/plots/gridplot.md
               - mplstyle: python_api/plots/mplstyle.md
+  - Community:
+      - community/index.md
+      - Contributing: community/contributing.md
+      - Let's talk!: community/lets-talk.md
+      - Citing dynamiqs: community/citing.md

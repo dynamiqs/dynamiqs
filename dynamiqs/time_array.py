@@ -46,11 +46,11 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
     $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant array.
 
-    Notes:
-        The argument `times` argument must be sorted in ascending order, but does not
+    Note:
+        The argument `times` must be sorted in ascending order, but does not
         need to be evenly spaced.
 
-    Notes:
+    Note:
         If the returned time-array is called for a time $t$ which does not belong to any
         time intervals, the returned array is null.
 
@@ -168,7 +168,7 @@ class TimeArray(eqx.Module):
             dimensions.
         ndim _(int)_: Number of dimensions.
 
-    Notes:
+    Note: Arithmetic operation support
         Time-arrays support elementary operations:
 
         - negation (`__neg__`),
@@ -278,9 +278,6 @@ class TimeArray(eqx.Module):
 
     def __repr__(self) -> str:
         return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
-
-    def __str__(self) -> str:
-        return self.__repr__()
 
 
 class ConstantTimeArray(TimeArray):

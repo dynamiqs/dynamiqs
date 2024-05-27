@@ -95,14 +95,14 @@ You can create the state and Hamiltonian using any array-like object. Let's take
 import jax.numpy as jnp
 import dynamiqs as dq
 
-psi0 = jnp.array([[1], [0]])      # initial state
-H = jnp.array([[-1, 0], [0, 1]])  # Hamiltonian
+psi0 = [[1], [0]]                 # initial state
+H = [[-1, 0], [0, 1]]             # Hamiltonian
 tsave = jnp.linspace(0, 1.0, 11)  # saving times
 res = dq.sesolve(H, psi0, tsave)  # run the simulation
+print(res.states[-1])             # print the final state
 ```
 
-```pycon
->>> res.states[-1]                # print the final state
+```text title="Output"
 Array([[0.54+0.841j],
        [0.  +0.j   ]], dtype=complex64)
 ```

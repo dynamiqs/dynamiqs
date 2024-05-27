@@ -16,27 +16,31 @@ import jax.numpy as jnp
 
 ## The [`TimeArray`][dynamiqs.TimeArray] type
 
-In dynamiqs, time-dependent operators are defined with [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time:
-
+In dynamiqs, time-dependent operators are defined with [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
+$$
+    H_x(t)=\cos(2\pi t)\sigma_x
+$$
 ```pycon
->>> H = dq.timecallable(lambda t: t * dq.sigmaz()) # initialize a callable time-array
->>> H(2.0)
-Array([[ 2.+0.j,  0.+0.j],
-       [ 0.+0.j, -2.+0.j]], dtype=complex64)
->>> H.shape
+>>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+>>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-array
+>>> Hx(1.0)
+Array([[0.+0.j, 1.+0.j],
+       [1.+0.j, 0.+0.j]], dtype=complex64)
+>>> Hx.shape
 (2, 2)
 ```
 
-Time-arrays support common arithmetic operations, for example we can add two time-arrays together:
-
+Time-arrays support common arithmetic operations with scalars, regular arrays and other time-array objects. For example to define the Hamiltonian
+$$
+    H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
+$$
 ```pycon
->>> H0 = dq.constant(dq.sigmaz()) # constant time-array
->>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
->>> H1 = dq.modulated(f, dq.sigmax()) # modulated time-array
->>> H = H0 + H1
+>>> g = lambda t: jnp.sin(jnp.pi * t)
+>>> Hy = dq.modulated(g, dq.sigmay())
+>>> H = dq.sigmaz() + 2 * Hx - Hy
 >>> H(1.0)
-Array([[ 1.+0.j,  1.+0.j],
-       [ 1.+0.j, -1.+0.j]], dtype=complex64)
+Array([[ 1.+0.j,  2.-0.j],
+       [ 2.+0.j, -1.+0.j]], dtype=complex64)
 ```
 
 Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeArray`][dynamiqs.TimeArray] API page.
@@ -53,34 +57,35 @@ for any time $t$, where $O_0$ is a constant operator.
 
 In dynamiqs, constant operators can either be defined with array-like objects or as [`TimeArray`][dynamiqs.TimeArray] objects (using the [`dq.constant()`][dynamiqs.constant] function).
 
-!!! Notes
-    Common operators are available as utility functions, see the list of available operators in the [Python API](../python_api/index.md#operators).
+!!! Note
+    Common operators are available as utility functions, see the list of available operators in the [Python API](../../python_api/index.md#operators).
 
 For instance, to define the Pauli $Z$ operator $H = \sigma_z$, you can use any of the following syntaxes:
 
-```python
-# Python lists
-H = [[1, 0], [0, -1]]
-
-# NumPy arrays
-import numpy as np
-H = np.array([[1, 0], [0, -1]])
-
-# JAX arrays
-import jax.numpy as jnp
-H = jnp.array([[1, 0], [0, -1]])
-
-# QuTiP Qobjs
-import qutip as qt
-H = qt.sigmaz()
-
-# dynamiqs utility function
-import dynamiqs as dq
-H = dq.sigmaz()
-
-# constant time-array
-H = dq.constant(dq.sigmaz())
-```
+=== "dynamiqs"
+    ```python
+    import dynamiqs as dq
+    H = dq.sigmaz()
+    ```
+=== "NumPy array"
+    ```python
+    import numpy as np
+    H = np.array([[1, 0], [0, -1]])
+    ```
+=== "JAX array"
+    ```python
+    import jax.numpy as jnp
+    H = jnp.array([[1, 0], [0, -1]])
+    ```
+=== "QuTiP Qobj"
+    ```python
+    import qutip as qt
+    H = qt.sigmaz()
+    ```
+=== "Python list"
+    ```python
+    H = [[1, 0], [0, -1]]
+    ```
 
 ### Piecewise constant operators
 
@@ -98,48 +103,62 @@ In dynamiqs, PWC operators are defined by three array-like objects:
 
 To construct a PWC operator, pass these three arguments to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
-!!! Notes
+!!! Note
     The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
 
 Let's define a PWC operator:
 ```pycon
->>> times = jnp.array([0.0, 1.0, 2.0])
->>> values = jnp.array([3.0, -2.0])
+>>> times = [0.0, 1.0, 2.0]
+>>> values = [3.0, -2.0]
 >>> array = dq.sigmaz()
 >>> H = dq.pwc(times, values, array)
->>> type(H)
-<class 'dynamiqs.time_array.PWCTimeArray'>
->>> H.shape
-(2, 2)
+>>> H
+PWCTimeArray(shape=(2, 2), dtype=complex64)
 ```
 
 The returned object can be called at different times:
-```pycon
->>> H(-1.0)
-Array([[ 0.+0.j,  0.+0.j],
-       [ 0.+0.j, -0.+0.j]], dtype=complex64)
->>> H(0.0)
-Array([[ 3.+0.j,  0.+0.j],
-       [ 0.+0.j, -3.+0.j]], dtype=complex64)
->>> H(0.5)
-Array([[ 3.+0.j,  0.+0.j],
-       [ 0.+0.j, -3.+0.j]], dtype=complex64)
->>> H(1.0)
-Array([[-2.+0.j, -0.+0.j],
-       [-0.+0.j,  2.-0.j]], dtype=complex64)
->>> H(1.5)
-Array([[-2.+0.j, -0.+0.j],
-       [-0.+0.j,  2.-0.j]], dtype=complex64)
->>> H(2.0)
-Array([[ 0.+0.j,  0.+0.j],
-       [ 0.+0.j, -0.+0.j]], dtype=complex64)
-```
+=== "$t = -1.0$"
+    ```pycon
+    >>> H(-1.0)
+    Array([[ 0.+0.j,  0.+0.j],
+           [ 0.+0.j, -0.+0.j]], dtype=complex64)
+    ```
+=== "$t=0.0$"
+    ```pycon
+    >>> H(0.0)
+    Array([[ 3.+0.j,  0.+0.j],
+           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    ```
+=== "$t=0.5$"
+    ```pycon
+    >>> H(0.5)
+    Array([[ 3.+0.j,  0.+0.j],
+           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    ```
+=== "$t=1.0$"
+    ```pycon
+    >>> H(1.0)
+    Array([[-2.+0.j, -0.+0.j],
+           [-0.+0.j,  2.-0.j]], dtype=complex64)
+    ```
+=== "$t=1.5$"
+    ```pycon
+    >>> H(1.5)
+    Array([[-2.+0.j, -0.+0.j],
+           [-0.+0.j,  2.-0.j]], dtype=complex64)
+    ```
+=== "$t=2.0$"
+    ```pycon
+    >>> H(2.0)
+    Array([[ 0.+0.j,  0.+0.j],
+           [ 0.+0.j, -0.+0.j]], dtype=complex64)
+    ```
 
-??? Notes "Batching"
+??? Note "Batching PWC operators"
     The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
-    >>> times = jnp.array([0.0, 1.0, 2.0])
+    >>> times = [0.0, 1.0, 2.0]
     >>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
     >>> array = dq.sigmaz()
     >>> H = dq.pwc(times, values, array)
@@ -162,28 +181,30 @@ In dynamiqs, modulated operators are defined by:
 
 To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
-Let's define the modulated operator $H=\cos(2\pi t)\sigma_x$:
-```python
+Let's define the modulated operator $H(t)=\cos(2\pi t)\sigma_x$:
+```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
->>> type(H)
-<class 'dynamiqs.time_array.ModulatedTimeArray'>
->>> H.shape
-(2, 2)
+>>> H
+ModulatedTimeArray(shape=(2, 2), dtype=complex64)
 ```
 
 The returned object can be called at different times:
-```pycon
->>> H(0.5)
-Array([[-0.+0.j, -1.+0.j],
-       [-1.+0.j, -0.+0.j]], dtype=complex64)
->>> H(1.0)
-Array([[0.+0.j, 1.+0.j],
-       [1.+0.j, 0.+0.j]], dtype=complex64)
-```
+=== "$t = 0.5$"
+    ```pycon
+    >>> H(0.5)
+    Array([[-0.+0.j, -1.+0.j],
+           [-1.+0.j, -0.+0.j]], dtype=complex64)
+    ```
+=== "$t=1.0$"
+    ```pycon
+    >>> H(1.0)
+    Array([[0.+0.j, 1.+0.j],
+           [1.+0.j, 0.+0.j]], dtype=complex64)
+    ```
 
-??? Notes "Batching"
-    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+??? Note "Batching modulated operators"
+    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: jnp.cos(omegas * t)
@@ -192,7 +213,7 @@ Array([[0.+0.j, 1.+0.j],
     (11, 2, 2)
     ```
 
-??? Notes "Function with additional arguments"
+??? Note "Function with additional arguments"
     To define a modulated operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
     ```pycon
     >>> import functools
@@ -217,30 +238,32 @@ In dynamiqs, arbitrary time-dependent operators are defined by:
 
 To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
 
-Let's define the arbitrary time-dependent operator $H=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
+Let's define the arbitrary time-dependent operator $H(t)=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
 ```pycon
 >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
 >>> H = dq.timecallable(f)
->>> type(H)
-<class 'dynamiqs.time_array.CallableTimeArray'>
->>> H.shape
-(2, 2)
+>>> H
+CallableTimeArray(shape=(2, 2), dtype=float32)
 ```
 
 The returned object can be called at different times:
-```pycon
->>> H(0.5)
-Array([[0.5, 0. ],
-       [0. , 0.5]], dtype=float32)
->>> H(1.0)
-Array([[1., 0.],
-       [0., 0.]], dtype=float32)
-```
+=== "$t = 0.5$"
+    ```pycon
+    >>> H(0.5)
+    Array([[0.5, 0. ],
+           [0. , 0.5]], dtype=float32)
+    ```
+=== "$t=1.0$"
+    ```pycon
+    >>> H(1.0)
+    Array([[1., 0.],
+           [0., 0.]], dtype=float32)
+    ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
     An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
-??? Notes "Batching"
+??? Note "Batching arbitrary time-dependent operators"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
@@ -250,7 +273,7 @@ Array([[1., 0.],
     (11, 2, 2)
     ```
 
-??? Notes "Function with additional arguments"
+??? Note "Function with additional arguments"
     To define an arbitrary time-dependent operator with a function that takes arguments other than time (extra `*args` and `**kwargs`), you can use [`functools.partial()`](https://docs.python.org/3/library/functools.html#functools.partial). For example:
     ```pycon
     >>> import functools

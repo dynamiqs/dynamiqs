@@ -47,20 +47,20 @@ def sesolve(
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$.
 
-    Quote: Time-dependent Hamiltonian
+    Note-: Defining a time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
         [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
         [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See
-        the [Time-dependent operators](../../tutorials/time-dependent-operators.md)
+        [`dq.timecallable()`][dynamiqs.timecallable]. See the
+        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
 
-    Quote: Running multiple simulations concurrently
+    Note-: Running multiple simulations concurrently
         Both the Hamiltonian `H` and the initial state `psi0` can be batched to
         solve multiple Schrödinger equations concurrently. All other arguments are
         common to every batch. See the
-        [Batching simulations](../../tutorials/batching-simulations.md) tutorial for
-        more details.
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
 
     Args:
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
@@ -85,7 +85,7 @@ def sesolve(
             Schrödinger equation integration. Use the attributes `states` and `expects`
             to access saved quantities, more details in
             [`dq.SEResult`][dynamiqs.SEResult].
-    """
+    """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
     psi0 = jnp.asarray(psi0, dtype=cdtype())
