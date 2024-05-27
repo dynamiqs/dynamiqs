@@ -24,8 +24,8 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
             `number` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), 1))_ Ket of the Fock state or tensor product
-            of Fock states.
+        _(array of shape (..., n, 1))_ Ket of the Fock state or tensor product of Fock
+            states, with _n = prod(dims)_.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
@@ -117,8 +117,8 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
             `number` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the Fock state
-            or tensor product of Fock states.
+        _(array of shape (..., n, n))_ Density matrix of the Fock state or tensor
+            product of Fock states, with _n = prod(dims)_.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
@@ -179,8 +179,8 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), 1))_ Ket of the coherent state or tensor
-            product of coherent states.
+        _(array of shape (..., n, 1))_ Ket of the coherent state or tensor product of
+            coherent states, with _n = prod(dims)_.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
@@ -254,8 +254,8 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
-            state or tensor product of coherent states.
+        _(array of shape (..., n, n))_ Density matrix of the coherent state or tensor
+            product of coherent states, with _n = prod(dims)_.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
