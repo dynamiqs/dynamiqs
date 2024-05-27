@@ -12,11 +12,12 @@ dependencies = [
     "jax",
     "jaxlib",
     "jaxtyping",
-    "diffrax>=0.5.0",  # for complex support
+    "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
     "imageio",
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
+    "tqdm",
 ]
 
 [build-system]
@@ -88,7 +89,7 @@ convention = "google"
 
 [tool.codespell]
 skip = ".git,*.ipynb"
-ignore-words-list = "ket, braket"
+ignore-words-list = "ket, braket, SME"
 
 # === taskipy tasks definition ===
 
