@@ -38,39 +38,37 @@ The returned states is an array with shape _(3, 4, 11, 2, 1)_, where _3_ is the 
 !!! Note
     All relevant `result` attributes are batched. For example if you specified `exp_ops`, the resulting expectation values `result.expects` will be an array with shape _(3, 4, len(exp_ops), 11)_.
 
-Importantly, when you batch simulations **they are not run one after the other in a `for` loop**. What is meant by *batching* is that instead of evolving from initial to final time a single state with shape _(2, 1)_ for each combination of argument, the whole batched state _(3, 4, 2, 1)_ is evolved **once** from initial to final time, which is much more efficient.
+Importantly, **batched simulations are not run sequentially in a `for` loop**. What is meant by *batching* is that instead of evolving from initial to final time a single state with shape _(2, 1)_ for each combination of argument, the whole batched state _(3, 4, 2, 1)_ is evolved **once** from initial to final time, which is much more efficient.
 
-## Two ways to batch
+## Batching modes
 
-There are two ways to batch simulations in **dynamiqs**.
+There are two ways to batch simulations in dynamiqs: **cartesian batching** and **flat batching**.
 
 ### Cartesian batching
 
-The simulation runs for all possible combinations of Hamiltonians, jump operators and initial states. This is the default mode in **dynamiqs**.
+The simulation runs for all possible combinations of Hamiltonians, jump operators and initial states. This is the default mode.
 
-=== "For `dq.sesolve()`"
-    The returned array has shape:
+=== "`dq.sesolve`"
+    For `dq.sesolve`, the returned array has shape:
     ```
     result.states.shape = (...H, ...psi0, ntsave, n, 1)
     ```
+    where `...x` indicates the batching shape of `x`, i.e. its shape without the last two dimensions.
 
-    !!! Example
-        For example if:
-
+    !!! Example "Example: Cartesian batching with `dq.sesolve`"
         - `H` has shape _(2, 3, n, n)_,
         - `psi0` has shape _(4, n, 1)_,
 
         then `result.states` has shape _(2, 3, 4, ntsave, n, 1)_.
 
-=== "For `dq.mesolve()`"
-    The returned array has shape:
+=== "`dq.mesolve`"
+    For `dq.mesolve`, the returned array has shape:
     ```
     result.states.shape = (...H, ...L0, ...L1,  (...), ...rho0, ntsave, n, n)
     ```
+    where `...x` indicates the batching shape of `x`, i.e. its shape without the last two dimensions.
 
-    !!! Example
-        For example if:
-
+    !!! Example "Example: Cartesian batching with `dq.mesolve`"
         - `H` has shape _(2, 3, n, n)_,
         - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
         - `rho0` has shape _(7, n, n)_,
@@ -79,57 +77,51 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 
 ### Flat batching
 
-The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting.
+The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by setting `cartesian_batching=False` in [`dq.Options`][dynamiqs.Options]. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
 
 ??? Note "What is broadcasting?"
     JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the [NumPy documentation on broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html).
 
-=== "For `dq.sesolve()`"
-    The returned array has shape:
+=== "`dq.sesolve`"
+    For `dq.sesolve`, the returned array has shape:
     ```
     result.states.shape = (..., ntsave, n, 1)
     ```
     where `... = jnp.broadcast_shapes(H, psi0)` is the broadcasted shape of all arguments.
 
-    !!! Example
-        For example if:
-
+    !!! Example "Example: Flat batching with `dq.sesolve`"
         - `H` has shape _(2, 3, n, n)_,
         - `psi0` has shape _(3, n, 1)_,
 
         then `result.states` has shape _(2, 3, ntsave, n, 1)_.
 
-=== "For `dq.mesolve()`"
-    The returned array has shape:
+=== "`dq.mesolve`"
+    For `dq.mesolve`, the returned array has shape:
     ```
     result.states.shape = (..., ntsave, n, n)
     ```
     where `... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)` is the broadcasted shape of all arguments.
 
-    !!! Example
-        For example if:
-
+    !!! Example "Example: Flat batching with `dq.mesolve`"
         - `H` has shape _(2, 3, n, n)_,
         - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
         - `rho0` has shape _(3, n, n)_,
 
         then `result.states` has shape _(2, 3, ntsave, n, n)_.
 
-Flat batching can be activated by setting `cartesian_batching=False` in the options [`dq.Options`][dynamiqs.Options] passed to the simulation function.
-
 !!! Note
-    Note that any broadcastable shape are valid for the arguments. For example for `dq.sesolve()` with `H` of shape _(2, 3, n, n)_, `psi0` can be of shape: _(n, 1)_, _(3, n, 1)_, _(2, 1, n, 1)_, _(2, 3, n, 1)_, _(..., 2, 3, n, 1)_, etc. Playing with the arguments shape allow you to precisely define the simulations you want to perform in any way you want.
+    Any batch shape is valid as input as long as it is broadcastable with other arguments.
 
-!!! Note
-    For [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
+    For example for `dq.sesolve()` with `H` of shape _(2, 3, n, n)_, `psi0` can be of shape: _(n, 1)_, _(3, n, 1)_, _(2, 1, n, 1)_, _(2, 3, n, 1)_, _(..., 2, 3, n, 1)_, etc. By playing with the arguments shape, you have complete freedom over the simulation you want to run.
 
-## Mastering batching
 
-### Creating a batched argument
+## Creating batched arguments
+
+### Single-dimensional batching
 
 There are multiple ways to create a batched argument.
 
-=== "By passing a list"
+=== "Using lists"
     The most straightforward way is to pass a list of values:
     ```python
     # define several Hamiltonians
@@ -143,7 +135,7 @@ There are multiple ways to create a batched argument.
     omega = jnp.linspace(0.0, 1.0, 21)
     H = omega[:, None, None] * dq.sigmaz()  # (21, 2, 2)
     ```
-=== "Using dynamiqs functions directly"
+=== "Using dynamiqs functions"
     Or you can use dynamiqs utility functions directly:
     ```python
     # define several initial states
@@ -151,8 +143,10 @@ There are multiple ways to create a batched argument.
     psis = dq.coherent(16, alpha)  # (3, 16, 1)
     ```
 
+### Multi-dimensional batching
+
 The previous examples illustrate batching over one dimension, but you can batch over as many dimensions as you want:
-=== "By passing a list"
+=== "Using lists"
     ```python
     # define several Hamiltonians
     H = [
@@ -168,7 +162,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
     eps = jnp.linspace(0.0, 10.0, 11)[:, None, None]
     H = omega * dq.sigmaz() + eps * dq.sigmaz()  # (21, 11, 2, 2)
     ```
-=== "Using dynamiqs functions directly"
+=== "Using dynamiqs functions"
     ```python
     # define several initial states
     alpha_real = jnp.linspace(0, 1.0, 5)
@@ -210,9 +204,6 @@ We have seen how to batch over time-independent objects, but how about time-depe
     >>> H.shape
     (11, 2, 2)
     ```
-
-??? "Using `jnp.vectorize` to batch functions"
-    !!! Warning "Under construction."
 
 ## Why batching?
 
