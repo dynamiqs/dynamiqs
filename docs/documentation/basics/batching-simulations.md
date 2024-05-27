@@ -167,7 +167,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
     # define several initial states
     alpha_real = jnp.linspace(0, 1.0, 5)
     alpha_imag = jnp.linspace(0, 1.0, 6)
-    alpha = alpha_real[None] + 1j * alpha_imag  # (5, 6)
+    alpha = alpha_real[:, None] + 1j * alpha_imag  # (5, 6)
     psis = dq.coherent(16, alpha)  # (5, 6, 16, 1)
     ```
 
@@ -219,7 +219,7 @@ Common use cases for batching include:
 
 To illustrate the performance gain of batching, let us compare the total run time between using a for loop vs using a batched simulation. We will simulate a set of 3,000 Hamiltonians on a two-level system:
 
-```python
+```ipython
 # define 3000 Hamiltonians
 omega = jnp.linspace(0.0, 10.0, 100)[:, None, None]
 epsilon = jnp.linspace(0.0, 1.0, 30)[:, None, None, None]
