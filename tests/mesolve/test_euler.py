@@ -4,11 +4,11 @@ from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Euler
 
 from ..solver_tester import SolverTester
-from .open_system import ocavity, otdqubit
+from .open_system import ocavity, otdqubit, sparse_ocavity
 
 
 class TestMEEuler(SolverTester):
-    @pytest.mark.parametrize('system', [ocavity, otdqubit])
+    @pytest.mark.parametrize('system', [ocavity, otdqubit, sparse_ocavity])
     def test_correctness(self, system):
         solver = Euler(dt=1e-4)
         self._test_correctness(system, solver, esave_atol=1e-3)
