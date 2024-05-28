@@ -17,6 +17,9 @@ class SparseQArray(QArray):
     def to_dense(self) -> Array:
         return to_dense(self)
 
+    def __neg__(self) -> SparseQArray:
+        return -1 * self
+
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
     ) -> Array | SparseQArray:
