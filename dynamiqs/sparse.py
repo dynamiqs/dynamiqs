@@ -4,7 +4,7 @@ import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import Array, ArrayLike, ScalarLike
 
-from .qarray import QArray
+from .qarray import DenseQArray, QArray
 
 __all__ = ['SparseQArray', 'to_dense', 'to_sparse']
 
@@ -129,48 +129,42 @@ def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
         )
 
 
-def to_dense(sparse: SparseQArray) -> Array:
-    r"""Returns the input matrix in the Dense format.
+def to_dense(x: SparseQArray) -> DenseQArray:
+    r"""Convert a sparse `QArray` into a dense `Qarray`.
 
-    Parameters:
+    Args:
         sparse: A sparse matrix, containing diagonals and their offsets.
 
     Returns:
         Array: A dense matrix representation of the input sparse matrix.
     """
-    N = sparse.dims[0]
+    N = x.shape[-1]
     out = jnp.zeros((N, N))
-    for offset, diag in zip(sparse.offsets, sparse.diags):
+    for offset, diag in zip(x.offsets, x.diags):
         start = max(0, offset)
         end = min(N, N + offset)
         out += jnp.diag(diag[start:end], k=offset)
     return out
 
 
-def to_sparse(other: ArrayLike) -> SparseQArray:
-    r"""Returns the input matrix in the SparseDIA format.
-
-    This should be used when a user wants to turn a dense matrix that
-    presents sparse features in the SparseDIA custom format.
+def to_sparse(other: DenseQArray) -> SparseQArray:
+    r"""Returns the input matrix in the `SparseQArray` format.
 
     Args:
-        other: NxN matrix to turn from dense to SparseDIA format.
+        other: Matrix to turn from dense to SparseDIA format.
 
     Returns:
-        SparseDIA object which has 2 main attributes:
-            object.diags: Array where each row is a diagonal.
-            object.offsets: tuple of integers that represents the
-                            respective offsets of the diagonals
+        `SparseQArray` object
     """
+    if not isinstance(other, Array):
+        other = jnp.asarray(other.array)
+
     diagonals = []
     offsets = []
 
     N = other.shape[0]
     offset_range = 2 * N - 1
     offset_center = offset_range // 2
-
-    if not isinstance(other, Array):
-        other = jnp.asarray(other.array)
 
     for offset in range(-offset_center, offset_center + 1):
         diagonal = jnp.diagonal(other, offset=offset)
@@ -191,4 +185,4 @@ def to_sparse(other: ArrayLike) -> SparseQArray:
     diagonals = jnp.array(diagonals)
     offsets = tuple(offsets)
 
-    return SparseQArray(diagonals, offsets, (N, N))
+    return SparseQArray(diagonals, offsets, other.dims)
