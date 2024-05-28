@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections import defaultdict
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -117,7 +119,7 @@ class SparseQArray(QArray):
     def __rmul__(self, other: ArrayLike) -> Array:
         return self * other
 
-    def _matmul_dense(self, left_matmul: bool, other: ArrayLike) -> Array:
+    def _matmul_dense(self, left_matmul: bool, other: Array) -> Array:
         N = other.shape[0]
         out = jnp.zeros_like(other)
         for self_offset, self_diag in zip(self.offsets, self.diags):
@@ -125,41 +127,57 @@ class SparseQArray(QArray):
             end = min(N, N + self_offset)
             top = max(0, -self_offset)
             bottom = top + end - start
-            out = jax.lax.cond(
-                left_matmul,
-                lambda _,
-                out=out,
-                top=top,
-                bottom=bottom,
-                self_diag=self_diag,
-                start=start,
-                end=end: out.at[top:bottom, :].add(
-                    self_diag[start:end, None] * other[start:end, :]
-                ),
-                lambda _,
-                out=out,
-                top=top,
-                bottom=bottom,
-                self_diag=self_diag,
-                start=start,
-                end=end: out.at[:, start:end].add(
-                    jnp.expand_dims(self_diag[start:end], axis=0) * other[:, top:bottom]
-                ),
-                operand=None,
-            )
+
+            def left_case(
+                out: Array,
+                top: int = top,
+                bottom: int = bottom,
+                start: int = start,
+                end: int = end,
+                diag: Array = self_diag,
+            ) -> Array:
+                return out.at[top:bottom, :].add(
+                    diag[start:end, None] * other[start:end, :]
+                )
+
+            def right_case(
+                out: Array,
+                top: int = top,
+                bottom: int = bottom,
+                start: int = start,
+                end: int = end,
+                diag: Array = self_diag,
+            ) -> Array:
+                return out.at[:, start:end].add(
+                    diag[start:end, None].T * other[:, top:bottom]
+                )
+
+            out = jax.lax.cond(left_matmul, left_case, right_case, out)
         return out
 
-    def _matmul_dia(self, other: SparseQArray) -> tuple[Array, list[int]]:
-        N = other.diags.shape[-1]
-        out_diags, out_offsets = [], []
+    def _matmul_dia(self, other: SparseQArray) -> SparseQArray:
+        N = other.diags.shape[1]
+        diag_dict = defaultdict(lambda: jnp.zeros(N))
+
         for self_offset, self_diag in zip(self.offsets, self.diags):
             for other_offset, other_diag in zip(other.offsets, other.diags):
-                out_diag = jnp.zeros_like(self_diag)
+                result_offset = self_offset + other_offset
+
+                if abs(result_offset) > N - 1:
+                    continue
+
                 sA, sB = max(0, -other_offset), max(0, other_offset)
                 eA, eB = min(N, N - other_offset), min(N, N + other_offset)
-                out_diag = out_diag.at[sB:eB].add(self_diag[sA:eA] * other_diag[sB:eB])
-                out_diags.append(out_diag)
-                out_offsets.append(self_offset + other_offset)
+
+                diag_dict[result_offset] = (
+                    diag_dict[result_offset]
+                    .at[sB:eB]
+                    .add(self_diag[sA:eA] * other_diag[sB:eB])
+                )
+
+        out_offsets = sorted(diag_dict.keys())
+        out_diags = [diag_dict[offset] for offset in out_offsets]
+
         return SparseQArray(jnp.vstack(out_diags), tuple(out_offsets), self.dims)
 
     def __matmul__(self, other: Array | SparseQArray) -> Array | SparseQArray:

@@ -7,9 +7,22 @@ import dynamiqs as dq
 class TestSparseDIA:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        N = 4
-        self.matrixA = dq.destroy(N)
-        self.matrixB = dq.number(N)
+        N = 10
+        num_diags = 3
+        diags = jnp.arange(num_diags * N).reshape(num_diags, N)
+        offsets = tuple(range(-(N // 2), (N // 2) + 1))
+
+        self.matrixA = jnp.zeros((N, N))
+        self.matrixB = jnp.zeros((N, N))
+
+        for offset, diag in zip(offsets, diags):
+            self.matrixA = self.matrixA.at[:].add(
+                jnp.diag(diag[: N - abs(offset)], k=offset)
+            )
+            self.matrixB = self.matrixB.at[:].add(
+                jnp.diag(diag[: N - abs(offset)], k=offset)
+            )
+
         self.sparseA = dq.to_sparse(self.matrixA)
         self.sparseB = dq.to_sparse(self.matrixB)
 
