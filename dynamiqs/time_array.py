@@ -84,7 +84,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     return PWCTimeArray(times, values, array)
 
 
-def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTimeArray:
+def modulated(f: callable[[float], Array], array: ArrayLike) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
     A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
