@@ -262,12 +262,9 @@ class SparseDIA(eqx.Module):
             diags, offsets = other * self.diags, self.offsets
             return SparseDIA(diags, offsets)
         elif isinstance(other, Array):
-            diags, offsets = self._mul_dense(other)
-            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
-
+            return self._mul_dense(other)
         elif isinstance(other, SparseDIA):
-            diags, offsets = self._mul_dia(other)
-            return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
+            return self._mul_sparse(other)
 
         return NotImplemented
 
