@@ -5,7 +5,7 @@ import functools
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array
+from jaxtyping import Array, Scalar
 
 __all__ = ['SparseDIA', 'to_sparse', 'to_dense']
 
@@ -13,6 +13,10 @@ __all__ = ['SparseDIA', 'to_sparse', 'to_dense']
 class SparseDIA(eqx.Module):
     diags: jax.Array
     offsets: tuple[int, ...] = eqx.field(static=True)
+
+    @property
+    def dtype(self) -> jnp.dtype:
+        return self.diags.dtype
 
     @property
     def ndim(self) -> int:
@@ -269,16 +273,16 @@ class SparseDIA(eqx.Module):
         return NotImplemented
 
     def __rmul__(self, other: Array) -> Array:
-        if isinstance(other, Array):
+        if isinstance(other, (Scalar, complex)):
+            diags, offsets = other * self.diags, self.offsets
+            return SparseDIA(diags, offsets)
+        elif isinstance(other, Array):
             if other.shape == (1, 1):
                 diags, offsets = other * self.diags, self.offsets
                 return SparseDIA(diags, offsets)
             else:
                 diags, offsets = self._mul_dense(other)
                 return SparseDIA(diags, tuple([offset.item() for offset in offsets]))
-        elif isinstance(other, (complex, float)):
-            diags, offsets = other * self.diags, self.offsets
-            return SparseDIA(diags, offsets)
 
         return NotImplemented
 
