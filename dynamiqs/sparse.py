@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike, ScalarLike
+from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 
 from .qarray import QArray
 
@@ -75,12 +75,9 @@ class SparseQArray(QArray):
         return -self + other
 
     def __mul__(self, other: Array | SparseQArray) -> Array | SparseQArray:
-        if isinstance(other, ScalarLike):
-            if other == 0:
-                diags = jnp.empty(0, self.shape[-1])
-                offsets = ()
-                return SparseQArray(diags, offsets, self.dims)
-            return SparseQArray(other * self.diags, self.offsets, self.dims)
+        if isinstance(other, (complex, Scalar)):
+            diags, offsets = other * self.diags, self.offsets
+            return SparseQArray(diags, offsets, self.dims)
         elif isinstance(other, Array):
             return self._mul_dense(other)
         elif isinstance(other, SparseQArray):
