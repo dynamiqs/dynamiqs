@@ -80,7 +80,7 @@ def smesolve(
     The signals $I_k$ are singular quantities, the solver returns the averaged signals
     $J_k$ defined for a time interval $[t_0, t_1)$ by:
     $$
-        J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t) \dt
+        J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\, \dt
         = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd y_k(t).
     $$
     The time intervals for integration are defined by the argument `tmeas`, which
