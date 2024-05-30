@@ -48,76 +48,6 @@ class OpenSystem(System):
         )
 
 
-class SparseOCavity(OpenSystem):
-    class Params(NamedTuple):
-        delta: float
-        alpha0: float
-        kappa: float
-
-    def __init__(
-        self, *, n: int, delta: float, alpha0: float, kappa: float, tsave: ArrayLike
-    ):
-        self.n = n
-        self.delta = delta
-        self.alpha0 = alpha0
-        self.kappa = kappa
-        self.tsave = tsave
-
-        # define default gradient parameters
-        self.params_default = self.Params(delta, alpha0, kappa)
-
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
-        return params.delta * dq.to_sparse(dq.number(self.n))
-
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
-        return [jnp.sqrt(params.kappa) * dq.to_sparse(dq.destroy(self.n))]
-
-    def y0(self, params: PyTree) -> Array:
-        return dq.coherent(self.n, params.alpha0)
-
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
-
-    def _alpha(self, t: float) -> Array:
-        return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
-
-    def state(self, t: float) -> Array:
-        return dq.coherent_dm(self.n, self._alpha(t))
-
-    def expect(self, t: float) -> Array:
-        alpha_t = self._alpha(t)
-        exp_x = alpha_t.real
-        exp_p = alpha_t.imag
-        return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
-
-    def loss_state(self, state: Array) -> Array:
-        return dq.expect(dq.number(self.n), state).real
-
-    def grads_state(self, t: float) -> PyTree:
-        grad_delta = 0.0
-        grad_alpha0 = 2 * self.alpha0 * jnp.exp(-self.kappa * t)
-        grad_kappa = -(self.alpha0**2) * t * jnp.exp(-self.kappa * t)
-        return self.Params(grad_delta, grad_alpha0, grad_kappa)
-
-    def grads_expect(self, t: float) -> PyTree:
-        cdt = jnp.cos(self.delta * t)
-        sdt = jnp.sin(self.delta * t)
-        emkt = jnp.exp(-0.5 * self.kappa * t)
-
-        grad_x_delta = -self.alpha0 * t * sdt * emkt
-        grad_p_delta = -self.alpha0 * t * cdt * emkt
-        grad_x_alpha0 = cdt * emkt
-        grad_p_alpha0 = -sdt * emkt
-        grad_x_kappa = -0.5 * self.alpha0 * t * cdt * emkt
-        grad_p_kappa = 0.5 * self.alpha0 * t * sdt * emkt
-
-        return self.Params(
-            [grad_x_delta, grad_p_delta],
-            [grad_x_alpha0, grad_p_alpha0],
-            [grad_x_kappa, grad_p_kappa],
-        )
-
-
 class OCavity(OpenSystem):
     class Params(NamedTuple):
         delta: float
@@ -186,6 +116,14 @@ class OCavity(OpenSystem):
             [grad_x_alpha0, grad_p_alpha0],
             [grad_x_kappa, grad_p_kappa],
         )
+
+
+class SparseOCavity(OCavity):
+    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+        return params.delta * dq.to_sparse(dq.number(self.n))
+
+    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+        return [jnp.sqrt(params.kappa) * dq.to_sparse(dq.destroy(self.n))]
 
 
 class OTDQubit(OpenSystem):
@@ -286,6 +224,16 @@ class OTDQubit(OpenSystem):
         )
 
 
+class SparseOTDQubit(OTDQubit):
+    def H(self, params: PyTree):
+        sigmax_sparse = dq.to_sparse(dq.sigmax())
+        f = lambda t, eps, omega: eps * jnp.cos(omega * t) * sigmax_sparse
+        return dq.timecallable(f, args=(params.eps, params.omega))
+
+    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+        return [jnp.sqrt(params.gamma) * dq.to_sparse(dq.sigmax())]
+
+
 # # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # # gradients
 Hz = 2 * jnp.pi
@@ -297,3 +245,4 @@ sparse_ocavity = SparseOCavity(
 
 tsave = np.linspace(0.0, 1.0, 11)
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
+sparse_otdqubit = SparseOTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
