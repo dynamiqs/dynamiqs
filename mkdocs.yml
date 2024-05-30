@@ -152,6 +152,8 @@ nav:
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
               - Dopri8: python_api/solver/Dopri8.md
+              - Kvaerno3: python_api/solver/Kvaerno3.md
+              - Kvaerno5: python_api/solver/Kvaerno5.md
               - Euler: python_api/solver/Euler.md
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
