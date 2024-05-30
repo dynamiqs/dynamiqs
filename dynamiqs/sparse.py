@@ -258,7 +258,7 @@ class SparseDIA(eqx.Module):
         return NotImplemented
 
     def __mul__(self, other: Array | SparseDIA) -> Array | SparseDIA:
-        if isinstance(other, (complex, Scalar)):
+        if isinstance(other, (complex, float, Scalar)):
             diags, offsets = other * self.diags, self.offsets
             return SparseDIA(diags, offsets)
         elif isinstance(other, Array):
