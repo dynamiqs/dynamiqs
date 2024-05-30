@@ -44,17 +44,23 @@ def mesolve(
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
     starting from an initial state $\rho_0$, according to the Lindblad master
-    equation ($\hbar=1$)
+    equation (with $\hbar=1$ and where time is implicit(1))
     $$
-        \frac{\dd\rho(t)}{\dt} = -i[H(t), \rho(t)]
+        \frac{\dd\rho}{\dt} = -i[H, \rho]
         + \sum_{k=1}^N \left(
-            L_k(t) \rho(t) L_k^\dag(t)
-            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
-            - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
+            L_k \rho L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho
+            - \frac{1}{2} \rho L_k^\dag L_k
         \right),
     $$
-    where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
-    collection of jump operators at time $t$.
+    where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
+    operators.
+    { .annotate }
+
+    1. With explicit time dependence:
+        - $\rho\to\rho(t)$
+        - $H\to H(t)$
+        - $L_k\to L_k(t)$
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
