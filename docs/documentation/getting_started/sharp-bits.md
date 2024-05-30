@@ -37,14 +37,14 @@ In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the
     >>> sz = dq.sigmaz()
     >>> sz - 2 * dq.eye(2)
     Array([[-1.+0.j,  0.+0.j],
-           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+           [ 0.+0.j, -3.+0.j]], dtype=complex128)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sz = dq.sigmaz()
     >>> sz - 2
     Array([[-1.+0.j, -2.+0.j],
-           [-2.+0.j, -3.+0.j]], dtype=complex64)
+           [-2.+0.j, -3.+0.j]], dtype=complex128)
     ```
 
 ### Multiplying two operators
@@ -56,14 +56,14 @@ In QuTiP, the `*` symbol is used to multiply two operators. This convention also
     >>> sx = dq.sigmax()
     >>> sx @ sx
     Array([[1.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j]], dtype=complex64)
+           [0.+0.j, 1.+0.j]], dtype=complex128)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx = dq.sigmax()
     >>> sx * sx
     Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex64)
+           [1.+0.j, 0.+0.j]], dtype=complex128)
     ```
 
 Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to compute the power of a matrix:
@@ -72,13 +72,13 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
     ```pycon
     >>> dq.powm(sx, 2)
     Array([[1.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j]], dtype=complex64)
+           [0.+0.j, 1.+0.j]], dtype=complex128)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx**2
     Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex64)
+           [1.+0.j, 0.+0.j]], dtype=complex128)
     ```
 
 ### Computing matrix adjoint
