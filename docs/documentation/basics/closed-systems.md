@@ -34,7 +34,7 @@ The state evolution is described by the **Schrödinger equation**:
 $$
     i\hbar\frac{\dd\ket{\psi(t)}}{\dt}=H\ket{\psi(t)},
 $$
-where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
+where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$. In this tutorial we consider a constant Hamiltonian, but note that it can also be time-dependent $H(t)$.
 
 !!! Example "Example for a two-level system"
     The Hamiltonian of a two-level system with energy difference $\omega$ is $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$.

@@ -23,9 +23,9 @@ A greater precision will give a more accurate result, but will also take longer 
 
 The state evolution is described by the **Lindblad master equation**:
 $$
-    \frac{\dd\rho(t)}{\dt} = -\frac{i}{\hbar}[H(t), \rho(t)] + \sum_{k=1}^N \left(L_k \rho(t) L_k^\dag - \frac{1}{2} L_k^\dag L_k \rho(t) - \frac{1}{2} \rho(t) L_k^\dag L_k\right),
+    \frac{\dd\rho(t)}{\dt} = -\frac{i}{\hbar}[H, \rho(t)] + \sum_{k=1}^N \left(L_k \rho(t) L_k^\dag - \frac{1}{2} L_k^\dag L_k \rho(t) - \frac{1}{2} \rho(t) L_k^\dag L_k\right),
 $$
-where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
+where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$. In this tutorial we consider a constant Hamiltonian and jump operators, but note that they can also be time-dependent $H(t)$ and $L_k(t)$.
 
 !!! Example "Example for a two-level system"
     For example, $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$ and a single jump operator $L=\sqrt\gamma\sigma_-=\begin{pmatrix}0&0\\\sqrt\gamma&0\end{pmatrix}$.
