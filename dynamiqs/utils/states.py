@@ -308,7 +308,7 @@ def ground() -> Array:
         Array([[0.+0.j],
                [1.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0], [1]])
+    return jnp.array([[0], [1]], dtype=cdtype())
 
 
 def excited() -> Array:
@@ -328,4 +328,4 @@ def excited() -> Array:
         Array([[1.+0.j],
                [0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[1], [0]])
+    return jnp.array([[1], [0]], dtype=cdtype())
