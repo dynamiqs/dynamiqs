@@ -4,9 +4,10 @@ This tutorial introduces the quantum state for an open quantum system, describes
 
 ## The quantum state
 
-The quantum state that describes an open quantum system is a **density matrix** $\rho$. It is a positive semi-definite Hermitian matrix with unit trace, of size $n\times n$[^1].
+The quantum state that describes an open quantum system is a **density matrix** $\rho$. It is a positive semi-definite Hermitian matrix with unit trace, of size $n\times n$(1).
+{ .annotate }
 
-[^1]: Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
+1. Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
 
 !!! Example "Example for a two-level system"
     For a two-level system, $\rho=\begin{pmatrix}a & b\\ c & d\end{pmatrix}$ with $a,d\in\R^+$ and $b,c\in\mathbb{C}$ with $b^*=c$ (Hermitian matrix), $a+d=1$ (unit trace) and all its eigenvalues are positive (positive semi-definite).
@@ -33,9 +34,10 @@ We can also write
 $$
     \frac{\dd\rho(t)}{\dt} = \mathcal{L}(\rho(t)),
 $$
-where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (sometimes referred as Lindbladian). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
+where $\mathcal{L}$ is a superoperator(1) called the **Liouvillian** (sometimes referred as Lindbladian). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
+{ .annotate }
 
-[^2]: A superoperator is a linear map that takes an operator and returns an operator.
+1. A superoperator is a linear map that takes an operator and returns an operator.
 
 !!! Example "Example for a two-level system"
     For example, for $H=-\frac{\omega}{2}\sigma_z$ and a single jump operator $L=\sqrt\gamma\sigma_-$, the Liouvillian in vectorized form is a $4\times4$ matrix:
@@ -67,8 +69,10 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
 
-^^Time complexity^^: $O(n^6)$ (complexity of computing the $n^2\times n^2$ Liouvillian matrix exponential[^3]).
-[^3]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
+^^Time complexity^^: $O(n^6)$ (complexity of computing the $n^2\times n^2$ Liouvillian matrix exponential(1)).
+{ .annotate }
+
+1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 For large Hilbert space sizes, the time complexity of computing the matrix exponential is often prohibitive, hence the need for other methods such as the ones we now describe below.
 
