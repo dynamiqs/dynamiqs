@@ -36,7 +36,7 @@ $$
 where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
 
 !!! Example "Example for a two-level system"
-    The Hamiltonian of a two-level system with energy difference $\omega$ is $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$.
+    The Hamiltonian of a two-level system with energy difference $\omega$ is $H=\frac{\omega}{2}\sigma_z=\begin{pmatrix}\omega/2&0\\0&-\omega/2\end{pmatrix}$.
 
 ## Solving the Schrödinger equation numerically
 
@@ -62,9 +62,9 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 [^2]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 !!! Example "Example for a two-level system"
-    For $H=-\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
+    For $H=\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
     $$
-        U(t) = e^{-iHt} = \begin{pmatrix}e^{i\omega t/2} & 0 \\\\ 0 & e^{-i\omega t/2}\end{pmatrix}.
+        U(t) = e^{-iHt} = \begin{pmatrix}e^{-i\omega t/2} & 0 \\\\ 0 & e^{i\omega t/2}\end{pmatrix}.
     $$
 
 ### Integrating the ODE
@@ -95,16 +95,16 @@ You can create the state and Hamiltonian using any array-like object. Let's take
 import jax.numpy as jnp
 import dynamiqs as dq
 
-psi0 = [[1], [0]]                 # initial state
-H = [[-1, 0], [0, 1]]             # Hamiltonian
+psi0 = dq.ground()                # initial state
+H = dq.sigmaz()                   # Hamiltonian
 tsave = jnp.linspace(0, 1.0, 11)  # saving times
 res = dq.sesolve(H, psi0, tsave)  # run the simulation
 print(res.states[-1])             # print the final state
 ```
 
 ```text title="Output"
-Array([[0.54+0.841j],
-       [0.  +0.j   ]], dtype=complex64)
+Array([[0.  +0.j   ],
+       [0.54+0.841j]], dtype=complex64)
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
