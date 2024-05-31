@@ -20,11 +20,12 @@ from ..core._utils import (
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
+from ..solver import Dopri5, Dopri8, Euler, Propagator, Rouchon1, Solver, Tsit5
 from ..time_array import Shape, TimeArray
 from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
+from .merouchon import MERouchon1
 
 __all__ = ['mesolve']
 
@@ -185,6 +186,7 @@ def _mesolve(
     # === select solver class
     solvers = {
         Euler: MEEuler,
+        Rouchon1: MERouchon1,
         Dopri5: MEDopri5,
         Dopri8: MEDopri8,
         Tsit5: METsit5,
