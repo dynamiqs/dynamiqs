@@ -11,7 +11,16 @@ from .._utils import cdtype
 from .operators import displace
 from .utils import tensor, todm
 
-__all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
+__all__ = [
+    'fock',
+    'fock_dm',
+    'basis',
+    'basis_dm',
+    'coherent',
+    'coherent_dm',
+    'ground',
+    'excited',
+]
 
 
 def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
@@ -280,3 +289,43 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         (2, 24, 24)
     """
     return todm(coherent(dim, alpha))
+
+
+def ground() -> Array:
+    r"""Returns the eigenvector with eigenvalue -1 of the Pauli $\sigma_z$ operator.
+
+    It is defined by $\ket{g} = \begin{pmatrix}0\\1\end{pmatrix}$.
+
+    Note:
+        This function is named `ground` because $\ket{g}$ is the lower energy state of
+        a two-level system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(array of shape (2, 1))_ Ket $\ket{g}$.
+
+    Examples:
+        >>> dq.ground()
+        Array([[0.+0.j],
+               [1.+0.j]], dtype=complex64)
+    """
+    return jnp.array([[0], [1]], dtype=cdtype())
+
+
+def excited() -> Array:
+    r"""Returns the eigenvector with eigenvalue +1 of the Pauli $\sigma_z$ operator.
+
+    It is defined by $\ket{e} = \begin{pmatrix}1\\0\end{pmatrix}$.
+
+    Note:
+        This function is named `excited` because $\ket{e}$ is the higher energy state of
+        a two-level-system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(array of shape (2, 1))_ Ket $\ket{e}$.
+
+    Examples:
+        >>> dq.excited()
+        Array([[1.+0.j],
+               [0.+0.j]], dtype=complex64)
+    """
+    return jnp.array([[1], [0]], dtype=cdtype())
