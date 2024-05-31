@@ -61,13 +61,19 @@ class MERouchon1(FixedSolver, MESolver):
     @property
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
+            # The Rouchon update for a single loss channel is:
+            #   rho_{k+1} = M0 @ rho @ M0d + \sum M1 @ rho @ M1d
+            # with
+            #   M0 = I - (iH + 0.5 Ld @ L) dt
+            #   M1 = L sqrt(dt)
+
             Ls = jnp.stack([L(t0) for L in self.Ls])
             Lsd = dag(Ls)
             LdL = (Lsd @ Ls).sum(0)
 
             delta_t = t1 - t0
             M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL) * delta_t
-            Mks = jnp.sqrt(delta_t) * Ls
+            Mks = Ls * jnp.sqrt(delta_t)
 
             return M0 @ y0 @ dag(M0) + jnp.sum(Mks @ y0 @ dag(Mks), axis=0)
 
