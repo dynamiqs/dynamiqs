@@ -67,8 +67,8 @@ class MERouchon1(FixedSolver, MESolver):
 
             delta_t = t1 - t0
             M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL) * delta_t
-            M1s = jnp.sqrt(delta_t) * Ls
+            Mks = jnp.sqrt(delta_t) * Ls
 
-            return M0 @ y0 @ dag(M0) + jnp.sum(M1s @ y0 @ dag(M1s), axis=0)
+            return M0 @ y0 @ dag(M0) + jnp.sum(Mks @ y0 @ dag(Mks), axis=0)
 
         return AbstractRouchonTerm(kraus_map)
