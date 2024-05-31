@@ -26,17 +26,23 @@ class SparseDIA(eqx.Module):
     def shape(self) -> tuple[int, ...]:
         return self.diags.shape
 
+    @property
+    def mT(self) -> SparseDIA:
+        N = self.diags.shape[1]
+        out_diags = jnp.zeros_like(self.diags)
+        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+            start = max(0, self_offset)
+            end = min(N, N + self_offset)
+            out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
+                self_diag[start:end]
+            )
+        return SparseDIA(out_diags, tuple(-x for x in self.offsets))
+
+    def conj(self) -> SparseDIA:
+        return SparseDIA(self.diags.conj(), self.offsets)
+
     def dag(self) -> SparseDIA:
-        dag_offsets = []
-        dag_diags = []
-
-        for diag, offset in zip(self.diags, self.offsets):
-            dag_offsets.append(-1 * offset)
-            dag_diags.append(jnp.roll(diag, -offset))
-
-        dag_diags = jnp.vstack(dag_diags)
-
-        return SparseDIA(dag_diags, dag_offsets)
+        return self.mT.conj()
 
     def _cleanup(self, diags: Array, offsets: tuple[int]) -> tuple[Array, tuple[int]]:
         diags = jnp.asarray(diags)
