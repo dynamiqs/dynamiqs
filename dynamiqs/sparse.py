@@ -262,7 +262,11 @@ class SparseDIA(eqx.Module):
             diags, offsets = other * self.diags, self.offsets
             return SparseDIA(diags, offsets)
         elif isinstance(other, Array):
-            return self._mul_dense(other)
+            if other.shape == (1, 1):
+                diags, offsets = other * self.diags, self.offsets
+                return SparseDIA(diags, offsets)
+            else:
+                return self._mul_dense(other)
         elif isinstance(other, SparseDIA):
             return self._mul_sparse(other)
 
