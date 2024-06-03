@@ -300,6 +300,7 @@ def to_dense(sparse: SparseDIA) -> Array:
     return out
 
 
+@functools.partial(jax.jit, static_argnums=(0,))
 def to_sparse(other: Array) -> SparseDIA:
     r"""Returns the input matrix in the SparseDIA format.
 
