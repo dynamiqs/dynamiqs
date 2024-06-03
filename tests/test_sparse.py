@@ -12,21 +12,13 @@ class TestSparseDIA:
         N = 10
         num_diags = 3
         diags = jnp.arange(num_diags * N).reshape(num_diags, N)
-        offsets = tuple(range(-(N // 2), (N // 2) + 1))
+        offsets = tuple(range(-(num_diags // 2), (num_diags // 2) + 1))
 
-        self.matrixA = jnp.zeros((N, N))
-        self.matrixB = jnp.zeros((N, N))
+        self.sparseA = dq.SparseQArray(diags, offsets, (N, N))
+        self.sparseB = dq.SparseQArray(diags, offsets, (N, N))
 
-        for offset, diag in zip(offsets, diags):
-            self.matrixA = self.matrixA.at[:].add(
-                jnp.diag(diag[: N - abs(offset)], k=offset)
-            )
-            self.matrixB = self.matrixB.at[:].add(
-                jnp.diag(diag[: N - abs(offset)], k=offset)
-            )
-
-        self.sparseA = dq.to_sparse(self.matrixA)
-        self.sparseB = dq.to_sparse(self.matrixB)
+        self.matrixA = self.sparseA.to_dense()
+        self.matrixB = self.sparseB.to_dense()
 
     def test_convert(self, rtol=1e-05, atol=1e-08):
         assert jnp.allclose(
