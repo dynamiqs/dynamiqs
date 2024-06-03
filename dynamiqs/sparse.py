@@ -147,7 +147,7 @@ def to_dense(x: SparseQArray) -> DenseQArray:
     return out
 
 
-def to_sparse(x: DenseQArray) -> SparseQArray:
+def to_sparse(x: DenseQArray | Array) -> SparseQArray:
     r"""Returns the input matrix in the `SparseQArray` format.
 
     Args:
@@ -163,10 +163,8 @@ def to_sparse(x: DenseQArray) -> SparseQArray:
     offsets = []
 
     N = x.shape[0]
-    offset_range = 2 * N - 1
-    offset_center = offset_range // 2
 
-    for offset in range(-offset_center, offset_center + 1):
+    for offset in range(-N + 1, N):
         diagonal = jnp.diagonal(x, offset=offset)
         if jnp.any(diagonal != 0):
             if offset > 0:
