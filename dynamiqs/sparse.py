@@ -133,7 +133,7 @@ def to_dense(x: SparseQArray) -> DenseQArray:
     r"""Convert a sparse `QArray` into a dense `Qarray`.
 
     Args:
-        sparse: A sparse matrix, containing diagonals and their offsets.
+        x: A sparse matrix, containing diagonals and their offsets.
 
     Returns:
         Array: A dense matrix representation of the input sparse matrix.
@@ -147,27 +147,27 @@ def to_dense(x: SparseQArray) -> DenseQArray:
     return out
 
 
-def to_sparse(other: DenseQArray) -> SparseQArray:
+def to_sparse(x: DenseQArray) -> SparseQArray:
     r"""Returns the input matrix in the `SparseQArray` format.
 
     Args:
-        other: Matrix to turn from dense to SparseDIA format.
+        x: Matrix to turn from dense to SparseDIA format.
 
     Returns:
         `SparseQArray` object
     """
-    if not isinstance(other, Array):
-        other = jnp.asarray(other.array)
+    if not isinstance(x, Array):
+        x = jnp.asarray(x.array)
 
     diagonals = []
     offsets = []
 
-    N = other.shape[0]
+    N = x.shape[0]
     offset_range = 2 * N - 1
     offset_center = offset_range // 2
 
     for offset in range(-offset_center, offset_center + 1):
-        diagonal = jnp.diagonal(other, offset=offset)
+        diagonal = jnp.diagonal(x, offset=offset)
         if jnp.any(diagonal != 0):
             if offset > 0:
                 padding = (offset, 0)
@@ -185,4 +185,4 @@ def to_sparse(other: DenseQArray) -> SparseQArray:
     diagonals = jnp.array(diagonals)
     offsets = tuple(offsets)
 
-    return SparseQArray(diagonals, offsets, other.dims)
+    return SparseQArray(diagonals, offsets, x.dims)
