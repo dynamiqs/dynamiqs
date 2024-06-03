@@ -36,19 +36,25 @@ class SparseQArray(QArray):
 
     @pack_dims
     def conj(self) -> SparseQArray:
-        return SparseQArray(self.diags.conj(), self.offset, self.dims)
+        return SparseQArray(self.diags.conj(), self.offsets, self.dims)
 
     @pack_dims
     def dag(self) -> SparseQArray:
         return self.mT.conj()
 
-    def trace(self) -> ScalarLike:
+    def trace(self) -> Array:
         main_diag_mask = jnp.asarray(self.offsets) == 0
         return jax.lax.cond(
             jnp.any(main_diag_mask),
             lambda: jnp.sum(self.diags[jnp.argmax(main_diag_mask)]).astype(jnp.float32),
             lambda: jnp.array(0.0, dtype=jnp.float32),
         )
+
+    def norm(self) -> Array:
+        return self.trace().real
+
+    def unit(self) -> SparseQArray:
+        return SparseQArray(self.diags / self.norm(), self.offsets, self.dims)
 
     def __add__(
         self, other: ScalarLike | ArrayLike | SparseQArray
