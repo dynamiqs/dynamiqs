@@ -14,6 +14,10 @@ class SparseQArray(QArray):
     dims: tuple[int, ...] = eqx.field(static=True)
 
     @property
+    def dtype(self) -> jnp.dtype:
+        return self.diags.dtype
+
+    @property
     def shape(self) -> tuple[int, ...]:
         return self.diags.shape
 
