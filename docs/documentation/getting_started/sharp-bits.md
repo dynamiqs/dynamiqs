@@ -14,14 +14,14 @@ The syntax in dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Pytho
 
 ### Floating-point precision
 
-In dynamiqs, all arrays are represented with **single-precision** floating-point numbers (complex64 or float32) by default, whereas QuTiP or NumPy arrays are represented with double-precision floating-point numbers (complex128 or float64). This choice is made for **performance**, as most problems do not require the higher precision provided by double-precision floating-point numbers. However, if needed, it is possible to switch back to double precision to accommodate more demanding computational tasks, using:
+In dynamiqs, all arrays are represented with **single-precision** floating-point numbers (`complex64` or `float32`) by default, whereas QuTiP or NumPy arrays are represented with double-precision floating-point numbers (`complex128` or `float64`). This choice is made for **performance**, as most problems do not require the higher precision provided by double-precision floating-point numbers. However, if needed, it is possible to switch back to double precision to accommodate more demanding computational tasks, using:
 ```python
 dq.set_precision('double') # 'simple' by default
 ```
 
 With single-precision, there are certain limitations to be aware of:
 
- - **Large numbers**: Single-precision floating-point numbers have a smaller range than double-precision floating-point numbers. This means that you may encounter overflow errors when working with very large numbers. Thus, it is advised to **set the scale of your problems such that the numbers involved are close to unity**.
+ - **Large numbers**: Floating-point numbers are denser as they approach unity. This means that you may find an accumulation of floating-point errors when working with very large numbers. Thus, it is advised to **set the scale of your problems such that the numbers involved are close to unity**.
  - **Tolerences**: If you require very precise ODE simulations (e.g. setting lower `rtol` and `atol` than defaults), you may encounter a divergence of the simulation due to the limited precision of single-precision floating-point numbers. In this case, you should switch to double-precision.
 
 !!! Note
