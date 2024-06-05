@@ -54,7 +54,7 @@ class QArray(eqx.Module):
     @property
     @abstractmethod
     def dtype(self) -> jnp.dtype:
-        """Data type of the quantum state.
+        """Return the data type of the quantum state.
 
         Returns:
              The data type of the quantum state.
@@ -63,7 +63,7 @@ class QArray(eqx.Module):
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """Shape of the quantum state.
+        """Returns the shape of the quantum state.
 
         Returns:
             The shape of the quantum state.
@@ -71,7 +71,7 @@ class QArray(eqx.Module):
 
     @property
     def ndim(self) -> int:
-        """Number of dimensions of the quantum state.
+        """Returns the number of dimensions of the quantum state.
 
         Returns:
             The number of dimensions of the quantum state.
@@ -81,7 +81,7 @@ class QArray(eqx.Module):
     @property
     @abstractmethod
     def I(self) -> QArray:  # noqa: E743
-        """Identity operator compatible with the quantum state.
+        """Returns the identity operator compatible with the quantum state.
 
         Returns:
             The identity operator.
@@ -90,7 +90,7 @@ class QArray(eqx.Module):
     @property
     @abstractmethod
     def mT(self) -> QArray:
-        """Transpose of the quantum state.
+        """Returns the transpose of the quantum state.
 
         Returns:
             The transpose of the quantum state.
@@ -99,7 +99,7 @@ class QArray(eqx.Module):
     # methods
     @abstractmethod
     def conj(self) -> QArray:
-        """Conjugate of the quantum state.
+        """Returns the conjugate of the quantum state.
 
         Returns:
             The conjugate of the quantum state.
@@ -107,7 +107,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def norm(self) -> Array:
-        """Norm of the quantum state.
+        """Returns the norm of the quantum state.
 
         Returns:
             The norm of the quantum state.
@@ -115,7 +115,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def unit(self) -> QArray:
-        """Normalize the quantum state.
+        """Returns the normalize the quantum state.
 
         Returns:
             The normalized quantum state.
@@ -123,7 +123,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def diag(self) -> Array:
-        """Diagonal of the quantum state.
+        """Returns the diagonal of the quantum state.
 
         Returns:
             The diagonal of the quantum state.
@@ -131,7 +131,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def trace(self) -> Array:
-        """Trace of the quantum state.
+        """Returns the trace of the quantum state.
 
         Returns:
             The trace of the quantum state.
@@ -139,7 +139,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def reshape(self, *new_shape: int) -> QArray:
-        """Reshape the quantum state.
+        """Returns the reshape the quantum state.
 
         Args:
             new_shape: New shape of the quantum state.
@@ -150,18 +150,18 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def broadcast_to(self, *new_shape: int) -> QArray:
-        """Broadcast the quantum state.
+        """Returns the broadcast the quantum state.
 
         Returns:
             The broadcast quantum state.
         """
 
     @abstractmethod
-    def ptrace(self, keep_dims: tuple[int, ...]) -> QArray:
-        """Partial trace of the quantum state.
+    def ptrace(self, keep: tuple[int, ...]) -> QArray:
+        """Returns the partial trace of the quantum state.
 
         Args:
-            keep_dims: Dimensions to keep.
+            keep: Dimensions to keep.
 
         Returns:
             The partial trace of the quantum state.
@@ -169,7 +169,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def dag(self) -> QArray:
-        """Dagger of the quantum state.
+        """Returns the dagger of the quantum state.
 
         Returns:
             The dagger of the quantum state.
@@ -177,7 +177,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def isket(self) -> bool:
-        """Check if the quantum state is a ket.
+        """Returns the check if the quantum state is a ket.
 
         Returns:
             True if the quantum state is a ket, False otherwise.
@@ -185,7 +185,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def isbra(self) -> bool:
-        """Check if the quantum state is a bra.
+        """Returns the check if the quantum state is a bra.
 
         Returns:
             True if the quantum state is a bra, False otherwise.
@@ -193,14 +193,14 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def isdm(self) -> bool:
-        """Check if the quantum state is a density matrix.
+        """Returns the check if the quantum state is a density matrix.
 
         Returns:
             True if the quantum state is a density matrix, False otherwise.
         """
 
     def isop(self) -> bool:
-        """Check if the quantum state is an operator.
+        """Returns the check if the quantum state is an operator.
 
         Returns:
             True if the quantum state is an operator, False otherwise.
@@ -209,7 +209,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def isherm(self) -> bool:
-        """Check if the quantum state is Hermitian.
+        """Returns the check if the quantum state is Hermitian.
 
         Returns:
             True if the quantum state is Hermitian, False otherwise.
@@ -253,6 +253,7 @@ class QArray(eqx.Module):
         Returns:
             The projector of the quantum state.
         """
+        return self.todm()
 
     # conversion methods
     @abstractmethod
@@ -263,13 +264,13 @@ class QArray(eqx.Module):
             The NumPy array representation of the quantum state.
         """
 
+    @abstractmethod
     def to_qutip(self) -> qt.QObj:
         """Convert the quantum state to a QuTiP object.
 
         Returns:
             A QuTiP object representation of the quantum state.
         """
-        return qt.Qobj(self.to_numpy(), dims=self.dims)
 
     @abstractmethod
     def to_jax(self) -> Array:
@@ -337,7 +338,7 @@ class QArray(eqx.Module):
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
-    data: ArrayLike
+    data: Array
     dims: tuple[int, ...]
 
     def __init__(self, data: ArrayLike, dims: tuple[int, ...] | None = None):
@@ -350,7 +351,7 @@ class DenseQArray(QArray):
             dims = data.shape[-2] if isket(data) else data.shape[-1]
             dims = (dims,)
 
-        self.data = data
+        self.data = jnp.asarray(data)
         self.dims = dims
 
     @property
@@ -397,10 +398,10 @@ class DenseQArray(QArray):
     def broadcast_to(self, *new_shape: int) -> Array:
         return jnp.broadcast_to(self.data, new_shape)
 
-    def ptrace(self, keep_dims: tuple[int, ...]) -> DenseQArray:
+    def ptrace(self, keep: tuple[int, ...]) -> DenseQArray:
         return DenseQArray(
-            ptrace(self.data, keep_dims, self.dims),
-            tuple(self.dims[dim] for dim in keep_dims),
+            ptrace(self.data, keep, self.dims),
+            tuple(self.dims[dim] for dim in keep),
         )
 
     @pack_dims
@@ -447,6 +448,9 @@ class DenseQArray(QArray):
     def to_jax(self) -> Array:
         return self.data
 
+    def to_qutip(self) -> qt.QObj:
+        return qt.Qobj(self.to_numpy(), dims=self.dims)
+
     @pack_dims
     def expm(self) -> Array:
         """Matrix exponential of the quantum state.
@@ -478,15 +482,15 @@ class DenseQArray(QArray):
         if isinstance(other, DenseQArray):
             if self.dims != other.dims:
                 raise ValueError(
-                    f'Two DenseQArray must have the same dimensions to be added. '
+                    f'QArrays must have the same dimensions to be added. '
                     f'Got {self.dims} and {other.dims}'
                 )
             return DenseQArray(self.data + other.data, self.dims)
         elif isinstance(other, ScalarLike):
             warnings.warn(
-                '"+" between a scalar and a DenseQArray performs '
+                'Calling `+` between a scalar and a QArray performs '
                 'element-wise addition. If you want to perform addition '
-                'with an operator, use "x + 2 * x.I"',
+                'with the identity operator, use `x + 2 * x.I` instead.',
                 stacklevel=2,
             )
         return DenseQArray(self.data + other, self.dims)
@@ -495,15 +499,15 @@ class DenseQArray(QArray):
         if isinstance(other, DenseQArray):
             if self.dims != other.dims:
                 raise ValueError(
-                    f'Two DenseQArray must have the same dimensions to be subtracted. '
-                    f'Got {self.dims} and {other.dims}'
+                    f'QArrays must have the same dimensions to be subtracted '
+                    f'from one another. Got {self.dims} and {other.dims}.'
                 )
             return DenseQArray(self.data - other.data, self.dims)
         elif isinstance(other, ScalarLike):
             warnings.warn(
-                '"-" between a scalar and a DenseQArray performs '
-                'element-wise addition. If you want to perform addition '
-                'with an operator, use "x - 2 * x.I"',
+                'Calling `-` between a scalar and a QArray performs '
+                'element-wise subtraction. If you want to perform subtraction '
+                'with the identity operator, use `x - 2 * x.I` instead.',
                 stacklevel=2,
             )
         return DenseQArray(self.data - other, self.dims)
@@ -511,17 +515,17 @@ class DenseQArray(QArray):
     def __mul__(self, other: ScalarLike | ArrayLike | DenseQArray) -> DenseQArray:
         if isinstance(other, (ArrayLike, DenseQArray)):
             warnings.warn(
-                '"*" between a DenseQArray and another DenseQArray '
-                'or an Array performs element-wise multiplication. If you '
-                'wanted to perform matrix multiplication, use "@" operator',
+                'Calling `*` between a QArray and another QArray or Array '
+                'performs element-wise multiplication. If you want to perform '
+                'matrix multiplication, use the `@` operator instead.',
                 stacklevel=2,
             )
 
         if isinstance(other, DenseQArray):
             if self.dims != other.dims:
                 raise ValueError(
-                    f'Two DenseQArray must have the same dimensions to be multiplied '
-                    f'element wise. Got {self.dims} and {other.dims}'
+                    f'QArrays must have the same dimensions to be multiplied '
+                    f'together element-wise. Got {self.dims} and {other.dims}.'
                 )
             return DenseQArray(self.data * other.data, self.dims)
         else:
@@ -531,8 +535,8 @@ class DenseQArray(QArray):
         if isinstance(other, DenseQArray):
             if self.dims != other.dims:
                 raise ValueError(
-                    f'Two DenseQArray must have the same dimensions to be multiplied. '
-                    f'Got {self.dims} and {other.dims}'
+                    f'QArrays must have the same dimensions to be multiplied '
+                    f'together. Got {self.dims} and {other.dims}.'
                 )
             return DenseQArray(self.data @ other.data, self.dims)
         else:

@@ -255,10 +255,10 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         >>> psi_abc = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi_abc.shape
         (60, 1)
-        >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
+        >>> rho_a = dq.ptrace(psi_abc)
         >>> rho_a.shape
         (3, 3)
-        >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
+        >>> rho_bc = dq.ptrace(psi_abc)
         >>> rho_bc.shape
         (20, 20)
     """
