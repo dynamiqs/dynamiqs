@@ -300,7 +300,7 @@ def to_dense(sparse: SparseDIA) -> Array:
     return out
 
 
-@jax.jit
+# @jax.jit
 def to_sparse(other: Array) -> SparseDIA:
     r"""Returns the input matrix in the SparseDIA format.
 
@@ -326,7 +326,7 @@ def to_sparse(other: Array) -> SparseDIA:
 
     for offset in range(-n + 1, n):
         diagonal = jnp.diagonal(other, offset=offset)
-        if jnp.where(diagonal != 0, diagonal, 1).shape == diagonal.shape:
+        if jnp.any(diagonal != 0):
             diag = jnp.zeros((n,))
             start = max(0, offset)
             end = min(n, n + offset)
