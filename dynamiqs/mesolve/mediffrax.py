@@ -9,6 +9,8 @@ from ..core.diffrax_solver import (
     Dopri5Solver,
     Dopri8Solver,
     EulerSolver,
+    Kvaerno3Solver,
+    Kvaerno5Solver,
     Tsit5Solver,
 )
 from ..utils.utils import dag
@@ -59,4 +61,12 @@ class MEDopri8(MEDiffraxSolver, Dopri8Solver):
 
 
 class METsit5(MEDiffraxSolver, Tsit5Solver):
+    pass
+
+
+class MEKvaerno3(MEDiffraxSolver, Kvaerno3Solver):
+    pass
+
+
+class MEKvaerno5(MEDiffraxSolver, Kvaerno5Solver):
     pass

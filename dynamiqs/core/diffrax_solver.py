@@ -155,3 +155,11 @@ class Dopri8Solver(AdaptiveSolver):
 
 class Tsit5Solver(AdaptiveSolver):
     diffrax_solver = dx.Tsit5()
+
+
+class Kvaerno3Solver(AdaptiveSolver):
+    diffrax_solver = dx.Kvaerno3()
+
+
+class Kvaerno5Solver(AdaptiveSolver):
+    diffrax_solver = dx.Kvaerno5()

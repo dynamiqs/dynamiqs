@@ -20,10 +20,20 @@ from ..core._utils import (
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Rouchon1, Solver, Tsit5
+from ..solver import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Propagator,
+    Rouchon1,
+    Solver,
+    Tsit5,
+)
 from ..time_array import Shape, TimeArray
 from ..utils.utils import todm
-from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
+from .mediffrax import MEDopri5, MEDopri8, MEEuler, MEKvaerno3, MEKvaerno5, METsit5
 from .mepropagator import MEPropagator
 from .merouchon import MERouchon1
 
@@ -86,6 +96,8 @@ def mesolve(
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
             [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
             [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
@@ -190,6 +202,8 @@ def _mesolve(
         Dopri5: MEDopri5,
         Dopri8: MEDopri8,
         Tsit5: METsit5,
+        Kvaerno3: MEKvaerno3,
+        Kvaerno5: MEKvaerno5,
         Propagator: MEPropagator,
     }
     solver_class = get_solver_class(solvers, solver)
