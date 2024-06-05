@@ -300,7 +300,7 @@ def to_dense(sparse: SparseDIA) -> Array:
     return out
 
 
-@functools.partial(jax.jit, static_argnums=(0,))
+@jax.jit
 def to_sparse(other: Array) -> SparseDIA:
     r"""Returns the input matrix in the SparseDIA format.
 
@@ -320,16 +320,13 @@ def to_sparse(other: Array) -> SparseDIA:
     offsets = []
 
     n = other.shape[0]
-    offset_range = 2 * n - 1
-    offset_center = offset_range // 2
 
-    # maybe the best way is to check all conditions but for now stick to 'not Array'
     if not isinstance(other, Array):
         other = jnp.asarray(other.array)
 
-    for offset in range(-offset_center, offset_center + 1):
+    for offset in range(-n + 1, n):
         diagonal = jnp.diagonal(other, offset=offset)
-        if jnp.any(diagonal != 0):
+        if jnp.where(diagonal != 0, diagonal, 1).shape == diagonal.shape:
             if offset > 0:
                 padding = (offset, 0)
             elif offset < 0:
