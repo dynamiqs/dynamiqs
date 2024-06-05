@@ -38,9 +38,6 @@ class RouchonSolver(dx.AbstractSolver):
     def init(self, terms, t0, t1, y0, args):
         pass
 
-    def order(self, terms):
-        return 1
-
     def step(self, terms, t0, t1, y0, args, solver_state, made_jump):
         del solver_state, made_jump
         y1 = terms.term.kraus_map(t0, t1, y0)
@@ -51,8 +48,13 @@ class RouchonSolver(dx.AbstractSolver):
         pass
 
 
+class Rouchon1Solver(RouchonSolver):
+    def order(self, terms):
+        return 1
+
+
 class MERouchon1(FixedSolver, MESolver):
-    diffrax_solver: dx.AbstractSolver = RouchonSolver()
+    diffrax_solver: dx.AbstractSolver = Rouchon1Solver()
 
     @property
     def Id(self) -> Array:
