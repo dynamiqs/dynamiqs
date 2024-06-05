@@ -19,7 +19,7 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
 
-        # The Lindblad equation is:
+        # The Lindblad equation for a single loss channel is:
         # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
         # An alternative but similar equation is:
         # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.

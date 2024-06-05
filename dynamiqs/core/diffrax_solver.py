@@ -13,6 +13,10 @@ from .abstract_solver import BaseSolver
 
 
 class DiffraxSolver(BaseSolver):
+    # Subclasses should implement:
+    # - the attributes: stepsize_controller, dt0, max_steps, diffrax_solver, terms
+    # - the methods: result, infos
+
     stepsize_controller: dx.AbstractVar[dx.AbstractStepSizeController]
     dt0: dx.AbstractVar[float | None]
     max_steps: dx.AbstractVar[int]
@@ -67,6 +71,10 @@ class DiffraxSolver(BaseSolver):
 
 
 class FixedSolver(DiffraxSolver):
+    # Subclasses should implement:
+    # - the attributes: diffrax_solver, terms
+    # - the methods: result
+
     class Infos(eqx.Module):
         nsteps: Array
 
@@ -94,6 +102,10 @@ class EulerSolver(FixedSolver):
 
 
 class AdaptiveSolver(DiffraxSolver):
+    # Subclasses should implement:
+    # - the attributes: diffrax_solver, terms
+    # - the methods: result
+
     class Infos(eqx.Module):
         nsteps: Array
         naccepted: Array

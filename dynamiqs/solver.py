@@ -123,8 +123,8 @@ class Euler(_ODEFixedStep):
 class Rouchon1(_ODEFixedStep):
     """First-order Rouchon method (fixed step size ODE solver).
 
-    Warning:
-        This solver has not been ported to JAX yet.
+    Args:
+        dt _(float)_: Fixed time step.
 
     Note-: Supported gradients
         This solver supports differentiation with
