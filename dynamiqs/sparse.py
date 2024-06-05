@@ -327,17 +327,10 @@ def to_sparse(other: Array) -> SparseDIA:
     for offset in range(-n + 1, n):
         diagonal = jnp.diagonal(other, offset=offset)
         if jnp.where(diagonal != 0, diagonal, 1).shape == diagonal.shape:
-            if offset > 0:
-                padding = (offset, 0)
-            elif offset < 0:
-                padding = (0, -offset)
-            else:
-                padding = (0, 0)
-
-            padded_diagonal = jnp.pad(
-                diagonal, padding, mode='constant', constant_values=0
-            )
-            diagonals.append(padded_diagonal)
+            diag = jnp.zeros((n,))
+            start = max(0, offset)
+            end = min(n, n + offset)
+            diagonals.append(diag.at[start:end].set(diagonal))
             offsets.append(offset)
 
     diagonals = jnp.array(diagonals)
