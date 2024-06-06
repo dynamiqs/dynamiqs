@@ -28,7 +28,7 @@ $$
 where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$. In this tutorial we consider a constant Hamiltonian and jump operators, but note that they can also be time-dependent $H(t)$ and $L_k(t)$.
 
 !!! Example "Example for a two-level system"
-    For example, $H=-\frac{\omega}{2}\sigma_z=\begin{pmatrix}-\omega/2&0\\0&\omega/2\end{pmatrix}$ and a single jump operator $L=\sqrt\gamma\sigma_-=\begin{pmatrix}0&0\\\sqrt\gamma&0\end{pmatrix}$.
+    For example, $H=\frac{\omega}{2}\sigma_z=\begin{pmatrix}\omega/2&0\\0&-\omega/2\end{pmatrix}$ and a single jump operator $L=\sqrt\gamma\sigma_-=\begin{pmatrix}0&0\\\sqrt\gamma&0\end{pmatrix}$.
 
 We can also write
 $$
@@ -40,12 +40,12 @@ where $\mathcal{L}$ is a superoperator(1) called the **Liouvillian** (sometimes 
 1. A superoperator is a linear map that takes an operator and returns an operator.
 
 !!! Example "Example for a two-level system"
-    For example, for $H=-\frac{\omega}{2}\sigma_z$ and a single jump operator $L=\sqrt\gamma\sigma_-$, the Liouvillian in vectorized form is a $4\times4$ matrix:
+    For example, for $H=\frac{\omega}{2}\sigma_z$ and a single jump operator $L=\sqrt\gamma\sigma_-$, the Liouvillian in vectorized form is a $4\times4$ matrix:
     $$
         \mathcal{L} = \begin{pmatrix}
         -\gamma & 0 & 0 & 0\\\\
-        0 & -\gamma/2-\omega i & 0 & 0\\\\
-        0 & 0 & -\gamma/2+\omega i & 0\\\\
+        0 & -\gamma/2+\omega i & 0 & 0\\\\
+        0 & 0 & -\gamma/2-\omega i & 0\\\\
         \gamma & 0 & 0 & 0\\\\
         \end{pmatrix}
     $$
@@ -111,11 +111,11 @@ You can create the state, Hamiltonian and jump operators using any array-like ob
 import jax.numpy as jnp
 import dynamiqs as dq
 
-rho0 = [[1, 0], [0, 0]]                     # initial state
-H = [[-1, 0], [0, 1]]                       # Hamiltonian
-jump_ops = [[[0, 0], [1, 0]]]               # list of jump operators
+psi0 = dq.excited()                         # initial state
+H = dq.sigmaz()                             # Hamiltonian
+jump_ops = [dq.sigmam()]                    # list of jump operators
 tsave = jnp.linspace(0, 1.0, 11)            # saving times
-res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
+res = dq.mesolve(H, jump_ops, psi0, tsave)  # run the simulation
 print(res.states[-1])                       # print the final state
 ```
 

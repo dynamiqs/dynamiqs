@@ -19,9 +19,18 @@ from ..core._utils import (
 from ..gradient import Gradient
 from ..options import Options
 from ..result import SEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
+from ..solver import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Propagator,
+    Solver,
+    Tsit5,
+)
 from ..time_array import Shape, TimeArray
-from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
+from .sediffrax import SEDopri5, SEDopri8, SEEuler, SEKvaerno3, SEKvaerno5, SETsit5
 from .sepropagator import SEPropagator
 
 __all__ = ['sesolve']
@@ -79,6 +88,8 @@ def sesolve(
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
             [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
             [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Propagator`][dynamiqs.solver.Propagator]).
 
@@ -165,6 +176,8 @@ def _sesolve(
         Dopri5: SEDopri5,
         Dopri8: SEDopri8,
         Tsit5: SETsit5,
+        Kvaerno3: SEKvaerno3,
+        Kvaerno5: SEKvaerno5,
         Propagator: SEPropagator,
     }
     solver_class = get_solver_class(solvers, solver)
