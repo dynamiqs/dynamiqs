@@ -4,9 +4,10 @@ This tutorial introduces the quantum state for an open quantum system, describes
 
 ## The quantum state
 
-The quantum state that describes an open quantum system is a **density matrix** $\rho$. It is a positive semi-definite Hermitian matrix with unit trace, of size $n\times n$[^1].
+The quantum state that describes an open quantum system is a **density matrix** $\rho$. It is a positive semi-definite Hermitian matrix with unit trace, of size $n\times n$(1).
+{ .annotate }
 
-[^1]: Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
+1. Where $n$ is the dimension of the finite-dimensional complex Hilbert space of the system.
 
 !!! Example "Example for a two-level system"
     For a two-level system, $\rho=\begin{pmatrix}a & b\\ c & d\end{pmatrix}$ with $a,d\in\R^+$ and $b,c\in\mathbb{C}$ with $b^*=c$ (Hermitian matrix), $a+d=1$ (unit trace) and all its eigenvalues are positive (positive semi-definite).
@@ -22,9 +23,9 @@ A greater precision will give a more accurate result, but will also take longer 
 
 The state evolution is described by the **Lindblad master equation**:
 $$
-    \frac{\dd\rho(t)}{\dt} = -\frac{i}{\hbar}[H(t), \rho(t)] + \sum_{k=1}^N \left(L_k \rho(t) L_k^\dag - \frac{1}{2} L_k^\dag L_k \rho(t) - \frac{1}{2} \rho(t) L_k^\dag L_k\right),
+    \frac{\dd\rho(t)}{\dt} = -\frac{i}{\hbar}[H, \rho(t)] + \sum_{k=1}^N \left(L_k \rho(t) L_k^\dag - \frac{1}{2} L_k^\dag L_k \rho(t) - \frac{1}{2} \rho(t) L_k^\dag L_k\right),
 $$
-where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$.
+where $H$ is a linear operator called the **Hamiltonian**, a matrix of size $n\times n$, and $\{L_k\}$ is a collection of arbitrary operators called **jump operators** which are also matrices of size $n\times n$. This equation is a *first-order (linear and homogeneous) ordinary differential equation* (ODE). To simplify notations, we set $\hbar=1$. In this tutorial we consider a constant Hamiltonian and jump operators, but note that they can also be time-dependent $H(t)$ and $L_k(t)$.
 
 !!! Example "Example for a two-level system"
     For example, $H=\frac{\omega}{2}\sigma_z=\begin{pmatrix}\omega/2&0\\0&-\omega/2\end{pmatrix}$ and a single jump operator $L=\sqrt\gamma\sigma_-=\begin{pmatrix}0&0\\\sqrt\gamma&0\end{pmatrix}$.
@@ -33,9 +34,10 @@ We can also write
 $$
     \frac{\dd\rho(t)}{\dt} = \mathcal{L}(\rho(t)),
 $$
-where $\mathcal{L}$ is a superoperator[^2] called the **Liouvillian** (sometimes referred as Lindbladian). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
+where $\mathcal{L}$ is a superoperator(1) called the **Liouvillian** (sometimes referred as Lindbladian). We can write the state and Liouvillian in vectorized form, where we see the state $\rho(t)$ as a column vector of size $n^2$, and the Liouvillian as a matrix of size $n^2\times n^2$.
+{ .annotate }
 
-[^2]: A superoperator is a linear map that takes an operator and returns an operator.
+1. A superoperator is a linear map that takes an operator and returns an operator.
 
 !!! Example "Example for a two-level system"
     For example, for $H=\frac{\omega}{2}\sigma_z$ and a single jump operator $L=\sqrt\gamma\sigma_-$, the Liouvillian in vectorized form is a $4\times4$ matrix:
@@ -67,8 +69,10 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ^^Space complexity^^: $O(n^4)$ (storing the Liouvillian).
 
-^^Time complexity^^: $O(n^6)$ (complexity of computing the $n^2\times n^2$ Liouvillian matrix exponential[^3]).
-[^3]: Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
+^^Time complexity^^: $O(n^6)$ (complexity of computing the $n^2\times n^2$ Liouvillian matrix exponential(1)).
+{ .annotate }
+
+1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 For large Hilbert space sizes, the time complexity of computing the matrix exponential is often prohibitive, hence the need for other methods such as the ones we now describe below.
 

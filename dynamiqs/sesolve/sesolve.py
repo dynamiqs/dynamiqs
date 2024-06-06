@@ -50,11 +50,16 @@ def sesolve(
 
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
     $t$, starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
-    equation ($\hbar=1$)
+    equation (with $\hbar=1$ and where time is implicit(1))
     $$
-        \frac{\dd\ket{\psi(t)}}{\dt} = -i H(t) \ket{\psi(t)},
+        \frac{\dd\ket{\psi}}{\dt} = -i H \ket{\psi},
     $$
-    where $H(t)$ is the system's Hamiltonian at time $t$.
+    where $H$ is the system's Hamiltonian.
+    { .annotate }
+
+    1. With explicit time dependence:
+        - $\ket\psi\to\ket{\psi(t)}$
+        - $H\to H(t)$
 
     Note-: Defining a time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
