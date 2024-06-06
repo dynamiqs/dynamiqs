@@ -19,7 +19,8 @@ class SparseQArray(QArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.diags.shape
+        N = self.diags.shape[-1]
+        return (N, N)
 
     @property
     def ndim(self) -> int:
@@ -28,7 +29,7 @@ class SparseQArray(QArray):
     @property
     @pack_dims
     def mT(self) -> SparseQArray:
-        N = self.dims[0]
+        N = self.shape[0]
         out_diags = jnp.zeros_like(self.diags)
         for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
             start = max(0, self_offset)
