@@ -12,9 +12,10 @@ class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     dims: tuple[int, ...] = eqx.field(static=True)
 
-    def __add__(
-        self, other: ScalarLike | ArrayLike | SparseQArray
-    ) -> Array | SparseQArray:
+    def __neg__(self) -> SparseQArray:
+        return -1 * self
+
+    def __add__(self, other: ScalarLike | ArrayLike) -> QArray:
         if isinstance(other, ScalarLike):
             if other == 0:
                 return self
