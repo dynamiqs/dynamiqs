@@ -32,6 +32,7 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
             returning $O_0$ for any time $t$.
     """
     if isinstance(array, SparseQArray):
+        check_shape(array, 'array', '(..., n, n)')
         return ConstantTimeArray(array)
 
     array = jnp.asarray(array, dtype=cdtype())
