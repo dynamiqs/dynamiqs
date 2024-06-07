@@ -192,7 +192,7 @@ class TimeArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT, in_axes, discontinuity_ts (if needed)
+    # - the properties: dtype, shape, mT, in_axes, discontinuity_ts
     # - the methods: reshape, broadcast_to, conj, __call__, __neg__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
@@ -225,8 +225,9 @@ class TimeArray(eqx.Module):
         return len(self.shape)
 
     @property
+    @abstractmethod
     def discontinuity_ts(self) -> Array | None:
-        return None
+        pass
 
     @abstractmethod
     def reshape(self, *new_shape: int) -> TimeArray:
@@ -315,6 +316,10 @@ class ConstantTimeArray(TimeArray):
     @property
     def in_axes(self) -> PyTree[int]:
         return ConstantTimeArray(Shape(self.array.shape[:-2]))
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return None
 
     def reshape(self, *new_shape: int) -> TimeArray:
         return ConstantTimeArray(self.array.reshape(*new_shape))
