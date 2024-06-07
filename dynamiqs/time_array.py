@@ -84,7 +84,12 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     return PWCTimeArray(times, values, array)
 
 
-def modulated(f: callable[[float], Array], array: ArrayLike) -> ModulatedTimeArray:
+def modulated(
+    f: callable[[float], Array],
+    array: ArrayLike,
+    *,
+    discontinuity_ts: ArrayLike | None = None,
+) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
     A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
@@ -97,6 +102,8 @@ def modulated(f: callable[[float], Array], array: ArrayLike) -> ModulatedTimeArr
             `f(t: float) -> Array` that returns the modulating factor
             $f(t)$.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
+        discontinuity_ts _(array_like, optional)_: Times at which there is a
+            discontinuous jump in the function values.
 
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -115,10 +122,12 @@ def modulated(f: callable[[float], Array], array: ArrayLike) -> ModulatedTimeArr
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
-    return ModulatedTimeArray(f, array)
+    return ModulatedTimeArray(f, array, discontinuity_ts)
 
 
-def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
+def timecallable(
+    f: callable[[float], Array], *, discontinuity_ts: ArrayLike | None = None
+) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
@@ -134,6 +143,8 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
             `(t: float) -> Array` that returns the array $f(t)$.
+        discontinuity_ts _(array_like, optional)_: Times at which there is a
+            discontinuous jump in the function values.
 
     Returns:
        _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -148,7 +159,7 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
-    return CallableTimeArray(f)
+    return CallableTimeArray(f, discontinuity_ts)
 
 
 class Shape(tuple):
@@ -405,6 +416,7 @@ class PWCTimeArray(TimeArray):
 class ModulatedTimeArray(TimeArray):
     f: BatchedCallable  # (...)
     array: Array  # (n, n)
+    _disc_ts: Array | None
 
     @property
     def dtype(self) -> np.dtype:
@@ -416,33 +428,37 @@ class ModulatedTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array.mT)
+        return ModulatedTimeArray(self.f, self.array.mT, self._disc_ts)
 
     @property
     def in_axes(self) -> PyTree[int]:
-        return ModulatedTimeArray(Shape(self.f.shape), Shape())
+        return ModulatedTimeArray(Shape(self.f.shape), Shape(), Shape())
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return self._disc_ts
 
     def reshape(self, *new_shape: int) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape[:-2]))
-        return ModulatedTimeArray(f, self.array)
+        return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
         f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), *new_shape[:-2]))
-        return ModulatedTimeArray(f, self.array)
+        return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def conj(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).conj())
-        return ModulatedTimeArray(f, self.array.conj())
+        return ModulatedTimeArray(f, self.array.conj(), self._disc_ts)
 
     def __call__(self, t: ScalarLike) -> Array:
         values = self.f(t)
         return values.reshape(*values.shape, 1, 1) * self.array
 
     def __neg__(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, -self.array)
+        return ModulatedTimeArray(self.f, -self.array, self._disc_ts)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array * y)
+        return ModulatedTimeArray(self.f, self.array * y, self._disc_ts)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
@@ -456,6 +472,7 @@ class ModulatedTimeArray(TimeArray):
 
 class CallableTimeArray(TimeArray):
     f: BatchedCallable  # (..., n, n)
+    _disc_ts: Array | None
 
     @property
     def dtype(self) -> np.dtype:
@@ -468,34 +485,38 @@ class CallableTimeArray(TimeArray):
     @property
     def mT(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).mT)
-        return CallableTimeArray(f)
+        return CallableTimeArray(f, self._disc_ts)
 
     @property
     def in_axes(self) -> PyTree[int]:
-        return CallableTimeArray(Shape(self.f.shape[:-2]))
+        return CallableTimeArray(Shape(self.f.shape[:-2]), Shape())
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return self._disc_ts
 
     def reshape(self, *new_shape: int) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape))
-        return CallableTimeArray(f)
+        return CallableTimeArray(f, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
         f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), new_shape))
-        return CallableTimeArray(f)
+        return CallableTimeArray(f, self._disc_ts)
 
     def conj(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).conj())
-        return CallableTimeArray(f)
+        return CallableTimeArray(f, self._disc_ts)
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
 
     def __neg__(self) -> TimeArray:
         f = jtu.Partial(lambda t: -self.f(t))
-        return CallableTimeArray(f)
+        return CallableTimeArray(f, self._disc_ts)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t) * y)
-        return CallableTimeArray(f)
+        return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
