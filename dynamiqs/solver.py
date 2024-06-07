@@ -288,20 +288,19 @@ class Tsit5(_ODEAdaptiveStep):
 class Kvaerno3(_ODEAdaptiveStep):
     """Kvaerno's method of order 3 (adaptive step size and implicit ODE solver).
 
-    This method is suitable for stiff problems, typically problems with Hamiltonians or
-    jump operators that feature large spectral gaps. This is for instance the case with
-    high-order polynomials in bosonic ladder operators in large dimensions.
+    This method is suitable for stiff problems, typically those with Hamiltonians or
+    Liouvillians that have eigenvalues spanning different orders of magnitudes. This is
+    for instance the case with problems involving high-order polynomials of the bosonic
+    annihilation and creation operators, in large dimensions.
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno3`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno3).
 
     Warning:
-        Implicit solvers might suffer from **single-precision** floating-point numbers
-        at larger tolerances than explicit solvers. If you find that your simulation is
-        slow or that the progress bar gets stuck, consider switching to
-        double-precision with
-        [`dq.set_precision("double")`][dynamiqs.set_precision]. See more details in the
-        [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
+        If you find that your simulation is slow or that the progress bar gets stuck,
+        consider switching to double-precision with
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
+        [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
 
     Args:
         rtol: Relative tolerance.
@@ -335,20 +334,19 @@ class Kvaerno3(_ODEAdaptiveStep):
 class Kvaerno5(_ODEAdaptiveStep):
     """Kvaerno's method of order 5 (adaptive step size and implicit ODE solver).
 
-    This method is suitable for stiff problems, typically problems with Hamiltonians or
-    jump operators that feature large spectral gaps. This is for instance the case with
-    high-order polynomials in bosonic ladder operators in large dimensions.
+    This method is suitable for stiff problems, typically those with Hamiltonians or
+    Liouvillians that have eigenvalues spanning different orders of magnitudes. This is
+    for instance the case with problems involving high-order polynomials of the bosonic
+    annihilation and creation operators, in large dimensions.
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno5).
 
     Warning:
-        Implicit solvers might suffer from single-precision floating-point numbers at
-        larger tolerances than explicit solvers. If you find that your simulation is
-        slow or that the progress bar gets stuck, consider switching to
-        double-precision with
-        [`dq.set_precision("double")`][dynamiqs.set_precision]. See more details in the
-        [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
+        If you find that your simulation is slow or that the progress bar gets stuck,
+        consider switching to double-precision with
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
+        [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
 
     Args:
         rtol: Relative tolerance.
