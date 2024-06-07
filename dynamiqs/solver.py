@@ -296,10 +296,8 @@ class Kvaerno3(_ODEAdaptiveStep):
     library, see [`diffrax.Kvaerno3`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno3).
 
     Warning:
-        Implicit solvers might suffer from **single-precision** floating-point numbers
-        at larger tolerances than explicit solvers. If you find that your simulation is
-        slow or that the progress bar gets stuck, consider switching to
-        double-precision with
+        If you find that your simulation is slow or that the progress bar gets stuck,
+        consider switching to double-precision with
         [`dq.set_precision("double")`][dynamiqs.set_precision]. See more details in the
         [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
 
@@ -343,10 +341,8 @@ class Kvaerno5(_ODEAdaptiveStep):
     library, see [`diffrax.Kvaerno5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno5).
 
     Warning:
-        Implicit solvers might suffer from single-precision floating-point numbers at
-        larger tolerances than explicit solvers. If you find that your simulation is
-        slow or that the progress bar gets stuck, consider switching to
-        double-precision with
+        If you find that your simulation is slow or that the progress bar gets stuck,
+        consider switching to double-precision with
         [`dq.set_precision("double")`][dynamiqs.set_precision]. See more details in the
         [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
 
