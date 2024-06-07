@@ -27,6 +27,11 @@ When using single-precision, there are certain limitations to be aware of:
 !!! Warning
     Most GPUs do not have native support for double-precision, and only perform well in single-precision. However, note that some recent NVIDIA GPUs (e.g. V100, A100, H100) do provide efficient support for double-precision.
 
+<!-- set precision back to default
+```python
+dq.set_precision('simple')
+```
+-->
 
 ### Adding a scalar to an operator
 
@@ -37,14 +42,14 @@ In QuTiP, adding a scalar to a `QObj` performs an implicit multiplication of the
     >>> sz = dq.sigmaz()
     >>> sz - 2 * dq.eye(2)
     Array([[-1.+0.j,  0.+0.j],
-           [ 0.+0.j, -3.+0.j]], dtype=complex128)
+           [ 0.+0.j, -3.+0.j]], dtype=complex64)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sz = dq.sigmaz()
     >>> sz - 2
     Array([[-1.+0.j, -2.+0.j],
-           [-2.+0.j, -3.+0.j]], dtype=complex128)
+           [-2.+0.j, -3.+0.j]], dtype=complex64)
     ```
 
 ### Multiplying two operators
@@ -56,14 +61,14 @@ In QuTiP, the `*` symbol is used to multiply two operators. This convention also
     >>> sx = dq.sigmax()
     >>> sx @ sx
     Array([[1.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j]], dtype=complex128)
+           [0.+0.j, 1.+0.j]], dtype=complex64)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx = dq.sigmax()
     >>> sx * sx
     Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex128)
+           [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
 
 Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to compute the power of a matrix:
@@ -72,13 +77,13 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
     ```pycon
     >>> dq.powm(sx, 2)
     Array([[1.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j]], dtype=complex128)
+           [0.+0.j, 1.+0.j]], dtype=complex64)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx**2
     Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex128)
+           [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
 
 ### Computing matrix adjoint
