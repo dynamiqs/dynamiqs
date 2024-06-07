@@ -6,7 +6,7 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from .._utils import merge
+from .._utils import _concatenate_sort
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult, Result, Saved, SEResult
@@ -86,4 +86,5 @@ class MESolver(BaseSolver):
 
     @property
     def discontinuity_ts(self) -> Array | None:
-        return merge(self.H.discontinuity_ts, *[L.discontinuity_ts for L in self.Ls])
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(ts)

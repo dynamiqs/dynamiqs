@@ -63,9 +63,8 @@ def expand_as_broadcastable(arrays: tuple[ArrayLike, ...]) -> tuple[ArrayLike, .
     return tuple(expanded_arrays)
 
 
-def merge(*args: Array | None) -> Array | None:
-    # jnp.unique also sorts in ascending order
+def _concatenate_sort(*args: Array | None) -> Array | None:
     args = [x for x in args if x is not None]
     if len(args) == 0:
         return None
-    return jnp.unique(jnp.concatenate(args))
+    return jnp.sort(jnp.concatenate(args))

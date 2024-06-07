@@ -12,7 +12,7 @@ from jax import Array, lax
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
-from ._utils import cdtype, merge, obj_type_str
+from ._utils import _concatenate_sort, cdtype, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -527,7 +527,8 @@ class SummedTimeArray(TimeArray):
 
     @property
     def discontinuity_ts(self) -> Array | None:
-        return merge(*[tarray.discontinuity_ts for tarray in self.timearrays])
+        ts = [tarray.discontinuity_ts for tarray in self.timearrays]
+        return _concatenate_sort(*ts)
 
     def reshape(self, *new_shape: int) -> TimeArray:
         return SummedTimeArray(
