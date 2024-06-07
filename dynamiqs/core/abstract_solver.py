@@ -87,4 +87,4 @@ class MESolver(BaseSolver):
     @property
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
-        return _concatenate_sort(ts)
+        return _concatenate_sort(*ts)
