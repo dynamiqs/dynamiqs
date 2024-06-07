@@ -167,6 +167,8 @@ class TimeArray(eqx.Module):
         mT _(TimeArray)_: Returns the time-array transposed over its last two
             dimensions.
         ndim _(int)_: Number of dimensions.
+        discontinuity_ts _(Array | None)_: Times at which there is a discontinuous jump
+            in the time-array values.
 
     Note: Arithmetic operation support
         Time-arrays support elementary operations:
@@ -213,7 +215,6 @@ class TimeArray(eqx.Module):
 
     @property
     def discontinuity_ts(self) -> Array | None:
-        # specify times when there is a discontinuous jump in the time-array values
         return None
 
     @abstractmethod
