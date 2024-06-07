@@ -298,7 +298,7 @@ class Kvaerno3(_ODEAdaptiveStep):
     Warning:
         If you find that your simulation is slow or that the progress bar gets stuck,
         consider switching to double-precision with
-        [`dq.set_precision("double")`][dynamiqs.set_precision]. See more details in the
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in the
         [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
 
     Args:
@@ -343,7 +343,7 @@ class Kvaerno5(_ODEAdaptiveStep):
     Warning:
         If you find that your simulation is slow or that the progress bar gets stuck,
         consider switching to double-precision with
-        [`dq.set_precision("double")`][dynamiqs.set_precision]. See more details in the
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in the
         [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
 
     Args:
