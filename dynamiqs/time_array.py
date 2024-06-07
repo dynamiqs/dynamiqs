@@ -179,7 +179,8 @@ class TimeArray(eqx.Module):
             dimensions.
         ndim _(int)_: Number of dimensions.
         discontinuity_ts _(Array | None)_: Times at which there is a discontinuous jump
-            in the time-array values.
+            in the time-array values (the array is always sorted, but does not
+            necessarily contain unique values).
 
     Note: Arithmetic operation support
         Time-arrays support elementary operations:
