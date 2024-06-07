@@ -298,8 +298,8 @@ class Kvaerno3(_ODEAdaptiveStep):
     Warning:
         If you find that your simulation is slow or that the progress bar gets stuck,
         consider switching to double-precision with
-        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in the
-        [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
+        [The sharp bits 🔪](/documentation/getting_started/sharp-bits.html) tutorial.
 
     Args:
         rtol: Relative tolerance.
@@ -343,8 +343,8 @@ class Kvaerno5(_ODEAdaptiveStep):
     Warning:
         If you find that your simulation is slow or that the progress bar gets stuck,
         consider switching to double-precision with
-        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in the
-        [Sharp bits](/documentation/getting_started/sharp-bits.html) documentation.
+        [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
+        [The sharp bits 🔪](/documentation/getting_started/sharp-bits.html) tutorial.
 
     Args:
         rtol: Relative tolerance.
