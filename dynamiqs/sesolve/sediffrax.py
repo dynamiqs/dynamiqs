@@ -8,6 +8,8 @@ from ..core.diffrax_solver import (
     Dopri5Solver,
     Dopri8Solver,
     EulerSolver,
+    Kvaerno3Solver,
+    Kvaerno5Solver,
     Tsit5Solver,
 )
 
@@ -33,4 +35,12 @@ class SEDopri8(SEDiffraxSolver, Dopri8Solver):
 
 
 class SETsit5(SEDiffraxSolver, Tsit5Solver):
+    pass
+
+
+class SEKvaerno3(SEDiffraxSolver, Kvaerno3Solver):
+    pass
+
+
+class SEKvaerno5(SEDiffraxSolver, Kvaerno5Solver):
     pass

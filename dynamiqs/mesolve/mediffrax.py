@@ -9,6 +9,8 @@ from ..core.diffrax_solver import (
     Dopri5Solver,
     Dopri8Solver,
     EulerSolver,
+    Kvaerno3Solver,
+    Kvaerno5Solver,
     Tsit5Solver,
 )
 from ..utils.utils import dag
@@ -19,7 +21,7 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
 
-        # The Lindblad equation is:
+        # The Lindblad equation for a single loss channel is:
         # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
         # An alternative but similar equation is:
         # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
@@ -59,4 +61,12 @@ class MEDopri8(MEDiffraxSolver, Dopri8Solver):
 
 
 class METsit5(MEDiffraxSolver, Tsit5Solver):
+    pass
+
+
+class MEKvaerno3(MEDiffraxSolver, Kvaerno3Solver):
+    pass
+
+
+class MEKvaerno5(MEDiffraxSolver, Kvaerno5Solver):
     pass

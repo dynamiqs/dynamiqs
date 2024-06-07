@@ -19,6 +19,7 @@ theme:
     repo: fontawesome/brands/github
     admonition:
       example: material/human-male-board
+    annotation: material/plus-circle
   logo: media/logo.png
   favicon: media/favicon.svg
   palette:
@@ -152,6 +153,8 @@ nav:
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
               - Dopri8: python_api/solver/Dopri8.md
+              - Kvaerno3: python_api/solver/Kvaerno3.md
+              - Kvaerno5: python_api/solver/Kvaerno5.md
               - Euler: python_api/solver/Euler.md
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
@@ -189,6 +192,8 @@ nav:
               - basis_dm: python_api/utils/states/basis_dm.md
               - coherent: python_api/utils/states/coherent.md
               - coherent_dm: python_api/utils/states/coherent_dm.md
+              - ground: python_api/utils/states/ground.md
+              - excited: python_api/utils/states/excited.md
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
               - powm: python_api/utils/utils/powm.md
