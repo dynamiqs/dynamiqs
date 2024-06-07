@@ -119,6 +119,10 @@ def modulated(
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
+    # discontinuity_ts
+    if discontinuity_ts is not None:
+        discontinuity_ts = jnp.asarray(discontinuity_ts)
+
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
@@ -155,6 +159,10 @@ def timecallable(
         raise TypeError(
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
+
+    # discontinuity_ts
+    if discontinuity_ts is not None:
+        discontinuity_ts = jnp.asarray(discontinuity_ts)
 
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
