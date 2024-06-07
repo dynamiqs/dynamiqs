@@ -12,7 +12,7 @@ from jax import Array, lax
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
-from ._utils import cdtype, obj_type_str
+from ._utils import cdtype, merge, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -179,7 +179,7 @@ class TimeArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT, in_axes
+    # - the properties: dtype, shape, mT, in_axes, discontinuity_ts (if needed)
     # - the methods: reshape, broadcast_to, conj, __call__, __neg__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
@@ -210,6 +210,11 @@ class TimeArray(eqx.Module):
     @property
     def ndim(self) -> int:
         return len(self.shape)
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        # specify times when there is a discontinuous jump in the time-array values
+        return None
 
     @abstractmethod
     def reshape(self, *new_shape: int) -> TimeArray:
@@ -348,6 +353,10 @@ class PWCTimeArray(TimeArray):
     @property
     def in_axes(self) -> PyTree[int]:
         return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return self.times
 
     def reshape(self, *new_shape: int) -> TimeArray:
         new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
@@ -515,6 +524,10 @@ class SummedTimeArray(TimeArray):
     @property
     def in_axes(self) -> PyTree[int]:
         return SummedTimeArray([tarray.in_axes for tarray in self.timearrays])
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return merge(*[tarray.discontinuity_ts for tarray in self.timearrays])
 
     def reshape(self, *new_shape: int) -> TimeArray:
         return SummedTimeArray(

@@ -133,6 +133,7 @@ class AdaptiveSolver(DiffraxSolver):
             safety=self.solver.safety_factor,
             factormin=self.solver.min_factor,
             factormax=self.solver.max_factor,
+            jump_ts=self.discontinuity_ts,
         )
 
     @property

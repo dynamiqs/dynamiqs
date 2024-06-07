@@ -6,6 +6,7 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
+from .._utils import merge
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult, Result, Saved, SEResult
@@ -36,6 +37,10 @@ class BaseSolver(AbstractSolver):
     @property
     def t1(self) -> Scalar:
         return self.ts[-1]
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return self.H.discontinuity_ts
 
     def save(self, y: PyTree) -> Saved:
         ysave, Esave, extra = None, None, None
@@ -78,3 +83,7 @@ class MESolver(BaseSolver):
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return merge(self.H.discontinuity_ts, *[L.discontinuity_ts for L in self.Ls])
