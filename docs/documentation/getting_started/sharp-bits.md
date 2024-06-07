@@ -14,18 +14,18 @@ The syntax in dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Pytho
 
 ### Floating-point precision
 
-In dynamiqs, all arrays are represented with **single-precision** floating-point numbers (`complex64` or `float32`) by default, whereas QuTiP or NumPy arrays are represented with double-precision floating-point numbers (`complex128` or `float64`). This choice is made for **performance**, as most problems do not require the higher precision provided by double-precision floating-point numbers. However, if needed, it is possible to switch back to double precision to accommodate more demanding computational tasks, using:
+In dynamiqs, all arrays are represented by default with **single-precision** floating-point numbers (`float32` or `complex64`), whereas the default in QuTiP or NumPy is double-precision (`float64` or `complex128`). We made this choice to match JAX's default, and for **performance** reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using [`dq.set_precision()`][dynamiqs.set_precision]:
 ```python
-dq.set_precision('double') # 'simple' by default
+dq.set_precision('double')  # 'simple' by default
 ```
 
-With single-precision, there are certain limitations to be aware of:
+When using single-precision, there are certain limitations to be aware of:
 
- - **Large numbers**: Floating-point numbers are denser as they approach unity. This means that you may find an accumulation of floating-point errors when working with very large numbers. Thus, it is advised to **set the scale of your problems such that the numbers involved are close to unity**.
- - **Tolerences**: If you require very precise ODE simulations (e.g. setting lower `rtol` and `atol` than defaults), you may encounter a divergence of the simulation due to the limited precision of single-precision floating-point numbers. In this case, you should switch to double-precision.
+- **Large numbers**: Numerical errors in floating-point arithmetic become more significant when using large numbers. Therefore, you should try to choose units for your simulation such that all quantities involved are not too large, e.g. between zero and one hundred.
+- **Tolerances**: If you require very precise simulation results (e.g. if you set lower `rtol` and `atol` than the default values), the simulation time may increase significantly, or it may even get stuck. In that case, switch to double-precision.
 
-!!! Note
-    Most GPUs do not have native support for double-precision floating-point numbers, such that single-precision is often much more efficient. Note that this is not the case of certain recent NVIDIA GPUs (e.g. A100, H100, H200) which do have efficient support for double-precision.
+!!! Warning
+    Most GPUs do not have native support for double-precision, and only perform well in single-precision. However, note that some recent NVIDIA GPUs (e.g. V100, A100, H100) do provide efficient support for double-precision.
 
 
 ### Adding a scalar to an operator
