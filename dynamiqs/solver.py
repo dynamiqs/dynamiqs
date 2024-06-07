@@ -288,9 +288,10 @@ class Tsit5(_ODEAdaptiveStep):
 class Kvaerno3(_ODEAdaptiveStep):
     """Kvaerno's method of order 3 (adaptive step size and implicit ODE solver).
 
-    This method is suitable for stiff problems, typically problems with Hamiltonians or
-    jump operators that feature large spectral gaps. This is for instance the case with
-    high-order polynomials in bosonic ladder operators in large dimensions.
+    This method is suitable for stiff problems, typically those with Hamiltonians or
+    Liouvillians that have eigenvalues spanning different orders of magnitudes. This is
+    for instance the case with problems involving high-order polynomials of the bosonic
+    annihilation and creation operators, in large dimensions.
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno3`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno3).
@@ -333,9 +334,10 @@ class Kvaerno3(_ODEAdaptiveStep):
 class Kvaerno5(_ODEAdaptiveStep):
     """Kvaerno's method of order 5 (adaptive step size and implicit ODE solver).
 
-    This method is suitable for stiff problems, typically problems with Hamiltonians or
-    jump operators that feature large spectral gaps. This is for instance the case with
-    high-order polynomials in bosonic ladder operators in large dimensions.
+    This method is suitable for stiff problems, typically those with Hamiltonians or
+    Liouvillians that have eigenvalues spanning different orders of magnitudes. This is
+    for instance the case with problems involving high-order polynomials of the bosonic
+    annihilation and creation operators, in large dimensions.
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno5).
