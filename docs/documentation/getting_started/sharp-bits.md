@@ -22,7 +22,7 @@ dq.set_precision('double')  # 'simple' by default
 When using single-precision, there are certain limitations to be aware of:
 
 - **Large numbers**: Numerical errors in floating-point arithmetic become more significant when using large numbers. Therefore, you should try to choose units for your simulation such that all quantities involved are not too large, e.g. between zero and one hundred.
-- **Tolerances**: If you require very precise simulation results (e.g. if you set lower `rtol` and `atol` than the default values), the simulation time may increase significantly, or it may even get stuck. In that case, switch to double-precision.
+- **Tolerances**: If you require very precise simulation results (e.g. if you set lower `rtol` and `atol` than the default values), the simulation time may increase significantly, or the simulation may even get stuck. In that case, switch to double-precision.
 
 !!! Warning
     Most GPUs do not have native support for double-precision, and only perform well in single-precision. However, note that some recent NVIDIA GPUs (e.g. V100, A100, H100) do provide efficient support for double-precision.
