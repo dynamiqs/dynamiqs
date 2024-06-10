@@ -5,6 +5,7 @@ import functools
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jaxtyping import Array, ArrayLike, Scalar
 
 __all__ = ['SparseDIA', 'to_sparse', 'to_dense']
@@ -301,39 +302,64 @@ def to_dense(sparse: SparseDIA) -> Array:
 
 
 # @jax.jit
-def to_sparse(other: Array) -> SparseDIA:
-    r"""Returns the input matrix in the SparseDIA format.
+# def to_sparse(other: Array) -> SparseDIA:
+#     r"""Returns the input matrix in the SparseDIA format.
 
-    This should be used when a user wants to turn a dense matrix that
-    presents sparse features in the SparseDIA custom format.
+#     This should be used when a user wants to turn a dense matrix that
+#     presents sparse features in the SparseDIA custom format.
 
-    Args:
-        other: NxN matrix to turn from dense to SparseDIA format.
+#     Args:
+#         other: NxN matrix to turn from dense to SparseDIA format.
 
-    Returns:
-        SparseDIA object which has 2 main attributes:
-            object.diags: Array where each row is a diagonal.
-            object.offsets: tuple of integers that represents the
-                            respective offsets of the diagonals
-    """
-    diagonals = []
-    offsets = []
+#     Returns:
+#         SparseDIA object which has 2 main attributes:
+#             object.diags: Array where each row is a diagonal.
+#             object.offsets: tuple of integers that represents the
+#                             respective offsets of the diagonals
+#     """
+#     diagonals = []
+#     offsets = []
 
+#     n = other.shape[0]
+
+#     if not isinstance(other, Array):
+#         other = jnp.asarray(other.array)
+
+#     for offset in range(-n + 1, n):
+#         diagonal = jnp.diagonal(other, offset=offset)
+#         if jnp.any(diagonal != 0):
+#             diag = jnp.zeros((n,))
+#             start = max(0, offset)
+#             end = min(n, n + offset)
+#             diagonals.append(diag.at[start:end].set(diagonal))
+#             offsets.append(offset)
+
+#     diagonals = jnp.array(diagonals)
+#     offsets = tuple(offsets)
+
+#     return SparseDIA(diagonals, offsets)
+
+
+def find_offsets(other: ArrayLike) -> tuple[int, ...]:
+    indices = np.nonzero(other)
+    return tuple(np.unique(indices[1] - indices[0]))
+
+
+@functools.partial(jax.jit, static_argnums=(0,))
+def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     n = other.shape[0]
+    diags = jnp.zeros((len(offsets), n))
 
-    if not isinstance(other, Array):
-        other = jnp.asarray(other.array)
-
-    for offset in range(-n + 1, n):
+    for i, offset in enumerate(offsets):
+        start = max(0, offset)
+        end = min(n, n + offset)
         diagonal = jnp.diagonal(other, offset=offset)
-        if jnp.any(diagonal != 0):
-            diag = jnp.zeros((n,))
-            start = max(0, offset)
-            end = min(n, n + offset)
-            diagonals.append(diag.at[start:end].set(diagonal))
-            offsets.append(offset)
+        diags = diags.at[i, start:end].set(diagonal)
 
-    diagonals = jnp.array(diagonals)
-    offsets = tuple(offsets)
+    return diags
 
-    return SparseDIA(diagonals, offsets)
+
+def to_sparse(other: Array) -> SparseDIA:
+    offsets = find_offsets(other)
+    diags = produce_dia(offsets, other)
+    return SparseDIA(diags, offsets)
