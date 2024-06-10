@@ -37,7 +37,7 @@ class TestSparseDIA:
         # === operators
         a = dq.destroy(N)
         n = dq.number(N)
-        a_sparse = dq.to_sparse(a)
+        a_sparse = jax.jit(dq.to_sparse(a))
         n_sparse = dq.to_sparse(n)
         H0 = delta * n + eta * (a + dq.dag(a))
         H0_sparse = delta * n_sparse + eta * (a_sparse + dq.dag(a_sparse))

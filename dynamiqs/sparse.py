@@ -6,6 +6,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jax.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar
 
 __all__ = ['SparseDIA', 'to_sparse', 'to_dense']
@@ -301,45 +302,6 @@ def to_dense(sparse: SparseDIA) -> Array:
     return out
 
 
-# @jax.jit
-# def to_sparse(other: Array) -> SparseDIA:
-#     r"""Returns the input matrix in the SparseDIA format.
-
-#     This should be used when a user wants to turn a dense matrix that
-#     presents sparse features in the SparseDIA custom format.
-
-#     Args:
-#         other: NxN matrix to turn from dense to SparseDIA format.
-
-#     Returns:
-#         SparseDIA object which has 2 main attributes:
-#             object.diags: Array where each row is a diagonal.
-#             object.offsets: tuple of integers that represents the
-#                             respective offsets of the diagonals
-#     """
-#     diagonals = []
-#     offsets = []
-
-#     n = other.shape[0]
-
-#     if not isinstance(other, Array):
-#         other = jnp.asarray(other.array)
-
-#     for offset in range(-n + 1, n):
-#         diagonal = jnp.diagonal(other, offset=offset)
-#         if jnp.any(diagonal != 0):
-#             diag = jnp.zeros((n,))
-#             start = max(0, offset)
-#             end = min(n, n + offset)
-#             diagonals.append(diag.at[start:end].set(diagonal))
-#             offsets.append(offset)
-
-#     diagonals = jnp.array(diagonals)
-#     offsets = tuple(offsets)
-
-#     return SparseDIA(diagonals, offsets)
-
-
 def find_offsets(other: ArrayLike) -> tuple[int, ...]:
     indices = np.nonzero(other)
     return tuple(np.unique(indices[1] - indices[0]))
@@ -359,7 +321,9 @@ def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     return diags
 
 
+@jax.jit
 def to_sparse(other: Array) -> SparseDIA:
+    concrete_or_error(None, other)
     offsets = find_offsets(other)
     diags = produce_dia(offsets, other)
     return SparseDIA(diags, offsets)
