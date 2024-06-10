@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
@@ -19,8 +21,22 @@ class SparseQArray(QArray):
         if isinstance(other, ScalarLike):
             if other == 0:
                 return self
+            warnings.warn(
+                'Calling `+` between a Scalar and a SparseQArray'
+                'which returns a DenseQArray. If you want to perform'
+                'addition with the identity operator, use'
+                '`x + 2 * x.I`instead!',
+                stacklevel=2,
+            )
             return self.to_dense() + other
         elif isinstance(other, ArrayLike):
+            warnings.warn(
+                'Calling `+` between an Array and a SparseQArray'
+                'which returns a DenseQArray. If you want to perform'
+                'addition with the identity operator, use'
+                '`x + 2 * x.I`instead!',
+                stacklevel=2,
+            )
             return self.to_dense() + other
         elif isinstance(other, SparseQArray):
             _check_compatible_dims(self.dims, other.dims)
@@ -50,8 +66,22 @@ class SparseQArray(QArray):
         if isinstance(other, ScalarLike):
             if other == 0:
                 return self
+            warnings.warn(
+                'Calling `-` between a Scalar and a SparseQArray'
+                'which returns a DenseQArray. If you want to perform'
+                'substraction with the identity operator, use'
+                '`x - 2 * x.I`instead!',
+                stacklevel=2,
+            )
             return self.to_dense() - other
         elif isinstance(other, ArrayLike):
+            warnings.warn(
+                'Calling `-` between an Array and a SparseQArray'
+                'which returns a DenseQArray. If you want to perform'
+                'substraction with the identity operator, use'
+                '`x - 2 * x.I`instead!',
+                stacklevel=2,
+            )
             return self.to_dense() - other
         elif isinstance(other, SparseQArray):
             _check_compatible_dims(self.dims, other.dims)
@@ -77,6 +107,12 @@ class SparseQArray(QArray):
 
     def __mul__(self, other: Array | SparseQArray) -> Array | SparseQArray:
         if isinstance(other, (complex, Scalar)):
+            warnings.warn(
+                'Calling `*` between a Scalar and another Array or SparseQArray '
+                'performs element-wise multiplication. If you want to perform '
+                'matrix multiplication, use the `@` operator instead.',
+                stacklevel=2,
+            )
             diags, offsets = other * self.diags, self.offsets
             return SparseQArray(diags, offsets, self.dims)
         elif isinstance(other, Array):
