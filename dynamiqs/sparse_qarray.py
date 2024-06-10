@@ -10,7 +10,7 @@ from .qarray import QArray
 class SparseQArray(QArray):
     diags: Array
     offsets: tuple[int, ...] = eqx.field(static=True)
-    dims: tuple[int, ...] = eqx.field(static=True)
+    dims: tuple[int, ...]
 
     def __neg__(self) -> SparseQArray:
         return -1 * self
