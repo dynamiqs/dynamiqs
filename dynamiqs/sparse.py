@@ -13,8 +13,8 @@ __all__ = ['SparseDIA', 'to_sparse', 'to_dense']
 
 
 class SparseDIA(eqx.Module):
-    diags: jax.Array
     offsets: tuple[int, ...] = eqx.field(static=True)
+    diags: jax.Array
 
     @property
     def dtype(self) -> jnp.dtype:
