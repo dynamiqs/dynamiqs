@@ -26,7 +26,6 @@ from .utils.utils.general import (
     tobra,
     todm,
     toket,
-    unit,
 )
 
 __all__ = ['QArray', 'DenseQArray']
@@ -87,15 +86,6 @@ class QArray(eqx.Module):
             The identity operator.
         """
 
-    @property
-    @abstractmethod
-    def mT(self) -> QArray:
-        """Returns the transpose of the quantum state.
-
-        Returns:
-            The transpose of the quantum state.
-        """
-
     # methods
     @abstractmethod
     def conj(self) -> QArray:
@@ -106,6 +96,14 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
+    def dag(self) -> QArray:
+        """Returns the dagger of the quantum state.
+
+        Returns:
+            The dagger of the quantum state.
+        """
+
+    @abstractmethod
     def norm(self) -> Array:
         """Returns the norm of the quantum state.
 
@@ -113,29 +111,13 @@ class QArray(eqx.Module):
             The norm of the quantum state.
         """
 
-    @abstractmethod
     def unit(self) -> QArray:
-        """Returns the normalize the quantum state.
+        """Returns the normalized the quantum state.
 
         Returns:
             The normalized quantum state.
         """
-
-    @abstractmethod
-    def diag(self) -> Array:
-        """Returns the diagonal of the quantum state.
-
-        Returns:
-            The diagonal of the quantum state.
-        """
-
-    @abstractmethod
-    def trace(self) -> Array:
-        """Returns the trace of the quantum state.
-
-        Returns:
-            The trace of the quantum state.
-        """
+        return self / self.norm()[..., None, None]
 
     @abstractmethod
     def reshape(self, *new_shape: int) -> QArray:
@@ -165,14 +147,6 @@ class QArray(eqx.Module):
 
         Returns:
             The partial trace of the quantum state.
-        """
-
-    @abstractmethod
-    def dag(self) -> QArray:
-        """Returns the dagger of the quantum state.
-
-        Returns:
-            The dagger of the quantum state.
         """
 
     @abstractmethod
@@ -286,15 +260,13 @@ class QArray(eqx.Module):
             f'dims={self.dims}, dtype={self.dtype})'
         )
 
-    def __str__(self) -> str:
-        return self.__repr__()
-
     def __neg__(self) -> QArray:
         """Negate the quantum state."""
         return -1 * self
 
+    @abstractmethod
     def __mul__(
-        self, other: ScalarLike | ArrayLike @ abstractmethod
+        self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with array
         """Element-wise multiplication with a scalar or an array."""
 
@@ -302,23 +274,28 @@ class QArray(eqx.Module):
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with array
         """Element-wise multiplication with a scalar or an array on the right."""
+        return other * self
 
+    @abstractmethod
     def __add__(
         self, other: ScalarLike | ArrayLike @ abstractmethod
     ) -> QArray:  # warning if used with scalar
         """Element-wise addition with a scalar or an array."""
 
+    @abstractmethod
     def __radd__(
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
         """Element-wise addition with a scalar or an array on the right."""
         return self + other
 
+    @abstractmethod
     def __sub__(
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
         """Element-wise subtraction with a scalar or an array."""
 
+    @abstractmethod
     def __rsub__(
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
@@ -329,17 +306,25 @@ class QArray(eqx.Module):
     def __matmul__(self, other: ArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array."""
 
+    @abstractmethod
     def __rmatmul__(self, other: ArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array
         on the right.
         """
+
+    @abstractmethod
+    def __and__(self, other: QArray) -> QArray:
+        """Tensor product between two quantum states."""
+
+    @abstractmethod
+    def __pow__(self, power: int) -> QArray:
+        """Matrix power of the quantum state."""
 
 
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
     data: Array
-    dims: tuple[int, ...]
 
     def __init__(self, data: ArrayLike, dims: tuple[int, ...] | None = None):
         if not (isbra(data) or isket(data) or isdm(data) or isop(data)):
@@ -367,28 +352,21 @@ class DenseQArray(QArray):
     def I(self) -> Array:  # noqa: E743
         return jnp.eye(jnp.prod(jnp.asarray(self.dims)))
 
-    @property
-    @pack_dims
-    def mT(self) -> Array:
-        return self.data.mT
-
     @pack_dims
     def conj(self) -> Array:
         return self.data.conj()
 
+    @pack_dims
+    def dag(self) -> Array:
+        """Dagger of the quantum state.
+
+        Returns:
+            DenseQArray: The dagger of the quantum state.
+        """
+        return dag(self.data)
+
     def norm(self) -> Array:
         return norm(self.data)
-
-    @pack_dims
-    def unit(self) -> Array:
-        return unit(self.data)
-
-    @pack_dims
-    def diag(self) -> Array:
-        return jnp.diag(self.data)
-
-    def trace(self) -> Array:
-        return jnp.trace(self.data)
 
     @pack_dims
     def reshape(self, *new_shape: int) -> Array:
@@ -403,15 +381,6 @@ class DenseQArray(QArray):
             ptrace(self.data, keep, self.dims),
             tuple(self.dims[dim] for dim in keep),
         )
-
-    @pack_dims
-    def dag(self) -> Array:
-        """Dagger of the quantum state.
-
-        Returns:
-            DenseQArray: The dagger of the quantum state.
-        """
-        return dag(self.data)
 
     def isket(self) -> bool:
         return isket(self.data)
@@ -556,3 +525,11 @@ class DenseQArray(QArray):
     def __and__(self, other: DenseQArray) -> DenseQArray:
         """Tensor product between two quantum states."""
         return DenseQArray(tensor(self.data, other.data), self.dims + other.dims)
+
+    def __pow__(self, power: int) -> DenseQArray:
+        warnings.warn(
+            'Calling `**` between on a QArray performs '
+            'element-wise power. If you want to perform matrix power, '
+            'use `x @ x @ ... @ x` instead.',
+            stacklevel=2,
+        )

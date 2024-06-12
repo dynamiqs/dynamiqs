@@ -255,10 +255,10 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         >>> psi_abc = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi_abc.shape
         (60, 1)
-        >>> rho_a = dq.ptrace(psi_abc)
+        >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
         >>> rho_a.shape
         (3, 3)
-        >>> rho_bc = dq.ptrace(psi_abc)
+        >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
         >>> rho_bc.shape
         (20, 20)
     """
@@ -744,6 +744,33 @@ def todm(x: ArrayLike) -> Array:
         return proj(x)
     else:
         return x
+
+
+def toop(x: ArrayLike) -> Array:
+    r""" "Returns the density matrix representation of a quantum state.  # noqa: D210
+
+    Note:
+    This function is an alias of [`dq.todm()`][dynamiqs.todm].
+
+    Args:
+    x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
+    density matrix.
+
+    Returns:
+    _(array of shape (..., n, n))_ Density matrix.
+
+    Examples:
+    >>> psi = dq.fock(3, 0)  # shape: (3, 1)
+    >>> psi
+    Array([[1.+0.j],
+           [0.+0.j],
+           [0.+0.j]], dtype=complex64)
+    >>> dq.toop(psi)  # shape: (3, 3)
+    Array([[1.+0.j, 0.+0.j, 0.+0.j],
+           [0.+0.j, 0.+0.j, 0.+0.j],
+           [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    return todm(x)
 
 
 def proj(x: ArrayLike) -> Array:
