@@ -95,7 +95,7 @@ def modulated(
     shape _(...)_ for any time $t$.
 
     Args:
-        f _(function returning array of shape (...))_: Function with signature
+        f _(function returning scalar or array of shape (...))_: Function with signature
             `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
