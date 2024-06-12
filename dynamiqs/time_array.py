@@ -122,6 +122,7 @@ def modulated(
     # discontinuity_ts
     if discontinuity_ts is not None:
         discontinuity_ts = jnp.asarray(discontinuity_ts)
+        discontinuity_ts = jnp.sort(discontinuity_ts)
 
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
@@ -163,6 +164,7 @@ def timecallable(
     # discontinuity_ts
     if discontinuity_ts is not None:
         discontinuity_ts = jnp.asarray(discontinuity_ts)
+        discontinuity_ts = jnp.sort(discontinuity_ts)
 
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
@@ -236,6 +238,7 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def discontinuity_ts(self) -> Array | None:
+        # must be sorted, not necessarily unique values
         pass
 
     @abstractmethod
