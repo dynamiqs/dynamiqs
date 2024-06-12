@@ -224,6 +224,11 @@ The returned object can be called at different times:
     >>> H = dq.modulated(f, dq.sigmax())
     ```
 
+??? Note "Discontinuous function"
+    If there is a discontinuous jump in the function values, you should use the optional
+    argument `discontinuity_ts` to enforce adaptive step size solvers to stop at these
+    times (i.e., right before, and right after the jump).
+
 ### Arbitrary time-dependent operators
 
 An arbitrary time-dependent operator is defined by
@@ -283,3 +288,8 @@ The returned object can be called at different times:
     >>> f = functools.partial(func, a=1.0, amplitude=5.0)
     >>> H = dq.timecallable(f)
     ```
+
+??? Note "Discontinuous function"
+    If there is a discontinuous jump in the function values, you should use the optional
+    argument `discontinuity_ts` to enforce adaptive step size solvers to stop at these
+    times (i.e., right before, and right after the jump).
