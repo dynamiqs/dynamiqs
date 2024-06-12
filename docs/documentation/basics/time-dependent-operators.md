@@ -176,7 +176,7 @@ where $f(t)$ is an time-dependent scalar.
 
 In dynamiqs, modulated operators are defined by:
 
-- `f`: a Python function with signature `f(t: float) -> Array` that returns the modulating factor $f(t)$ for any time $t$, as an array of shape _(...)_,
+- `f`: a Python function with signature `f(t: float) -> Scalar | Array` that returns the modulating factor $f(t)$ for any time $t$, as a scalar or an array of shape _(...)_,
 - `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
 
 To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.

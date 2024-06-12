@@ -9,7 +9,7 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from jax import Array, lax
-from jaxtyping import ArrayLike, PyTree, ScalarLike
+from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
@@ -85,7 +85,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
 
 
 def modulated(
-    f: callable[[float], Array],
+    f: callable[[float], Scalar | Array],
     array: ArrayLike,
     *,
     discontinuity_ts: ArrayLike | None = None,
@@ -94,12 +94,12 @@ def modulated(
 
     A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
     time-dependent scalar. The function $f$ is defined by passing a Python function
-    with signature `f(t: float) -> Array` that returns an array of shape
-    _(...)_ for any time $t$.
+    with signature `f(t: float) -> Scalar | Array` that returns a scalar or an array of
+    shape _(...)_ for any time $t$.
 
     Args:
-        f _(function returning array of shape (...))_: Function with signature
-            `f(t: float) -> Array` that returns the modulating factor
+        f _(function returning scalar or array of shape (...))_: Function with signature
+            `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
         discontinuity_ts _(array_like, optional)_: Times at which there is a
@@ -609,9 +609,9 @@ class BatchedCallable(eqx.Module):
     f: callable[[float], Array]
     indices: list[Array]
 
-    def __init__(self, f: callable[[float], Array]):
-        # make f a valid PyTree with `Partial`
-        self.f = jtu.Partial(f)
+    def __init__(self, f: callable[[float], Scalar | Array]):
+        # make f a valid PyTree with `Partial` and convert its output to an array
+        self.f = jtu.Partial(lambda t: jnp.asarray(f(t)))
         shape = jax.eval_shape(f, 0.0).shape
         self.indices = list(jnp.indices(shape))
 
