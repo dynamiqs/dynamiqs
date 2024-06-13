@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 from optimistix import AbstractRootFinder
 
+from .._utils import _concatenate_sort
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult, Result, Saved, SEResult, FinalSaved
@@ -39,6 +40,10 @@ class BaseSolver(AbstractSolver):
     @property
     def t1(self) -> Scalar:
         return self.ts[-1] if self.options.t1 is None else self.options.t1
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return self.H.discontinuity_ts
 
     def save(self, y: PyTree) -> Saved:
         ysave, Esave, extra = None, None, None
@@ -97,3 +102,8 @@ class MCSolver(BaseSolver):
 
     def save(self, y: PyTree) -> Saved:
         return super().save(unit(y))
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(*ts)

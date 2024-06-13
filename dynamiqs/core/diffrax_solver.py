@@ -13,6 +13,10 @@ from .abstract_solver import BaseSolver
 
 
 class DiffraxSolver(BaseSolver):
+    # Subclasses should implement:
+    # - the attributes: stepsize_controller, dt0, max_steps, diffrax_solver, terms
+    # - the methods: result, infos
+
     stepsize_controller: dx.AbstractVar[dx.AbstractStepSizeController]
     dt0: dx.AbstractVar[float | None]
     max_steps: dx.AbstractVar[int]
@@ -69,6 +73,10 @@ class DiffraxSolver(BaseSolver):
 
 
 class FixedSolver(DiffraxSolver):
+    # Subclasses should implement:
+    # - the attributes: diffrax_solver, terms
+    # - the methods: result
+
     class Infos(eqx.Module):
         nsteps: Array
 
@@ -96,6 +104,10 @@ class EulerSolver(FixedSolver):
 
 
 class AdaptiveSolver(DiffraxSolver):
+    # Subclasses should implement:
+    # - the attributes: diffrax_solver, terms
+    # - the methods: result
+
     class Infos(eqx.Module):
         nsteps: Array
         naccepted: Array
@@ -123,6 +135,7 @@ class AdaptiveSolver(DiffraxSolver):
             safety=self.solver.safety_factor,
             factormin=self.solver.min_factor,
             factormax=self.solver.max_factor,
+            jump_ts=self.discontinuity_ts,
         )
 
     @property
@@ -145,3 +158,11 @@ class Dopri8Solver(AdaptiveSolver):
 
 class Tsit5Solver(AdaptiveSolver):
     diffrax_solver = dx.Tsit5()
+
+
+class Kvaerno3Solver(AdaptiveSolver):
+    diffrax_solver = dx.Kvaerno3()
+
+
+class Kvaerno5Solver(AdaptiveSolver):
+    diffrax_solver = dx.Kvaerno5()

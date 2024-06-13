@@ -20,11 +20,22 @@ from ..core._utils import (
 from ..gradient import Gradient
 from ..options import Options
 from ..result import MEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
+from ..solver import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Propagator,
+    Rouchon1,
+    Solver,
+    Tsit5,
+)
 from ..time_array import Shape, TimeArray
 from ..utils.utils import todm
-from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
+from .mediffrax import MEDopri5, MEDopri8, MEEuler, MEKvaerno3, MEKvaerno5, METsit5
 from .mepropagator import MEPropagator
+from .merouchon import MERouchon1
 
 __all__ = ['mesolve']
 
@@ -44,17 +55,23 @@ def mesolve(
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
     starting from an initial state $\rho_0$, according to the Lindblad master
-    equation ($\hbar=1$)
+    equation (with $\hbar=1$ and where time is implicit(1))
     $$
-        \frac{\dd\rho(t)}{\dt} = -i[H(t), \rho(t)]
+        \frac{\dd\rho}{\dt} = -i[H, \rho]
         + \sum_{k=1}^N \left(
-            L_k(t) \rho(t) L_k^\dag(t)
-            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
-            - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
+            L_k \rho L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho
+            - \frac{1}{2} \rho L_k^\dag L_k
         \right),
     $$
-    where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
-    collection of jump operators at time $t$.
+    where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
+    operators.
+    { .annotate }
+
+    1. With explicit time dependence:
+        - $\rho\to\rho(t)$
+        - $H\to H(t)$
+        - $L_k\to L_k(t)$
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
@@ -85,6 +102,8 @@ def mesolve(
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
             [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
             [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
@@ -185,9 +204,12 @@ def _mesolve(
     # === select solver class
     solvers = {
         Euler: MEEuler,
+        Rouchon1: MERouchon1,
         Dopri5: MEDopri5,
         Dopri8: MEDopri8,
         Tsit5: METsit5,
+        Kvaerno3: MEKvaerno3,
+        Kvaerno5: MEKvaerno5,
         Propagator: MEPropagator,
     }
     solver_class = get_solver_class(solvers, solver)
