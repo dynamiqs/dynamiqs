@@ -271,6 +271,29 @@ class TimeArray(eqx.Module):
             New time-array object with element-wise complex conjuguated values.
         """
 
+    def squeeze(self, axis: int | None = None) -> TimeArray:
+        """Squeeze a time-array.
+
+        Args:
+            axis: Axis to squeeze. If `none`, all axes with dimension 1 are squeezed.
+
+        Returns:
+            New time-array object with squeezed_shape
+        """
+        if axis is None:
+            shape = self.shape
+            x = self
+            for i, s in reversed(list(enumerate(shape))):
+                if s == 1:
+                    x = x.squeeze(i)
+            return x
+
+        if axis >= self.ndim:
+            raise ValueError(
+                f'Cannot squeeze axis {axis} from a time-array with {self.ndim} axes.'
+            )
+        return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
+
     @abstractmethod
     def __call__(self, t: ScalarLike) -> Array:
         """Returns the time-array evaluated at a given time.
@@ -642,6 +665,9 @@ class BatchedCallable(eqx.Module):
 
     def conj(self) -> BatchedCallable:
         return BatchedCallable(lambda t: self.f(t).conj())
+
+    def squeeze(self, i) -> BatchedCallable:
+        return BatchedCallable(lambda t: jnp.squeeze(self.f(t), i))
 
     def __neg__(self) -> BatchedCallable:
         return BatchedCallable(lambda t: -self.f(t))
