@@ -103,7 +103,9 @@ def tree_false_to_none(
     return jtu.tree_map(lambda x: x if x is not False else None, tree, is_leaf=is_leaf)
 
 
-def _h_vectorize(f: TimeArray, n_batch_false, out_axes_false):
+def _h_vectorize(  # noqa: C901
+    f: TimeArray, n_batch_false: PyTree, out_axes_false: PyTree
+) -> TimeArray:
     """Vectorize a Hamiltonian function.
 
     Args:
@@ -145,7 +147,7 @@ def _h_vectorize(f: TimeArray, n_batch_false, out_axes_false):
 
     expand_dims = sorted(expand_dims)
 
-    def squeeze_args(size, arg):
+    def squeeze_args(size: PyTree, arg: PyTree) -> PyTree:
         """Squeeze the all the arguments with a dimension 1."""
         if is_shape(size):
             for i, s in reversed(list(enumerate(size))):
@@ -154,19 +156,20 @@ def _h_vectorize(f: TimeArray, n_batch_false, out_axes_false):
 
         return arg
 
-    def unsqueeze_args(out_ax, result):
+    def unsqueeze_args(out_ax: PyTree, result: PyTree) -> PyTree:
         """Unsqueeze the result."""
         if out_ax is not False:
             for dim in expand_dims:
-                result = jtu.tree_map(lambda t: jnp.expand_dims(t, dim), result)
+                result = jtu.tree_map(
+                    ft.partial(lambda t, dim: jnp.expand_dims(t, dim), dim=dim), result
+                )
 
         return result
 
-    def wrap(*args):
+    def wrap(*args: [PyTree]) -> PyTree:
         squeezed_args = jtu.tree_map(squeeze_args, n_batch_false, args)
         result = f(*squeezed_args)
-        result = jtu.tree_map(unsqueeze_args, out_axes_false, result)
-        return result
+        return jtu.tree_map(unsqueeze_args, out_axes_false, result)
 
     return wrap
 

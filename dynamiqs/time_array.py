@@ -329,8 +329,8 @@ class TimeArray(eqx.Module):
     def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
-    # def __repr__(self) -> str:
-    #     return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
 
 class ConstantTimeArray(TimeArray):
@@ -658,7 +658,7 @@ class BatchedCallable(eqx.Module):
     def conj(self) -> BatchedCallable:
         return BatchedCallable(lambda t: self.f(t).conj())
 
-    def squeeze(self, i) -> BatchedCallable:
+    def squeeze(self, i: int) -> BatchedCallable:
         return BatchedCallable(lambda t: jnp.squeeze(self.f(t), i))
 
     def __neg__(self) -> BatchedCallable:

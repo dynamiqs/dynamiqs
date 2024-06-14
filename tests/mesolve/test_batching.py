@@ -75,7 +75,7 @@ def test_batching_boris():
     # Hamiltonian
     H = H1 + H2
 
-    rho0 = dq.fock_dm(n, 1)  # (4, 9, 9)
+    rho0 = dq.fock_dm(n, range(3))  # (4, 9, 9)
     jump_ops = [a]
     result = dq.mesolve(H, jump_ops, rho0, [0, 1])
-    print(result.states.shape)
+    assert result.states.shape == (30, 1, 20, 1, 3, 2, 9, 9)
