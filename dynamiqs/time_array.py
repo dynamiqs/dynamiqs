@@ -306,8 +306,8 @@ class TimeArray(eqx.Module):
     def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
-    def __repr__(self) -> str:
-        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+    # def __repr__(self) -> str:
+    #     return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
 
 class ConstantTimeArray(TimeArray):
@@ -456,15 +456,15 @@ class ModulatedTimeArray(TimeArray):
         return self._disc_ts
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape[:-2]))
+        f = self.f.reshape(*new_shape[:-2])
         return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), *new_shape[:-2]))
+        f = self.f.broadcast_to(*new_shape[:-2])
         return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def conj(self) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).conj())
+        f = self.f.conj()
         return ModulatedTimeArray(f, self.array.conj(), self._disc_ts)
 
     def __call__(self, t: ScalarLike) -> Array:
@@ -513,40 +513,48 @@ class CallableTimeArray(TimeArray):
         return self._disc_ts
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape))
+        f = self.f.reshape(*new_shape)
         return CallableTimeArray(f, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), new_shape))
+        f = self.f.broadcast_to(new_shape)
         return CallableTimeArray(f, self._disc_ts)
 
     def conj(self) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).conj())
+        f = self.f.conj()
         return CallableTimeArray(f, self._disc_ts)
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
 
     def __neg__(self) -> TimeArray:
-        f = jtu.Partial(lambda t: -self.f(t))
+        f = -self.f
         return CallableTimeArray(f, self._disc_ts)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t) * y)
+        f = self.f * y
         return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
             other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([self, other])
+            return SummedTimeArray.new([self, other])
         elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
+            return SummedTimeArray.new([self, other])
         else:
             return NotImplemented
 
 
 class SummedTimeArray(TimeArray):
     timearrays: list[TimeArray]
+
+    @staticmethod
+    def new(timearrays):
+        broadcast_shape = jnp.broadcast_shapes(*[tarray.shape for tarray in timearrays])
+        for tarray in timearrays:
+            tarray = tarray.broadcast_to(*broadcast_shape)
+            timearrays.append(tarray)
+        return SummedTimeArray(timearrays)
 
     @property
     def dtype(self) -> np.dtype:
@@ -625,3 +633,18 @@ class BatchedCallable(eqx.Module):
     @property
     def shape(self) -> tuple[int, ...]:
         return jax.eval_shape(self.f, 0.0).shape
+
+    def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t).reshape(shape))
+
+    def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
+        return BatchedCallable(lambda t: jnp.broadcast_to(self.f(t), shape))
+
+    def conj(self) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t).conj())
+
+    def __neg__(self) -> BatchedCallable:
+        return BatchedCallable(lambda t: -self.f(t))
+
+    def __mul__(self, other: Array) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t) * other)

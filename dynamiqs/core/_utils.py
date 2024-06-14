@@ -84,6 +84,7 @@ def _flat_vectorize(
     # todo: write doc
     broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
+    print("broadcast_shape", broadcast_shape)
     in_axes = jtu.tree_map(
         lambda x: 0 if len(x) > 0 else None, n_batch, is_leaf=is_shape
     )
@@ -118,6 +119,6 @@ def _cartesian_vectorize(
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     # We flat vectorize on the first n_batch term, which is the
-    # Hamilonian. This prevents performing the Cartesian product
+    # Hamiltonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
     return _flat_vectorize(f, n_batch[:1] + (None,) * len(n_batch[1:]), out_axes)
