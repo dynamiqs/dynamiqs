@@ -158,11 +158,17 @@ def _vectorized_mesolve(
     # the result is vectorized over `_saved` and `infos`
     out_axes = MEResult(False, False, False, False, 0, 0)
 
-    # if not options.cartesian_batching:
-    #     broadcast_shape = jnp.broadcast_shapes(
-    #         H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
-    #     )
-    #     rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
+    if not options.cartesian_batching:
+        broadcast_shape = jnp.broadcast_shapes(
+            H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
+        )
+
+        def broadcast(x: TimeArray) -> TimeArray:
+            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
+
+        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
+        H = broadcast(H)
+        jump_ops = list(map(broadcast, jump_ops))
 
     n_batch = (
         H.in_axes,

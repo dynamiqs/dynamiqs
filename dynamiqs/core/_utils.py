@@ -79,9 +79,12 @@ def is_shape(x: object) -> bool:
 
 
 def _flat_vectorize(
-    f: callable, n_batch: PyTree[int], out_axes: PyTree[int | None]
+    f: callable, n_batch: PyTree[int | False], out_axes: PyTree[int | False]
 ) -> callable:
     # todo: write doc
+    n_batch = tree_false_to_none(n_batch, is_leaf=is_shape)
+    out_axes = tree_false_to_none(out_axes)
+
     broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
     in_axes = jtu.tree_map(
@@ -172,6 +175,8 @@ def _cartesian_vectorize(
     f: callable, n_batch: PyTree[int], out_axes: PyTree[int | None]
 ) -> callable:
     # todo :write doc
+    n_batch = tree_false_to_none(n_batch, is_leaf=is_shape)
+    out_axes = tree_false_to_none(out_axes)
 
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
     # Only the second to last batch terms are taken into account in order to

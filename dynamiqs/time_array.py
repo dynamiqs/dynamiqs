@@ -540,7 +540,7 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = self.f.broadcast_to(new_shape)
+        f = self.f.broadcast_to(*new_shape)
         return CallableTimeArray(f, self._disc_ts)
 
     def conj(self) -> TimeArray:
@@ -561,23 +561,15 @@ class CallableTimeArray(TimeArray):
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
             other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray.new([self, other])
+            return SummedTimeArray([self, other])
         elif isinstance(other, TimeArray):
-            return SummedTimeArray.new([self, other])
+            return SummedTimeArray([self, other])
         else:
             return NotImplemented
 
 
 class SummedTimeArray(TimeArray):
     timearrays: list[TimeArray]
-
-    @staticmethod
-    def new(timearrays):
-        broadcast_shape = jnp.broadcast_shapes(*[tarray.shape for tarray in timearrays])
-        for tarray in timearrays:
-            tarray = tarray.broadcast_to(*broadcast_shape)
-            timearrays.append(tarray)
-        return SummedTimeArray(timearrays)
 
     @property
     def dtype(self) -> np.dtype:
