@@ -63,12 +63,12 @@ def test_batching_boris():
     a = dq.destroy(n)
 
     # first modulated operator (20, 1, 9, 9)
-    omega1 = jnp.linspace(0, 1, 20)[None, :]
+    omega1 = jnp.linspace(0, 1, 20)[None, None, :, None]
     f = lambda t: jnp.cos(omega1 * t)
     H1 = dq.modulated(f, a + dq.dag(a))
 
     # second modulated operator 2 (1, 30, 9, 9)
-    omega2 = jnp.linspace(0, 1, 30)[:, None]
+    omega2 = jnp.linspace(0, 1, 30)[:, None, None, None]
     f = lambda t: jnp.cos(omega2 * t)
     H2 = dq.modulated(f, 1j * a - 1j * dq.dag(a))
 

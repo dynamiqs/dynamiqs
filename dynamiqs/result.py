@@ -70,16 +70,16 @@ class Result(eqx.Module):
             'Infos   ': self.infos if self.infos is not None else None,
         }
 
-    def __str__(self) -> str:
-        parts = self._str_parts()
-
-        # remove None values
-        parts = {k: v for k, v in parts.items() if v is not None}
-
-        # pad to align colons
-        padding = max(len(k) for k in parts) + 1
-        parts_str = '\n'.join(f'{k:<{padding}}: {v}' for k, v in parts.items())
-        return f'==== {self.__class__.__name__} ====\n' + parts_str
+    # def __str__(self) -> str:
+    #     parts = self._str_parts()
+    #
+    #     # remove None values
+    #     parts = {k: v for k, v in parts.items() if v is not None}
+    #
+    #     # pad to align colons
+    #     padding = max(len(k) for k in parts) + 1
+    #     parts_str = '\n'.join(f'{k:<{padding}}: {v}' for k, v in parts.items())
+    #     return f'==== {self.__class__.__name__} ====\n' + parts_str
 
     def to_qutip(self) -> Result:
         raise NotImplementedError

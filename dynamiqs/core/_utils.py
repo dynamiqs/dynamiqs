@@ -94,21 +94,26 @@ def _flat_vectorize(
     return f
 
 
-def _h_vectorize(f: TimeArray, n_batch, out_axes):
+def tree_false_to_none(
+    tree: PyTree, is_leaf: callable[PyTree, bool] | None = None
+) -> PyTree:
+    return jtu.tree_map(lambda x: x if x is not False else None, tree, is_leaf=is_leaf)
+
+
+def _h_vectorize(f: TimeArray, n_batch_false, out_axes_false):
     """Vectorize a Hamiltonian function.
 
     Args:
         f: the Hamiltonian function.
-        n_batch: the batch shape of the Hamiltonian.
-        out_axes: the out axes of the Hamiltonian.
+        n_batch_false: the batch shape of the Hamiltonian.
+        out_axes_false: the out axes of the Hamiltonian.
     """
     # JAX completely dismisses leaves with a `None` when applying the `tree_map`, so we
     # need to keep one version of the batch shape with `False` instead of `None`
     # to keep the structure.
-    n_batch_false = n_batch
-    n_batch = jtu.tree_map(
-        lambda x: x if x != False else None, n_batch_false, is_leaf=is_shape
-    )
+    n_batch = tree_false_to_none(n_batch_false, is_leaf=is_shape)
+    out_axes = tree_false_to_none(out_axes_false)
+
     broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
 
@@ -125,22 +130,40 @@ def _h_vectorize(f: TimeArray, n_batch, out_axes):
         else:
             return 0
 
+    n = len(broadcast_shape)
+    expand_dims = []  # dimensions '1' that will be lost during the vmap but that
+    # we want to keep in the results.
     for i in range(len(broadcast_shape)):
         in_axes = jtu.tree_map(ft.partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
-        f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+        if jtu.tree_all(jtu.tree_map(lambda x: x is None, in_axes)):
+            expand_dims.append(n - i - 1)
+        else:
+            f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+
+    expand_dims = sorted(expand_dims)
 
     def squeeze_args(size, arg):
         """Squeeze the all the arguments with a dimension 1."""
         if is_shape(size):
-            for i, s in enumerate(size):
+            for i, s in reversed(list(enumerate(size))):
                 if s == 1:
                     arg = arg.squeeze(i)
 
         return arg
 
+    def unsqueeze_args(out_ax, result):
+        """Unsqueeze the result."""
+        if out_ax is not False:
+            for dim in expand_dims:
+                result = jtu.tree_map(lambda t: jnp.expand_dims(t, dim), result)
+
+        return result
+
     def wrap(*args):
         squeezed_args = jtu.tree_map(squeeze_args, n_batch_false, args)
-        return f(*squeezed_args)
+        result = f(*squeezed_args)
+        result = jtu.tree_map(unsqueeze_args, out_axes_false, result)
+        return result
 
     return wrap
 
