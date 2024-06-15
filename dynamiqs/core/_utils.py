@@ -78,32 +78,14 @@ def is_shape(x: object) -> bool:
     return isinstance(x, Shape)
 
 
-def _flat_vectorize(
-    f: callable, n_batch: PyTree[int | False], out_axes: PyTree[int | False]
-) -> callable:
-    # todo: write doc
-    n_batch = tree_false_to_none(n_batch, is_leaf=is_shape)
-    out_axes = tree_false_to_none(out_axes)
-
-    broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
-    broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
-    in_axes = jtu.tree_map(
-        lambda x: 0 if len(x) > 0 else None, n_batch, is_leaf=is_shape
-    )
-
-    for _ in range(len(broadcast_shape)):
-        f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
-
-    return f
-
-
 def tree_false_to_none(
     tree: PyTree, is_leaf: callable[PyTree, bool] | None = None
 ) -> PyTree:
+    """Replace all `False` values in a tree by `None`."""
     return jtu.tree_map(lambda x: x if x is not False else None, tree, is_leaf=is_leaf)
 
 
-def _h_vectorize(  # noqa: C901
+def _flat_vectorize(  # noqa: C901
     f: TimeArray, n_batch_false: PyTree, out_axes_false: PyTree
 ) -> TimeArray:
     """Vectorize a Hamiltonian function.
@@ -202,4 +184,4 @@ def _cartesian_vectorize(
     # We flat vectorize on the first n_batch term, which is the
     # Hamiltonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
-    return _h_vectorize(f, n_batch[:1] + (False,) * len(n_batch[1:]), out_axes)
+    return _flat_vectorize(f, n_batch[:1] + (False,) * len(n_batch[1:]), out_axes)
