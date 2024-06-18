@@ -10,8 +10,8 @@ from .qarray import QArray
 
 
 class SparseQArray(QArray):
-    diags: Array
     offsets: tuple[int, ...] = eqx.field(static=True)
+    diags: Array
     dims: tuple[int, ...]
 
     def __neg__(self) -> QArray:
@@ -49,7 +49,7 @@ class SparseQArray(QArray):
         out_offsets = tuple(sorted(out_offsets_diags.keys()))
         out_diags = jnp.stack([out_offsets_diags[offset] for offset in out_offsets])
 
-        return SparseQArray(out_diags, out_offsets, self.dims)
+        return SparseQArray(out_offsets, out_diags, self.dims)
 
     def __radd__(self, other: Array) -> Array:
         return self + other
@@ -88,7 +88,7 @@ class SparseQArray(QArray):
         out_offsets = tuple(sorted(out_offsets_diags.keys()))
         out_diags = jnp.array([out_offsets_diags[offset] for offset in out_offsets])
 
-        return SparseQArray(out_diags, out_offsets, self.dims)
+        return SparseQArray(out_offsets, out_diags, self.dims)
 
     def __rsub__(self, other: Array) -> Array:
         return -self + other
@@ -96,7 +96,7 @@ class SparseQArray(QArray):
     def __mul__(self, other: Array | SparseQArray) -> Array | SparseQArray:
         if isinstance(other, (complex, Scalar)):
             diags, offsets = other * self.diags, self.offsets
-            return SparseQArray(diags, offsets, self.dims)
+            return SparseQArray(offsets, diags, self.dims)
         elif isinstance(other, Array):
             return self._mul_dense(other)
         elif isinstance(other, SparseQArray):
@@ -116,7 +116,7 @@ class SparseQArray(QArray):
                 other_diag * self_diag[start:end]
             )
 
-        return SparseQArray(out_diags, self.offsets, self.dims)
+        return SparseQArray(self.offsets, out_diags, self.dims)
 
     def _mul_sparse(self, other: SparseQArray) -> SparseQArray:
         out_diags, out_offsets = [], []
@@ -127,7 +127,7 @@ class SparseQArray(QArray):
                 out_diags.append(self_diag * other_diag)
                 out_offsets.append(other_offset)
 
-        return SparseQArray(jnp.stack(out_diags), tuple(out_offsets), self.dims)
+        return SparseQArray(tuple(out_offsets), jnp.stack(out_diags), self.dims)
 
     def __rmul__(self, other: ArrayLike) -> Array:
         return self * other
