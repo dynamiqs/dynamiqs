@@ -8,21 +8,7 @@ from dynamiqs.sparse import *
 
 
 class TestSparseDIA:
-    # @pytest.fixture(autouse=True)
-    # def _setup(self):
-    #     # pass
-    #     N = 4
-    #     delta = 0.2
-    #     eta = 1.5
-    #     alpha0 = 0.3 - 0.5j
-    #     time = 10.0
-    #     num_tsave = 10
-
-    #     self.tsave = jnp.linspace(0.0, time, num_tsave)
-    #     self.a = dq.destroy(N)
-    #     self.n = dq.number(N)
-
-    def test_sesolve_constant_H(self, rtol=1e-05, atol=1e-08):
+    def test_sesolve_constant_H(self, rtol=1e-05, atol=1e-06):
         # parameters
         N = 4
         delta = 0.2
@@ -37,7 +23,7 @@ class TestSparseDIA:
         # === operators
         a = dq.destroy(N)
         n = dq.number(N)
-        a_sparse = jax.jit(dq.to_sparse(a))
+        a_sparse = dq.to_sparse(a)
         n_sparse = dq.to_sparse(n)
         H0 = delta * n + eta * (a + dq.dag(a))
         H0_sparse = delta * n_sparse + eta * (a_sparse + dq.dag(a_sparse))

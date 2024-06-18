@@ -38,10 +38,10 @@ class SparseDIA(eqx.Module):
             out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
                 self_diag[start:end]
             )
-        return SparseDIA(out_diags, tuple(-x for x in self.offsets))
+        return SparseDIA(tuple(-x for x in self.offsets), out_diags)
 
     def conj(self) -> SparseDIA:
-        return SparseDIA(self.diags.conj(), self.offsets)
+        return SparseDIA(self.offsets, self.diags.conj())
 
     def dag(self) -> SparseDIA:
         return self.mT.conj()
@@ -198,7 +198,7 @@ class SparseDIA(eqx.Module):
         elif isinstance(other, SparseDIA):
             diags, offsets = self._matmul_dia(other=other)
             # diags, offsets = self._cleanup(diags, offsets)
-            return SparseDIA(diags, tuple(offsets))
+            return SparseDIA(tuple(offsets), diags)
 
         return NotImplemented
 
@@ -214,7 +214,7 @@ class SparseDIA(eqx.Module):
 
         elif isinstance(other, SparseDIA):
             diags, offsets = self._add_dia(other=other)
-            return SparseDIA(diags, tuple(offsets))
+            return SparseDIA(tuple(offsets), diags)
 
         elif isinstance(other, (int, float, complex)):
             if other == 0:
@@ -241,9 +241,9 @@ class SparseDIA(eqx.Module):
             return self._add_dense(-1 * other)
 
         elif isinstance(other, SparseDIA):
-            new_other = SparseDIA(-1 * other.diags, other.offsets)
+            new_other = SparseDIA(other.offsets, -1 * other.diags)
             diags, offsets = self._add_dia(other=new_other)
-            return SparseDIA(diags, tuple(offsets))
+            return SparseDIA(tuple(offsets), diags)
 
         elif isinstance(other, (int, float, complex)):
             if other == 0:
@@ -268,11 +268,11 @@ class SparseDIA(eqx.Module):
     def __mul__(self, other: Array | SparseDIA) -> Array | SparseDIA:
         if isinstance(other, (complex, float, Scalar)):
             diags, offsets = other * self.diags, self.offsets
-            return SparseDIA(diags, offsets)
+            return SparseDIA(offsets, diags)
         elif isinstance(other, Array):
             if other.shape == (1, 1):
                 diags, offsets = other * self.diags, self.offsets
-                return SparseDIA(diags, offsets)
+                return SparseDIA(offsets, diags)
             else:
                 return self._mul_dense(other)
         elif isinstance(other, SparseDIA):
@@ -282,6 +282,9 @@ class SparseDIA(eqx.Module):
 
     def __rmul__(self, other: ArrayLike) -> Array:
         return self * other
+
+    def __neg__(self) -> SparseDIA:
+        return -1 * self
 
 
 def to_dense(sparse: SparseDIA) -> Array:
@@ -321,9 +324,9 @@ def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     return diags
 
 
-@jax.jit
+# @jax.jit
 def to_sparse(other: Array) -> SparseDIA:
     concrete_or_error(None, other)
     offsets = find_offsets(other)
     diags = produce_dia(offsets, other)
-    return SparseDIA(diags, offsets)
+    return SparseDIA(offsets, diags)
