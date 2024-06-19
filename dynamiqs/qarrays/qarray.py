@@ -5,9 +5,9 @@ from abc import abstractmethod
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
-import qutip as qt
 from jax import Array
 from jaxtyping import ArrayLike, ScalarLike
+from qutip import Qobj
 
 __all__ = ['QArray']
 
@@ -226,7 +226,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def to_qutip(self) -> qt.QObj:
+    def to_qutip(self) -> Qobj:
         """Convert the quantum state to a QuTiP object.
 
         Returns:
