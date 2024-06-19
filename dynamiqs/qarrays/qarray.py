@@ -269,11 +269,11 @@ class QArray(eqx.Module):
         """Element-wise addition with a scalar or an array on the right."""
         return self + other
 
-    @abstractmethod
     def __sub__(
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
         """Element-wise subtraction with a scalar or an array."""
+        self + (-other)
 
     def __rsub__(
         self, other: ScalarLike | ArrayLike
