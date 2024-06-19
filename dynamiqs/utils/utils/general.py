@@ -746,6 +746,33 @@ def todm(x: ArrayLike) -> Array:
         return x
 
 
+def toop(x: ArrayLike) -> Array:
+    r""" "Returns the density matrix representation of a quantum state.  # noqa: D210
+
+    Note:
+    This function is an alias of [`dq.todm()`][dynamiqs.todm].
+
+    Args:
+    x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
+    density matrix.
+
+    Returns:
+    _(array of shape (..., n, n))_ Density matrix.
+
+    Examples:
+    >>> psi = dq.fock(3, 0)  # shape: (3, 1)
+    >>> psi
+    Array([[1.+0.j],
+           [0.+0.j],
+           [0.+0.j]], dtype=complex64)
+    >>> dq.toop(psi)  # shape: (3, 3)
+    Array([[1.+0.j, 0.+0.j, 0.+0.j],
+           [0.+0.j, 0.+0.j, 0.+0.j],
+           [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    return todm(x)
+
+
 def proj(x: ArrayLike) -> Array:
     r"""Returns the projection operator onto a pure quantum state.
 
