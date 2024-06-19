@@ -296,4 +296,4 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __pow__(self, power: int) -> QArray:
-        """Matrix power of the quantum state."""
+        pass
