@@ -86,7 +86,9 @@ def tree_false_to_none(
 
 
 def _flat_vectorize(  # noqa: C901
-    f: TimeArray, n_batch_false: PyTree, out_axes_false: PyTree
+    f: TimeArray,
+    n_batch_false: PyTree[int | False],
+    out_axes_false: PyTree[int | False],
 ) -> TimeArray:
     """Vectorize a Hamiltonian function.
 
@@ -130,7 +132,7 @@ def _flat_vectorize(  # noqa: C901
     expand_dims = sorted(expand_dims)
 
     def squeeze_args(size: PyTree, arg: PyTree) -> PyTree:
-        """Squeeze the all the arguments with a dimension 1."""
+        """Squeeze all arguments with a dimension 1."""
         if is_shape(size):
             for i, s in reversed(list(enumerate(size))):
                 if s == 1:
@@ -157,16 +159,18 @@ def _flat_vectorize(  # noqa: C901
 
 
 def _cartesian_vectorize(
-    f: callable, n_batch: PyTree[int], out_axes: PyTree[int | None]
-) -> callable:
+    f: TimeArray,
+    n_batch_false: PyTree[int | False],
+    out_axes_false: PyTree[int | False],
+) -> TimeArray:
     # todo :write doc
-    n_batch = tree_false_to_none(n_batch, is_leaf=is_shape)
-    out_axes = tree_false_to_none(out_axes)
+    n_batch_false = tree_false_to_none(n_batch_false, is_leaf=is_shape)
+    out_axes_false = tree_false_to_none(out_axes_false)
 
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
     # Only the second to last batch terms are taken into account in order to
     # have proper batching of SummedTimeArrays (see below).
-    leaves, treedef = jtu.tree_flatten((None,) + n_batch[1:], is_leaf=is_shape)
+    leaves, treedef = jtu.tree_flatten((None,) + n_batch_false[1:], is_leaf=is_shape)
 
     # note: we apply the successive vmaps in reverse order, so the output
     # dimensions are in the correct order
@@ -179,9 +183,11 @@ def _cartesian_vectorize(
             in_axes[i] = 0
             in_axes = jtu.tree_unflatten(treedef, in_axes)
             for _ in range(leaf_len):
-                f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
+                f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes_false)
 
     # We flat vectorize on the first n_batch term, which is the
     # Hamiltonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
-    return _flat_vectorize(f, n_batch[:1] + (False,) * len(n_batch[1:]), out_axes)
+    return _flat_vectorize(
+        f, n_batch_false[:1] + (False,) * len(n_batch_false[1:]), out_axes_false
+    )
