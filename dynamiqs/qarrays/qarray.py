@@ -251,7 +251,7 @@ class QArray(eqx.Module):
 
     def __neg__(self) -> QArray:
         """Negate the quantum state."""
-        return -1 * self
+        return self * (-1)
 
     @abstractmethod
     def __mul__(self, y: ScalarLike | ArrayLike) -> QArray:
