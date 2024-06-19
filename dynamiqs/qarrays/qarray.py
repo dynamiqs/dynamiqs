@@ -259,11 +259,10 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __add__(
-        self, other: ScalarLike | ArrayLike @ abstractmethod
+        self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
         """Element-wise addition with a scalar or an array."""
 
-    @abstractmethod
     def __radd__(
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
@@ -276,7 +275,6 @@ class QArray(eqx.Module):
     ) -> QArray:  # warning if used with scalar
         """Element-wise subtraction with a scalar or an array."""
 
-    @abstractmethod
     def __rsub__(
         self, other: ScalarLike | ArrayLike
     ) -> QArray:  # warning if used with scalar
