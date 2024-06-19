@@ -150,7 +150,7 @@ def _flat_vectorize(  # noqa: C901
 
         return result
 
-    def wrap(*args: [PyTree]) -> PyTree:
+    def wrap(*args: PyTree) -> PyTree:
         squeezed_args = jtu.tree_map(squeeze_args, n_batch_false, args)
         result = f(*squeezed_args)
         return jtu.tree_map(unsqueeze_args, out_axes_false, result)
