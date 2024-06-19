@@ -273,6 +273,7 @@ class QArray(eqx.Module):
 
     def __sub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
+        # warning if used with scalar
         self + (-y)
 
     def __rsub__(self, y: ScalarLike | ArrayLike) -> QArray:
@@ -296,4 +297,5 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __pow__(self, power: int) -> QArray:
+        # warning if used
         pass
