@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 
 import equinox as eqx
@@ -254,31 +255,37 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        # warning if used with array
+        if isinstance(y, ArrayLike):
+            logging.warning(
+                'Using the `*` operator between two arrays performs element-wise '
+                'multiplication. For matrix multiplication, use the `@` operator '
+                'instead.'
+            )
 
     def __rmul__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
-        # warning if used with array
         return y * self
 
     @abstractmethod
     def __add__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        # warning if used with scalar
+        if isinstance(y, ScalarLike):
+            logging.warning(
+                'Using the `+` or `-` operator between an array and a scalar performs '
+                'element-wise addition or subtraction. For addition with a scaled '
+                'identity matrix, use e.g. `x + 2 * x.I` instead.'
+            )
 
     def __radd__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
-        # warning if used with scalar
         return self + y
 
     def __sub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
-        # warning if used with scalar
         self + (-y)
 
     def __rsub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array on the right."""
-        # warning if used with scalar
         return -self + y
 
     @abstractmethod
@@ -297,5 +304,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __pow__(self, power: int) -> QArray:
-        # warning if used
-        pass
+        logging.warning(
+            'Using the `**` operator performs element-wise power. For matrix power, '
+            'use `x @ x ... @ x` or `dq.powm(x, power)` instead.'
+        )
