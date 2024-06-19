@@ -246,53 +246,46 @@ class QArray(eqx.Module):
         return -1 * self
 
     @abstractmethod
-    def __mul__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with array
+    def __mul__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
+        # warning if used with array
 
-    def __rmul__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with array
+    def __rmul__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
-        return other * self
+        # warning if used with array
+        return y * self
 
     @abstractmethod
-    def __add__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __add__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
+        # warning if used with scalar
 
-    def __radd__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __radd__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
-        return self + other
+        # warning if used with scalar
+        return self + y
 
-    def __sub__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __sub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
-        self + (-other)
+        self + (-y)
 
-    def __rsub__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __rsub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array on the right."""
-        return -self + other
+        # warning if used with scalar
+        return -self + y
 
     @abstractmethod
-    def __matmul__(self, other: ArrayLike) -> QArray:
+    def __matmul__(self, y: ArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array."""
 
     @abstractmethod
-    def __rmatmul__(self, other: ArrayLike) -> QArray:
+    def __rmatmul__(self, y: ArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array
         on the right.
         """
 
     @abstractmethod
-    def __and__(self, other: QArray) -> QArray:
+    def __and__(self, y: QArray) -> QArray:
         """Tensor product between two quantum states."""
 
     @abstractmethod
