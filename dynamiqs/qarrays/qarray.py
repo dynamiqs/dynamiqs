@@ -283,7 +283,7 @@ class QArray(eqx.Module):
 
     def __sub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
-        self + (-y)
+        return self + (-y)
 
     def __rsub__(self, y: ScalarLike | ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array on the right."""
