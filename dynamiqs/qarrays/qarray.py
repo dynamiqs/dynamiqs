@@ -29,6 +29,14 @@ class QArray(eqx.Module):
     If you come from QuTiP, this is the equivalent of the Qobj class.
     """
 
+    # Subclasses should implement:
+    # - the properties: dtype, shape
+    # - the methods: conj, dag, norm, reshape, broadcast_to, ptrace, to_numpy, to_qutip,
+    #                to_jax, __mul__, __add__, __matmul__, __rmatmul__, __and__, __pow__
+
+    # (for now also property I and methods is_ket, is_bra, is_dm, is_herm, toket, tobra,
+    # todm)
+
     dims: tuple[int, ...]
 
     @property
