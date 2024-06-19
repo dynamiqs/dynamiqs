@@ -67,7 +67,6 @@ class QArray(eqx.Module):
             The identity operator.
         """
 
-    # methods
     @abstractmethod
     def conj(self) -> QArray:
         """Returns the conjugate of the quantum state.
@@ -210,7 +209,6 @@ class QArray(eqx.Module):
         """
         return self.todm()
 
-    # conversion methods
     @abstractmethod
     def to_numpy(self) -> np.ndarray:
         """Convert the quantum state to a NumPy array.
