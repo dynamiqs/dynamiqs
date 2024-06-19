@@ -27,26 +27,27 @@ from ..utils.utils.general import (
 )
 from .qarray import QArray, pack_dims
 
-__all__ = ['DenseQArray']
+__all__ = ['dense_qarray', 'DenseQArray']
+
+
+def dense_qarray(data: ArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
+    if not (isbra(data) or isket(data) or isdm(data) or isop(data)):
+        raise ValueError(
+            f'DenseQArray data must be a bra, a ket, a density matrix '
+            f'or and operator. Got array with size {data.shape}'
+        )
+    if dims is None:
+        dims = data.shape[-2] if isket(data) else data.shape[-1]
+        dims = (dims,)
+
+    data = jnp.asarray(data)
+    return DenseQArray(dims, data)
 
 
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
     data: Array
-
-    def __init__(self, data: ArrayLike, dims: tuple[int, ...] | None = None):
-        if not (isbra(data) or isket(data) or isdm(data) or isop(data)):
-            raise ValueError(
-                f'DenseQArray data must be a bra, a ket, a density matrix '
-                f'or and operator. Got array with size {data.shape}'
-            )
-        if dims is None:
-            dims = data.shape[-2] if isket(data) else data.shape[-1]
-            dims = (dims,)
-
-        self.data = jnp.asarray(data)
-        self.dims = dims
 
     @property
     def dtype(self) -> jnp.dtype:
