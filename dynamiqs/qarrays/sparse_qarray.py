@@ -8,6 +8,8 @@ from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 
 from .qarray import QArray
 
+__all__ = ['SparseQArray']
+
 
 class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
