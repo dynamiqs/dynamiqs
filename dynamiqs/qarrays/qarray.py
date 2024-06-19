@@ -65,7 +65,7 @@ class QArray(eqx.Module):
         Returns:
             The number of dimensions of the quantum state.
         """
-        return len(self.dims)
+        return len(self.shape)
 
     @property
     @abstractmethod
