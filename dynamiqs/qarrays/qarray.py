@@ -307,5 +307,5 @@ class QArray(eqx.Module):
     def __pow__(self, power: int) -> QArray:
         logging.warning(
             'Using the `**` operator performs element-wise power. For matrix power, '
-            'use `x @ x ... @ x` or `dq.powm(x, power)` instead.'
+            'use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
         )
