@@ -13,7 +13,7 @@ from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, obj_type_str
-from .sparse import SparseQArray
+from .sparse_qarray import SparseQArray
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
