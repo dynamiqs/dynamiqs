@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Union, get_args
+from typing import get_args
 
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, ScalarLike
+from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from ..utils.jax_utils import to_qutip
@@ -119,24 +119,24 @@ class DenseQArray(QArray):
     def to_jax(self) -> Array:
         return self.data
 
-    def __mul__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
 
         if isinstance(y, DenseQArray):
             data = self.data * y.data
-        elif isinstance(y, get_args(Union[ArrayLike, ScalarLike])):
+        elif isinstance(y, get_args(ArrayLike)):
             data = self.data * y
         else:
             return NotImplemented
 
         return DenseQArray(self.dims, data)
 
-    def __add__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __add__(self, y: ArrayLike) -> QArray:
         super().__add__(y)
 
         if isinstance(y, DenseQArray):
             data = self.data + y.data
-        elif isinstance(y, get_args(Union[ArrayLike, ScalarLike])):
+        elif isinstance(y, get_args(ArrayLike)):
             data = self.data + y
         else:
             return NotImplemented
