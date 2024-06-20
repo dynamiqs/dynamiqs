@@ -242,22 +242,22 @@ class TimeArray(eqx.Module):
         pass
 
     @abstractmethod
-    def reshape(self, *new_shape: int) -> TimeArray:
+    def reshape(self, *shape: int) -> TimeArray:
         """Returns a reshaped copy of a time-array.
 
         Args:
-            *new_shape: New shape, which must match the original size.
+            *shape: New shape, which must match the original size.
 
         Returns:
             New time-array object with the given shape.
         """
 
     @abstractmethod
-    def broadcast_to(self, *new_shape: int) -> TimeArray:
+    def broadcast_to(self, *shape: int) -> TimeArray:
         """Broadcasts a time-array to a new shape.
 
         Args:
-            *new_shape: New shape, which must be compatible with the original shape.
+            *shape: New shape, which must be compatible with the original shape.
 
         Returns:
             New time-array object with the given shape.
@@ -356,11 +356,11 @@ class ConstantTimeArray(TimeArray):
     def discontinuity_ts(self) -> Array | None:
         return None
 
-    def reshape(self, *new_shape: int) -> TimeArray:
-        return ConstantTimeArray(self.array.reshape(*new_shape))
+    def reshape(self, *shape: int) -> TimeArray:
+        return ConstantTimeArray(self.array.reshape(*shape))
 
-    def broadcast_to(self, *new_shape: int) -> TimeArray:
-        return ConstantTimeArray(jnp.broadcast_to(self.array, new_shape))
+    def broadcast_to(self, *shape: int) -> TimeArray:
+        return ConstantTimeArray(jnp.broadcast_to(self.array, shape))
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
@@ -410,14 +410,14 @@ class PWCTimeArray(TimeArray):
     def discontinuity_ts(self) -> Array | None:
         return self.times
 
-    def reshape(self, *new_shape: int) -> TimeArray:
-        new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
-        values = self.values.reshape(*new_shape)
+    def reshape(self, *shape: int) -> TimeArray:
+        shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = self.values.reshape(*shape)
         return PWCTimeArray(self.times, values, self.array)
 
-    def broadcast_to(self, *new_shape: int) -> TimeArray:
-        new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
-        values = jnp.broadcast_to(self.values, new_shape)
+    def broadcast_to(self, *shape: int) -> TimeArray:
+        shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = jnp.broadcast_to(self.values, shape)
         return PWCTimeArray(self.times, values, self.array)
 
     def conj(self) -> TimeArray:
@@ -478,12 +478,12 @@ class ModulatedTimeArray(TimeArray):
     def discontinuity_ts(self) -> Array | None:
         return self._disc_ts
 
-    def reshape(self, *new_shape: int) -> TimeArray:
-        f = self.f.reshape(*new_shape[:-2])
+    def reshape(self, *shape: int) -> TimeArray:
+        f = self.f.reshape(*shape[:-2])
         return ModulatedTimeArray(f, self.array, self._disc_ts)
 
-    def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = self.f.broadcast_to(*new_shape[:-2])
+    def broadcast_to(self, *shape: int) -> TimeArray:
+        f = self.f.broadcast_to(*shape[:-2])
         return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def conj(self) -> TimeArray:
@@ -535,12 +535,12 @@ class CallableTimeArray(TimeArray):
     def discontinuity_ts(self) -> Array | None:
         return self._disc_ts
 
-    def reshape(self, *new_shape: int) -> TimeArray:
-        f = self.f.reshape(*new_shape)
+    def reshape(self, *shape: int) -> TimeArray:
+        f = self.f.reshape(*shape)
         return CallableTimeArray(f, self._disc_ts)
 
-    def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = self.f.broadcast_to(*new_shape)
+    def broadcast_to(self, *shape: int) -> TimeArray:
+        f = self.f.broadcast_to(*shape)
         return CallableTimeArray(f, self._disc_ts)
 
     def conj(self) -> TimeArray:
@@ -592,14 +592,12 @@ class SummedTimeArray(TimeArray):
         ts = [tarray.discontinuity_ts for tarray in self.timearrays]
         return _concatenate_sort(*ts)
 
-    def reshape(self, *new_shape: int) -> TimeArray:
-        return SummedTimeArray(
-            [tarray.reshape(*new_shape) for tarray in self.timearrays]
-        )
+    def reshape(self, *shape: int) -> TimeArray:
+        return SummedTimeArray([tarray.reshape(*shape) for tarray in self.timearrays])
 
-    def broadcast_to(self, *new_shape: int) -> TimeArray:
+    def broadcast_to(self, *shape: int) -> TimeArray:
         return SummedTimeArray(
-            [tarray.broadcast_to(*new_shape) for tarray in self.timearrays]
+            [tarray.broadcast_to(*shape) for tarray in self.timearrays]
         )
 
     def conj(self) -> TimeArray:
