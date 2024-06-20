@@ -110,18 +110,18 @@ class QArray(eqx.Module):
         return self / self.norm()[..., None, None]
 
     @abstractmethod
-    def reshape(self, *new_shape: int) -> QArray:
+    def reshape(self, *shape: int) -> QArray:
         """Returns the reshape the quantum state.
 
         Args:
-            new_shape: New shape of the quantum state.
+            shape: New shape of the quantum state.
 
         Returns:
             The reshaped quantum state.
         """
 
     @abstractmethod
-    def broadcast_to(self, *new_shape: int) -> QArray:
+    def broadcast_to(self, *shape: int) -> QArray:
         """Returns the broadcast the quantum state.
 
         Returns:
