@@ -5,7 +5,7 @@ from .options import *
 from .plots import *
 from .result import *
 from .solvers import *
-from .sparse import *
+from .sparse_qarray import *
 from .time_array import *
 from .utils import *
 
