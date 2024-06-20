@@ -581,11 +581,13 @@ class SummedTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        return SummedTimeArray([tarray.mT for tarray in self.timearrays])
+        timearrays = [tarray.mT for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     @property
     def in_axes(self) -> PyTree[int]:
-        return SummedTimeArray([tarray.in_axes for tarray in self.timearrays])
+        timearrays = [tarray.in_axes for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     @property
     def discontinuity_ts(self) -> Array | None:
@@ -593,15 +595,16 @@ class SummedTimeArray(TimeArray):
         return _concatenate_sort(*ts)
 
     def reshape(self, *shape: int) -> TimeArray:
-        return SummedTimeArray([tarray.reshape(*shape) for tarray in self.timearrays])
+        timearrays = [tarray.reshape(*shape) for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     def broadcast_to(self, *shape: int) -> TimeArray:
-        return SummedTimeArray(
-            [tarray.broadcast_to(*shape) for tarray in self.timearrays]
-        )
+        timearrays = [tarray.broadcast_to(*shape) for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     def conj(self) -> TimeArray:
-        return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
+        timearrays = [tarray.conj() for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     def __call__(self, t: ScalarLike) -> Array:
         return jax.tree_util.tree_reduce(
@@ -609,10 +612,12 @@ class SummedTimeArray(TimeArray):
         )
 
     def __neg__(self) -> TimeArray:
-        return SummedTimeArray([-tarray for tarray in self.timearrays])
+        timearrays = [-tarray for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        return SummedTimeArray([tarray * y for tarray in self.timearrays])
+        timearrays = [tarray * y for tarray in self.timearrays]
+        return SummedTimeArray(timearrays)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
@@ -648,19 +653,25 @@ class BatchedCallable(eqx.Module):
         return jax.eval_shape(self.f, 0.0).shape
 
     def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        return BatchedCallable(lambda t: self.f(t).reshape(shape))
+        f = lambda t: self.f(t).reshape(shape)
+        return BatchedCallable(f)
 
     def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        return BatchedCallable(lambda t: jnp.broadcast_to(self.f(t), shape))
+        f = lambda t: jnp.broadcast_to(self.f(t), shape)
+        return BatchedCallable(f)
 
     def conj(self) -> BatchedCallable:
-        return BatchedCallable(lambda t: self.f(t).conj())
+        f = lambda t: self.f(t).conj()
+        return BatchedCallable(f)
 
     def squeeze(self, i: int) -> BatchedCallable:
-        return BatchedCallable(lambda t: jnp.squeeze(self.f(t), i))
+        f = lambda t: jnp.squeeze(self.f(t), i)
+        return BatchedCallable(f)
 
     def __neg__(self) -> BatchedCallable:
-        return BatchedCallable(lambda t: -self.f(t))
+        f = lambda t: -self.f(t)
+        return BatchedCallable(f)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
-        return BatchedCallable(lambda t: self.f(t) * y)
+        f = lambda t: self.f(t) * y
+        return BatchedCallable(f)
