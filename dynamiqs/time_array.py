@@ -271,6 +271,29 @@ class TimeArray(eqx.Module):
             New time-array object with element-wise complex conjuguated values.
         """
 
+    def squeeze(self, axis: int | None = None) -> TimeArray:
+        """Squeeze a time-array.
+
+        Args:
+            axis: Axis to squeeze. If `none`, all axes with dimension 1 are squeezed.
+
+        Returns:
+            New time-array object with squeezed_shape
+        """
+        if axis is None:
+            shape = self.shape
+            x = self
+            for i, s in reversed(list(enumerate(shape))):
+                if s == 1:
+                    x = x.squeeze(i)
+            return x
+
+        if axis >= self.ndim:
+            raise ValueError(
+                f'Cannot squeeze axis {axis} from a time-array with {self.ndim} axes.'
+            )
+        return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
+
     @abstractmethod
     def __call__(self, t: ScalarLike) -> Array:
         """Returns the time-array evaluated at a given time.
@@ -456,15 +479,15 @@ class ModulatedTimeArray(TimeArray):
         return self._disc_ts
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape[:-2]))
+        f = self.f.reshape(*new_shape[:-2])
         return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), *new_shape[:-2]))
+        f = self.f.broadcast_to(*new_shape[:-2])
         return ModulatedTimeArray(f, self.array, self._disc_ts)
 
     def conj(self) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).conj())
+        f = self.f.conj()
         return ModulatedTimeArray(f, self.array.conj(), self._disc_ts)
 
     def __call__(self, t: ScalarLike) -> Array:
@@ -513,26 +536,26 @@ class CallableTimeArray(TimeArray):
         return self._disc_ts
 
     def reshape(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape))
+        f = self.f.reshape(*new_shape)
         return CallableTimeArray(f, self._disc_ts)
 
     def broadcast_to(self, *new_shape: int) -> TimeArray:
-        f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), new_shape))
+        f = self.f.broadcast_to(*new_shape)
         return CallableTimeArray(f, self._disc_ts)
 
     def conj(self) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t).conj())
+        f = self.f.conj()
         return CallableTimeArray(f, self._disc_ts)
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
 
     def __neg__(self) -> TimeArray:
-        f = jtu.Partial(lambda t: -self.f(t))
+        f = -self.f
         return CallableTimeArray(f, self._disc_ts)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = jtu.Partial(lambda t: self.f(t) * y)
+        f = self.f * y
         return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
@@ -625,3 +648,21 @@ class BatchedCallable(eqx.Module):
     @property
     def shape(self) -> tuple[int, ...]:
         return jax.eval_shape(self.f, 0.0).shape
+
+    def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t).reshape(shape))
+
+    def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
+        return BatchedCallable(lambda t: jnp.broadcast_to(self.f(t), shape))
+
+    def conj(self) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t).conj())
+
+    def squeeze(self, i: int) -> BatchedCallable:
+        return BatchedCallable(lambda t: jnp.squeeze(self.f(t), i))
+
+    def __neg__(self) -> BatchedCallable:
+        return BatchedCallable(lambda t: -self.f(t))
+
+    def __mul__(self, y: ArrayLike) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t) * y)

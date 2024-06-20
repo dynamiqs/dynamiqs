@@ -149,7 +149,7 @@ def _vectorized_sesolve(
     )
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = SEResult(None, None, None, None, 0, 0)
+    out_axes = SEResult(False, False, False, False, 0, 0)
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
