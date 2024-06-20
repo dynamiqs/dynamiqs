@@ -107,15 +107,15 @@ You can create the state, Hamiltonian and jump operators using any array-like ob
 import jax.numpy as jnp
 import dynamiqs as dq
 
-rho0 = jnp.array([[1, 0], [0, 0]])                # initial state
-H = jnp.array([[-1, 0], [0, 1]])            # Hamiltonian
-jump_ops = jnp.array([[[0, 0], [1, 0]]])    # list of jump operators
+rho0 = [[1, 0], [0, 0]]                     # initial state
+H = [[-1, 0], [0, 1]]                       # Hamiltonian
+jump_ops = [[[0, 0], [1, 0]]]               # list of jump operators
 tsave = jnp.linspace(0, 1.0, 11)            # saving times
 res = dq.mesolve(H, jump_ops, rho0, tsave)  # run the simulation
+print(res.states[-1])                       # print the final state
 ```
 
-```pycon
->>> res.states[-1]                          # print the final state
+```text title="Output"
 Array([[0.368+0.j, 0.   +0.j],
        [0.   +0.j, 0.632+0.j]], dtype=complex64)
 ```
