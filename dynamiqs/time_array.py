@@ -7,7 +7,6 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
-import numpy as np
 from jax import Array, lax
 from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
@@ -211,7 +210,7 @@ class TimeArray(eqx.Module):
 
     @property
     @abstractmethod
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> jnp.dtype:
         pass
 
     @property
@@ -337,7 +336,7 @@ class ConstantTimeArray(TimeArray):
     array: Array
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> jnp.dtype:
         return self.array.dtype
 
     @property
@@ -391,7 +390,7 @@ class PWCTimeArray(TimeArray):
     array: Array  # (n, n)
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> jnp.dtype:
         return self.array.dtype
 
     @property
@@ -459,7 +458,7 @@ class ModulatedTimeArray(TimeArray):
     _disc_ts: Array | None
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> jnp.dtype:
         return self.array.dtype
 
     @property
@@ -515,7 +514,7 @@ class CallableTimeArray(TimeArray):
     _disc_ts: Array | None
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> jnp.dtype:
         return self.f.dtype
 
     @property
@@ -572,7 +571,7 @@ class SummedTimeArray(TimeArray):
     timearrays: list[TimeArray]
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> jnp.dtype:
         return self.timearrays[0].dtype
 
     @property
