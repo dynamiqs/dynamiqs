@@ -664,5 +664,5 @@ class BatchedCallable(eqx.Module):
     def __neg__(self) -> BatchedCallable:
         return BatchedCallable(lambda t: -self.f(t))
 
-    def __mul__(self, other: Array) -> BatchedCallable:
-        return BatchedCallable(lambda t: self.f(t) * other)
+    def __mul__(self, y: ArrayLike) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t) * y)
