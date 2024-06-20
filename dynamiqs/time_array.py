@@ -203,7 +203,7 @@ class TimeArray(eqx.Module):
 
     # Subclasses should implement:
     # - the properties: dtype, shape, mT, in_axes, discontinuity_ts
-    # - the methods: reshape, broadcast_to, conj, __call__, __neg__, __mul__, __add__
+    # - the methods: reshape, broadcast_to, conj, __call__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Array`, `ConstantTimeArray` and the subclass type itself.
@@ -304,9 +304,8 @@ class TimeArray(eqx.Module):
             Array evaluated at time $t$.
         """
 
-    @abstractmethod
     def __neg__(self) -> TimeArray:
-        pass
+        return self * (-1)
 
     @abstractmethod
     def __mul__(self, y: ArrayLike) -> TimeArray:
@@ -366,9 +365,6 @@ class ConstantTimeArray(TimeArray):
 
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.array
-
-    def __neg__(self) -> TimeArray:
-        return ConstantTimeArray(-self.array)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ConstantTimeArray(self.array * y)
@@ -436,9 +432,6 @@ class PWCTimeArray(TimeArray):
 
         return value.reshape(*value.shape, 1, 1) * self.array
 
-    def __neg__(self) -> TimeArray:
-        return PWCTimeArray(self.times, self.values, -self.array)
-
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array * y)
 
@@ -493,9 +486,6 @@ class ModulatedTimeArray(TimeArray):
         values = self.f(t)
         return values.reshape(*values.shape, 1, 1) * self.array
 
-    def __neg__(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, -self.array, self._disc_ts)
-
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array * y, self._disc_ts)
 
@@ -548,10 +538,6 @@ class CallableTimeArray(TimeArray):
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
-
-    def __neg__(self) -> TimeArray:
-        f = -self.f
-        return CallableTimeArray(f, self._disc_ts)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         f = self.f * y
@@ -610,10 +596,6 @@ class SummedTimeArray(TimeArray):
             jnp.add, [tarray(t) for tarray in self.timearrays]
         )
 
-    def __neg__(self) -> TimeArray:
-        timearrays = [-tarray for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
-
     def __mul__(self, y: ArrayLike) -> TimeArray:
         timearrays = [tarray * y for tarray in self.timearrays]
         return SummedTimeArray(timearrays)
@@ -665,10 +647,6 @@ class BatchedCallable(eqx.Module):
 
     def squeeze(self, i: int) -> BatchedCallable:
         f = lambda t: jnp.squeeze(self.f(t), i)
-        return BatchedCallable(f)
-
-    def __neg__(self) -> BatchedCallable:
-        f = lambda t: -self.f(t)
         return BatchedCallable(f)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
