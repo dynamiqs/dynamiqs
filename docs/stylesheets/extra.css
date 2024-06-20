@@ -223,6 +223,14 @@ p {
     .md-nav--lifted > .md-nav__list > .md-nav__item--active > .md-nav__link {
         margin-bottom: 1em;
     }
+
+    [dir="ltr"] .md-nav__item--section > .md-nav {
+        margin-left: 0;
+    }
+}
+
+.md-nav {
+    font-size: 0.68rem;
 }
 
 /* Function name */
