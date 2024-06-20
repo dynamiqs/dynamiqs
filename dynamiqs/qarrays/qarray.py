@@ -254,21 +254,21 @@ class QArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __mul__(self, y: ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        if isinstance(y, get_args(ArrayLike)):
+        if not isinstance(y, get_args(ScalarLike)):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '
                 'instead.'
             )
 
-    def __rmul__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __rmul__(self, y: ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
         return y * self
 
     @abstractmethod
-    def __add__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __add__(self, y: ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
         if isinstance(y, get_args(ScalarLike)):
             logging.warning(
@@ -277,15 +277,15 @@ class QArray(eqx.Module):
                 'identity matrix, use e.g. `x + 2 * x.I` instead.'
             )
 
-    def __radd__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __radd__(self, y: ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
         return self + y
 
-    def __sub__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __sub__(self, y: ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
         return self + (-y)
 
-    def __rsub__(self, y: ScalarLike | ArrayLike) -> QArray:
+    def __rsub__(self, y: ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array on the right."""
         return -self + y
 
