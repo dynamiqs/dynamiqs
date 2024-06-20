@@ -11,9 +11,9 @@ from .qarray import QArray, pack_dims
 
 
 class SparseQArray(QArray):
-    diags: Array
     offsets: tuple[int, ...] = eqx.field(static=True)
-    dims: tuple[int, ...] = eqx.field(static=True)
+    diags: Array
+    dims: tuple[int, ...]
 
     @property
     def dtype(self) -> jnp.dtype:
