@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import functools as ft
+from functools import partial, wraps
 
 import jax
 import jax.numpy as jnp
@@ -34,7 +34,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
     # exception message. Note that this will not work for jitted function, as the
     # exception code will be traced out.
 
-    @ft.wraps(func)
+    @wraps(func)
     def wrapper(*args, **kwargs):  # noqa: ANN202
         try:
             return func(*args, **kwargs)
@@ -123,7 +123,7 @@ def _flat_vectorize(  # noqa: C901
     expand_dims = []  # dimensions '1' that will be lost during the vmap but that
     # we want to keep in the results.
     for i in range(len(broadcast_shape)):
-        in_axes = jtu.tree_map(ft.partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
+        in_axes = jtu.tree_map(partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
         if jtu.tree_all(jtu.tree_map(lambda x: x is None, in_axes)):
             expand_dims.append(n - i - 1)
         else:
@@ -145,7 +145,7 @@ def _flat_vectorize(  # noqa: C901
         if out_ax is not False:
             for dim in expand_dims:
                 result = jtu.tree_map(
-                    ft.partial(lambda t, dim: jnp.expand_dims(t, dim), dim=dim), result
+                    partial(lambda t, dim: jnp.expand_dims(t, dim), dim=dim), result
                 )
 
         return result
