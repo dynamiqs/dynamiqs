@@ -72,12 +72,12 @@ class DenseQArray(QArray):
         data = norm(self.data)
         return DenseQArray(self.dims, data)
 
-    def reshape(self, *new_shape: int) -> QArray:
-        data = jnp.reshape(self.data, new_shape)
+    def reshape(self, *shape: int) -> QArray:
+        data = jnp.reshape(self.data, shape)
         return DenseQArray(self.dims, data)
 
-    def broadcast_to(self, *new_shape: int) -> QArray:
-        data = jnp.broadcast_to(self.data, new_shape)
+    def broadcast_to(self, *shape: int) -> QArray:
+        data = jnp.broadcast_to(self.data, shape)
         return DenseQArray(self.dims, data)
 
     def ptrace(self, keep: tuple[int, ...]) -> QArray:
