@@ -166,9 +166,9 @@ def _vectorized_mesolve(
         def broadcast(x: TimeArray) -> TimeArray:
             return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
 
-        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
         H = broadcast(H)
         jump_ops = list(map(broadcast, jump_ops))
+        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
 
     n_batch = (
         H.in_axes,
