@@ -36,10 +36,6 @@ class SparseQArray(QArray):
         offsets = (0,)
         return SparseQArray(diags, offsets, self.dims)
 
-    @property
-    def ndim(self) -> int:
-        return len(self.dims)
-
     def conj(self) -> QArray:
         return SparseQArray(self.diags.conj(), self.offsets, self.dims)
 
