@@ -153,7 +153,6 @@ def to_dense(x: SparseQArray) -> DenseQArray:
         out += jnp.diag(diag[start:end], k=offset)
     return out
 
-
 def find_offsets(other: ArrayLike) -> tuple[int, ...]:
     indices = np.nonzero(other)
     return tuple(np.unique(indices[1] - indices[0]))
