@@ -1,17 +1,17 @@
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import DenseQArray, dag, tensor
+from dynamiqs import dag, dense_qarray, tensor
 
 
 class TestDenseQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         self.data = jnp.arange(16).reshape(4, 4) * (1 + 1j)
-        self.qarray = DenseQArray(self.data, dims=(2, 2))
+        self.qarray = dense_qarray(self.data, dims=(2, 2))
 
         self.other = jnp.arange(16).reshape(4, 4) + 16
-        self.qother = DenseQArray(self.other, dims=(2, 2))
+        self.qother = dense_qarray(self.other, dims=(2, 2))
 
     def test_I(self):
         assert jnp.array_equal(self.qarray.I.data, jnp.eye(4))
@@ -61,7 +61,7 @@ class TestDenseQArray:
         assert t.dims == (2, 2, 2, 2)
 
         other = jnp.arange(9).reshape(3, 3)
-        qother = DenseQArray(other)
+        qother = dense_qarray(other)
         t = self.qarray & qother
 
         assert jnp.array_equal(t.data, tensor(self.data, other))
