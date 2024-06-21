@@ -10,8 +10,7 @@ import numpy as np
 from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 
-from .dense_qarray import DenseQArray
-from .qarray import QArray
+from .qarray import DenseQArray, QArray
 
 __all__ = ['SparseQArray']
 
@@ -20,6 +19,51 @@ class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array
     dims: tuple[int, ...]
+
+    @property
+    def dtype(self) -> jnp.dtype:
+        return self.diags.dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        N = self.diags.shape[-1]
+        return (N, N)
+
+    @property
+    def ndim(self) -> int:
+        return len(self.dims)
+
+    @property
+    def mT(self) -> SparseQArray:
+        N = self.shape[0]
+        out_diags = jnp.zeros_like(self.diags)
+        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+            start = max(0, self_offset)
+            end = min(N, N + self_offset)
+            out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
+                self_diag[start:end]
+            )
+        return SparseQArray(out_diags, tuple(-x for x in self.offsets), self.dims)
+
+    def conj(self) -> SparseQArray:
+        return SparseQArray(self.diags.conj(), self.offsets, self.dims)
+
+    def dag(self) -> SparseQArray:
+        return self.mT.conj()
+
+    def trace(self) -> Array:
+        main_diag_mask = jnp.asarray(self.offsets) == 0
+        return jax.lax.cond(
+            jnp.any(main_diag_mask),
+            lambda: jnp.sum(self.diags[jnp.argmax(main_diag_mask)]).astype(jnp.float32),
+            lambda: jnp.array(0.0, dtype=jnp.float32),
+        )
+
+    def norm(self) -> Array:
+        return self.trace().real
+
+    def unit(self) -> SparseQArray:
+        return SparseQArray(self.diags / self.norm(), self.offsets, self.dims)
 
     def __neg__(self) -> QArray:
         return -1 * self
