@@ -201,7 +201,6 @@ class SparseQArray(QArray):
     def __matmul__(self, other: Array | SparseQArray) -> QArray:
         if isinstance(other, Array):
             return self._matmul_dense(left_matmul=True, other=other)
-
         elif isinstance(other, SparseQArray):
             return self._matmul_dia(other=other)
 
@@ -239,13 +238,13 @@ def to_dense(x: SparseQArray) -> DenseQArray:
     return out
 
 
-def find_offsets(other: ArrayLike) -> tuple[int, ...]:
+def _find_offsets(other: ArrayLike) -> tuple[int, ...]:
     indices = np.nonzero(other)
     return tuple(np.unique(indices[1] - indices[0]))
 
 
 @functools.partial(jax.jit, static_argnums=(0,))
-def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
+def _construct_diags(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     n = other.shape[0]
     diags = jnp.zeros((len(offsets), n))
 
@@ -268,6 +267,6 @@ def to_sparse(x: DenseQArray | Array) -> SparseQArray:
         `SparseQArray` object
     """
     concrete_or_error(None, x, '`to_sparse` does not support tracing.')
-    offsets = find_offsets(x)
-    diags = produce_dia(offsets, x)
+    offsets = _find_offsets(x)
+    diags = _construct_diags(offsets, x)
     return SparseQArray(diags, offsets, x.dims)
