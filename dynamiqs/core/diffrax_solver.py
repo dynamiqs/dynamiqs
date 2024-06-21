@@ -114,8 +114,8 @@ class AdaptiveSolver(DiffraxSolver):
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
                 return (
-                    f'avg. {self.nsteps.mean()} steps ({self.naccepted.mean()}'
-                    f' accepted, {self.nrejected.mean()} rejected) | infos shape'
+                    f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
+                    f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
                     f' {self.nsteps.shape}'
                 )
             return (
