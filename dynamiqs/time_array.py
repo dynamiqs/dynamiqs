@@ -75,15 +75,22 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
             returning $O(t)$ for any time $t$.
 
     Examples:
-        >>> times = jnp.linspace(0.0, 1.0, 11)
-        >>> values = jnp.linspace(1.0, 10.0, 10)
-        >>> H = dq.pwc(times, values, dq.sigmaz())
+        >>> times = [0.0, 1.0, 2.0]
+        >>> values = [3.0, -2.0]
+        >>> array = dq.sigmaz()
+        >>> H = dq.pwc(times, values, array)
+        >>> H(-0.5)
+        Array([[ 0.+0.j,  0.+0.j],
+               [ 0.+0.j, -0.+0.j]], dtype=complex64)
         >>> H(0.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
-        >>> H(0.95)
-        Array([[ 10.+0.j,   0.+0.j],
-               [  0.+0.j, -10.+0.j]], dtype=complex64)
+        Array([[ 3.+0.j,  0.+0.j],
+               [ 0.+0.j, -3.+0.j]], dtype=complex64)
+        >>> H(0.5)
+        Array([[ 3.+0.j,  0.+0.j],
+               [ 0.+0.j, -3.+0.j]], dtype=complex64)
+        >>> H(1.0)
+        Array([[-2.+0.j, -0.+0.j],
+               [-0.+0.j,  2.-0.j]], dtype=complex64)
     """
     # times
     times = jnp.asarray(times)
@@ -123,14 +130,14 @@ def modulated(f: callable[[float], Array], array: ArrayLike) -> ModulatedTimeArr
             returning $O(t)$ for any time $t$.
 
     Examples:
-        >>> f = lambda t: jnp.cos(jnp.pi * t)
-        >>> H = dq.modulated(f, dq.sigmaz())
-        >>> H(0.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+        >>> H = dq.modulated(f, dq.sigmax())
+        >>> H(0.5)
+        Array([[-0.+0.j, -1.+0.j],
+               [-1.+0.j, -0.+0.j]], dtype=complex64)
         >>> H(1.0)
-        Array([[-1.+0.j, -0.+0.j],
-               [-0.+0.j,  1.-0.j]], dtype=complex64)
+        Array([[0.+0.j, 1.+0.j],
+               [1.+0.j, 0.+0.j]], dtype=complex64)
     """
     # check f is callable
     if not callable(f):
@@ -170,14 +177,14 @@ def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
             returning $O(t)$ for any time $t$.
 
     Examples:
-        >>> f = lambda t: jnp.cos(jnp.pi * t) * dq.sigmaz()
+        >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
         >>> H = dq.timecallable(f)
-        >>> H(0.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        >>> H(0.5)
+        Array([[0.5, 0. ],
+               [0. , 0.5]], dtype=float32)
         >>> H(1.0)
-        Array([[-1.+0.j, -0.+0.j],
-               [-0.+0.j,  1.-0.j]], dtype=complex64)
+        Array([[1., 0.],
+               [0., 0.]], dtype=float32)
     """
     # check f is callable
     if not callable(f):
