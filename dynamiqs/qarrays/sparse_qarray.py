@@ -171,7 +171,7 @@ class SparseQArray(QArray):
                 )
 
             out = jax.lax.cond(left_matmul, left_case, right_case, out)
-        return out
+        return DenseQArray(out, self.dims)
 
     def _matmul_dia(self, other: SparseQArray) -> QArray:
         N = other.diags.shape[1]
@@ -206,7 +206,7 @@ class SparseQArray(QArray):
 
         return NotImplemented
 
-    def __rmatmul__(self, other: Array) -> Array:
+    def __rmatmul__(self, other: Array) -> QArray:
         if isinstance(other, Array):
             return self._matmul_dense(left_matmul=False, other=other)
 
@@ -235,7 +235,7 @@ def to_dense(x: SparseQArray) -> DenseQArray:
         start = max(0, offset)
         end = min(N, N + offset)
         out += jnp.diag(diag[start:end], k=offset)
-    return out
+    return DenseQArray(out, x.dims)
 
 
 def _find_offsets(other: ArrayLike) -> tuple[int, ...]:
