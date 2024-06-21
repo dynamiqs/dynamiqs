@@ -80,13 +80,15 @@ class SparseQArray(QArray):
             if other == 0:
                 return self
             warnings.warn(
-                'to_dense() called, the array' 'is no longer using Sparse format.',
+                '`to_dense` was called on a SparseQArray due to addition with a scalar.'
+                ' The array is no longer in sparse format.',
                 stacklevel=2,
             )
             return self.to_dense() + other
         elif isinstance(other, ArrayLike):
             warnings.warn(
-                'to_dense() called, the array' 'is no longer using Sparse format.',
+                '`to_dense` was called on a SparseQArray due to addition with a dense'
+                ' array. The array is no longer in sparse format.',
                 stacklevel=2,
             )
             return self.to_dense() + other
@@ -119,13 +121,15 @@ class SparseQArray(QArray):
             if other == 0:
                 return self
             warnings.warn(
-                'to_dense() called, the array' 'is no longer using Sparse format.',
+                '`to_dense` was called on a SparseQArray due to subtraction with a'
+                ' scalar. The array is no longer in sparse format.',
                 stacklevel=2,
             )
             return self.to_dense() - other
         elif isinstance(other, ArrayLike):
             warnings.warn(
-                'to_dense() called, the array' 'is no longer using Sparse format.',
+                '`to_dense` was called on a SparseQArray due to subtraction with a'
+                ' dense array. The array is no longer in sparse format.',
                 stacklevel=2,
             )
             return self.to_dense() - other
