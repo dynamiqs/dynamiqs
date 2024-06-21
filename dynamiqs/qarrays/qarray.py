@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
+from typing import get_args
 
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
-import qutip as qt
 from jax import Array
 from jaxtyping import ArrayLike, ScalarLike
+from qutip import Qobj
 
 __all__ = ['QArray']
 
@@ -28,6 +30,14 @@ class QArray(eqx.Module):
     (bras, kets and density matrices) and quantum operators.
     If you come from QuTiP, this is the equivalent of the Qobj class.
     """
+
+    # Subclasses should implement:
+    # - the properties: dtype, shape
+    # - the methods: conj, dag, norm, reshape, broadcast_to, ptrace, to_numpy, to_qutip,
+    #                to_jax, __mul__, __add__, __matmul__, __rmatmul__, __and__, __pow__
+
+    # (for now also property I and methods is_ket, is_bra, is_dm, is_herm, toket, tobra,
+    # todm)
 
     dims: tuple[int, ...]
 
@@ -56,7 +66,7 @@ class QArray(eqx.Module):
         Returns:
             The number of dimensions of the quantum state.
         """
-        return len(self.dims)
+        return len(self.shape)
 
     @property
     @abstractmethod
@@ -67,7 +77,6 @@ class QArray(eqx.Module):
             The identity operator.
         """
 
-    # methods
     @abstractmethod
     def conj(self) -> QArray:
         """Returns the conjugate of the quantum state.
@@ -101,18 +110,18 @@ class QArray(eqx.Module):
         return self / self.norm()[..., None, None]
 
     @abstractmethod
-    def reshape(self, *new_shape: int) -> QArray:
-        """Returns the reshape the quantum state.
+    def reshape(self, *shape: int) -> QArray:
+        """Returns the reshaped quantum state.
 
         Args:
-            new_shape: New shape of the quantum state.
+            shape: New shape of the quantum state.
 
         Returns:
             The reshaped quantum state.
         """
 
     @abstractmethod
-    def broadcast_to(self, *new_shape: int) -> QArray:
+    def broadcast_to(self, *shape: int) -> QArray:
         """Returns the broadcast the quantum state.
 
         Returns:
@@ -210,7 +219,6 @@ class QArray(eqx.Module):
         """
         return self.todm()
 
-    # conversion methods
     @abstractmethod
     def to_numpy(self) -> np.ndarray:
         """Convert the quantum state to a NumPy array.
@@ -220,7 +228,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def to_qutip(self) -> qt.QObj:
+    def to_qutip(self) -> Qobj:
         """Convert the quantum state to a QuTiP object.
 
         Returns:
@@ -243,60 +251,61 @@ class QArray(eqx.Module):
 
     def __neg__(self) -> QArray:
         """Negate the quantum state."""
-        return -1 * self
+        return self * (-1)
 
     @abstractmethod
-    def __mul__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with array
+    def __mul__(self, y: ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
+        if not isinstance(y, get_args(ScalarLike)):
+            logging.warning(
+                'Using the `*` operator between two arrays performs element-wise '
+                'multiplication. For matrix multiplication, use the `@` operator '
+                'instead.'
+            )
 
-    def __rmul__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with array
+    def __rmul__(self, y: ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
-        return other * self
+        return y * self
 
     @abstractmethod
-    def __add__(
-        self, other: ScalarLike | ArrayLike @ abstractmethod
-    ) -> QArray:  # warning if used with scalar
+    def __add__(self, y: ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
+        if isinstance(y, get_args(ScalarLike)):
+            logging.warning(
+                'Using the `+` or `-` operator between an array and a scalar performs '
+                'element-wise addition or subtraction. For addition with a scaled '
+                'identity matrix, use e.g. `x + 2 * x.I` instead.'
+            )
 
-    @abstractmethod
-    def __radd__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __radd__(self, y: ArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
-        return self + other
+        return self + y
 
-    @abstractmethod
-    def __sub__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __sub__(self, y: ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
+        return self + (-y)
 
-    @abstractmethod
-    def __rsub__(
-        self, other: ScalarLike | ArrayLike
-    ) -> QArray:  # warning if used with scalar
+    def __rsub__(self, y: ArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array on the right."""
-        return -self + other
+        return -self + y
 
     @abstractmethod
-    def __matmul__(self, other: ArrayLike) -> QArray:
+    def __matmul__(self, y: ArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array."""
 
     @abstractmethod
-    def __rmatmul__(self, other: ArrayLike) -> QArray:
+    def __rmatmul__(self, y: ArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array
         on the right.
         """
 
     @abstractmethod
-    def __and__(self, other: QArray) -> QArray:
+    def __and__(self, y: QArray) -> QArray:
         """Tensor product between two quantum states."""
 
     @abstractmethod
     def __pow__(self, power: int) -> QArray:
-        """Matrix power of the quantum state."""
+        logging.warning(
+            'Using the `**` operator performs element-wise power. For matrix power, '
+            'use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
+        )
