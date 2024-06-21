@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import functools
 import warnings
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
+import numpy as np
+from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 
+from .dense_qarray import DenseQArray
 from .qarray import QArray
 
 __all__ = ['SparseQArray']
@@ -140,3 +145,55 @@ def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
         raise ValueError(
             f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
+
+
+def to_dense(x: SparseQArray) -> DenseQArray:
+    r"""Convert a sparse `QArray` into a dense `Qarray`.
+
+    Args:
+        x: A sparse matrix, containing diagonals and their offsets.
+
+    Returns:
+        Array: A dense matrix representation of the input sparse matrix.
+    """
+    N = x.shape[-1]
+    out = jnp.zeros((N, N))
+    for offset, diag in zip(x.offsets, x.diags):
+        start = max(0, offset)
+        end = min(N, N + offset)
+        out += jnp.diag(diag[start:end], k=offset)
+    return out
+
+
+def find_offsets(other: ArrayLike) -> tuple[int, ...]:
+    indices = np.nonzero(other)
+    return tuple(np.unique(indices[1] - indices[0]))
+
+
+@functools.partial(jax.jit, static_argnums=(0,))
+def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
+    n = other.shape[0]
+    diags = jnp.zeros((len(offsets), n))
+
+    for i, offset in enumerate(offsets):
+        start = max(0, offset)
+        end = min(n, n + offset)
+        diagonal = jnp.diagonal(other, offset=offset)
+        diags = diags.at[i, start:end].set(diagonal)
+
+    return diags
+
+
+def to_sparse(x: DenseQArray | Array) -> SparseQArray:
+    r"""Returns the input matrix in the `SparseQArray` format.
+
+    Args:
+        x: Matrix to turn from dense to SparseDIA format.
+
+    Returns:
+        `SparseQArray` object
+    """
+    concrete_or_error(None, x, '`to_sparse` does not support tracing.')
+    offsets = find_offsets(x)
+    diags = produce_dia(offsets, x)
+    return SparseQArray(diags, offsets, x.dims)
