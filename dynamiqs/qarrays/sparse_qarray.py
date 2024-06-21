@@ -31,6 +31,12 @@ class SparseQArray(QArray):
         return (N, N)
 
     @property
+    def I(self) -> QArray:  # noqa: E743
+        diags = jnp.ones((1, self.shape[-1]))
+        offsets = (0,)
+        return SparseQArray(diags, offsets, self.dims)
+
+    @property
     def ndim(self) -> int:
         return len(self.dims)
 
