@@ -40,23 +40,20 @@ class SparseQArray(QArray):
     def ndim(self) -> int:
         return len(self.dims)
 
-    @property
-    def mT(self) -> QArray:
-        N = self.shape[0]
-        out_diags = jnp.zeros_like(self.diags)
-        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
-            start = max(0, self_offset)
-            end = min(N, N + self_offset)
-            out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
-                self_diag[start:end]
-            )
-        return SparseQArray(out_diags, tuple(-x for x in self.offsets), self.dims)
-
     def conj(self) -> QArray:
         return SparseQArray(self.diags.conj(), self.offsets, self.dims)
 
     def dag(self) -> QArray:
-        return self.mT.conj()
+        N = self.shape[-1]
+        diags = jnp.zeros_like(self.diags)
+        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+            start = max(0, self_offset)
+            end = min(N, N + self_offset)
+            diags = diags.at[i, start - self_offset : end - self_offset].set(
+                self_diag[start:end].conj()
+            )
+        offsets = tuple(-x for x in self.offsets)
+        return SparseQArray(diags, offsets, self.dims)
 
     def trace(self) -> Array:
         main_diag_mask = jnp.asarray(self.offsets) == 0
