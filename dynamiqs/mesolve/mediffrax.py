@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import diffrax as dx
-import jax.numpy as jnp
 
 from ..core.abstract_solver import MESolver
 from ..core.diffrax_solver import (
@@ -37,10 +36,10 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
         # induced on the dynamics.
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            Ls = jnp.stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
+            Ls = [L(t) for L in self.Ls]
+            LdL = sum([dag(L) @ L for L in Ls])
+            jump_term = sum([L @ y @ dag(L) for L in Ls])
+            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * jump_term
             return tmp + dag(tmp)
 
         return dx.ODETerm(vector_field)

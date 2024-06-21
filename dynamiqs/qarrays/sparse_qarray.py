@@ -14,6 +14,8 @@ from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 from .dense_qarray import DenseQArray
 from .qarray import QArray
 
+__all__ = ['SparseQArray', 'to_dense', 'to_sparse']
+
 
 class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
