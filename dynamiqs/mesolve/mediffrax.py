@@ -37,8 +37,9 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             Ls = [L(t) for L in self.Ls]
-            LdL = sum([dag(L) @ L for L in Ls])
-            jump_term = sum([L @ y @ dag(L) for L in Ls])
+            Lsdag = [dag(L) for L in Ls]
+            LdL = sum([Ld @ L for L, Ld in zip(Ls, Lsdag)])
+            jump_term = sum([L @ y @ Ld for L, Ld in zip(Ls, Lsdag)])
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * jump_term
             return tmp + dag(tmp)
 
