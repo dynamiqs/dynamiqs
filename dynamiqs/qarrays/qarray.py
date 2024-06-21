@@ -111,7 +111,7 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def reshape(self, *shape: int) -> QArray:
-        """Returns the reshape the quantum state.
+        """Returns the reshaped quantum state.
 
         Args:
             shape: New shape of the quantum state.
