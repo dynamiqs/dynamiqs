@@ -28,6 +28,15 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O_0$ for any time $t$.
+
+    Examples:
+        >>> H = dq.constant(dq.sigmaz())
+        >>> H(0.0)
+        Array([[ 1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        >>> H(1.0)
+        Array([[ 1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(..., n, n)')
@@ -63,6 +72,24 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
+
+    Examples:
+        >>> times = [0.0, 1.0, 2.0]
+        >>> values = [3.0, -2.0]
+        >>> array = dq.sigmaz()
+        >>> H = dq.pwc(times, values, array)
+        >>> H(-0.5)
+        Array([[ 0.+0.j,  0.+0.j],
+               [ 0.+0.j, -0.+0.j]], dtype=complex64)
+        >>> H(0.0)
+        Array([[ 3.+0.j,  0.+0.j],
+               [ 0.+0.j, -3.+0.j]], dtype=complex64)
+        >>> H(0.5)
+        Array([[ 3.+0.j,  0.+0.j],
+               [ 0.+0.j, -3.+0.j]], dtype=complex64)
+        >>> H(1.0)
+        Array([[-2.+0.j, -0.+0.j],
+               [-0.+0.j,  2.-0.j]], dtype=complex64)
     """
     # times
     times = jnp.asarray(times)
@@ -107,6 +134,16 @@ def modulated(
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
+
+    Examples:
+        >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
+        >>> H = dq.modulated(f, dq.sigmax())
+        >>> H(0.5)
+        Array([[-0.+0.j, -1.+0.j],
+               [-1.+0.j, -0.+0.j]], dtype=complex64)
+        >>> H(1.0)
+        Array([[0.+0.j, 1.+0.j],
+               [1.+0.j, 0.+0.j]], dtype=complex64)
     """
     # check f is callable
     if not callable(f):
@@ -153,6 +190,16 @@ def timecallable(
     Returns:
        _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
+
+    Examples:
+        >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
+        >>> H = dq.timecallable(f)
+        >>> H(0.5)
+        Array([[0.5, 0. ],
+               [0. , 0.5]], dtype=float32)
+        >>> H(1.0)
+        Array([[1., 0.],
+               [0., 0.]], dtype=float32)
     """
     # check f is callable
     if not callable(f):
