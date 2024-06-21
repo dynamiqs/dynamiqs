@@ -1,10 +1,17 @@
 from __future__ import annotations
-from collections import defaultdict
+
+import functools
 import warnings
+from collections import defaultdict
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
+from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
+
+from .dense_qarray import DenseQArray
 from .qarray import QArray
 
 
@@ -12,6 +19,51 @@ class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array
     dims: tuple[int, ...]
+
+    @property
+    def dtype(self) -> jnp.dtype:
+        return self.diags.dtype
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        N = self.diags.shape[-1]
+        return (N, N)
+
+    @property
+    def ndim(self) -> int:
+        return len(self.dims)
+
+    @property
+    def mT(self) -> SparseQArray:
+        N = self.shape[0]
+        out_diags = jnp.zeros_like(self.diags)
+        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+            start = max(0, self_offset)
+            end = min(N, N + self_offset)
+            out_diags = out_diags.at[i, start - self_offset : end - self_offset].set(
+                self_diag[start:end]
+            )
+        return SparseQArray(out_diags, tuple(-x for x in self.offsets), self.dims)
+
+    def conj(self) -> SparseQArray:
+        return SparseQArray(self.diags.conj(), self.offsets, self.dims)
+
+    def dag(self) -> SparseQArray:
+        return self.mT.conj()
+
+    def trace(self) -> Array:
+        main_diag_mask = jnp.asarray(self.offsets) == 0
+        return jax.lax.cond(
+            jnp.any(main_diag_mask),
+            lambda: jnp.sum(self.diags[jnp.argmax(main_diag_mask)]).astype(jnp.float32),
+            lambda: jnp.array(0.0, dtype=jnp.float32),
+        )
+
+    def norm(self) -> Array:
+        return self.trace().real
+
+    def unit(self) -> SparseQArray:
+        return SparseQArray(self.diags / self.norm(), self.offsets, self.dims)
 
     def __neg__(self) -> QArray:
         return -1 * self
@@ -207,8 +259,61 @@ class SparseQArray(QArray):
 
         return NotImplemented
 
+
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
             f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
+
+
+def to_dense(x: SparseQArray) -> DenseQArray:
+    r"""Convert a sparse `QArray` into a dense `Qarray`.
+
+    Args:
+        x: A sparse matrix, containing diagonals and their offsets.
+
+    Returns:
+        Array: A dense matrix representation of the input sparse matrix.
+    """
+    N = x.shape[-1]
+    out = jnp.zeros((N, N))
+    for offset, diag in zip(x.offsets, x.diags):
+        start = max(0, offset)
+        end = min(N, N + offset)
+        out += jnp.diag(diag[start:end], k=offset)
+    return out
+
+
+def find_offsets(other: ArrayLike) -> tuple[int, ...]:
+    indices = np.nonzero(other)
+    return tuple(np.unique(indices[1] - indices[0]))
+
+
+@functools.partial(jax.jit, static_argnums=(0,))
+def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
+    n = other.shape[0]
+    diags = jnp.zeros((len(offsets), n))
+
+    for i, offset in enumerate(offsets):
+        start = max(0, offset)
+        end = min(n, n + offset)
+        diagonal = jnp.diagonal(other, offset=offset)
+        diags = diags.at[i, start:end].set(diagonal)
+
+    return diags
+
+
+def to_sparse(x: DenseQArray | Array) -> SparseQArray:
+    r"""Returns the input matrix in the `SparseQArray` format.
+
+    Args:
+        x: Matrix to turn from dense to SparseDIA format.
+
+    Returns:
+        `SparseQArray` object
+    """
+    concrete_or_error(None, x, '`to_sparse` does not support tracing.')
+    offsets = find_offsets(x)
+    diags = produce_dia(offsets, x)
+    return SparseQArray(diags, offsets, x.dims)
