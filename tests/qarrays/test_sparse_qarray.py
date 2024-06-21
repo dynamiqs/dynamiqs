@@ -56,3 +56,13 @@ class TestSparseDIA:
         assert jnp.allclose(out_dense_left, out_dense_right, rtol=rtol, atol=atol)
         assert jnp.allclose(out_dense_left, out_dia_left, rtol=rtol, atol=atol)
         assert jnp.allclose(out_dense_left, out_dia_right, rtol=rtol, atol=atol)
+
+    def test_matmul(self, rtol=1e-05, atol=1e-08):
+        out_dia_dia = (self.sparseA @ self.sparseB).to_dense()
+        out_dia_dense = self.sparseA @ self.matrixB
+        out_dense_dia = self.matrixA @ self.sparseB
+        out_dense_dense = self.matrixA @ self.matrixB
+
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
