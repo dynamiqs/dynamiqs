@@ -55,7 +55,7 @@ class SparseQArray(QArray):
         offsets = tuple(-x for x in self.offsets)
         return SparseQArray(diags, offsets, self.dims)
 
-    def trace(self) -> Array:
+    def _trace(self) -> Array:
         main_diag_mask = jnp.asarray(self.offsets) == 0
         return jax.lax.cond(
             jnp.any(main_diag_mask),
@@ -64,7 +64,7 @@ class SparseQArray(QArray):
         )
 
     def norm(self) -> Array:
-        return self.trace().real
+        return self._trace().real
 
     def unit(self) -> QArray:
         return SparseQArray(self.diags / self.norm(), self.offsets, self.dims)
