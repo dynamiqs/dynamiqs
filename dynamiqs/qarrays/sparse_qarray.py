@@ -47,6 +47,9 @@ class SparseQArray(QArray):
             )
         return SparseQArray(out_diags, tuple(-x for x in self.offsets), self.dims)
 
+    def to_dense(self) -> Array:
+        return to_dense(self)
+
     def conj(self) -> SparseQArray:
         return SparseQArray(self.diags.conj(), self.offsets, self.dims)
 
