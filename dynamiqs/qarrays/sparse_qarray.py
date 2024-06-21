@@ -20,7 +20,6 @@ __all__ = ['SparseQArray', 'to_dense', 'to_sparse']
 class SparseQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array
-    dims: tuple[int, ...]
 
     @property
     def dtype(self) -> jnp.dtype:
