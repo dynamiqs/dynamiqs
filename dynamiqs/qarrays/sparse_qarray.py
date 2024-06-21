@@ -1,9 +1,19 @@
 from __future__ import annotations
+
+import functools
 import warnings
+
 import equinox as eqx
+import jax
 import jax.numpy as jnp
+import numpy as np
+from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
+
+from .dense_qarray import DenseQArray
 from .qarray import QArray
+
+__all__ = ['SparseQArray']
 
 
 class SparseQArray(QArray):
@@ -136,6 +146,7 @@ def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
             f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
 
+
 def to_dense(x: SparseQArray) -> DenseQArray:
     r"""Convert a sparse `QArray` into a dense `Qarray`.
 
@@ -152,6 +163,7 @@ def to_dense(x: SparseQArray) -> DenseQArray:
         end = min(N, N + offset)
         out += jnp.diag(diag[start:end], k=offset)
     return out
+
 
 def find_offsets(other: ArrayLike) -> tuple[int, ...]:
     indices = np.nonzero(other)
@@ -181,7 +193,7 @@ def to_sparse(x: DenseQArray | Array) -> SparseQArray:
     Returns:
         `SparseQArray` object
     """
-    concrete_or_error(None, x)
+    concrete_or_error(None, x, '`to_sparse` does not support tracing.')
     offsets = find_offsets(x)
     diags = produce_dia(offsets, x)
     return SparseQArray(diags, offsets, x.dims)
