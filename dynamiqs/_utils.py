@@ -4,7 +4,7 @@ from typing import Any
 
 import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike, PyTree
+from jaxtyping import Array, PyTree
 
 
 def type_str(type: Any) -> str:  # noqa: A002
@@ -45,19 +45,8 @@ def tree_str_inline(x: PyTree) -> str:
     return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
 
 
-def expand_as_broadcastable(arrays: tuple[ArrayLike, ...]) -> tuple[ArrayLike, ...]:
-    arrays = tuple([jnp.asarray(arr) for arr in arrays])
-    expanded_arrays = []
-
-    # number of dimensions of the expanded arrays
-    num_dims = sum([arr.ndim for arr in arrays])
-
-    # loop over the arrays and expand them
-    k = 0
-    for arr in arrays:
-        new_shape = [-1 if i in range(k, k + arr.ndim) else 1 for i in range(num_dims)]
-        new_arr = arr.reshape(new_shape)
-        expanded_arrays.append(new_arr)
-        k += arr.ndim
-
-    return tuple(expanded_arrays)
+def _concatenate_sort(*args: Array | None) -> Array | None:
+    args = [x for x in args if x is not None]
+    if len(args) == 0:
+        return None
+    return jnp.sort(jnp.concatenate(args))

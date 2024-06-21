@@ -156,7 +156,7 @@ def _vectorized_mesolve(
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = MEResult(None, None, None, None, 0, 0)
+    out_axes = MEResult(False, False, False, False, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(

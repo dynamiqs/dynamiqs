@@ -176,7 +176,7 @@ where $f(t)$ is an time-dependent scalar.
 
 In dynamiqs, modulated operators are defined by:
 
-- `f`: a Python function with signature `f(t: float) -> Array` that returns the modulating factor $f(t)$ for any time $t$, as an array of shape _(...)_,
+- `f`: a Python function with signature `f(t: float) -> Scalar | Array` that returns the modulating factor $f(t)$ for any time $t$, as a scalar or an array of shape _(...)_,
 - `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
 
 To construct a modulated operator, pass these two arguments to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
@@ -223,6 +223,11 @@ The returned object can be called at different times:
     >>> f = functools.partial(pulse, omega=1.0, amplitude=5.0)
     >>> H = dq.modulated(f, dq.sigmax())
     ```
+
+??? Note "Discontinuous function"
+    If there is a discontinuous jump in the function values, you should use the optional
+    argument `discontinuity_ts` to enforce adaptive step size solvers to stop at these
+    times (i.e., right before, and right after the jump).
 
 ### Arbitrary time-dependent operators
 
@@ -283,3 +288,8 @@ The returned object can be called at different times:
     >>> f = functools.partial(func, a=1.0, amplitude=5.0)
     >>> H = dq.timecallable(f)
     ```
+
+??? Note "Discontinuous function"
+    If there is a discontinuous jump in the function values, you should use the optional
+    argument `discontinuity_ts` to enforce adaptive step size solvers to stop at these
+    times (i.e., right before, and right after the jump).
