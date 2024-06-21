@@ -165,7 +165,7 @@ def _cartesian_vectorize(
 ) -> TimeArray:
     # todo :write doc
     n_batch_false = tree_false_to_none(n_batch_false, is_leaf=is_shape)
-    out_axes_false = tree_false_to_none(out_axes_false)
+    out_axes = tree_false_to_none(out_axes_false)
 
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
     # Only the second to last batch terms are taken into account in order to
@@ -183,7 +183,7 @@ def _cartesian_vectorize(
             in_axes[i] = 0
             in_axes = jtu.tree_unflatten(treedef, in_axes)
             for _ in range(leaf_len):
-                f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes_false)
+                f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     # We flat vectorize on the first n_batch term, which is the
     # Hamiltonian. This prevents performing the Cartesian product

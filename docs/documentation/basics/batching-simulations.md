@@ -243,6 +243,10 @@ def run_unbatched():
 def run_batched():
     return dq.sesolve(H, psi0, tsave, options=options)
 
+# exclude JIT time from benchmarking by running each function once first
+%timeit -n1 -r1 -q run_unbatched()
+%timeit -n1 -r1 -q run_batched()
+
 # time functions
 %timeit run_unbatched()
 %timeit run_batched()

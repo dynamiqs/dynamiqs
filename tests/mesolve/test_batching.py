@@ -79,3 +79,4 @@ def test_batching_boris():
     jump_ops = [a]
     result = dq.mesolve(H, jump_ops, rho0, [0, 1])
     assert result.states.shape == (7, 5, 3, 2, 9, 9)
+    assert result.tsave is not None
