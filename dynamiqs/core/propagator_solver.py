@@ -21,7 +21,7 @@ class PropagatorSolver(BaseSolver):
                 # note: propagator solvers can make different number of steps between
                 # batch elements when batching over PWC objects
                 return (
-                    f'avg. {self.nsteps.mean()} steps | infos shape'
+                    f'avg. {self.nsteps.mean():.1f} steps | infos shape'
                     f' {self.nsteps.shape}'
                 )
             return f'{self.nsteps} steps'
