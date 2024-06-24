@@ -96,11 +96,6 @@ class Cavity(ClosedSystem):
         return self.Params([grad_x_delta, grad_p_delta], [grad_x_alpha0, grad_p_alpha0])
 
 
-class SparseCavity(Cavity):
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
-        return params.delta * dq.to_sparse(dq.number(self.n))
-
-
 class TDQubit(ClosedSystem):
     class Params(NamedTuple):
         eps: float
@@ -174,20 +169,11 @@ class TDQubit(ClosedSystem):
         )
 
 
-class SparseTDQubit(TDQubit):
-    def H(self, params: PyTree) -> TimeArray:
-        sigmax_sparse = dq.to_sparse(dq.sigmax())
-        f = lambda t, eps, omega: eps * jnp.cos(omega * t) * sigmax_sparse
-        return dq.timecallable(f, args=(params.eps, params.omega))
-
-
 # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # gradients
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave)
-sparse_cavity = SparseCavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave)
 
 tsave = np.linspace(0.0, 1.0, 11)
 tdqubit = TDQubit(eps=3.0, omega=10.0, tsave=tsave)
-sparse_tdqubit = SparseTDQubit(eps=0.3, omega=10.0, tsave=tsave)
