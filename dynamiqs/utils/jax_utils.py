@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import Literal
 
 import jax
-import numpy as np
-from jax.typing import ArrayLike
 from qutip import Qobj
 
 from .._checks import check_shape
+from .._types import ArrayLike, asjaxarray
 from .utils import isbra, isket, isop
 from .utils.general import _hdim
 
@@ -70,7 +69,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
-    x = np.asarray(x)
+    x = asjaxarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if x.ndim > 2:
