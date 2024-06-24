@@ -4,7 +4,8 @@ from typing import Any
 
 import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import Array, PyTree
+from jax import Array
+from jaxtyping import PyTree
 
 
 def type_str(type: Any) -> str:  # noqa: A002
