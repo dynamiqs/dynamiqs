@@ -78,6 +78,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
         )
 
     # array
+    array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
     return PWCTimeArray(times, values, array)
@@ -108,6 +109,7 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
         )
 
     # array
+    array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
     # make f a valid PyTree that is vmap-compatible
