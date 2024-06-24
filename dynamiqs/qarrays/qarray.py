@@ -384,3 +384,7 @@ class QArray(eqx.Module):
             'Using the `**` operator performs element-wise power. For matrix power, '
             'use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
         )
+
+    @abstractmethod
+    def __getitem__(self, key: int | slice) -> QArray:
+        pass

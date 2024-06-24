@@ -253,6 +253,9 @@ class SparseDIAQArray(QArray):
     def __pow__(self, y: Scalar) -> QArray:
         return NotImplemented
 
+    def __getitem__(self, key: int | slice) -> QArray:
+        return NotImplemented
+
 
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
