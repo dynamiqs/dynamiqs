@@ -255,7 +255,7 @@ class QArray(eqx.Module):
 
     def __rmul__(self, y: ArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
-        return y * self
+        return self * y
 
     @abstractmethod
     def __add__(self, y: ArrayLike) -> QArray:
