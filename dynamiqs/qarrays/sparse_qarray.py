@@ -62,9 +62,6 @@ class SparseQArray(QArray):
     def norm(self) -> Array:
         return self._trace().real
 
-    def unit(self) -> QArray:
-        return SparseQArray(self.diags / self.norm(), self.offsets, self.dims)
-
     def __add__(self, other: ScalarLike | ArrayLike) -> QArray:
         if isinstance(other, ScalarLike):
             if other == 0:
