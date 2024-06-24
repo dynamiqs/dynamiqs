@@ -10,6 +10,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
+from qutip import Qobj
 
 from .dense_qarray import DenseQArray
 from .qarray import QArray
@@ -61,6 +62,45 @@ class SparseQArray(QArray):
 
     def norm(self) -> Array:
         return self._trace().real
+
+    def reshape(self, *shape: int) -> QArray:  # noqa: ARG002
+        return NotImplemented
+
+    def broadcast_to(self, *shape: int) -> QArray:  # noqa: ARG002
+        return NotImplemented
+
+    def ptrace(self, keep: tuple[int, ...]) -> QArray:  # noqa: ARG002
+        return NotImplemented
+
+    def isket(self) -> bool:
+        return NotImplemented
+
+    def isbra(self) -> bool:
+        return NotImplemented
+
+    def isdm(self) -> bool:
+        return NotImplemented
+
+    def isherm(self) -> bool:
+        return NotImplemented
+
+    def toket(self) -> QArray:
+        return NotImplemented
+
+    def tobra(self) -> QArray:
+        return NotImplemented
+
+    def todm(self) -> QArray:
+        return NotImplemented
+
+    def to_numpy(self) -> np.ndarray:
+        return NotImplemented
+
+    def to_qutip(self) -> Qobj:
+        return NotImplemented
+
+    def to_jax(self) -> Array:
+        return NotImplemented
 
     def __add__(self, other: ScalarLike | ArrayLike) -> QArray:
         if isinstance(other, ScalarLike):
