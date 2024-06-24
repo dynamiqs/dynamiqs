@@ -35,7 +35,9 @@ class QArray(eqx.Module):
     #   - arithmetic methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, __pow__
 
-    dims: tuple[int, ...]
+    # Setting dims as static for now. Otherwise, I believe it is upgraded to a complex
+    # dtype during the computation, which raises an error on diffrax side.
+    dims: tuple[int, ...] = eqx.field(static=True)
 
     def __check_init__(self):
         # ensure dims is a tuple of ints
