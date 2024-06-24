@@ -249,6 +249,12 @@ class SparseQArray(QArray):
 
         return SparseQArray(jnp.vstack(out_diags), tuple(out_offsets), self.dims)
 
+    def __and__(self, y: QArray) -> QArray:
+        return NotImplemented
+
+    def __pow__(self, y: Scalar) -> QArray:
+        return NotImplemented
+
 
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
