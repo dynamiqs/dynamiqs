@@ -8,8 +8,8 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
-from .._utils import cdtype
 from ..core._utils import (
+    _asqarray,
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
@@ -88,9 +88,9 @@ def sesolve(
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
-    psi0 = jnp.asarray(psi0, dtype=cdtype())
+    psi0 = _asqarray(psi0)
     tsave = jnp.asarray(tsave)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    exp_ops = _asqarray(exp_ops) if exp_ops is not None else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
