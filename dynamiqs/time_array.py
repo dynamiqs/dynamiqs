@@ -13,7 +13,6 @@ from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, obj_type_str
-from .qarrays import QArray
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -31,9 +30,7 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O_0$ for any time $t$.
     """
-    if not isinstance(array, QArray):
-        array = jnp.asarray(array, dtype=cdtype())
-
+    array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(..., n, n)')
     return ConstantTimeArray(array)
 
@@ -81,8 +78,6 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
         )
 
     # array
-    if not isinstance(array, QArray):
-        array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
     return PWCTimeArray(times, values, array)
@@ -113,8 +108,6 @@ def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTi
         )
 
     # array
-    if not isinstance(array, QArray):
-        array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
     # make f a valid PyTree that is vmap-compatible
