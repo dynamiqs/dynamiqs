@@ -179,7 +179,7 @@ def plot_wigner_mosaic(
         >>> H = dq.zero(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
-        >>> tsave = np.linspace(0, 1.0, 101)
+        >>> tsave = jnp.linspace(0, 1.0, 101)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
         >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
         >>> renderfig('plot_wigner_mosaic_cat')
@@ -190,7 +190,7 @@ def plot_wigner_mosaic(
         >>> a = dq.destroy(n)
         >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
-        >>> tsave = np.linspace(0, np.pi, 101)
+        >>> tsave = jnp.linspace(0, jnp.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
         >>> renderfig('plot_wigner_mosaic_kerr')
@@ -275,7 +275,7 @@ def plot_wigner_gif(
         >>> H = dq.zero(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
-        >>> tsave = np.linspace(0, 1.0, 1001)
+        >>> tsave = jnp.linspace(0, 1.0, 1001)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
         >>> dq.plot_wigner_gif(
         ...     result.states,
@@ -293,7 +293,7 @@ def plot_wigner_gif(
         >>> a = dq.destroy(n)
         >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
-        >>> tsave = np.linspace(0, np.pi, 1001)
+        >>> tsave = jnp.linspace(0, jnp.pi, 1001)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_wigner_gif(
         ...     result.states,
