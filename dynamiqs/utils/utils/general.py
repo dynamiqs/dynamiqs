@@ -4,12 +4,13 @@ from functools import reduce
 
 import jax
 import jax.numpy as jnp
+import jaxtyping
 import numpy as np
-from jax import Array
-from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
+from ..._types import Array, ArrayLike, asarray
 from ..._utils import on_cpu
+from ...qarrays.qarray import QArray
 
 __all__ = [
     'dag',
@@ -61,7 +62,7 @@ def dag(x: ArrayLike) -> Array:
         >>> dq.dag(dq.fock(2, 0))
         Array([[1.-0.j, 0.-0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., m, n)')
     return x.mT.conj()
 
@@ -84,8 +85,10 @@ def powm(x: ArrayLike, n: int) -> Array:
         Array([[1.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, n)')
+    if isinstance(x, QArray):
+        return x._powm(n)  # noqa: SLF001
     return jnp.linalg.matrix_power(x, n)
 
 
@@ -110,8 +113,10 @@ def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
         Array([[2.718+0.j, 0.   +0.j],
                [0.   +0.j, 0.368+0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, n)')
+    if isinstance(x, QArray):
+        return x._expm(max_squarings=max_squarings)  # noqa: SLF001
     return jax.scipy.linalg.expm(x, max_squarings=max_squarings)
 
 
@@ -136,7 +141,7 @@ def cosm(x: ArrayLike) -> Array:
         Array([[-1.+0.j,  0.+0.j],
                [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return 0.5 * (expm(1j * x) + expm(-1j * x))
 
@@ -162,12 +167,12 @@ def sinm(x: ArrayLike) -> Array:
         Array([[0.-0.j, 1.-0.j],
                [1.-0.j, 0.-0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
-def trace(x: ArrayLike) -> Array:
+def trace(x: ArrayLike) -> jax.Array:
     r"""Returns the trace of an array along its last two dimensions.
 
     Args:
@@ -181,12 +186,14 @@ def trace(x: ArrayLike) -> Array:
         >>> dq.trace(x)
         Array(3., dtype=float32)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, n)')
+    if isinstance(x, QArray):
+        return x.trace()
     return x.trace(axis1=-1, axis2=-2)
 
 
-def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
+def tracemm(x: ArrayLike, y: ArrayLike) -> jax.Array:
     r"""Return the trace of a matrix multiplication using a fast implementation.
 
     The trace is computed as `sum(x * y.T)` where `*` is the element-wise product,
@@ -216,20 +223,22 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> Array:
         >>> dq.tracemm(x, y)
         Array(9., dtype=float32)
     """
-    x = jnp.asarray(x)
-    y = jnp.asarray(y)
+    x = asarray(x)
+    y = asarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     return (x * y.mT).sum((-2, -1))
 
 
 def _hdim(x: ArrayLike) -> int:
-    x = jnp.asarray(x)
+    x = asarray(x)
     return x.shape[-2] if isket(x) else x.shape[-1]
 
 
 # @partial(jax.jit, static_argnums=(1, 2))
-def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Array:
+def ptrace(
+    x: jaxtyping.ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]
+) -> jax.Array:
     r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
@@ -314,7 +323,7 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
     return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
-def tensor(*args: ArrayLike) -> Array:
+def tensor(*args: jaxtyping.ArrayLike) -> jax.Array:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
@@ -350,7 +359,7 @@ def tensor(*args: ArrayLike) -> Array:
 _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 
-def expect(O: ArrayLike, x: ArrayLike) -> Array:
+def expect(O: ArrayLike, x: ArrayLike) -> jax.Array:
     r"""Returns the expectation value of an operator or list of operators on a ket, bra
     or density matrix.
 
@@ -389,8 +398,8 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
         >>> dq.expect(Os, psis).shape
         (2, 5)
     """
-    O = jnp.asarray(O)
-    x = jnp.asarray(x)
+    O = asarray(O)
+    x = asarray(x)
     check_shape(O, 'O', '(?, n, n)', subs={'?': 'nO?'})
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
@@ -400,7 +409,7 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
     return f(O, x)
 
 
-def _expect_single(O: Array, x: Array) -> Array:
+def _expect_single(O: Array, x: Array) -> jax.Array:
     # O: (n, n), x: (..., n, m)
     if isket(x):
         return (dag(x) @ O @ x).squeeze((-1, -2))  # <x|O|x>
@@ -410,7 +419,7 @@ def _expect_single(O: Array, x: Array) -> Array:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: ArrayLike) -> Array:
+def norm(x: ArrayLike) -> jax.Array:
     r"""Returns the norm of a ket, bra or density matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
@@ -437,8 +446,11 @@ def norm(x: ArrayLike) -> Array:
         >>> dq.norm(rho)
         Array(3., dtype=float32)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
+
+    if isinstance(x, QArray):
+        return x.norm()
 
     if isket(x) or isbra(x):
         return jnp.linalg.norm(x, axis=(-1, -2)).real
@@ -467,7 +479,7 @@ def unit(x: ArrayLike) -> Array:
         >>> dq.norm(psi)
         Array(1., dtype=float32)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     return x / norm(x)[..., None, None]
@@ -498,8 +510,8 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j,  0.+0.j, -2.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
     """
-    L = jnp.asarray(L)
-    rho = jnp.asarray(rho)
+    L = asarray(L)
+    rho = asarray(rho)
     check_shape(L, 'L', '(..., n, n)')
     check_shape(rho, 'rho', '(..., n, n)')
 
@@ -542,9 +554,9 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
     """
-    H = jnp.asarray(H)
-    jump_ops = jnp.asarray(jump_ops)
-    rho = jnp.asarray(rho)
+    H = asarray(H)
+    jump_ops = asarray(jump_ops)
+    rho = asarray(rho)
     check_shape(H, 'H', '(..., n, n)')
     check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
     check_shape(rho, 'rho', '(..., n, n)')
@@ -569,7 +581,7 @@ def isket(x: ArrayLike) -> bool:
         >>> dq.isket(jnp.ones((3, 3)))
         False
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     return x.shape[-1] == 1
 
 
@@ -590,7 +602,7 @@ def isbra(x: ArrayLike) -> bool:
         >>> dq.isbra(jnp.ones((3, 3)))
         False
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     return x.shape[-2] == 1
 
 
@@ -611,7 +623,7 @@ def isdm(x: ArrayLike) -> bool:
         >>> dq.isdm(jnp.ones((3, 1)))
         False
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     return x.shape[-1] == x.shape[-2]
 
 
@@ -632,7 +644,7 @@ def isop(x: ArrayLike) -> bool:
         >>> dq.isop(jnp.ones((3, 1)))
         False
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     return x.shape[-1] == x.shape[-2]
 
 
@@ -653,8 +665,10 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         >>> dq.isherm([[0, 1j], [1j, 0]])
         Array(False, dtype=bool)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, n)')
+    if isinstance(x, QArray):
+        return x.isherm(rtol=rtol, atol=atol)
     return jnp.allclose(x, dag(x), rtol=rtol, atol=atol)
 
 
@@ -676,7 +690,7 @@ def toket(x: ArrayLike) -> Array:
                [0.+0.j],
                [0.+0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
@@ -703,7 +717,7 @@ def tobra(x: ArrayLike) -> Array:
         >>> dq.tobra(psi)  # shape: (1, 3)
         Array([[1.-0.j, 0.-0.j, 0.-0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
@@ -737,7 +751,7 @@ def todm(x: ArrayLike) -> Array:
                [0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if isbra(x) or isket(x):
@@ -765,7 +779,7 @@ def proj(x: ArrayLike) -> Array:
                [0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    x = jnp.asarray(x)
+    x = asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)')
 
     if isbra(x):
@@ -774,7 +788,7 @@ def proj(x: ArrayLike) -> Array:
         return x @ dag(x)
 
 
-def braket(x: ArrayLike, y: ArrayLike) -> Array:
+def braket(x: ArrayLike, y: ArrayLike) -> jax.Array:
     r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets.
 
     Args:
@@ -790,15 +804,15 @@ def braket(x: ArrayLike, y: ArrayLike) -> Array:
         >>> dq.braket(fock0, fock01)
         Array(0.707+0.j, dtype=complex64)
     """
-    x = jnp.asarray(x)
-    y = jnp.asarray(y)
+    x = asarray(x)
+    y = asarray(y)
     check_shape(x, 'x', '(..., n, 1)')
     check_shape(y, 'y', '(..., n, 1)')
 
     return (dag(x) @ y).squeeze((-1, -2))
 
 
-def overlap(x: ArrayLike, y: ArrayLike) -> Array:
+def overlap(x: ArrayLike, y: ArrayLike) -> jax.Array:
     r"""Returns the overlap between two quantum states.
 
     The overlap is computed
@@ -825,8 +839,8 @@ def overlap(x: ArrayLike, y: ArrayLike) -> Array:
         >>> dq.overlap(fock0, fock01_dm)
         Array(0.5, dtype=float32)
     """
-    x = jnp.asarray(x)
-    y = jnp.asarray(y)
+    x = asarray(x)
+    y = asarray(y)
     check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
     check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 
@@ -840,7 +854,7 @@ def overlap(x: ArrayLike, y: ArrayLike) -> Array:
         return tracemm(dag(x), y).real
 
 
-def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
+def fidelity(x: jaxtyping.ArrayLike, y: jaxtyping.ArrayLike) -> jax.Array:
     r"""Returns the fidelity of two states, kets or density matrices.
 
     The fidelity is computed
@@ -886,7 +900,7 @@ def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
         return _dm_fidelity_gpu(x, y)
 
 
-def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
+def _dm_fidelity_cpu(x: jax.Array, y: jax.Array) -> jax.Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
 
@@ -907,7 +921,7 @@ def _dm_fidelity_cpu(x: Array, y: Array) -> Array:
     return jnp.sqrt(w).sum(-1) ** 2
 
 
-def _dm_fidelity_gpu(x: Array, y: Array) -> Array:
+def _dm_fidelity_gpu(x: jax.Array, y: jax.Array) -> jax.Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
 
@@ -921,7 +935,7 @@ def _dm_fidelity_gpu(x: Array, y: Array) -> Array:
     return jnp.sqrt(w).sum(-1) ** 2
 
 
-def _sqrtm_gpu(x: Array) -> Array:
+def _sqrtm_gpu(x: jax.Array) -> jax.Array:
     # returns the square root of a symmetric or Hermitian positive definite matrix
     # x: (..., n, n) -> (..., n, n)
 
@@ -939,7 +953,7 @@ def _sqrtm_gpu(x: Array) -> Array:
     return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
 
 
-def entropy_vn(x: ArrayLike) -> Array:
+def entropy_vn(x: jaxtyping.ArrayLike) -> jax.Array:
     r"""Returns the Von Neumann entropy of a ket or density matrix.
 
     It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
