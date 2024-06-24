@@ -8,10 +8,24 @@ import jax.tree_util as jtu
 from jax._src.lib import xla_client
 from jaxtyping import ArrayLike, PyTree
 
-from .._utils import cdtype, obj_type_str
+from .._utils import obj_type_str
+from ..qarrays import QArray, dense_qarray
 from ..solver import Solver, _ODEAdaptiveStep
 from ..time_array import ConstantTimeArray, Shape, TimeArray
 from .abstract_solver import AbstractSolver
+
+
+def _asqarray(x: ArrayLike) -> QArray:
+    if isinstance(x, QArray):
+        return x
+    else:
+        try:
+            return dense_qarray(x)
+        except (TypeError, ValueError) as e:
+            raise TypeError(
+                'Argument must be an array-like or a quantum array object, but has'
+                f' type {obj_type_str(x)}.'
+            ) from e
 
 
 def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
@@ -20,7 +34,7 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
     else:
         try:
             # same as dq.constant() but not checking the shape
-            array = jnp.asarray(x, dtype=cdtype())
+            array = _asqarray(x)
             return ConstantTimeArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
