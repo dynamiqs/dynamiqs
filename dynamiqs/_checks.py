@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
-from jax import Array
+
+from ._types import Array
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
@@ -61,7 +63,7 @@ def check_shape(
     )
 
 
-def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
+def check_times(x: jax.Array, argname: str, allow_empty: bool = False) -> jax.Array:
     # check that an array of time is valid (it must be a 1D array sorted in strictly
     # ascending order)
 
