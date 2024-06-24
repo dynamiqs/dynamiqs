@@ -5,9 +5,9 @@ from abc import abstractmethod
 from typing import get_args
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
-from jax import Array
 from jaxtyping import ArrayLike, ScalarLike
 from qutip import Qobj
 
@@ -90,19 +90,19 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def trace(self) -> Array:
+    def trace(self) -> jax.Array:
         pass
 
     @abstractmethod
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> jax.Array:
         pass
 
     @abstractmethod
-    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> jax.Array:
         pass
 
     @abstractmethod
-    def norm(self) -> Array:
+    def norm(self) -> jax.Array:
         """Returns the norm of the quantum state.
 
         Returns:
@@ -244,7 +244,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def to_jax(self) -> Array:
+    def to_jax(self) -> jax.Array:
         """Convert the quantum state to a JAX array.
 
         Returns:

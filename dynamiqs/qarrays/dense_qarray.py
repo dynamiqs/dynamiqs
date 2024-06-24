@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import get_args
 
+import jax
 import jax.numpy as jnp
 import numpy as np
-from jax import Array
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
@@ -48,7 +48,7 @@ def dense_qarray(data: ArrayLike, dims: tuple[int, ...] | None = None) -> DenseQ
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
-    data: Array
+    data: jax.Array
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -76,16 +76,16 @@ class DenseQArray(QArray):
         data = dag(self.data)
         return DenseQArray(self.dims, data)
 
-    def trace(self) -> Array:
+    def trace(self) -> jax.Array:
         return trace(self.data)
 
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> jax.Array:
         return self.data.sum(axis=axis)
 
-    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> jax.Array:
         return self.data.squeeze(axis=axis)
 
-    def norm(self) -> Array:
+    def norm(self) -> jax.Array:
         return norm(self.data)
 
     def reshape(self, *shape: int) -> QArray:
@@ -131,7 +131,7 @@ class DenseQArray(QArray):
     def to_qutip(self) -> Qobj:
         return to_qutip(self.data, dims=self.dims)
 
-    def to_jax(self) -> Array:
+    def to_jax(self) -> jax.Array:
         return self.data
 
     def _powm(self, n: int) -> QArray:
