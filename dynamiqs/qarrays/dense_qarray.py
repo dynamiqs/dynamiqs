@@ -4,6 +4,7 @@ from typing import get_args
 
 import jax.numpy as jnp
 import numpy as np
+from equinox.internal._omega import _Metaω
 from jax import Array
 from jaxtyping import ArrayLike
 from qutip import Qobj
@@ -179,6 +180,10 @@ class DenseQArray(QArray):
         return DenseQArray(dims, data)
 
     def __pow__(self, power: int) -> QArray:
+        # to deal with the x**ω notation from equinox (used in diffrax internals)
+        if isinstance(power, _Metaω):
+            return _Metaω.__rpow__(power, self)
+
         super().__pow__(power)
         data = powm(self.data, power)
         return DenseQArray(self.dims, data)
