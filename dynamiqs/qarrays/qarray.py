@@ -22,9 +22,10 @@ class QArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape
-    # - the methods: conj, dag, norm, reshape, broadcast_to, ptrace, to_numpy, to_qutip,
-    #                to_jax, __mul__, __add__, __matmul__, __rmatmul__, __and__, __pow__
+    # - the properties: dtype, shape, mT
+    # - the methods: conj, dag, trace, sum, squeeze, norm, reshape, broadcast_to,
+    #                ptrace, to_numpy, to_qutip, to_jax, _powm, _expm, __mul__,
+    #                __add__, __matmul__, __rmatmul__, __and__, __pow__
 
     # (for now also property I and methods is_ket, is_bra, is_dm, is_herm, toket, tobra,
     # todm)
@@ -48,6 +49,11 @@ class QArray(eqx.Module):
         Returns:
             The shape of the quantum state.
         """
+
+    @property
+    @abstractmethod
+    def mT(self) -> QArray:
+        pass
 
     @property
     def ndim(self) -> int:
@@ -82,6 +88,18 @@ class QArray(eqx.Module):
         Returns:
             The dagger of the quantum state.
         """
+
+    @abstractmethod
+    def trace(self) -> Array:
+        pass
+
+    @abstractmethod
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
+        pass
+
+    @abstractmethod
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
+        pass
 
     @abstractmethod
     def norm(self) -> Array:
@@ -162,7 +180,7 @@ class QArray(eqx.Module):
         return self.isdm()
 
     @abstractmethod
-    def isherm(self) -> bool:
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         """Returns the check if the quantum state is Hermitian.
 
         Returns:
@@ -232,6 +250,14 @@ class QArray(eqx.Module):
         Returns:
             The JAX array representation of the quantum state.
         """
+
+    @abstractmethod
+    def _powm(self, n: int) -> QArray:
+        pass
+
+    @abstractmethod
+    def _expm(self, *, max_squarings: int = 16) -> QArray:
+        pass
 
     def __repr__(self) -> str:
         return (

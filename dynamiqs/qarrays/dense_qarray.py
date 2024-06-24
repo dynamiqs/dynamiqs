@@ -11,8 +11,10 @@ from qutip import Qobj
 from ..utils.jax_utils import to_qutip
 from ..utils.utils.general import (
     dag,
+    expm,
     isbra,
     isdm,
+    isherm,
     isket,
     isop,
     norm,
@@ -22,6 +24,7 @@ from ..utils.utils.general import (
     tobra,
     todm,
     toket,
+    trace,
 )
 from .qarray import QArray
 
@@ -56,6 +59,11 @@ class DenseQArray(QArray):
         return self.data.shape
 
     @property
+    def mT(self) -> QArray:
+        data = self.data.mT
+        return DenseQArray(self.dims, data)
+
+    @property
     def I(self) -> QArray:  # noqa: E743
         data = jnp.eye(jnp.prod(jnp.asarray(self.dims)))
         return DenseQArray(self.dims, data)
@@ -68,9 +76,17 @@ class DenseQArray(QArray):
         data = dag(self.data)
         return DenseQArray(self.dims, data)
 
-    def norm(self) -> QArray:
-        data = norm(self.data)
-        return DenseQArray(self.dims, data)
+    def trace(self) -> Array:
+        return trace(self.data)
+
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
+        return self.data.sum(axis=axis)
+
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
+        return self.data.squeeze(axis=axis)
+
+    def norm(self) -> Array:
+        return norm(self.data)
 
     def reshape(self, *shape: int) -> QArray:
         data = jnp.reshape(self.data, shape)
@@ -94,9 +110,8 @@ class DenseQArray(QArray):
     def isdm(self) -> bool:
         return isdm(self.data)
 
-    def isherm(self) -> bool:
-        # TODO: could be made more efficient
-        return jnp.allclose(self.data, dag(self.data))
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        return isherm(self.data, rtol=rtol, atol=atol)
 
     def toket(self) -> QArray:
         data = toket(self.data)
@@ -118,6 +133,14 @@ class DenseQArray(QArray):
 
     def to_jax(self) -> Array:
         return self.data
+
+    def _powm(self, n: int) -> QArray:
+        data = powm(self.data, n)
+        return DenseQArray(self.dims, data)
+
+    def _expm(self, n: int) -> QArray:
+        data = expm(self.data, n)
+        return DenseQArray(self.dims, data)
 
     def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
