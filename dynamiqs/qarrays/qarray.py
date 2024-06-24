@@ -29,7 +29,9 @@ class QArray(eqx.Module):
     # (for now also property I and methods is_ket, is_bra, is_dm, is_herm, toket, tobra,
     # todm)
 
-    dims: tuple[int, ...]
+    # Setting dims as static for now. Otherwise, I believe it is upgraded to a complex
+    # dtype during the computation, which raises an error on diffrax side.
+    dims: tuple[int, ...] = eqx.field(static=True)
 
     @property
     @abstractmethod
@@ -299,3 +301,7 @@ class QArray(eqx.Module):
             'Using the `**` operator performs element-wise power. For matrix power, '
             'use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
         )
+
+    @abstractmethod
+    def __getitem__(self, key: int | slice) -> QArray:
+        pass

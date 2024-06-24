@@ -9,8 +9,8 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
-from .._utils import cdtype
 from ..core._utils import (
+    _asqarray,
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
@@ -101,9 +101,9 @@ def mesolve(
     # === convert arguments
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
-    rho0 = jnp.asarray(rho0, dtype=cdtype())
+    rho0 = _asqarray(rho0)
     tsave = jnp.asarray(tsave)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    exp_ops = _asqarray(exp_ops) if exp_ops is not None else None
 
     # === check arguments
     _check_mesolve_args(H, jump_ops, rho0, exp_ops)
