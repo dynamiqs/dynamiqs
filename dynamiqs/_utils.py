@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike, PyTree
+from jaxtyping import ArrayLike, PyTree
 
 
 def type_str(type: Any) -> str:  # noqa: A002
@@ -18,7 +19,7 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def on_cpu(x: Array) -> str:
+def on_cpu(x: jax.Array) -> str:
     # TODO: this is a temporary solution, it won't work when we have multiple devices
     return x.devices().pop().device_kind == 'cpu'
 
