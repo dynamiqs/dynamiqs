@@ -8,8 +8,10 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jaxtyping import ArrayLike, ScalarLike
+from jaxtyping import ScalarLike
 from qutip import Qobj
+
+from .._types import QArrayLike
 
 __all__ = ['QArray']
 
@@ -270,7 +272,7 @@ class QArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: ArrayLike) -> QArray:
+    def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
         if not isinstance(y, get_args(ScalarLike)):
             logging.warning(
@@ -279,12 +281,12 @@ class QArray(eqx.Module):
                 'instead.'
             )
 
-    def __rmul__(self, y: ArrayLike) -> QArray:
+    def __rmul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
         return self * y
 
     @abstractmethod
-    def __add__(self, y: ArrayLike) -> QArray:
+    def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
         if isinstance(y, get_args(ScalarLike)):
             logging.warning(
@@ -293,24 +295,24 @@ class QArray(eqx.Module):
                 'identity matrix, use e.g. `x + 2 * x.I` instead.'
             )
 
-    def __radd__(self, y: ArrayLike) -> QArray:
+    def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
         return self + y
 
-    def __sub__(self, y: ArrayLike) -> QArray:
+    def __sub__(self, y: QArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""
         return self + (-y)
 
-    def __rsub__(self, y: ArrayLike) -> QArray:
+    def __rsub__(self, y: QArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array on the right."""
         return -self + y
 
     @abstractmethod
-    def __matmul__(self, y: ArrayLike) -> QArray:
+    def __matmul__(self, y: QArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array."""
 
     @abstractmethod
-    def __rmatmul__(self, y: ArrayLike) -> QArray:
+    def __rmatmul__(self, y: QArrayLike) -> QArray:
         """Matrix multiplication with another quantum state or JAX array
         on the right.
         """
