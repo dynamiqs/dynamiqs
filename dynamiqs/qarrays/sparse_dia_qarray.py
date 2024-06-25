@@ -298,7 +298,7 @@ def _construct_diags(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     return diags
 
 
-def to_sparse(x: DenseQArray | Array) -> SparseDIAQArray:
+def to_sparse_dia(x: DenseQArray | Array) -> SparseDIAQArray:
     r"""Returns the input matrix in the `SparseDIAQArray` format.
 
     Args:
@@ -307,7 +307,7 @@ def to_sparse(x: DenseQArray | Array) -> SparseDIAQArray:
     Returns:
         `SparseDIAQArray` object
     """
-    concrete_or_error(None, x, '`to_sparse` does not support tracing.')
+    concrete_or_error(None, x, '`to_sparse_dia` does not support tracing.')
     offsets = _find_offsets(x)
     diags = _construct_diags(offsets, x)
     return SparseDIAQArray(x.dims, offsets, diags)

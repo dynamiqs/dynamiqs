@@ -22,7 +22,10 @@ class TestSparseDIAQArray:
 
     def test_convert(self, rtol=1e-05, atol=1e-08):
         assert jnp.allclose(
-            self.matrixA, dq.to_dense(dq.to_sparse(self.matrixA)), rtol=rtol, atol=atol
+            self.matrixA,
+            dq.to_dense(dq.to_sparse_dia(self.matrixA)),
+            rtol=rtol,
+            atol=atol,
         )
 
     def test_add(self, rtol=1e-05, atol=1e-08):
