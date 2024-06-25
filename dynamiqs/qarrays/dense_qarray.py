@@ -5,9 +5,10 @@ from typing import get_args
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, ScalarLike
 from qutip import Qobj
 
+from .._types import QArrayLike, asarray
 from ..utils.jax_utils import to_qutip
 from ..utils.utils.general import (
     dag,
@@ -142,49 +143,53 @@ class DenseQArray(QArray):
         data = expm(self.data, n)
         return DenseQArray(self.dims, data)
 
-    def __mul__(self, y: ArrayLike) -> QArray:
+    def __mul__(self, y: QArrayLike) -> QArray:
         super().__mul__(y)
 
+        if isinstance(y, ScalarLike):
+            data = self.data * y
         if isinstance(y, DenseQArray):
             data = self.data * y.data
-        elif isinstance(y, get_args(ArrayLike)):
-            data = self.data * y
+        elif isinstance(y, get_args(QArrayLike)):
+            data = self.data * asarray(y)
         else:
             return NotImplemented
 
         return DenseQArray(self.dims, data)
 
-    def __add__(self, y: ArrayLike) -> QArray:
+    def __add__(self, y: QArrayLike) -> QArray:
         super().__add__(y)
 
-        if isinstance(y, DenseQArray):
-            data = self.data + y.data
-        elif isinstance(y, get_args(ArrayLike)):
+        if isinstance(y, ScalarLike):
             data = self.data + y
+        elif isinstance(y, DenseQArray):
+            data = self.data + y.data
+        elif isinstance(y, get_args(QArrayLike)):
+            data = self.data + asarray(y)
         else:
             return NotImplemented
 
         return DenseQArray(self.dims, data)
 
-    def __matmul__(self, y: ArrayLike) -> QArray:
+    def __matmul__(self, y: QArrayLike) -> QArray:
         super().__matmul__(y)
 
         if isinstance(y, DenseQArray):
             data = self.data @ y.data
-        elif isinstance(y, get_args(ArrayLike)):
-            data = self.data @ y
+        elif isinstance(y, get_args(QArrayLike)):
+            data = self.data @ asarray(y)
         else:
             return NotImplemented
 
         return DenseQArray(self.dims, data)
 
-    def __rmatmul__(self, y: ArrayLike) -> QArray:
+    def __rmatmul__(self, y: QArrayLike) -> QArray:
         super().__rmatmul__(y)
 
         if isinstance(y, DenseQArray):
             data = y.data @ self.data
-        elif isinstance(y, get_args(ArrayLike)):
-            data = y @ self.data
+        elif isinstance(y, get_args(QArrayLike)):
+            data = asarray(y) @ self.data
         else:
             return NotImplemented
 
