@@ -6,19 +6,19 @@ import jax
 from qutip import Qobj
 
 from .._checks import check_shape
-from .._types import ArrayLike, asjaxarray
+from .._types import QArrayLike, asjaxarray
 from .utils import isbra, isket, isop
 from .utils.general import _hdim
 
 __all__ = ['to_qutip', 'set_device', 'set_precision', 'set_matmul_precision']
 
 
-def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
+def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
     quantum objects if it has more than two dimensions).
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
             density matrix or operator.
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
             Hilbert space of the composite system, defaults to `None` (a single system

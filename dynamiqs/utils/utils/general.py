@@ -4,11 +4,11 @@ from functools import reduce
 
 import jax
 import jax.numpy as jnp
-import jaxtyping
 import numpy as np
+from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ..._types import Array, ArrayLike, asarray
+from ..._types import Array, QArrayLike, asarray
 from ..._utils import on_cpu
 from ...qarrays.qarray import QArray
 
@@ -43,11 +43,11 @@ __all__ = [
 ]
 
 
-def dag(x: ArrayLike) -> Array:
+def dag(x: QArrayLike) -> Array:
     r"""Returns the adjoint (complex conjugate transpose) of a matrix.
 
     Args:
-        x _(array_like of shape (..., m, n))_: Matrix.
+        x _(qarray_like of shape (..., m, n))_: Matrix.
 
     Returns:
        _(array of shape (..., n, m))_ Adjoint of `x`.
@@ -67,11 +67,11 @@ def dag(x: ArrayLike) -> Array:
     return x.mT.conj()
 
 
-def powm(x: ArrayLike, n: int) -> Array:
+def powm(x: QArrayLike, n: int) -> Array:
     """Returns the $n$-th matrix power of an array.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Square matrix.
+        x _(qarray_like of shape (..., n, n))_: Square matrix.
         n: Integer exponent.
 
     Returns:
@@ -92,13 +92,13 @@ def powm(x: ArrayLike, n: int) -> Array:
     return jnp.linalg.matrix_power(x, n)
 
 
-def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
+def expm(x: QArrayLike, *, max_squarings: int = 16) -> Array:
     """Returns the matrix exponential of an array.
 
     The exponential is computed using the scaling-and-squaring approximation method.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Square matrix.
+        x _(qarray_like of shape (..., n, n))_: Square matrix.
         max_squarings: Number of squarings.
 
     Returns:
@@ -120,11 +120,11 @@ def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
     return jax.scipy.linalg.expm(x, max_squarings=max_squarings)
 
 
-def cosm(x: ArrayLike) -> Array:
+def cosm(x: QArrayLike) -> Array:
     r"""Returns the cosine of an array.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Square matrix.
+        x _(qarray_like of shape (..., n, n))_: Square matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Cosine of `x`.
@@ -146,11 +146,11 @@ def cosm(x: ArrayLike) -> Array:
     return 0.5 * (expm(1j * x) + expm(-1j * x))
 
 
-def sinm(x: ArrayLike) -> Array:
+def sinm(x: QArrayLike) -> Array:
     r"""Returns the sine of an array.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Square matrix.
+        x _(qarray_like of shape (..., n, n))_: Square matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Sine of `x`.
@@ -172,11 +172,11 @@ def sinm(x: ArrayLike) -> Array:
     return -0.5j * (expm(1j * x) - expm(-1j * x))
 
 
-def trace(x: ArrayLike) -> jax.Array:
+def trace(x: QArrayLike) -> jax.Array:
     r"""Returns the trace of an array along its last two dimensions.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Array.
+        x _(qarray_like of shape (..., n, n))_: Array.
 
     Returns:
         _(array of shape (...))_ Trace of `x`.
@@ -193,7 +193,7 @@ def trace(x: ArrayLike) -> jax.Array:
     return x.trace(axis1=-1, axis2=-2)
 
 
-def tracemm(x: ArrayLike, y: ArrayLike) -> jax.Array:
+def tracemm(x: QArrayLike, y: QArrayLike) -> jax.Array:
     r"""Return the trace of a matrix multiplication using a fast implementation.
 
     The trace is computed as `sum(x * y.T)` where `*` is the element-wise product,
@@ -211,8 +211,8 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> jax.Array:
         instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Array.
-        y _(array_like of shape (..., n, n))_: Array.
+        x _(qarray_like of shape (..., n, n))_: Array.
+        y _(qarray_like of shape (..., n, n))_: Array.
 
     Returns:
         _(array of shape (...))_ Trace of `x @ y`.
@@ -230,14 +230,14 @@ def tracemm(x: ArrayLike, y: ArrayLike) -> jax.Array:
     return (x * y.mT).sum((-2, -1))
 
 
-def _hdim(x: ArrayLike) -> int:
+def _hdim(x: QArrayLike) -> int:
     x = asarray(x)
     return x.shape[-2] if isket(x) else x.shape[-1]
 
 
 # @partial(jax.jit, static_argnums=(1, 2))
 def ptrace(
-    x: jaxtyping.ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]
+    x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]
 ) -> jax.Array:
     r"""Returns the partial trace of a ket, bra or density matrix.
 
@@ -323,7 +323,7 @@ def ptrace(
     return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
 
 
-def tensor(*args: jaxtyping.ArrayLike) -> jax.Array:
+def tensor(*args: ArrayLike) -> jax.Array:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
@@ -359,7 +359,7 @@ def tensor(*args: jaxtyping.ArrayLike) -> jax.Array:
 _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 
-def expect(O: ArrayLike, x: ArrayLike) -> jax.Array:
+def expect(O: QArrayLike, x: QArrayLike) -> jax.Array:
     r"""Returns the expectation value of an operator or list of operators on a ket, bra
     or density matrix.
 
@@ -375,9 +375,9 @@ def expect(O: ArrayLike, x: ArrayLike) -> jax.Array:
         `dq.expect(O, x).real`.
 
     Args:
-        O _(array_like of shape (nO?, n, n))_: Arbitrary operator or list of _nO_
+        O _(qarray_like of shape (nO?, n, n))_: Arbitrary operator or list of _nO_
             operators.
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket,
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket,
             bra or density matrix.
 
     Returns:
@@ -419,15 +419,15 @@ def _expect_single(O: Array, x: Array) -> jax.Array:
         return tracemm(O, x)  # tr(Ox)
 
 
-def norm(x: ArrayLike) -> jax.Array:
+def norm(x: QArrayLike) -> jax.Array:
     r"""Returns the norm of a ket, bra or density matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
     matrix, it is $\tr{\rho}$.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
-            density matrix.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+            or density matrix.
 
     Returns:
         _(array of shape (...))_ Real-valued norm of `x`.
@@ -458,14 +458,14 @@ def norm(x: ArrayLike) -> jax.Array:
         return trace(x).real
 
 
-def unit(x: ArrayLike) -> Array:
+def unit(x: QArrayLike) -> Array:
     r"""Normalize a ket, bra or density matrix to unit norm.
 
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
-            density matrix.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+            or density matrix.
 
     Returns:
         _(array of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Normalized ket,
@@ -485,7 +485,7 @@ def unit(x: ArrayLike) -> Array:
     return x / norm(x)[..., None, None]
 
 
-def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
+def dissipator(L: QArrayLike, rho: QArrayLike) -> Array:
     r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
@@ -495,8 +495,8 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
     $$
 
     Args:
-        L _(array_like of shape (..., n, n))_: Jump operator.
-        rho _(array_like of shape (..., n, n))_: Density matrix.
+        L _(qarray_like of shape (..., n, n))_: Jump operator.
+        rho _(qarray_like of shape (..., n, n))_: Density matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
@@ -520,7 +520,7 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
     return L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL
 
 
-def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
+def lindbladian(H: QArrayLike, jump_ops: QArrayLike, rho: QArrayLike) -> Array:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -536,9 +536,9 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(array_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
-        rho _(array_like of shape (..., n, n))_: Density matrix.
+        H _(qarray_like of shape (..., n, n))_: Hamiltonian.
+        jump_ops _(qarray_like of shape (N, ..., n, n))_: Sequence of jump operators.
+        rho _(qarray_like of shape (..., n, n))_: Density matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
@@ -564,11 +564,11 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     return -1j * (H @ rho - rho @ H) + dissipator(jump_ops, rho).sum(0)
 
 
-def isket(x: ArrayLike) -> bool:
+def isket(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of a ket.
 
     Args:
-        x _(array_like of shape (...))_: Array.
+        x _(qarray_like of shape (...))_: Array.
 
     Returns:
         True if the last dimension of `x` is 1, False otherwise.
@@ -585,11 +585,11 @@ def isket(x: ArrayLike) -> bool:
     return x.shape[-1] == 1
 
 
-def isbra(x: ArrayLike) -> bool:
+def isbra(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of a bra.
 
     Args:
-        x _(array_like of shape (...))_: Array.
+        x _(qarray_like of shape (...))_: Array.
 
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
@@ -606,11 +606,11 @@ def isbra(x: ArrayLike) -> bool:
     return x.shape[-2] == 1
 
 
-def isdm(x: ArrayLike) -> bool:
+def isdm(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of a density matrix.
 
     Args:
-        x _(array_like of shape (...))_: Array.
+        x _(qarray_like of shape (...))_: Array.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -627,11 +627,11 @@ def isdm(x: ArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
-def isop(x: ArrayLike) -> bool:
+def isop(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of an operator.
 
     Args:
-        x _(array_like of shape (...))_: Array.
+        x _(qarray_like of shape (...))_: Array.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -648,11 +648,11 @@ def isop(x: ArrayLike) -> bool:
     return x.shape[-1] == x.shape[-2]
 
 
-def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
     r"""Returns True if the array is Hermitian.
 
     Args:
-        x _(array_like of shape (..., n, n))_: Array.
+        x _(qarray_like of shape (..., n, n))_: Array.
         rtol: Relative tolerance of the check.
         atol: Absolute tolerance of the check.
 
@@ -672,11 +672,11 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
     return jnp.allclose(x, dag(x), rtol=rtol, atol=atol)
 
 
-def toket(x: ArrayLike) -> Array:
+def toket(x: QArrayLike) -> Array:
     r"""Returns the ket representation of a pure quantum state.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
         _(array of shape (..., n, 1))_ Ket.
@@ -699,11 +699,11 @@ def toket(x: ArrayLike) -> Array:
         return x
 
 
-def tobra(x: ArrayLike) -> Array:
+def tobra(x: QArrayLike) -> Array:
     r"""Returns the bra representation of a pure quantum state.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
         _(array of shape (..., 1, n))_ Bra.
@@ -726,7 +726,7 @@ def tobra(x: ArrayLike) -> Array:
         return dag(x)
 
 
-def todm(x: ArrayLike) -> Array:
+def todm(x: QArrayLike) -> Array:
     r"""Returns the density matrix representation of a quantum state.
 
     Note:
@@ -734,8 +734,8 @@ def todm(x: ArrayLike) -> Array:
         density matrix, it is returned directly.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
-            density matrix.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+            or density matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Density matrix.
@@ -760,14 +760,14 @@ def todm(x: ArrayLike) -> Array:
         return x
 
 
-def proj(x: ArrayLike) -> Array:
+def proj(x: QArrayLike) -> Array:
     r"""Returns the projection operator onto a pure quantum state.
 
     The projection operator onto the state $\ket\psi$ is defined as
     $P_{\ket\psi} = \ket\psi\bra\psi$.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
         _(array of shape (..., n, n))_ Projection operator.
@@ -788,12 +788,12 @@ def proj(x: ArrayLike) -> Array:
         return x @ dag(x)
 
 
-def braket(x: ArrayLike, y: ArrayLike) -> jax.Array:
+def braket(x: QArrayLike, y: QArrayLike) -> jax.Array:
     r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets.
 
     Args:
-        x (array_like of shape _(..., n, 1))_: Left-side ket.
-        y (array_like of shape _(..., n, 1))_: Right-side ket.
+        x (qarray_like of shape _(..., n, 1))_: Left-side ket.
+        y (qarray_like of shape _(..., n, 1))_: Right-side ket.
 
     Returns:
         _(array of shape (...))_ Complex-valued inner product.
@@ -812,7 +812,7 @@ def braket(x: ArrayLike, y: ArrayLike) -> jax.Array:
     return (dag(x) @ y).squeeze((-1, -2))
 
 
-def overlap(x: ArrayLike, y: ArrayLike) -> jax.Array:
+def overlap(x: QArrayLike, y: QArrayLike) -> jax.Array:
     r"""Returns the overlap between two quantum states.
 
     The overlap is computed
@@ -825,8 +825,8 @@ def overlap(x: ArrayLike, y: ArrayLike) -> jax.Array:
       $\sigma$.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        y _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        y _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
 
     Returns:
         _(array of shape (...))_ Real-valued overlap.
@@ -854,7 +854,7 @@ def overlap(x: ArrayLike, y: ArrayLike) -> jax.Array:
         return tracemm(dag(x), y).real
 
 
-def fidelity(x: jaxtyping.ArrayLike, y: jaxtyping.ArrayLike) -> jax.Array:
+def fidelity(x: ArrayLike, y: ArrayLike) -> jax.Array:
     r"""Returns the fidelity of two states, kets or density matrices.
 
     The fidelity is computed
@@ -953,7 +953,7 @@ def _sqrtm_gpu(x: jax.Array) -> jax.Array:
     return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
 
 
-def entropy_vn(x: jaxtyping.ArrayLike) -> jax.Array:
+def entropy_vn(x: ArrayLike) -> jax.Array:
     r"""Returns the Von Neumann entropy of a ket or density matrix.
 
     It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
