@@ -185,5 +185,5 @@ class DenseQArray(QArray):
 
     def __pow__(self, power: int) -> QArray:
         super().__pow__(power)
-        data = powm(self.data, power)
+        data = self.data**power
         return DenseQArray(self.dims, data)
