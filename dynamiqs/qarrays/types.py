@@ -38,11 +38,11 @@ def is_qarraylike(x: Any) -> bool:
     return False
 
 
-def asqarray(x: QArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
+def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
     return x if isinstance(x, QArray) else dense_qarray(x, dims=dims)
 
 
-def dense_qarray(x: ArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
+def dense_qarray(x: ArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
     from .dense_qarray import DenseQArray
 
     # TODO: check if is bra, ket, dm or op
@@ -56,6 +56,8 @@ def dense_qarray(x: ArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
     x = jnp.asarray(x)
     if dims is None:
         dims = (x.shape[-2],)  # TODO: fix for bra
+    elif isinstance(dims, int):
+        dims = (dims,)
     return DenseQArray(dims, x)
 
 
