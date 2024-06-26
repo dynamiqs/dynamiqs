@@ -55,8 +55,8 @@ skip-magic-trailing-comma = true
 [tool.ruff.lint]
 select = [
     "F", "E", "W", "C90", "I", "D", "UP", "YTT", "ANN", "BLE", "B", "A", "C4", "FA",
-    "INP", "PIE", "T20", "PYI", "PT", "RSE", "RET", "SLF", "SIM", "INT", "ARG", "PTH",
-    "PL", "TRY", "FLY", "NPY", "RUF",
+    "INP", "NPY201", "PIE", "T20", "PYI", "PT", "RSE", "RET", "SLF", "SIM", "INT",
+    "ARG", "PTH", "PL", "TRY", "FLY", "NPY", "RUF",
 ]
 extend-select = ["D204", "D400", "D404", "D406", "D410"]
 ignore = [
