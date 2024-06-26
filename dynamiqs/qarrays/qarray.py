@@ -304,8 +304,8 @@ class QArray(eqx.Module):
 
     def __repr__(self) -> str:
         return (
-            f'{type(self).__name__}(shape={self.shape}, '
-            f'dims={self.dims}, dtype={self.dtype})'
+            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
+            f'dtype={self.dtype}'
         )
 
     def __neg__(self) -> QArray:
