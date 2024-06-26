@@ -8,13 +8,14 @@ from jax.typing import ArrayLike
 
 from .._checks import check_type_int
 from .._utils import cdtype
+from ..qarrays import QArray, asqarray
 from .operators import displace
-from .utils import tensor, todm
+from .utils import tensor
 
 __all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
 
 
-def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
+def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     r"""Returns the ket of a Fock state or a tensor product of Fock states.
 
     Args:
@@ -24,38 +25,41 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
             `number` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), 1))_ Ket of the Fock state or tensor product
+        _(qarray of shape (..., prod(dim), 1))_ Ket of the Fock state or tensor product
             of Fock states.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
         >>> dq.fock(3, 1)
-        Array([[0.+0.j],
-               [1.+0.j],
-               [0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]]
 
         Batched single-mode Fock states $\{\ket{0}\!, \ket{1}\!, \ket{2}\}$:
         >>> dq.fock(3, [0, 1, 2])
-        Array([[[1.+0.j],
-                [0.+0.j],
-                [0.+0.j]],
+        DenseQArray: shape=(3, 3, 1), dims=(3,), dtype=complex64
+        [[[1.+0.j]
+          [0.+0.j]
+          [0.+0.j]]
         <BLANKLINE>
-               [[0.+0.j],
-                [1.+0.j],
-                [0.+0.j]],
+         [[0.+0.j]
+          [1.+0.j]
+          [0.+0.j]]
         <BLANKLINE>
-               [[0.+0.j],
-                [0.+0.j],
-                [1.+0.j]]], dtype=complex64)
+         [[0.+0.j]
+          [0.+0.j]
+          [1.+0.j]]]
 
         Multi-mode Fock state $\ket{1,0}$:
         >>> dq.fock((3, 2), (1, 0))
-        Array([[0.+0.j],
-               [0.+0.j],
-               [1.+0.j],
-               [0.+0.j],
-               [0.+0.j],
-               [0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(6, 1), dims=(3, 2), dtype=complex64
+        [[0.+0.j]
+         [0.+0.j]
+         [1.+0.j]
+         [0.+0.j]
+         [0.+0.j]
+         [0.+0.j]]
 
         Batched multi-mode Fock states $\{\ket{0,0}\!, \ket{0,1}\!, \ket{1,1}\!,
         \ket{2,0}\}$:
@@ -96,7 +100,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
     return _vectorized_fock(dim, number)
 
 
-def _fock(dim: Array, number: Array) -> Array:
+def _fock(dim: Array, number: Array) -> QArray:
     # return the tensor product of Fock states |n0> x |n1> x ... x |nf> where dim has
     # shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
     # this is the unbatched version of fock()
@@ -104,10 +108,11 @@ def _fock(dim: Array, number: Array) -> Array:
     for d, n in zip(dim, number):
         idx = d * idx + n
     ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
-    return ket.at[idx].set(1.0)
+    array = ket.at[idx].set(1.0)
+    return asqarray(array, dims=tuple(dim.tolist()))
 
 
-def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
+def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     r"""Returns the density matrix of a Fock state or a tensor product of Fock states.
 
     Args:
@@ -117,38 +122,41 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
             `number` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the Fock state
+        _(qarray of shape (..., prod(dim), prod(dim)))_ Density matrix of the Fock state
             or tensor product of Fock states.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
         >>> dq.fock_dm(3, 1)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j]]
 
         Batched single-mode Fock states $\{\ket{0}\!, \ket{1}\!, \ket{2}\}$:
         >>> dq.fock_dm(3, [0, 1, 2])
-        Array([[[1.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j]],
+        DenseQArray: shape=(3, 3, 3), dims=(3,), dtype=complex64
+        [[[1.+0.j 0.+0.j 0.+0.j]
+          [0.+0.j 0.+0.j 0.+0.j]
+          [0.+0.j 0.+0.j 0.+0.j]]
         <BLANKLINE>
-               [[0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 1.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j]],
+         [[0.+0.j 0.+0.j 0.+0.j]
+          [0.+0.j 1.+0.j 0.+0.j]
+          [0.+0.j 0.+0.j 0.+0.j]]
         <BLANKLINE>
-               [[0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 0.+0.j],
-                [0.+0.j, 0.+0.j, 1.+0.j]]], dtype=complex64)
+         [[0.+0.j 0.+0.j 0.+0.j]
+          [0.+0.j 0.+0.j 0.+0.j]
+          [0.+0.j 0.+0.j 1.+0.j]]]
 
         Multi-mode Fock state $\ket{1,0}$:
         >>> dq.fock_dm((3, 2), (1, 0))
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(6, 6), dims=(3, 2), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
 
         Batched multi-mode Fock states $\{\ket{0,0}\!, \ket{0,1}\!, \ket{1,1}\!,
         \ket{2,0}\}$:
@@ -156,20 +164,20 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
         >>> dq.fock_dm((3, 2), number).shape
         (4, 6, 6)
     """
-    return todm(fock(dim, number))
+    return fock(dim, number).todm()
 
 
-def basis(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
+def basis(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     """Alias of [`dq.fock()`][dynamiqs.fock]."""
     return fock(dim, number)
 
 
-def basis_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
+def basis_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     """Alias of [`dq.fock_dm()`][dynamiqs.fock_dm]."""
     return fock_dm(dim, number)
 
 
-def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
+def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
     r"""Returns the ket of a coherent state or a tensor product of coherent states.
 
     Args:
@@ -179,37 +187,41 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), 1))_ Ket of the coherent state or tensor
+        _(qarray of shape (..., prod(dim), 1))_ Ket of the coherent state or tensor
             product of coherent states.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
         >>> dq.coherent(4, 0.5)
-        Array([[0.882+0.j],
-               [0.441+0.j],
-               [0.156+0.j],
-               [0.047+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 1), dims=(4,), dtype=complex64
+        [[0.882+0.j]
+         [0.441+0.j]
+         [0.156+0.j]
+         [0.047+0.j]]
 
         Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
         >>> dq.coherent(4, [0.5, 0.5j])
-        Array([[[ 0.882+0.j   ],
-                [ 0.441+0.j   ],
-                [ 0.156+0.j   ],
-                [ 0.047+0.j   ]],
+        DenseQArray: shape=(2, 4, 1), dims=(4,), dtype=complex64
+        [[[ 0.882+0.j   ]
+          [ 0.441+0.j   ]
+          [ 0.156+0.j   ]
+          [ 0.047+0.j   ]]
         <BLANKLINE>
-               [[ 0.882+0.j   ],
-                [ 0.   +0.441j],
-                [-0.156+0.j   ],
-                [ 0.   -0.047j]]], dtype=complex64)
+         [[ 0.882+0.j   ]
+          [ 0.   +0.441j]
+          [-0.156+0.j   ]
+          [ 0.   -0.047j]]]
+
 
         Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
         >>> dq.coherent((2, 3), (0.5, 0.5j))
-        Array([[ 0.775+0.j   ],
-               [ 0.   +0.386j],
-               [-0.146+0.j   ],
-               [ 0.423+0.j   ],
-               [ 0.   +0.211j],
-               [-0.08 +0.j   ]], dtype=complex64)
+        DenseQArray: shape=(6, 1), dims=(2, 3), dtype=complex64
+        [[ 0.775+0.j   ]
+         [ 0.   +0.386j]
+         [-0.146+0.j   ]
+         [ 0.423+0.j   ]
+         [ 0.   +0.211j]
+         [-0.08 +0.j   ]]
 
         Batched multi-mode coherent states $\{\ket{\alpha_0}\otimes\ket{\beta_0}\!,
         \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
@@ -239,11 +251,11 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
 
     # compute all kets
     alpha = alpha.swapaxes(0, -1)  # (len(dim), ...)
-    kets = [displace(d, a) @ fock(d, 0) for d, a in zip(dim, alpha)]
+    kets = [displace(int(d), a) @ fock(int(d), 0) for d, a in zip(dim, alpha)]
     return tensor(*kets)
 
 
-def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
+def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
     r"""Returns the density matrix of a coherent state or a tensor product of coherent
     states.
 
@@ -254,16 +266,17 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(array of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
+        _(qarray of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
             state or tensor product of coherent states.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
         >>> dq.coherent_dm(4, 0.5)
-        Array([[0.779+0.j, 0.389+0.j, 0.137+0.j, 0.042+0.j],
-               [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
-               [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
-               [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[0.779+0.j 0.389+0.j 0.137+0.j 0.042+0.j]
+         [0.389+0.j 0.195+0.j 0.069+0.j 0.021+0.j]
+         [0.137+0.j 0.069+0.j 0.024+0.j 0.007+0.j]
+         [0.042+0.j 0.021+0.j 0.007+0.j 0.002+0.j]]
 
         Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
         >>> dq.coherent_dm(4, [0.5, 0.5j]).shape
@@ -279,4 +292,4 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         >>> dq.coherent_dm((4, 6), alpha).shape
         (2, 24, 24)
     """
-    return todm(coherent(dim, alpha))
+    return coherent(dim, alpha).todm()
