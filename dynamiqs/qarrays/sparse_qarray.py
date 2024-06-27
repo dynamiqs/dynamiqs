@@ -296,30 +296,33 @@ class SparseQArray(QArray):
             s_o: ArrayLike, s_d: ArrayLike, o_o: ArrayLike, o_d: ArrayLike
         ) -> Array:
             temp = jax.vmap(lambda x, y: x * y, in_axes=(0, None))(s_d, o_d)
-            temp = jnp.hstack(temp)
-            out_offsets.append(M * s_o + o_o)
-            return temp
+            temp_diag = jnp.hstack(temp)
+            return temp_diag, M * s_o + o_o
 
         def main_process(
             s_o: ArrayLike, s_d: ArrayLike, o_o: ArrayLike, o_d: ArrayLike
         ) -> Array:
-            return jax.vmap(process, in_axes=(None, None, 0, 0))(s_o, s_d, o_o, o_d)
+            return jax.vmap(process, in_axes=(None, None, 0, 0), out_axes=(0, 0))(
+                s_o, s_d, jnp.asarray(o_o), o_d
+            )
 
-        out_diags = jax.vmap(main_process, in_axes=(0, 0, None, None))(
+        out_diags, out_offsets = jax.vmap(
+            main_process, in_axes=(0, 0, None, None), out_axes=(0, 0)
+        )(
             jnp.asarray(self.offsets),
             self.diags,
             jnp.asarray(other.offsets),
             other.diags,
         )
-
-        return SparseQArray(tuple(out_offsets), jnp.vstack(out_diags), self.dims)
+        return tuple(o for array in out_offsets for o in array), jnp.vstack(out_diags)
 
     def __and__(self, other: Array) -> Array:
         if isinstance(other, Array):
             return self._tensor_dense(other=other)
 
         elif isinstance(other, SparseQArray):
-            return self._tensor_dia(other=other)
+            offsets, diags = self._tensor_dia(other=other)
+            return SparseQArray(tuple(o.item() for o in offsets), diags, self.dims)
 
         return NotImplemented
 
