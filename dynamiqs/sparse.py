@@ -286,6 +286,56 @@ class SparseDIA(eqx.Module):
     def __neg__(self) -> SparseDIA:
         return -1 * self
 
+    def _tensor_dense(self, other: ArrayLike) -> Array:
+        N = self.diags.shape[-1]
+        p, q = other.shape
+        out = jnp.empty((N * p, N * q), dtype=jnp.int32)
+        for self_offset, self_diag in zip(self.offsets, self.diags):
+            i = jnp.arange(N + 1 - self_offset)
+            j = jnp.arange(self_offset, N + 1)
+            start = max(0, self_offset)
+            end = min(N, N + self_offset)
+            for k, d in enumerate(self_diag[start:end]):
+                out = jax.lax.dynamic_update_slice(out, d * other, (N * i[k], N * j[k]))
+        return out
+
+    def _tensor_dia(self, other: SparseDIA) -> SparseDIA:
+        M = other.diags.shape[-1]
+        out_offsets = []
+
+        def process(
+            s_o: ArrayLike, s_d: ArrayLike, o_o: ArrayLike, o_d: ArrayLike
+        ) -> Array:
+            temp = jax.vmap(lambda x, y: x * y, in_axes=(0, None))(s_d, o_d)
+            temp_diag = jnp.hstack(temp)
+            return temp_diag, M * s_o + o_o
+
+        def main_process(
+            s_o: ArrayLike, s_d: ArrayLike, o_o: ArrayLike, o_d: ArrayLike
+        ) -> Array:
+            return jax.vmap(process, in_axes=(None, None, 0, 0), out_axes=(0, 0))(
+                s_o, s_d, jnp.asarray(o_o), o_d
+            )
+
+        out_diags, out_offsets = jax.vmap(
+            main_process, in_axes=(0, 0, None, None), out_axes=(0, 0)
+        )(
+            jnp.asarray(self.offsets),
+            self.diags,
+            jnp.asarray(other.offsets),
+            other.diags,
+        )
+        return jnp.vstack(out_diags), tuple(o for array in out_offsets for o in array)
+
+    def __and__(self, other: Array) -> Array:
+        if isinstance(other, Array):
+            return self._tensor_dense(other=other)
+
+        elif isinstance(other, SparseDIA):
+            return self._tensor_dia(other=other)
+
+        return NotImplemented
+
 
 def to_dense(sparse: SparseDIA) -> Array:
     r"""Returns the input matrix in the Dense format.
