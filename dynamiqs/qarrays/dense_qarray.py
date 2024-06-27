@@ -4,6 +4,7 @@ from typing import get_args
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax import Array, Device
 from jaxtyping import ScalarLike
 from qutip import Qobj
@@ -100,8 +101,11 @@ class DenseQArray(QArray):
     def to_qutip(self) -> Qobj:
         return to_qutip(self.data, dims=self.dims)
 
-    def __jax_array__(self) -> Array:
+    def to_jax(self) -> Array:
         return self.data
+
+    def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
+        return np.asarray(self.data, dtype=dtype)
 
     def __repr__(self) -> str:
         return repr(self.data)

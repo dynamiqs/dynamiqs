@@ -31,7 +31,7 @@ class QArray(eqx.Module):
     #                     _abs
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
-    #   - conversion methods: to_qutip, __jax_array__
+    #   - conversion methods: to_qutip, to_jax, __array__
     #   - arithmetic methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, __pow__
 
@@ -282,11 +282,16 @@ class QArray(eqx.Module):
             A QuTiP object representation of the quantum state.
         """
 
-    def __array__(self) -> np.ndarray:
-        return np.asarray(jnp.asarray(self))
+    @abstractmethod
+    def to_jax(self) -> Array:
+        """Convert the quantum state to a JAX array.
+
+        Returns:
+            The JAX array representation of the quantum state.
+        """
 
     @abstractmethod
-    def __jax_array__(self) -> Array:
+    def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         pass
 
     def to_numpy(self) -> np.ndarray:
@@ -296,14 +301,6 @@ class QArray(eqx.Module):
             The NumPy array representation of the quantum state.
         """
         return np.asarray(self)
-
-    def to_jax(self) -> Array:
-        """Convert the quantum state to a JAX array.
-
-        Returns:
-            The JAX array representation of the quantum state.
-        """
-        return jnp.asarray(self)
 
     def __repr__(self) -> str:
         return (
