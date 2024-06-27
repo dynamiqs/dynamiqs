@@ -4,6 +4,8 @@ import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
 
+from .qarrays import QArray
+
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
 
@@ -28,7 +30,7 @@ _cases = {
 }
 
 
-def has_shape(x: Array, shape: str) -> bool:
+def has_shape(x: Array | QArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
     else:
@@ -36,7 +38,7 @@ def has_shape(x: Array, shape: str) -> bool:
 
 
 def check_shape(
-    x: Array, argname: str, *shapes: str, subs: dict[str, str] | None = None
+    x: Array | QArray, argname: str, *shapes: str, subs: dict[str, str] | None = None
 ):
     # subs is used to replace symbols in the error message, this can be used to e.g.
     # specify a shape (?, n, n) but print an error message with (nH?, n, n), by passing
@@ -85,7 +87,7 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
     )
 
 
-def check_type_int(x: Array, argname: str):
+def check_type_int(x: Array | QArray, argname: str):
     if not jnp.issubdtype(x.dtype, jnp.integer):
         raise ValueError(
             f'Argument {argname} must be of type integer, but is of type'
