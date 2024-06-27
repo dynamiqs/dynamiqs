@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from math import prod
 
-import jax
 import jax.numpy as jnp
-from jax import Array
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from .utils import dag, tensor
+from ..qarrays import QArray, asqarray
+from .utils import tensor
 
 __all__ = [
     'eye',
@@ -31,7 +30,7 @@ __all__ = [
 ]
 
 
-def eye(*dims: int) -> Array:
+def eye(*dims: int) -> QArray:
     r"""Returns the identity operator.
 
     If only a single dimension is provided, `eye` returns the identity operator
@@ -43,28 +42,31 @@ def eye(*dims: int) -> Array:
         *dims: Variable length argument list of the Hilbert space dimensions.
 
     Returns:
-        _(array of shape (n, n))_ Identity operator (with _n_ the product of
+        _(qarray of shape (n, n))_ Identity operator (with _n_ the product of
             dimensions in `dims`).
 
     Examples:
         >>> dq.eye(4)
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
         >>> dq.eye(2, 3)
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
     """
     dim = prod(dims)
-    return jnp.eye(dim, dtype=cdtype())
+    array = jnp.eye(dim, dtype=cdtype())
+    return asqarray(array, dims=dims)
 
 
-def zero(*dims: int) -> Array:
+def zero(*dims: int) -> QArray:
     r"""Returns the null operator.
 
     If only a single dimension is provided, `zero` returns the null operator
@@ -76,28 +78,31 @@ def zero(*dims: int) -> Array:
         *dims: Variable length argument list of the Hilbert space dimensions.
 
     Returns:
-        _(array of shape (n, n))_ Null operator (with _n_ the product of dimensions
+        _(qarray of shape (n, n))_ Null operator (with _n_ the product of dimensions
             in `dims`).
 
     Examples:
         >>> dq.zero(4)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
         >>> dq.zero(2, 3)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
     """
     dim = prod(dims)
-    return jnp.zeros((dim, dim), dtype=cdtype())
+    array = jnp.zeros((dim, dim), dtype=cdtype())
+    return asqarray(array, dims=dims)
 
 
-def destroy(*dims: int) -> Array | tuple[Array, ...]:
+def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators in
     a multi-mode system.
 
@@ -110,31 +115,34 @@ def destroy(*dims: int) -> Array | tuple[Array, ...]:
         *dims: Variable length argument list of the Hilbert space dimensions.
 
     Returns:
-        _(array or tuple of arrays)_ Annihilation operator of given dimension, or
+        _(qarray or tuple of qarrays)_ Annihilation operator of given dimension, or
             tuple of annihilation operators in a multi-mode system.
 
     Examples:
         >>> dq.destroy(4)
-        Array([[0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.732+0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 1.732+0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
         >>> a, b = dq.destroy(2, 3)
         >>> a
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
         >>> b
-        Array([[0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]],      dtype=complex64)
-    """  # noqa: E501
+        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
+        [[0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+    """
     if len(dims) == 1:
         return _destroy_single(dims[0])
 
@@ -146,12 +154,13 @@ def destroy(*dims: int) -> Array | tuple[Array, ...]:
     )
 
 
-def _destroy_single(dim: int) -> Array:
+def _destroy_single(dim: int) -> QArray:
     """Bosonic annihilation operator."""
-    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=1)
+    array = jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=1)
+    return asqarray(array, dims=dim)
 
 
-def create(*dims: int) -> Array | tuple[Array, ...]:
+def create(*dims: int) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators in a
     multi-mode system.
 
@@ -164,31 +173,34 @@ def create(*dims: int) -> Array | tuple[Array, ...]:
         *dims: Variable length argument list of the Hilbert space dimensions.
 
     Returns:
-        _(array or tuple of arrays)_ Creation operator of given dimension, or tuple
+        _(qarray or tuple of qarrays)_ Creation operator of given dimension, or tuple
             of creation operators in a multi-mode system.
 
     Examples:
         >>> dq.create(4)
-        Array([[0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [1.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 1.732+0.j, 0.   +0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 1.732+0.j 0.   +0.j]]
         >>> a, b = dq.create(2, 3)
         >>> a
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]]
         >>> b
-        Array([[0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [1.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j]],      dtype=complex64)
-    """  # noqa: E501
+        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
+        [[0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j]]
+    """
     if len(dims) == 1:
         return _create_single(dims[0])
 
@@ -200,12 +212,13 @@ def create(*dims: int) -> Array | tuple[Array, ...]:
     )
 
 
-def _create_single(dim: int) -> Array:
+def _create_single(dim: int) -> QArray:
     """Bosonic creation operator."""
-    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
+    array = jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
+    return asqarray(array, dims=dim)
 
 
-def number(dim: int | None = None) -> Array:
+def number(dim: int | None = None) -> QArray:
     r"""Returns the number operator of a bosonic mode.
 
     It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
@@ -215,19 +228,21 @@ def number(dim: int | None = None) -> Array:
         dim: Dimension of the Hilbert space.
 
     Returns:
-        _(array of shape (dim, dim))_ Number operator.
+        _(qarray of shape (dim, dim))_ Number operator.
 
     Examples:
         >>> dq.number(4)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 2.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 3.+0.j]]
     """
-    return jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
+    array = jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
+    return asqarray(array)
 
 
-def parity(dim: int) -> Array:
+def parity(dim: int) -> QArray:
     r"""Returns the parity operator of a bosonic mode.
 
     It is defined by $P = e^{i\pi a^\dag a}$, where $a$ and $a^\dag$ are the
@@ -237,21 +252,23 @@ def parity(dim: int) -> Array:
         dim: Dimension of the Hilbert space.
 
     Returns:
-        _(array of shape (dim, dim))_ Parity operator.
+        _(qarray of shape (dim, dim))_ Parity operator.
 
     Examples:
         >>> dq.parity(4)
-        Array([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j,  0.+0.j,  1.+0.j,  0.+0.j],
-               [ 0.+0.j,  0.+0.j,  0.+0.j, -1.+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
+         [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
+         [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]
+         [ 0.+0.j  0.+0.j  0.+0.j -1.+0.j]]
     """
     diag_values = jnp.ones(dim, dtype=cdtype())
     diag_values = diag_values.at[1::2].set(-1)
-    return jnp.diag(diag_values)
+    array = jnp.diag(diag_values)
+    return asqarray(array)
 
 
-def displace(dim: int, alpha: ArrayLike) -> Array:
+def displace(dim: int, alpha: ArrayLike) -> QArray:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -265,25 +282,25 @@ def displace(dim: int, alpha: ArrayLike) -> Array:
         alpha _(array_like of shape (...))_: Displacement amplitude.
 
     Returns:
-        _(array of shape (..., dim, dim))_ Displacement operator.
+        _(qarray of shape (..., dim, dim))_ Displacement operator.
 
     Examples:
         >>> dq.displace(4, 0.5)
-        Array([[ 0.882+0.j, -0.441+0.j,  0.156+0.j, -0.047+0.j],
-               [ 0.441+0.j,  0.662+0.j, -0.542+0.j,  0.27 +0.j],
-               [ 0.156+0.j,  0.542+0.j,  0.442+0.j, -0.697+0.j],
-               [ 0.047+0.j,  0.27 +0.j,  0.697+0.j,  0.662+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[ 0.882+0.j -0.441+0.j  0.156+0.j -0.047+0.j]
+         [ 0.441+0.j  0.662+0.j -0.542+0.j  0.27 +0.j]
+         [ 0.156+0.j  0.542+0.j  0.442+0.j -0.697+0.j]
+         [ 0.047+0.j  0.27 +0.j  0.697+0.j  0.662+0.j]]
         >>> dq.displace(4, [0.1, 0.2]).shape
         (2, 4, 4)
     """
     alpha = jnp.asarray(alpha, dtype=cdtype())
     alpha = alpha[..., None, None]  # (..., 1, 1)
-
     a = destroy(dim)  # (n, n)
-    return jax.scipy.linalg.expm(alpha * dag(a) - alpha.conj() * a)
+    return (alpha * a.dag() - alpha.conj() * a).expm()
 
 
-def squeeze(dim: int, z: ArrayLike) -> Array:
+def squeeze(dim: int, z: ArrayLike) -> QArray:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
@@ -297,14 +314,15 @@ def squeeze(dim: int, z: ArrayLike) -> Array:
         z _(array_like of shape (...))_: Squeezing amplitude.
 
     Returns:
-        _(array of shape (..., dim, dim))_ Squeezing operator.
+        _(qarray of shape (..., dim, dim))_ Squeezing operator.
 
     Examples:
         >>> dq.squeeze(4, 0.5)
-        Array([[ 0.938+0.j,  0.   +0.j,  0.346+0.j,  0.   +0.j],
-               [ 0.   +0.j,  0.818+0.j,  0.   +0.j,  0.575+0.j],
-               [-0.346+0.j,  0.   +0.j,  0.938+0.j,  0.   +0.j],
-               [ 0.   +0.j, -0.575+0.j,  0.   +0.j,  0.818+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[ 0.938+0.j  0.   +0.j  0.346+0.j  0.   +0.j]
+         [ 0.   +0.j  0.818+0.j  0.   +0.j  0.575+0.j]
+         [-0.346+0.j  0.   +0.j  0.938+0.j  0.   +0.j]
+         [ 0.   +0.j -0.575+0.j  0.   +0.j  0.818+0.j]]
         >>> dq.squeeze(4, [0.1, 0.2]).shape
         (2, 4, 4)
     """
@@ -313,10 +331,10 @@ def squeeze(dim: int, z: ArrayLike) -> Array:
 
     a = destroy(dim)  # (n, n)
     a2 = a @ a
-    return jax.scipy.linalg.expm(0.5 * (z.conj() * a2 - z * dag(a2)))
+    return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
-def quadrature(dim: int, phi: float) -> Array:
+def quadrature(dim: int, phi: float) -> QArray:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
     It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$, where $a$ and
@@ -327,141 +345,155 @@ def quadrature(dim: int, phi: float) -> Array:
         phi: Phase angle.
 
     Returns:
-        _(array of shape (dim, dim))_ Quadrature operator.
+        _(qarray of shape (dim, dim))_ Quadrature operator.
 
     Examples:
         >>> dq.quadrature(3, 0.0)
-        Array([[0.   +0.j, 0.5  +0.j, 0.   +0.j],
-               [0.5  +0.j, 0.   +0.j, 0.707+0.j],
-               [0.   +0.j, 0.707+0.j, 0.   +0.j]], dtype=complex64)
+        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        [[0.   +0.j 0.5  +0.j 0.   +0.j]
+         [0.5  +0.j 0.   +0.j 0.707+0.j]
+         [0.   +0.j 0.707+0.j 0.   +0.j]]
         >>> dq.quadrature(3, jnp.pi / 2)
-        Array([[ 0.+0.j   , -0.-0.5j  ,  0.+0.j   ],
-               [-0.+0.5j  ,  0.+0.j   , -0.-0.707j],
-               [ 0.+0.j   , -0.+0.707j,  0.+0.j   ]], dtype=complex64)
+        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        [[ 0.+0.j    -0.-0.5j    0.+0.j   ]
+         [-0.+0.5j    0.+0.j    -0.-0.707j]
+         [ 0.+0.j    -0.+0.707j  0.+0.j   ]]
     """
     a = destroy(dim)
-    return 0.5 * (jnp.exp(1.0j * phi) * dag(a) + jnp.exp(-1.0j * phi) * a)
+    return 0.5 * (jnp.exp(1.0j * phi) * a.dag() + jnp.exp(-1.0j * phi) * a)
 
 
-def position(dim: int) -> Array:
+def position(dim: int) -> QArray:
     r"""Returns the position operator $x = (a^\dag + a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
 
     Returns:
-        _(array of shape (dim, dim))_ Position operator.
+        _(qarray of shape (dim, dim))_ Position operator.
 
     Examples:
         >>> dq.position(3)
-        Array([[0.   +0.j, 0.5  +0.j, 0.   +0.j],
-               [0.5  +0.j, 0.   +0.j, 0.707+0.j],
-               [0.   +0.j, 0.707+0.j, 0.   +0.j]], dtype=complex64)
+        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        [[0.   +0.j 0.5  +0.j 0.   +0.j]
+         [0.5  +0.j 0.   +0.j 0.707+0.j]
+         [0.   +0.j 0.707+0.j 0.   +0.j]]
     """
     a = destroy(dim)
-    return 0.5 * (a + dag(a))
+    return 0.5 * (a + a.dag())
 
 
-def momentum(dim: int) -> Array:
+def momentum(dim: int) -> QArray:
     r"""Returns the momentum operator $p = i (a^\dag - a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
 
     Returns:
-        _(array of shape (dim, dim))_ Momentum operator.
+        _(qarray of shape (dim, dim))_ Momentum operator.
 
     Examples:
         >>> dq.momentum(3)
-        Array([[0.+0.j   , 0.-0.5j  , 0.+0.j   ],
-               [0.+0.5j  , 0.+0.j   , 0.-0.707j],
-               [0.+0.j   , 0.+0.707j, 0.+0.j   ]], dtype=complex64)
+        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        [[ 0.+0.j    -0.-0.5j    0.+0.j   ]
+         [ 0.+0.5j    0.+0.j    -0.-0.707j]
+         [ 0.+0.j     0.+0.707j  0.+0.j   ]]
     """
     a = destroy(dim)
-    return 0.5j * (dag(a) - a)
+    return 0.5j * (a.dag() - a)
 
 
-def sigmax() -> Array:
+def sigmax() -> QArray:
     r"""Returns the Pauli $\sigma_x$ operator.
 
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_x$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_x$ operator.
 
     Examples:
         >>> dq.sigmax()
-        Array([[0.+0.j, 1.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        [[0.+0.j 1.+0.j]
+         [1.+0.j 0.+0.j]]
     """
-    return jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
+    array = jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
+    return asqarray(array)
 
 
-def sigmay() -> Array:
+def sigmay() -> QArray:
     r"""Returns the Pauli $\sigma_y$ operator.
 
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_y$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_y$ operator.
 
     Examples:
         >>> dq.sigmay()
-        Array([[ 0.+0.j, -0.-1.j],
-               [ 0.+1.j,  0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        [[ 0.+0.j -0.-1.j]
+         [ 0.+1.j  0.+0.j]]
     """
-    return jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
+    array = jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
+    return asqarray(array)
 
 
-def sigmaz() -> Array:
+def sigmaz() -> QArray:
     r"""Returns the Pauli $\sigma_z$ operator.
 
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_z$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_z$ operator.
 
     Examples:
         >>> dq.sigmaz()
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        [[ 1.+0.j  0.+0.j]
+         [ 0.+0.j -1.+0.j]]
     """
-    return jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
+    array = jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
+    return asqarray(array)
 
 
-def sigmap() -> Array:
+def sigmap() -> QArray:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_+$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_+$ operator.
 
     Examples:
         >>> dq.sigmap()
-        Array([[0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        [[0.+0.j 1.+0.j]
+         [0.+0.j 0.+0.j]]
     """
-    return jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
+    array = jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
+    return asqarray(array)
 
 
-def sigmam() -> Array:
+def sigmam() -> QArray:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_-$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_-$ operator.
 
     Examples:
         >>> dq.sigmam()
-        Array([[0.+0.j, 0.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        [[0.+0.j 0.+0.j]
+         [1.+0.j 0.+0.j]]
     """
-    return jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
+    array = jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
+    return asqarray(array)
 
 
-def hadamard(n: int = 1) -> Array:
+def hadamard(n: int = 1) -> QArray:
     r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
@@ -480,17 +512,19 @@ def hadamard(n: int = 1) -> Array:
         n: Number of qubits to act on.
 
     Returns:
-        _(array of shape (2^n, 2^n))_ Hadamard transform operator.
+        _(qarray of shape (2^n, 2^n))_ Hadamard transform operator.
 
     Examples:
         >>> dq.hadamard()
-        Array([[ 0.707+0.j,  0.707+0.j],
-               [ 0.707+0.j, -0.707+0.j]], dtype=complex64)
+        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        [[ 0.707+0.j  0.707+0.j]
+         [ 0.707+0.j -0.707+0.j]]
         >>> dq.hadamard(2)
-        Array([[ 0.5+0.j,  0.5+0.j,  0.5+0.j,  0.5+0.j],
-               [ 0.5+0.j, -0.5+0.j,  0.5+0.j, -0.5+0.j],
-               [ 0.5+0.j,  0.5+0.j, -0.5+0.j, -0.5+0.j],
-               [ 0.5+0.j, -0.5+0.j, -0.5+0.j,  0.5-0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(2, 2), dtype=complex64
+        [[ 0.5+0.j  0.5+0.j  0.5+0.j  0.5+0.j]
+         [ 0.5+0.j -0.5+0.j  0.5+0.j -0.5+0.j]
+         [ 0.5+0.j  0.5+0.j -0.5+0.j -0.5+0.j]
+         [ 0.5+0.j -0.5+0.j -0.5+0.j  0.5-0.j]]
     """
     H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
