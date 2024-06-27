@@ -4,17 +4,17 @@ from typing import Literal
 
 import jax
 import numpy as np
-from jax.typing import ArrayLike
 from qutip import Qobj
 
 from .._checks import check_shape
+from ..qarrays import QArray, QArrayLike
 from .utils import isbra, isket, isop
 from .utils.general import _hdim
 
 __all__ = ['to_qutip', 'set_device', 'set_precision', 'set_matmul_precision']
 
 
-def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
+def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
     quantum objects if it has more than two dimensions).
 
@@ -31,9 +31,10 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
     Examples:
         >>> psi = dq.fock(3, 1)
         >>> psi
-        Array([[0.+0.j],
-               [1.+0.j],
-               [0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]]
         >>> dq.to_qutip(psi)
         Quantum object: dims = [[3], [1]], shape = (3, 1), type = ket
         Qobj data =
@@ -48,19 +49,10 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
         >>> len(dq.to_qutip(rhos))
         5
 
-        Note that the tensor product structure is not inferred automatically, it must be
-        specified with the `dims` argument:
+        Note that the tensor product structure is inferred automatically for qarrays. It
+        can be specified with the `dims` argument for other types.
         >>> I = dq.eye(3, 2)
         >>> dq.to_qutip(I)
-        Quantum object: dims = [[6], [6]], shape = (6, 6), type = oper, isherm = True
-        Qobj data =
-        [[1. 0. 0. 0. 0. 0.]
-         [0. 1. 0. 0. 0. 0.]
-         [0. 0. 1. 0. 0. 0.]
-         [0. 0. 0. 1. 0. 0.]
-         [0. 0. 0. 0. 1. 0.]
-         [0. 0. 0. 0. 0. 1.]]
-        >>> dq.to_qutip(I, (3, 2))
         Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
@@ -70,6 +62,9 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
+    if isinstance(x, QArray):
+        dims = x.dims
+
     x = np.asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
