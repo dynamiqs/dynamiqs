@@ -325,14 +325,15 @@ class SparseDIA(eqx.Module):
             jnp.asarray(other.offsets),
             other.diags,
         )
-        return jnp.vstack(out_diags), tuple(o for array in out_offsets for o in array)
+        return tuple(o for array in out_offsets for o in array), jnp.vstack(out_diags)
 
     def __and__(self, other: Array) -> Array:
         if isinstance(other, Array):
             return self._tensor_dense(other=other)
 
         elif isinstance(other, SparseDIA):
-            return self._tensor_dia(other=other)
+            offsets, diags = self._tensor_dia(other=other)
+            return SparseDIA(tuple(o.item() for o in offsets), diags)
 
         return NotImplemented
 
@@ -374,7 +375,6 @@ def produce_dia(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     return diags
 
 
-# @jax.jit
 def to_sparse(other: Array) -> SparseDIA:
     concrete_or_error(None, other)
     offsets = find_offsets(other)
