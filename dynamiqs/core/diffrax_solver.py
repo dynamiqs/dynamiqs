@@ -31,6 +31,7 @@ class DiffraxSolver(BaseSolver):
         # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
+            warnings.simplefilter('ignore', FutureWarning)
 
             # === prepare diffrax arguments
             fn = lambda t, y, args: self.save(y)  # noqa: ARG005
