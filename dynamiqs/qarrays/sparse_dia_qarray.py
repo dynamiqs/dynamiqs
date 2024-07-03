@@ -250,7 +250,7 @@ class SparseDIAQArray(QArray):
     def __and__(self, y: QArray) -> QArray:
         return NotImplemented
 
-    def __pow__(self, y: Scalar) -> QArray:
+    def _pow(self, power: int) -> QArray:  # noqa: ARG002
         return NotImplemented
 
     def __getitem__(self, key: int | slice) -> QArray:

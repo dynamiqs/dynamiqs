@@ -5,13 +5,24 @@ from typing import get_args
 import jax
 import jax.numpy as jnp
 import numpy as np
-from equinox.internal._omega import _Metaω
 from jax import Array, Device
 from jaxtyping import ScalarLike
 from qutip import Qobj
 
 from ..utils.jax_utils import to_qutip
-from ..utils.utils.general import norm, ptrace
+from ..utils.utils.general import (
+    dag,
+    isbra,
+    isdm,
+    isket,
+    isop,
+    norm,
+    ptrace,
+    tensor,
+    tobra,
+    todm,
+    toket,
+)
 from .qarray import QArray
 from .types import QArrayLike, asjaxarray
 
@@ -191,12 +202,7 @@ class DenseQArray(QArray):
 
         return DenseQArray(dims, data)
 
-    def __pow__(self, power: int) -> QArray:
-        # to deal with the x**ω notation from equinox (used in diffrax internals)
-        if isinstance(power, _Metaω):
-            return _Metaω.__rpow__(power, self)
-
-        super().__pow__(power)
+    def _pow(self, power: int) -> QArray:
         data = self.data**power
         return DenseQArray(self.dims, data)
 
