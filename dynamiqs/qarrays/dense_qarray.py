@@ -10,19 +10,7 @@ from jaxtyping import ScalarLike
 from qutip import Qobj
 
 from ..utils.jax_utils import to_qutip
-from ..utils.utils.general import (
-    dag,
-    isbra,
-    isdm,
-    isket,
-    isop,
-    norm,
-    ptrace,
-    tensor,
-    tobra,
-    todm,
-    toket,
-)
+from ..utils.utils.general import norm, ptrace
 from .qarray import QArray
 from .types import QArrayLike, asjaxarray
 
