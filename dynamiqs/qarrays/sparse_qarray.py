@@ -298,8 +298,8 @@ class SparseQArray(QArray):
 
         return tuple(out_offsets), out_diags
 
-    def __and__(self, other: Array) -> Array:
-        if isinstance(other, Array):
+    def __and__(self, other: Array) -> QArray:
+        if isinstance(other, DenseQArray):
             return self._tensor_dense(other=other)
 
         elif isinstance(other, SparseQArray):
