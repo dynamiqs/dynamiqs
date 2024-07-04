@@ -275,36 +275,36 @@ class SparseQArray(QArray):
 
         return NotImplemented
 
-    def _tensor_dense(self, other: ArrayLike) -> Array:
-        N = self.diags.shape[-1]
-        p, q = other.shape
-        out = jnp.empty((N * p, N * q), dtype=jnp.int32)
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            i = jnp.arange(N + 1 - self_offset)
-            j = jnp.arange(self_offset, N + 1)
-            start = max(0, self_offset)
-            end = min(N, N + self_offset)
-            for k, d in enumerate(self_diag[start:end]):
-                out = jax.lax.dynamic_update_slice(out, d * other, (N * i[k], N * j[k]))
-        return out
-
-    def _tensor_dia(self, other: SparseQArray) -> SparseQArray:
+    def _kronecker_dia(self, other: SparseQArray) -> SparseQArray:
         N = other.diags.shape[-1]
-
-        out_offsets = (
-            jnp.asarray(self.offsets) * N + jnp.asarray(other.offsets)[:, None]
-        ).reshape(-1)
+        out_offsets = jnp.ravel(
+            jnp.asarray(self.offsets) * N + jnp.asarray(other.offsets)[:, None],
+            order='F',
+        )
         out_diags = jnp.kron(self.diags, other.diags)
-
         return tuple(out_offsets), out_diags
 
-    def __and__(self, other: Array) -> QArray:
-        if isinstance(other, DenseQArray):
-            return self._tensor_dense(other=other)
+    def _clean_kronecker_dia(
+        self, offsets: tuple[int, ...], diags: ArrayLike
+    ) -> SparseQArray:
+        offsets = jnp.sort(jnp.asarray(offsets))
+        unique_offsets, inverse_indices = jnp.unique(offsets, return_inverse=True)
+        count = unique_offsets.shape[0]
+        out_diags = jnp.zeros((count, diags.shape[-1]))
+        for i in range(count):
+            mask = inverse_indices == i
+            out_diags = out_diags.at[i, :].set(jnp.sum(diags[mask, :], axis=0))
+        return SparseQArray(
+            tuple(o.item() for o in unique_offsets), out_diags, self.dims
+        )
+
+    def __and__(self, other: Array) -> Array:
+        if isinstance(other, Array):
+            return jnp.kron(self.to_dense(), other)
 
         elif isinstance(other, SparseQArray):
-            offsets, diags = self._tensor_dia(other=other)
-            return SparseQArray(tuple(o.item() for o in offsets), diags, self.dims)
+            temp_o, temp_d = self._kronecker_dia(other=other)
+            return self._clean_kronecker_dia(temp_o, temp_d)
 
         return NotImplemented
 
