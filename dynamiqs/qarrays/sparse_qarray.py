@@ -289,32 +289,14 @@ class SparseQArray(QArray):
         return out
 
     def _tensor_dia(self, other: SparseQArray) -> SparseQArray:
-        M = other.diags.shape[-1]
-        out_offsets = []
+        N = other.diags.shape[-1]
 
-        def process(
-            s_o: ArrayLike, s_d: ArrayLike, o_o: ArrayLike, o_d: ArrayLike
-        ) -> Array:
-            temp = jax.vmap(lambda x, y: x * y, in_axes=(0, None))(s_d, o_d)
-            temp_diag = jnp.hstack(temp)
-            return temp_diag, M * s_o + o_o
+        out_offsets = (
+            jnp.asarray(self.offsets) * N + jnp.asarray(other.offsets)[:, None]
+        ).reshape(-1)
+        out_diags = jnp.kron(self.diags, other.diags)
 
-        def main_process(
-            s_o: ArrayLike, s_d: ArrayLike, o_o: ArrayLike, o_d: ArrayLike
-        ) -> Array:
-            return jax.vmap(process, in_axes=(None, None, 0, 0), out_axes=(0, 0))(
-                s_o, s_d, jnp.asarray(o_o), o_d
-            )
-
-        out_diags, out_offsets = jax.vmap(
-            main_process, in_axes=(0, 0, None, None), out_axes=(0, 0)
-        )(
-            jnp.asarray(self.offsets),
-            self.diags,
-            jnp.asarray(other.offsets),
-            other.diags,
-        )
-        return tuple(o for array in out_offsets for o in array), jnp.vstack(out_diags)
+        return tuple(out_offsets), out_diags
 
     def __and__(self, other: Array) -> Array:
         if isinstance(other, Array):
