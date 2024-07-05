@@ -6,7 +6,7 @@ import pytest
 import dynamiqs as dq
 
 
-class TestSparseDIA:
+class TestSparseDIAQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         N = 10
@@ -14,15 +14,18 @@ class TestSparseDIA:
         diags = jnp.arange(num_diags * N).reshape(num_diags, N)
         offsets = tuple(range(-(num_diags // 2), (num_diags // 2) + 1))
 
-        self.sparseA = dq.SparseQArray(diags=diags, offsets=offsets, dims=(N, N))
-        self.sparseB = dq.SparseQArray(diags=diags, offsets=offsets, dims=(N, N))
+        self.sparseA = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
+        self.sparseB = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
 
         self.matrixA = dq.to_dense(self.sparseA)
         self.matrixB = dq.to_dense(self.sparseB)
 
     def test_convert(self, rtol=1e-05, atol=1e-08):
         assert jnp.allclose(
-            self.matrixA, dq.to_dense(dq.to_sparse(self.matrixA)), rtol=rtol, atol=atol
+            self.matrixA,
+            dq.to_dense(dq.to_sparse_dia(self.matrixA)),
+            rtol=rtol,
+            atol=atol,
         )
 
     def test_add(self, rtol=1e-05, atol=1e-08):
