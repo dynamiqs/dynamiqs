@@ -34,7 +34,7 @@ def is_qarraylike(x: Any) -> bool:
     if isinstance(x, get_args(_QArrayLike)):
         return True
     elif isinstance(x, list):
-        return all(isinstance(_x, get_args(_QArrayLike)) for _x in x)
+        return all(is_qarraylike(_x) for _x in x)
     return False
 
 
@@ -55,7 +55,7 @@ def dense_qarray(x: ArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
 
     x = jnp.asarray(x)
     if dims is None:
-        dims = (x.shape[-2],)
+        dims = (x.shape[-2],)  # TODO: fix for bra
     return DenseQArray(dims, x)
 
 
