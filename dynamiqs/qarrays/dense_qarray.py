@@ -10,7 +10,7 @@ from jaxtyping import ScalarLike
 from qutip import Qobj
 
 from ..utils.jax_utils import to_qutip
-from ..utils.utils.general import dag, norm, ptrace
+from ..utils.utils.general import norm, ptrace
 from .qarray import QArray
 from .types import QArrayLike, asjaxarray
 
@@ -43,7 +43,7 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def dag(self) -> QArray:
-        data = dag(self.data)
+        data = self.data.mT.conj()
         return DenseQArray(self.dims, data)
 
     def reshape(self, *shape: int) -> QArray:
