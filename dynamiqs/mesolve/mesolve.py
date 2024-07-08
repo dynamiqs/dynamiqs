@@ -10,7 +10,6 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from ..core._utils import (
-    _asqarray,
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
@@ -19,6 +18,7 @@ from ..core._utils import (
 )
 from ..gradient import Gradient
 from ..options import Options
+from ..qarrays.types import asqarray
 from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import Shape, TimeArray
@@ -101,9 +101,9 @@ def mesolve(
     # === convert arguments
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
-    rho0 = _asqarray(rho0)
+    rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
-    exp_ops = _asqarray(exp_ops) if exp_ops is not None else None
+    exp_ops = asqarray(exp_ops) if exp_ops is not None else None
 
     # === check arguments
     _check_mesolve_args(H, jump_ops, rho0, exp_ops)

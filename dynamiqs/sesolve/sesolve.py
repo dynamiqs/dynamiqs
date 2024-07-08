@@ -9,7 +9,6 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape, check_times
 from ..core._utils import (
-    _asqarray,
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
@@ -18,6 +17,7 @@ from ..core._utils import (
 )
 from ..gradient import Gradient
 from ..options import Options
+from ..qarrays.types import asqarray
 from ..result import SEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import Shape, TimeArray
@@ -88,9 +88,9 @@ def sesolve(
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
-    psi0 = _asqarray(psi0)
+    psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
-    exp_ops = _asqarray(exp_ops) if exp_ops is not None else None
+    exp_ops = asqarray(exp_ops) if exp_ops is not None else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)

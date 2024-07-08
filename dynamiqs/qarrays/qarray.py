@@ -382,15 +382,14 @@ class QArray(eqx.Module):
         """Tensor product between two quantum states."""
 
     def __pow__(self, power: int | _Metaω) -> QArray:
-        logging.warning(
-            'Using the `**` operator performs element-wise power. For matrix power, '
-            'use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
-        )
-
         # to deal with the x**ω notation from equinox (used in diffrax internals)
         if isinstance(power, _Metaω):
             return _Metaω.__rpow__(power, self)
         else:
+            logging.warning(
+                'Using the `**` operator performs element-wise power. For matrix '
+                'power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
+            )
             return self._pow(power)
 
     @abstractmethod
