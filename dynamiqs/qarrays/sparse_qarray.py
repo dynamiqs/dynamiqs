@@ -11,7 +11,6 @@ import numpy as np
 from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 
-from ..utils.utils.general import isbra, isdm, isket
 from .dense_qarray import DenseQArray
 from .qarray import QArray
 
@@ -70,15 +69,6 @@ class SparseQArray(QArray):
 
     def unit(self) -> SparseQArray:
         return SparseQArray(self.offsets, self.diags / self.norm(), self.dims)
-
-    def isket(self) -> bool:
-        return isket(self.to_dense())
-
-    def isbra(self) -> bool:
-        return isbra(self.to_dense())
-
-    def isdm(self) -> bool:
-        return isdm(self.to_dense())
 
     def __neg__(self) -> QArray:
         return -1 * self
