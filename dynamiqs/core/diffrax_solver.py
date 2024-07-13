@@ -29,9 +29,12 @@ class DiffraxSolver(BaseSolver):
         super().__init__(*args)
 
     def run(self) -> PyTree:
-        # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():
+            # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
+            # TODO: remove once https://github.com/patrick-kidger/diffrax/issues/445 is
+            # closed
+            warnings.simplefilter('ignore', FutureWarning)
 
             # === prepare diffrax arguments
             fn = lambda t, y, args: self.save(y)  # noqa: ARG005
@@ -116,8 +119,8 @@ class AdaptiveSolver(DiffraxSolver):
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
                 return (
-                    f'avg. {self.nsteps.mean()} steps ({self.naccepted.mean()}'
-                    f' accepted, {self.nrejected.mean()} rejected) | infos shape'
+                    f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
+                    f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
                     f' {self.nsteps.shape}'
                 )
             return (

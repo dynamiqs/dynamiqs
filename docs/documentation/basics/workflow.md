@@ -76,6 +76,7 @@ print(result)
 ```
 
 ```text title="Output"
+|██████████| 100.0% ◆ elapsed 3.25ms ◆ remaining 0.00ms
 `result` is of type <class 'dynamiqs.result.SEResult'>.
 `result` has the following attributes:
 ['Esave', '_abc_impl', 'expects', 'gradient', 'options', 'solver', 'states', 'to_numpy', 'to_qutip', 'tsave', 'ysave']

@@ -177,7 +177,7 @@ def plot_hinton(
         >>> _, axs = dq.gridplot(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
         >>> dq.plot_hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
-        >>> dq.plot_hinton(np.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
+        >>> dq.plot_hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
         >>> renderfig('plot_hinton_real')
 
         ![plot_hinton_real](/figs_code/plot_hinton_real.png){.fig-half}

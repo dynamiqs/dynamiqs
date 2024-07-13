@@ -97,8 +97,8 @@ def gridplot(
     Examples:
         For example, to plot six different curves:
 
-        >>> x = np.linspace(0, 1, 101)
-        >>> ys = [np.sin(f * 2 * np.pi * x) for f in range(6)]  # (6, 101)
+        >>> x = jnp.linspace(0, 1, 101)
+        >>> ys = [jnp.sin(f * 2 * jnp.pi * x) for f in range(6)]  # (6, 101)
 
         Replace the usual Matplotlib code
 
@@ -155,8 +155,8 @@ def mplstyle(*, usetex: bool = False):
         Documentation redaction in progress.
 
     Examples:
-        >>> x = np.linspace(0, 2 * np.pi, 101)
-        >>> ys = [np.sin(x), np.sin(2 * x), np.sin(3 * x)]
+        >>> x = jnp.linspace(0, 2 * jnp.pi, 101)
+        >>> ys = [jnp.sin(x), jnp.sin(2 * x), jnp.sin(3 * x)]
         >>> default_mpl_style()
 
         Before (default Matplotlib style):

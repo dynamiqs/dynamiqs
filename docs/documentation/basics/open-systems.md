@@ -120,6 +120,7 @@ print(res.states[-1])                       # print the final state
 ```
 
 ```text title="Output"
+|██████████| 100.0% ◆ elapsed 4.47ms ◆ remaining 0.00ms
 Array([[0.368+0.j, 0.   +0.j],
        [0.   +0.j, 0.632+0.j]], dtype=complex64)
 ```
