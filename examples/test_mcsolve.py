@@ -19,7 +19,7 @@ exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)), dq.basis(2, 1) @ dq.tobra(
 
 initial_states = [dq.basis(2, 1),]
 
-num_traj = 81
+num_traj = 31
 options = dq.Options(ntraj=num_traj)
 result = dq.mcsolve(
     timecallable(H_func),

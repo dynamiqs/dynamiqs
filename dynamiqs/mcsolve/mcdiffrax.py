@@ -31,12 +31,11 @@ class MCDiffraxSolver(DiffraxSolver, MCSolver):
         return dx.ODETerm(vector_field)
 
     @property
-    def discrete_terminating_event(self):
-        def norm_below_rand(state, **kwargs):
-            psi = state.y
-            prob = jnp.abs(jnp.einsum("id,id->", jnp.conj(psi), psi))
-            return prob < self.rand
-        return dx.DiscreteTerminatingEvent(norm_below_rand)
+    def event(self):
+        def norm_below_rand(t, y, *args, **kwargs):
+            prob = jnp.abs(jnp.einsum("id,id->", jnp.conj(y), y))
+            return prob - self.rand
+        return dx.Event(norm_below_rand, self.root_finder)
 
 
 class MCEuler(MCDiffraxSolver, EulerSolver):

@@ -7,10 +7,12 @@ import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import optimistix as optx
 from equinox.internal import while_loop
 from jax.random import PRNGKey
 from jax import Array
 from jaxtyping import ArrayLike
+from optimistix import AbstractRootFinder
 
 from .._checks import check_shape, check_times
 from .._utils import cdtype
@@ -41,6 +43,7 @@ def mcsolve(
     key: PRNGKey = PRNGKey(42),
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
+    root_finder: AbstractRootFinder = optx.Newton(1e-5, 1e-5, optx.rms_norm),
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> Result:
@@ -117,7 +120,7 @@ def mcsolve(
     _check_mcsolve_args(H, jump_ops, psi0, tsave, exp_ops)
 
     return _vectorized_mcsolve(
-        H, jump_ops, psi0, tsave, key, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options
     )
 
 
@@ -130,6 +133,7 @@ def _vectorized_mcsolve(
     key: PRNGKey,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ) -> MCResult:
@@ -161,6 +165,7 @@ def _vectorized_mcsolve(
         Shape(),
         Shape(),
         Shape(),
+        Shape(),
     )
     # the result is vectorized over `saved`
 
@@ -171,7 +176,7 @@ def _vectorized_mcsolve(
         f = _flat_vectorize(_mcsolve, n_batch, out_axes)
 
     # === apply vectorized function
-    return f(H, jump_ops, psi0, tsave, key, exp_ops, solver, gradient, options)
+    return f(H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options)
 
 
 def _mcsolve(
@@ -182,6 +187,7 @@ def _mcsolve(
     key: PRNGKey,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ) -> MCResult:
@@ -190,7 +196,7 @@ def _mcsolve(
     # simulate no-jump trajectory
     rand0 = 0.0
     no_jump_result = _single_traj(
-        H, jump_ops, psi0, tsave, rand0, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, rand0, exp_ops, solver, root_finder, gradient, options
     )
     # extract the no-jump probability
     no_jump_state = no_jump_result.final_state
@@ -202,12 +208,12 @@ def _mcsolve(
     if options.one_jump_only:
         f = jax.vmap(
             one_jump_only,
-            in_axes=(None, None, None, None, 0, 0, None, None, None, None),
+            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
         )
     else:
         f = jax.vmap(
             loop_over_jumps,
-            in_axes=(None, None, None, None, 0, 0, None, None, None, None),
+            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
         )
     jump_results = f(
         H,
@@ -218,6 +224,7 @@ def _mcsolve(
         random_numbers,
         exp_ops,
         solver,
+        root_finder,
         gradient,
         options,
     )
@@ -231,7 +238,7 @@ def _mcsolve(
     return mcresult
 
 
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('solver', 'root_finder', 'gradient', 'options'))
 def _single_traj(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -240,6 +247,7 @@ def _single_traj(
     rand: Array,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
@@ -253,7 +261,7 @@ def _single_traj(
     solver_class = get_solver_class(solvers, solver)
     solver.assert_supports_gradient(gradient)
     mcsolver = solver_class(
-        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
     )
     return mcsolver.run()
 
@@ -267,19 +275,20 @@ def one_jump_only(
     rand: float,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
     key_1, key_2 = jax.random.split(key)
     before_jump_result = _jump_trajs(
-        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
     )
     new_t0 = before_jump_result.final_time
     new_psi0 = before_jump_result.final_state
     new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
     # don't allow another jump
     after_jump_result = _jump_trajs(
-        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, gradient, options
+        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, root_finder, gradient, options
     )
     result = interpolate_states_and_expects(
         tsave, new_tsave, before_jump_result, after_jump_result, new_t0, options
@@ -296,6 +305,7 @@ def loop_over_jumps(
     rand: float,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
@@ -322,6 +332,7 @@ def loop_over_jumps(
             new_rand,
             exp_ops,
             solver,
+            root_finder,
             gradient,
             options,
         )
@@ -333,7 +344,7 @@ def loop_over_jumps(
     # solve until the first jump occurs. Enter the while loop for additional jumps
     key_1, key_2 = jax.random.split(key)
     initial_result = _jump_trajs(
-        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
     )
 
     final_result, _ = while_loop(
@@ -355,6 +366,7 @@ def _jump_trajs(
     rand: float,
     exp_ops: Array | None,
     solver: Solver,
+    root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ):
@@ -363,7 +375,7 @@ def _jump_trajs(
     rand_key, sample_key = jax.random.split(key)
     # solve until jump or tsave[-1]
     res_before_jump = _single_traj(
-        H, jump_ops, psi0, tsave, rand, exp_ops, solver, gradient, options
+        H, jump_ops, psi0, tsave, rand, exp_ops, solver, root_finder, gradient, options
     )
     t_jump = res_before_jump.final_time
     psi_before_jump = res_before_jump.final_state
