@@ -9,7 +9,7 @@ def rand_mcsolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 4
     kH, *kLs, kpsi0, kEs, kmc = jax.random.split(jax.random.PRNGKey(42), nkeys)
     H = dq.rand_herm(kH, (*nH, n, n))
-    Ls = [jax.random.uniform(kL) * dq.destroy(*nL, n) for kL, nL in zip(kLs, nLs)]
+    Ls = [dq.rand_herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
     psi0 = dq.rand_ket(kpsi0, (*npsi0, n, 1))
     Es = dq.rand_complex(kEs, (nEs, n, n))
     return H, Ls, psi0, Es, kmc
@@ -29,12 +29,12 @@ def test_cartesian_batching(nH, npsi0, nL1, nL2):
     # run mesolve
     H, Ls, psi0, Es, kmc = rand_mcsolve_args(n, nH, nLs, npsi0, nEs)
     tsave = jnp.linspace(0, 0.01, ntsave)
-    options = dq.Options(ntraj=ntraj, save_states=False)
+    options = dq.Options(ntraj=ntraj, save_states=True, one_jump_only=True)
     result = dq.mcsolve(H, Ls, psi0, tsave, key=kmc, exp_ops=Es, options=options)
 
     # check result shape
-    assert result.jump_states.shape == (*nH, *nL1, *nL2, *npsi0, ntraj, ntsave, n, n)
-    assert result.no_jump_states.shape == (*nH, *nL1, *nL2, *npsi0, ntsave, n, n)
+    assert result.jump_states.shape == (*nH, *nL1, *nL2, *npsi0, ntraj, ntsave, n, 1)
+    assert result.no_jump_states.shape == (*nH, *nL1, *nL2, *npsi0, ntsave, n, 1)
     assert result.expects.shape == (*nH, *nL1, *nL2, *npsi0, nEs, ntsave)
 
 
@@ -58,6 +58,6 @@ def test_flat_batching(nL1, npsi0):
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
-    assert result.jump_states.shape == (*broadcast_shape, ntraj, ntsave, n, n)
-    assert result.no_jump_states.shape == (*broadcast_shape, ntsave, n, n)
+    assert result.jump_states.shape == (*broadcast_shape, ntraj, ntsave, n, 1)
+    assert result.no_jump_states.shape == (*broadcast_shape, ntsave, n, 1)
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
