@@ -316,7 +316,7 @@ def loop_over_jumps(
         while_body,
         (initial_result, key_2),
         max_steps=100,
-        kind="checkpointed",
+        kind="bounded",
     )
     return final_result
 
