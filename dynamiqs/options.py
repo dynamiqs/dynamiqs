@@ -36,6 +36,7 @@ class Options(eqx.Module):
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers (see
             [`SEResult`][dynamiqs.SEResult] or [`MEResult`][dynamiqs.MEResult]).
+        ntraj: number of trajectories for mcsolve
     """
 
     save_states: bool = True
@@ -45,6 +46,7 @@ class Options(eqx.Module):
     t0: ScalarLike | None = None
     t1: ScalarLike | None
     save_extra: callable[[Array], PyTree] | None = None
+    ntraj: int = 10
 
     def __init__(
         self,
@@ -55,6 +57,7 @@ class Options(eqx.Module):
         t0: ScalarLike | None = None,
         t1: ScalarLike | None = None,
         save_extra: callable[[Array], PyTree] | None = None,
+        ntraj: int = 10
     ):
         if progress_meter is None:
             progress_meter = NoProgressMeter()
@@ -65,6 +68,7 @@ class Options(eqx.Module):
         self.progress_meter = progress_meter
         self.t0 = t0
         self.t1 = t1
+        self.ntraj = ntraj
 
         # make `save_extra` a valid Pytree with `Partial`
         if save_extra is not None:
