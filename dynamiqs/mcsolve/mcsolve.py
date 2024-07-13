@@ -205,10 +205,16 @@ def _mcsolve(
     random_numbers = jax.random.uniform(key_2, shape=(ntraj,), minval=p_nojump)
     # run all single trajectories at once
     traj_keys = jax.random.split(key_3, num=ntraj)
-    f = jax.vmap(
-        loop_over_jumps,
-        in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
-    )
+    if options.one_jump_only:
+        f = jax.vmap(
+            one_jump_only,
+            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
+        )
+    else:
+        f = jax.vmap(
+            loop_over_jumps,
+            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
+        )
     jump_results, jump_times, num_jumps = f(
         H,
         jump_ops,
@@ -258,6 +264,36 @@ def _single_traj(
         tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
     )
     return mcsolver.run()
+
+
+def one_jump_only(
+    H: ArrayLike | TimeArray,
+    jump_ops: list[ArrayLike | TimeArray],
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    key: PRNGKey,
+    rand: float,
+    exp_ops: Array | None,
+    solver: Solver,
+    root_finder: AbstractRootFinder,
+    gradient: Gradient | None,
+    options: Options,
+):
+    key_1, key_2 = jax.random.split(key)
+    before_jump_result, t_jump = _jump_trajs(
+        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
+    )
+    new_t0 = before_jump_result.final_time
+    new_psi0 = before_jump_result.final_state
+    new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
+    # don't allow another jump
+    after_jump_result, _ = _jump_trajs(
+        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, root_finder, gradient, options
+    )
+    result = interpolate_states_and_expects(
+        tsave, new_tsave, before_jump_result, after_jump_result, new_t0, options
+    )
+    return result, t_jump, 1
 
 
 def loop_over_jumps(
@@ -318,7 +354,7 @@ def loop_over_jumps(
         while_cond,
         while_body,
         (initial_result, first_t_jump, 0, key_2),
-        max_steps=100,
+        max_steps=100_000_000,
         kind="bounded",
     )
     return final_result, last_t_jump, total_num_jumps

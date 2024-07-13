@@ -37,6 +37,7 @@ class Options(eqx.Module):
             the result object returned by the solvers (see
             [`SEResult`][dynamiqs.SEResult] or [`MEResult`][dynamiqs.MEResult]).
         ntraj: number of trajectories for mcsolve
+        one_jump_only: whether or not to only allow one jump in mcsolve
     """
 
     save_states: bool = True
@@ -47,6 +48,7 @@ class Options(eqx.Module):
     t1: ScalarLike | None
     save_extra: callable[[Array], PyTree] | None = None
     ntraj: int = 10
+    one_jump_only: bool = False
 
     def __init__(
         self,
@@ -57,7 +59,8 @@ class Options(eqx.Module):
         t0: ScalarLike | None = None,
         t1: ScalarLike | None = None,
         save_extra: callable[[Array], PyTree] | None = None,
-        ntraj: int = 10
+        ntraj: int = 10,
+        one_jump_only: bool = False,
     ):
         if progress_meter is None:
             progress_meter = NoProgressMeter()
@@ -69,6 +72,7 @@ class Options(eqx.Module):
         self.t0 = t0
         self.t1 = t1
         self.ntraj = ntraj
+        self.one_jump_only = one_jump_only
 
         # make `save_extra` a valid Pytree with `Partial`
         if save_extra is not None:
