@@ -10,6 +10,7 @@ from jaxtyping import PyTree
 
 from ..gradient import Autograd, CheckpointAutograd
 from .abstract_solver import BaseSolver
+from diffrax._progress_meter import NoProgressMeter
 
 
 class DiffraxSolver(BaseSolver):
@@ -49,6 +50,11 @@ class DiffraxSolver(BaseSolver):
             elif isinstance(self.gradient, Autograd):
                 adjoint = dx.DirectAdjoint()
 
+            if self.event is None:
+                progress_meter = self.options.progress_meter.to_diffrax()
+            else:
+                progress_meter = NoProgressMeter()
+
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
                 self.terms,
@@ -62,7 +68,7 @@ class DiffraxSolver(BaseSolver):
                 adjoint=adjoint,
                 event=self.event,
                 max_steps=self.max_steps,
-                progress_meter=self.options.progress_meter.to_diffrax(),
+                progress_meter=progress_meter,
             )
 
         # === collect and return results
