@@ -482,24 +482,24 @@ def _check_mcsolve_args(
     exp_ops: Array | None,
 ):
     # === check H shape
-    check_shape(H, 'H', '(?, n, n)', subs={'?': 'nH?'})
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
     # === check jump_ops shape
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
+
     if len(jump_ops) == 0:
         logging.warning(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
-    for i, L in enumerate(jump_ops):
-        check_shape(L, f'jump_ops[{i}]', '(?, n, n)', subs={'?': 'nL?'})
-
-    # === check rho0 shape
-    check_shape(psi0, 'rho0', '(?, n, 1)', subs={'?': 'npsi0?'})
+    # === check psi0 shape
+    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
 
     # === check tsave shape
     check_times(tsave, 'tsave')
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'nE'})
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
