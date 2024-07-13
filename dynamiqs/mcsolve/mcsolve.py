@@ -141,7 +141,7 @@ def _vectorized_mcsolve(
     # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
     # below we will have another layer of vectorization over ntraj
 
-    out_axes = MCResult(None, 0, 0, 0, 0)
+    out_axes = MCResult(False, 0, 0, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(
@@ -205,16 +205,10 @@ def _mcsolve(
     random_numbers = jax.random.uniform(key_2, shape=(ntraj,), minval=p_nojump)
     # run all single trajectories at once
     traj_keys = jax.random.split(key_3, num=ntraj)
-    if options.one_jump_only:
-        f = jax.vmap(
-            one_jump_only,
-            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
-        )
-    else:
-        f = jax.vmap(
-            loop_over_jumps,
-            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
-        )
+    f = jax.vmap(
+        loop_over_jumps,
+        in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
+    )
     jump_results = f(
         H,
         jump_ops,
@@ -264,36 +258,6 @@ def _single_traj(
         tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
     )
     return mcsolver.run()
-
-
-def one_jump_only(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    key: PRNGKey,
-    rand: float,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
-):
-    key_1, key_2 = jax.random.split(key)
-    before_jump_result = _jump_trajs(
-        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
-    )
-    new_t0 = before_jump_result.final_time
-    new_psi0 = before_jump_result.final_state
-    new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
-    # don't allow another jump
-    after_jump_result = _jump_trajs(
-        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, root_finder, gradient, options
-    )
-    result = interpolate_states_and_expects(
-        tsave, new_tsave, before_jump_result, after_jump_result, new_t0, options
-    )
-    return result
 
 
 def loop_over_jumps(
