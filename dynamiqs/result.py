@@ -114,6 +114,8 @@ class MCResult(eqx.Module):
     _no_jump_res: Result
     _jump_res: Result
     no_jump_prob: float
+    jump_times: Array
+    num_jumps: Array
     expects: Array | None
 
     @property
@@ -138,6 +140,8 @@ class MCResult(eqx.Module):
             'Jump result': str(self._jump_res),
             'No-jump states  ': array_str(self.no_jump_states),
             'Jump states  ': array_str(self.jump_states),
+            'Jump times  ': array_str(self.jump_times),
+            'Number of jumps in each trajectory  ': array_str(self.num_jumps),
             'Expects ': array_str(self.expects) if self.expects is not None else None,
         }
         parts = {k: v for k, v in parts.items() if v is not None}
