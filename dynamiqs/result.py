@@ -8,7 +8,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult']
+__all__ = ['SEResult', 'MEResult', 'PropagatorResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -188,3 +188,52 @@ class MEResult(Result):
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
+
+
+class PropagatorResult(Result):
+    r"""Result of the Schrödinger equation integration to obtain the propagator.
+
+    Attributes:
+        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+
+    Note-: Result of running multiple simulations concurrently
+        The resulting propagators are batched according to the
+        leading dimensions of the Hamiltonian `H`. In this case, there
+        is no difference between `cartesian_batching = True` or `False`
+        (as opposed to e.g. [`dq.sesolve`][dynamiqs.sesolve] where the initial states
+         are explicitly specified).
+
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
+
+    """
+
+    propagators: Array
+
+    @property
+    def states(self) -> Array:
+        raise NotImplementedError
+
+    @property
+    def expects(self) -> Array:
+        raise NotImplementedError
+
+    @property
+    def extra(self) -> Array:
+        raise NotImplementedError
+
+    def _str_parts(self) -> dict[str, str]:
+        return {
+            'Solver  ': type(self.solver).__name__,
+            'Gradient': (
+                type(self.gradient).__name__ if self.gradient is not None else None
+            ),
+            'Propagators  ': array_str(self.propagators),
+            'Infos   ': self.infos if self.infos is not None else None,
+        }
