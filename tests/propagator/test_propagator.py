@@ -1,8 +1,8 @@
-import pytest
-
 import jax
 import jax.numpy as jnp
-from dynamiqs import propagator, sigmay, Options
+import pytest
+
+from dynamiqs import Options, propagator, sigmay
 
 from ..sesolve.closed_system import cavity, tdqubit
 from ..solver_tester import SolverTester

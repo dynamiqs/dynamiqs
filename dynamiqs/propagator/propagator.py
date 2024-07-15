@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from jaxtyping import ArrayLike
 import jax.numpy as jnp
+from jaxtyping import ArrayLike
 
 from ..gradient import Gradient
 from ..options import Options
