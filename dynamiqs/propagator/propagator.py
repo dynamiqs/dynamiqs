@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from jaxtyping import ArrayLike
+import jax.numpy as jnp
 
 from ..gradient import Gradient
 from ..options import Options
@@ -77,9 +78,14 @@ def propagator(
         options=options
     )
     if options.save_states:
-        propagators = seresult.states[..., 0].swapaxes(-2, -3)
+        # indices are ...i, t, j. Want to permute them to
+        # t, j, i such that the t index is first and each
+        # column of the propogator corresponds to each initial state
+        ndim = len(seresult.states.shape) - 1
+        perm = list(range(ndim - 3)) + [ndim - 2, ndim - 1, ndim - 3]
+        propagators = jnp.transpose(seresult.states[..., 0], perm)
     else:
-        propagators = seresult.states[..., 0]
+        propagators = seresult.states[..., 0].swapaxes(-1, -2)
     return PropagatorResult(
         tsave, solver, gradient, options, seresult._saved, seresult.infos, propagators
     )
