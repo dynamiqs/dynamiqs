@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import get_args
-
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -12,7 +10,7 @@ from qutip import Qobj
 from ..utils.jax_utils import to_qutip
 from ..utils.utils.general import norm, ptrace
 from .qarray import QArray
-from .types import QArrayLike, asjaxarray
+from .types import QArrayLike, asjaxarray, isqarraylike
 
 __all__ = ['DenseQArray']
 
@@ -116,11 +114,11 @@ class DenseQArray(QArray):
     def __mul__(self, y: QArrayLike) -> QArray:
         super().__mul__(y)
 
-        if isinstance(y, get_args(ScalarLike)):
+        if isinstance(y, ScalarLike):
             data = self.data * y
         if isinstance(y, DenseQArray):
             data = self.data * y.data
-        elif isinstance(y, get_args(QArrayLike)):
+        elif isqarraylike(y):
             data = self.data * asjaxarray(y)
         else:
             return NotImplemented
@@ -130,11 +128,11 @@ class DenseQArray(QArray):
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)
 
-        if isinstance(y, get_args(ScalarLike)):
+        if isinstance(y, ScalarLike):
             data = self.data / y
         if isinstance(y, DenseQArray):
             data = self.data / y.data
-        elif isinstance(y, get_args(QArrayLike)):
+        elif isqarraylike(y):
             data = self.data / asjaxarray(y)
         else:
             return NotImplemented
@@ -144,11 +142,11 @@ class DenseQArray(QArray):
     def __add__(self, y: QArrayLike) -> QArray:
         super().__add__(y)
 
-        if isinstance(y, get_args(ScalarLike)):
+        if isinstance(y, ScalarLike):
             data = self.data + y
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
-        elif isinstance(y, get_args(QArrayLike)):
+        elif isqarraylike(y):
             data = self.data + asjaxarray(y)
         else:
             return NotImplemented
@@ -160,7 +158,7 @@ class DenseQArray(QArray):
 
         if isinstance(y, DenseQArray):
             data = self.data @ y.data
-        elif isinstance(y, get_args(QArrayLike)):
+        elif isqarraylike(y):
             data = self.data @ asjaxarray(y)
         else:
             return NotImplemented
@@ -172,7 +170,7 @@ class DenseQArray(QArray):
 
         if isinstance(y, DenseQArray):
             data = y.data @ self.data
-        elif isinstance(y, get_args(QArrayLike)):
+        elif isqarraylike(y):
             data = asjaxarray(y) @ self.data
         else:
             return NotImplemented
