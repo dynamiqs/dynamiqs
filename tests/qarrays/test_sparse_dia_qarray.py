@@ -14,8 +14,8 @@ class TestSparseDIAQArray:
         diags = jnp.arange(num_diags * N).reshape(num_diags, N)
         offsets = tuple(range(-(num_diags // 2), (num_diags // 2) + 1))
 
-        self.sparseA = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
-        self.sparseB = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
+        self.sparseA = dq.SparseDIAQArray((1, N, N), offsets, diags)
+        self.sparseB = dq.SparseDIAQArray((1, N, N), offsets, diags)
 
         self.matrixA = dq.to_dense(self.sparseA)
         self.matrixB = dq.to_dense(self.sparseB)

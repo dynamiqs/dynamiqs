@@ -8,8 +8,16 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .qarray import QArray
+from .sparse_dia_qarray import SparseDIAQArray
 
-__all__ = ['QArray', 'QArrayLike', 'asqarray', 'asjaxarray', 'dense_qarray']
+__all__ = [
+    'QArray',
+    'QArrayLike',
+    'asqarray',
+    'asjaxarray',
+    'dense_qarray',
+    'SparseDIAQArray',
+]
 
 # In this file we define an extended array type named `QArrayLike`. Most
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
