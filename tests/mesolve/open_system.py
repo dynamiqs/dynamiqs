@@ -118,14 +118,6 @@ class OCavity(OpenSystem):
         )
 
 
-class SparseOCavity(OCavity):
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
-        return params.delta * dq.to_sparse(dq.number(self.n))
-
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
-        return [jnp.sqrt(params.kappa) * dq.to_sparse(dq.destroy(self.n))]
-
-
 class OTDQubit(OpenSystem):
     class Params(NamedTuple):
         eps: float
@@ -224,25 +216,11 @@ class OTDQubit(OpenSystem):
         )
 
 
-class SparseOTDQubit(OTDQubit):
-    def H(self, params: PyTree):
-        sigmax_sparse = dq.to_sparse(dq.sigmax())
-        f = lambda t, eps, omega: eps * jnp.cos(omega * t) * sigmax_sparse
-        return dq.timecallable(f, args=(params.eps, params.omega))
-
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
-        return [jnp.sqrt(params.gamma) * dq.to_sparse(dq.sigmax())]
-
-
 # # we choose `t_end` not coinciding with a full period (`t_end=1.0`) to avoid null
 # # gradients
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 ocavity = OCavity(n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave)
-sparse_ocavity = SparseOCavity(
-    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave
-)
 
 tsave = np.linspace(0.0, 1.0, 11)
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
-sparse_otdqubit = SparseOTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
