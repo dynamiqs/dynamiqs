@@ -14,8 +14,8 @@ class TestSparseDIAQArray:
         diags = jnp.arange(num_diags * N).reshape(num_diags, N)
         offsets = tuple(range(-(num_diags // 2), (num_diags // 2) + 1))
 
-        self.sparseA = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
-        self.sparseB = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
+        self.sparseA = dq.SparseDIAQArray((1, N, N), offsets, diags)
+        self.sparseB = dq.SparseDIAQArray((1, N, N), offsets, diags)
 
         self.matrixA = dq.to_dense(self.sparseA)
         self.matrixB = dq.to_dense(self.sparseB)
@@ -69,3 +69,19 @@ class TestSparseDIAQArray:
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
+
+    def test_pow(self, rtol=1e-05, atol=1e-08):
+        n = 5
+        out_dia = dq.to_dense(self.sparseA**n)
+        out_dense = self.matrixA**n
+
+        assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
+
+    def test_powm(self, rtol=1e-05, atol=1e-08):
+        n = 5
+        out_dia = dq.to_dense(self.sparseA.powm(n))
+        out_dense = self.matrixA
+        for _ in range(n - 1):
+            out_dense = out_dense * self.matrixA
+
+        assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
