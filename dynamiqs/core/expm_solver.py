@@ -34,7 +34,7 @@ class ExpmSolver(BaseSolver):
         # coincide with the times specified in self.ts. So we need to evaluate the
         # matrix exponential for all such regions
         else:
-            times = jnp.sort(jnp.concatenate((self.H.times, self.ts)))
+            times = jnp.sort(jnp.concatenate((self.H.times, self.ts, jnp.asarray(self.t0).reshape(-1))))
         _t_diffs = jnp.diff(times)
         # for times before t0, don't want to include in the propagator calculation
         t_diffs = jnp.where(times[:-1] < self.t0, 0.0, _t_diffs)
@@ -42,7 +42,7 @@ class ExpmSolver(BaseSolver):
         # to be constant over the region times[-2] to times[-1]
         H_at_ts = jnp.stack([self.H(t) for t in times[:-1]])
         # put the t dimension first, since scan works over the first dimension
-        Ht = jnp.einsum("t,...tij->t...ij", t_diffs, H_at_ts)
+        Ht = jnp.einsum("t,t...ij->t...ij", t_diffs, H_at_ts)
         step_propagators = expm(-1j * Ht)
 
         def _reduce(prev_prop, next_prop):
@@ -51,19 +51,22 @@ class ExpmSolver(BaseSolver):
             total_prop = jnp.einsum("...ij,...jk->...ik", next_prop, prev_prop)
             return total_prop, total_prop
 
+        eye_broadcast = jnp.broadcast_to(eye(self.H.shape[-1]), self.H.shape)
         _, propagators_for_times = jax.lax.scan(
-            _reduce, eye(self.H.shape[0]), step_propagators
+            _reduce, eye_broadcast, step_propagators
         )
 
         # extract the propagators at the correct times
         # the -1 is because the indices of the propagators are defined by t_diffs,
         # not times itself
-        t_idxs = jnp.argmin(jnp.abs(times - self.ts[:, None]), axis=1) - 1
+        t_idxs = jnp.argmin(jnp.abs(times - self.ts[:, None]), axis=1)
+        t_idxs = jnp.where(t_idxs > 0, t_idxs - 1, t_idxs)
         propagators = propagators_for_times[t_idxs]
         # note that we can't take the output of scan as final_prop, because
         # it could correspond to a time window of H.times. However
         # the final element of propagators will correspond to the propagator at the final time
         final_prop = propagators[-1]
+        propagators = jnp.einsum("t...ij->...tij", propagators)
         saved = Saved(propagators, None, None)
         saved = self.collect_saved(saved, final_prop)
         return self.result(saved)

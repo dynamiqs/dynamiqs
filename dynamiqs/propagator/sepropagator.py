@@ -71,7 +71,7 @@ def propagator(
         return result
     else:
         solver = Tsit5() if solver is None else solver
-        initial_states = eye(H.shape[0])[..., None]
+        initial_states = eye(H.shape[-1])[..., None]
         seresult = sesolve(
             H, initial_states, tsave, solver=solver, gradient=gradient, options=options
         )
