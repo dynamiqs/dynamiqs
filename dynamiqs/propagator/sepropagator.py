@@ -8,8 +8,8 @@ from ..gradient import Gradient
 from ..options import Options
 from ..result import PropagatorResult, Saved
 from ..sesolve import sesolve
-from ..solver import Solver, Expm, Tsit5
-from ..time_array import TimeArray, ConstantTimeArray, PWCTimeArray
+from ..solver import Expm, Solver, Tsit5
+from ..time_array import ConstantTimeArray, PWCTimeArray, TimeArray
 from ..utils.operators import eye
 
 __all__ = ["propagator"]
@@ -19,7 +19,7 @@ def propagator(
     H: ArrayLike | TimeArray,
     tsave: ArrayLike,
     *,
-    solver: Solver = None,  # noqa: B008
+    solver: Solver = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> PropagatorResult:

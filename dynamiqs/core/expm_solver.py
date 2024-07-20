@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
-from .. import expm, eye, PropagatorResult
+from .. import PropagatorResult, expm, eye
 from ..result import Saved
 from ..time_array import ConstantTimeArray, PWCTimeArray
 from .abstract_solver import BaseSolver

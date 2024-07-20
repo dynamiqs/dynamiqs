@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import Options, propagator, sigmay, pwc, eye, constant, rand_herm
+from dynamiqs import Options, constant, eye, propagator, pwc, rand_herm, sigmay
 from dynamiqs.solver import Tsit5
 
 from ..sesolve.closed_system import cavity, tdqubit
