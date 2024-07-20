@@ -194,7 +194,7 @@ class PropagatorResult(Result):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        propagator _(array of shape (..., ntsave, n, n))_: Saved propagators.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -204,9 +204,11 @@ class PropagatorResult(Result):
     Note-: Result of running multiple simulations concurrently
         The resulting propagators are batched according to the
         leading dimensions of the Hamiltonian `H`. In this case, there
-        is no difference between `cartesian_batching = True` or `False`
-        (as opposed to e.g. [`dq.sesolve`][dynamiqs.sesolve] where the initial states
-         are explicitly specified).
+        is no sense of flat batching because the only object to batch over is
+        the Hamiltonian. Therefore setting `cartesian_batching=False` will throw an error.
+        This situation is to be contrasted with [`dq.sesolve`][dynamiqs.sesolve],
+        where the initial states are explicitly specified and one can have flat batching over
+        the Hamiltonian and initial states.
 
         See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
@@ -214,19 +216,14 @@ class PropagatorResult(Result):
 
     """
 
-    propagators: Array
+    @property
+    def propagator(self) -> Array:
+        return self._saved.ysave
 
     @property
     def states(self) -> Array:
-        raise NotImplementedError
-
-    @property
-    def expects(self) -> Array:
-        raise NotImplementedError
-
-    @property
-    def extra(self) -> Array:
-        raise NotImplementedError
+        raise NotImplementedError("states is not an attribute of PropagatorResult."
+                                  "Perhaps you meant to ask for the attribute propagator?")
 
     def _str_parts(self) -> dict[str, str]:
         return {
@@ -234,6 +231,6 @@ class PropagatorResult(Result):
             'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
-            'Propagators  ': array_str(self.propagators),
+            'Propagator  ': array_str(self.propagator),
             'Infos   ': self.infos if self.infos is not None else None,
         }

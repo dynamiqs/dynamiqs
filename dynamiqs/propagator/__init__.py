@@ -1,1 +1,1 @@
-from .propagator import *
+from .sepropagator import *

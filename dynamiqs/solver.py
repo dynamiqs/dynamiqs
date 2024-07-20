@@ -85,6 +85,29 @@ class Propagator(Solver):
     def __init__(self):
         pass
 
+class Expm(Solver):
+    r"""Quantum propagator method.
+
+    Explicitly compute the propagator for each time in `tsave` by matrix exponentiation.
+
+    Warning:
+        This solver is not recommended for open systems of large dimension, due to
+        the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian exponential.
+
+    Warning:
+        Constant or piece-wise constant Hamiltonians only
+
+    Note-: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
 
 # === generic ODE solvers options
 class _ODESolver(Solver):
