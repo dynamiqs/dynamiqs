@@ -23,7 +23,7 @@ def propagator(
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> PropagatorResult:
-    r"""Solve the Schrödinger equation by computing the propagator.
+    r"""Compute the propagator of the Schrödinger equation.
 
     This computation is done in one of two ways. If `solver` is set to `None`
     and if the Hamiltonian is of type [`dq.ConstantTimeArray`][dynamiqs.ConstantTimeArray] or
