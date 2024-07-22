@@ -9,7 +9,7 @@ from ..options import Options
 from ..result import PropagatorResult, Saved
 from ..sesolve import sesolve
 from ..solver import Expm, Solver, Tsit5
-from ..time_array import ConstantTimeArray, PWCTimeArray, TimeArray, SummedTimeArray
+from ..time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray, TimeArray
 from ..utils.operators import eye
 
 __all__ = ["propagator"]
@@ -52,7 +52,7 @@ def propagator(
             the result of the propagator computation. Use the attribute `propagator`
             to access saved quantities, more details in
             [`dq.PropagatorResult`][dynamiqs.PropagatorResult].
-    """  # noqa: E501
+    """
     if not options.cartesian_batching:
         raise ValueError(
             "Flat batching not supported for propagator. "

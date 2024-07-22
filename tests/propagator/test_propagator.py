@@ -53,10 +53,7 @@ class TestPropagator(SolverTester):
         U0 = eye(H.shape[-1])
         U1 = jax.scipy.linalg.expm(-1j * H.array * 3.0 * 0.5)
         U2 = jax.scipy.linalg.expm(-1j * H.array * -2.0 * 1.0)
-        if save_states:
-            trueresult = jnp.stack((U0, U1, U2 @ U1))
-        else:
-            trueresult = U2 @ U1
+        trueresult = jnp.stack((U0, U1, U2 @ U1)) if save_states else U2 @ U1
         errs = jnp.linalg.norm(propresult - trueresult)
         assert jnp.all(errs <= ysave_atol)
 
@@ -79,9 +76,6 @@ class TestPropagator(SolverTester):
         U1 = jax.scipy.linalg.expm(-1j * (H_1.array * 3.0 + H_2.array * (-5.0)) * 0.5)
         U2 = jax.scipy.linalg.expm(-1j * (H_1.array * (-2.0) + H_2.array * 1.0) * 1.0)
         U3 = jax.scipy.linalg.expm(-1j * H_2.array * 1.0 * 0.5)
-        if save_states:
-            trueresult = jnp.stack((U0, U1, U3 @ U2 @ U1))
-        else:
-            trueresult = U3 @ U2 @ U1
+        trueresult = jnp.stack((U0, U1, U3 @ U2 @ U1)) if save_states else U3 @ U2 @ U1
         errs = jnp.linalg.norm(propresult - trueresult)
         assert jnp.all(errs <= ysave_atol)
