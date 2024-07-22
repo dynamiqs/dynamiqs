@@ -194,7 +194,7 @@ class PropagatorResult(Result):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagator _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -217,13 +217,15 @@ class PropagatorResult(Result):
     """
 
     @property
-    def propagator(self) -> Array:
+    def propagators(self) -> Array:
         return self._saved.ysave
 
     @property
     def states(self) -> Array:
-        raise NotImplementedError("states is not an attribute of PropagatorResult."
-                                  "Perhaps you meant to ask for the attribute propagator?")
+        raise NotImplementedError(
+            "states is not an attribute of PropagatorResult."
+            "The propagators can be accessed through the `.propagators` attribute."
+        )
 
     def _str_parts(self) -> dict[str, str]:
         return {
@@ -231,6 +233,6 @@ class PropagatorResult(Result):
             'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
-            'Propagator  ': array_str(self.propagator),
+            'Propagator  ': array_str(self.propagators),
             'Infos   ': self.infos if self.infos is not None else None,
         }
