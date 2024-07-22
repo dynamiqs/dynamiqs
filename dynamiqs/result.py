@@ -224,8 +224,8 @@ class PropagatorResult(Result):
     @property
     def states(self) -> Array:
         raise NotImplementedError(
-            "states is not an attribute of PropagatorResult."
-            "The propagators can be accessed through the `.propagators` attribute."
+            'states is not an attribute of PropagatorResult.'
+            'The propagators can be accessed through the `.propagators` attribute.'
         )
 
     def _str_parts(self) -> dict[str, str]:

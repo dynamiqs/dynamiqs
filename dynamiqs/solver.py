@@ -85,6 +85,7 @@ class Propagator(Solver):
     def __init__(self):
         pass
 
+
 class Expm(Solver):
     r"""Quantum propagator method.
 

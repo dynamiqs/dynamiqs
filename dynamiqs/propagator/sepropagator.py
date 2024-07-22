@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
@@ -12,7 +13,7 @@ from ..solver import Expm, Solver, Tsit5
 from ..time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray, TimeArray
 from ..utils.operators import eye
 
-__all__ = ["propagator"]
+__all__ = ['propagator']
 
 
 def propagator(
@@ -53,11 +54,6 @@ def propagator(
             to access saved quantities, more details in
             [`dq.PropagatorResult`][dynamiqs.PropagatorResult].
     """
-    if not options.cartesian_batching:
-        raise ValueError(
-            "Flat batching not supported for propagator. "
-            "Only cartesian batching is supported"
-        )
     if isinstance(H, (ConstantTimeArray, PWCTimeArray)):
         constant_or_pwc_check = True
     elif isinstance(H, SummedTimeArray):
@@ -75,6 +71,9 @@ def propagator(
     else:
         solver = Tsit5() if solver is None else solver
         initial_states = eye(H.shape[-1])[..., None]
+        options = eqx.tree_at(
+            lambda x: x.cartesian_batching, options, True, is_leaf=lambda x: x is None
+        )
         seresult = sesolve(
             H, initial_states, tsave, solver=solver, gradient=gradient, options=options
         )

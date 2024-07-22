@@ -5,14 +5,14 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from .. import PropagatorResult, expm, eye
-from ..result import Saved
+from ..result import PropagatorResult, Saved
 from ..time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray
+from ..utils.operators import eye
+from ..utils.utils.general import expm
 from .abstract_solver import BaseSolver
 
 
 class ExpmSolver(BaseSolver):
-
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -29,8 +29,8 @@ class ExpmSolver(BaseSolver):
             constant_or_pwc_check = False
         if not constant_or_pwc_check:
             raise TypeError(
-                "Solver `Expm` requires a time-independent Hamiltonian, "
-                "piece-wise constant Hamiltonian or sum of such Hamiltonians."
+                'Solver `Expm` requires a time-independent Hamiltonian, '
+                'piece-wise constant Hamiltonian or sum of such Hamiltonians.'
             )
 
     def run(self) -> PyTree:
@@ -87,7 +87,7 @@ class ExpmSolver(BaseSolver):
         # the final element of propagators will correspond to the propagator
         # at the final time
         final_prop = propagators[-1]
-        propagators = jnp.einsum("t...ij->...tij", propagators)
+        propagators = jnp.moveaxis(propagators, 0, -3)
         saved = Saved(propagators, None, None)
         saved = self.collect_saved(saved, final_prop)
         return self.result(saved)

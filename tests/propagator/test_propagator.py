@@ -17,7 +17,7 @@ class TestPropagator(SolverTester):
         y0 = system.y0(params)
         propresult = propagator(H, system.tsave)
         true_ysave = system.states(system.tsave)
-        prop_ysave = jnp.einsum("ijk,kd->ijd", propresult.propagators, y0)
+        prop_ysave = jnp.einsum('ijk,kd->ijd', propresult.propagators, y0)
         errs = jnp.linalg.norm(true_ysave - prop_ysave, axis=(-2, -1))
         assert jnp.all(errs <= ysave_atol)
 
@@ -25,7 +25,7 @@ class TestPropagator(SolverTester):
     @pytest.mark.parametrize('solver', [None, Tsit5()])
     @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
     def test_correctness_complex(
-            self, nH, save_states, solver, ysave_atol: float = 1e-3
+        self, nH, save_states, solver, ysave_atol: float = 1e-3
     ):
         H = constant(rand_herm(jax.random.PRNGKey(42), (*nH, 2, 2)))
         t = 10.0
@@ -33,7 +33,7 @@ class TestPropagator(SolverTester):
         options = Options(save_states=save_states)
         propresult = propagator(H, tsave, solver=solver, options=options).propagators
         if save_states:
-            Hs = jnp.einsum("...ij,t->...tij", H.array, tsave)
+            Hs = jnp.einsum('...ij,t->...tij', H.array, tsave)
             trueresult = jax.scipy.linalg.expm(-1j * Hs)
         else:
             trueresult = jax.scipy.linalg.expm(-1j * H.array * t)
@@ -60,7 +60,7 @@ class TestPropagator(SolverTester):
     @pytest.mark.parametrize('save_states', [True, False])
     @pytest.mark.parametrize('solver', [None, Tsit5()])
     def test_correctness_summed_pwc(
-            self, save_states, solver, ysave_atol: float = 1e-4
+        self, save_states, solver, ysave_atol: float = 1e-4
     ):
         times_1 = [0.0, 1.0, 2.0]
         times_2 = [0.0, 0.5, 1.0, 2.5]
