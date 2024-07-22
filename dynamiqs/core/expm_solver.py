@@ -20,7 +20,7 @@ class ExpmSolver(BaseSolver):
             isinstance(self.H, ConstantTimeArray) or isinstance(self.H, PWCTimeArray)
         ):
             raise TypeError(
-                "Solver `ExpmSolver` requires a time-independent or piece-wise constant Hamiltonian."
+                "Solver `Expm` requires a time-independent or piece-wise constant Hamiltonian."
             )
 
     def run(self) -> PyTree:
