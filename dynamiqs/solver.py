@@ -9,6 +9,7 @@ from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = [
     'Propagator',
+    'Expm',
     'Euler',
     'Rouchon1',
     'Rouchon2',

@@ -113,7 +113,7 @@ Array([[0.  +0.j   ],
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
 
 You can also directly compute the propagator using dynamiqs, by calling the `propagator` function
-(see [`dq.propagator()`][dynamiqs.propgator] API documentation for more details). Continuing the last
+(see [`dq.propagator()`][dynamiqs.propagator] API documentation for more details). Continuing the last
 example
 
 ```python
