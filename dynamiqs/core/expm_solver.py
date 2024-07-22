@@ -45,7 +45,7 @@ class ExpmSolver(BaseSolver):
         # to be constant over the region times[-2] to times[-1]
         H_at_ts = jnp.stack([self.H(t) for t in times[:-1]])
         # put the t dimension first, since scan works over the first dimension
-        Ht = jnp.einsum("t,t...ij->t...ij", t_diffs, H_at_ts)
+        Ht = jnp.expand_dims(t_diffs, jnp.arange(-H_at_ts.ndim + 1, 0)) * H_at_ts
         step_propagators = expm(-1j * Ht)
 
         def _reduce(prev_prop, next_prop):
