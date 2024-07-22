@@ -20,7 +20,7 @@ class ExpmSolver(BaseSolver):
             isinstance(self.H, ConstantTimeArray) or isinstance(self.H, PWCTimeArray)
         ):
             raise TypeError(
-                "Solver `ExpmSolver` requires a time-independent or piece-wise constant Hamiltonian."
+                "Solver `Expm` requires a time-independent or piece-wise constant Hamiltonian."
             )
 
     def run(self) -> PyTree:
@@ -45,16 +45,16 @@ class ExpmSolver(BaseSolver):
         # to be constant over the region times[-2] to times[-1]
         H_at_ts = jnp.stack([self.H(t) for t in times[:-1]])
         # put the t dimension first, since scan works over the first dimension
-        Ht = jnp.einsum("t,t...ij->t...ij", t_diffs, H_at_ts)
+        Ht = jnp.expand_dims(t_diffs, jnp.arange(-H_at_ts.ndim + 1, 0)) * H_at_ts
         step_propagators = expm(-1j * Ht)
 
         def _reduce(prev_prop, next_prop):
             # notice the ordering of prev_prop and next_prop, want
             # next_prop to be to the left of prev_prop
-            total_prop = jnp.einsum("...ij,...jk->...ik", next_prop, prev_prop)
+            total_prop = next_prop @ prev_prop
             return total_prop, total_prop
 
-        eye_broadcast = jnp.broadcast_to(eye(self.H.shape[-1]), self.H.shape)
+        eye_broadcast = eye(self.H.shape[-1])
         _, propagators_for_times = jax.lax.scan(
             _reduce, eye_broadcast, step_propagators
         )
