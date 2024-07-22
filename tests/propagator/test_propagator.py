@@ -47,15 +47,15 @@ class TestPropagator(SolverTester):
         values = [3.0, -2.0]
         array = sigmay()
         H = pwc(times, values, array)
-        tsave = jnp.asarray([0.5, 1.5, 2.0])
+        tsave = jnp.asarray([0.5, 1.0, 2.0])
         options = Options(save_states=save_states)
         propresult = propagator(H, tsave, solver=solver, options=options).propagators
-        U0 = eye(H.shape[0])
+        U0 = eye(H.shape[-1])
         U1 = jax.scipy.linalg.expm(-1j * H.array * 3.0 * 0.5)
-        U2 = jax.scipy.linalg.expm(-1j * H.array * -2.0 * 0.5)
+        U2 = jax.scipy.linalg.expm(-1j * H.array * -2.0 * 1.0)
         if save_states:
-            trueresult = jnp.stack((U0, U2 @ U1, U2 @ U2 @ U1))
+            trueresult = jnp.stack((U0, U1, U2 @ U1))
         else:
-            trueresult = U2 @ U2 @ U1
+            trueresult = U2 @ U1
         errs = jnp.linalg.norm(propresult - trueresult)
         assert jnp.all(errs <= ysave_atol)
