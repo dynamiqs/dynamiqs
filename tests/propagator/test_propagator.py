@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import Options, constant, eye, propagator, pwc, rand_herm, sigmay
+from dynamiqs import Options, constant, eye, propagator, pwc, rand_herm, sigmax, sigmay
 from dynamiqs.solver import Tsit5
 
 from ..sesolve.closed_system import cavity, tdqubit
@@ -57,5 +57,31 @@ class TestPropagator(SolverTester):
             trueresult = jnp.stack((U0, U1, U2 @ U1))
         else:
             trueresult = U2 @ U1
+        errs = jnp.linalg.norm(propresult - trueresult)
+        assert jnp.all(errs <= ysave_atol)
+
+    @pytest.mark.parametrize('save_states', [True, False])
+    @pytest.mark.parametrize('solver', [None, Tsit5()])
+    def test_correctness_summed_pwc(
+            self, save_states, solver, ysave_atol: float = 1e-4
+    ):
+        times_1 = [0.0, 1.0, 2.0]
+        times_2 = [0.0, 0.5, 1.0, 2.5]
+        values_1 = [3.0, -2.0]
+        values_2 = [4.0, -5.0, 1.0]
+        H_1 = pwc(times_1, values_1, sigmay())
+        H_2 = pwc(times_2, values_2, sigmax())
+        H = H_1 + H_2
+        tsave = jnp.asarray([0.5, 1.0, 2.5])
+        options = Options(save_states=save_states)
+        propresult = propagator(H, tsave, solver=solver, options=options).propagators
+        U0 = eye(H.shape[-1])
+        U1 = jax.scipy.linalg.expm(-1j * (H_1.array * 3.0 + H_2.array * (-5.0)) * 0.5)
+        U2 = jax.scipy.linalg.expm(-1j * (H_1.array * (-2.0) + H_2.array * 1.0) * 1.0)
+        U3 = jax.scipy.linalg.expm(-1j * H_2.array * 1.0 * 0.5)
+        if save_states:
+            trueresult = jnp.stack((U0, U1, U3 @ U2 @ U1))
+        else:
+            trueresult = U3 @ U2 @ U1
         errs = jnp.linalg.norm(propresult - trueresult)
         assert jnp.all(errs <= ysave_atol)

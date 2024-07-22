@@ -6,7 +6,7 @@ from jaxtyping import PyTree
 
 from .. import PropagatorResult, expm, eye
 from ..result import Saved
-from ..time_array import ConstantTimeArray, PWCTimeArray
+from ..time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray
 from .abstract_solver import BaseSolver
 
 
@@ -15,12 +15,23 @@ class ExpmSolver(BaseSolver):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # check that Hamiltonian is either time-independent or piecewise constant
-        if not (
-            isinstance(self.H, ConstantTimeArray) or isinstance(self.H, PWCTimeArray)
-        ):
+        # check that Hamiltonian is either time-independent, piecewise constant
+        # or a sum of such Hamiltonians
+        if isinstance(self.H, (ConstantTimeArray, PWCTimeArray)):
+            constant_or_pwc_check = True
+        elif isinstance(self.H, SummedTimeArray):
+            constant_or_pwc_check = all(
+                [
+                    isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
+                    for timearray in self.H.timearrays
+                ]
+            )
+        else:
+            constant_or_pwc_check = False
+        if not constant_or_pwc_check:
             raise TypeError(
-                "Solver `Expm` requires a time-independent or piece-wise constant Hamiltonian."
+                "Solver `Expm` requires a time-independent Hamiltonian, "
+                "piece-wise constant Hamiltonian or sum of such Hamiltonians."
             )
 
     def run(self) -> PyTree:
@@ -32,10 +43,17 @@ class ExpmSolver(BaseSolver):
         # for each pwc region, and moreover the times defining those regions may not
         # coincide with the times specified in self.ts. So we need to evaluate the
         # matrix exponential for all such regions
-        else:
+        elif isinstance(self.H, PWCTimeArray):
             times = jnp.sort(
                 jnp.concatenate(
                     (jnp.asarray(self.t0).reshape(-1), self.H.times, self.ts)
+                )
+            )
+        # must be summed time array of constant or pwc Hamiltonians
+        else:
+            times = jnp.sort(
+                jnp.concatenate(
+                    (jnp.asarray(self.t0).reshape(-1), self.H.discontinuity_ts, self.ts)
                 )
             )
         _t_diffs = jnp.diff(times)
