@@ -38,15 +38,11 @@ def propagator(
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        solver: Solver for the integration. As mentioned above, if this is `None`
-            and the Hamiltonian is constant or piece-wise constant, the propagator is computed
-            by matrix exponential. If it is `None` and the Hamiltonian is not
-            constant or piece-wise constant, the propagator is computed using
-            [`dq.sesolve`][dynamiqs.sesolve] with the solver defaulting to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5]. If the solver is specified, the propagator
-            is computed using [`dq.sesolve`][dynamiqs.sesolve]. See [`dq.sesolve`][dynamiqs.sesolve]
+        solver: Solver for the integration. If solver is `None` (default value) then we
+            redirect to [`dq.solver.Expm`][dynamiqs.solver.Expm] or 
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] depending on the type of 
+            the input Hamiltonian. See [`dq.sesolve`][dynamiqs.sesolve]
             for a list of supported solvers.
-
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
