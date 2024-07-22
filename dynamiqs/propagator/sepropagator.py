@@ -26,7 +26,7 @@ def propagator(
     r"""Compute the propagator of the Schrödinger equation.
 
     This computation is done in one of two ways. If `solver` is set to `None`
-    and if the Hamiltonian is of type 
+    and if the Hamiltonian is of type
     [`dq.ConstantTimeArray`][dynamiqs.ConstantTimeArray] or
     [`dq.PWCTimeArray`][dynamiqs.PWCTimeArray], then the propagator is computed
     by appropriately exponentiating the Hamiltonian. On the other hand if the solver is
@@ -48,7 +48,7 @@ def propagator(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.PropagatorResult`][dynamiqs.PropagatorResult] object holding 
+        [`dq.PropagatorResult`][dynamiqs.PropagatorResult] object holding
             the result of the propagator computation. Use the attribute `propagator`
             to access saved quantities, more details in
             [`dq.PropagatorResult`][dynamiqs.PropagatorResult].
@@ -62,10 +62,8 @@ def propagator(
         constant_or_pwc_check = True
     elif isinstance(H, SummedTimeArray):
         constant_or_pwc_check = all(
-            [
-                isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
-                for timearray in H.timearrays
-            ]
+            isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
+            for timearray in H.timearrays
         )
     else:
         constant_or_pwc_check = False
@@ -73,8 +71,7 @@ def propagator(
         solver = Expm()
         solver.assert_supports_gradient(gradient)
         solver_class = ExpmSolver(tsave, None, H, None, solver, gradient, options)
-        result = solver_class.run()
-        return result
+        return solver_class.run()
     else:
         solver = Tsit5() if solver is None else solver
         initial_states = eye(H.shape[-1])[..., None]
@@ -86,7 +83,7 @@ def propagator(
             # t, j, i such that the t index is first and each
             # column of the propogator corresponds to each initial state
             ndim = len(seresult.states.shape) - 1
-            perm = list(range(ndim - 3)) + [ndim - 2, ndim - 1, ndim - 3]
+            perm = [*list(range(ndim - 3)), ndim - 2, ndim - 1, ndim - 3]
             propagators = jnp.transpose(seresult.states[..., 0], perm)
         else:
             # otherwise, sesolve has only saved the final states

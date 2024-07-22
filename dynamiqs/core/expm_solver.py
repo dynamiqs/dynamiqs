@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp
+from jax import Array
 from jaxtyping import PyTree
 
 from .. import PropagatorResult, expm, eye
@@ -21,10 +22,8 @@ class ExpmSolver(BaseSolver):
             constant_or_pwc_check = True
         elif isinstance(self.H, SummedTimeArray):
             constant_or_pwc_check = all(
-                [
-                    isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
-                    for timearray in self.H.timearrays
-                ]
+                isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
+                for timearray in self.H.timearrays
             )
         else:
             constant_or_pwc_check = False
@@ -66,7 +65,7 @@ class ExpmSolver(BaseSolver):
         Ht = jnp.expand_dims(t_diffs, jnp.arange(-H_at_ts.ndim + 1, 0)) * H_at_ts
         step_propagators = expm(-1j * Ht)
 
-        def _reduce(prev_prop, next_prop):
+        def _reduce(prev_prop: Array, next_prop: Array) -> Array:
             # notice the ordering of prev_prop and next_prop, want
             # next_prop to be to the left of prev_prop
             total_prop = next_prop @ prev_prop
@@ -85,14 +84,15 @@ class ExpmSolver(BaseSolver):
         propagators = propagators_for_times[t_idxs]
         # note that we can't take the output of scan as final_prop, because
         # it could correspond to a time window of H.times. However
-        # the final element of propagators will correspond to the propagator at the final time
+        # the final element of propagators will correspond to the propagator
+        # at the final time
         final_prop = propagators[-1]
         propagators = jnp.einsum("t...ij->...tij", propagators)
         saved = Saved(propagators, None, None)
         saved = self.collect_saved(saved, final_prop)
         return self.result(saved)
 
-    def result(self, saved: Saved, infos: PyTree | None = None):
+    def result(self, saved: Saved, infos: PyTree | None = None) -> PropagatorResult:
         return PropagatorResult(
             self.ts, self.solver, self.gradient, self.options, saved, infos
         )
