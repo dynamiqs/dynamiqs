@@ -54,7 +54,7 @@ class ExpmSolver(BaseSolver):
             total_prop = next_prop @ prev_prop
             return total_prop, total_prop
 
-        eye_broadcast = jnp.broadcast_to(eye(self.H.shape[-1]), self.H.shape)
+        eye_broadcast = eye(self.H.shape[-1])
         _, propagators_for_times = jax.lax.scan(
             _reduce, eye_broadcast, step_propagators
         )
