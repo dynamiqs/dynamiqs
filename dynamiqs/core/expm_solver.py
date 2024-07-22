@@ -51,7 +51,7 @@ class ExpmSolver(BaseSolver):
         def _reduce(prev_prop, next_prop):
             # notice the ordering of prev_prop and next_prop, want
             # next_prop to be to the left of prev_prop
-            total_prop = jnp.einsum("...ij,...jk->...ik", next_prop, prev_prop)
+            total_prop = next_prop @ prev_prop
             return total_prop, total_prop
 
         eye_broadcast = jnp.broadcast_to(eye(self.H.shape[-1]), self.H.shape)
