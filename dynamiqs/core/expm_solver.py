@@ -27,14 +27,17 @@ class ExpmSolver(BaseSolver):
         # for a constant Hamiltonian, we only need to compute matrix exponentials
         # at the asked-for times
         if isinstance(self.H, ConstantTimeArray):
-            times = self.ts
+            times = jnp.concatenate((jnp.asarray(self.t0).reshape(-1), self.ts))
         # for a pwc Hamiltonian, we need to evaluate the matrix exponential
         # for each pwc region, and moreover the times defining those regions may not
         # coincide with the times specified in self.ts. So we need to evaluate the
         # matrix exponential for all such regions
         else:
-            times = jnp.sort(jnp.concatenate((self.H.times, self.ts)))
-        times = jnp.concatenate((jnp.asarray(self.t0).reshape(-1), times))
+            times = jnp.sort(
+                jnp.concatenate(
+                    (jnp.asarray(self.t0).reshape(-1), self.H.times, self.ts)
+                )
+            )
         _t_diffs = jnp.diff(times)
         # for times before t0, don't want to include in the propagator calculation
         t_diffs = jnp.where(times[:-1] < self.t0, 0.0, _t_diffs)
