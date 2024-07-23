@@ -40,8 +40,6 @@ from ..sesolve.diffrax_integrator import (
 )
 from ..sesolve.propagator_integrator import SESolvePropagatorIntegrator
 
-__all__ = ['sesolve']
-
 
 def sesolve(
     H: ArrayLike | TimeArray,

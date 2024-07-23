@@ -44,8 +44,6 @@ from ..mesolve.diffrax_integrator import (
 from ..mesolve.propagator_integrator import MESolvePropagatorIntegrator
 from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
-__all__ = ['mesolve']
-
 
 def mesolve(
     H: ArrayLike | TimeArray,
