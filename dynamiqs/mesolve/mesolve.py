@@ -18,11 +18,10 @@ from ..core._utils import (
 )
 from ..gradient import Gradient
 from ..options import Options
-from ..qarrays.types import asqarray
+from ..qarrays import QArray, QArrayLike, asqarray
 from ..result import MEResult
 from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
 from ..time_array import Shape, TimeArray
-from ..utils.utils import todm
 from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
 from .mepropagator import MEPropagator
 
@@ -30,12 +29,12 @@ __all__ = ['mesolve']
 
 
 def mesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    rho0: ArrayLike,
+    H: QArrayLike | TimeArray,
+    jump_ops: list[QArrayLike | TimeArray],
+    rho0: QArrayLike,
     tsave: ArrayLike,
     *,
-    exp_ops: list[ArrayLike] | None = None,
+    exp_ops: list[QArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
@@ -72,14 +71,14 @@ def mesolve(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-array, each of shape (...Lk, n, n))_:
             List of jump operators.
-        rho0 _(array-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
+        rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
+        exp_ops _(list of qarray-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
@@ -110,7 +109,7 @@ def mesolve(
     tsave = check_times(tsave, 'tsave')
 
     # === convert rho0 to density matrix
-    rho0 = todm(rho0)
+    rho0 = rho0.todm()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
@@ -124,9 +123,9 @@ def mesolve(
 def _vectorized_mesolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
-    rho0: Array,
+    rho0: QArray,
     tsave: Array,
-    exp_ops: Array | None,
+    exp_ops: QArray | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -175,9 +174,9 @@ def _vectorized_mesolve(
 def _mesolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
-    rho0: Array,
+    rho0: QArray,
     tsave: Array,
-    exp_ops: Array | None,
+    exp_ops: QArray | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -206,7 +205,7 @@ def _mesolve(
 
 
 def _check_mesolve_args(
-    H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
+    H: TimeArray, jump_ops: list[TimeArray], rho0: QArray, exp_ops: QArray | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
