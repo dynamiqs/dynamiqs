@@ -284,13 +284,15 @@ class SparseDIAQArray(QArray):
             tuple(o.item() for o in unique_offsets), out_diags, self.dims
         )
 
-    def __and__(self, other: QArrayLike) -> SparseDIAQArray | Array:
+    def __and__(self, other: QArrayLike) -> QArray:
         if isinstance(other, SparseDIAQArray):
             temp_o, temp_d = self._kronecker_dia(other=other)
             return self._clean_kronecker_dia(temp_o, temp_d)
 
         elif isinstance(other, get_args(QArrayLike)):
-            return jnp.kron(self.to_dense(), other)
+            return DenseQArray(
+                other.dims, jnp.kron(self.to_dense(), jnp.asarray(other))
+            )
 
         return NotImplemented
 
