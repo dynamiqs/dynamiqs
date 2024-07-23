@@ -167,6 +167,9 @@ class Rouchon2(_ODEFixedStep):
     Warning:
         This solver has not been ported to JAX yet.
 
+    Args:
+        dt: Fixed time step.
+
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
