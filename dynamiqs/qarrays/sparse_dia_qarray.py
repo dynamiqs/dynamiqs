@@ -258,9 +258,6 @@ class SparseDIAQArray(QArray):
 
         return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
 
-    def __pow__(self, y: Scalar) -> QArray:
-        return NotImplemented
-
     def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
         N = other.diags.shape[-1]
         out_offsets = jnp.ravel(
@@ -294,6 +291,12 @@ class SparseDIAQArray(QArray):
                 other.dims, jnp.kron(self.to_dense(), jnp.asarray(other))
             )
 
+        return NotImplemented
+
+    def _pow(self, power: int) -> QArray:  # noqa: ARG002
+        return NotImplemented
+
+    def __getitem__(self, key: int | slice) -> QArray:
         return NotImplemented
 
 

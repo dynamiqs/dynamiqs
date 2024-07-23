@@ -190,7 +190,10 @@ class DenseQArray(QArray):
 
         return DenseQArray(dims, data)
 
-    def __pow__(self, power: int) -> QArray:
-        super().__pow__(power)
+    def _pow(self, power: int) -> QArray:
         data = self.data**power
+        return DenseQArray(self.dims, data)
+
+    def __getitem__(self, key: int | slice) -> QArray:
+        data = self.data[key]
         return DenseQArray(self.dims, data)

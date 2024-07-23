@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, get_args
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
+from equinox.internal._omega import _Metaω
 from jax import Array, Device
 from jaxtyping import ScalarLike
 from qutip import Qobj
@@ -32,10 +33,12 @@ class QArray(eqx.Module):
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
     #   - conversion methods: to_qutip, to_jax, __array__
-    #   - arithmetic methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
-    #                         __and__, __pow__
+    #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
+    #                         __and__, _pow, __getitem__
 
-    dims: tuple[int, ...]
+    # TODO: Setting dims as static for now. Otherwise, I believe it is upgraded to a
+    # complex dtype during the computation, which raises an error on diffrax side.
+    dims: tuple[int, ...] = eqx.field(static=True)
 
     def __check_init__(self):
         # ensure dims is a tuple of ints
@@ -378,9 +381,21 @@ class QArray(eqx.Module):
     def __and__(self, y: QArray) -> QArray:
         """Tensor product between two quantum states."""
 
+    def __pow__(self, power: int | _Metaω) -> QArray:
+        # to deal with the x**ω notation from equinox (used in diffrax internals)
+        if isinstance(power, _Metaω):
+            return _Metaω.__rpow__(power, self)
+        else:
+            logging.warning(
+                'Using the `**` operator performs element-wise power. For matrix '
+                'power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
+            )
+            return self._pow(power)
+
     @abstractmethod
-    def __pow__(self, power: int) -> QArray:
-        logging.warning(
-            'Using the `**` operator performs element-wise power. For matrix power, '
-            'use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
-        )
+    def _pow(self, power: int) -> QArray:
+        """Element-wise power of the quantum state."""
+
+    @abstractmethod
+    def __getitem__(self, key: int | slice) -> QArray:
+        pass
