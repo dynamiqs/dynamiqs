@@ -125,7 +125,7 @@ def timecallable(f: callable[[float], QArray]) -> CallableTimeArray:
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
     time-dependent operator. The function $f$ is defined by passing a Python function
-    with signature `f(t: float) -> QArray` that returns an array of shape
+    with signature `f(t: float) -> QArray` that returns a qarray of shape
     _(..., n, n)_ for any time $t$.
 
     Warning: The function `f` must return a `QArray` (not a qarray-like object!)
@@ -135,7 +135,7 @@ def timecallable(f: callable[[float], QArray]) -> CallableTimeArray:
 
     Args:
         f _(function returning qarray of shape (..., n, n))_: Function with signature
-            `(t: float) -> QArray` that returns the array $f(t)$.
+            `(t: float) -> QArray` that returns the qarray $f(t)$.
 
     Returns:
        _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -251,7 +251,7 @@ class TimeArray(eqx.Module):
             t: Time at which to evaluate the array.
 
         Returns:
-            Array evaluated at time $t$.
+            QArray evaluated at time $t$.
         """
 
     @abstractmethod
