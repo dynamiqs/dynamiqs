@@ -254,8 +254,7 @@ class SparseDIAQArray(QArray):
                 )
 
             out_tensor = jax.lax.cond(left_matmul, left_case, right_case, out_tensor)
-        return out_tensor
-        # return DenseQArray(self.dims, out_tensor)
+        return DenseQArray(self.dims, out_tensor)
 
     def _matmul_dia(self, other: SparseDIAQArray) -> QArray:
         diags = jnp.transpose(self.diags, (1, 0, 2))
