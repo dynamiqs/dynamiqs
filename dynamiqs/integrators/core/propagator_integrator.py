@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..time_array import ConstantTimeArray
-from .abstract_solver import BaseIntegrator, MESolveIntegrator, SESolveIntegrator
+from .abstract_solver import BaseIntegrator
 
 
 class PropagatorIntegrator(BaseIntegrator):
@@ -61,21 +61,3 @@ class PropagatorIntegrator(BaseIntegrator):
     @abstractmethod
     def forward(self, delta_t: Scalar, y: Array) -> Array:
         pass
-
-
-class _SESolvePropagatorIntegrator(PropagatorIntegrator, SESolveIntegrator):
-    pass
-
-
-class _MESolvePropagatorIntegrator(PropagatorIntegrator, MESolveIntegrator):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        # check that jump operators are time-independent
-        if not all(isinstance(L, ConstantTimeArray) for L in self.Ls):
-            raise TypeError(
-                'Solver `Propagator` requires time-independent jump operators.'
-            )
-
-        # extract the constant arrays from the `ConstantTimeArray` objects
-        self.Ls = [L.array for L in self.Ls]

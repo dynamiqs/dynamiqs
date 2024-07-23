@@ -2,18 +2,31 @@ import jax
 from jax import Array
 from jaxtyping import Scalar
 
-from ..core.propagator_solver import _MESolvePropagatorIntegrator
+from ...time_array import ConstantTimeArray
+from ..core.abstract_solver import MESolveIntegrator
+from ..core.propagator_solver import PropagatorIntegrator
 from ..result import Saved
 from ..utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 
 
-class MESolvePropagatorIntegrator(_MESolvePropagatorIntegrator):
+class MESolvePropagatorIntegrator(PropagatorIntegrator, MESolveIntegrator):
     # supports only ConstantTimeArray
     # TODO: support PWCTimeArray
     lindbladian: Array
 
     def __init__(self, *args):
         super().__init__(*args)
+
+        # check that jump operators are time-independent
+        if not all(isinstance(L, ConstantTimeArray) for L in self.Ls):
+            raise TypeError(
+                'Solver `Propagator` requires time-independent jump operators.'
+            )
+
+        # extract the constant arrays from the `ConstantTimeArray` objects
+        self.Ls = [L.array for L in self.Ls]
+
+        # convert to vectorized form
         self.lindbladian = slindbladian(self.H, self.Ls)  # (n^2, n^2)
         self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
 
