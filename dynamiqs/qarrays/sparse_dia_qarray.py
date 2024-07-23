@@ -283,6 +283,9 @@ class SparseDIAQArray(QArray):
         out_offsets = sorted(diag_dict.keys())
         out_diags = [diag_dict[offset] for offset in out_offsets]
 
+        if len(out_offsets) == 0:
+            return SparseDIAQArray(self.dims, (0,), jnp.zeros((self.shape[0], N)))
+
         return SparseDIAQArray(
             self.dims,
             tuple(out_offsets),
