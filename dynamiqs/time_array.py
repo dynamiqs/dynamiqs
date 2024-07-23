@@ -244,7 +244,7 @@ class TimeArray(eqx.Module):
         """
 
     @abstractmethod
-    def __call__(self, t: ScalarLike) -> Array:
+    def __call__(self, t: ScalarLike) -> QArray:
         """Returns the time-array evaluated at a given time.
 
         Args:
@@ -365,10 +365,10 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
     def __call__(self, t: ScalarLike) -> QArray:
-        def _zero(_: float) -> Array:
+        def _zero(_: float) -> QArray:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
-        def _pwc(t: float) -> Array:
+        def _pwc(t: float) -> QArray:
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
