@@ -250,8 +250,14 @@ class SparseDIAQArray(QArray):
     def __and__(self, y: QArray) -> QArray:
         return NotImplemented
 
-    def __pow__(self, y: Scalar) -> QArray:
-        return NotImplemented
+    def powm(self, n: ScalarLike) -> QArray:
+        result = self
+        for _ in range(n - 1):
+            result = result @ self
+        return result
+
+    def __pow__(self, n: ScalarLike) -> SparseDIAQArray:
+        return SparseDIAQArray(self.dims, self.offsets, jnp.power(self.diags, n))
 
 
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
