@@ -115,7 +115,7 @@ class Euler(_ODEFixedStep):
         This solver is not recommended for general use.
 
     Args:
-        dt _(float)_: Fixed time step.
+        dt: Fixed time step.
 
     Note-: Supported gradients
         This solver supports differentiation with
@@ -134,7 +134,7 @@ class Rouchon1(_ODEFixedStep):
     """First-order Rouchon method (fixed step size ODE solver).
 
     Args:
-        dt _(float)_: Fixed time step.
+        dt: Fixed time step.
 
     Note-: Supported gradients
         This solver supports differentiation with
