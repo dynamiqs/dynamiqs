@@ -30,7 +30,14 @@ from ..solver import (
     Tsit5,
 )
 from ..time_array import Shape, TimeArray
-from .sediffrax import SEDopri5, SEDopri8, SEEuler, SEKvaerno3, SEKvaerno5, SETsit5
+from .sediffrax import (
+    SESolveDopri5Integrator,
+    SESolveDopri8Integrator,
+    SESolveEulerIntegrator,
+    SESolveKvaerno3Integrator,
+    SESolveKvaerno5Integrator,
+    SESolveTsit5Integrator,
+)
 from .sepropagator import SEPropagator
 
 __all__ = ['sesolve']
@@ -172,12 +179,12 @@ def _sesolve(
 ) -> SEResult:
     # === select solver class
     solvers = {
-        Euler: SEEuler,
-        Dopri5: SEDopri5,
-        Dopri8: SEDopri8,
-        Tsit5: SETsit5,
-        Kvaerno3: SEKvaerno3,
-        Kvaerno5: SEKvaerno5,
+        Euler: SESolveEulerIntegrator,
+        Dopri5: SESolveDopri5Integrator,
+        Dopri8: SESolveDopri8Integrator,
+        Tsit5: SESolveTsit5Integrator,
+        Kvaerno3: SESolveKvaerno3Integrator,
+        Kvaerno5: SESolveKvaerno5Integrator,
         Propagator: SEPropagator,
     }
     solver_class = get_solver_class(solvers, solver)

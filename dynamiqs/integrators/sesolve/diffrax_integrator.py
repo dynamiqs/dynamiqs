@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import diffrax as dx
 
-from ..core.abstract_solver import SESolver
+from ..core.abstract_solver import SESolveIntegrator
 from ..core.diffrax_solver import (
-    DiffraxSolver,
-    Dopri5Solver,
-    Dopri8Solver,
-    EulerSolver,
-    Kvaerno3Solver,
-    Kvaerno5Solver,
-    Tsit5Solver,
+    DiffraxIntegrator,
+    Dopri5Integrator,
+    Dopri8Integrator,
+    EulerIntegrator,
+    Kvaerno3Integrator,
+    Kvaerno5Integrator,
+    Tsit5Integrator,
 )
 
 
-class SEDiffraxSolver(DiffraxSolver, SESolver):
+class SESolveDiffraxIntegrator(DiffraxIntegrator, SESolveIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Schrödinger term d|psi>/dt = - i H |psi>
@@ -22,25 +22,25 @@ class SEDiffraxSolver(DiffraxSolver, SESolver):
         return dx.ODETerm(vector_field)
 
 
-class SEEuler(SEDiffraxSolver, EulerSolver):
+class SESolveEulerIntegrator(SESolveDiffraxIntegrator, EulerIntegrator):
     pass
 
 
-class SEDopri5(SEDiffraxSolver, Dopri5Solver):
+class SESolveDopri5Integrator(SESolveDiffraxIntegrator, Dopri5Integrator):
     pass
 
 
-class SEDopri8(SEDiffraxSolver, Dopri8Solver):
+class SESolveDopri8Integrator(SESolveDiffraxIntegrator, Dopri8Integrator):
     pass
 
 
-class SETsit5(SEDiffraxSolver, Tsit5Solver):
+class SESolveTsit5Integrator(SESolveDiffraxIntegrator, Tsit5Integrator):
     pass
 
 
-class SEKvaerno3(SEDiffraxSolver, Kvaerno3Solver):
+class SESolveKvaerno3Integrator(SESolveDiffraxIntegrator, Kvaerno3Integrator):
     pass
 
 
-class SEKvaerno5(SEDiffraxSolver, Kvaerno5Solver):
+class SESolveKvaerno5Integrator(SESolveDiffraxIntegrator, Kvaerno5Integrator):
     pass

@@ -3,20 +3,20 @@ from __future__ import annotations
 import diffrax as dx
 import jax.numpy as jnp
 
-from ..core.abstract_solver import MESolver
+from ..core.abstract_solver import MESolveIntegrator
 from ..core.diffrax_solver import (
-    DiffraxSolver,
-    Dopri5Solver,
-    Dopri8Solver,
-    EulerSolver,
-    Kvaerno3Solver,
-    Kvaerno5Solver,
-    Tsit5Solver,
+    DiffraxIntegrator,
+    Dopri5Integrator,
+    Dopri8Integrator,
+    EulerIntegrator,
+    Kvaerno3Integrator,
+    Kvaerno5Integrator,
+    Tsit5Integrator,
 )
 from ..utils.utils import dag
 
 
-class MEDiffraxSolver(DiffraxSolver, MESolver):
+class MESolveDiffraxIntegrator(DiffraxIntegrator, MESolveIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
@@ -48,25 +48,25 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
         return dx.ODETerm(vector_field)
 
 
-class MEEuler(MEDiffraxSolver, EulerSolver):
+class MESolveEulerIntegrator(MESolveDiffraxIntegrator, EulerIntegrator):
     pass
 
 
-class MEDopri5(MEDiffraxSolver, Dopri5Solver):
+class MESolveDopri5Integrator(MESolveDiffraxIntegrator, Dopri5Integrator):
     pass
 
 
-class MEDopri8(MEDiffraxSolver, Dopri8Solver):
+class MESolveDopri8Integrator(MESolveDiffraxIntegrator, Dopri8Integrator):
     pass
 
 
-class METsit5(MEDiffraxSolver, Tsit5Solver):
+class MESolveTsit5Integrator(MESolveDiffraxIntegrator, Tsit5Integrator):
     pass
 
 
-class MEKvaerno3(MEDiffraxSolver, Kvaerno3Solver):
+class MESolveKvaerno3Integrator(MESolveDiffraxIntegrator, Kvaerno3Integrator):
     pass
 
 
-class MEKvaerno5(MEDiffraxSolver, Kvaerno5Solver):
+class MESolveKvaerno5Integrator(MESolveDiffraxIntegrator, Kvaerno5Integrator):
     pass

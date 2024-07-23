@@ -9,10 +9,10 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..time_array import ConstantTimeArray
-from .abstract_solver import BaseSolver, MESolver, SESolver
+from .abstract_solver import BaseIntegrator, MESolveIntegrator, SESolveIntegrator
 
 
-class PropagatorSolver(BaseSolver):
+class PropagatorIntegrator(BaseIntegrator):
     class Infos(eqx.Module):
         nsteps: Array
 
@@ -63,11 +63,11 @@ class PropagatorSolver(BaseSolver):
         pass
 
 
-class SEPropagatorSolver(PropagatorSolver, SESolver):
+class _SESolvePropagatorIntegrator(PropagatorIntegrator, SESolveIntegrator):
     pass
 
 
-class MEPropagatorSolver(PropagatorSolver, MESolver):
+class _MESolvePropagatorIntegrator(PropagatorIntegrator, MESolveIntegrator):
     def __init__(self, *args):
         super().__init__(*args)
 

@@ -9,10 +9,10 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..gradient import Autograd, CheckpointAutograd
-from .abstract_solver import BaseSolver
+from .abstract_solver import BaseIntegrator
 
 
-class DiffraxSolver(BaseSolver):
+class DiffraxIntegrator(BaseIntegrator):
     # Subclasses should implement:
     # - the attributes: stepsize_controller, dt0, max_steps, diffrax_solver, terms
     # - the methods: result, infos
@@ -24,7 +24,7 @@ class DiffraxSolver(BaseSolver):
     terms: dx.AbstractVar[dx.AbstractTerm]
 
     def __init__(self, *args):
-        # pass all init arguments to `BaseSolver`
+        # pass all init arguments to `BaseIntegrator`
         super().__init__(*args)
 
     def run(self) -> PyTree:
@@ -73,7 +73,7 @@ class DiffraxSolver(BaseSolver):
         pass
 
 
-class FixedSolver(DiffraxSolver):
+class FixedStepIntegrator(DiffraxIntegrator):
     # Subclasses should implement:
     # - the attributes: diffrax_solver, terms
     # - the methods: result
@@ -100,11 +100,11 @@ class FixedSolver(DiffraxSolver):
         return self.Infos(stats['num_steps'])
 
 
-class EulerSolver(FixedSolver):
+class EulerIntegrator(FixedStepIntegrator):
     diffrax_solver: dx.AbstractSolver = dx.Euler()
 
 
-class AdaptiveSolver(DiffraxSolver):
+class AdaptiveStepIntegrator(DiffraxIntegrator):
     # Subclasses should implement:
     # - the attributes: diffrax_solver, terms
     # - the methods: result
@@ -149,21 +149,21 @@ class AdaptiveSolver(DiffraxSolver):
         )
 
 
-class Dopri5Solver(AdaptiveSolver):
+class Dopri5Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Dopri5()
 
 
-class Dopri8Solver(AdaptiveSolver):
+class Dopri8Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Dopri8()
 
 
-class Tsit5Solver(AdaptiveSolver):
+class Tsit5Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Tsit5()
 
 
-class Kvaerno3Solver(AdaptiveSolver):
+class Kvaerno3Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Kvaerno3()
 
 
-class Kvaerno5Solver(AdaptiveSolver):
+class Kvaerno5Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Kvaerno5()

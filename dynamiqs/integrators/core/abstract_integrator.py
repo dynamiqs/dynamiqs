@@ -15,13 +15,13 @@ from ..time_array import TimeArray
 from ..utils.utils import expect
 
 
-class AbstractSolver(eqx.Module):
+class AbstractIntegrator(eqx.Module):
     @abstractmethod
     def run(self) -> PyTree:
         pass
 
 
-class BaseSolver(AbstractSolver):
+class BaseIntegrator(AbstractIntegrator):
     ts: Array
     y0: Array
     H: TimeArray
@@ -73,12 +73,12 @@ class BaseSolver(AbstractSolver):
         pass
 
 
-class SESolver(BaseSolver):
+class SESolveIntegrator(BaseIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return SEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
 
 
-class MESolver(BaseSolver):
+class MESolveIntegrator(BaseIntegrator):
     Ls: list[TimeArray]
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:

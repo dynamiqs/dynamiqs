@@ -9,8 +9,8 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 from jax import Array
 
-from ..core.abstract_solver import MESolver
-from ..core.diffrax_solver import FixedSolver
+from ..core.abstract_solver import MESolveIntegrator
+from ..core.diffrax_solver import FixedStepIntegrator
 from ..utils.utils.general import dag
 
 
@@ -31,7 +31,7 @@ class AbstractRouchonTerm(dx.AbstractTerm):
         pass
 
 
-class RouchonSolver(dx.AbstractSolver):
+class RouchonDXSolver(dx.AbstractSolver):
     term_structure = AbstractRouchonTerm
     interpolation_cls = LocalLinearInterpolation
 
@@ -48,13 +48,13 @@ class RouchonSolver(dx.AbstractSolver):
         pass
 
 
-class Rouchon1Solver(RouchonSolver):
+class Rouchon1DXSolver(RouchonDXSolver):
     def order(self, terms):
         return 1
 
 
-class MERouchon1(FixedSolver, MESolver):
-    diffrax_solver: dx.AbstractSolver = Rouchon1Solver()
+class MESolveRouchon1Integrator(FixedStepIntegrator, MESolveIntegrator):
+    diffrax_solver: dx.AbstractSolver = Rouchon1DXSolver()
 
     @property
     def Id(self) -> Array:

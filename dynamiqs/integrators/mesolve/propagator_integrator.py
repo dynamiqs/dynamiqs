@@ -2,12 +2,12 @@ import jax
 from jax import Array
 from jaxtyping import Scalar
 
-from ..core.propagator_solver import MEPropagatorSolver
+from ..core.propagator_solver import _MESolvePropagatorIntegrator
 from ..result import Saved
 from ..utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 
 
-class MEPropagator(MEPropagatorSolver):
+class MESolvePropagatorIntegrator(_MESolvePropagatorIntegrator):
     # supports only ConstantTimeArray
     # TODO: support PWCTimeArray
     lindbladian: Array

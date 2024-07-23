@@ -33,9 +33,16 @@ from ..solver import (
 )
 from ..time_array import Shape, TimeArray
 from ..utils.utils import todm
-from .mediffrax import MEDopri5, MEDopri8, MEEuler, MEKvaerno3, MEKvaerno5, METsit5
+from .mediffrax import (
+    MESolveDopri5Integrator,
+    MESolveDopri8Integrator,
+    MESolveEulerIntegrator,
+    MESolveKvaerno3Integrator,
+    MESolveKvaerno5Integrator,
+    MESolveTsit5Integrator,
+)
 from .mepropagator import MEPropagator
-from .merouchon import MERouchon1
+from .merouchon import MESolveRouchon1Integrator
 
 __all__ = ['mesolve']
 
@@ -203,13 +210,13 @@ def _mesolve(
 ) -> MEResult:
     # === select solver class
     solvers = {
-        Euler: MEEuler,
-        Rouchon1: MERouchon1,
-        Dopri5: MEDopri5,
-        Dopri8: MEDopri8,
-        Tsit5: METsit5,
-        Kvaerno3: MEKvaerno3,
-        Kvaerno5: MEKvaerno5,
+        Euler: MESolveEulerIntegrator,
+        Rouchon1: MESolveRouchon1Integrator,
+        Dopri5: MESolveDopri5Integrator,
+        Dopri8: MESolveDopri8Integrator,
+        Tsit5: MESolveTsit5Integrator,
+        Kvaerno3: MESolveKvaerno3Integrator,
+        Kvaerno5: MESolveKvaerno5Integrator,
         Propagator: MEPropagator,
     }
     solver_class = get_solver_class(solvers, solver)
