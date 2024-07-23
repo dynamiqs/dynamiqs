@@ -2,10 +2,11 @@ import jax
 from jax import Array
 from jaxtyping import Scalar
 
-from ..core.propagator_solver import SEPropagatorSolver
+from ..core.abstract_integrator import SESolveIntegrator
+from ..core.propagator_integrator import PropagatorIntegrator
 
 
-class SEPropagator(SEPropagatorSolver):
+class SESolvePropagatorIntegrator(PropagatorIntegrator, SESolveIntegrator):
     # supports only ConstantTimeArray
     # TODO: support PWCTimeArray
 
