@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike, PyTree
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver, _ODEAdaptiveStep
 from ..time_array import ConstantTimeArray, Shape, TimeArray
-from .abstract_solver import AbstractSolver
+from .core.abstract_integrator import AbstractIntegrator
 
 
 def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
@@ -62,16 +62,16 @@ def catch_xla_runtime_error(func: callable) -> callable:
     return wrapper
 
 
-def get_solver_class(
-    solvers: dict[Solver, AbstractSolver], solver: Solver
-) -> AbstractSolver:
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers)
+def get_integrator_class(
+    integrators: dict[Solver, AbstractIntegrator], solver: Solver
+) -> AbstractIntegrator:
+    if not isinstance(solver, tuple(integrators.keys())):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in integrators)
         raise TypeError(
             f'Solver of type `{type(solver).__name__}` is not supported (supported'
             f' solver types: {supported_str}).'
         )
-    return solvers[type(solver)]
+    return integrators[type(solver)]
 
 
 def is_shape(x: object) -> bool:

@@ -8,19 +8,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._checks import check_shape, check_times
-from .._utils import cdtype
-from ..core._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
-    catch_xla_runtime_error,
-    get_solver_class,
-)
-from ..gradient import Gradient
-from ..options import Options
-from ..result import MEResult
-from ..solver import (
+from ..._checks import check_shape, check_times
+from ..._utils import cdtype
+from ...gradient import Gradient
+from ...options import Options
+from ...result import MEResult
+from ...solver import (
     Dopri5,
     Dopri8,
     Euler,
@@ -31,13 +24,25 @@ from ..solver import (
     Solver,
     Tsit5,
 )
-from ..time_array import Shape, TimeArray
-from ..utils.utils import todm
-from .mediffrax import MEDopri5, MEDopri8, MEEuler, MEKvaerno3, MEKvaerno5, METsit5
-from .mepropagator import MEPropagator
-from .merouchon import MERouchon1
-
-__all__ = ['mesolve']
+from ...time_array import Shape, TimeArray
+from ...utils.utils import todm
+from .._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    _flat_vectorize,
+    catch_xla_runtime_error,
+    get_integrator_class,
+)
+from ..mesolve.diffrax_integrator import (
+    MESolveDopri5Integrator,
+    MESolveDopri8Integrator,
+    MESolveEulerIntegrator,
+    MESolveKvaerno3Integrator,
+    MESolveKvaerno5Integrator,
+    MESolveTsit5Integrator,
+)
+from ..mesolve.propagator_integrator import MESolvePropagatorIntegrator
+from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 
 def mesolve(
@@ -201,27 +206,29 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MEResult:
-    # === select solver class
-    solvers = {
-        Euler: MEEuler,
-        Rouchon1: MERouchon1,
-        Dopri5: MEDopri5,
-        Dopri8: MEDopri8,
-        Tsit5: METsit5,
-        Kvaerno3: MEKvaerno3,
-        Kvaerno5: MEKvaerno5,
-        Propagator: MEPropagator,
+    # === select integrator class
+    integrators = {
+        Euler: MESolveEulerIntegrator,
+        Rouchon1: MESolveRouchon1Integrator,
+        Dopri5: MESolveDopri5Integrator,
+        Dopri8: MESolveDopri8Integrator,
+        Tsit5: MESolveTsit5Integrator,
+        Kvaerno3: MESolveKvaerno3Integrator,
+        Kvaerno5: MESolveKvaerno5Integrator,
+        Propagator: MESolvePropagatorIntegrator,
     }
-    solver_class = get_solver_class(solvers, solver)
+    integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_class(tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops)
+    # === init integrator
+    integrator = integrator_class(
+        tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops
+    )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504
