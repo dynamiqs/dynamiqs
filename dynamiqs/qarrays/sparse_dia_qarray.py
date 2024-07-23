@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import warnings
 from collections import defaultdict
+from typing import get_args
 
 import equinox as eqx
 import jax
@@ -13,7 +14,7 @@ from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
 from qutip import Qobj
 
 from .dense_qarray import DenseQArray
-from .qarray import QArray
+from .qarray import QArray, QArrayLike
 
 
 class SparseDIAQArray(QArray):
@@ -50,6 +51,9 @@ class SparseDIAQArray(QArray):
         offsets = tuple(-x for x in self.offsets)
         return SparseDIAQArray(self.dims, offsets, diags)
 
+    def to_dense(self) -> Array:
+        return to_dense(self)
+
     def _trace(self) -> Array:
         main_diag_mask = jnp.asarray(self.offsets) == 0
         return jax.lax.cond(
@@ -60,6 +64,12 @@ class SparseDIAQArray(QArray):
 
     def norm(self) -> Array:
         return self._trace().real
+
+    def unit(self) -> SparseDIAQArray:
+        return SparseDIAQArray(self.offsets, self.diags / self.norm(), self.dims)
+
+    def __neg__(self) -> QArray:
+        return -1 * self
 
     def reshape(self, *shape: int) -> QArray:  # noqa: ARG002
         return NotImplemented
@@ -220,6 +230,7 @@ class SparseDIAQArray(QArray):
                 )
 
             out = jax.lax.cond(left_matmul, left_case, right_case, out)
+
         return DenseQArray(self.dims, out)
 
     def _matmul_dia(self, other: SparseDIAQArray) -> QArray:
@@ -247,7 +258,39 @@ class SparseDIAQArray(QArray):
 
         return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
 
-    def __and__(self, y: QArray) -> QArray:
+    def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
+        N = other.diags.shape[-1]
+        out_offsets = jnp.ravel(
+            jnp.asarray(self.offsets) * N + jnp.asarray(other.offsets)[:, None],
+            order='F',
+        )
+        out_diags = jnp.kron(self.diags, other.diags)
+        return tuple(out_offsets), out_diags
+
+    def _clean_kronecker_dia(
+        self, offsets: tuple[int, ...], diags: ArrayLike
+    ) -> SparseDIAQArray:
+        offsets = jnp.sort(jnp.asarray(offsets))
+        unique_offsets, inverse_indices = jnp.unique(offsets, return_inverse=True)
+        count = unique_offsets.shape[0]
+        out_diags = jnp.zeros((count, diags.shape[-1]))
+        for i in range(count):
+            mask = inverse_indices == i
+            out_diags = out_diags.at[i, :].set(jnp.sum(diags[mask, :], axis=0))
+        return SparseDIAQArray(
+            tuple(o.item() for o in unique_offsets), out_diags, self.dims
+        )
+
+    def __and__(self, other: QArrayLike) -> QArray:
+        if isinstance(other, SparseDIAQArray):
+            temp_o, temp_d = self._kronecker_dia(other=other)
+            return self._clean_kronecker_dia(temp_o, temp_d)
+
+        elif isinstance(other, get_args(QArrayLike)):
+            return DenseQArray(
+                other.dims, jnp.kron(self.to_dense(), jnp.asarray(other))
+            )
+
         return NotImplemented
 
     def _pow(self, power: int) -> QArray:  # noqa: ARG002

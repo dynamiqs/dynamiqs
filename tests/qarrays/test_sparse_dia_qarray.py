@@ -69,3 +69,11 @@ class TestSparseDIAQArray:
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
+
+    def test_kronecker(self, rtol=1e-05, atol=1e-08):
+        out_dia_dia = (self.sparseA & self.sparseB).to_dense()
+        out_dia_dense = self.sparseA & self.matrixB
+        out_dense_dense = jnp.kron(self.matrixA, self.matrixB)
+
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+        assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
