@@ -6,16 +6,16 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 from jax._src.lib import xla_client
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import PyTree
 
 from .._utils import obj_type_str
-from ..qarrays.types import asqarray
+from ..qarrays import QArrayLike, asqarray
 from ..solver import Solver, _ODEAdaptiveStep
 from ..time_array import ConstantTimeArray, Shape, TimeArray
 from .abstract_solver import AbstractSolver
 
 
-def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
+def _astimearray(x: QArrayLike | TimeArray) -> TimeArray:
     if isinstance(x, TimeArray):
         return x
     else:
@@ -25,7 +25,7 @@ def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
             return ConstantTimeArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be an array-like or a time-array object, but has type'
+                'Argument must be a qarray-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 
