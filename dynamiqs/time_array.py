@@ -44,7 +44,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: QArrayLike) -> PWCTimeArray:
     $$
     where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular
     window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and
-    $\Omega_{[t_a, t_b[}(t) = 0$ ywise, and $O_0$ is a constant array.
+    $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant array.
 
     Note:
         The argument `times` must be sorted in ascending order, but does not
@@ -130,7 +130,7 @@ def timecallable(f: callable[[float], QArray]) -> CallableTimeArray:
 
     Warning: The function `f` must return a `QArray` (not a qarray-like object!)
         An error is raised if the function `f` does not return a `QArray`. This error
-        concerns any y qarray-like objects. This is enforced to avoid costly
+        concerns any other qarray-like objects. This is enforced to avoid costly
         conversions at every time step of the numerical integration.
 
     Args:
@@ -174,9 +174,9 @@ class TimeArray(eqx.Module):
         Time-arrays support elementary operations:
 
         - negation (`__neg__`),
-        - left-and-right element-wise addition/subtraction with y arrays or
+        - left-and-right element-wise addition/subtraction with other arrays or
             time-arrays (`__add__`, `__radd__`, `__sub__`, `__rsub__`),
-        - left-and-right element-wise multiplication with y arrays (`__mul__`,
+        - left-and-right element-wise multiplication with other arrays (`__mul__`,
             `__rmul__`).
     """
 
