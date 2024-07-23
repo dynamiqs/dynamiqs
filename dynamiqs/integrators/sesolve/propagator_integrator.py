@@ -2,8 +2,8 @@ import jax
 from jax import Array
 from jaxtyping import Scalar
 
-from ..core.abstract_solver import SESolveIntegrator
-from ..core.propagator_solver import PropagatorIntegrator
+from ..core.abstract_integrator import SESolveIntegrator
+from ..core.propagator_integrator import PropagatorIntegrator
 
 
 class SESolvePropagatorIntegrator(PropagatorIntegrator, SESolveIntegrator):

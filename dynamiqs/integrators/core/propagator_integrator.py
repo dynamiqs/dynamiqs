@@ -8,8 +8,8 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..time_array import ConstantTimeArray
-from .abstract_solver import BaseIntegrator
+from ...time_array import ConstantTimeArray
+from .abstract_integrator import BaseIntegrator
 
 
 class PropagatorIntegrator(BaseIntegrator):

@@ -6,13 +6,13 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from .._utils import _concatenate_sort
-from ..gradient import Gradient
-from ..options import Options
-from ..result import MEResult, Result, Saved, SEResult
-from ..solver import Solver
-from ..time_array import TimeArray
-from ..utils.utils import expect
+from ..._utils import _concatenate_sort
+from ...gradient import Gradient
+from ...options import Options
+from ...result import MEResult, Result, Saved, SEResult
+from ...solver import Solver
+from ...time_array import TimeArray
+from ...utils.utils import expect
 
 
 class AbstractIntegrator(eqx.Module):

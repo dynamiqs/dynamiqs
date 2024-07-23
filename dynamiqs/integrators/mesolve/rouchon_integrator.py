@@ -9,9 +9,9 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 from jax import Array
 
-from ..core.abstract_solver import MESolveIntegrator
-from ..core.diffrax_solver import FixedStepIntegrator
-from ..utils.utils.general import dag
+from ...utils.utils.general import dag
+from ..core.abstract_integrator import MESolveIntegrator
+from ..core.diffrax_integrator import FixedStepIntegrator
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):

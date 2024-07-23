@@ -3,8 +3,9 @@ from __future__ import annotations
 import diffrax as dx
 import jax.numpy as jnp
 
-from ..core.abstract_solver import MESolveIntegrator
-from ..core.diffrax_solver import (
+from ...utils.utils import dag
+from ..core.abstract_integrator import MESolveIntegrator
+from ..core.diffrax_integrator import (
     DiffraxIntegrator,
     Dopri5Integrator,
     Dopri8Integrator,
@@ -13,7 +14,6 @@ from ..core.diffrax_solver import (
     Kvaerno5Integrator,
     Tsit5Integrator,
 )
-from ..utils.utils import dag
 
 
 class MESolveDiffraxIntegrator(DiffraxIntegrator, MESolveIntegrator):

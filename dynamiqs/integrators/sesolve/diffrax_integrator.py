@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import diffrax as dx
 
-from ..core.abstract_solver import SESolveIntegrator
-from ..core.diffrax_solver import (
+from ..core.abstract_integrator import SESolveIntegrator
+from ..core.diffrax_integrator import (
     DiffraxIntegrator,
     Dopri5Integrator,
     Dopri8Integrator,

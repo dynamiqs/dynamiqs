@@ -2,11 +2,11 @@ import jax
 from jax import Array
 from jaxtyping import Scalar
 
+from ...result import Saved
 from ...time_array import ConstantTimeArray
-from ..core.abstract_solver import MESolveIntegrator
-from ..core.propagator_solver import PropagatorIntegrator
-from ..result import Saved
-from ..utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
+from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
+from ..core.abstract_integrator import MESolveIntegrator
+from ..core.propagator_integrator import PropagatorIntegrator
 
 
 class MESolvePropagatorIntegrator(PropagatorIntegrator, MESolveIntegrator):

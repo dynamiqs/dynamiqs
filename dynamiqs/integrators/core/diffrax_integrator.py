@@ -8,8 +8,8 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
 
-from ..gradient import Autograd, CheckpointAutograd
-from .abstract_solver import BaseIntegrator
+from ...gradient import Autograd, CheckpointAutograd
+from .abstract_integrator import BaseIntegrator
 
 
 class DiffraxIntegrator(BaseIntegrator):

@@ -8,19 +8,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._checks import check_shape, check_times
-from .._utils import cdtype
-from ..core._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
-    catch_xla_runtime_error,
-    get_solver_class,
-)
-from ..gradient import Gradient
-from ..options import Options
-from ..result import MEResult
-from ..solver import (
+from ..._checks import check_shape, check_times
+from ..._utils import cdtype
+from ...gradient import Gradient
+from ...options import Options
+from ...result import MEResult
+from ...solver import (
     Dopri5,
     Dopri8,
     Euler,
@@ -31,9 +24,16 @@ from ..solver import (
     Solver,
     Tsit5,
 )
-from ..time_array import Shape, TimeArray
-from ..utils.utils import todm
-from .mediffrax import (
+from ...time_array import Shape, TimeArray
+from ...utils.utils import todm
+from .._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    _flat_vectorize,
+    catch_xla_runtime_error,
+    get_solver_class,
+)
+from ..mesolve.diffrax_integrator import (
     MESolveDopri5Integrator,
     MESolveDopri8Integrator,
     MESolveEulerIntegrator,
@@ -41,8 +41,8 @@ from .mediffrax import (
     MESolveKvaerno5Integrator,
     MESolveTsit5Integrator,
 )
-from .mepropagator import MEPropagator
-from .merouchon import MESolveRouchon1Integrator
+from ..mesolve.propagator_integrator import MESolvePropagatorIntegrator
+from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 __all__ = ['mesolve']
 
@@ -217,7 +217,7 @@ def _mesolve(
         Tsit5: MESolveTsit5Integrator,
         Kvaerno3: MESolveKvaerno3Integrator,
         Kvaerno5: MESolveKvaerno5Integrator,
-        Propagator: MEPropagator,
+        Propagator: MESolvePropagatorIntegrator,
     }
     solver_class = get_solver_class(solvers, solver)
 

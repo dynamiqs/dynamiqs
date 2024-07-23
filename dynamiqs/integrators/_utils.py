@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike, PyTree
 from .._utils import cdtype, obj_type_str
 from ..solver import Solver, _ODEAdaptiveStep
 from ..time_array import ConstantTimeArray, Shape, TimeArray
-from .abstract_solver import AbstractIntegrator
+from .core.abstract_integrator import AbstractIntegrator
 
 
 def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
