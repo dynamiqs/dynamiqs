@@ -8,6 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
+from ..qarrays import QArray
 from ..time_array import ConstantTimeArray
 from .abstract_solver import BaseSolver, MESolver, SESolver
 
@@ -59,7 +60,7 @@ class PropagatorSolver(BaseSolver):
         return self.result(saved, infos=self.Infos(nsteps))
 
     @abstractmethod
-    def forward(self, delta_t: Scalar, y: Array) -> Array:
+    def forward(self, delta_t: Scalar, y: QArray) -> QArray:
         pass
 
 

@@ -8,6 +8,7 @@ from jaxtyping import PyTree, Scalar
 
 from ..gradient import Gradient
 from ..options import Options
+from ..qarrays import QArray
 from ..result import MEResult, Result, Saved, SEResult
 from ..solver import Solver
 from ..time_array import TimeArray
@@ -22,9 +23,9 @@ class AbstractSolver(eqx.Module):
 
 class BaseSolver(AbstractSolver):
     ts: Array
-    y0: Array
+    y0: QArray
     H: TimeArray
-    Es: Array
+    Es: QArray
     solver: Solver
     gradient: Gradient | None
     options: Options
@@ -48,7 +49,7 @@ class BaseSolver(AbstractSolver):
 
         return Saved(ysave, Esave, extra)
 
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+    def collect_saved(self, saved: Saved, ylast: QArray) -> Saved:
         # if save_states is False save only last state
         if not self.options.save_states:
             saved = eqx.tree_at(
