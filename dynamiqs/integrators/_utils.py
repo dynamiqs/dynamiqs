@@ -62,16 +62,16 @@ def catch_xla_runtime_error(func: callable) -> callable:
     return wrapper
 
 
-def get_solver_class(
-    solvers: dict[Solver, AbstractIntegrator], solver: Solver
+def get_integrator_class(
+    integrators: dict[Solver, AbstractIntegrator], solver: Solver
 ) -> AbstractIntegrator:
-    if not isinstance(solver, tuple(solvers.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in solvers)
+    if not isinstance(solver, tuple(integrators.keys())):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in integrators)
         raise TypeError(
             f'Solver of type `{type(solver).__name__}` is not supported (supported'
             f' solver types: {supported_str}).'
         )
-    return solvers[type(solver)]
+    return integrators[type(solver)]
 
 
 def is_shape(x: object) -> bool:

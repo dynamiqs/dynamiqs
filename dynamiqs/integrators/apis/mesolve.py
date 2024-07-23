@@ -31,7 +31,7 @@ from .._utils import (
     _cartesian_vectorize,
     _flat_vectorize,
     catch_xla_runtime_error,
-    get_solver_class,
+    get_integrator_class,
 )
 from ..mesolve.diffrax_integrator import (
     MESolveDopri5Integrator,
@@ -206,8 +206,8 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MEResult:
-    # === select solver class
-    solvers = {
+    # === select integrator class
+    integrators = {
         Euler: MESolveEulerIntegrator,
         Rouchon1: MESolveRouchon1Integrator,
         Dopri5: MESolveDopri5Integrator,
@@ -217,16 +217,18 @@ def _mesolve(
         Kvaerno5: MESolveKvaerno5Integrator,
         Propagator: MESolvePropagatorIntegrator,
     }
-    solver_class = get_solver_class(solvers, solver)
+    integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_class(tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops)
+    # === init integrator
+    integrator = integrator_class(
+        tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops
+    )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504

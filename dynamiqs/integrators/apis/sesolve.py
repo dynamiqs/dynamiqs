@@ -28,7 +28,7 @@ from .._utils import (
     _cartesian_vectorize,
     _flat_vectorize,
     catch_xla_runtime_error,
-    get_solver_class,
+    get_integrator_class,
 )
 from ..sesolve.diffrax_integrator import (
     SESolveDopri5Integrator,
@@ -175,8 +175,8 @@ def _sesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> SEResult:
-    # === select solver class
-    solvers = {
+    # === select integrator class
+    integrators = {
         Euler: SESolveEulerIntegrator,
         Dopri5: SESolveDopri5Integrator,
         Dopri8: SESolveDopri8Integrator,
@@ -185,16 +185,16 @@ def _sesolve(
         Kvaerno5: SESolveKvaerno5Integrator,
         Propagator: SESolvePropagatorIntegrator,
     }
-    solver_class = get_solver_class(solvers, solver)
+    integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_class(tsave, psi0, H, exp_ops, solver, gradient, options)
+    # === init integrator
+    integrator = integrator_class(tsave, psi0, H, exp_ops, solver, gradient, options)
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504
