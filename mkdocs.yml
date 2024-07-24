@@ -139,9 +139,9 @@ nav:
   - Python API:
       - python_api/index.md
       - Quantum solvers:
-          - sesolve: python_api/solvers/sesolve.md
-          - mesolve: python_api/solvers/mesolve.md
-          - smesolve: python_api/solvers/smesolve.md
+          - sesolve: python_api/integrators/sesolve.md
+          - mesolve: python_api/integrators/mesolve.md
+          - smesolve: python_api/integrators/smesolve.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md

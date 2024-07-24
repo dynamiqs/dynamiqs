@@ -7,19 +7,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._checks import check_shape, check_times
-from .._utils import cdtype
-from ..core._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
-    catch_xla_runtime_error,
-    get_solver_class,
-)
-from ..gradient import Gradient
-from ..options import Options
-from ..result import SEResult
-from ..solver import (
+from ..._checks import check_shape, check_times
+from ..._utils import cdtype
+from ...gradient import Gradient
+from ...options import Options
+from ...result import SEResult
+from ...solver import (
     Dopri5,
     Dopri8,
     Euler,
@@ -29,11 +22,23 @@ from ..solver import (
     Solver,
     Tsit5,
 )
-from ..time_array import Shape, TimeArray
-from .sediffrax import SEDopri5, SEDopri8, SEEuler, SEKvaerno3, SEKvaerno5, SETsit5
-from .sepropagator import SEPropagator
-
-__all__ = ['sesolve']
+from ...time_array import Shape, TimeArray
+from .._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    _flat_vectorize,
+    catch_xla_runtime_error,
+    get_integrator_class,
+)
+from ..sesolve.diffrax_integrator import (
+    SESolveDopri5Integrator,
+    SESolveDopri8Integrator,
+    SESolveEulerIntegrator,
+    SESolveKvaerno3Integrator,
+    SESolveKvaerno5Integrator,
+    SESolveTsit5Integrator,
+)
+from ..sesolve.propagator_integrator import SESolvePropagatorIntegrator
 
 
 def sesolve(
@@ -170,26 +175,26 @@ def _sesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> SEResult:
-    # === select solver class
-    solvers = {
-        Euler: SEEuler,
-        Dopri5: SEDopri5,
-        Dopri8: SEDopri8,
-        Tsit5: SETsit5,
-        Kvaerno3: SEKvaerno3,
-        Kvaerno5: SEKvaerno5,
-        Propagator: SEPropagator,
+    # === select integrator class
+    integrators = {
+        Euler: SESolveEulerIntegrator,
+        Dopri5: SESolveDopri5Integrator,
+        Dopri8: SESolveDopri8Integrator,
+        Tsit5: SESolveTsit5Integrator,
+        Kvaerno3: SESolveKvaerno3Integrator,
+        Kvaerno5: SESolveKvaerno5Integrator,
+        Propagator: SESolvePropagatorIntegrator,
     }
-    solver_class = get_solver_class(solvers, solver)
+    integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_class(tsave, psi0, H, exp_ops, solver, gradient, options)
+    # === init integrator
+    integrator = integrator_class(tsave, psi0, H, exp_ops, solver, gradient, options)
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504
