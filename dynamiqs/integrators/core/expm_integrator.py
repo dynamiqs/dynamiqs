@@ -5,8 +5,8 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
+from ..._utils import _concatenate_sort
 from ...result import Saved
-from ...time_array import ConstantTimeArray, PWCTimeArray
 from ...utils.operators import eye
 from ...utils.utils.general import expm
 from .._utils import ispwc
@@ -26,27 +26,10 @@ class ExpmIntegrator(BaseIntegrator):
             )
 
     def run(self) -> PyTree:
-        # for a constant Hamiltonian, we only need to compute matrix exponentials
-        # at the asked-for times
-        if isinstance(self.H, ConstantTimeArray):
-            times = jnp.concatenate((jnp.asarray(self.t0).reshape(-1), self.ts))
-        # for a pwc Hamiltonian, we need to evaluate the matrix exponential
-        # for each pwc region, and moreover the times defining those regions may not
-        # coincide with the times specified in self.ts. So we need to evaluate the
-        # matrix exponential for all such regions
-        elif isinstance(self.H, PWCTimeArray):
-            times = jnp.sort(
-                jnp.concatenate(
-                    (jnp.asarray(self.t0).reshape(-1), self.H.times, self.ts)
-                )
-            )
-        # must be summed time array of constant or pwc Hamiltonians
-        else:
-            times = jnp.sort(
-                jnp.concatenate(
-                    (jnp.asarray(self.t0).reshape(-1), self.H.discontinuity_ts, self.ts)
-                )
-            )
+        # find times at which the Hamiltonian changes
+        t0 = jnp.asarray(self.t0).reshape(-1)
+        times = _concatenate_sort(t0, self.H.discontinuity_ts, self.ts)
+        # find the time differences
         _t_diffs = jnp.diff(times)
         # for times before t0, don't want to include in the propagator calculation
         t_diffs = jnp.where(times[:-1] < self.t0, 0.0, _t_diffs)
