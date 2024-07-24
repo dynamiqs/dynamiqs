@@ -6,8 +6,8 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import PropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray, TimeArray
-from .._utils import get_integrator_class
+from ...time_array import TimeArray
+from .._utils import get_integrator_class, ispwc
 from ..sepropagator.diffrax_integrator import SEPropagatorDiffraxIntegrator
 from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
@@ -50,19 +50,8 @@ def sepropagator(
             to access saved quantities, more details in
             [`dq.PropagatorResult`][dynamiqs.PropagatorResult].
     """
-    if isinstance(H, (ConstantTimeArray, PWCTimeArray)):
-        constant_or_pwc_check = True
-    elif isinstance(H, SummedTimeArray):
-        constant_or_pwc_check = all(
-            isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
-            for timearray in H.timearrays
-        )
-    else:
-        constant_or_pwc_check = False
-    if solver is None and constant_or_pwc_check:
-        solver = Expm()
-    elif solver is None:
-        solver = Tsit5()
+    if solver is None:
+        solver = Expm() if ispwc(H) else Tsit5()
     integrators = {
         Expm: SEPropagatorExpmIntegrator,
         Euler: SEPropagatorDiffraxIntegrator,

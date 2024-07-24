@@ -6,9 +6,10 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...result import Saved
-from ...time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray
+from ...time_array import ConstantTimeArray, PWCTimeArray
 from ...utils.operators import eye
 from ...utils.utils.general import expm
+from .._utils import ispwc
 from .abstract_integrator import BaseIntegrator
 
 
@@ -18,16 +19,7 @@ class ExpmIntegrator(BaseIntegrator):
 
         # check that Hamiltonian is either time-independent, piecewise constant
         # or a sum of such Hamiltonians
-        if isinstance(self.H, (ConstantTimeArray, PWCTimeArray)):
-            constant_or_pwc_check = True
-        elif isinstance(self.H, SummedTimeArray):
-            constant_or_pwc_check = all(
-                isinstance(timearray, (ConstantTimeArray, PWCTimeArray))
-                for timearray in self.H.timearrays
-            )
-        else:
-            constant_or_pwc_check = False
-        if not constant_or_pwc_check:
+        if not ispwc(self.H):
             raise TypeError(
                 'Solver `Expm` requires a time-independent Hamiltonian, '
                 'piece-wise constant Hamiltonian or sum of such Hamiltonians.'
