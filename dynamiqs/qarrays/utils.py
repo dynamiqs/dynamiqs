@@ -11,42 +11,60 @@ from .types import QArray
 __all__ = ['stack']
 
 
-def stack(qarrays: QArray | Sequence[QArray], axis: int = 0) -> QArray:
-    """Join a sequence of QArrays along a new axis.
+def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
+    """Join a sequence of qarrays along a new axis.
+
+    Warning:
+        All elements of the sequence `qarrays` must have identical types, shapes and
+        `dims` attributes. Additionally, when stacking qarrays of type
+        `SparseDIAQArray`, all elements must have identical `offsets` attributes.
 
     Args:
-        qarrays: The QArrays to be stacked.
-        axis: The axis in the result along which the input QArrays are stacked.
+        qarrays: Qarrays to stack.
+        axis: Axis in the result along which the input qarrays are stacked.
 
     Returns:
-        QArray: The stacked QArray.
-    """
-    if isinstance(qarrays, QArray):
-        return qarrays
+        Stacked qarray.
 
+    Examples:
+        >>> dq.stack([dq.fock(3, 0), dq.fock(3, 1)]).shape
+        DenseQArray: shape=(2, 3, 1), dims=(3,), dtype=complex64
+        [[[1.+0.j]
+          [0.+0.j]
+          [0.+0.j]]
+        <BLANKLINE>
+         [[0.+0.j]
+          [1.+0.j]
+          [0.+0.j]]]
+    """
     # check validity of input
     if len(qarrays) == 0:
-        raise ValueError('At least one QArray must be provided.')
+        raise ValueError('Argument `qarrays` must contain at least one element.')
     if not all(isinstance(q, QArray) for q in qarrays):
-        raise ValueError('All elements must be of type QArray.')
-    if not all(qarray.dims == qarrays[0].dims for qarray in qarrays):
-        raise ValueError('All elements must have the same dims.')
+        raise ValueError(
+            'Argument `qarrays` must contain only elements of type `QArray`.'
+        )
+    dims = qarrays[0].dims
+    if not all(q.dims == dims for q in qarrays):
+        raise ValueError(
+            'Argument `qarrays` must contain elements with identical `dims` attribute.'
+        )
 
     # stack inputs depending on type
-    dims = qarrays[0].dims
-    if all(isinstance(qarray, DenseQArray) for qarray in qarrays):
-        data = jnp.stack([qarray.data for qarray in qarrays], axis=axis)
+    if all(isinstance(q, DenseQArray) for q in qarrays):
+        data = jnp.stack([q.data for q in qarrays], axis=axis)
         return DenseQArray(dims, data)
-    elif all(isinstance(qarray, SparseDIAQArray) for qarray in qarrays):
-        if not all(qarray.offsets == qarrays[0].offsets for qarray in qarrays):
-            # todo: implement stacking with different offsets
-            raise NotImplementedError(
-                'All SparseDIAQArrays to be stacked must have the same offsets.'
-            )
-        diags = jnp.stack([x.diags for x in qarrays], axis=axis)
+    elif all(isinstance(q, SparseDIAQArray) for q in qarrays):
         offsets = qarrays[0].offsets
-        return SparseDIAQArray(dims, diags, offsets)
+        if not all(q.offsets == offsets for q in qarrays):
+            # TODO: implement stacking with different offsets
+            raise ValueError(
+                'Argument `qarrays` with elements of type `SparseDIAQArray` must have'
+                ' identical `offsets` attribute.'
+            )
+        diags = jnp.stack([q.diags for q in qarrays], axis=axis)
+        return SparseDIAQArray(dims, offsets, diags)
     else:
         raise NotImplementedError(
-            'Stacking different types of QArrays is not implemented.'
+            'Stacking qarrays with different types is not implemented.'
         )
