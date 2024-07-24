@@ -3,7 +3,7 @@ import pytest
 from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Tsit5
 
-from ..solver_tester import IntegratorTester
+from ..integrator_tester import IntegratorTester
 from .open_system import ocavity, otdqubit
 
 # we only test Tsit5 to keep the unit test suite fast

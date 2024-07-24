@@ -1,7 +1,7 @@
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Propagator
 
-from ..solver_tester import IntegratorTester
+from ..integrator_tester import IntegratorTester
 from .closed_system import cavity
 
 

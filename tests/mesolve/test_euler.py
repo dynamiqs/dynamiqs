@@ -3,7 +3,7 @@ import pytest
 from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Euler
 
-from ..solver_tester import IntegratorTester
+from ..integrator_tester import IntegratorTester
 from .open_system import ocavity, otdqubit
 
 
