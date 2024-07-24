@@ -2,7 +2,16 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import Options, constant, eye, propagator, pwc, rand_herm, sigmax, sigmay
+from dynamiqs import (
+    Options,
+    constant,
+    eye,
+    pwc,
+    rand_herm,
+    sepropagator,
+    sigmax,
+    sigmay,
+)
 from dynamiqs.solver import Tsit5
 
 from ..sesolve.closed_system import cavity, tdqubit
@@ -15,7 +24,7 @@ class TestPropagator(SolverTester):
         params = system.params_default
         H = system.H(params)
         y0 = system.y0(params)
-        propresult = propagator(H, system.tsave)
+        propresult = sepropagator(H, system.tsave)
         true_ysave = system.states(system.tsave)
         prop_ysave = jnp.einsum('ijk,kd->ijd', propresult.propagators, y0)
         errs = jnp.linalg.norm(true_ysave - prop_ysave, axis=(-2, -1))
@@ -31,7 +40,7 @@ class TestPropagator(SolverTester):
         t = 10.0
         tsave = jnp.linspace(0.0, t, 3)
         options = Options(save_states=save_states)
-        propresult = propagator(H, tsave, solver=solver, options=options).propagators
+        propresult = sepropagator(H, tsave, solver=solver, options=options).propagators
         if save_states:
             Hs = jnp.einsum('...ij,t->...tij', H.array, tsave)
             trueresult = jax.scipy.linalg.expm(-1j * Hs)
@@ -49,7 +58,7 @@ class TestPropagator(SolverTester):
         H = pwc(times, values, array)
         tsave = jnp.asarray([0.5, 1.0, 2.0])
         options = Options(save_states=save_states)
-        propresult = propagator(H, tsave, solver=solver, options=options).propagators
+        propresult = sepropagator(H, tsave, solver=solver, options=options).propagators
         U0 = eye(H.shape[-1])
         U1 = jax.scipy.linalg.expm(-1j * H.array * 3.0 * 0.5)
         U2 = jax.scipy.linalg.expm(-1j * H.array * -2.0 * 1.0)
@@ -71,7 +80,7 @@ class TestPropagator(SolverTester):
         H = H_1 + H_2
         tsave = jnp.asarray([0.5, 1.0, 2.5])
         options = Options(save_states=save_states)
-        propresult = propagator(H, tsave, solver=solver, options=options).propagators
+        propresult = sepropagator(H, tsave, solver=solver, options=options).propagators
         U0 = eye(H.shape[-1])
         U1 = jax.scipy.linalg.expm(-1j * (H_1.array * 3.0 + H_2.array * (-5.0)) * 0.5)
         U2 = jax.scipy.linalg.expm(-1j * (H_1.array * (-2.0) + H_2.array * 1.0) * 1.0)

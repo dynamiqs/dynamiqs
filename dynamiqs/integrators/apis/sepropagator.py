@@ -1,22 +1,18 @@
 from __future__ import annotations
 
-import equinox as eqx
-import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
-from ..core.expm_solver import ExpmSolver
-from ..gradient import Gradient
-from ..options import Options
-from ..result import PropagatorResult, Saved
-from ..sesolve import sesolve
-from ..solver import Expm, Solver, Tsit5
-from ..time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray, TimeArray
-from ..utils.operators import eye
-
-__all__ = ['propagator']
+from ...gradient import Gradient
+from ...options import Options
+from ...result import PropagatorResult
+from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
+from ...time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray, TimeArray
+from .._utils import get_integrator_class
+from ..sepropagator.diffrax_integrator import SEPropagatorDiffraxIntegrator
+from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
-def propagator(
+def sepropagator(
     H: ArrayLike | TimeArray,
     tsave: ArrayLike,
     *,
@@ -65,28 +61,18 @@ def propagator(
         constant_or_pwc_check = False
     if solver is None and constant_or_pwc_check:
         solver = Expm()
-        solver.assert_supports_gradient(gradient)
-        solver_class = ExpmSolver(tsave, None, H, None, solver, gradient, options)
-        return solver_class.run()
-    else:
-        solver = Tsit5() if solver is None else solver
-        initial_states = eye(H.shape[-1])[..., None]
-        options = eqx.tree_at(
-            lambda x: x.cartesian_batching, options, True, is_leaf=lambda x: x is None
-        )
-        seresult = sesolve(
-            H, initial_states, tsave, solver=solver, gradient=gradient, options=options
-        )
-        if options.save_states:
-            # indices are ...i, t, j. Want to permute them to
-            # t, j, i such that the t index is first and each
-            # column of the propogator corresponds to each initial state
-            ndim = len(seresult.states.shape) - 1
-            perm = [*list(range(ndim - 3)), ndim - 2, ndim - 1, ndim - 3]
-            propagators = jnp.transpose(seresult.states[..., 0], perm)
-        else:
-            # otherwise, sesolve has only saved the final states
-            # so we only need to permute the final two axes
-            propagators = seresult.states[..., 0].swapaxes(-1, -2)
-        saved = Saved(propagators, None, None)
-        return PropagatorResult(tsave, solver, gradient, options, saved, seresult.infos)
+    elif solver is None:
+        solver = Tsit5()
+    integrators = {
+        Expm: SEPropagatorExpmIntegrator,
+        Euler: SEPropagatorDiffraxIntegrator,
+        Dopri5: SEPropagatorDiffraxIntegrator,
+        Dopri8: SEPropagatorDiffraxIntegrator,
+        Tsit5: SEPropagatorDiffraxIntegrator,
+        Kvaerno3: SEPropagatorDiffraxIntegrator,
+        Kvaerno5: SEPropagatorDiffraxIntegrator,
+    }
+    integrator_class = get_integrator_class(integrators, solver)
+    solver.assert_supports_gradient(gradient)
+    integrator = integrator_class(tsave, None, H, None, solver, gradient, options)
+    return integrator.run()

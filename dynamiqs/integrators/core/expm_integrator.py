@@ -5,14 +5,14 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from ..result import PropagatorResult, Saved
-from ..time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray
-from ..utils.operators import eye
-from ..utils.utils.general import expm
-from .abstract_solver import BaseSolver
+from ...result import Saved
+from ...time_array import ConstantTimeArray, PWCTimeArray, SummedTimeArray
+from ...utils.operators import eye
+from ...utils.utils.general import expm
+from .abstract_integrator import BaseIntegrator
 
 
-class ExpmSolver(BaseSolver):
+class ExpmIntegrator(BaseIntegrator):
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -92,7 +92,5 @@ class ExpmSolver(BaseSolver):
         saved = self.collect_saved(saved, final_prop)
         return self.result(saved)
 
-    def result(self, saved: Saved, infos: PyTree | None = None) -> PropagatorResult:
-        return PropagatorResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
-        )
+    def infos(self, stats: dict[str, Array]) -> PyTree:
+        pass
