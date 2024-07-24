@@ -16,6 +16,8 @@ from qutip import Qobj
 from .dense_qarray import DenseQArray
 from .qarray import QArray, QArrayLike
 
+__all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
+
 
 class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
