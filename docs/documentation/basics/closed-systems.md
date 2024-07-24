@@ -123,7 +123,7 @@ import dynamiqs as dq
 psi0 = dq.ground()
 H = dq.sigmay()
 tsave = jnp.linspace(0, 1.0, 11)
-res = dq.propagator(H, tsave)
+res = dq.sepropagator(H, tsave)
 print(res.propagators[-1])  # print the final propagator
 ```
 
