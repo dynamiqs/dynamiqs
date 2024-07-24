@@ -10,7 +10,7 @@ from ..apis.sesolve import _sesolve
 from ..core.abstract_integrator import SEPropagatorIntegrator
 
 
-class SEPropagatorDiffraxIntegrator(SEPropagatorIntegrator):
+class SEPropagatorDynamiqsIntegrator(SEPropagatorIntegrator):
     def run(self) -> PyTree:
         # for technical reasons, matrix-matrix product (for square matrices) is about
         # 20% faster than matrix-vector product. So rather than directly calling

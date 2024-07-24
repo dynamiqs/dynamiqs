@@ -10,7 +10,7 @@ from ...result import PropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
 from .._utils import _astimearray, get_integrator_class, ispwc
-from ..sepropagator.diffrax_integrator import SEPropagatorDiffraxIntegrator
+from ..sepropagator.dynamiqs_integrator import SEPropagatorDynamiqsIntegrator
 from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
@@ -65,12 +65,12 @@ def sepropagator(
         solver = Expm() if ispwc(H) else Tsit5()
     integrators = {
         Expm: SEPropagatorExpmIntegrator,
-        Euler: SEPropagatorDiffraxIntegrator,
-        Dopri5: SEPropagatorDiffraxIntegrator,
-        Dopri8: SEPropagatorDiffraxIntegrator,
-        Tsit5: SEPropagatorDiffraxIntegrator,
-        Kvaerno3: SEPropagatorDiffraxIntegrator,
-        Kvaerno5: SEPropagatorDiffraxIntegrator,
+        Euler: SEPropagatorDynamiqsIntegrator,
+        Dopri5: SEPropagatorDynamiqsIntegrator,
+        Dopri8: SEPropagatorDynamiqsIntegrator,
+        Tsit5: SEPropagatorDynamiqsIntegrator,
+        Kvaerno3: SEPropagatorDynamiqsIntegrator,
+        Kvaerno5: SEPropagatorDynamiqsIntegrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
     solver.assert_supports_gradient(gradient)
