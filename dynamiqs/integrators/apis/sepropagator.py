@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from functools import partial
+
+import jax
 import jax.numpy as jnp
-from jaxtyping import ArrayLike
+from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -9,7 +12,7 @@ from ...options import Options
 from ...result import PropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
-from .._utils import _astimearray, get_integrator_class, ispwc
+from .._utils import _astimearray, catch_xla_runtime_error, get_integrator_class, ispwc
 from ..sepropagator.dynamiqs_integrator import SEPropagatorDynamiqsIntegrator
 from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
@@ -60,6 +63,18 @@ def sepropagator(
     _check_sepropagator_args(H)
     tsave = check_times(tsave, 'tsave')
 
+    return _sepropagator(H, tsave, solver, gradient, options)
+
+
+@catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _sepropagator(
+    H: TimeArray,
+    tsave: Array,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> PropagatorResult:
     # === select and check integrator class
     if solver is None:  # default solver
         solver = Expm() if ispwc(H) else Tsit5()
