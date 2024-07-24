@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
+from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...result import PropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
-from .._utils import get_integrator_class, ispwc
+from .._utils import _astimearray, get_integrator_class, ispwc
 from ..sepropagator.diffrax_integrator import SEPropagatorDiffraxIntegrator
 from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
@@ -50,7 +52,16 @@ def sepropagator(
             to access saved quantities, more details in
             [`dq.PropagatorResult`][dynamiqs.PropagatorResult].
     """
-    if solver is None:
+    # === convert arguments
+    H = _astimearray(H)
+    tsave = jnp.asarray(tsave)
+
+    # === check arguments
+    _check_sepropagator_args(H)
+    tsave = check_times(tsave, 'tsave')
+
+    # === select and check integrator class
+    if solver is None:  # default solver
         solver = Expm() if ispwc(H) else Tsit5()
     integrators = {
         Expm: SEPropagatorExpmIntegrator,
@@ -64,4 +75,10 @@ def sepropagator(
     integrator_class = get_integrator_class(integrators, solver)
     solver.assert_supports_gradient(gradient)
     integrator = integrator_class(tsave, None, H, None, solver, gradient, options)
+
+    # === run integrator and return result
     return integrator.run()
+
+
+def _check_sepropagator_args(H: TimeArray):
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})

@@ -12,7 +12,7 @@ from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import TimeArray, constant
+from dynamiqs.time_array import TimeArray
 
 from ..system import System
 
@@ -56,7 +56,7 @@ class Cavity(ClosedSystem):
         self.params_default = self.Params(delta, alpha0)
 
     def H(self, params: PyTree) -> ArrayLike | TimeArray:
-        return constant(params.delta * dq.number(self.n))
+        return params.delta * dq.number(self.n)
 
     def y0(self, params: PyTree) -> Array:
         return dq.coherent(self.n, params.alpha0)
