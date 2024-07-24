@@ -78,6 +78,12 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
 
+### QArray utilities
+
+::: dynamiqs.qarrays.utils
+    options:
+        table: true
+
 ### JAX-related utilities
 
 ::: dynamiqs.utils.jax_utils
