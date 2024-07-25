@@ -97,7 +97,6 @@ def sesolve(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Propagator`][dynamiqs.solver.Propagator]).
-
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
