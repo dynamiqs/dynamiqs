@@ -202,19 +202,13 @@ class PropagatorResult(Result):
         options _(Options)_: Options used.
 
     Note-: Result of running multiple simulations concurrently
-        The resulting propagators are batched according to the
-        leading dimensions of the Hamiltonian `H`. In this case, there
-        is no sense of flat batching because the only object to batch over is
-        the Hamiltonian. Therefore setting `cartesian_batching=False`
-        will throw an error. This situation is to be contrasted with
-        [`dq.sesolve`][dynamiqs.sesolve], where the initial states are explicitly
-        specified and one can have flat batching over the Hamiltonian and
-         initial states.
+        The resulting propagators are batched according to the leading
+        dimensions of the Hamiltonian `H`. For example if `H` has shape
+        _(2, 3, n, n)_, then `propagators` has shape _(2, 3, ntsave, n, n)_.
 
         See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
-
     """
 
     @property
