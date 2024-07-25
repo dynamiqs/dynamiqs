@@ -21,7 +21,7 @@ def sepropagator(
     H: ArrayLike | TimeArray,
     tsave: ArrayLike,
     *,
-    solver: Solver = None,
+    solver: Solver | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> SEPropagatorResult:
@@ -95,7 +95,7 @@ def sepropagator(
 def _sepropagator(
     H: TimeArray,
     tsave: Array,
-    solver: Solver,
+    solver: Solver | None,
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
