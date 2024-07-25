@@ -217,10 +217,18 @@ class SEPropagatorResult(Result):
 
     @property
     def states(self) -> Array:
-        raise NotImplementedError(
-            'states is not an attribute of SEPropagatorResult.'
-            'The propagators can be accessed through the `.propagators` attribute.'
+        raise AttributeError(
+            '`SEPropagatorResult` object has no attribute `states`. To access'
+            ' saved propagators, use the `propagators` attribute.'
         )
+
+    @property
+    def expects(self) -> Array | None:
+        raise AttributeError('`SEPropagatorResult` object has no attribute `expects`.')
+
+    @property
+    def extra(self) -> PyTree | None:
+        raise AttributeError('`SEPropagatorResult` object has no attribute `extra`.')
 
     def _str_parts(self) -> dict[str, str]:
         return {
