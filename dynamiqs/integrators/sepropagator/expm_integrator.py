@@ -69,6 +69,3 @@ class SEPropagatorExpmIntegrator(SEPropagatorIntegrator):
         saved = Saved(propagators, None, None)
         saved = self.collect_saved(saved, final_prop)
         return self.result(saved)
-
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        pass
