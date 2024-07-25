@@ -68,8 +68,7 @@ def sesolve(
 
     Note-: Defining a time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
-        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
