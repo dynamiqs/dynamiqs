@@ -224,10 +224,10 @@ class SEPropagatorResult(Result):
 
     def _str_parts(self) -> dict[str, str]:
         return {
-            'Solver  ': type(self.solver).__name__,
-            'Gradient': (
+            'Solver     ': type(self.solver).__name__,
+            'Gradient   ': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
-            'Propagator  ': array_str(self.propagators),
-            'Infos   ': self.infos if self.infos is not None else None,
+            'Propagators': array_str(self.propagators),
+            'Infos      ': self.infos if self.infos is not None else None,
         }
