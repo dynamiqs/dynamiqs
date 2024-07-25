@@ -87,6 +87,8 @@ def sepropagator(
     _check_sepropagator_args(H)
     tsave = check_times(tsave, 'tsave')
 
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
     return _sepropagator(H, tsave, solver, gradient, options)
 
 
@@ -99,9 +101,10 @@ def _sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === select and check integrator class
+    # === select integrator class
     if solver is None:  # default solver
         solver = Expm() if ispwc(H) else Tsit5()
+
     integrators = {
         Expm: SEPropagatorExpmIntegrator,
         Euler: SEPropagatorDynamiqsIntegrator,
@@ -112,12 +115,20 @@ def _sepropagator(
         Kvaerno5: SEPropagatorDynamiqsIntegrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
+
+    # === check gradient is supported
     solver.assert_supports_gradient(gradient)
+
+    # === init integrator
     integrator = integrator_class(tsave, None, H, None, solver, gradient, options)
 
-    # === run integrator and return result
-    return integrator.run()
+    # === run integrator
+    result = integrator.run()
+
+    # === return result
+    return result  # noqa: RET504
 
 
 def _check_sepropagator_args(H: TimeArray):
+    # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
