@@ -27,34 +27,58 @@ def sepropagator(
 ) -> SEPropagatorResult:
     r"""Compute the propagator of the Schrödinger equation.
 
-    This computation is done in one of two ways. If `solver` is set to `None`
-    and if the Hamiltonian is of type
-    [`dq.ConstantTimeArray`][dynamiqs.ConstantTimeArray] or
-    [`dq.PWCTimeArray`][dynamiqs.PWCTimeArray], then the propagator is computed
-    by appropriately exponentiating the Hamiltonian. On the other hand if the solver is
-    specified or if the Hamiltonian is not constant or piece-wise constant, we solve
-    the Schrödinger equation using [`dq.sesolve`][dynamiqs.sesolve] and batching over
-    all initial states.
+    This function computes the propagator $U(t)$ at time $t$ of the Schrödinger
+    equation (with $\hbar=1$)
+    $$
+        U(t) = \mathscr{T}\exp\left(-i\int_0^tH(t')\dt'\right),
+    $$
+    where $\mathscr{T}$ is the time-ordering symbol and $H$ is the system's
+    Hamiltonian. The formula simplifies to $U(t)=e^{-iHt}$ if the Hamiltonian
+    does not depend on time.
+
+    If the Hamiltonian is constant or piecewise constant, the propagator is
+    computed by directly exponentiating the Hamiltonian. Otherwise, the
+    propagator is computed by solving the Schrödinger equation with an ODE solver.
+
+    Note-: Defining a time-dependent Hamiltonian
+        If the Hamiltonian depends on time, it can be converted to a time-array using
+        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
+        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.timecallable()`][dynamiqs.timecallable]. See the
+        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+        tutorial for more details.
+
+    Note-: Running multiple simulations concurrently
+        The Hamiltonian `H` can be batched to compute multiple propagators
+        concurrently. All other arguments are common to every batch. See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
 
     Args:
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
-            are saved. The equation is solved from `tsave[0]` to
-            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        solver: Solver for the integration. If solver is `None` (default value) then we
-            redirect to [`dq.solver.Expm`][dynamiqs.solver.Expm] or
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] depending on the type of
-            the input Hamiltonian. See [`dq.sesolve`][dynamiqs.sesolve]
-            for a list of supported solvers.
+            are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
+            or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        solver: Solver for the integration. Defaults to `None` which redirects
+            to [`dq.solver.Expm`][dynamiqs.solver.Expm] (explicit matrix
+            exponentiation) or [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5]
+            depending on the Hamiltonian type (supported:
+            [`Expm`][dynamiqs.solver.Expm],
+            [`Tsit5`][dynamiqs.solver.Tsit5],
+            [`Dopri5`][dynamiqs.solver.Dopri5],
+            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
+            [`Euler`][dynamiqs.solver.Euler]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
         [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult] object holding
-            the result of the propagator computation. Use the attribute `propagator`
-            to access saved quantities, more details in
+            the result of the propagator computation. Use the attribute
+            `propagators` to access saved quantities, more details in
             [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult].
-    """
+    """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
     tsave = jnp.asarray(tsave)
