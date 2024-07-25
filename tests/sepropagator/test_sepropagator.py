@@ -18,7 +18,7 @@ from ..sesolve.closed_system import cavity, tdqubit
 from ..solver_tester import SolverTester
 
 
-class TestPropagator(SolverTester):
+class TestSEPropagator(SolverTester):
     @pytest.mark.parametrize('system', [cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):
         params = system.params_default
