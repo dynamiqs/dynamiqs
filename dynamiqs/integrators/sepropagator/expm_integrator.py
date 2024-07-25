@@ -17,12 +17,12 @@ class SEPropagatorExpmIntegrator(SEPropagatorIntegrator):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # check that Hamiltonian is either time-independent, piecewise constant
-        # or a sum of such Hamiltonians
+        # check that Hamiltonian is constant or piecewise constant, or a sum of
+        # such Hamiltonians
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a time-independent Hamiltonian, '
-                'piece-wise constant Hamiltonian or sum of such Hamiltonians.'
+                'Solver `Expm` requires a constant or piecewise constant'
+                ' Hamiltonian.'
             )
 
     def run(self) -> PyTree:
