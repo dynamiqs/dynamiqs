@@ -91,10 +91,6 @@ class Expm(Solver):
     r"""Explicit matrix exponentiation to compute propagators.
 
     Warning:
-        This solver is not recommended for open systems of large dimension, due to
-        the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian exponential.
-
-    Warning:
         This solver only supports constant or piecewise constant Hamiltonian.
 
     Note-: Supported gradients
