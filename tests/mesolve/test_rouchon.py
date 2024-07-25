@@ -3,11 +3,11 @@ import pytest
 from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Rouchon1
 
-from ..solver_tester import SolverTester
+from ..integrator_tester import IntegratorTester
 from .open_system import ocavity, otdqubit
 
 
-class TestMERouchon1(SolverTester):
+class TestMESolveRouchon1(IntegratorTester):
     @pytest.mark.parametrize('system', [ocavity, otdqubit])
     def test_correctness(self, system):
         solver = Rouchon1(dt=1e-4)
