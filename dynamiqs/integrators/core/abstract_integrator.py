@@ -91,7 +91,7 @@ class MESolveIntegrator(BaseIntegrator):
 
 
 class SEPropagatorIntegrator(BaseIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> PropagatorResult:
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return PropagatorResult(
             self.ts, self.solver, self.gradient, self.options, saved, infos
         )
