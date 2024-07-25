@@ -12,10 +12,10 @@ from ..core.abstract_integrator import SEPropagatorIntegrator
 
 class SEPropagatorDynamiqsIntegrator(SEPropagatorIntegrator):
     def run(self) -> PyTree:
-        # for technical reasons, matrix-matrix product (for square matrices) is about
-        # 20% faster than matrix-vector product. So rather than directly calling
-        # sesolve, here we call _sesolve instead and specify the initial state as
-        # a square matrix (the identity matrix)
+        # Square matrix-matrix product is faster than batched matrix-vector
+        # product, so rather than directly calling sesolve on batched input
+        # states, we call _sesolve instead and specify the initial state as a
+        # square matrix (the identity matrix).
         initial_states = eye(self.H.shape[-1])
         n_batch = (self.H.in_axes, Shape(), Shape(), Shape(), Shape(), Shape(), Shape())
         out_axes = SEResult(False, False, False, False, 0, 0)
