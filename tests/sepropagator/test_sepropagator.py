@@ -14,11 +14,11 @@ from dynamiqs import (
 )
 from dynamiqs.solver import Tsit5
 
+from ..integrator_tester import IntegratorTester
 from ..sesolve.closed_system import cavity, tdqubit
-from ..solver_tester import SolverTester
 
 
-class TestSEPropagator(SolverTester):
+class TestSEPropagator(IntegratorTester):
     @pytest.mark.parametrize('system', [cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):
         params = system.params_default
