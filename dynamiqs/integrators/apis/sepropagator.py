@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
-from ...result import PropagatorResult
+from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
 from .._utils import _astimearray, catch_xla_runtime_error, get_integrator_class, ispwc
@@ -24,7 +24,7 @@ def sepropagator(
     solver: Solver = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> PropagatorResult:
+) -> SEPropagatorResult:
     r"""Compute the propagator of the Schrödinger equation.
 
     This computation is done in one of two ways. If `solver` is set to `None`
@@ -50,10 +50,10 @@ def sepropagator(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.PropagatorResult`][dynamiqs.PropagatorResult] object holding
+        [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult] object holding
             the result of the propagator computation. Use the attribute `propagator`
             to access saved quantities, more details in
-            [`dq.PropagatorResult`][dynamiqs.PropagatorResult].
+            [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult].
     """
     # === convert arguments
     H = _astimearray(H)
@@ -74,7 +74,7 @@ def _sepropagator(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> PropagatorResult:
+) -> SEPropagatorResult:
     # === select and check integrator class
     if solver is None:  # default solver
         solver = Expm() if ispwc(H) else Tsit5()

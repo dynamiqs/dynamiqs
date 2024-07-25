@@ -9,7 +9,7 @@ from jaxtyping import PyTree, Scalar
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...options import Options
-from ...result import MEResult, PropagatorResult, Result, Saved, SEResult
+from ...result import MEResult, Result, Saved, SEPropagatorResult, SEResult
 from ...solver import Solver
 from ...time_array import TimeArray
 from ...utils.utils import expect
@@ -92,6 +92,6 @@ class MESolveIntegrator(BaseIntegrator):
 
 class SEPropagatorIntegrator(BaseIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return PropagatorResult(
+        return SEPropagatorResult(
             self.ts, self.solver, self.gradient, self.options, saved, infos
         )

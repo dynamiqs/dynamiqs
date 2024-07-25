@@ -168,7 +168,7 @@ nav:
           - Results:
               - SEResult: python_api/result/SEResult.md
               - MEResult: python_api/result/MEResult.md
-              - PropagatorResult: python_api/result/PropagatorResult.md
+              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md

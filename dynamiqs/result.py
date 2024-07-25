@@ -8,7 +8,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult', 'PropagatorResult']
+__all__ = ['SEResult', 'MEResult', 'SEPropagatorResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -190,7 +190,7 @@ class MEResult(Result):
     """
 
 
-class PropagatorResult(Result):
+class SEPropagatorResult(Result):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
@@ -218,7 +218,7 @@ class PropagatorResult(Result):
     @property
     def states(self) -> Array:
         raise NotImplementedError(
-            'states is not an attribute of PropagatorResult.'
+            'states is not an attribute of SEPropagatorResult.'
             'The propagators can be accessed through the `.propagators` attribute.'
         )
 
