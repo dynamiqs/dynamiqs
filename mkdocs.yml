@@ -142,7 +142,7 @@ nav:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
           - smesolve: python_api/integrators/smesolve.md
-          - sepropagator: python_api/solvers/sepropagator.md
+          - sepropagator: python_api/integrators/sepropagator.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -168,7 +168,7 @@ nav:
           - Results:
               - SEResult: python_api/result/SEResult.md
               - MEResult: python_api/result/MEResult.md
-              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
+              - PropagatorResult: python_api/result/PropagatorResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
