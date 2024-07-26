@@ -13,7 +13,7 @@ __all__ = [
     'plot_fock',
     'plot_fock_evolution',
     'plot_hinton',
-    'gridplot',
     'gifit',
+    'gridplot',
     'mplstyle',
 ]

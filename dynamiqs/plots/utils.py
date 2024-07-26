@@ -24,7 +24,7 @@ from matplotlib.ticker import FixedLocator, MaxNLocator, MultipleLocator, NullLo
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
-__all__ = ['gridplot', 'gifit', 'mplstyle']
+__all__ = ['gifit', 'gridplot', 'mplstyle']
 # __all__ = [
 #     'linmap',
 #     'figax',
