@@ -330,40 +330,24 @@ def gifit(
         the provided array.
 
     Examples:
-        >>> N = 20
-        >>> alpha = 2
+        >>> N = 16
         >>> a = dq.destroy(N)
-        >>> L2 = a @ a - alpha**2 * dq.eye(N)
-        >>> output = dq.mesolve(0 * a, [L2], dq.fock(N, 0), jnp.linspace(0, 1, 100))
-        >>> filename = 'docs/figs-code/cat_inflation.gif'
-        >>> dq.gifit(dq.plot_wigner, filename=filename, display=False)(output.states)
+        >>> H = dq.zero(N)
+        >>> jump_ops = [a @ a - 4.0 * dq.eye(N)]
+        >>> psi0 = dq.basis(N, 0)
+        >>> tsave = jnp.linspace(0.0, 1.0, 100)
+        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
+        >>> filename = 'docs/figs_code/cat_inflation.gif'
+        >>> dq.gifit(dq.plot_wigner, filename=filename, display=False)(result.states)
 
-        ![plot_cat_inflation](docs/figs-code/cat_inflation.gif)
+        ![plot_cat_inflation](/figs_code/cat_inflation.gif)
 
-        >>> Na, Nb = 20, 5
-        >>> g2 = 2
-        >>> ed = -8
-        >>> kb = 16
-        >>> a = dq.tensor(dq.destroy(Na), dq.eye(Nb))
-        >>> b = dq.tensor(dq.eye(Na), dq.destroy(Nb))
-        >>> H = g2 * dq.dag(a) @ dq.dag(a) @ b + ed * b
-        >>> H += dq.dag(H)
-        >>> output = dq.mesolve(
-        ...     H, [jnp.sqrt(kb) * b], dq.fock(Na * Nb, 0), jnp.linspace(0, 1, 100)
-        ... )
-        >>> def plot_memory_buffer(state):
-        ...     _, ax = plt.subplots(1, 2, figsize=(10, 5))
-        ...     dq.plot_wigner(dq.ptrace(state, 0, (Na, Nb)), ax=ax[0])
-        ...     dq.plot_wigner(dq.ptrace(state, 1, (Na, Nb)), ax=ax[1])
-        >>> dq.gifit(
-        ...     plot_memory_buffer,
-        ...     filename='docs/figs-code/memory_buffer.gif',
-        ...     display=False,
-        ... )(output.states)
+        >>> alphas = jnp.linspace(0.0, 3.0, 50)
+        >>> states = dq.coherent(20, alphas)
+        >>> filename = 'docs/figs_code/coherent_evolution.gif'
+        >>> dq.gifit(dq.plot_fock, filename=filename, display=False)(states)
 
-        ![plot_memory_buffer](docs/figs-code/memory_buffer.gif)
-
-
+        ![plot_coherent_evolution](/figs_code/coherent_evolution.gif)
     """
 
     def wrapper(states: ArrayLike, *args, **kwargs) -> None:
