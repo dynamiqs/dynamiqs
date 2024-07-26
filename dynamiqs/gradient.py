@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import equinox as eqx
 
+from ._utils import tree_str_inline
+
 __all__ = ['Autograd', 'CheckpointAutograd']
 
 
 class Gradient(eqx.Module):
-    pass
+    def __str__(self) -> str:
+        return tree_str_inline(self)
 
 
 class Autograd(Gradient):
@@ -15,8 +18,8 @@ class Autograd(Gradient):
     With this option, the gradient is computed by automatically differentiating
     through the internals of the solver.
 
-    Note: For Diffrax-based solvers
-        This falls back to the
+    Note:
+        For Diffrax-based solvers, this falls back to the
         [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
         option.
     """
@@ -46,8 +49,8 @@ class CheckpointAutograd(Gradient):
         is something you need.
 
 
-    Note: For Diffrax-based solvers
-        This falls back to the
+    Note:
+        For Diffrax-based solvers, this falls back to the
         [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
         option.
 

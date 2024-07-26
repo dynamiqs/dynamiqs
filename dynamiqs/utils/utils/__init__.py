@@ -3,9 +3,12 @@ from .wigner import *
 
 __all__ = [
     'dag',
-    'mpow',
-    'tracemm',
+    'powm',
+    'expm',
+    'cosm',
+    'sinm',
     'trace',
+    'tracemm',
     'ptrace',
     'tensor',
     'expect',
@@ -25,6 +28,6 @@ __all__ = [
     'braket',
     'overlap',
     'fidelity',
-    'eigenstates',
+    'entropy_vn',
     'wigner',
 ]

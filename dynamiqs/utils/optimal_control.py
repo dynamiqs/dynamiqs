@@ -4,6 +4,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
+from .._checks import check_shape
 from .._utils import cdtype
 from ..utils.operators import displace
 from ..utils.states import fock
@@ -38,6 +39,8 @@ def snap_gate(phase: ArrayLike) -> Array:
         (2, 3, 3)
     """
     phase = jnp.asarray(phase, dtype=cdtype())
+    check_shape(phase, 'phase', '(..., n)')
+
     # batched construct diagonal array
     bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
     return bdiag(jnp.exp(1j * phase))

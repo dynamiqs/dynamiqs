@@ -67,7 +67,7 @@ def test_ket_dm_fidelity_correctness():
     rho = qt.rand_dm(n, n, seed=43)
     qt_fid = qt.fidelity(psi, rho) ** 2
 
-    # dynmaiqs
+    # dynamiqs
     psi = jnp.asarray(psi)
     rho = jnp.asarray(rho)
     dq_fid_ket_dm = dq.fidelity(psi, rho).item()

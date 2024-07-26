@@ -49,12 +49,12 @@ def rand_complex(
     Each element of the returned array is sampled uniformly in the disk of radius
     $\text{rmax}$.
 
-    Notes-: Uniform sampling in the complex plane
+    Note-: Uniform sampling in the complex plane
         Here are three common options to generate random complex numbers,
         `dq.rand_complex()` returns the last one:
 
         ```python
-        _, (ax0, ax1, ax2) = dq.gridplot(3, sharex=True, sharey=True)
+        _, (ax0, ax1, ax2) = dq.gridplot(3, sharexy=True)
         ax0.set(xlim=(-1.1, 1.1), ylim=(-1.1, 1.1))
 
         n = 10_000
@@ -64,7 +64,7 @@ def rand_complex(
         ax0.scatter(x.real, x.imag, s=1.0)
 
         # option 2: uniformly distributed magnitude and phase
-        x = np.random.rand(n) * np.exp(1j * 2 * np.pi * np.random.rand(n))
+        x = np.random.rand(n) * jnp.exp(1j * 2 * jnp.pi * np.random.rand(n))
         ax1.scatter(x.real, x.imag, s=1.0)
 
         # option 3: uniformly distributed in a disk (in dynamiqs)
@@ -74,7 +74,7 @@ def rand_complex(
         renderfig('rand_complex')
         ```
 
-        ![rand_complex](/figs-code/rand_complex.png){.fig}
+        ![rand_complex](/figs_code/rand_complex.png){.fig}
 
     Args:
         key: A PRNG key used as the random key.
@@ -101,7 +101,7 @@ def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Args:
         key: A PRNG key used as the random key.
-        shape: Shape of the returned array.
+        shape _(shape of the form (..., n, n))_: Shape of the returned array.
 
     Returns:
         _(array of shape (*shape))_ Random complex Hermitian matrix.
@@ -113,7 +113,9 @@ def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
                [ 0.473+0.446j,  0.13 +0.j   ]], dtype=complex64)
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
-        raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
+        raise ValueError(
+            f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
+        )
     x = rand_complex(key, shape)
     return 0.5 * (x + dag(x))
 
@@ -123,7 +125,7 @@ def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Args:
         key: A PRNG key used as the random key.
-        shape: Shape of the returned array.
+        shape _(shape of the form (..., n, n))_: Shape of the returned array.
 
     Returns:
         _(array of shape (*shape))_ Random complex positive semi-definite matrix.
@@ -136,7 +138,9 @@ def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
-        raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
+        raise ValueError(
+            f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
+        )
     x = rand_complex(key, shape)
     return x @ dag(x)
 
@@ -147,7 +151,7 @@ def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Args:
         key: A PRNG key used as the random key.
-        shape: Shape of the returned array.
+        shape _(shape of the form (..., n, n))_: Shape of the returned array.
 
     Returns:
         _(array of shape (*shape))_ Random density matrix.
@@ -159,7 +163,9 @@ def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
                [0.293-0.166j, 0.424+0.j   ]], dtype=complex64)
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
-        raise ValueError(f'`shape` must be at least 2D and square, but got {shape}.')
+        raise ValueError(
+            f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
+        )
     x = rand_psd(key, shape)
     return unit(x)
 
@@ -169,7 +175,7 @@ def rand_ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Args:
         key: A PRNG key used as the random key.
-        shape: Shape of the returned array.
+        shape _(shape of the form (..., n, 1))_: Shape of the returned array.
 
     Returns:
         _(array of shape (*shape))_ Random ket.
@@ -182,7 +188,7 @@ def rand_ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     """
     if not len(shape) >= 2 or not shape[-1] == 1:
         raise ValueError(
-            f'`shape` must be at least 2D and with last dimension 1, but got {shape}.'
+            f'Argument `shape` must be of the form (..., n, 1), but is shape={shape}.'
         )
     x = rand_complex(key, shape)
     return unit(x)

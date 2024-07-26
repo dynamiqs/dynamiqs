@@ -12,6 +12,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
+from .._checks import check_shape
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['plot_hinton']
@@ -105,7 +106,7 @@ def _plot_hinton(
     # squares areas
     areas = areas.T.flatten()
     # squares colors
-    cmap = mpl.colormaps.get_cmap(cmap)
+    cmap = mpl.colormaps[cmap]
     colors = cmap(colors.T).reshape(-1, 4)
     _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 
@@ -142,27 +143,27 @@ def plot_hinton(
         >>> dq.plot_hinton(jnp.abs(rho))
         >>> renderfig('plot_hinton_coherent')
 
-        ![plot_hinton_coherent](/figs-code/plot_hinton_coherent.png){.fig-half}
+        ![plot_hinton_coherent](/figs_code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
         >>> H = dq.dag(a) @ a + 2.0 * (a + dq.dag(a))
         >>> dq.plot_hinton(jnp.abs(H))
         >>> renderfig('plot_hinton_hamiltonian')
 
-        ![plot_hinton_hamiltonian](/figs-code/plot_hinton_hamiltonian.png){.fig-half}
+        ![plot_hinton_hamiltonian](/figs_code/plot_hinton_hamiltonian.png){.fig-half}
 
-        >>> cnot = jnp.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+        >>> cnot = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
-        ![plot_hinton_cnot](/figs-code/plot_hinton_cnot.png){.fig-half}
+        ![plot_hinton_cnot](/figs_code/plot_hinton_cnot.png){.fig-half}
 
         >>> key = jax.random.PRNGKey(42)
         >>> x = dq.rand_complex(key, (16, 16))
         >>> dq.plot_hinton(x)
         >>> renderfig('plot_hinton_rand_complex')
 
-        ![plot_hinton_rand_complex](/figs-code/plot_hinton_rand_complex.png){.fig-half}
+        ![plot_hinton_rand_complex](/figs_code/plot_hinton_rand_complex.png){.fig-half}
 
         >>> _, axs = dq.gridplot(2)
         >>> psi = dq.unit(dq.fock(4, 0) - dq.fock(4, 2))
@@ -171,28 +172,24 @@ def plot_hinton(
         >>> dq.plot_hinton(rho, ax=next(axs))
         >>> renderfig('plot_hinton_fock02')
 
-        ![plot_hinton_fock02](/figs-code/plot_hinton_fock02.png){.fig-half}
+        ![plot_hinton_fock02](/figs_code/plot_hinton_fock02.png){.fig-half}
 
         >>> _, axs = dq.gridplot(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
         >>> dq.plot_hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
-        >>> dq.plot_hinton(np.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
+        >>> dq.plot_hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
         >>> renderfig('plot_hinton_real')
 
-        ![plot_hinton_real](/figs-code/plot_hinton_real.png){.fig-half}
+        ![plot_hinton_real](/figs_code/plot_hinton_real.png){.fig-half}
 
         >>> x = np.random.uniform(-1.0, 1.0, (100, 100))
         >>> dq.plot_hinton(x, vmin=-1.0, vmax=1.0, ewidth=0, clear=True, w=20)
         >>> renderfig('plot_hinton_large')
 
-        ![plot_hinton_large](/figs-code/plot_hinton_large.png){.fig}
+        ![plot_hinton_large](/figs_code/plot_hinton_large.png){.fig}
     """  # noqa: E501
     x = jnp.asarray(x)
-
-    if x.ndim != 2 or x.shape[0] != x.shape[1]:
-        raise ValueError(
-            f'Argument `x` must be a 2D square array, but has shape {x.shape}.'
-        )
+    check_shape(x, 'x', '(n, n)')
 
     # set different defaults, areas and colors for real matrix, positive real matrix
     # and complex matrix

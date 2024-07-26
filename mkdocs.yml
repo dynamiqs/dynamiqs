@@ -3,6 +3,7 @@ site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
 repo_name: dynamiqs
+docs_dir: docs
 theme:
   name: material
   custom_dir: docs/overrides
@@ -18,6 +19,7 @@ theme:
     repo: fontawesome/brands/github
     admonition:
       example: material/human-male-board
+    annotation: material/plus-circle
   logo: media/logo.png
   favicon: media/favicon.svg
   palette:
@@ -30,7 +32,7 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
     # palette toggle for dark mode
-    - media: "(prefers-color-scheme: dark)"
+    - media: "(prefers-color-scheme: light)"
       scheme: slate
       primary: custom
       accent: custom
@@ -50,6 +52,9 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
+  - exclude:
+      glob:
+        - glossary.md
   - glightbox:
       effect: fade
       slide_effect: slide
@@ -89,18 +94,23 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.snippets:
       auto_append:
-        - includes/glossary.md
+        - docs/glossary.md
   - abbr
   - attr_list
   - footnotes
   - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 extra_javascript:
   - javascripts/katex.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
 watch:
   - dynamiqs
-  - includes
+  - docs/glossary.md
 validation:
   nav:
     omitted_files: warn
@@ -112,30 +122,26 @@ validation:
     unrecognized_links: warn
 nav:
   - Home: index.md
-  - Getting started:
-      - getting_started/index.md
-      - What is dynamiqs?: getting_started/whatis.md
-      - Installation: getting_started/installation.md
-      - Basic examples: getting_started/examples.md
-      - The sharp bits 🔪: getting_started/sharp-bits.md
-      - Contributing: getting_started/contributing.md
-      - Let's talk!: getting_started/lets-talk.md
-      - Citing dynamiqs: getting_started/citing.md
-  - Tutorials:
-      - tutorials/index.md
-      - Basics:
-          - Workflow in dynamiqs: tutorials/workflow.md
-          - tutorials/time-dependent-operators.md
-          - tutorials/closed-system.md
-          - tutorials/open-system.md
-          - tutorials/batching-simulations.md
-          - tutorials/computing-gradients.md
+  - Documentation:
+      - documentation/index.md
+      - Getting started:
+          - What is dynamiqs?: documentation/getting_started/whatis.md
+          - Installation: documentation/getting_started/installation.md
+          - Basic examples: documentation/getting_started/examples.md
+          - The sharp bits 🔪: documentation/getting_started/sharp-bits.md
+      - Learn the basics:
+          - Workflow in dynamiqs: documentation/basics/workflow.md
+          - Time-dependent operators: documentation/basics/time-dependent-operators.md
+          - Closed systems: documentation/basics/closed-systems.md
+          - Open systems: documentation/basics/open-systems.md
+          - Batching simulations: documentation/basics/batching-simulations.md
+          - Computing gradients: documentation/basics/computing-gradients.md
   - Python API:
       - python_api/index.md
       - Quantum solvers:
-          - sesolve: python_api/solvers/sesolve.md
-          - mesolve: python_api/solvers/mesolve.md
-          - smesolve: python_api/solvers/smesolve.md
+          - sesolve: python_api/integrators/sesolve.md
+          - mesolve: python_api/integrators/mesolve.md
+          - smesolve: python_api/integrators/smesolve.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -147,6 +153,8 @@ nav:
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
               - Dopri8: python_api/solver/Dopri8.md
+              - Kvaerno3: python_api/solver/Kvaerno3.md
+              - Kvaerno5: python_api/solver/Kvaerno5.md
               - Euler: python_api/solver/Euler.md
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
@@ -184,11 +192,16 @@ nav:
               - basis_dm: python_api/utils/states/basis_dm.md
               - coherent: python_api/utils/states/coherent.md
               - coherent_dm: python_api/utils/states/coherent_dm.md
+              - ground: python_api/utils/states/ground.md
+              - excited: python_api/utils/states/excited.md
           - Quantum utilities:
               - dag: python_api/utils/utils/dag.md
-              - mpow: python_api/utils/utils/mpow.md
-              - tracemm: python_api/utils/utils/tracemm.md
+              - powm: python_api/utils/utils/powm.md
+              - expm: python_api/utils/utils/expm.md
+              - cosm: python_api/utils/utils/cosm.md
+              - sinm: python_api/utils/utils/sinm.md
               - trace: python_api/utils/utils/trace.md
+              - tracemm: python_api/utils/utils/tracemm.md
               - ptrace: python_api/utils/utils/ptrace.md
               - tensor: python_api/utils/utils/tensor.md
               - expect: python_api/utils/utils/expect.md
@@ -208,12 +221,13 @@ nav:
               - braket: python_api/utils/utils/braket.md
               - overlap: python_api/utils/utils/overlap.md
               - fidelity: python_api/utils/utils/fidelity.md
-              - eigenstates: python_api/utils/utils/eigenstates.md
+              - entropy_vn: python_api/utils/utils/entropy_vn.md
               - wigner: python_api/utils/utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md
               - set_precision: python_api/utils/jax_utils/set_precision.md
+              - set_matmul_precision: python_api/utils/jax_utils/set_matmul_precision.md
           - Vectorization:
               - operator_to_vector: python_api/utils/vectorization/operator_to_vector.md
               - vector_to_operator: python_api/utils/vectorization/vector_to_operator.md
@@ -241,3 +255,9 @@ nav:
               - plot_fock_evolution: python_api/plots/plot_fock_evolution.md
               - plot_hinton: python_api/plots/plot_hinton.md
               - gridplot: python_api/plots/gridplot.md
+              - mplstyle: python_api/plots/mplstyle.md
+  - Community:
+      - community/index.md
+      - Contributing: community/contributing.md
+      - Let's talk!: community/lets-talk.md
+      - Citing dynamiqs: community/citing.md

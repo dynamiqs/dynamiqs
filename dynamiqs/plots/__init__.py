@@ -5,7 +5,6 @@ from .plots_misc import *
 from .plots_wigner import *
 from .utils import *
 
-# TODO: document gridplot
 __all__ = [
     'plot_wigner',
     'plot_wigner_mosaic',
@@ -16,4 +15,5 @@ __all__ = [
     'plot_hinton',
     'gridplot',
     'gifit',
+    'mplstyle',
 ]

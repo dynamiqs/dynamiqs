@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 
+from .._checks import check_shape
 from ..utils import wigner
 from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
@@ -34,6 +35,7 @@ def plot_wigner_data(
     clear: bool = False,
 ):
     w = jnp.asarray(wigner)
+    check_shape(w, 'wigner', '(n, n)')
 
     # set plot norm
     vmin = -vmax
@@ -103,27 +105,28 @@ def plot_wigner(
         >>> dq.plot_wigner(psi)
         >>> renderfig('plot_wigner_coh')
 
-        ![plot_wigner_coh](/figs-code/plot_wigner_coh.png){.fig-half}
+        ![plot_wigner_coh](/figs_code/plot_wigner_coh.png){.fig-half}
 
         >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
         >>> dq.plot_wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
         >>> renderfig('plot_wigner_cat')
 
-        ![plot_wigner_cat](/figs-code/plot_wigner_cat.png){.fig-half}
+        ![plot_wigner_cat](/figs_code/plot_wigner_cat.png){.fig-half}
 
         >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
         >>> dq.plot_wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
-        ![plot_wigner_01](/figs-code/plot_wigner_01.png){.fig-half}
+        ![plot_wigner_01](/figs_code/plot_wigner_01.png){.fig-half}
 
         >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
         >>> dq.plot_wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 
-        ![plot_wigner_4legged](/figs-code/plot_wigner_4legged.png){.fig-half}
+        ![plot_wigner_4legged](/figs_code/plot_wigner_4legged.png){.fig-half}
     """
     state = jnp.asarray(state)
+    check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
     _, _, w = wigner(state, xmax, ymax, npixels)
@@ -169,32 +172,33 @@ def plot_wigner_mosaic(
         >>> dq.plot_wigner_mosaic(psis)
         >>> renderfig('plot_wigner_mosaic_fock')
 
-        ![plot_wigner_mosaic_fock](/figs-code/plot_wigner_mosaic_fock.png){.fig}
+        ![plot_wigner_mosaic_fock](/figs_code/plot_wigner_mosaic_fock.png){.fig}
 
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> H = dq.zero(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
-        >>> tsave = np.linspace(0, 1.0, 101)
+        >>> tsave = jnp.linspace(0, 1.0, 101)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
         >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
         >>> renderfig('plot_wigner_mosaic_cat')
 
-        ![plot_wigner_mosaic_cat](/figs-code/plot_wigner_mosaic_cat.png){.fig}
+        ![plot_wigner_mosaic_cat](/figs_code/plot_wigner_mosaic_cat.png){.fig}
 
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
-        >>> tsave = np.linspace(0, np.pi, 101)
+        >>> tsave = jnp.linspace(0, jnp.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
         >>> renderfig('plot_wigner_mosaic_kerr')
 
-        ![plot_wigner_mosaic_kerr](/figs-code/plot_wigner_mosaic_kerr.png){.fig}
+        ![plot_wigner_mosaic_kerr](/figs_code/plot_wigner_mosaic_kerr.png){.fig}
     """
     states = jnp.asarray(states)
+    check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
     if nstates < n:
@@ -271,25 +275,25 @@ def plot_wigner_gif(
         >>> H = dq.zero(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
-        >>> tsave = np.linspace(0, 1.0, 1001)
+        >>> tsave = jnp.linspace(0, 1.0, 1001)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
         >>> dq.plot_wigner_gif(
         ...     result.states,
         ...     fps=25,  # 25 frames per second
         ...     xmax=4.0,
         ...     ymax=2.0,
-        ...     filename='docs/figs-code/wigner-cat.gif',
+        ...     filename='docs/figs_code/wigner-cat.gif',
         ...     dpi=150,
         ...     display=False,
         ... )
 
-        ![plot_wigner_gif_cat](/figs-code/wigner-cat.gif){.fig}
+        ![plot_wigner_gif_cat](/figs_code/wigner-cat.gif){.fig}
 
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
-        >>> tsave = np.linspace(0, np.pi, 1001)
+        >>> tsave = jnp.linspace(0, jnp.pi, 1001)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_wigner_gif(
         ...     result.states,
@@ -297,14 +301,15 @@ def plot_wigner_gif(
         ...     fps=25,
         ...     xmax=4.0,
         ...     clear=True,
-        ...     filename='docs/figs-code/wigner-kerr.gif',
+        ...     filename='docs/figs_code/wigner-kerr.gif',
         ...     dpi=150,
         ...     display=False,
         ... )
 
-        ![plot_wigner_gif_kerr](/figs-code/wigner-kerr.gif){.fig-half}
+        ![plot_wigner_gif_kerr](/figs_code/wigner-kerr.gif){.fig-half}
     """
     states = jnp.asarray(states)
+    check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
@@ -340,7 +345,10 @@ def plot_wigner_gif(
             frames.append(frame)
 
         # loop=0: loop the GIF forever
-        iio.v3.imwrite(filename, frames, format='GIF', fps=fps, loop=0)
+        frame_duration_ms = 1000 * 1 / fps
+        iio.v3.imwrite(
+            filename, frames, format='GIF', duration=frame_duration_ms, loop=0
+        )
         if display:
             ipy.display(ipy.Image(filename))
     finally:

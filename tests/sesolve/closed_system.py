@@ -111,8 +111,8 @@ class TDQubit(ClosedSystem):
         self.params_default = self.Params(eps, omega)
 
     def H(self, params: PyTree) -> TimeArray:
-        f = lambda t, eps, omega: eps * jnp.cos(omega * t) * dq.sigmax()
-        return dq.timecallable(f, args=(params.eps, params.omega))
+        f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
+        return dq.timecallable(f)
 
     def y0(self, params: PyTree) -> Array:  # noqa: ARG002
         return dq.fock(2, 0)
