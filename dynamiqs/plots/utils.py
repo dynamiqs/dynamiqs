@@ -5,7 +5,6 @@ import shutil
 from collections.abc import Iterable
 from functools import wraps
 from math import ceil
-from typing import Callable
 
 import imageio as iio
 import IPython.display as ipy
@@ -298,13 +297,13 @@ def add_colorbar(
 
 
 def gifit(
-    plot_function: Callable,
+    plot_function: callable[[ArrayLike, ...], None],
     gif_duration: float = 5.0,
     fps: int = 10,
     filename: str = '.tmp/dynamiqs/evolution.gif',
     dpi: int = 72,
     display: bool = True,
-) -> Callable:
+) -> callable[[ArrayLike, ...], None]:
     """Plot a GIF of the plot_function of multiple states.
 
     Warning:
