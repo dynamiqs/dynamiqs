@@ -6,22 +6,23 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..gradient import Gradient
-from ..options import Options
-from ..qarrays import QArray
-from ..result import MEResult, Result, Saved, SEResult
-from ..solver import Solver
-from ..time_array import TimeArray
-from ..utils.utils import expect
+from ..._utils import _concatenate_sort
+from ...gradient import Gradient
+from ...options import Options
+from ...qarrays import QArray
+from ...result import MEResult, Result, Saved, SEResult
+from ...solver import Solver
+from ...time_array import TimeArray
+from ...utils.utils import expect
 
 
-class AbstractSolver(eqx.Module):
+class AbstractIntegrator(eqx.Module):
     @abstractmethod
     def run(self) -> PyTree:
         pass
 
 
-class BaseSolver(AbstractSolver):
+class BaseIntegrator(AbstractIntegrator):
     ts: Array
     y0: QArray
     H: TimeArray
@@ -37,6 +38,10 @@ class BaseSolver(AbstractSolver):
     @property
     def t1(self) -> Scalar:
         return self.ts[-1]
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        return self.H.discontinuity_ts
 
     def save(self, y: PyTree) -> Saved:
         ysave, Esave, extra = None, None, None
@@ -69,13 +74,18 @@ class BaseSolver(AbstractSolver):
         pass
 
 
-class SESolver(BaseSolver):
+class SESolveIntegrator(BaseIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return SEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
 
 
-class MESolver(BaseSolver):
+class MESolveIntegrator(BaseIntegrator):
     Ls: list[TimeArray]
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(*ts)

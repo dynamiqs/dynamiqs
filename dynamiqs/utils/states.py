@@ -12,7 +12,16 @@ from ..qarrays import QArray, asqarray
 from .operators import displace
 from .utils import tensor
 
-__all__ = ['fock', 'fock_dm', 'basis', 'basis_dm', 'coherent', 'coherent_dm']
+__all__ = [
+    'fock',
+    'fock_dm',
+    'basis',
+    'basis_dm',
+    'coherent',
+    'coherent_dm',
+    'ground',
+    'excited',
+]
 
 
 def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
@@ -25,8 +34,8 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
             `number` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., prod(dim), 1))_ Ket of the Fock state or tensor product
-            of Fock states.
+        _(qarray of shape (..., n, 1))_ Ket of the Fock state or tensor product of Fock
+            states, with _n = prod(dims)_.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
@@ -122,8 +131,8 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
             `number` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., prod(dim), prod(dim)))_ Density matrix of the Fock state
-            or tensor product of Fock states.
+        _(qarray of shape (..., n, n))_ Density matrix of the Fock state or tensor
+            product of Fock states, with _n = prod(dims)_.
 
     Examples:
         Single-mode Fock state $\ket{1}$:
@@ -187,8 +196,8 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., prod(dim), 1))_ Ket of the coherent state or tensor
-            product of coherent states.
+        _(qarray of shape (..., n, 1))_ Ket of the coherent state or tensor product of
+            coherent states, with _n = prod(dims)_.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
@@ -266,8 +275,8 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
             `alpha` should match the length of `dim`.
 
     Returns:
-        _(qarray of shape (..., prod(dim), prod(dim)))_ Density matrix of the coherent
-            state or tensor product of coherent states.
+        _(qarray of shape (..., n, n))_ Density matrix of the coherent state or tensor
+            product of coherent states, with _n = prod(dims)_.
 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
@@ -293,3 +302,45 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
         (2, 24, 24)
     """
     return coherent(dim, alpha).todm()
+
+
+def ground() -> QArray:
+    r"""Returns the eigenvector with eigenvalue -1 of the Pauli $\sigma_z$ operator.
+
+    It is defined by $\ket{g} = \begin{pmatrix}0\\1\end{pmatrix}$.
+
+    Note:
+        This function is named `ground` because $\ket{g}$ is the lower energy state of
+        a two-level system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(qarray of shape (2, 1))_ Ket $\ket{g}$.
+
+    Examples:
+        >>> dq.ground()
+        DenseQArray: shape=(2, 1), dims=(2,), dtype=complex64
+        [[0.+0.j],
+         [1.+0.j]]
+    """
+    return jnp.array([[0], [1]], dtype=cdtype())
+
+
+def excited() -> QArray:
+    r"""Returns the eigenvector with eigenvalue +1 of the Pauli $\sigma_z$ operator.
+
+    It is defined by $\ket{e} = \begin{pmatrix}1\\0\end{pmatrix}$.
+
+    Note:
+        This function is named `excited` because $\ket{e}$ is the higher energy state of
+        a two-level-system with Hamiltonian $H=\omega \sigma_z$.
+
+    Returns:
+        _(qarray of shape (2, 1))_ Ket $\ket{e}$.
+
+    Examples:
+        >>> dq.excited()
+        DenseQArray: shape=(2, 1), dims=(2,), dtype=complex64
+        [[1.+0.j],
+         [0.+0.j]]
+    """
+    return jnp.array([[1], [0]], dtype=cdtype())

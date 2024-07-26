@@ -7,24 +7,38 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._checks import check_shape, check_times
-from ..core._utils import (
+from ..._checks import check_shape, check_times
+from ...gradient import Gradient
+from ...options import Options
+from ...qarrays import QArray, QArrayLike, asqarray
+from ...result import SEResult
+from ...solver import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Propagator,
+    Solver,
+    Tsit5,
+)
+from ...time_array import Shape, TimeArray
+from .._utils import (
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
     catch_xla_runtime_error,
-    get_solver_class,
+    get_integrator_class,
 )
-from ..gradient import Gradient
-from ..options import Options
-from ..qarrays import QArray, QArrayLike, asqarray
-from ..result import SEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
-from ..time_array import Shape, TimeArray
-from .sediffrax import SEDopri5, SEDopri8, SEEuler, SETsit5
-from .sepropagator import SEPropagator
-
-__all__ = ['sesolve']
+from ..sesolve.diffrax_integrator import (
+    SESolveDopri5Integrator,
+    SESolveDopri8Integrator,
+    SESolveEulerIntegrator,
+    SESolveKvaerno3Integrator,
+    SESolveKvaerno5Integrator,
+    SESolveTsit5Integrator,
+)
+from ..sesolve.propagator_integrator import SESolvePropagatorIntegrator
 
 
 def sesolve(
@@ -41,11 +55,16 @@ def sesolve(
 
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
     $t$, starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
-    equation ($\hbar=1$)
+    equation (with $\hbar=1$ and where time is implicit(1))
     $$
-        \frac{\dd\ket{\psi(t)}}{\dt} = -i H(t) \ket{\psi(t)},
+        \frac{\dd\ket{\psi}}{\dt} = -i H \ket{\psi},
     $$
-    where $H(t)$ is the system's Hamiltonian at time $t$.
+    where $H$ is the system's Hamiltonian.
+    { .annotate }
+
+    1. With explicit time dependence:
+        - $\ket\psi\to\ket{\psi(t)}$
+        - $H\to H(t)$
 
     Note-: Defining a time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
@@ -74,6 +93,8 @@ def sesolve(
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
             [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
             [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Propagator`][dynamiqs.solver.Propagator]).
 
@@ -133,7 +154,7 @@ def _vectorized_sesolve(
     )
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = SEResult(None, None, None, None, 0, 0)
+    out_axes = SEResult(False, False, False, False, 0, 0)
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
@@ -154,24 +175,26 @@ def _sesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> SEResult:
-    # === select solver class
-    solvers = {
-        Euler: SEEuler,
-        Dopri5: SEDopri5,
-        Dopri8: SEDopri8,
-        Tsit5: SETsit5,
-        Propagator: SEPropagator,
+    # === select integrator class
+    integrators = {
+        Euler: SESolveEulerIntegrator,
+        Dopri5: SESolveDopri5Integrator,
+        Dopri8: SESolveDopri8Integrator,
+        Tsit5: SESolveTsit5Integrator,
+        Kvaerno3: SESolveKvaerno3Integrator,
+        Kvaerno5: SESolveKvaerno5Integrator,
+        Propagator: SESolvePropagatorIntegrator,
     }
-    solver_class = get_solver_class(solvers, solver)
+    integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_class(tsave, psi0, H, exp_ops, solver, gradient, options)
+    # === init integrator
+    integrator = integrator_class(tsave, psi0, H, exp_ops, solver, gradient, options)
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504

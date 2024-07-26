@@ -112,7 +112,7 @@ def plot_fock_evolution(
         >>> a = dq.destroy(n)
         >>> psi0 = dq.coherent(n, 0.0)
         >>> H = 2.0 * (a + dq.dag(a))
-        >>> tsave = np.linspace(0, 1.0, 11)
+        >>> tsave = jnp.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot_fock_evolution(result.states, times=tsave)
         >>> renderfig('plot_fock_evolution')
