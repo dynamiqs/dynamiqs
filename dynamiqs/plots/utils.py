@@ -350,10 +350,15 @@ def gifit(
         ![plot_coherent_evolution](/figs_code/coherent_evolution.gif)
     """
 
-    def wrapper(states: ArrayLike, *args, **kwargs) -> None:
-        states = jnp.asarray(states)
+    def wrapper(iterable: ArrayLike, *args, **kwargs) -> None:
+        iterable = jnp.asarray(iterable)
         nframes = int(gif_duration * fps)
-        selected_indexes = np.linspace(0, len(states), nframes, dtype=int)
+        if nframes > len(iterable):
+            indices = np.arange(len(iterable))
+            nplots = len(iterable)
+        else:
+            indices = np.round(np.linspace(0, len(iterable) - 1, nframes)).astype(int)
+            nplots = nframes
 
         try:
             # create temporary directory
@@ -361,8 +366,8 @@ def gifit(
             tmpdir.mkdir(parents=True, exist_ok=True)
 
             frames = []
-            for i in tqdm(range(nframes)):
-                plot_function(states[selected_indexes[i]], *args, **kwargs)
+            for i in tqdm(range(nplots)):
+                plot_function(iterable[indices[i]], *args, **kwargs)
                 frame_filename = tmpdir / f'tmp-{i}.png'
 
                 plt.gcf().savefig(frame_filename, bbox_inches='tight', dpi=dpi)
@@ -371,9 +376,9 @@ def gifit(
                 frames.append(frame)
 
             # loop=0: loop the GIF forever
-            iio.v3.imwrite(
-                filename, frames, format='GIF', durations=int(1000 / fps), loop=0
-            )
+            # rescale duration to account for eventual duplicate frames
+            duration = int(1000 / fps * nframes / nplots)
+            iio.v3.imwrite(filename, frames, format='GIF', duration=duration, loop=0)
             if display:
                 ipy.display(ipy.Image(filename))
         finally:
