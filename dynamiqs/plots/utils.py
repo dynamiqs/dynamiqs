@@ -304,28 +304,30 @@ def gifit(
     dpi: int = 72,
     display: bool = True,
 ) -> callable[[ArrayLike, ...], None]:
-    """Plot a GIF of the plot_function of multiple states.
+    """Transform a static plot function into a GIF plot function that can be called
+    over an array of inputs.
+
+    The input plot function must take a single array as input and produce a plot out of
+    it. The plot function must create its own figure and not close it. By default,
+    the GIF is displayed in Jupyter notebook environments.
 
     Warning:
         This function creates a temporary directory to store the frames of the GIF.
-        The directory is deleted after the GIF is created. Meaning that the GIF file
+        The directory is deleted after the GIF is created, meaning that the GIF file
         is deleted if the filename is not changed.
 
-    Note:
-        The plot_function must take a single state as input and plot it.
-        The states must be passed as a list or an array.
-        The plot_function must create its own figure and not close it.
-        By default, the GIF is displayed in Jupyter notebook environments.
-
     Args:
-        plot_function (Callable): plot function to be giffed.
-        gif_duration (float, optional): GIF duration in seconds.
-        Defaults to 5 s.
-        fps (int, optional): GIF frames per seconds. Defaults to 10.
-        filename (str, optional): save path of the gif.
-        Defaults to '.tmp/dynamiqs/evolution.gif'.
-        dpi (int, optional): GIF resolution. Defaults to 72.
-        display (bool, optional): if True, the GIF will be displayed. Defaults to True.
+        plot_function: Plot function to be GIF-ed.
+        gif_duration: GIF duration in seconds. Defaults to 5 seconds.
+        fps: GIF frames per seconds. Defaults to 10.
+        filename: Save path of the gif. Defaults to '.tmp/dynamiqs/evolution.gif'.
+        dpi: GIF resolution. Defaults to 72.
+        display: If True, the produced GIF is displayed. Defaults to True.
+
+    Returns:
+        A function with the same signature as `plot_function` but that accepts an array
+        as its first argument and produces a GIF that runs over the first dimension of
+        the provided array.
 
     Examples:
         >>> N = 20
