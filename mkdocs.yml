@@ -218,6 +218,8 @@ nav:
               - fidelity: python_api/utils/utils/fidelity.md
               - entropy_vn: python_api/utils/utils/entropy_vn.md
               - wigner: python_api/utils/utils/wigner.md
+          - QArray utilities:
+              - stack: python_api/qarrays/utils/stack.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md
