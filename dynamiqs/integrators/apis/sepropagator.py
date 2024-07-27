@@ -12,8 +12,16 @@ from ...options import Options
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
+from ...utils.operators import eye
 from .._utils import _astimearray, catch_xla_runtime_error, get_integrator_class, ispwc
-from ..sepropagator.dynamiqs_integrator import SEPropagatorDynamiqsIntegrator
+from ..sepropagator.diffrax_integrator import (
+    SEPropagatorDopri5Integrator,
+    SEPropagatorDopri8Integrator,
+    SEPropagatorEulerIntegrator,
+    SEPropagatorKvaerno3Integrator,
+    SEPropagatorKvaerno5Integrator,
+    SEPropagatorTsit5Integrator,
+)
 from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
@@ -107,12 +115,12 @@ def _sepropagator(
 
     integrators = {
         Expm: SEPropagatorExpmIntegrator,
-        Euler: SEPropagatorDynamiqsIntegrator,
-        Dopri5: SEPropagatorDynamiqsIntegrator,
-        Dopri8: SEPropagatorDynamiqsIntegrator,
-        Tsit5: SEPropagatorDynamiqsIntegrator,
-        Kvaerno3: SEPropagatorDynamiqsIntegrator,
-        Kvaerno5: SEPropagatorDynamiqsIntegrator,
+        Euler: SEPropagatorEulerIntegrator,
+        Dopri5: SEPropagatorDopri5Integrator,
+        Dopri8: SEPropagatorDopri8Integrator,
+        Tsit5: SEPropagatorTsit5Integrator,
+        Kvaerno3: SEPropagatorKvaerno3Integrator,
+        Kvaerno5: SEPropagatorKvaerno5Integrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
 
@@ -120,7 +128,9 @@ def _sepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, None, H, None, solver, gradient, options)
+    y0 = eye(H.shape[-1])
+    y0 = jnp.broadcast_to(y0, H.shape)
+    integrator = integrator_class(tsave, y0, H, None, solver, gradient, options)
 
     # === run integrator
     result = integrator.run()
