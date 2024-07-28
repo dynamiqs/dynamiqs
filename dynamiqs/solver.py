@@ -9,6 +9,7 @@ from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = [
     'Propagator',
+    'Expm',
     'Euler',
     'Rouchon1',
     'Rouchon2',
@@ -73,6 +74,24 @@ class Propagator(Solver):
     Warning: Constant Hamiltonian and jump operators only
         The propagator method only supports constant Hamiltonian and jump
         operators. Piecewise-constant problems will also be supported in the future.
+
+    Note-: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
+class Expm(Solver):
+    r"""Explicit matrix exponentiation to compute propagators.
+
+    Warning:
+        This solver only supports constant or piecewise constant Hamiltonian.
 
     Note-: Supported gradients
         This solver supports differentiation with
