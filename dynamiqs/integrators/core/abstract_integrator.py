@@ -12,7 +12,7 @@ from optimistix import AbstractRootFinder
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...options import Options
-from ...result import MEResult, Result, Saved, SEResult, FinalSaved
+from ...result import MEResult, Result, Saved, SEResult, FinalSaved, MCResult
 from ...solver import Solver
 from ...time_array import TimeArray
 from ...utils.utils import expect, unit
@@ -88,15 +88,15 @@ class SESolveIntegrator(BaseIntegrator):
 class MESolveIntegrator(BaseIntegrator):
     Ls: list[TimeArray]
 
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+    def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> MEResult:
+        return MEResult(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
 
     @property
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return _concatenate_sort(*ts)
 
-class MCSolver(BaseSolver):
+class MCSolveIntegrator(BaseIntegrator):
     Ls: list[Array | TimeArray] | None = None
     rand: float = 0.0
     root_finder: AbstractRootFinder | None = None

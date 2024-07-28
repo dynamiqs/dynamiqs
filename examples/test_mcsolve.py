@@ -17,10 +17,10 @@ tsave = jnp.linspace(0, 1.0, 41)
 jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)),]
 exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)), dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1))]
 
-initial_states = [dq.basis(2, 1),]
+initial_states = [dq.basis(2, 0),]
 
-num_traj = 31
-options = dq.Options(ntraj=num_traj)
+num_traj = 51
+options = dq.Options(ntraj=num_traj, one_jump_only=True)
 result = dq.mcsolve(
     timecallable(H_func),
     jump_ops,
