@@ -11,9 +11,15 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_array import Shape, TimeArray
 from ...utils.operators import eye
-from .._utils import _astimearray, catch_xla_runtime_error, get_integrator_class, ispwc
+from .._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    catch_xla_runtime_error,
+    get_integrator_class,
+    ispwc,
+)
 from ..sepropagator.diffrax_integrator import (
     SEPropagatorDopri5Integrator,
     SEPropagatorDopri8Integrator,
@@ -97,11 +103,32 @@ def sepropagator(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _sepropagator(H, tsave, solver, gradient, options)
+    return _vectorized_sepropagator(H, tsave, solver, gradient, options)
 
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _vectorized_sepropagator(
+    H: TimeArray,
+    tsave: Array,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> SEPropagatorResult:
+    # === vectorize function
+    # we vectorize over H, all other arguments are not vectorized
+    n_batch = (H.in_axes, Shape(), Shape(), Shape(), Shape())
+
+    # the result is vectorized over `_saved` and `infos`
+    out_axes = SEPropagatorResult(False, False, False, False, 0, 0)
+
+    # compute vectorized function
+    f = _cartesian_vectorize(_sepropagator, n_batch, out_axes)
+
+    # === apply vectorized function
+    return f(H, tsave, solver, gradient, options)
+
+
 def _sepropagator(
     H: TimeArray,
     tsave: Array,
@@ -129,7 +156,6 @@ def _sepropagator(
 
     # === init integrator
     y0 = eye(H.shape[-1])
-    y0 = jnp.broadcast_to(y0, H.shape)
     integrator = integrator_class(tsave, y0, H, None, solver, gradient, options)
 
     # === run integrator
