@@ -33,25 +33,28 @@ __all__ = [
 def eye(*dims: int) -> QArray:
     r"""Returns the identity operator.
 
-    If only a single dimension is provided, `eye` returns the identity operator
-    of corresponding dimension. If instead multiples dimensions are provided, `eye`
-    returns the identity operator of the composite Hilbert space given by the product
-    of all dimensions.
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
+    identity operator of the composite Hilbert space of dimension $n=\prod n_k$:
+    $$
+        I_n = I_{n_1}\otimes\dots\otimes I_{n_N}.
+    $$
 
     Args:
-        *dims: Variable length argument list of the Hilbert space dimensions.
+        *dims: Hilbert space dimension of each subsystem.
 
     Returns:
-        _(qarray of shape (n, n))_ Identity operator (with _n_ the product of
-            dimensions in `dims`).
+        _(qarray of shape (n, n))_ Identity operator, with _n = prod(dims)_.
 
     Examples:
+        Single-mode $I_4$:
         >>> dq.eye(4)
         DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
         [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
+
+        Multi-mode $I_2 \otimes I_3$:
         >>> dq.eye(2, 3)
         DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
         [[1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
@@ -69,25 +72,28 @@ def eye(*dims: int) -> QArray:
 def zero(*dims: int) -> QArray:
     r"""Returns the null operator.
 
-    If only a single dimension is provided, `zero` returns the null operator
-    of corresponding dimension. If instead multiples dimensions are provided, `zero`
-    returns the null operator of the composite Hilbert space given by the product
-    of all dimensions.
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
+    null operator of the composite Hilbert space of dimension $n=\prod n_k$:
+    $$
+        0_n = 0_{n_1}\otimes\dots\otimes 0_{n_N}.
+    $$
 
     Args:
-        *dims: Variable length argument list of the Hilbert space dimensions.
+        *dims: Hilbert space dimension of each subsystem.
 
     Returns:
-        _(qarray of shape (n, n))_ Null operator (with _n_ the product of dimensions
-            in `dims`).
+        _(qarray of shape (n, n))_ Null operator, with _n = prod(dims)_.
 
     Examples:
+        Single-mode $0_4$:
         >>> dq.zero(4)
         DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
         [[0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+
+        Multi-mode $0_2 \otimes 0_3$:
         >>> dq.zero(2, 3)
         DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
         [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
@@ -103,28 +109,34 @@ def zero(*dims: int) -> QArray:
 
 
 def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
-    r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators in
-    a multi-mode system.
+    r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
+    for a multi-mode system.
 
-    If only a single dimension is provided, `destroy` returns the annihilation operator
-    of corresponding dimension. If instead multiples dimensions are provided, `destroy`
-    returns a tuple of each annihilation operator of given dimension, in the Hilbert
-    space given by the product of all dimensions.
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns a
+    tuple with _len(dims)_ operators $(A_1,\dots,A_N)$, where $A_k$ is the annihilation
+    operator acting on the $k$-th subsystem within the composite Hilbert space of
+    dimension $n=\prod n_k$:
+    $$
+        A_k = I_{n_1} \otimes\dots\otimes a_{n_k} \otimes\dots\otimes I_{n_N}.
+    $$
 
     Args:
-        *dims: Variable length argument list of the Hilbert space dimensions.
+        *dims: Hilbert space dimension of each mode.
 
     Returns:
-        _(qarray or tuple of qarrays)_ Annihilation operator of given dimension, or
-            tuple of annihilation operators in a multi-mode system.
+        _(qarray or tuple of qarrays, each of shape (n, n))_ Annihilation operator(s),
+            with _n = prod(dims)_.
 
     Examples:
+        Single-mode $a$:
         >>> dq.destroy(4)
         DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
         [[0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j]
          [0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j]
          [0.   +0.j 0.   +0.j 0.   +0.j 1.732+0.j]
          [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+
+        Mult-mode $a\otimes I_3$ and $I_2\otimes b$:
         >>> a, b = dq.destroy(2, 3)
         >>> a
         DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
@@ -161,30 +173,36 @@ def _destroy_single(dim: int) -> QArray:
 
 
 def create(*dims: int) -> QArray | tuple[QArray, ...]:
-    r"""Returns a bosonic creation operator, or a tuple of creation operators in a
+    r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
 
-    If only a single dimension is provided, `create` returns the creation operator of
-    corresponding dimension. If instead multiples dimensions are provided, `create`
-    returns a tuple of each creation operator of given dimension, in the Hilbert space
-    given by the product of all dimensions.
+    If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns a
+    tuple with _len(dims)_ operators $(A_1^\dag,\dots,A_N^\dag)$, where $A_k^\dag$ is
+    the creation operator acting on the $k$-th subsystem within the composite Hilbert
+    space of dimension $n=\prod n_k$:
+    $$
+        A_k^\dag = I_{n_1} \otimes\dots\otimes a_{n_k}^\dag \otimes\dots\otimes I_{n_N}.
+    $$
 
     Args:
-        *dims: Variable length argument list of the Hilbert space dimensions.
+        *dims: Hilbert space dimension of each mode.
 
     Returns:
-        _(qarray or tuple of qarrays)_ Creation operator of given dimension, or tuple
-            of creation operators in a multi-mode system.
+        _(qarray or tuple of qarrays, each of shape (n, n))_ Creation operator(s), with
+            _n = prod(dims)_.
 
     Examples:
+        Single-mode $a^\dag$:
         >>> dq.create(4)
         DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
         [[0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
          [1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
          [0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j]
          [0.   +0.j 0.   +0.j 1.732+0.j 0.   +0.j]]
-        >>> a, b = dq.create(2, 3)
-        >>> a
+
+        Mult-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
+        >>> adag, bdag = dq.create(2, 3)
+        >>> adag
         DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
         [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
@@ -192,7 +210,7 @@ def create(*dims: int) -> QArray | tuple[QArray, ...]:
          [1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]]
-        >>> b
+        >>> bdag
         DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
         [[0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
          [1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]

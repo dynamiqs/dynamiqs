@@ -353,3 +353,18 @@ article.md-typeset h1 {
   margin: 0 auto;
   width: 50%;
 }
+
+/* Magic plus annotation */
+.md-annotation__index {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.md-annotation__index::after, .md-annotation__index::before {
+  top: -.4ch;
+  width: 1.4ch;
+}
+
+.md-annotation__index {
+  width: 1.4ch;
+}

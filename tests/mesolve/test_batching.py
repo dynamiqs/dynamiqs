@@ -56,3 +56,27 @@ def test_flat_batching(nL1, npsi0):
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
     assert result.states.shape == (*broadcast_shape, ntsave, n, n)
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
+
+
+def test_batching_boris():
+    n = 9
+    a = dq.destroy(n)
+
+    # first modulated operator (1, 5, 9, 9)
+    omega1 = jnp.linspace(0, 1, 5)[None, :]
+    f = lambda t: jnp.cos(omega1 * t)
+    H1 = dq.modulated(f, a + dq.dag(a))
+
+    # second modulated operator 2 (7, 1, 9, 9)
+    omega2 = jnp.linspace(0, 1, 7)[:, None]
+    f = lambda t: jnp.cos(omega2 * t)
+    H2 = dq.modulated(f, 1j * a - 1j * dq.dag(a))
+
+    # Hamiltonian
+    H = H1 + H2
+
+    rho0 = dq.fock_dm(n, range(3))  # (3, 9, 9)
+    jump_ops = [a]
+    result = dq.mesolve(H, jump_ops, rho0, [0, 1])
+    assert result.states.shape == (7, 5, 3, 2, 9, 9)
+    assert result.tsave is not None

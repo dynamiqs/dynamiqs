@@ -64,7 +64,7 @@ def rand_complex(
         ax0.scatter(x.real, x.imag, s=1.0)
 
         # option 2: uniformly distributed magnitude and phase
-        x = np.random.rand(n) * np.exp(1j * 2 * np.pi * np.random.rand(n))
+        x = np.random.rand(n) * jnp.exp(1j * 2 * jnp.pi * np.random.rand(n))
         ax1.scatter(x.real, x.imag, s=1.0)
 
         # option 3: uniformly distributed in a disk (in dynamiqs)
