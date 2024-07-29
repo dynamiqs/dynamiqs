@@ -8,24 +8,40 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from .._checks import check_shape, check_times
-from ..core._utils import (
+from ..._checks import check_shape, check_times
+from ...gradient import Gradient
+from ...options import Options
+from ...qarrays import QArray, QArrayLike, asqarray
+from ...result import MEResult
+from ...solver import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Kvaerno3,
+    Kvaerno5,
+    Propagator,
+    Rouchon1,
+    Solver,
+    Tsit5,
+)
+from ...time_array import Shape, TimeArray
+from .._utils import (
     _astimearray,
     _cartesian_vectorize,
     _flat_vectorize,
     catch_xla_runtime_error,
-    get_solver_class,
+    get_integrator_class,
 )
-from ..gradient import Gradient
-from ..options import Options
-from ..qarrays import QArray, QArrayLike, asqarray
-from ..result import MEResult
-from ..solver import Dopri5, Dopri8, Euler, Propagator, Solver, Tsit5
-from ..time_array import Shape, TimeArray
-from .mediffrax import MEDopri5, MEDopri8, MEEuler, METsit5
-from .mepropagator import MEPropagator
-
-__all__ = ['mesolve']
+from ..mesolve.diffrax_integrator import (
+    MESolveDopri5Integrator,
+    MESolveDopri8Integrator,
+    MESolveEulerIntegrator,
+    MESolveKvaerno3Integrator,
+    MESolveKvaerno5Integrator,
+    MESolveTsit5Integrator,
+)
+from ..mesolve.propagator_integrator import MESolvePropagatorIntegrator
+from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 
 def mesolve(
@@ -43,17 +59,23 @@ def mesolve(
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
     starting from an initial state $\rho_0$, according to the Lindblad master
-    equation ($\hbar=1$)
+    equation (with $\hbar=1$ and where time is implicit(1))
     $$
-        \frac{\dd\rho(t)}{\dt} = -i[H(t), \rho(t)]
+        \frac{\dd\rho}{\dt} = -i[H, \rho]
         + \sum_{k=1}^N \left(
-            L_k(t) \rho(t) L_k^\dag(t)
-            - \frac{1}{2} L_k^\dag(t) L_k(t) \rho(t)
-            - \frac{1}{2} \rho(t) L_k^\dag(t) L_k(t)
+            L_k \rho L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho
+            - \frac{1}{2} \rho L_k^\dag L_k
         \right),
     $$
-    where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
-    collection of jump operators at time $t$.
+    where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
+    operators.
+    { .annotate }
+
+    1. With explicit time dependence:
+        - $\rho\to\rho(t)$
+        - $H\to H(t)$
+        - $L_k\to L_k(t)$
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
@@ -84,6 +106,8 @@ def mesolve(
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
             [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
             [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
@@ -136,7 +160,7 @@ def _vectorized_mesolve(
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = MEResult(None, None, None, None, 0, 0)
+    out_axes = MEResult(False, False, False, False, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(
@@ -181,24 +205,29 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MEResult:
-    # === select solver class
-    solvers = {
-        Euler: MEEuler,
-        Dopri5: MEDopri5,
-        Dopri8: MEDopri8,
-        Tsit5: METsit5,
-        Propagator: MEPropagator,
+    # === select integrator class
+    integrators = {
+        Euler: MESolveEulerIntegrator,
+        Rouchon1: MESolveRouchon1Integrator,
+        Dopri5: MESolveDopri5Integrator,
+        Dopri8: MESolveDopri8Integrator,
+        Tsit5: MESolveTsit5Integrator,
+        Kvaerno3: MESolveKvaerno3Integrator,
+        Kvaerno5: MESolveKvaerno5Integrator,
+        Propagator: MESolvePropagatorIntegrator,
     }
-    solver_class = get_solver_class(solvers, solver)
+    integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_class(tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops)
+    # === init integrator
+    integrator = integrator_class(
+        tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops
+    )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504
