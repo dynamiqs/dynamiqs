@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -328,7 +328,9 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        if not isinstance(y, ScalarLike) and not isinstance(y, DynamicJaxprTracer):
+        if not isinstance(y, get_args(ScalarLike)) and not isinstance(
+            y, DynamicJaxprTracer
+        ):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '
@@ -349,7 +351,7 @@ class QArray(eqx.Module):
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        if isinstance(y, ScalarLike):
+        if isinstance(y, get_args(ScalarLike)):
             logging.warning(
                 'Using the `+` or `-` operator between an array and a scalar performs '
                 'element-wise addition or subtraction. For addition with a scaled '

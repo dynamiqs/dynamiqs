@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import get_args
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -114,7 +116,7 @@ class DenseQArray(QArray):
     def __mul__(self, y: QArrayLike) -> QArray:
         super().__mul__(y)
 
-        if isinstance(y, ScalarLike):
+        if isinstance(y, get_args(ScalarLike)):
             data = self.data * y
         if isinstance(y, DenseQArray):
             data = self.data * y.data
@@ -128,7 +130,7 @@ class DenseQArray(QArray):
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)
 
-        if isinstance(y, ScalarLike):
+        if isinstance(y, get_args(ScalarLike)):
             data = self.data / y
         if isinstance(y, DenseQArray):
             data = self.data / y.data
@@ -142,7 +144,7 @@ class DenseQArray(QArray):
     def __add__(self, y: QArrayLike) -> QArray:
         super().__add__(y)
 
-        if isinstance(y, ScalarLike):
+        if isinstance(y, get_args(ScalarLike)):
             data = self.data + y
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
