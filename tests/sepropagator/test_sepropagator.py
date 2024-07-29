@@ -32,7 +32,7 @@ class TestSEPropagator(IntegratorTester):
 
     @pytest.mark.parametrize('save_states', [True, False])
     @pytest.mark.parametrize('solver', [None, Tsit5()])
-    @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
+    @pytest.mark.parametrize('nH', [(), (4,), (4, 5)])
     def test_correctness_complex(
         self, nH, save_states, solver, ysave_atol: float = 1e-3
     ):
