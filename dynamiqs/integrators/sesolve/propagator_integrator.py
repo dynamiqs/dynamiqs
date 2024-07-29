@@ -1,8 +1,7 @@
 import jax
 from jaxtyping import Scalar
 
-from dynamiqs.qarrays import QArray
-
+from ...qarrays import QArray
 from ..core.abstract_integrator import SESolveIntegrator
 from ..core.propagator_integrator import PropagatorIntegrator
 
