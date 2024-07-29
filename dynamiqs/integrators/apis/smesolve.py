@@ -6,10 +6,10 @@ from jaxtyping import ArrayLike
 
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays import QArrayLike
 from ...result import Result
 from ...solver import Solver
 from ...time_array import TimeArray
-from ..qarrays import QArrayLike
 
 
 def smesolve(

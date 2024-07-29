@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import get_args
 
 import equinox as eqx
 import jax
@@ -12,7 +11,8 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
-from .qarrays import QArray, QArrayLike, asqarray, isqarraylike
+from .qarrays import QArray, QArrayLike, asqarray
+from .qarrays.types import isqarraylike
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
