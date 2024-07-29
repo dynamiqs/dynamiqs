@@ -9,7 +9,6 @@ import jax.numpy as jnp
 import numpy as np
 from equinox.internal._omega import _Metaω
 from jax import Array, Device
-from jax._src.interpreters.partial_eval import DynamicJaxprTracer
 from jaxtyping import ScalarLike
 from qutip import Qobj
 
@@ -328,9 +327,7 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        if not isinstance(y, get_args(ScalarLike)) and not isinstance(
-            y, DynamicJaxprTracer
-        ):
+        if not isinstance(y, get_args(ScalarLike)):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '
