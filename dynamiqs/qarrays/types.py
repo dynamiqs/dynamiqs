@@ -30,11 +30,11 @@ _NestedQArrayLikeList = list[Union[_QArrayLike, '_NestedQArrayLikeList']]
 QArrayLike = Union[_QArrayLike, _NestedQArrayLikeList]
 
 
-def is_qarraylike(x: Any) -> bool:
+def isqarraylike(x: Any) -> bool:
     if isinstance(x, get_args(_QArrayLike)):
         return True
     elif isinstance(x, list):
-        return all(is_qarraylike(_x) for _x in x)
+        return all(isqarraylike(_x) for _x in x)
     return False
 
 
