@@ -9,7 +9,7 @@ from qutip import Qobj
 
 from .qarray import QArray
 
-__all__ = ['QArray', 'QArrayLike', 'asqarray', 'asjaxarray']
+__all__ = ['QArray', 'QArrayLike', 'asqarray', 'asjaxarray', 'isqarraylike']
 
 # In this file we define an extended array type named `QArrayLike`. Most
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
