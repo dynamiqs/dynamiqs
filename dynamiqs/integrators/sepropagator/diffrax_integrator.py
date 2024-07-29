@@ -17,7 +17,7 @@ from ..core.diffrax_integrator import (
 class SEPropagatorDiffraxIntegrator(DiffraxIntegrator, SEPropagatorIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
-        # define Schrödinger term d|psi>/dt = - i H |psi>
+        # define Schrödinger term dU/dt = - i H U
         vector_field = lambda t, y, _: -1j * self.H(t) @ y
         return dx.ODETerm(vector_field)
 
