@@ -3,11 +3,11 @@ import pytest
 from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Euler
 
-from ..integrator_tester import IntegratorTester
+from ..solver_tester import SolverTester
 from .closed_system import cavity, tdqubit
 
 
-class TestSESolveEuler(IntegratorTester):
+class TestSEEuler(SolverTester):
     @pytest.mark.parametrize('system', [cavity, tdqubit])
     def test_correctness(self, system):
         solver = Euler(dt=1e-4)

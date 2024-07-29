@@ -2,26 +2,24 @@ from __future__ import annotations
 
 import diffrax as dx
 
-from ...qarrays.utils import stack
-from ...utils.utils import dag
-from ..core.abstract_integrator import MESolveIntegrator
-from ..core.diffrax_integrator import (
-    DiffraxIntegrator,
-    Dopri5Integrator,
-    Dopri8Integrator,
-    EulerIntegrator,
-    Kvaerno3Integrator,
-    Kvaerno5Integrator,
-    Tsit5Integrator,
+from ..core.abstract_solver import MESolver
+from ..core.diffrax_solver import (
+    DiffraxSolver,
+    Dopri5Solver,
+    Dopri8Solver,
+    EulerSolver,
+    Tsit5Solver,
 )
+from ..qarrays.utils import stack
+from ..utils.utils import dag
 
 
-class MESolveDiffraxIntegrator(DiffraxIntegrator, MESolveIntegrator):
+class MEDiffraxSolver(DiffraxSolver, MESolver):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
 
-        # The Lindblad equation for a single loss channel is:
+        # The Lindblad equation is:
         # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
         # An alternative but similar equation is:
         # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
@@ -48,25 +46,17 @@ class MESolveDiffraxIntegrator(DiffraxIntegrator, MESolveIntegrator):
         return dx.ODETerm(vector_field)
 
 
-class MESolveEulerIntegrator(MESolveDiffraxIntegrator, EulerIntegrator):
+class MEEuler(MEDiffraxSolver, EulerSolver):
     pass
 
 
-class MESolveDopri5Integrator(MESolveDiffraxIntegrator, Dopri5Integrator):
+class MEDopri5(MEDiffraxSolver, Dopri5Solver):
     pass
 
 
-class MESolveDopri8Integrator(MESolveDiffraxIntegrator, Dopri8Integrator):
+class MEDopri8(MEDiffraxSolver, Dopri8Solver):
     pass
 
 
-class MESolveTsit5Integrator(MESolveDiffraxIntegrator, Tsit5Integrator):
-    pass
-
-
-class MESolveKvaerno3Integrator(MESolveDiffraxIntegrator, Kvaerno3Integrator):
-    pass
-
-
-class MESolveKvaerno5Integrator(MESolveDiffraxIntegrator, Kvaerno5Integrator):
+class METsit5(MEDiffraxSolver, Tsit5Solver):
     pass

@@ -1,11 +1,11 @@
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Propagator
 
-from ..integrator_tester import IntegratorTester
+from ..solver_tester import SolverTester
 from .open_system import ocavity
 
 
-class TestMESolvePropagator(IntegratorTester):
+class TestMEPropagator(SolverTester):
     def test_correctness(self):
         self._test_correctness(ocavity, Propagator())
 
