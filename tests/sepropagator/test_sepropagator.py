@@ -38,8 +38,8 @@ class TestSEPropagator(IntegratorTester):
     ):
         H = constant(rand_herm(jax.random.PRNGKey(42), (*nH, 2, 2)))
         t = 10.0
-        tsave = jnp.linspace(0.0, t, 3)
-        options = Options(save_states=save_states)
+        tsave = jnp.linspace(1.0, t, 3)
+        options = Options(save_states=save_states, t0=0.0)
         propresult = sepropagator(H, tsave, solver=solver, options=options).propagators
         if save_states:
             Hs = jnp.einsum('...ij,t->...tij', H.array, tsave)
