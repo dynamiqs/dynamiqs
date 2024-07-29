@@ -14,7 +14,7 @@ from dynamiqs.solver import Solver
 from .system import System
 
 
-class IntegratorTester:
+class SolverTester:
     def _test_correctness(
         self,
         system: System,

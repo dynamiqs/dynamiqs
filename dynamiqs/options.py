@@ -32,9 +32,7 @@ class Options(eqx.Module):
         save_extra _(function, optional)_: A function with signature
             `f(Array) -> PyTree` that takes a state as input and returns a PyTree.
             This can be used to save additional arbitrary data during the
-            integration. The additional data is accessible in the `extra` attribute of
-            the result object returned by the solvers (see
-            [`SEResult`][dynamiqs.SEResult] or [`MEResult`][dynamiqs.MEResult]).
+            integration.
     """
 
     save_states: bool = True

@@ -1,11 +1,11 @@
 from dynamiqs.gradient import Autograd
 from dynamiqs.solver import Propagator
 
-from ..integrator_tester import IntegratorTester
+from ..solver_tester import SolverTester
 from .closed_system import cavity
 
 
-class TestSESolvePropagator(IntegratorTester):
+class TestSEPropagator(SolverTester):
     def test_correctness(self):
         self._test_correctness(cavity, Propagator())
 

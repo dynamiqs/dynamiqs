@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from jaxtyping import ArrayLike
 
-from ...gradient import Gradient
-from ...options import Options
-from ...result import Result
-from ...solver import Solver
-from ...time_array import TimeArray
+from ..gradient import Gradient
+from ..options import Options
 from ..qarrays import QArrayLike
+from ..result import Result
+from ..solver import Solver
+from ..time_array import TimeArray
+
+__all__ = ['smesolve']
 
 
 def smesolve(
@@ -33,32 +35,27 @@ def smesolve(
         a draft API, copied from the old PyTorch version of the library.
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
-    starting from an initial state $\rho_0$, according to the diffusive SME in Itô
-    form (with $\hbar=1$ and where time is implicit(1))
+    starting from an initial state $\rho(t=0)$, according to the diffusive SME in Itô
+    form ($\hbar=1$)
     $$
         \begin{split}
-            \dd\rho =&~ -i[H, \rho]\,\dt + \sum_{k=1}^N \left(
-                L_k \rho L_k^\dag
-                - \frac{1}{2} L_k^\dag L_k \rho
-                - \frac{1}{2} \rho L_k^\dag L_k
-        \right)\dt \\\\
+            \dd\rho(t) =&~ -i[H(t), \rho(t)] \dt \\\\
+            &+ \sum_{k=1}^N \left(
+                L_k(t) \rho(t) L_k(t)^\dag
+                - \frac{1}{2} L_k(t)^\dag L_k(t) \rho(t)
+                - \frac{1}{2} \rho(t) L_k(t)^\dag L_k(t)
+            \right)\dt \\\\
             &+ \sum_{k=1}^N \sqrt{\eta_k} \left(
-                L_k \rho
-                + \rho L_k^\dag
-                - \tr{(L_k+L_k^\dag)\rho}\rho
-            \right)\dd W_k,
+                L_k(t) \rho(t)
+                + \rho(t) L_k(t)^\dag
+                - \tr{(L_k(t)+L_k(t)^\dag)\rho(t)}\rho(t)\ \dd W_k(t)
+            \right),
         \end{split}
     $$
-    where $H$ is the system's Hamiltonian, $\{L_k\}$ is a collection of jump operators,
-    each continuously measured with efficiency $0\leq\eta_k\leq1$ ($\eta_k=0$ for
-    purely dissipative loss channels) and $\dd W_k$ are independent Wiener processes.
-    { .annotate }
-
-    1. With explicit time dependence:
-        - $\rho\to\rho(t)$
-        - $H\to H(t)$
-        - $L_k\to L_k(t)$
-        - $\dd W_k\to \dd W_k(t)$
+    where $H(t)$ is the system's Hamiltonian at time $t$, $\{L_k(t)\}$ is a collection
+    of jump operators at time $t$, each continuously measured with efficiency
+    $0\leq\eta_k\leq1$ ($\eta_k=0$ for purely dissipative loss channels) and
+    $\dd W_k(t)$ are independent Wiener processes.
 
     Note-: Diffusive vs. jump SME
         In quantum optics the _diffusive_ SME corresponds to homodyne or heterodyne
@@ -67,19 +64,19 @@ def smesolve(
         don't hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
-    The measured signals $I_k=\dd y_k/\dt$ verifies (again time is implicit):
+    The measured signals $I_k(t)=\dd y_k(t)/\dt$ verifies:
     $$
-        \dd y_k =\sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
+        \dd y_k(t) =\sqrt{\eta_k} \tr{(L_k(t) + L_k(t)^\dag) \rho(t)} \dt + \dd W_k(t).
     $$
 
     Note-: Signal normalisation
         Sometimes the signals are defined with a different but equivalent normalisation
-        $\dd y_k' = \dd y_k/(2\sqrt{\eta_k})$.
+        $\dd y_k'(t) = \dd y_k(t)/(2\sqrt{\eta_k})$.
 
-    The signals $I_k$ are singular quantities, the solver returns the averaged signals
-    $J_k$ defined for a time interval $[t_0, t_1)$ by:
+    The signals $I_k(t)$ are singular quantities, the solver returns the averaged signals
+    $J_k(t)$ defined for a time interval $[t_0, t_1)$ by:
     $$
-        J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\, \dt
+        J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t) \dt
         = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd y_k(t).
     $$
     The time intervals for integration are defined by the argument `tmeas`, which

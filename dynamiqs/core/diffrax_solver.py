@@ -8,15 +8,11 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
 
-from ...gradient import Autograd, CheckpointAutograd
-from .abstract_integrator import BaseIntegrator
+from ..gradient import Autograd, CheckpointAutograd
+from .abstract_solver import BaseSolver
 
 
-class DiffraxIntegrator(BaseIntegrator):
-    # Subclasses should implement:
-    # - the attributes: stepsize_controller, dt0, max_steps, diffrax_solver, terms
-    # - the methods: result, infos
-
+class DiffraxSolver(BaseSolver):
     stepsize_controller: dx.AbstractVar[dx.AbstractStepSizeController]
     dt0: dx.AbstractVar[float | None]
     max_steps: dx.AbstractVar[int]
@@ -24,16 +20,13 @@ class DiffraxIntegrator(BaseIntegrator):
     terms: dx.AbstractVar[dx.AbstractTerm]
 
     def __init__(self, *args):
-        # pass all init arguments to `BaseIntegrator`
+        # pass all init arguments to `BaseSolver`
         super().__init__(*args)
 
     def run(self) -> PyTree:
+        # TODO: remove once complex support is stabilized in diffrax
         with warnings.catch_warnings():
-            # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
-            # TODO: remove once https://github.com/patrick-kidger/diffrax/issues/445 is
-            # closed
-            warnings.simplefilter('ignore', FutureWarning)
 
             # === prepare diffrax arguments
             fn = lambda t, y, args: self.save(y)  # noqa: ARG005
@@ -73,11 +66,7 @@ class DiffraxIntegrator(BaseIntegrator):
         pass
 
 
-class FixedStepIntegrator(DiffraxIntegrator):
-    # Subclasses should implement:
-    # - the attributes: diffrax_solver, terms
-    # - the methods: result
-
+class FixedSolver(DiffraxSolver):
     class Infos(eqx.Module):
         nsteps: Array
 
@@ -100,15 +89,11 @@ class FixedStepIntegrator(DiffraxIntegrator):
         return self.Infos(stats['num_steps'])
 
 
-class EulerIntegrator(FixedStepIntegrator):
+class EulerSolver(FixedSolver):
     diffrax_solver: dx.AbstractSolver = dx.Euler()
 
 
-class AdaptiveStepIntegrator(DiffraxIntegrator):
-    # Subclasses should implement:
-    # - the attributes: diffrax_solver, terms
-    # - the methods: result
-
+class AdaptiveSolver(DiffraxSolver):
     class Infos(eqx.Module):
         nsteps: Array
         naccepted: Array
@@ -117,8 +102,8 @@ class AdaptiveStepIntegrator(DiffraxIntegrator):
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
                 return (
-                    f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
-                    f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
+                    f'avg. {self.nsteps.mean()} steps ({self.naccepted.mean()}'
+                    f' accepted, {self.nrejected.mean()} rejected) | infos shape'
                     f' {self.nsteps.shape}'
                 )
             return (
@@ -136,7 +121,6 @@ class AdaptiveStepIntegrator(DiffraxIntegrator):
             safety=self.solver.safety_factor,
             factormin=self.solver.min_factor,
             factormax=self.solver.max_factor,
-            jump_ts=self.discontinuity_ts,
         )
 
     @property
@@ -149,21 +133,13 @@ class AdaptiveStepIntegrator(DiffraxIntegrator):
         )
 
 
-class Dopri5Integrator(AdaptiveStepIntegrator):
+class Dopri5Solver(AdaptiveSolver):
     diffrax_solver = dx.Dopri5()
 
 
-class Dopri8Integrator(AdaptiveStepIntegrator):
+class Dopri8Solver(AdaptiveSolver):
     diffrax_solver = dx.Dopri8()
 
 
-class Tsit5Integrator(AdaptiveStepIntegrator):
+class Tsit5Solver(AdaptiveSolver):
     diffrax_solver = dx.Tsit5()
-
-
-class Kvaerno3Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Kvaerno3()
-
-
-class Kvaerno5Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Kvaerno5()

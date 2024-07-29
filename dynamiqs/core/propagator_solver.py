@@ -8,12 +8,12 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ...qarrays import QArray
-from ...time_array import ConstantTimeArray
-from .abstract_integrator import BaseIntegrator
+from ..qarrays import QArray
+from ..time_array import ConstantTimeArray
+from .abstract_solver import BaseSolver, MESolver, SESolver
 
 
-class PropagatorIntegrator(BaseIntegrator):
+class PropagatorSolver(BaseSolver):
     class Infos(eqx.Module):
         nsteps: Array
 
@@ -22,7 +22,7 @@ class PropagatorIntegrator(BaseIntegrator):
                 # note: propagator solvers can make different number of steps between
                 # batch elements when batching over PWC objects
                 return (
-                    f'avg. {self.nsteps.mean():.1f} steps | infos shape'
+                    f'avg. {self.nsteps.mean()} steps | infos shape'
                     f' {self.nsteps.shape}'
                 )
             return f'{self.nsteps} steps'
@@ -62,3 +62,21 @@ class PropagatorIntegrator(BaseIntegrator):
     @abstractmethod
     def forward(self, delta_t: Scalar, y: QArray) -> QArray:
         pass
+
+
+class SEPropagatorSolver(PropagatorSolver, SESolver):
+    pass
+
+
+class MEPropagatorSolver(PropagatorSolver, MESolver):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # check that jump operators are time-independent
+        if not all(isinstance(L, ConstantTimeArray) for L in self.Ls):
+            raise TypeError(
+                'Solver `Propagator` requires time-independent jump operators.'
+            )
+
+        # extract the constant arrays from the `ConstantTimeArray` objects
+        self.Ls = [L.array for L in self.Ls]

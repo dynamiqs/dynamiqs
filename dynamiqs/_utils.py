@@ -5,7 +5,7 @@ from typing import Any
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import ArrayLike, PyTree
 
 from .qarrays import QArray
 
@@ -21,7 +21,7 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def on_cpu(x: Array | QArray) -> bool:
+def on_cpu(x: Array | QArray) -> str:
     # TODO: this is a temporary solution, it won't work when we have multiple devices
     return x.devices().pop().device_kind == 'cpu'
 
@@ -48,8 +48,19 @@ def tree_str_inline(x: PyTree) -> str:
     return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
 
 
-def _concatenate_sort(*args: Array | None) -> Array | None:
-    args = [x for x in args if x is not None]
-    if len(args) == 0:
-        return None
-    return jnp.sort(jnp.concatenate(args))
+def expand_as_broadcastable(arrays: tuple[ArrayLike, ...]) -> tuple[ArrayLike, ...]:
+    arrays = tuple([jnp.asarray(arr) for arr in arrays])
+    expanded_arrays = []
+
+    # number of dimensions of the expanded arrays
+    num_dims = sum([arr.ndim for arr in arrays])
+
+    # loop over the arrays and expand them
+    k = 0
+    for arr in arrays:
+        new_shape = [-1 if i in range(k, k + arr.ndim) else 1 for i in range(num_dims)]
+        new_arr = arr.reshape(new_shape)
+        expanded_arrays.append(new_arr)
+        k += arr.ndim
+
+    return tuple(expanded_arrays)

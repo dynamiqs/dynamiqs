@@ -7,11 +7,12 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
+import numpy as np
 from jax import Array, lax
-from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 from ._checks import check_shape, check_times
-from ._utils import _concatenate_sort, cdtype, obj_type_str
+from ._utils import cdtype, obj_type_str
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -28,15 +29,6 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O_0$ for any time $t$.
-
-    Examples:
-        >>> H = dq.constant(dq.sigmaz())
-        >>> H(0.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
-        >>> H(1.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(..., n, n)')
@@ -72,24 +64,6 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
-
-    Examples:
-        >>> times = [0.0, 1.0, 2.0]
-        >>> values = [3.0, -2.0]
-        >>> array = dq.sigmaz()
-        >>> H = dq.pwc(times, values, array)
-        >>> H(-0.5)
-        Array([[ 0.+0.j,  0.+0.j],
-               [ 0.+0.j, -0.+0.j]], dtype=complex64)
-        >>> H(0.0)
-        Array([[ 3.+0.j,  0.+0.j],
-               [ 0.+0.j, -3.+0.j]], dtype=complex64)
-        >>> H(0.5)
-        Array([[ 3.+0.j,  0.+0.j],
-               [ 0.+0.j, -3.+0.j]], dtype=complex64)
-        >>> H(1.0)
-        Array([[-2.+0.j, -0.+0.j],
-               [-0.+0.j,  2.-0.j]], dtype=complex64)
     """
     # times
     times = jnp.asarray(times)
@@ -110,40 +84,23 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
     return PWCTimeArray(times, values, array)
 
 
-def modulated(
-    f: callable[[float], Scalar | Array],
-    array: ArrayLike,
-    *,
-    discontinuity_ts: ArrayLike | None = None,
-) -> ModulatedTimeArray:
+def modulated(f: callable[[float, ...], Array], array: ArrayLike) -> ModulatedTimeArray:
     r"""Instantiate a modulated time-array.
 
     A modulated time-array is defined by $O(t) = f(t) O_0$ where $f(t)$ is a
     time-dependent scalar. The function $f$ is defined by passing a Python function
-    with signature `f(t: float) -> Scalar | Array` that returns a scalar or an array of
-    shape _(...)_ for any time $t$.
+    with signature `f(t: float) -> Array` that returns an array of shape
+    _(...)_ for any time $t$.
 
     Args:
-        f _(function returning scalar or array of shape (...))_: Function with signature
-            `f(t: float) -> Scalar | Array` that returns the modulating factor
+        f _(function returning array of shape (...))_: Function with signature
+            `f(t: float) -> Array` that returns the modulating factor
             $f(t)$.
         array _(array_like of shape (n, n))_: Constant array $O_0$.
-        discontinuity_ts _(array_like, optional)_: Times at which there is a
-            discontinuous jump in the function values.
 
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
-
-    Examples:
-        >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
-        >>> H = dq.modulated(f, dq.sigmax())
-        >>> H(0.5)
-        Array([[-0.+0.j, -1.+0.j],
-               [-1.+0.j, -0.+0.j]], dtype=complex64)
-        >>> H(1.0)
-        Array([[0.+0.j, 1.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
     """
     # check f is callable
     if not callable(f):
@@ -155,20 +112,13 @@ def modulated(
     array = jnp.asarray(array, dtype=cdtype())
     check_shape(array, 'array', '(n, n)')
 
-    # discontinuity_ts
-    if discontinuity_ts is not None:
-        discontinuity_ts = jnp.asarray(discontinuity_ts)
-        discontinuity_ts = jnp.sort(discontinuity_ts)
-
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
-    return ModulatedTimeArray(f, array, discontinuity_ts)
+    return ModulatedTimeArray(f, array)
 
 
-def timecallable(
-    f: callable[[float], Array], *, discontinuity_ts: ArrayLike | None = None
-) -> CallableTimeArray:
+def timecallable(f: callable[[float], Array]) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
@@ -184,22 +134,10 @@ def timecallable(
     Args:
         f _(function returning array of shape (..., n, n))_: Function with signature
             `(t: float) -> Array` that returns the array $f(t)$.
-        discontinuity_ts _(array_like, optional)_: Times at which there is a
-            discontinuous jump in the function values.
 
     Returns:
        _(time-array object of shape (..., n, n) when called)_ Callable object
             returning $O(t)$ for any time $t$.
-
-    Examples:
-        >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
-        >>> H = dq.timecallable(f)
-        >>> H(0.5)
-        Array([[0.5, 0. ],
-               [0. , 0.5]], dtype=float32)
-        >>> H(1.0)
-        Array([[1., 0.],
-               [0., 0.]], dtype=float32)
     """
     # check f is callable
     if not callable(f):
@@ -207,15 +145,10 @@ def timecallable(
             f'Argument `f` must be a function, but has type {obj_type_str(f)}.'
         )
 
-    # discontinuity_ts
-    if discontinuity_ts is not None:
-        discontinuity_ts = jnp.asarray(discontinuity_ts)
-        discontinuity_ts = jnp.sort(discontinuity_ts)
-
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
-    return CallableTimeArray(f, discontinuity_ts)
+    return CallableTimeArray(f)
 
 
 class Shape(tuple):
@@ -234,9 +167,6 @@ class TimeArray(eqx.Module):
         mT _(TimeArray)_: Returns the time-array transposed over its last two
             dimensions.
         ndim _(int)_: Number of dimensions.
-        discontinuity_ts _(Array | None)_: Times at which there is a discontinuous jump
-            in the time-array values (the array is always sorted, but does not
-            necessarily contain unique values).
 
     Note: Arithmetic operation support
         Time-arrays support elementary operations:
@@ -249,15 +179,15 @@ class TimeArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT, in_axes, discontinuity_ts
-    # - the methods: reshape, broadcast_to, conj, __call__, __mul__, __add__
+    # - the properties: dtype, shape, mT, in_axes
+    # - the methods: reshape, broadcast_to, conj, __call__, __neg__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
     # with `Array`, `ConstantTimeArray` and the subclass type itself.
 
     @property
     @abstractmethod
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         pass
 
     @property
@@ -281,29 +211,23 @@ class TimeArray(eqx.Module):
     def ndim(self) -> int:
         return len(self.shape)
 
-    @property
     @abstractmethod
-    def discontinuity_ts(self) -> Array | None:
-        # must be sorted, not necessarily unique values
-        pass
-
-    @abstractmethod
-    def reshape(self, *shape: int) -> TimeArray:
+    def reshape(self, *new_shape: int) -> TimeArray:
         """Returns a reshaped copy of a time-array.
 
         Args:
-            *shape: New shape, which must match the original size.
+            *new_shape: New shape, which must match the original size.
 
         Returns:
             New time-array object with the given shape.
         """
 
     @abstractmethod
-    def broadcast_to(self, *shape: int) -> TimeArray:
+    def broadcast_to(self, *new_shape: int) -> TimeArray:
         """Broadcasts a time-array to a new shape.
 
         Args:
-            *shape: New shape, which must be compatible with the original shape.
+            *new_shape: New shape, which must be compatible with the original shape.
 
         Returns:
             New time-array object with the given shape.
@@ -317,29 +241,6 @@ class TimeArray(eqx.Module):
             New time-array object with element-wise complex conjuguated values.
         """
 
-    def squeeze(self, axis: int | None = None) -> TimeArray:
-        """Squeeze a time-array.
-
-        Args:
-            axis: Axis to squeeze. If `none`, all axes with dimension 1 are squeezed.
-
-        Returns:
-            New time-array object with squeezed_shape
-        """
-        if axis is None:
-            shape = self.shape
-            x = self
-            for i, s in reversed(list(enumerate(shape))):
-                if s == 1:
-                    x = x.squeeze(i)
-            return x
-
-        if axis >= self.ndim:
-            raise ValueError(
-                f'Cannot squeeze axis {axis} from a time-array with {self.ndim} axes.'
-            )
-        return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
-
     @abstractmethod
     def __call__(self, t: ScalarLike) -> Array:
         """Returns the time-array evaluated at a given time.
@@ -351,8 +252,9 @@ class TimeArray(eqx.Module):
             Array evaluated at time $t$.
         """
 
+    @abstractmethod
     def __neg__(self) -> TimeArray:
-        return self * (-1)
+        pass
 
     @abstractmethod
     def __mul__(self, y: ArrayLike) -> TimeArray:
@@ -382,7 +284,7 @@ class ConstantTimeArray(TimeArray):
     array: Array
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.array.dtype
 
     @property
@@ -397,21 +299,20 @@ class ConstantTimeArray(TimeArray):
     def in_axes(self) -> PyTree[int]:
         return ConstantTimeArray(Shape(self.array.shape[:-2]))
 
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        return None
+    def reshape(self, *new_shape: int) -> TimeArray:
+        return ConstantTimeArray(self.array.reshape(*new_shape))
 
-    def reshape(self, *shape: int) -> TimeArray:
-        return ConstantTimeArray(self.array.reshape(*shape))
-
-    def broadcast_to(self, *shape: int) -> TimeArray:
-        return ConstantTimeArray(jnp.broadcast_to(self.array, shape))
+    def broadcast_to(self, *new_shape: int) -> TimeArray:
+        return ConstantTimeArray(jnp.broadcast_to(self.array, new_shape))
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
 
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.array
+
+    def __neg__(self) -> TimeArray:
+        return ConstantTimeArray(-self.array)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ConstantTimeArray(self.array * y)
@@ -433,7 +334,7 @@ class PWCTimeArray(TimeArray):
     array: Array  # (n, n)
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.array.dtype
 
     @property
@@ -448,18 +349,14 @@ class PWCTimeArray(TimeArray):
     def in_axes(self) -> PyTree[int]:
         return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
 
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        return self.times
-
-    def reshape(self, *shape: int) -> TimeArray:
-        shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
-        values = self.values.reshape(*shape)
+    def reshape(self, *new_shape: int) -> TimeArray:
+        new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = self.values.reshape(*new_shape)
         return PWCTimeArray(self.times, values, self.array)
 
-    def broadcast_to(self, *shape: int) -> TimeArray:
-        shape = shape[:-2] + self.values.shape[-1:]  # (..., nv)
-        values = jnp.broadcast_to(self.values, shape)
+    def broadcast_to(self, *new_shape: int) -> TimeArray:
+        new_shape = new_shape[:-2] + self.values.shape[-1:]  # (..., nv)
+        values = jnp.broadcast_to(self.values, new_shape)
         return PWCTimeArray(self.times, values, self.array)
 
     def conj(self) -> TimeArray:
@@ -479,6 +376,9 @@ class PWCTimeArray(TimeArray):
 
         return value.reshape(*value.shape, 1, 1) * self.array
 
+    def __neg__(self) -> TimeArray:
+        return PWCTimeArray(self.times, self.values, -self.array)
+
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array * y)
 
@@ -495,10 +395,9 @@ class PWCTimeArray(TimeArray):
 class ModulatedTimeArray(TimeArray):
     f: BatchedCallable  # (...)
     array: Array  # (n, n)
-    _disc_ts: Array | None
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.array.dtype
 
     @property
@@ -507,34 +406,33 @@ class ModulatedTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array.mT, self._disc_ts)
+        return ModulatedTimeArray(self.f, self.array.mT)
 
     @property
     def in_axes(self) -> PyTree[int]:
-        return ModulatedTimeArray(Shape(self.f.shape), Shape(), Shape())
+        return ModulatedTimeArray(Shape(self.f.shape), Shape())
 
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        return self._disc_ts
+    def reshape(self, *new_shape: int) -> TimeArray:
+        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape[:-2]))
+        return ModulatedTimeArray(f, self.array)
 
-    def reshape(self, *shape: int) -> TimeArray:
-        f = self.f.reshape(*shape[:-2])
-        return ModulatedTimeArray(f, self.array, self._disc_ts)
-
-    def broadcast_to(self, *shape: int) -> TimeArray:
-        f = self.f.broadcast_to(*shape[:-2])
-        return ModulatedTimeArray(f, self.array, self._disc_ts)
+    def broadcast_to(self, *new_shape: int) -> TimeArray:
+        f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), *new_shape[:-2]))
+        return ModulatedTimeArray(f, self.array)
 
     def conj(self) -> TimeArray:
-        f = self.f.conj()
-        return ModulatedTimeArray(f, self.array.conj(), self._disc_ts)
+        f = jtu.Partial(lambda t: self.f(t).conj())
+        return ModulatedTimeArray(f, self.array.conj())
 
     def __call__(self, t: ScalarLike) -> Array:
         values = self.f(t)
         return values.reshape(*values.shape, 1, 1) * self.array
 
+    def __neg__(self) -> TimeArray:
+        return ModulatedTimeArray(self.f, -self.array)
+
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        return ModulatedTimeArray(self.f, self.array * y, self._disc_ts)
+        return ModulatedTimeArray(self.f, self.array * y)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
@@ -548,10 +446,9 @@ class ModulatedTimeArray(TimeArray):
 
 class CallableTimeArray(TimeArray):
     f: BatchedCallable  # (..., n, n)
-    _disc_ts: Array | None
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.f.dtype
 
     @property
@@ -561,34 +458,34 @@ class CallableTimeArray(TimeArray):
     @property
     def mT(self) -> TimeArray:
         f = jtu.Partial(lambda t: self.f(t).mT)
-        return CallableTimeArray(f, self._disc_ts)
+        return CallableTimeArray(f)
 
     @property
     def in_axes(self) -> PyTree[int]:
-        return CallableTimeArray(Shape(self.f.shape[:-2]), Shape())
+        return CallableTimeArray(Shape(self.f.shape[:-2]))
 
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        return self._disc_ts
+    def reshape(self, *new_shape: int) -> TimeArray:
+        f = jtu.Partial(lambda t: self.f(t).reshape(*new_shape))
+        return CallableTimeArray(f)
 
-    def reshape(self, *shape: int) -> TimeArray:
-        f = self.f.reshape(*shape)
-        return CallableTimeArray(f, self._disc_ts)
-
-    def broadcast_to(self, *shape: int) -> TimeArray:
-        f = self.f.broadcast_to(*shape)
-        return CallableTimeArray(f, self._disc_ts)
+    def broadcast_to(self, *new_shape: int) -> TimeArray:
+        f = jtu.Partial(lambda t: jnp.broadcast_to(self.f(t), new_shape))
+        return CallableTimeArray(f)
 
     def conj(self) -> TimeArray:
-        f = self.f.conj()
-        return CallableTimeArray(f, self._disc_ts)
+        f = jtu.Partial(lambda t: self.f(t).conj())
+        return CallableTimeArray(f)
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
 
+    def __neg__(self) -> TimeArray:
+        f = jtu.Partial(lambda t: -self.f(t))
+        return CallableTimeArray(f)
+
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        f = self.f * y
-        return CallableTimeArray(f, self._disc_ts)
+        f = jtu.Partial(lambda t: self.f(t) * y)
+        return CallableTimeArray(f)
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
@@ -604,7 +501,7 @@ class SummedTimeArray(TimeArray):
     timearrays: list[TimeArray]
 
     @property
-    def dtype(self) -> jnp.dtype:
+    def dtype(self) -> np.dtype:
         return self.timearrays[0].dtype
 
     @property
@@ -613,39 +510,35 @@ class SummedTimeArray(TimeArray):
 
     @property
     def mT(self) -> TimeArray:
-        timearrays = [tarray.mT for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
+        return SummedTimeArray([tarray.mT for tarray in self.timearrays])
 
     @property
     def in_axes(self) -> PyTree[int]:
-        timearrays = [tarray.in_axes for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
+        return SummedTimeArray([tarray.in_axes for tarray in self.timearrays])
 
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        ts = [tarray.discontinuity_ts for tarray in self.timearrays]
-        return _concatenate_sort(*ts)
+    def reshape(self, *new_shape: int) -> TimeArray:
+        return SummedTimeArray(
+            [tarray.reshape(*new_shape) for tarray in self.timearrays]
+        )
 
-    def reshape(self, *shape: int) -> TimeArray:
-        timearrays = [tarray.reshape(*shape) for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
-
-    def broadcast_to(self, *shape: int) -> TimeArray:
-        timearrays = [tarray.broadcast_to(*shape) for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
+    def broadcast_to(self, *new_shape: int) -> TimeArray:
+        return SummedTimeArray(
+            [tarray.broadcast_to(*new_shape) for tarray in self.timearrays]
+        )
 
     def conj(self) -> TimeArray:
-        timearrays = [tarray.conj() for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
+        return SummedTimeArray([tarray.conj() for tarray in self.timearrays])
 
     def __call__(self, t: ScalarLike) -> Array:
         return jax.tree_util.tree_reduce(
             jnp.add, [tarray(t) for tarray in self.timearrays]
         )
 
+    def __neg__(self) -> TimeArray:
+        return SummedTimeArray([-tarray for tarray in self.timearrays])
+
     def __mul__(self, y: ArrayLike) -> TimeArray:
-        timearrays = [tarray * y for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
+        return SummedTimeArray([tarray * y for tarray in self.timearrays])
 
     def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
         if isinstance(other, get_args(ArrayLike)):
@@ -663,9 +556,9 @@ class BatchedCallable(eqx.Module):
     f: callable[[float], Array]
     indices: list[Array]
 
-    def __init__(self, f: callable[[float], Scalar | Array]):
-        # make f a valid PyTree with `Partial` and convert its output to an array
-        self.f = jtu.Partial(lambda t: jnp.asarray(f(t)))
+    def __init__(self, f: callable[[float], Array]):
+        # make f a valid PyTree with `Partial`
+        self.f = jtu.Partial(f)
         shape = jax.eval_shape(f, 0.0).shape
         self.indices = list(jnp.indices(shape))
 
@@ -679,23 +572,3 @@ class BatchedCallable(eqx.Module):
     @property
     def shape(self) -> tuple[int, ...]:
         return jax.eval_shape(self.f, 0.0).shape
-
-    def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        f = lambda t: self.f(t).reshape(shape)
-        return BatchedCallable(f)
-
-    def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        f = lambda t: jnp.broadcast_to(self.f(t), shape)
-        return BatchedCallable(f)
-
-    def conj(self) -> BatchedCallable:
-        f = lambda t: self.f(t).conj()
-        return BatchedCallable(f)
-
-    def squeeze(self, i: int) -> BatchedCallable:
-        f = lambda t: jnp.squeeze(self.f(t), i)
-        return BatchedCallable(f)
-
-    def __mul__(self, y: ArrayLike) -> BatchedCallable:
-        f = lambda t: self.f(t) * y
-        return BatchedCallable(f)
