@@ -2,24 +2,26 @@ from __future__ import annotations
 
 import diffrax as dx
 
-from ..core.abstract_solver import MESolver
-from ..core.diffrax_solver import (
-    DiffraxSolver,
-    Dopri5Solver,
-    Dopri8Solver,
-    EulerSolver,
-    Tsit5Solver,
+from ...qarrays.utils import stack
+from ...utils.utils import dag
+from ..core.abstract_integrator import MESolveIntegrator
+from ..core.diffrax_integrator import (
+    DiffraxIntegrator,
+    Dopri5Integrator,
+    Dopri8Integrator,
+    EulerIntegrator,
+    Kvaerno3Integrator,
+    Kvaerno5Integrator,
+    Tsit5Integrator,
 )
-from ..qarrays.utils import stack
-from ..utils.utils import dag
 
 
-class MEDiffraxSolver(DiffraxSolver, MESolver):
+class MESolveDiffraxIntegrator(DiffraxIntegrator, MESolveIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
 
-        # The Lindblad equation is:
+        # The Lindblad equation for a single loss channel is:
         # (1) drho/dt = -i [H, rho] + L @ rho @ Ld - 0.5 Ld @ L @ rho - 0.5 rho @ Ld @ L
         # An alternative but similar equation is:
         # (2) drho/dt = (-i H @ rho + 0.5 L @ rho @ Ld - 0.5 Ld @ L @ rho) + h.c.
@@ -46,17 +48,25 @@ class MEDiffraxSolver(DiffraxSolver, MESolver):
         return dx.ODETerm(vector_field)
 
 
-class MEEuler(MEDiffraxSolver, EulerSolver):
+class MESolveEulerIntegrator(MESolveDiffraxIntegrator, EulerIntegrator):
     pass
 
 
-class MEDopri5(MEDiffraxSolver, Dopri5Solver):
+class MESolveDopri5Integrator(MESolveDiffraxIntegrator, Dopri5Integrator):
     pass
 
 
-class MEDopri8(MEDiffraxSolver, Dopri8Solver):
+class MESolveDopri8Integrator(MESolveDiffraxIntegrator, Dopri8Integrator):
     pass
 
 
-class METsit5(MEDiffraxSolver, Tsit5Solver):
+class MESolveTsit5Integrator(MESolveDiffraxIntegrator, Tsit5Integrator):
+    pass
+
+
+class MESolveKvaerno3Integrator(MESolveDiffraxIntegrator, Kvaerno3Integrator):
+    pass
+
+
+class MESolveKvaerno5Integrator(MESolveDiffraxIntegrator, Kvaerno5Integrator):
     pass

@@ -29,6 +29,7 @@ print(result)
 ```
 
 ```text title="Output"
+|██████████| 100.0% ◆ elapsed 66.94ms ◆ remaining 0.00ms
 ==== MEResult ====
 Solver  : Tsit5
 States  : Array complex64 (101, 128, 128) | 12.62 Mb
@@ -73,6 +74,7 @@ print(f'Gradient w.r.t. alpha={grads[2]:.2f}')
 ```
 
 ```text title="Output"
+|██████████| 100.0% ◆ elapsed 86.63ms ◆ remaining 0.00ms
 Gradient w.r.t. omega=0.00
 Gradient w.r.t. kappa=-0.90
 Gradient w.r.t. alpha=1.81

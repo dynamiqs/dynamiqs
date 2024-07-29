@@ -61,6 +61,7 @@ print(result)
 ```
 
 ```text
+|██████████| 100.0% ◆ elapsed 66.94ms ◆ remaining 0.00ms
 ==== MEResult ====
 Solver  : Tsit5
 States  : Array complex64 (101, 128, 128) | 12.62 Mb
@@ -105,6 +106,7 @@ print(f'Gradient w.r.t. alpha={grads[2]:.2f}')
 ```
 
 ```text
+|██████████| 100.0% ◆ elapsed 86.63ms ◆ remaining 0.00ms
 Gradient w.r.t. omega=0.00
 Gradient w.r.t. kappa=-0.90
 Gradient w.r.t. alpha=1.81
@@ -116,7 +118,7 @@ Below are some cool features of **dynamiqs** that are either already available o
 
 **Solvers**
 
-- Choose between a variety of solvers, from **modern** ODE solvers (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** solvers that preserve the physicality of the evolution (the state trace and positivity are preserved).
+- Choose between a variety of solvers, from **modern** explicit and implicit ODE solvers (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** solvers that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
 - Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.
@@ -146,7 +148,6 @@ Below are some cool features of **dynamiqs** that are either already available o
 **Coming soon**
 
 - Discover a custom **sparse format**, with substantial speedups for large systems.
-- Use **implicit** ODE solvers.
 - Simulate using propagators solvers based on **Krylov subspace methods**.
 - **Benchmark code** to compare solvers and performance for different systems.
 
