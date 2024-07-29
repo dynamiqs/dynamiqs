@@ -104,6 +104,9 @@ class DenseQArray(QArray):
     def to_jax(self) -> Array:
         return self.data
 
+    def __len__(self):
+        return len(self.data)
+
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return np.asarray(self.data, dtype=dtype)
 
@@ -118,7 +121,7 @@ class DenseQArray(QArray):
 
         if isinstance(y, get_args(ScalarLike)):
             data = self.data * y
-        if isinstance(y, DenseQArray):
+        elif isinstance(y, DenseQArray):
             data = self.data * y.data
         elif isinstance(y, get_args(QArrayLike)):
             data = self.data * asjaxarray(y)

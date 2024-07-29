@@ -145,7 +145,7 @@ class OTDQubit(OpenSystem):
         return dq.fock(2, 0)
 
     def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
+        return dq.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
 
     def _theta(self, t: float) -> float:
         return 2 * self.eps / self.omega * jnp.sin(self.omega * t)
