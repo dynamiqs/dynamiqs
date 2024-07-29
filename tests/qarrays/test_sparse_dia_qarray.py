@@ -80,8 +80,6 @@ class TestSparseDIAQArray:
     def test_powm(self, rtol=1e-05, atol=1e-08):
         N = 3
         out_dia = dq.to_dense(self.sparseA.powm(N))
-        out_dense = self.matrixA
-        for _ in range(N - 1):
-            out_dense = out_dense @ self.matrixA
+        out_dense = jnp.linalg.matrix_power(self.matrixA, N)
 
         assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)

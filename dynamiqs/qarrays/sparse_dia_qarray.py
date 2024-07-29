@@ -250,13 +250,11 @@ class SparseDIAQArray(QArray):
     def __and__(self, y: QArray) -> QArray:
         return NotImplemented
 
-    def powm(self, n: ScalarLike) -> QArray:
-        result = self
-        for _ in range(n - 1):
-            result = result @ self
-        return result
+    def powm(self, n: int) -> QArray:
+        f = lambda carry, _: (carry @ self, None)
+        return jax.lax.scan(f, self, length=n - 1)
 
-    def __pow__(self, n: ScalarLike) -> SparseDIAQArray:
+    def __pow__(self, n: int) -> SparseDIAQArray:
         return SparseDIAQArray(self.dims, self.offsets, jnp.power(self.diags, n))
 
 
