@@ -356,10 +356,8 @@ def gifit(
         nframes = int(gif_duration * fps)
         if nframes > len(iterable):
             indices = np.arange(len(iterable))
-            nplots = len(iterable)
         else:
             indices = np.round(np.linspace(0, len(iterable) - 1, nframes)).astype(int)
-            nplots = nframes
 
         try:
             # create temporary directory
@@ -367,8 +365,8 @@ def gifit(
             tmpdir.mkdir(parents=True, exist_ok=True)
 
             frames = []
-            for i in tqdm(range(nplots)):
-                plot_function(iterable[indices[i]], *args, **kwargs)
+            for i, idx in tqdm(enumerate(indices)):
+                plot_function(iterable[idx], *args, **kwargs)
                 frame_filename = tmpdir / f'tmp-{i}.png'
 
                 plt.gcf().savefig(frame_filename, bbox_inches='tight', dpi=dpi)
@@ -378,7 +376,7 @@ def gifit(
 
             # loop=0: loop the GIF forever
             # rescale duration to account for eventual duplicate frames
-            duration = int(1000 / fps * nframes / nplots)
+            duration = int(1000 / fps * nframes / len(indices))
             iio.v3.imwrite(filename, frames, format='GIF', duration=duration, loop=0)
             if display:
                 ipy.display(ipy.Image(filename))
