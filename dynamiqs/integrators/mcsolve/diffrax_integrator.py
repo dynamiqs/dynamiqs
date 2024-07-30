@@ -37,7 +37,7 @@ class MCSolveDiffraxIntegrator(DiffraxIntegrator, MCSolveIntegrator):
         return dx.Event(norm_below_rand, self.root_finder)
 
 
-class MCSolveEulerIntegrator(MCSolveDiffraxIntegrator, Dopri5Integrator):
+class MCSolveEulerIntegrator(MCSolveDiffraxIntegrator, EulerIntegrator):
     pass
 
 

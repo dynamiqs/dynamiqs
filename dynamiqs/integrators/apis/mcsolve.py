@@ -218,15 +218,8 @@ def _mcsolve(
     # extract the no-jump probability
     no_jump_state = no_jump_result.final_state
     p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))
-    jax.debug.breakpoint()
     operands = (H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options, p_nojump)
-    jump_results, jump_times, num_jumps = jax.lax.cond(
-        1 - p_nojump > 1e-3,
-        _run_jump_trajs,
-        _dark_state,
-        operands,
-    )
-    jax.debug.breakpoint()
+    jump_results, jump_times, num_jumps = _run_jump_trajs(*operands)
     if no_jump_result.expects is not None:
         jump_expects = jnp.mean(jump_results.expects, axis=0)
         no_jump_expects = no_jump_result.expects
@@ -235,39 +228,6 @@ def _mcsolve(
         avg_expects = None
     mcresult = MCResult(tsave, no_jump_result, jump_results, p_nojump, jump_times, num_jumps, avg_expects)
     return mcresult
-
-
-def _dark_state(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    key: PRNGKey,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
-    p_nojump: float,
-):
-    f = jax.vmap(
-            _single_traj,
-            in_axes=(None, None, None, None, 0, None, None, None, None, None),
-        )
-    random_numbers = jax.random.uniform(key, shape=(options.ntraj,), minval=p_nojump)
-    result = f(
-        H,
-        jump_ops,
-        psi0,
-        tsave,
-        random_numbers,
-        exp_ops,
-        solver,
-        root_finder,
-        gradient,
-        options,
-    )
-    return result, tsave[-1] * jnp.ones(options.ntraj), jnp.zeros(options.ntraj)
 
 
 def _run_jump_trajs(
@@ -284,20 +244,14 @@ def _run_jump_trajs(
     p_nojump: float,
 ):
     # TODO split earlier so that not reusing key for different batch dimensions
-    key_1, key_2 = jax.random.split(key, num=3)
+    key_1, key_2 = jax.random.split(key, num=2)
     random_numbers = jax.random.uniform(key_1, shape=(options.ntraj,), minval=p_nojump)
     # run all single trajectories at once
     traj_keys = jax.random.split(key_2, num=options.ntraj)
-    if options.one_jump_only:
-        f = jax.vmap(
-            one_jump_only,
-            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
-        )
-    else:
-        f = jax.vmap(
-            loop_over_jumps,
-            in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
-        )
+    f = jax.vmap(
+        one_jump_only,
+        in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
+    )
     return f(
         H,
         jump_ops,
@@ -337,8 +291,10 @@ def _single_traj(
     }
     integrator_class = get_integrator_class(solvers, solver)
     solver.assert_supports_gradient(gradient)
+    new_rand = jnp.where(1 - rand < 1e-3, 0.0, rand)
+    # jax.debug.breakpoint()
     integrator = integrator_class(
-        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, new_rand, root_finder,
     )
     return integrator.run()
 
