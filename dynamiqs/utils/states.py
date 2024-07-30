@@ -4,11 +4,11 @@ from math import prod
 
 import jax.numpy as jnp
 from jax import Array
-from jax.typing import ArrayLike
+from jaxtyping import ArrayLike
 
 from .._checks import check_type_int
 from .._utils import cdtype
-from ..qarrays import QArray, asqarray
+from ..qarrays import QArray, asjaxarray, asqarray
 from .operators import displace
 from .utils import tensor
 
@@ -186,12 +186,12 @@ def basis_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     return fock_dm(dim, number)
 
 
-def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
+def coherent(dim: int | tuple[int, ...], alpha: [ArrayLike] | ArrayLike) -> QArray:
     r"""Returns the ket of a coherent state or a tensor product of coherent states.
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array_like of shape (...) or (..., len(dim)))_: Coherent state
+        alpha _(list of array_like of shape (...) or (..., len(dim)))_: Coherent state
             amplitude for each mode. If `dim` is a tuple, the last dimension of
             `alpha` should match the length of `dim`.
 
@@ -234,34 +234,27 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
 
         Batched multi-mode coherent states $\{\ket{\alpha_0}\otimes\ket{\beta_0}\!,
         \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
-        >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
+        >>> alpha1 = np.linspace(0, 1, 5)
+        >>> alpha2 = np.linspace(0, 1, 7)
+        >>> dq.coherent((8, 8), (alphas1[None, ...], alphas2[:, None]))
         >>> dq.coherent((4, 6), alpha).shape
-        (2, 24, 1)
+        (7, 5, 64, 1)
     """
-    dim = jnp.asarray(dim)
-    alpha = jnp.asarray(alpha)
+    dim = asjaxarray(dim)
     check_type_int(dim, 'dim')
 
     # check if dim is a single value or a tuple
     if dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
-    # if dim is an integer, convert shapes dim: () -> (1,) and alpha: (...) -> (..., 1)
-    if dim.ndim == 0:
-        dim = dim[None]
-        alpha = alpha[..., None]
+    # tackle multi-modes
+    if dim.ndim == 1:
+        return tensor(*[coherent(d, a) for d, a in zip(dim, alpha)])
 
-    # check if alpha has shape (..., len(ndim))
-    if alpha.shape[-1] != dim.shape[-1]:
-        raise ValueError(
-            'Argument `alpha` must have shape `(...)` or `(..., len(dim))`, but'
-            f' has shape alpha.shape={alpha.shape}.'
-        )
+    # fact: dim is now an integer
 
-    # compute all kets
-    alpha = alpha.swapaxes(0, -1)  # (len(dim), ...)
-    kets = [displace(int(d), a) @ fock(int(d), 0) for d, a in zip(dim, alpha)]
-    return tensor(*kets)
+    ket = displace(int(dim), alpha) @ fock(int(dim), 0)
+    return ket
 
 
 def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:

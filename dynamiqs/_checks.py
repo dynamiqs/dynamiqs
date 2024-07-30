@@ -88,6 +88,7 @@ def check_times(x: Array, argname: str, allow_empty: bool = False) -> Array:
 
 
 def check_type_int(x: Array | QArray, argname: str):
+
     if not jnp.issubdtype(x.dtype, jnp.integer):
         raise ValueError(
             f'Argument {argname} must be of type integer, but is of type'
