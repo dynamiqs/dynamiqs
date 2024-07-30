@@ -354,7 +354,7 @@ def gifit(
     def wrapper(iterable: ArrayLike, *args, **kwargs) -> None:
         iterable = jnp.asarray(iterable)
         nframes = int(gif_duration * fps)
-        if nframes > len(iterable):
+        if nframes >= len(iterable):
             indices = np.arange(len(iterable))
         else:
             indices = np.round(np.linspace(0, len(iterable) - 1, nframes)).astype(int)
