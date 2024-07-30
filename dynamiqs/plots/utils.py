@@ -333,6 +333,16 @@ def gifit(
         the provided array.
 
     Examples:
+        >>> def plot_cos(phi):
+        ...     x = np.linspace(0, 1.0, 501)
+        ...     y = np.cos(2 * np.pi * x + phi)
+        ...     plt.plot(x, y)
+        >>> phis = np.linspace(0, 2 * np.pi, 101)
+        >>> plot_cos_gif = dq.gifit(plot_cos, filename='docs/figs_code/cos.gif')
+        >>> plot_cos_gif(phases)
+
+        ![plot_cos](/figs_code/plot_cos.gif)
+
         >>> alphas = jnp.linspace(0.0, 3.0, 50)
         >>> states = dq.coherent(20, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
