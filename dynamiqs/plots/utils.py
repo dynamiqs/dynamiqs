@@ -370,11 +370,15 @@ def gifit(
 
             frames = []
             for i, idx in enumerate(tqdm(indices)):
+                # plot frame
                 plot_function(items[idx], *args, **kwargs)
-                frame_filename = tmpdir / f'tmp-{i}.png'
 
+                # save frame in temporary file
+                frame_filename = tmpdir / f'tmp-{i}.png'
                 plt.gcf().savefig(frame_filename, bbox_inches='tight', dpi=dpi)
                 plt.close()
+
+                # read frame with imageio
                 frame = iio.v3.imread(frame_filename)
                 frames.append(frame)
 
