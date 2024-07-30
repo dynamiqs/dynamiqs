@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
@@ -26,7 +27,7 @@ class BaseIntegrator(AbstractIntegrator):
     ts: Array
     y0: QArray
     H: TimeArray
-    Es: QArray
+    Es: list[QArray] | None
     solver: Solver
     gradient: Gradient | None
     options: Options
@@ -48,7 +49,7 @@ class BaseIntegrator(AbstractIntegrator):
         if self.options.save_states:
             ysave = y
         if self.Es is not None and len(self.Es) > 0:
-            Esave = expect(self.Es, y)
+            Esave = jnp.asarray([expect(E, y) for E in self.Es])
         if self.options.save_extra is not None:
             extra = self.options.save_extra(y)
 
