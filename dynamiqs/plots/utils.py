@@ -350,6 +350,7 @@ def gifit(
         ![plot_coherent_evolution](/figs_code/coherent_evolution.gif)
     """
 
+    @wraps(plot_function)
     def wrapper(iterable: ArrayLike, *args, **kwargs) -> None:
         iterable = jnp.asarray(iterable)
         nframes = int(gif_duration * fps)
