@@ -347,7 +347,7 @@ def gifit(
 
         ![plot_cos](/figs_code/plot_cos.gif)
 
-        >>> alphas = jnp.linspace(0.0, 3.0, 50)
+        >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(20, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
         >>> dq.gifit(dq.plot_fock, filename=filename, display=False)(states)
