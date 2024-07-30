@@ -6,6 +6,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
+from dynamiqs import stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -36,7 +37,7 @@ class System(ABC):
         raise NotImplementedError
 
     def states(self, t: Array) -> Array:
-        return jnp.stack([self.state(t_.item()) for t_ in t])
+        return stack([self.state(t_.item()) for t_ in t])
 
     def expect(self, t: float) -> Array:
         """Compute the exact (complex) expectation values at a given time."""

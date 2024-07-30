@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import get_args
 
 import equinox as eqx
 import jax
@@ -406,7 +407,7 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.array.reshape(*shape))
 
     def broadcast_to(self, *shape: int) -> TimeArray:
-        return ConstantTimeArray(jnp.broadcast_to(self.array, shape))
+        return ConstantTimeArray(self.array.broadcast_to(*shape))
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())

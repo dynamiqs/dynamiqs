@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import partial
+from typing import get_args
 
 import jax
 import jax.numpy as jnp
@@ -126,7 +127,15 @@ def mesolve(
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
-    exp_ops = asqarray(exp_ops) if exp_ops is not None else None
+
+    if exp_ops is None:
+        pass
+    elif isinstance(exp_ops, list):
+        exp_ops = [asqarray(e) for e in exp_ops]
+    elif isinstance(exp_ops, get_args(ArrayLike)):
+        if len(exp_ops.shape) > 2:
+            raise Exception("not supported")
+        exp_ops = [asqarray(exp_ops)]
 
     # === check arguments
     _check_mesolve_args(H, jump_ops, rho0, exp_ops)
@@ -172,7 +181,7 @@ def _vectorized_mesolve(
 
         H = broadcast(H)
         jump_ops = list(map(broadcast, jump_ops))
-        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
+        rho0 = rho0.broadcast_to(*(broadcast_shape + rho0.shape[-2:]))
 
     n_batch = (
         H.in_axes,
@@ -254,4 +263,6 @@ def _check_mesolve_args(
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
+        for exp_op in exp_ops:
+            # todo: improve message here
+            check_shape(exp_op, 'exp_ops', '(n, n)')

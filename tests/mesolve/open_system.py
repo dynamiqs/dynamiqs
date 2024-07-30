@@ -76,7 +76,7 @@ class OCavity(OpenSystem):
         return dq.coherent(self.n, params.alpha0)
 
     def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
+        return [dq.position(self.n), dq.momentum(self.n)]
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
