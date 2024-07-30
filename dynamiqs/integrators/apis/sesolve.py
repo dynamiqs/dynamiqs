@@ -211,4 +211,6 @@ def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: list[QArray] | None
     if exp_ops is not None:
         if not isinstance(exp_ops, list):
             raise TypeError(f'Argument `exp_ops` must be a list, got {type(exp_ops)}.')
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
+
+        for exp_op in exp_ops:
+            check_shape(exp_op, 'exp_ops', '(n, n)')
