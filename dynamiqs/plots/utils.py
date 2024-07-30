@@ -300,7 +300,7 @@ def gifit(
     plot_function: callable[[ArrayLike, ...], None],
     gif_duration: float = 5.0,
     fps: int = 10,
-    filename: str = '.tmp/dynamiqs/evolution.gif',
+    filename: str = '.tmp/dynamiqs/gifit.gif',
     dpi: int = 72,
     display: bool = True,
 ) -> callable[[ArrayLike, ...], None]:
