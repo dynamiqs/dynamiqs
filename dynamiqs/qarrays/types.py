@@ -39,10 +39,9 @@ def isqarraylike(x: Any) -> bool:
 
 
 def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
-    return x if isinstance(x, QArray) else _dense_qarray(x, dims=dims)
+    if isinstance(x, QArray):
+        return x
 
-
-def _dense_qarray(x: ArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
     from .dense_qarray import DenseQArray
 
     # TODO: check if is bra, ket, dm or op

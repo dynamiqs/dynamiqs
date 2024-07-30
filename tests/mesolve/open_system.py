@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
+from dynamiqs import asqarray
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -145,7 +146,7 @@ class OTDQubit(OpenSystem):
         return dq.fock(2, 0)
 
     def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return dq.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
+        return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
         return 2 * self.eps / self.omega * jnp.sin(self.omega * t)
@@ -160,7 +161,7 @@ class OTDQubit(OpenSystem):
         rho_11 = 0.5 * (1 - eta * jnp.cos(theta))
         rho_01 = 0.5j * eta * jnp.sin(theta)
         rho_10 = -0.5j * eta * jnp.sin(theta)
-        return jnp.array([[rho_00, rho_01], [rho_10, rho_11]])
+        return asqarray(jnp.array([[rho_00, rho_01], [rho_10, rho_11]]))
 
     def expect(self, t: float) -> Array:
         theta = self._theta(t)

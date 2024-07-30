@@ -126,6 +126,10 @@ def mesolve(
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
+    if not (isinstance(exp_ops, list) or exp_ops is None):
+        raise TypeError(
+            f"`exp_ops` must be instance of `list` but got `{exp_ops.__class__}`"
+        )
     exp_ops = [asqarray(exp_op) for exp_op in exp_ops] if exp_ops is not None else None
 
     # === check arguments
@@ -258,4 +262,4 @@ def _check_mesolve_args(
             raise TypeError(f'Argument `exp_ops` must be a list, got {type(exp_ops)}.')
         for exp_op in exp_ops:
             # todo: improve message here
-            check_shape(exp_op, 'exp_ops', '(n, n)')
+            check_shape(exp_op, 'exp_ops', '(..., n, n)')
