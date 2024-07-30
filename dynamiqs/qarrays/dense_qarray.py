@@ -6,11 +6,9 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array, Device
-from jaxtyping import ScalarLike
+from jaxtyping import ArrayLike, ScalarLike
 from qutip import Qobj
 
-from ..utils.jax_utils import to_qutip
-from ..utils.utils.general import norm, ptrace
 from .qarray import QArray
 from .types import QArrayLike, asjaxarray, isqarraylike
 
@@ -55,6 +53,8 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def ptrace(self, keep: tuple[int, ...]) -> QArray:
+        from ..utils.utils.general import ptrace
+
         dims = tuple(self.dims[dim] for dim in keep)
         data = ptrace(self.data, keep, self.dims)
         return DenseQArray(dims, data)
@@ -67,11 +67,9 @@ class DenseQArray(QArray):
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
         return DenseQArray(self.dims, data)
 
-    def _abs(self) -> QArray:
-        data = jnp.abs(self.data)
-        return DenseQArray(self.dims, data)
-
     def norm(self) -> Array:
+        from ..utils.utils.general import norm
+
         return norm(self.data)
 
     def trace(self) -> Array:
@@ -99,6 +97,8 @@ class DenseQArray(QArray):
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj:
+        from ..utils.jax_utils import to_qutip
+
         return to_qutip(self.data, dims=self.dims)
 
     def to_jax(self) -> Array:
@@ -113,7 +113,7 @@ class DenseQArray(QArray):
     def __repr__(self) -> str:
         return (
             f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
-            f'dtype={self.dtype}\n{self.data}'
+            f'dtype={self.dtype}'
         )
 
     def __mul__(self, y: QArrayLike) -> QArray:
@@ -135,7 +135,7 @@ class DenseQArray(QArray):
 
         if isinstance(y, get_args(ScalarLike)):
             data = self.data / y
-        if isinstance(y, DenseQArray):
+        elif isinstance(y, DenseQArray):
             data = self.data / y.data
         elif isqarraylike(y):
             data = self.data / asjaxarray(y)
@@ -144,15 +144,19 @@ class DenseQArray(QArray):
 
         return DenseQArray(self.dims, data)
 
-    def __add__(self, y: QArrayLike) -> QArray:
+    def __add__(self, y: QArray) -> QArray:
+        from .sparse_dia_qarray import SparseDIAQArray
+
         super().__add__(y)
 
         if isinstance(y, get_args(ScalarLike)):
             data = self.data + y
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
-        elif isqarraylike(y):
+        elif isinstance(y, get_args(ArrayLike)):
             data = self.data + asjaxarray(y)
+        elif isinstance(y, SparseDIAQArray):
+            return y.__add__(self)
         else:
             return NotImplemented
 

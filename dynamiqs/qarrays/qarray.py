@@ -143,10 +143,6 @@ class QArray(eqx.Module):
 
         return sinm(self)
 
-    @abstractmethod
-    def _abs(self) -> QArray:
-        pass
-
     def unit(self) -> QArray:
         """Returns the normalized the quantum state.
 
@@ -357,7 +353,10 @@ class QArray(eqx.Module):
 
     def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
-        return self + y
+        print()
+        print(self)
+        print(y)
+        return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
         """Element-wise subtraction with a scalar or an array."""

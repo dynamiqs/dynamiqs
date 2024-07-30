@@ -10,11 +10,11 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax._src.core import concrete_or_error
-from jaxtyping import Array, ArrayLike, Scalar, ScalarLike
+from jaxtyping import Array, ArrayLike, ScalarLike
 from qutip import Qobj
 
 from .dense_qarray import DenseQArray
-from .types import QArray, QArrayLike
+from .types import QArray, QArrayLike, asqarray
 
 __all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
 
@@ -33,10 +33,12 @@ class SparseDIAQArray(QArray):
         return (N, N)
 
     @property
-    def I(self) -> QArray:  # noqa: E743
-        diags = jnp.ones((1, self.shape[-1]))
-        offsets = (0,)
-        return SparseDIAQArray(self.dims, offsets, diags)
+    def mT(self):
+        raise NotImplementedError
+
+    @property
+    def ndim(self):
+        raise NotImplementedError
 
     def conj(self) -> QArray:
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
@@ -53,10 +55,28 @@ class SparseDIAQArray(QArray):
         offsets = tuple(-x for x in self.offsets)
         return SparseDIAQArray(self.dims, offsets, diags)
 
-    def to_dense(self) -> Array:
-        return to_dense(self)
+    def reshape(self, *shape: int) -> QArray:
+        raise NotImplementedError
 
-    def _trace(self) -> Array:
+    def broadcast_to(self, *shape: int) -> QArray:
+        raise NotImplementedError
+
+    def ptrace(self, keep: tuple[int, ...]) -> QArray:  # noqa: ARG002
+        return NotImplemented
+
+    def powm(self):
+        raise NotImplementedError
+
+    def expm(self):
+        raise NotImplementedError
+
+    def unit(self) -> SparseDIAQArray:
+        return SparseDIAQArray(self.offsets, self.diags / self.norm(), self.dims)
+
+    def norm(self) -> Array:
+        raise NotImplementedError
+
+    def trace(self) -> Array:
         main_diag_mask = jnp.asarray(self.offsets) == 0
         return jax.lax.cond(
             jnp.any(main_diag_mask),
@@ -64,58 +84,46 @@ class SparseDIAQArray(QArray):
             lambda: jnp.array(0.0, dtype=jnp.float32),
         )
 
-    def norm(self) -> Array:
-        return self._trace().real
+    def sum(self):
+        raise NotImplementedError
 
-    def unit(self) -> SparseDIAQArray:
-        return SparseDIAQArray(self.offsets, self.diags / self.norm(), self.dims)
+    def squeeze(self):
+        raise NotImplementedError
 
-    def __neg__(self) -> QArray:
-        return -1 * self
+    def _eigh(self) -> tuple[Array, Array]:
+        raise NotImplementedError
 
-    def reshape(self, *shape: int) -> QArray:  # noqa: ARG002
-        return NotImplemented
+    def _eigvals(self) -> Array:
+        raise NotImplementedError
 
-    def broadcast_to(self, *shape: int) -> QArray:  # noqa: ARG002
-        return NotImplemented
+    def _eigvalsh(self) -> Array:
+        raise NotImplementedError
 
-    def ptrace(self, keep: tuple[int, ...]) -> QArray:  # noqa: ARG002
-        return NotImplemented
+    def devices(self) -> set[jax.Device]:
+        raise NotImplementedError
 
-    def isket(self) -> bool:
-        return NotImplemented
-
-    def isbra(self) -> bool:
-        return NotImplemented
-
-    def isdm(self) -> bool:
-        return NotImplemented
+    def to_dense(self) -> DenseQArray:
+        return to_dense(self)
 
     def isherm(self) -> bool:
-        return NotImplemented
-
-    def toket(self) -> QArray:
-        return NotImplemented
-
-    def tobra(self) -> QArray:
-        return NotImplemented
-
-    def todm(self) -> QArray:
-        return NotImplemented
-
-    def to_numpy(self) -> np.ndarray:
-        return NotImplemented
+        raise NotImplementedError
 
     def to_qutip(self) -> Qobj:
-        return NotImplemented
+        raise NotImplementedError
 
     def to_jax(self) -> Array:
-        return NotImplemented
+        return self.to_dense().to_jax()
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
+        raise NotImplementedError
 
     def __mul__(self, other: Array | SparseDIAQArray) -> QArray:
-        if isinstance(other, (complex, Scalar)):
+        if isinstance(other, get_args(ScalarLike)):
             diags, offsets = other * self.diags, self.offsets
-            return SparseDIAQArray(offsets, diags, self.dims)
+            return SparseDIAQArray(offsets=offsets, diags=diags, dims=self.dims)
         elif isinstance(other, Array):
             return self._mul_dense(other)
         elif isinstance(other, SparseDIAQArray):
@@ -148,7 +156,10 @@ class SparseDIAQArray(QArray):
 
         return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.stack(out_diags))
 
-    def __add__(self, other: ScalarLike | ArrayLike) -> QArray:
+    def __truediv__(self, y: QArrayLike) -> QArray:
+        raise NotImplementedError
+
+    def __add__(self, other: ScalarLike | ArrayLike | QArray) -> QArray:
         if isinstance(other, ScalarLike):
             if other == 0:
                 return self
@@ -168,6 +179,9 @@ class SparseDIAQArray(QArray):
         elif isinstance(other, SparseDIAQArray):
             _check_compatible_dims(self.dims, other.dims)
             return self._add_sparse(other)
+        elif isinstance(other, DenseQArray):
+            _check_compatible_dims(self.dims, other.dims)
+            return self.to_dense() + other
 
         return NotImplemented
 
@@ -280,7 +294,9 @@ class SparseDIAQArray(QArray):
             mask = inverse_indices == i
             out_diags = out_diags.at[i, :].set(jnp.sum(diags[mask, :], axis=0))
         return SparseDIAQArray(
-            tuple(o.item() for o in unique_offsets), out_diags, self.dims
+            offsets=tuple(o.item() for o in unique_offsets),
+            diags=out_diags,
+            dims=self.dims,
         )
 
     def __and__(self, other: QArrayLike) -> QArray:
@@ -289,9 +305,7 @@ class SparseDIAQArray(QArray):
             return self._clean_kronecker_dia(temp_o, temp_d)
 
         elif isinstance(other, get_args(QArrayLike)):
-            return DenseQArray(
-                other.dims, jnp.kron(self.to_dense(), jnp.asarray(other))
-            )
+            return self.to_dense() & asqarray(other)
 
         return NotImplemented
 
@@ -346,7 +360,7 @@ def _construct_diags(offsets: tuple[int, ...], other: ArrayLike) -> Array:
     return diags
 
 
-def to_sparse_dia(x: DenseQArray | Array) -> SparseDIAQArray:
+def to_sparse_dia(x: DenseQArray | ArrayLike | SparseDIAQArray) -> SparseDIAQArray:
     r"""Returns the input matrix in the `SparseDIAQArray` format.
 
     Args:
@@ -355,7 +369,17 @@ def to_sparse_dia(x: DenseQArray | Array) -> SparseDIAQArray:
     Returns:
         `SparseDIAQArray` object
     """
+    if isinstance(x, SparseDIAQArray):
+        return x
+    elif isinstance(x, DenseQArray):
+        dims = x.dims
+        x = x.to_jax()
+    elif isinstance(x, get_args(ArrayLike)):
+        dims = (x.shape[-1],)
+    else:
+        raise TypeError
+
     concrete_or_error(None, x, '`to_sparse_dia` does not support tracing.')
     offsets = _find_offsets(x)
     diags = _construct_diags(offsets, x)
-    return SparseDIAQArray(x.dims, offsets, diags)
+    return SparseDIAQArray(dims=dims, offsets=offsets, diags=diags)
