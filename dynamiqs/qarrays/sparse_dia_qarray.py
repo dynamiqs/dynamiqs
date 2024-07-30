@@ -245,6 +245,7 @@ class SparseDIAQArray(QArray):
                     diag[start:end, None].T * other[:, top:bottom]
                 )
 
+            # todo: replace by a dump "if"
             out = jax.lax.cond(left_matmul, left_case, right_case, out)
 
         return DenseQArray(self.dims, out)
@@ -281,13 +282,12 @@ class SparseDIAQArray(QArray):
             order='F',
         )
         out_diags = jnp.kron(self.diags, other.diags)
-        return tuple(out_offsets), out_diags
 
-    def _clean_kronecker_dia(
-        self, offsets: tuple[int, ...], diags: ArrayLike
-    ) -> SparseDIAQArray:
+        offsets = tuple(out_offsets)
+        diags = out_diags
         offsets = jnp.sort(jnp.asarray(offsets))
-        unique_offsets, inverse_indices = jnp.unique(offsets, return_inverse=True)
+
+        unique_offsets, inverse_indices = np.unique(offsets, return_inverse=True)
         count = unique_offsets.shape[0]
         out_diags = jnp.zeros((count, diags.shape[-1]))
         for i in range(count):
@@ -296,13 +296,12 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(
             offsets=tuple(o.item() for o in unique_offsets),
             diags=out_diags,
-            dims=self.dims,
+            dims=self.dims + other.dims,
         )
 
     def __and__(self, other: QArrayLike) -> QArray:
         if isinstance(other, SparseDIAQArray):
-            temp_o, temp_d = self._kronecker_dia(other=other)
-            return self._clean_kronecker_dia(temp_o, temp_d)
+            return self._kronecker_dia(other=other)
 
         elif isinstance(other, get_args(QArrayLike)):
             return self.to_dense() & asqarray(other)

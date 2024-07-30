@@ -14,8 +14,8 @@ class TestSparseDIAQArray:
         diags = jnp.arange(num_diags * N).reshape(num_diags, N)
         offsets = tuple(range(-(num_diags // 2), (num_diags // 2) + 1))
 
-        self.sparseA = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
-        self.sparseB = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N, N))
+        self.sparseA = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
+        self.sparseB = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
 
         self.matrixA = dq.to_dense(self.sparseA)
         self.matrixB = dq.to_dense(self.sparseB)
@@ -82,10 +82,12 @@ class TestSparseDIAQArray:
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     def test_kronecker(self, rtol=1e-05, atol=1e-08):
-        out_dense_dense = (self.matrixA & self.matrixB).to_jax()
+        out_dense_dense = self.matrixA & self.matrixB
+        out_dia_dia = self.sparseA & self.sparseB
 
-        out_dia_dia = (self.sparseA & self.sparseB).to_jax()
-        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+        assert jnp.allclose(
+            out_dense_dense.to_jax(), out_dia_dia.to_jax(), rtol=rtol, atol=atol
+        )
 
         out_dia_dense = (self.sparseA & self.matrixB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
