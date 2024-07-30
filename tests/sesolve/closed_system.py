@@ -8,6 +8,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
+from dynamiqs import QArray
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -55,19 +56,19 @@ class Cavity(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0)
 
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeArray:
         return params.delta * dq.number(self.n)
 
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
+    def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
         return [dq.position(self.n), dq.momentum(self.n)]
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t)
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         return dq.coherent(self.n, self._alpha(t))
 
     def expect(self, t: float) -> Array:
@@ -114,16 +115,16 @@ class TDQubit(ClosedSystem):
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 
-    def y0(self, params: PyTree) -> Array:  # noqa: ARG002
+    def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
+    def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
         return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
         return 2 * self.eps / self.omega * jnp.sin(self.omega * t)
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         theta_2 = (1 / 2) * self._theta(t)
         return jnp.cos(theta_2) * dq.fock(2, 0) - 1j * jnp.sin(theta_2) * dq.fock(2, 1)
 

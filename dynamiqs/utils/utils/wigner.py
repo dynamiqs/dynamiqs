@@ -97,8 +97,7 @@ def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
     def loop(i: int, w: Array) -> Array:
         i = n - 2 - i
         w = w * (2 * a * (i + 1) ** (-0.5))
-        res = w + _laguerre_series(i, 4 * a2, state, n)
-        return res
+        return w + _laguerre_series(i, 4 * a2, state, n)
 
     w = lax.fori_loop(0, n - 1, loop, w)
 

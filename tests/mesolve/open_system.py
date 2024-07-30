@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import asqarray
+from dynamiqs import QArray, asqarray
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -67,16 +67,16 @@ class OCavity(OpenSystem):
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0, kappa)
 
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeArray:
         return params.delta * dq.number(self.n)
 
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
         return [jnp.sqrt(params.kappa) * dq.destroy(self.n)]
 
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
+    def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
         return [dq.position(self.n), dq.momentum(self.n)]
 
     def _alpha(self, t: float) -> Array:
@@ -135,17 +135,17 @@ class OTDQubit(OpenSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega, gamma)
 
-    def H(self, params: PyTree):
+    def H(self, params: PyTree) -> TimeArray:
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
         return [jnp.sqrt(params.gamma) * dq.sigmax()]
 
-    def y0(self, params: PyTree) -> Array:  # noqa: ARG002
+    def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
+    def Es(self, params: PyTree) -> QArray:  # noqa: ARG002
         return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
@@ -154,7 +154,7 @@ class OTDQubit(OpenSystem):
     def _eta(self, t: float) -> float:
         return jnp.exp(-2 * self.gamma * t)
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         theta = self._theta(t)
         eta = self._eta(t)
         rho_00 = 0.5 * (1 + eta * jnp.cos(theta))
