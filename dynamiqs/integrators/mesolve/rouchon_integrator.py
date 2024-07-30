@@ -69,19 +69,19 @@ class MESolveRouchon1Integrator(FixedStepIntegrator, MESolveIntegrator):
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
 
-            Ls_tot = jnp.zeros_like(self.Ls[0])
-            LdL_tot = jnp.zeros_like(self.Ls[0])
+            Ls_tot = 0
+            LdL_tot = 0
             second_term = jnp.zeros_like(y0)
             delta_t = t1 - t0
-            for Ls in self.Ls:
-                Ls = Ls(t0)
-                Lsd = dag(Ls)
-                LdL = Lsd @ Ls
+            for L in self.Ls:
+                L_t0 = L(t0)
+                Lsd = dag(L_t0)
+                LdL = Lsd @ L_t0
 
-                Ls_tot = Ls_tot + Ls
+                Ls_tot = Ls_tot + L_t0
                 LdL_tot = LdL_tot + LdL
 
-                Mk = Ls * jnp.sqrt(delta_t)
+                Mk = L_t0 * jnp.sqrt(delta_t)
 
                 second_term = second_term + Mk @ y0 @ dag(Mk)
 
