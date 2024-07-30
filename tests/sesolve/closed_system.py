@@ -62,7 +62,7 @@ class Cavity(ClosedSystem):
         return dq.coherent(self.n, params.alpha0)
 
     def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
+        return [dq.position(self.n), dq.momentum(self.n)]
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t)
@@ -118,7 +118,7 @@ class TDQubit(ClosedSystem):
         return dq.fock(2, 0)
 
     def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
+        return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
         return 2 * self.eps / self.omega * jnp.sin(self.omega * t)

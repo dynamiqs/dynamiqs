@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import QArray
+from dynamiqs import QArray, asqarray
 from dynamiqs.time_array import (
     ConstantTimeArray,
     SummedTimeArray,
@@ -25,7 +25,7 @@ def assert_equal(x, y):
 class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        self.x = ConstantTimeArray(jnp.arange(4).reshape(2, 2))
+        self.x = ConstantTimeArray(asqarray(jnp.arange(4).reshape(2, 2)))
 
     @pytest.mark.skip('broken test')
     def test_jit(self):

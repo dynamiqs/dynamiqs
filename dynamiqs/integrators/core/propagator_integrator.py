@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ...qarrays import QArray
+from ...qarrays.dense_qarray import DenseQArray
 from ...time_array import ConstantTimeArray
 from .abstract_integrator import BaseIntegrator
 
@@ -36,8 +37,11 @@ class PropagatorIntegrator(BaseIntegrator):
                 'Solver `Propagator` requires a time-independent Hamiltonian.'
             )
 
+        if not isinstance(self.H.array, DenseQArray):
+            raise TypeError('Solver `Propagator` requires a `DenseQArray` Hamiltonian.')
+
         # extract the constant array from the `ConstantTimeArray` object
-        self.H = self.H.array
+        self.H = self.H.array.to_jax()
 
     def run(self) -> PyTree:
         # === solve differential equation
