@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import diffrax as dx
 
-from ...qarrays.utils import stack
-from ...utils.utils import dag
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import (
     DiffraxIntegrator,
@@ -39,11 +37,13 @@ class MESolveDiffraxIntegrator(DiffraxIntegrator, MESolveIntegrator):
         # induced on the dynamics.
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            Ls = stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
-            return tmp + dag(tmp)
+            tmp = -1j * self.H(t) @ y
+            for L in self.Ls:
+                Lt = L(t)
+                Ltdag = Lt.dag()
+                Lt_y = Lt @ y
+                tmp += 0.5 * (Lt_y @ Ltdag - Ltdag @ Lt_y)
+            return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)
 
