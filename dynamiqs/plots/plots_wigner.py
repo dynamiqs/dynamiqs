@@ -7,13 +7,13 @@ import imageio as iio
 import IPython.display as ipy
 import jax.numpy as jnp
 import numpy as np
-from jax.typing import ArrayLike
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 
 from .._checks import check_shape
+from ..qarrays import QArrayLike, asjaxarray, asqarray
 from ..utils import wigner
 from .utils import add_colorbar, colors, figax, gridplot, optional_ax
 
@@ -22,7 +22,7 @@ __all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
 
 @optional_ax
 def plot_wigner_data(
-    wigner: ArrayLike,
+    wigner: QArrayLike,
     xmax: float,
     ymax: float,
     *,
@@ -34,7 +34,7 @@ def plot_wigner_data(
     cross: bool = False,
     clear: bool = False,
 ):
-    w = jnp.asarray(wigner)
+    w = asjaxarray(wigner)
     check_shape(w, 'wigner', '(n, n)')
 
     # set plot norm
@@ -74,7 +74,7 @@ def plot_wigner_data(
 
 @optional_ax
 def plot_wigner(
-    state: ArrayLike,
+    state: QArrayLike,
     *,
     ax: Axes | None = None,
     xmax: float = 5.0,
@@ -125,7 +125,7 @@ def plot_wigner(
 
         ![plot_wigner_4legged](/figs_code/plot_wigner_4legged.png){.fig-half}
     """
-    state = jnp.asarray(state)
+    state = asqarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
@@ -146,7 +146,7 @@ def plot_wigner(
 
 
 def plot_wigner_mosaic(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     n: int = 8,
     nrows: int = 1,
@@ -197,7 +197,7 @@ def plot_wigner_mosaic(
 
         ![plot_wigner_mosaic_kerr](/figs_code/plot_wigner_mosaic_kerr.png){.fig}
     """
-    states = jnp.asarray(states)
+    states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
@@ -237,7 +237,7 @@ def plot_wigner_mosaic(
 
 
 def plot_wigner_gif(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     gif_duration: float = 5.0,
     fps: int = 10,
@@ -308,7 +308,7 @@ def plot_wigner_gif(
 
         ![plot_wigner_gif_kerr](/figs_code/wigner-kerr.gif){.fig-half}
     """
-    states = jnp.asarray(states)
+    states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     ymax = xmax if ymax is None else ymax
