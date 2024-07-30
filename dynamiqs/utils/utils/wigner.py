@@ -119,7 +119,6 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
     r"""Evaluate a polynomial series of the form `$\sum_n c_n L_n^i$` where `$L_n$` is
     such that `$L_n^i = (-1)^n \sqrt(i!n!/(i+n)!) LaguerreL[n,i,x]$`.
     """
-    print("_laguerre_series rho", rho)
 
     def n_1() -> Array:
         return _diag_element(rho, i, 0) * jnp.ones_like(x)

@@ -353,9 +353,6 @@ class QArray(eqx.Module):
 
     def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
-        print()
-        print(self)
-        print(y)
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
