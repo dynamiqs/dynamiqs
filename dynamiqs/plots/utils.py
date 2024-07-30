@@ -382,6 +382,7 @@ def gifit(
                 frame = iio.v3.imread(frame_filename)
                 frames.append(frame)
 
+            # duration: duration per frame in ms
             # loop=0: loop the GIF forever
             # rescale duration to account for eventual duplicate frames
             duration = int(1000 / fps * nframes / len(indices))
