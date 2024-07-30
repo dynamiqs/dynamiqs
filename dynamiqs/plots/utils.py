@@ -356,10 +356,12 @@ def gifit(
     @wraps(plot_function)
     def wrapper(items: ArrayLike, *args, **kwargs) -> None:
         nframes = int(gif_duration * fps)
-        if nframes >= len(items):
-            indices = np.arange(len(items))
+
+        nitems = len(items)
+        if nframes >= nitems:
+            indices = np.arange(nitems)
         else:
-            indices = np.round(np.linspace(0, len(items) - 1, nframes)).astype(int)
+            indices = np.round(np.linspace(0, nitems - 1, nframes)).astype(int)
 
         try:
             # create temporary directory
