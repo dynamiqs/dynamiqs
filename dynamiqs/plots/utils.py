@@ -307,30 +307,34 @@ def gifit(
     dpi: int = 72,
     display: bool = True,
 ) -> callable[[Sequence[T], ...], None]:
-    """Transform a static plot function into a GIF plot function that can be called
-    over an array of inputs.
+    """Transform a plot function into a function that creates an animated GIF.
 
-    The input plot function must take a single array as input and produce a plot out of
-    it. The plot function must create its own figure and not close it. By default,
-    the GIF is displayed in Jupyter notebook environments.
+    This function takes a plot function that normally operates on a single input and
+    returns a function that creates a GIF from a sequence of inputs.
 
     Warning:
-        This function creates a temporary directory to store the frames of the GIF.
-        The directory is deleted after the GIF is created, meaning that the GIF file
-        is deleted if the filename is not changed.
+        This function creates files in the current working directory under
+        `.tmp/dynamiqs` to store the GIF frames. The directory is automatically deleted
+        when the function ends. Specify the argument `filename` to save the GIF
+        on your disk.
+
+    Note:
+        By default, the GIF is displayed in Jupyter notebook environments.
 
     Args:
-        plot_function: Plot function to be GIF-ed.
-        gif_duration: GIF duration in seconds. Defaults to 5 seconds.
-        fps: GIF frames per seconds. Defaults to 10.
-        filename: Save path of the gif. Defaults to '.tmp/dynamiqs/evolution.gif'.
-        dpi: GIF resolution. Defaults to 72.
-        display: If True, the produced GIF is displayed. Defaults to True.
+        plot_function: Plot function which must take as first positional argument the
+            input that will be sequenced over by the new function. It must create a
+            matplotlib `Figure` object and not close it.
+        gif_duration: GIF duration in seconds.
+        fps: GIF frames per seconds.
+        filename: Save path of the GIF file.
+        dpi: GIF resolution.
+        display: If `True`, the GIF is displayed in Jupyter notebook environments.
 
     Returns:
-        A function with the same signature as `plot_function` but that accepts an array
-        as its first argument and produces a GIF that runs over the first dimension of
-        the provided array.
+        A new function with the same signature as `plot_function` which accepts a
+            sequence of inputs and creates a GIF by applying the original
+            `plot_function` to each element in the sequence.
 
     Examples:
         >>> def plot_cos(phi):
@@ -339,7 +343,7 @@ def gifit(
         ...     plt.plot(x, y)
         >>> phis = np.linspace(0, 2 * np.pi, 101)
         >>> plot_cos_gif = dq.gifit(plot_cos, filename='docs/figs_code/cos.gif')
-        >>> plot_cos_gif(phases)
+        >>> plot_cos_gif(phis)
 
         ![plot_cos](/figs_code/plot_cos.gif)
 
