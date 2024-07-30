@@ -12,7 +12,7 @@ from optimistix import AbstractRootFinder
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...options import Options
-from ...result import MEResult, Result, Saved, SEResult, FinalSaved, MCResult
+from ...result import MEResult, Result, Saved, SEResult, SEPropagatorResult, FinalSaved, MCResult
 from ...solver import Solver
 from ...time_array import TimeArray
 from ...utils.utils import expect, unit
@@ -111,3 +111,10 @@ class MCSolveIntegrator(BaseIntegrator):
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return _concatenate_sort(*ts)
+
+
+class SEPropagatorIntegrator(BaseIntegrator):
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return SEPropagatorResult(
+            self.ts, self.solver, self.gradient, self.options, saved, infos
+        )

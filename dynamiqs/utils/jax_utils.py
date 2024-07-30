@@ -74,7 +74,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if x.ndim > 2:
-        return [to_qutip(sub_x) for sub_x in x]
+        return [to_qutip(sub_x, dims=dims) for sub_x in x]
     else:
         dims = [_hdim(x)] if dims is None else list(dims)
         if isket(x):  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]

@@ -9,6 +9,7 @@ from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = [
     'Propagator',
+    'Expm',
     'Euler',
     'Rouchon1',
     'Rouchon2',
@@ -86,6 +87,24 @@ class Propagator(Solver):
         pass
 
 
+class Expm(Solver):
+    r"""Explicit matrix exponentiation to compute propagators.
+
+    Warning:
+        This solver only supports constant or piecewise constant Hamiltonian.
+
+    Note-: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
+
+
 # === generic ODE solvers options
 class _ODESolver(Solver):
     pass
@@ -115,7 +134,7 @@ class Euler(_ODEFixedStep):
         This solver is not recommended for general use.
 
     Args:
-        dt _(float)_: Fixed time step.
+        dt: Fixed time step.
 
     Note-: Supported gradients
         This solver supports differentiation with
@@ -134,7 +153,7 @@ class Rouchon1(_ODEFixedStep):
     """First-order Rouchon method (fixed step size ODE solver).
 
     Args:
-        dt _(float)_: Fixed time step.
+        dt: Fixed time step.
 
     Note-: Supported gradients
         This solver supports differentiation with
@@ -166,6 +185,9 @@ class Rouchon2(_ODEFixedStep):
 
     Warning:
         This solver has not been ported to JAX yet.
+
+    Args:
+        dt: Fixed time step.
 
     Note-: Supported gradients
         This solver supports differentiation with
