@@ -333,18 +333,6 @@ def gifit(
         the provided array.
 
     Examples:
-        >>> N = 16
-        >>> a = dq.destroy(N)
-        >>> H = dq.zero(N)
-        >>> jump_ops = [a @ a - 4.0 * dq.eye(N)]
-        >>> psi0 = dq.basis(N, 0)
-        >>> tsave = jnp.linspace(0.0, 1.0, 100)
-        >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
-        >>> filename = 'docs/figs_code/cat_inflation.gif'
-        >>> dq.gifit(dq.plot_wigner, filename=filename, display=False)(result.states)
-
-        ![plot_cat_inflation](/figs_code/cat_inflation.gif)
-
         >>> alphas = jnp.linspace(0.0, 3.0, 50)
         >>> states = dq.coherent(20, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
