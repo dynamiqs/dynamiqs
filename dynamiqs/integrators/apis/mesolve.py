@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from functools import partial
-from typing import get_args
 
 import jax
 import jax.numpy as jnp
@@ -127,15 +126,7 @@ def mesolve(
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
-
-    if exp_ops is None:
-        pass
-    elif isinstance(exp_ops, list):
-        exp_ops = [asqarray(e) for e in exp_ops]
-    elif isinstance(exp_ops, get_args(ArrayLike)):
-        if len(exp_ops.shape) > 2:
-            raise Exception("not supported")
-        exp_ops = [asqarray(exp_ops)]
+    exp_ops = [asqarray(exp_op) for exp_op in exp_ops] if exp_ops is not None else None
 
     # === check arguments
     _check_mesolve_args(H, jump_ops, rho0, exp_ops)
@@ -158,7 +149,7 @@ def _vectorized_mesolve(
     jump_ops: list[TimeArray],
     rho0: QArray,
     tsave: Array,
-    exp_ops: QArray | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -209,7 +200,7 @@ def _mesolve(
     jump_ops: list[TimeArray],
     rho0: QArray,
     tsave: Array,
-    exp_ops: QArray | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -243,7 +234,7 @@ def _mesolve(
 
 
 def _check_mesolve_args(
-    H: TimeArray, jump_ops: list[TimeArray], rho0: QArray, exp_ops: QArray | None
+    H: TimeArray, jump_ops: list[TimeArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
@@ -263,6 +254,8 @@ def _check_mesolve_args(
 
     # === check exp_ops shape
     if exp_ops is not None:
+        if not isinstance(exp_ops, list):
+            raise TypeError(f'Argument `exp_ops` must be a list, got {type(exp_ops)}.')
         for exp_op in exp_ops:
             # todo: improve message here
             check_shape(exp_op, 'exp_ops', '(n, n)')

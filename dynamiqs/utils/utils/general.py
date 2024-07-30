@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import reduce
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
@@ -350,7 +351,7 @@ def tensor(*args: QArrayLike) -> QArray:
     return reduce(lambda x, y: x & y, args)  # TODO: use jax.lax.reduce
 
 
-def expect(O: [QArrayLike] | QArrayLike, x: QArrayLike) -> Array:
+def expect(O: QArrayLike, x: QArrayLike) -> Array:
     r"""Returns the expectation value of an operator or list of operators on a ket, bra
     or density matrix.
 
@@ -389,16 +390,14 @@ def expect(O: [QArrayLike] | QArrayLike, x: QArrayLike) -> Array:
         >>> dq.expect(Os, psis).shape
         (2, 5)
     """
-    if isinstance(O, list):
-        return jnp.array([expect(o, x) for o in O])
-
     O = asqarray(O)
     x = asqarray(x)
-    # todo fix message
     check_shape(O, 'O', '(?, n, n)', subs={'?': 'nO?'})
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     f = _expect_single
+    if O.ndim > 2:
+        f = jax.vmap(f, in_axes=(0, None))
     return f(O, x)
 
 

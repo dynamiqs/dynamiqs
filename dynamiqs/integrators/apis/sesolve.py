@@ -111,12 +111,7 @@ def sesolve(
     H = _astimearray(H)
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
-    if exp_ops is None:
-        pass
-    elif isinstance(exp_ops, list):
-        exp_ops = [asqarray(e) for e in exp_ops]
-    else:
-        raise Exception(f"Expops should be None or list, got {exp_ops}")
+    exp_ops = [asqarray(exp_op) for exp_op in exp_ops] if exp_ops is not None else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
@@ -133,7 +128,7 @@ def _vectorized_sesolve(
     H: TimeArray,
     psi0: QArray,
     tsave: Array,
-    exp_ops: QArray | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -175,7 +170,7 @@ def _sesolve(
     H: TimeArray,
     psi0: QArray,
     tsave: Array,
-    exp_ops: QArray | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -205,7 +200,7 @@ def _sesolve(
     return result  # noqa: RET504
 
 
-def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: QArray | None):
+def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: list[QArray] | None):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
@@ -214,6 +209,6 @@ def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: QArray | None):
 
     # === check exp_ops shape
     if exp_ops is not None:
-        for exp_op in exp_ops:
-            # todo: improve error message
-            check_shape(exp_op, 'exp_op', '(n, n)')
+        if not isinstance(exp_ops, list):
+            raise TypeError(f'Argument `exp_ops` must be a list, got {type(exp_ops)}.')
+        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
