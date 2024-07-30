@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pathlib
 import shutil
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import wraps
 from math import ceil
+from typing import TypeVar
 
 import imageio as iio
 import IPython.display as ipy
-import jax.numpy as jnp
 import matplotlib
 import matplotlib as mpl
 import numpy as np
@@ -296,14 +296,17 @@ def add_colorbar(
     return cax
 
 
+T = TypeVar('T')
+
+
 def gifit(
-    plot_function: callable[[ArrayLike, ...], None],
+    plot_function: callable[[T, ...], None],
     gif_duration: float = 5.0,
     fps: int = 10,
     filename: str = '.tmp/dynamiqs/gifit.gif',
     dpi: int = 72,
     display: bool = True,
-) -> callable[[ArrayLike, ...], None]:
+) -> callable[[Sequence[T], ...], None]:
     """Transform a static plot function into a GIF plot function that can be called
     over an array of inputs.
 
@@ -351,13 +354,12 @@ def gifit(
     """
 
     @wraps(plot_function)
-    def wrapper(iterable: ArrayLike, *args, **kwargs) -> None:
-        iterable = jnp.asarray(iterable)
+    def wrapper(items: ArrayLike, *args, **kwargs) -> None:
         nframes = int(gif_duration * fps)
-        if nframes >= len(iterable):
-            indices = np.arange(len(iterable))
+        if nframes >= len(items):
+            indices = np.arange(len(items))
         else:
-            indices = np.round(np.linspace(0, len(iterable) - 1, nframes)).astype(int)
+            indices = np.round(np.linspace(0, len(items) - 1, nframes)).astype(int)
 
         try:
             # create temporary directory
@@ -366,7 +368,7 @@ def gifit(
 
             frames = []
             for i, idx in tqdm(enumerate(indices)):
-                plot_function(iterable[idx], *args, **kwargs)
+                plot_function(items[idx], *args, **kwargs)
                 frame_filename = tmpdir / f'tmp-{i}.png'
 
                 plt.gcf().savefig(frame_filename, bbox_inches='tight', dpi=dpi)
