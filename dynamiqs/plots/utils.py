@@ -369,7 +369,7 @@ def gifit(
             tmpdir.mkdir(parents=True, exist_ok=True)
 
             frames = []
-            for i, idx in tqdm(enumerate(indices)):
+            for i, idx in enumerate(tqdm(indices)):
                 plot_function(items[idx], *args, **kwargs)
                 frame_filename = tmpdir / f'tmp-{i}.png'
 
