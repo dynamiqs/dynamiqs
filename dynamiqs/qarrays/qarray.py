@@ -9,7 +9,6 @@ import jax.numpy as jnp
 import numpy as np
 from equinox.internal._omega import _Metaω
 from jax import Array, Device
-from jaxtyping import ArrayLike
 from qutip import Qobj
 
 if TYPE_CHECKING:  # avoid circular import by importing only during type checking
@@ -323,7 +322,9 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        if self._is_scalar(y):
+        from .._utils import _is_scalar
+
+        if _is_scalar(y):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '
@@ -344,18 +345,14 @@ class QArray(eqx.Module):
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        if self._is_scalar(y):
+        from .._utils import _is_scalar
+
+        if _is_scalar(y):
             logging.warning(
                 'Using the `+` or `-` operator between an array and a scalar performs '
                 'element-wise addition or subtraction. For addition with a scaled '
                 'identity matrix, use e.g. `x + 2 * x.I` instead.'
             )
-
-    @staticmethod
-    def _is_scalar(y):
-        from .types import asjaxarray
-
-        return isinstance(y, ArrayLike) and asjaxarray(y).ndim > 0
 
     def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""

@@ -5,9 +5,9 @@ from typing import Any
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import ArrayLike, PyTree
 
-from .qarrays import QArray
+from .qarrays import QArray, asjaxarray
 
 
 def type_str(type: Any) -> str:  # noqa: A002
@@ -53,3 +53,7 @@ def _concatenate_sort(*args: Array | None) -> Array | None:
     if len(args) == 0:
         return None
     return jnp.sort(jnp.concatenate(args))
+
+
+def _is_scalar(y):
+    return isinstance(y, ArrayLike) and asjaxarray(y).ndim == 0
