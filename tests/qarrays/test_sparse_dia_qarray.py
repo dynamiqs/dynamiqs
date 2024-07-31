@@ -1,6 +1,7 @@
 import random
 
 import jax.numpy as jnp
+import jax.random as jr
 import pytest
 
 import dynamiqs as dq
@@ -10,12 +11,23 @@ class TestSparseDIAQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         N = 10
-        num_diags = 3
-        diags = jnp.arange(num_diags * N).reshape(num_diags, N)
-        offsets = tuple(range(-(num_diags // 2), (num_diags // 2) + 1))
+        key = jr.PRNGKey(42)
+        keyA, keyB = jr.split(key)
+        diagsA = jr.normal(keyA, (3, N))
+        diagsB = jr.normal(keyB, (4, N))
+        offsetsA = (-2, 0, 2)
+        offsetsB = (-2, -1, 1, 3)
 
-        self.sparseA = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
-        self.sparseB = dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
+        # set out of bounds values to zero
+        diagsA = diagsA.at[0, -2:].set(0)
+        diagsA = diagsA.at[2, :2].set(0)
+        diagsB = diagsB.at[0, -2:].set(0)
+        diagsB = diagsB.at[1, -1:].set(0)
+        diagsB = diagsB.at[2, :1].set(0)
+        diagsB = diagsB.at[3, :3].set(0)
+
+        self.sparseA = dq.SparseDIAQArray(diags=diagsA, offsets=offsetsA, dims=(N,))
+        self.sparseB = dq.SparseDIAQArray(diags=diagsB, offsets=offsetsB, dims=(N,))
 
         self.matrixA = dq.to_dense(self.sparseA)
         self.matrixB = dq.to_dense(self.sparseB)
@@ -57,7 +69,6 @@ class TestSparseDIAQArray:
 
     def test_mul(self, rtol=1e-05, atol=1e-08):
         random_float = random.uniform(1.0, 10.0)
-
         out_dense_left = (random_float * self.matrixA).to_jax()
 
         out_dense_right = (self.matrixA * random_float).to_jax()
@@ -82,12 +93,9 @@ class TestSparseDIAQArray:
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     def test_kronecker(self, rtol=1e-05, atol=1e-08):
-        out_dense_dense = self.matrixA & self.matrixB
-        out_dia_dia = self.sparseA & self.sparseB
-
-        assert jnp.allclose(
-            out_dense_dense.to_jax(), out_dia_dia.to_jax(), rtol=rtol, atol=atol
-        )
+        out_dense_dense = (self.matrixA & self.matrixB).to_jax()
+        out_dia_dia = (self.sparseA & self.sparseB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         out_dia_dense = (self.sparseA & self.matrixB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
