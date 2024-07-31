@@ -99,8 +99,7 @@ class TestSparseDIAQArray:
     def test_outofbounds(self):
         # set up matrix
         N = 10
-        key = jr.PRNGKey(42)
-        diags = jr.normal(key, (4, N))
+        diags = jr.normal(jr.key(42), (4, N))
         offsets = (-2, -1, 1, 3)
 
         # assert an error is raised
