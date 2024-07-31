@@ -36,6 +36,10 @@ class SparseDIAQArray(QArray):
                 f"ie (..., {len(self.offsets)}, {np.prod(self.dims)}) but got {self.diags.shape}"
             )
 
+        # if the code is jitted, disable checks
+        if isinstance(self.diags, jax.core.Tracer):
+            return
+
         diags = jnp.swapaxes(self.diags, -2, 0)
         for offset, diag in zip(self.offsets, diags):
             if (offset < 0 and jnp.any(diag[..., offset:] != 0)) or (
