@@ -10,7 +10,7 @@ from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
 from ..._utils import on_cpu
-from ..operators import eye
+from ...qarrays import asjaxarray
 from .general import todm
 
 __all__ = ['wigner']
@@ -68,7 +68,7 @@ def wigner(
         state = jax.device_put(state, jax.devices(backend='cpu')[0])
 
     # === convert state to density matrix
-    state = todm(state)
+    state = asjaxarray(todm(state))
 
     # === prepare xvec and yvec
     xvec = jnp.linspace(-xmax, xmax, npixels) if xvec is None else jnp.asarray(xvec)
@@ -92,12 +92,12 @@ def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
     a2 = jnp.abs(a) ** 2
 
     w = 2 * state[0, -1] * jnp.ones_like(a)
-    state = state * (2 * jnp.ones((n, n)) - eye(n))
+    state = state * (2 * jnp.ones((n, n)) - jnp.eye(n))
 
     def loop(i: int, w: Array) -> Array:
         i = n - 2 - i
         w = w * (2 * a * (i + 1) ** (-0.5))
-        return w + (_laguerre_series(i, 4 * a2, state, n))
+        return w + _laguerre_series(i, 4 * a2, state, n)
 
     w = lax.fori_loop(0, n - 1, loop, w)
 

@@ -1,23 +1,20 @@
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import dag, dense_qarray, tensor
+from dynamiqs import asqarray, tensor
 
 
 class TestDenseQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         self.data = jnp.arange(16).reshape(4, 4) * (1 + 1j)
-        self.qarray = dense_qarray(self.data, dims=(2, 2))
+        self.qarray = asqarray(self.data, dims=(2, 2))
 
         self.other = jnp.arange(16).reshape(4, 4) + 16
-        self.qother = dense_qarray(self.other, dims=(2, 2))
-
-    def test_I(self):
-        assert jnp.array_equal(self.qarray.I.data, jnp.eye(4))
+        self.qother = asqarray(self.other, dims=(2, 2))
 
     def test_dag(self):
-        assert jnp.array_equal(self.qarray.dag().data, dag(self.data))
+        assert jnp.array_equal(self.qarray.dag().data, self.data.mT.conj())
 
     def test_ptrace(self):
         ptrace = self.qarray.ptrace((1,))
@@ -57,12 +54,12 @@ class TestDenseQArray:
     def test_and(self):
         t = self.qarray & self.qother
 
-        assert jnp.array_equal(t.data, tensor(self.data, self.other))
+        assert jnp.array_equal(t.data, tensor(self.data, self.other).data)
         assert t.dims == (2, 2, 2, 2)
 
         other = jnp.arange(9).reshape(3, 3)
-        qother = dense_qarray(other)
+        qother = asqarray(other)
         t = self.qarray & qother
 
-        assert jnp.array_equal(t.data, tensor(self.data, other))
+        assert jnp.array_equal(t.data, tensor(self.data, other).data)
         assert t.dims == (2, 2, 3)

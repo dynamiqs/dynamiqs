@@ -3,6 +3,7 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from dynamiqs import asqarray
 
 
 def rand_sesolve_args(n, nH, npsi0, nEs):
@@ -10,6 +11,7 @@ def rand_sesolve_args(n, nH, npsi0, nEs):
     H = dq.rand_herm(kH, (*nH, n, n))
     psi0 = dq.rand_ket(kpsi0, (*npsi0, n, 1))
     Es = dq.rand_complex(kEs, (nEs, n, n))
+    Es = [asqarray(e) for e in Es]
     return H, psi0, Es
 
 
@@ -59,7 +61,7 @@ def test_timearray_batching():
     times = jnp.linspace(0.0, 1.0, 11)
 
     # == constant time array
-    H_cte = jnp.stack([H0, 2 * H0])
+    H_cte = dq.stack([H0, 2 * H0])
 
     result = dq.sesolve(H_cte, psi0, times)
     assert result.states.shape == (2, 11, 4, 1)

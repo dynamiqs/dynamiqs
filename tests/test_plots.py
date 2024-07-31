@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from matplotlib import pyplot as plt
 
-from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, todm
+from dynamiqs import coherent, plot_wigner, plot_wigner_mosaic, stack, todm
 from dynamiqs.utils.utils.wigner import _diag_element, wigner
 
 # TODO : add comparison with analytical wigner for coherent states and cat states
@@ -15,8 +15,8 @@ class TestPlots:
         self.psis = [coherent(10, x) for x in np.linspace(0, 1, 10)]
         self.rhos = list(map(todm, self.psis))
 
-        self.psis = jnp.asarray(self.psis)
-        self.rhos = jnp.asarray(self.rhos)
+        self.psis = stack(self.psis)
+        self.rhos = stack(self.rhos)
 
     @pytest.fixture(autouse=True)
     def _teardown(self):

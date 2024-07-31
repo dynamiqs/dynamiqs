@@ -29,7 +29,9 @@ class IntegratorTester:
 
         # === test ysave
         true_ysave = system.states(system.tsave)
-        errs = jnp.linalg.norm(true_ysave - result.states, axis=(-2, -1))
+        errs = jnp.linalg.norm(
+            true_ysave.to_jax() - result.states.to_jax(), axis=(-2, -1)
+        )
         logging.warning(f'true_ysave = {true_ysave}')
         logging.warning(f'ysave      = {result.states}')
         assert jnp.all(errs <= ysave_atol)

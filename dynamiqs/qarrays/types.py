@@ -9,7 +9,7 @@ from qutip import Qobj
 
 from .qarray import QArray
 
-__all__ = ['QArray', 'QArrayLike', 'asqarray', 'asjaxarray', 'dense_qarray']
+__all__ = ['QArray', 'QArrayLike', 'asqarray', 'asjaxarray', 'isqarraylike']
 
 # In this file we define an extended array type named `QArrayLike`. Most
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
@@ -39,10 +39,9 @@ def isqarraylike(x: Any) -> bool:
 
 
 def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
-    return x if isinstance(x, QArray) else dense_qarray(x, dims=dims)
+    if isinstance(x, QArray):
+        return x
 
-
-def dense_qarray(x: ArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
     from .dense_qarray import DenseQArray
 
     # TODO: check if is bra, ket, dm or op

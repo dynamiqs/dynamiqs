@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import get_args
 
 import equinox as eqx
 import jax
@@ -406,7 +407,7 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.array.reshape(*shape))
 
     def broadcast_to(self, *shape: int) -> TimeArray:
-        return ConstantTimeArray(jnp.broadcast_to(self.array, shape))
+        return ConstantTimeArray(self.array.broadcast_to(*shape))
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
@@ -592,7 +593,10 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
-        if isqarraylike(y):
+
+        if isinstance(y, get_args(ScalarLike)):
+            return ConstantTimeArray(self.f + y)
+        elif isqarraylike(y):
             y = ConstantTimeArray(asqarray(y))
             return SummedTimeArray([self, y])
         elif isinstance(y, TimeArray):
@@ -696,6 +700,9 @@ class BatchedCallable(eqx.Module):
     def squeeze(self, i: int) -> BatchedCallable:
         f = lambda t: jnp.squeeze(self.f(t), i)
         return BatchedCallable(f)
+
+    def __add__(self, y: ArrayLike | ScalarLike) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t) + y)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
         f = lambda t: self.f(t) * y
