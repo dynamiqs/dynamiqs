@@ -7,8 +7,6 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
-from .qarrays import QArray
-
 
 def type_str(type: Any) -> str:  # noqa: A002
     if type.__module__ in ('builtins', '__main__'):
@@ -21,7 +19,7 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def on_cpu(x: Array | QArray) -> bool:
+def on_cpu(x: Array) -> bool:
     # TODO: this is a temporary solution, it won't work when we have multiple devices
     return x.devices().pop().device_kind == 'cpu'
 
@@ -61,3 +59,10 @@ def _is_batched_scalar(y: ArrayLike) -> bool:
         isinstance(y, get_args(ArrayLike))
         and (y.ndim == 0 or y.ndim > 1 and y.shape[-2:] == (1, 1))
     )
+
+
+def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+    if dims1 != dims2:
+        raise ValueError(
+            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        )

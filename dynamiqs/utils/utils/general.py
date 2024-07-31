@@ -349,7 +349,7 @@ def tensor(*args: QArrayLike) -> QArray:
         (60, 1)
     """  # noqa: E501
     args = [asqarray(arg) for arg in args]
-    return reduce(lambda x, y: x & y, args)  # TODO: use jax.lax.reduce
+    return reduce(lambda x, y: x & y, args)  # TODO: (guilmin) use jax.lax.reduce
 
 
 def expect(O: QArrayLike, x: QArrayLike) -> Array:

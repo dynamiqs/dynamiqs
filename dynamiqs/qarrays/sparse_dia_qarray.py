@@ -317,6 +317,10 @@ class SparseDIAQArray(QArray):
                 "Getting items for non batched SparseDIA " "arrays is not supported yet"
             )
 
+        return SparseDIAQArray(
+            diags=self.diags[key], offsets=self.offsets, dims=self.dims
+        )
+
 
 def _dia_slice(offset: int) -> slice:
     # Return the slice that selects the non-zero elements of a diagonal of given offset.
@@ -374,6 +378,7 @@ def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
 def _find_offsets(x: Array) -> tuple[int, ...]:
     indices = np.nonzero(x)
     return tuple(np.unique(indices[1] - indices[0]))
+
 
 @functools.partial(jax.jit, static_argnums=(0,))
 def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
