@@ -24,8 +24,6 @@ def test_operators_dispatch():
     dim = 20
     n = 4
 
-    print(dq.eye(*dims, matrix_format=dq.dia).to_jax())
-
     assert jnp.allclose(
         dq.eye(*dims, matrix_format=dq.dense).to_jax(),
         dq.eye(*dims, matrix_format=dq.dia).to_jax(),
