@@ -345,14 +345,14 @@ def gifit(
         >>> plot_cos_gif = dq.gifit(plot_cos, filename='docs/figs_code/cos.gif')
         >>> plot_cos_gif(phis)
 
-        ![plot_cos](/figs_code/plot_cos.gif)
+        ![plot_cos](/figs_code/cos.gif){.fig}
 
         >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(24, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
         >>> dq.gifit(dq.plot_fock, filename=filename, display=False)(states)
 
-        ![plot_coherent_evolution](/figs_code/coherent_evolution.gif)
+        ![plot_coherent_evolution](/figs_code/coherent_evolution.gif){.fig}
     """
 
     @wraps(plot_function)
