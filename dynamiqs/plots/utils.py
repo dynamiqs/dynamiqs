@@ -372,6 +372,9 @@ def gifit(
 
             frames = []
             for i, idx in enumerate(tqdm(indices)):
+                # ensure previous plot is closed
+                plt.close()
+
                 # plot frame
                 plot_function(items[idx], *args, **kwargs)
 
