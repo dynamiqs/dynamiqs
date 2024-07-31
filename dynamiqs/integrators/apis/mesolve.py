@@ -25,7 +25,7 @@ from ...solver import (
     Tsit5,
 )
 from ...time_array import Shape, TimeArray
-from ...utils.utils import todm
+from ...utils.quantum_utils import todm
 from .._utils import (
     _astimearray,
     _cartesian_vectorize,

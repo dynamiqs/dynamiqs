@@ -9,7 +9,7 @@ from jax.typing import ArrayLike
 from .._checks import check_type_int
 from .._utils import cdtype
 from .operators import displace
-from .utils import tensor, todm
+from .quantum_utils import tensor, todm
 
 __all__ = [
     'fock',

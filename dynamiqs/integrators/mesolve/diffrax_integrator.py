@@ -3,7 +3,7 @@ from __future__ import annotations
 import diffrax as dx
 import jax.numpy as jnp
 
-from ...utils.utils import dag
+from ...utils.quantum_utils import dag
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import (
     DiffraxIntegrator,

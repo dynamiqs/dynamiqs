@@ -7,7 +7,7 @@ from jaxtyping import PyTree
 
 from ..._utils import _concatenate_sort
 from ...result import Saved
-from ...utils.utils.general import expm
+from ...utils.quantum_utils.general import expm
 from .._utils import ispwc
 from ..core.abstract_integrator import SEPropagatorIntegrator
 
