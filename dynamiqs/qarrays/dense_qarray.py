@@ -6,9 +6,10 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array, Device
-from jaxtyping import ArrayLike, ScalarLike
+from jaxtyping import ArrayLike
 from qutip import Qobj
 
+from .._utils import _is_batched_scalar
 from .qarray import QArray
 from .types import QArrayLike, asjaxarray, isqarraylike
 
@@ -38,10 +39,6 @@ class DenseQArray(QArray):
 
     def conj(self) -> QArray:
         data = self.data.conj()
-        return DenseQArray(self.dims, data)
-
-    def dag(self) -> QArray:
-        data = self.data.mT.conj()
         return DenseQArray(self.dims, data)
 
     def reshape(self, *shape: int) -> QArray:
@@ -104,9 +101,6 @@ class DenseQArray(QArray):
     def to_jax(self) -> Array:
         return self.data
 
-    def __len__(self):
-        return len(self.data)
-
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return np.asarray(self.data, dtype=dtype)
 
@@ -119,7 +113,7 @@ class DenseQArray(QArray):
     def __mul__(self, y: QArrayLike) -> QArray:
         super().__mul__(y)
 
-        if isinstance(y, get_args(ScalarLike)):
+        if _is_batched_scalar(y):
             data = self.data * y
         elif isinstance(y, DenseQArray):
             data = self.data * y.data
@@ -133,7 +127,7 @@ class DenseQArray(QArray):
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)
 
-        if isinstance(y, get_args(ScalarLike)):
+        if _is_batched_scalar(y):
             data = self.data / y
         elif isinstance(y, DenseQArray):
             data = self.data / y.data
@@ -149,7 +143,7 @@ class DenseQArray(QArray):
 
         super().__add__(y)
 
-        if isinstance(y, get_args(ScalarLike)):
+        if _is_batched_scalar(y):
             data = self.data + y
         elif isinstance(y, DenseQArray):
             data = self.data + y.data

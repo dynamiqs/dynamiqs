@@ -88,13 +88,13 @@ class QArray(eqx.Module):
             The conjugate of the quantum state.
         """
 
-    @abstractmethod
     def dag(self) -> QArray:
         """Returns the dagger of the quantum state.
 
         Returns:
             The dagger of the quantum state.
         """
+        return self.mT.conj()
 
     @abstractmethod
     def reshape(self, *shape: int) -> QArray:
@@ -297,6 +297,12 @@ class QArray(eqx.Module):
             The JAX array representation of the quantum state.
         """
 
+    def __len__(self) -> int:
+        try:
+            return self.shape[0]
+        except IndexError as err:
+            raise TypeError("len() of unsized object") from err
+
     @abstractmethod
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         pass
@@ -322,14 +328,17 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        from .._utils import _is_scalar
+        from .._utils import _check_compatible_dims, _is_batched_scalar
 
-        if _is_scalar(y):
+        if _is_batched_scalar(y):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '
                 'instead.'
             )
+
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
@@ -345,14 +354,17 @@ class QArray(eqx.Module):
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        from .._utils import _is_scalar
+        from .._utils import _check_compatible_dims, _is_batched_scalar
 
-        if _is_scalar(y):
+        if _is_batched_scalar(y):
             logging.warning(
                 'Using the `+` or `-` operator between an array and a scalar performs '
                 'element-wise addition or subtraction. For addition with a scaled '
                 'identity matrix, use e.g. `x + 2 * x.I` instead.'
             )
+
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
