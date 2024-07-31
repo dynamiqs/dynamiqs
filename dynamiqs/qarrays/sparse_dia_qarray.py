@@ -13,7 +13,6 @@ from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
-from ._utils import _is_batched_scalar
 from .dense_qarray import DenseQArray
 from .types import QArray, QArrayLike, asqarray
 
@@ -116,6 +115,8 @@ class SparseDIAQArray(QArray):
         raise self.to_dense().__array__(dtype=dtype, copy=copy)
 
     def __mul__(self, other: QArrayLike) -> QArray:
+        from .utils import _is_batched_scalar
+
         super().__mul__(other)
 
         if _is_batched_scalar(other):
@@ -156,6 +157,8 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def __add__(self, other: QArrayLike) -> QArray:
+        from .utils import _is_batched_scalar
+
         if _is_batched_scalar(other):
             if other == 0:
                 return self
@@ -296,6 +299,10 @@ def _dia_slice(offset: int) -> slice:
     return slice(offset, None) if offset > 0 else slice(None, offset)
 
 
+_vectorized_diag_2d = jnp.vectorize(jnp.diag, signature='(m,m)->(m)')
+_vectorized_diag_1d = jnp.vectorize(jnp.diag, signature='(m)->(m,m)')
+
+
 def to_dense(x: SparseDIAQArray) -> DenseQArray:
     r"""Convert a sparse `QArray` into a dense `Qarray`.
 
@@ -307,7 +314,8 @@ def to_dense(x: SparseDIAQArray) -> DenseQArray:
     """
     out = jnp.zeros(x.shape, dtype=x.dtype)
     for offset, diag in zip(x.offsets, x.diags):
-        out += jnp.diag(diag[_dia_slice(offset)], k=offset)
+        print(diag[_dia_slice(offset)].shape)
+        out += _vectorized_diag_1d(diag[_dia_slice(offset)], k=offset)
     return DenseQArray(x.dims, out)
 
 
@@ -341,17 +349,13 @@ def _find_offsets(x: Array) -> tuple[int, ...]:
     indices = np.nonzero(x)
     return tuple(np.unique(indices[1] - indices[0]))
 
-
-vectorized_diag = jnp.vectorize(jnp.diag, signature='(m)->(m,m)')
-
-
 @functools.partial(jax.jit, static_argnums=(0,))
 def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
     n = x.shape[0]
     diags = jnp.zeros((*x.shape[:-2], len(offsets), n), dtype=x.dtype)
 
     for i, offset in enumerate(offsets):
-        diagonal = vectorized_diag(x, k=offset)
+        diagonal = _vectorized_diag_2d(x, k=offset)
         diags = diags.at[..., i, _dia_slice(offset)].set(diagonal)
 
     return diags
