@@ -328,7 +328,7 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        from .._utils import _check_compatible_dims, _is_batched_scalar
+        from .._utils import _is_batched_scalar
 
         if _is_batched_scalar(y):
             logging.warning(
@@ -354,7 +354,7 @@ class QArray(eqx.Module):
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        from .._utils import _check_compatible_dims, _is_batched_scalar
+        from .._utils import _is_batched_scalar
 
         if _is_batched_scalar(y):
             logging.warning(
@@ -410,3 +410,9 @@ class QArray(eqx.Module):
     @abstractmethod
     def __getitem__(self, key: int | slice) -> QArray:
         pass
+
+def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+    if dims1 != dims2:
+        raise ValueError(
+            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        )

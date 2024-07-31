@@ -13,6 +13,7 @@ from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
+from .._utils import _is_batched_scalar
 from .dense_qarray import DenseQArray
 from .types import QArray, QArrayLike, asqarray
 
@@ -115,8 +116,6 @@ class SparseDIAQArray(QArray):
         raise self.to_dense().__array__(dtype=dtype, copy=copy)
 
     def __mul__(self, other: QArrayLike) -> QArray:
-        from .utils import _is_batched_scalar
-
         super().__mul__(other)
 
         if _is_batched_scalar(other):
@@ -157,8 +156,6 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def __add__(self, other: QArrayLike) -> QArray:
-        from .utils import _is_batched_scalar
-
         if _is_batched_scalar(other):
             if other == 0:
                 return self
@@ -265,7 +262,9 @@ class SparseDIAQArray(QArray):
         # === merge duplicate diagonals
         unique_offsets, inverse_indices = np.unique(out_offsets, return_inverse=True)
         num_diags = unique_offsets.shape[0]
-        out_diags = jnp.zeros_like(tmp_diags)
+        out_diags = jnp.zeros(
+            (*tmp_diags.shape[:-2], num_diags, tmp_diags.shape[-1]), dtype=self.dtype
+        )
         for i in range(num_diags):
             mask = inverse_indices == i
             out_diags = out_diags.at[..., i, :].set(
@@ -296,11 +295,7 @@ def _dia_slice(offset: int) -> slice:
     # Return the slice that selects the non-zero elements of a diagonal of given offset.
     # For exemple, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
     # _dia_slice(2) will return the slice(2, None) to select [a, b, ..., z].
-    return slice(offset, None) if offset > 0 else slice(None, offset)
-
-
-_vectorized_diag_2d = jnp.vectorize(jnp.diag, signature='(m,m)->(m)')
-_vectorized_diag_1d = jnp.vectorize(jnp.diag, signature='(m)->(m,m)')
+    return slice(offset, None) if offset >= 0 else slice(None, offset)
 
 
 def to_dense(x: SparseDIAQArray) -> DenseQArray:
@@ -314,9 +309,13 @@ def to_dense(x: SparseDIAQArray) -> DenseQArray:
     """
     out = jnp.zeros(x.shape, dtype=x.dtype)
     for offset, diag in zip(x.offsets, x.diags):
-        print(diag[_dia_slice(offset)].shape)
-        out += _vectorized_diag_1d(diag[_dia_slice(offset)], k=offset)
+        out += _vectorized_diag(diag, offset)
     return DenseQArray(x.dims, out)
+
+
+@functools.partial(jnp.vectorize, signature='(n)->(n,n)', excluded={1})
+def _vectorized_diag(diag: Array, offset: int) -> Array:
+    return jnp.diag(diag[_dia_slice(offset)], k=offset)
 
 
 def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
@@ -355,7 +354,7 @@ def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
     diags = jnp.zeros((*x.shape[:-2], len(offsets), n), dtype=x.dtype)
 
     for i, offset in enumerate(offsets):
-        diagonal = _vectorized_diag_2d(x, k=offset)
+        diagonal = jnp.diagonal(x, offset=offset, axis1=-2, axis2=-1)
         diags = diags.at[..., i, _dia_slice(offset)].set(diagonal)
 
     return diags

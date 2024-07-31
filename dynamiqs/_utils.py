@@ -61,9 +61,3 @@ def _is_batched_scalar(y: ArrayLike) -> bool:
         isinstance(y, get_args(ArrayLike))
         and (y.ndim == 0 or y.ndim > 1 and y.shape[-2:] == (1, 1))
     )
-
-def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
-    if dims1 != dims2:
-        raise ValueError(
-            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
-        )
