@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import jax.tree_util as jtu
 import numpy as np
 
 from .._checks import check_shape
@@ -182,7 +183,7 @@ def sdissipator(L: QArrayLike) -> QArray:
     $$
 
     Args:
-        L _(qarray_like of shape (..., n, n))_: Jump operator.
+        L _(list of qarray_like of shape (..., n, n))_: Jump operator.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Dissipation superoperator.
@@ -194,7 +195,7 @@ def sdissipator(L: QArrayLike) -> QArray:
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: QArrayLike, jump_ops: QArrayLike) -> QArray:
+def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -220,13 +221,16 @@ def slindbladian(H: QArrayLike, jump_ops: QArrayLike) -> QArray:
 
     Args:
         H _(qarray_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(qarray_like of shape (N, ..., n, n))_: Sequence of jump operators.
+        jump_ops _(list of qarray_like of shape (N, ..., n, n))_: Sequence of jump operators.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Lindbladian superoperator.
     """
     H = asqarray(H)
-    jump_ops = asqarray(jump_ops)
+    jump_ops = list(map(asqarray, jump_ops))
     check_shape(H, 'H', '(..., n, n)')
-    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
-    return -1j * (spre(H) - spost(H)) + sdissipator(jump_ops).sum(0)
+    for jump_op in jump_ops:
+        check_shape(jump_op, 'jump_ops', '(..., n, n)')
+    return -1j * (spre(H) - spost(H)) + jtu.tree_reduce(
+        lambda x, y: x + y, jtu.tree_map(sdissipator, jump_ops)
+    )
