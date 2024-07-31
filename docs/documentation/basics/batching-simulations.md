@@ -14,14 +14,14 @@ Batching in dynamiqs is achieved by **passing a list of Hamiltonians, initial st
 
 ```python
 # define three Hamiltonians
-H = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]  # (3, 2, 2)
+H = dq.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])  # (3, 2, 2)
 
 # define four initial states
 g = dq.basis(2, 0)
 e = dq.basis(2, 1)
 plus = dq.unit(g + e)
 minus = dq.unit(g - e)
-psi = [g, e, plus, minus]  # (4, 2, 1)
+psi = dq.stack([g, e, plus, minus])  # (4, 2, 1)
 
 # run the simulation
 tsave = jnp.linspace(0.0, 1.0, 11)  # (11,)

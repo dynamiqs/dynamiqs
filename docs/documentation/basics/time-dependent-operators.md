@@ -23,7 +23,7 @@ $$
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-array
->>> Hx(1.0)
+>>> Hx(1.0).to_jax()
 Array([[0.+0.j, 1.+0.j],
        [1.+0.j, 0.+0.j]], dtype=complex64)
 >>> Hx.shape
@@ -38,7 +38,7 @@ $$
 >>> g = lambda t: jnp.sin(jnp.pi * t)
 >>> Hy = dq.modulated(g, dq.sigmay())
 >>> H = dq.sigmaz() + 2 * Hx - Hy
->>> H(1.0)
+>>> H(1.0).to_jax()
 Array([[ 1.+0.j,  2.-0.j],
        [ 2.+0.j, -1.+0.j]], dtype=complex64)
 ```
@@ -119,37 +119,37 @@ PWCTimeArray(shape=(2, 2), dtype=complex64)
 The returned object can be called at different times:
 === "$t = -1.0$"
     ```pycon
-    >>> H(-1.0)
+    >>> H(-1.0).to_jax()
     Array([[ 0.+0.j,  0.+0.j],
            [ 0.+0.j, -0.+0.j]], dtype=complex64)
     ```
 === "$t=0.0$"
     ```pycon
-    >>> H(0.0)
+    >>> H(0.0).to_jax()
     Array([[ 3.+0.j,  0.+0.j],
            [ 0.+0.j, -3.+0.j]], dtype=complex64)
     ```
 === "$t=0.5$"
     ```pycon
-    >>> H(0.5)
+    >>> H(0.5).to_jax()
     Array([[ 3.+0.j,  0.+0.j],
            [ 0.+0.j, -3.+0.j]], dtype=complex64)
     ```
 === "$t=1.0$"
     ```pycon
-    >>> H(1.0)
+    >>> H(1.0).to_jax()
     Array([[-2.+0.j, -0.+0.j],
            [-0.+0.j,  2.-0.j]], dtype=complex64)
     ```
 === "$t=1.5$"
     ```pycon
-    >>> H(1.5)
+    >>> H(1.5).to_jax()
     Array([[-2.+0.j, -0.+0.j],
            [-0.+0.j,  2.-0.j]], dtype=complex64)
     ```
 === "$t=2.0$"
     ```pycon
-    >>> H(2.0)
+    >>> H(2.0).to_jax()
     Array([[ 0.+0.j,  0.+0.j],
            [ 0.+0.j, -0.+0.j]], dtype=complex64)
     ```
@@ -192,13 +192,13 @@ ModulatedTimeArray(shape=(2, 2), dtype=complex64)
 The returned object can be called at different times:
 === "$t = 0.5$"
     ```pycon
-    >>> H(0.5)
+    >>> H(0.5).to_jax()
     Array([[-0.+0.j, -1.+0.j],
            [-1.+0.j, -0.+0.j]], dtype=complex64)
     ```
 === "$t=1.0$"
     ```pycon
-    >>> H(1.0)
+    >>> H(1.0).to_jax()
     Array([[0.+0.j, 1.+0.j],
            [1.+0.j, 0.+0.j]], dtype=complex64)
     ```

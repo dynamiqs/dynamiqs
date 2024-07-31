@@ -55,5 +55,5 @@ def _concatenate_sort(*args: Array | None) -> Array | None:
     return jnp.sort(jnp.concatenate(args))
 
 
-def _is_scalar(y):
+def _is_scalar(y: ArrayLike) -> bool:
     return isinstance(y, ArrayLike) and asjaxarray(y).ndim == 0

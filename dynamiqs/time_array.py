@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from functools import reduce
 from typing import get_args
 
 import equinox as eqx
@@ -593,7 +594,6 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
-
         if isinstance(y, get_args(ScalarLike)):
             return ConstantTimeArray(self.f + y)
         elif isqarraylike(y):
@@ -644,9 +644,7 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray(timearrays)
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return jax.tree_util.tree_reduce(
-            lambda x, y: x + y, [tarray(t) for tarray in self.timearrays]
-        )
+        return reduce(lambda x, y: x + y, [tarray(t) for tarray in self.timearrays])
 
     def __mul__(self, y: QArrayLike) -> TimeArray:
         timearrays = [tarray * y for tarray in self.timearrays]

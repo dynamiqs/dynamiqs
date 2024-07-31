@@ -40,14 +40,14 @@ In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the
 === ":material-check: Correct"
     ```pycon
     >>> sz = dq.sigmaz()
-    >>> sz - 2 * dq.eye(2)
+    >>> (sz - 2 * dq.eye(2)).to_jax()
     Array([[-1.+0.j,  0.+0.j],
            [ 0.+0.j, -3.+0.j]], dtype=complex64)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sz = dq.sigmaz()
-    >>> sz - 2
+    >>> (sz - 2).to_jax()
     Array([[-1.+0.j, -2.+0.j],
            [-2.+0.j, -3.+0.j]], dtype=complex64)
     ```
@@ -59,14 +59,14 @@ In QuTiP, the `*` symbol is used to multiply two operators. This convention also
 === ":material-check: Correct"
     ```pycon
     >>> sx = dq.sigmax()
-    >>> sx @ sx
+    >>> (sx @ sx).to_jax()
     Array([[1.+0.j, 0.+0.j],
            [0.+0.j, 1.+0.j]], dtype=complex64)
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx = dq.sigmax()
-    >>> sx * sx
+    >>> (sx * sx).to_jax()
     Array([[0.+0.j, 1.+0.j],
            [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
@@ -75,13 +75,13 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
 
 === ":material-check: Correct"
     ```pycon
-    >>> dq.powm(sx, 2)
+    >>> dq.powm(sx, 2).to_jax()
     Array([[1.+0.j, 0.+0.j],
            [0.+0.j, 1.+0.j]], dtype=complex64)
     ```
 === ":material-close: Incorrect"
     ```pycon
-    >>> sx**2
+    >>> (sx**2).to_jax()
     Array([[0.+0.j, 1.+0.j],
            [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
