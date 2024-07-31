@@ -180,13 +180,15 @@ class DenseQArray(QArray):
         super().__rmatmul__(y)
 
         if isinstance(y, DenseQArray):
+            dims = self.dims if len(self.dims) < len(y.dims) else y.dims
             data = y.data @ self.data
         elif isqarraylike(y):
+            dims = self.dims
             data = asjaxarray(y) @ self.data
         else:
             return NotImplemented
 
-        return DenseQArray(self.dims, data)
+        return DenseQArray(dims, data)
 
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)

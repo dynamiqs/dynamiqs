@@ -221,32 +221,14 @@ class SparseDIAQArray(QArray):
             top = max(0, -self_offset)
             bottom = top + end - start
 
-            def left_case(
-                out: Array,
-                top: int = top,
-                bottom: int = bottom,
-                start: int = start,
-                end: int = end,
-                diag: Array = self_diag,
-            ) -> Array:
-                return out.at[top:bottom, :].add(
-                    diag[start:end, None] * other[start:end, :]
+            if left_matmul:
+                out = out.at[top:bottom, :].add(
+                    self_diag[start:end, None] * other[start:end, :]
                 )
-
-            def right_case(
-                out: Array,
-                top: int = top,
-                bottom: int = bottom,
-                start: int = start,
-                end: int = end,
-                diag: Array = self_diag,
-            ) -> Array:
-                return out.at[:, start:end].add(
-                    diag[start:end, None].T * other[:, top:bottom]
+            else:
+                out = out.at[:, start:end].add(
+                    self_diag[start:end, None].T * other[:, top:bottom]
                 )
-
-            # todo: replace by a dump "if"
-            out = jax.lax.cond(left_matmul, left_case, right_case, out)
 
         return DenseQArray(self.dims, out)
 
