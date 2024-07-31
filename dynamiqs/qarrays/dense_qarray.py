@@ -104,7 +104,7 @@ class DenseQArray(QArray):
     def to_jax(self) -> Array:
         return self.data
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001

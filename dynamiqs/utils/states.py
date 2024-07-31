@@ -256,8 +256,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
     # fact: dim is now an integer
 
-    ket = displace(int(dim), alpha) @ fock(int(dim), 0)
-    return ket
+    return displace(int(dim), alpha) @ fock(int(dim), 0)
 
 
 def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
