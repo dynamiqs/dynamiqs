@@ -342,7 +342,10 @@ def gifit(
         ...     y = np.cos(2 * np.pi * x + phi)
         ...     plt.plot(x, y)
         >>> phis = np.linspace(0, 2 * np.pi, 101)
-        >>> plot_cos_gif = dq.gifit(plot_cos, filename='docs/figs_code/cos.gif')
+        >>> filename = 'docs/figs_code/cos.gif'
+        >>> plot_cos_gif = dq.gifit(
+        ...     plot_cos, fps=25, filename=filename, dpi=150, display=False
+        ... )
         >>> plot_cos_gif(phis)
 
         ![plot_cos](/figs_code/cos.gif){.fig}
@@ -350,7 +353,10 @@ def gifit(
         >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(24, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
-        >>> dq.gifit(dq.plot_fock, filename=filename, display=False)(states)
+        >>> plot_fock_gif = dq.gifit(
+        ...     dq.plot_fock, fps=25, filename=filename, dpi=150, display=False
+        ... )
+        >>> plot_fock_gif(states)
 
         ![plot_coherent_evolution](/figs_code/coherent_evolution.gif){.fig}
     """
