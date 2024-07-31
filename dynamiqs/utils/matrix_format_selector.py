@@ -36,10 +36,13 @@ def dispatch_matrix_format(func: Callable) -> Callable:
 
         key = (func.__name__, matrix_format)
         if key not in dispatch_dict:
+            handlers_list = "\n- ".join(list(map(str, dispatch_dict.keys())))
             raise RuntimeError(
                 f"There is no handler for method '{func.__name__}' "
-                f"and matrix format '{matrix_format}'.\nRegistered handlers"
-                f"are {dispatch_dict.keys()}"
+                f"and matrix format '{matrix_format}'.\nRegistered handlers "
+                f"are \n- {handlers_list}\n"
+                f"This error should never happen, if you encounter it, please "
+                f"open a ticket at https://github.com/dynamiqs/dynamiqs/issues."
             )
 
         return dispatch_dict[key](*args, **kwargs)

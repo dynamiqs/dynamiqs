@@ -26,9 +26,20 @@ class SparseDIAQArray(QArray):
 
     def __post_init__(self):
         # check that diagonals contain zeros outside the bounds of the matrix
-        for offset, diag in zip(self.offsets, self.diags):
-            if (offset < 0 and jnp.any(diag[offset:] != 0)) or (
-                offset > 0 and jnp.any(diag[:offset] != 0)
+
+        if self.diags.ndim < 2 or (
+            self.diags.shape[-2] != len(self.offsets)
+            or self.diags.shape[-1] != np.prod(self.dims)
+        ):
+            raise ValueError(
+                f"Diagonals of `SparseDIAQArray` must be of shape (..., len(offsets), prod(dims)) "
+                f"ie (..., {len(self.offsets)}, {np.prod(self.dims)}) but got {self.diags.shape}"
+            )
+
+        diags = jnp.swapaxes(self.diags, -2, 0)
+        for offset, diag in zip(self.offsets, diags):
+            if (offset < 0 and jnp.any(diag[..., offset:] != 0)) or (
+                offset > 0 and jnp.any(diag[..., :offset] != 0)
             ):
                 raise ValueError(
                     'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
@@ -61,7 +72,20 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def broadcast_to(self, *shape: int) -> QArray:
-        raise NotImplementedError
+
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f"Cannot broadcast to shape {shape} because"
+                f" the last two dimensions do not match current "
+                f"shape dimensions ({self.shape[:-2], self.shape[-1], self.shape[-1]})"
+            )
+
+        shape = list(shape)
+        shape[-1] = self.diags.shape[-1]
+        shape[-2] = len(self.offsets)
+
+        diags = jnp.broadcast_to(self.diags, shape)
+        return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
 
     def ptrace(self, keep: tuple[int, ...]) -> QArray:
         raise NotImplementedError
@@ -288,7 +312,10 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def __getitem__(self, key: int | slice) -> QArray:
-        return NotImplemented
+        if self.ndim <= 2:
+            raise NotImplementedError(
+                "Getting items for non batched SparseDIA " "arrays is not supported yet"
+            )
 
 
 def _dia_slice(offset: int) -> slice:
