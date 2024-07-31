@@ -62,7 +62,7 @@ class Cavity(ClosedSystem):
     def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
         return [dq.position(self.n), dq.momentum(self.n)]
 
     def _alpha(self, t: float) -> Array:
@@ -77,7 +77,7 @@ class Cavity(ClosedSystem):
         exp_p = alpha_t.imag
         return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         return dq.expect(dq.number(self.n), state).real
 
     def grads_state(self, t: float) -> PyTree:  # noqa: ARG002
@@ -118,7 +118,7 @@ class TDQubit(ClosedSystem):
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
         return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
@@ -135,7 +135,7 @@ class TDQubit(ClosedSystem):
         exp_z = jnp.cos(theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         return dq.expect(dq.sigmaz(), state).real
 
     def grads_state(self, t: float) -> PyTree:
