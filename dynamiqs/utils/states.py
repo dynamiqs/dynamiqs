@@ -186,14 +186,18 @@ def basis_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     return fock_dm(dim, number)
 
 
-def coherent(dim: int | tuple[int, ...], alpha: [ArrayLike] | ArrayLike) -> QArray:
+def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> QArray:
     r"""Returns the ket of a coherent state or a tensor product of coherent states.
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(list of array_like of shape (...) or (..., len(dim)))_: Coherent state
-            amplitude for each mode. If `dim` is a tuple, the last dimension of
+        alpha _(array_like of shape (...) or (len(dim), ...) or
+            list of array_like of shape (...))_: Coherent state
+            amplitude for each mode. If `dim` is a tuple, the first dimension of
             `alpha` should match the length of `dim`.
+
+    Note:
+        If you provide argument `alpha` as a list, all elements must be broadcastable.
 
     Returns:
         _(qarray of shape (..., n, 1))_ Ket of the coherent state or tensor product of
@@ -237,7 +241,6 @@ def coherent(dim: int | tuple[int, ...], alpha: [ArrayLike] | ArrayLike) -> QArr
         >>> alpha1 = np.linspace(0, 1, 5)
         >>> alpha2 = np.linspace(0, 1, 7)
         >>> dq.coherent((8, 8), (alphas1[None, ...], alphas2[:, None]))
-        >>> dq.coherent((4, 6), alpha).shape
         (7, 5, 64, 1)
     """
     dim = asjaxarray(dim)
