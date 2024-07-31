@@ -142,6 +142,7 @@ nav:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
           - smesolve: python_api/integrators/smesolve.md
+          - sepropagator: python_api/integrators/sepropagator.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -159,6 +160,7 @@ nav:
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
               - Propagator: python_api/solver/Propagator.md
+              - Expm: python_api/solver/Expm.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
@@ -166,6 +168,7 @@ nav:
           - Results:
               - SEResult: python_api/result/SEResult.md
               - MEResult: python_api/result/MEResult.md
+              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
