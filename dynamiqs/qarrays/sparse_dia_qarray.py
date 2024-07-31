@@ -269,14 +269,14 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
 
     def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
-        # === Compute the Kronecker product of diagonals
+        # === compute the Kronecker product of diagonals
         N = other.diags.shape[-1]
         self_offsets = np.asarray(self.offsets)
         other_offsets = np.asarray(other.offsets)
         out_offsets = np.ravel(self_offsets[:, None] * N + other_offsets)
         tmp_diags = jnp.kron(self.diags, other.diags)
 
-        # === Merge duplicate diagonals
+        # === merge duplicate diagonals
         unique_offsets, inverse_indices = np.unique(out_offsets, return_inverse=True)
         num_diags = unique_offsets.shape[0]
         out_diags = jnp.zeros_like(tmp_diags)
