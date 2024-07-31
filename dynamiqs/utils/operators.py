@@ -6,7 +6,12 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from ..qarrays import QArray, asqarray
+from ..qarrays import QArray, SparseDIAQArray, asqarray
+from .matrix_format_selector import (
+    MatrixFormat,
+    dispatch_matrix_format,
+    register_format_handler,
+)
 from .utils import tensor
 
 __all__ = [
@@ -30,7 +35,8 @@ __all__ = [
 ]
 
 
-def eye(*dims: int) -> QArray:
+@dispatch_matrix_format
+def eye(*dims: int) -> QArray:  # noqa: ARG001
     r"""Returns the identity operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -64,9 +70,19 @@ def eye(*dims: int) -> QArray:
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
     """
+
+
+@register_format_handler('eye', MatrixFormat.DENSE)
+def eye_dense(*dims: int) -> QArray:
     dim = prod(dims)
     array = jnp.eye(dim, dtype=cdtype())
     return asqarray(array, dims=dims)
+
+
+@register_format_handler('eye', MatrixFormat.SPARSE_DIA)
+def eye_sparse_dia(*dims: int) -> QArray:
+    dim = prod(dims)
+    return SparseDIAQArray(diags=jnp.ones((1, dim)), offsets=(0,), dims=dims)
 
 
 def zero(*dims: int) -> QArray:
@@ -155,6 +171,9 @@ def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
          [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j]
          [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
     """
+
+
+def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
     if len(dims) == 1:
         return _destroy_single(dims[0])
 
