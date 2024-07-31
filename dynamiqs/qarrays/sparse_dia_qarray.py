@@ -23,6 +23,17 @@ class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array = eqx.field(converter=jnp.asarray)
 
+    def __post_init__(self):
+        # check that diagonals contain zeros outside the bounds of the matrix
+        for offset, diag in zip(self.offsets, self.diags):
+            if (offset < 0 and jnp.any(diag[offset:] != 0)) or (
+                offset > 0 and jnp.any(diag[:offset] != 0)
+            ):
+                raise ValueError(
+                    'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
+                    'matrix bounds.'
+                )
+
     @property
     def dtype(self) -> jnp.dtype:
         return self.diags.dtype
@@ -258,33 +269,31 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
 
     def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
+        # === Compute the Kronecker product of diagonals
         N = other.diags.shape[-1]
-        out_offsets = jnp.ravel(
-            jnp.asarray(self.offsets) * N + jnp.asarray(other.offsets)[:, None],
-            order='F',
-        )
-        out_diags = jnp.kron(self.diags, other.diags)
+        self_offsets = np.asarray(self.offsets)
+        other_offsets = np.asarray(other.offsets)
+        out_offsets = np.ravel(self_offsets[:, None] * N + other_offsets)
+        tmp_diags = jnp.kron(self.diags, other.diags)
 
-        offsets = tuple(out_offsets)
-        diags = out_diags
-        offsets = jnp.sort(jnp.asarray(offsets))
-
-        unique_offsets, inverse_indices = np.unique(offsets, return_inverse=True)
-        count = unique_offsets.shape[0]
-        out_diags = jnp.zeros((count, diags.shape[-1]))
-        for i in range(count):
+        # === Merge duplicate diagonals
+        unique_offsets, inverse_indices = np.unique(out_offsets, return_inverse=True)
+        num_diags = unique_offsets.shape[0]
+        out_diags = jnp.zeros_like(tmp_diags)
+        for i in range(num_diags):
             mask = inverse_indices == i
-            out_diags = out_diags.at[i, :].set(jnp.sum(diags[mask, :], axis=0))
+            out_diags = out_diags.at[..., i, :].set(
+                jnp.sum(tmp_diags[..., mask, :], axis=-2)
+            )
+        out_offsets = tuple(o.item() for o in unique_offsets)
+
         return SparseDIAQArray(
-            offsets=tuple(o.item() for o in unique_offsets),
-            diags=out_diags,
-            dims=self.dims + other.dims,
+            offsets=out_offsets, diags=out_diags, dims=self.dims + other.dims
         )
 
     def __and__(self, other: QArrayLike) -> QArray:
         if isinstance(other, SparseDIAQArray):
             return self._kronecker_dia(other=other)
-
         elif isinstance(other, get_args(QArrayLike)):
             return self.to_dense() & asqarray(other)
 
