@@ -23,6 +23,17 @@ class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array = eqx.field(converter=jnp.asarray)
 
+    def __post_init__(self):
+        # check that diagonals contain zeros outside the bounds of the matrix
+        for offset, diag in zip(self.offsets, self.diags):
+            if (offset < 0 and jnp.any(diag[offset:] != 0)) or (
+                offset > 0 and jnp.any(diag[:offset] != 0)
+            ):
+                raise ValueError(
+                    'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
+                    'matrix bounds.'
+                )
+
     @property
     def dtype(self) -> jnp.dtype:
         return self.diags.dtype
