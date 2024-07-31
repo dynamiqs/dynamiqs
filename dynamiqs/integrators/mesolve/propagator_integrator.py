@@ -30,7 +30,7 @@ class MESolvePropagatorIntegrator(PropagatorIntegrator, MESolveIntegrator):
 
         # extract the constant arrays from the `ConstantTimeArray` objects
 
-        self.Ls = [L.array.to_jax() for L in self.Ls]
+        self.Ls = [L.array for L in self.Ls]
 
         # convert to vectorized form
         self.lindbladian = slindbladian(self.H, self.Ls)  # (n^2, n^2)
@@ -38,10 +38,10 @@ class MESolvePropagatorIntegrator(PropagatorIntegrator, MESolveIntegrator):
 
     def forward(self, delta_t: Scalar, y: QArray) -> QArray:
         propagator = (delta_t * self.lindbladian).expm()
-        return propagator.to_jax() @ y
+        return propagator @ y
 
     def save(self, y: QArray) -> Saved:
         # TODO: implement bexpect for vectorized operators and convert at the end
-        #       instead ofat each step
+        # instead of at each step
         y = vector_to_operator(y)
         return super().save(y)
