@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
@@ -8,6 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 from equinox.internal._omega import _Metaω
 from jax import Array, Device
+from jaxtyping import ArrayLike
 from qutip import Qobj
 
 if TYPE_CHECKING:  # avoid circular import by importing only during type checking
@@ -321,13 +323,12 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        # todo too noisy
-        # if not isinstance(y, get_args(ScalarLike)):
-        #     logging.warning(
-        #         'Using the `*` operator between two arrays performs element-wise '
-        #         'multiplication. For matrix multiplication, use the `@` operator '
-        #         'instead.'
-        #     )
+        if self._is_scalar(y):
+            logging.warning(
+                'Using the `*` operator between two arrays performs element-wise '
+                'multiplication. For matrix multiplication, use the `@` operator '
+                'instead.'
+            )
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
@@ -343,13 +344,18 @@ class QArray(eqx.Module):
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        # todo: too noisy
-        # if isinstance(y, get_args(ScalarLike)):
-        #     logging.warning(
-        #         'Using the `+` or `-` operator between an array and a scalar performs '
-        #         'element-wise addition or subtraction. For addition with a scaled '
-        #         'identity matrix, use e.g. `x + 2 * x.I` instead.'
-        #     )
+        if self._is_scalar(y):
+            logging.warning(
+                'Using the `+` or `-` operator between an array and a scalar performs '
+                'element-wise addition or subtraction. For addition with a scaled '
+                'identity matrix, use e.g. `x + 2 * x.I` instead.'
+            )
+
+    @staticmethod
+    def _is_scalar(y):
+        from .types import asjaxarray
+
+        return isinstance(y, ArrayLike) and asjaxarray(y).ndim > 0
 
     def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
@@ -382,11 +388,10 @@ class QArray(eqx.Module):
         if isinstance(power, _Metaω):
             return _Metaω.__rpow__(power, self)
         else:
-            # todo: too noisy
-            # logging.warning(
-            #     'Using the `**` operator performs element-wise power. For matrix '
-            #     'power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
-            # )
+            logging.warning(
+                'Using the `**` operator performs element-wise power. For matrix '
+                'power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
+            )
             return self._pow(power)
 
     @abstractmethod
