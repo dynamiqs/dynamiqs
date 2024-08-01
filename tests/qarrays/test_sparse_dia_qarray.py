@@ -66,7 +66,6 @@ class TestSparseDIAQArray:
 
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_convert(self, kA, rtol=1e-05, atol=1e-08):
-        print(self.denseB[kA].to_jax().shape)
         assert jnp.allclose(
             self.denseA[kA].to_jax(),
             dq.to_sparse_dia(self.denseA[kA]).to_jax(),
