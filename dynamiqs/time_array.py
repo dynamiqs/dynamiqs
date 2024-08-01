@@ -377,8 +377,8 @@ class TimeArray(eqx.Module):
     def __rsub__(self, y: QArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
-    def __repr__(self) -> str:
-        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+    # def __repr__(self) -> str:
+    #     return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
 
 class ConstantTimeArray(TimeArray):
@@ -669,8 +669,12 @@ class BatchedCallable(eqx.Module):
     def __init__(self, f: callable[[float], QArray]):
         # make f a valid PyTree with `Partial` and convert its output to an array
         self.f = jtu.Partial(f)
-        shape = jax.eval_shape(f, 0.0).shape
-        self.indices = list(jnp.indices(shape[:-2]))
+        eval_shape = jax.eval_shape(f, 0.0)
+        if isinstance(eval_shape, QArray):
+            shape = eval_shape.shape[:-2]
+        else:
+            shape = eval_shape.shape
+        self.indices = list(jnp.indices(shape))
 
     def __call__(self, t: ScalarLike) -> QArray:
         if len(self.indices) == 0:

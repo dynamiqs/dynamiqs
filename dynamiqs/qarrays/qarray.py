@@ -41,7 +41,7 @@ class QArray(eqx.Module):
     dims: tuple[int, ...] = eqx.field(static=True)
 
     def __check_init__(self):
-        # ensure dims is a tuple of ints
+        # === ensure dims is a tuple of ints
         if not isinstance(self.dims, tuple) or not all(
             isinstance(d, int) for d in self.dims
         ):
@@ -49,10 +49,11 @@ class QArray(eqx.Module):
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
 
-        # ensure dims is compatible with the shape
-        if (not self.isket() and prod(self.dims) != self.shape[-1]) or (
-            self.isket() and prod(self.dims) != self.shape[-2]
-        ):
+        # === ensure dims is compatible with the shape
+        # for vectorized superoperators, we allow that the shape is the square
+        # of the product of all dims
+        allowed_shapes = (prod(self.dims), prod(self.dims)**2)
+        if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
                 'Argument `dims` must be compatible with the shape of the QArray, but '
                 f'got dims {self.dims} and shape {self.shape}.'
