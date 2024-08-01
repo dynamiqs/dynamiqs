@@ -176,14 +176,8 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def _mul_scalar(self, other: QArrayLike) -> QArray:
-        if jnp.all(other == 0):
-            offsets = ()
-            shape = (*self.shape[:-2], len(offsets), self.shape[-1])
-            diags = jnp.zeros(shape, dtype=cdtype())
-            return SparseDIAQArray(self.dims, offsets, diags)
-        else:
-            diags, offsets = other * self.diags, self.offsets
-            return SparseDIAQArray(self.dims, offsets, diags)
+        diags, offsets = other * self.diags, self.offsets
+        return SparseDIAQArray(self.dims, offsets, diags)
 
     def _mul_sparse(self, other: SparseDIAQArray) -> QArray:
         # we check that the offsets are unique, as they should with the class __init__
@@ -238,8 +232,6 @@ class SparseDIAQArray(QArray):
         )
 
         if _is_batched_scalar(other):
-            if jnp.all(other == 0):
-                return self
             warnings.warn(warning_dense_addition, stacklevel=2)
             return self._add_scalar(other)
         elif isinstance(other, SparseDIAQArray):
