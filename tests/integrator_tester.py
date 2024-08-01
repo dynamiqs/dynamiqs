@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 
+from dynamiqs import dense, set_matrix_format
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.solver import Solver
@@ -15,6 +16,9 @@ from .system import System
 
 
 class IntegratorTester:
+    def __init__(self):
+        set_matrix_format(dense)
+
     def _test_correctness(
         self,
         system: System,

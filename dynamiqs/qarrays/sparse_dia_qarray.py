@@ -26,9 +26,23 @@ class SparseDIAQArray(QArray):
 
     def __post_init__(self):
         # check that diagonals contain zeros outside the bounds of the matrix
-        for offset, diag in zip(self.offsets, self.diags):
-            if (offset < 0 and jnp.any(diag[offset:] != 0)) or (
-                offset > 0 and jnp.any(diag[:offset] != 0)
+
+        if self.diags.ndim < 2 or (
+            self.diags.shape[-2] != len(self.offsets)
+            or self.diags.shape[-1] != np.prod(self.dims)
+        ):
+            raise ValueError(
+                f"Diagonals of `SparseDIAQArray` must be of shape (..., len(offsets), prod(dims)) "
+                f"ie (..., {len(self.offsets)}, {np.prod(self.dims)}) but got {self.diags.shape}"
+            )
+
+        # if the code is jitted, disable checks
+        if isinstance(self.diags, jax.core.Tracer):
+            return
+
+        for i, offset in enumerate(self.offsets):
+            if (offset < 0 and jnp.any(self.diags[..., i, offset:] != 0)) or (
+                offset > 0 and jnp.any(self.diags[..., i, :offset] != 0)
             ):
                 raise ValueError(
                     'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
@@ -69,7 +83,16 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def broadcast_to(self, *shape: int) -> QArray:
-        raise NotImplementedError
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f"Cannot broadcast to shape {shape} because"
+                f" the last two dimensions do not match current "
+                f"shape dimensions ({self.shape})"
+            )
+
+        shape = (*shape[:-2], len(self.offsets), self.diags.shape[-1])
+        diags = jnp.broadcast_to(self.diags, shape)
+        return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
 
     def ptrace(self, keep: tuple[int, ...]) -> QArray:
         raise NotImplementedError
@@ -301,7 +324,39 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def __getitem__(self, key: int | slice) -> QArray:
-        return NotImplemented
+        full = slice(None, None, None)
+
+        if key in (full, Ellipsis):
+            return self
+
+        if isinstance(key, (int, slice)):
+            is_key_valid = self.ndim > 2
+        elif isinstance(key, tuple):
+            if Ellipsis in key:
+                ellipsis_key = key.index(Ellipsis)
+                key = (
+                    key[:ellipsis_key]
+                    + (full,) * (self.ndim - len(key) + 1)
+                    + key[ellipsis_key + 1 :]
+                )
+
+            is_key_valid = (
+                len(key) <= self.ndim - 2
+                or (len(key) == self.ndim - 1 and key[-1] == full)
+                or (len(key) == self.ndim and key[-2] == full and key[-1] == full)
+            )
+        else:
+            raise IndexError("Should never happen")
+
+        if not is_key_valid:
+            raise NotImplementedError(
+                "Getting items for non batching dimensions of "
+                "SparseDIA is not supported yet"
+            )
+
+        return SparseDIAQArray(
+            diags=self.diags[key], offsets=self.offsets, dims=self.dims
+        )
 
 
 def _dia_slice(offset: int) -> slice:

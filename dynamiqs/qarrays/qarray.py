@@ -351,6 +351,10 @@ class QArray(eqx.Module):
     def __rtruediv__(self, y: QArrayLike) -> QArray:
         return self * 1 / y
 
+    def __iter__(self):
+        for i in range(self.shape[0]):
+            yield self[i]
+
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""

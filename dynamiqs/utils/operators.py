@@ -3,10 +3,17 @@ from __future__ import annotations
 from math import prod
 
 import jax.numpy as jnp
+import numpy as np
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from ..qarrays import QArray, asqarray
+from ..qarrays import DenseQArray, QArray, SparseDIAQArray, asqarray
+from .matrix_format_selector import (
+    MatrixFormatEnum,
+    MatrixFormat,
+    dispatch_matrix_format,
+    register_format_handler,
+)
 from .utils import tensor
 
 __all__ = [
@@ -30,7 +37,8 @@ __all__ = [
 ]
 
 
-def eye(*dims: int) -> QArray:
+@dispatch_matrix_format
+def eye(*dims: int, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the identity operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -41,6 +49,7 @@ def eye(*dims: int) -> QArray:
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (n, n))_ Identity operator, with _n = prod(dims)_.
@@ -64,12 +73,23 @@ def eye(*dims: int) -> QArray:
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
     """
+
+
+@register_format_handler('eye', MatrixFormatEnum.DENSE)
+def eye_dense(*dims: int) -> QArray:
     dim = prod(dims)
     array = jnp.eye(dim, dtype=cdtype())
     return asqarray(array, dims=dims)
 
 
-def zero(*dims: int) -> QArray:
+@register_format_handler('eye', MatrixFormatEnum.SPARSE_DIA)
+def eye_sparse_dia(*dims: int) -> QArray:
+    dim = prod(dims)
+    return SparseDIAQArray(diags=jnp.ones((1, dim)), offsets=(0,), dims=dims)
+
+
+@dispatch_matrix_format
+def zero(*dims: int, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the null operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -80,6 +100,7 @@ def zero(*dims: int) -> QArray:
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (n, n))_ Null operator, with _n = prod(dims)_.
@@ -103,12 +124,26 @@ def zero(*dims: int) -> QArray:
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
     """
+
+
+@register_format_handler('zero', MatrixFormatEnum.DENSE)
+def zero_dense(*dims: int) -> QArray:
     dim = prod(dims)
     array = jnp.zeros((dim, dim), dtype=cdtype())
     return asqarray(array, dims=dims)
 
 
-def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
+@register_format_handler('zero', MatrixFormatEnum.SPARSE_DIA)
+def zero_sparse_dia(*dims: int) -> QArray:
+    return SparseDIAQArray(
+        diags=jnp.zeros((0, np.prod(dims))), offsets=tuple(), dims=dims
+    )
+
+
+@dispatch_matrix_format
+def destroy(
+    *dims: int, matrix_format: MatrixFormat = None  # noqa: ARG001
+) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
 
@@ -122,6 +157,7 @@ def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
 
     Args:
         *dims: Hilbert space dimension of each mode.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray or tuple of qarrays, each of shape (n, n))_ Annihilation operator(s),
@@ -155,24 +191,51 @@ def destroy(*dims: int) -> QArray | tuple[QArray, ...]:
          [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j]
          [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
     """
-    if len(dims) == 1:
-        return _destroy_single(dims[0])
 
-    a = [_destroy_single(dim) for dim in dims]
-    Id = [eye(dim) for dim in dims]
+
+@register_format_handler('destroy', MatrixFormatEnum.DENSE)
+def destroy_dense(*dims: int) -> QArray | tuple[QArray, ...]:
+    if len(dims) == 1:
+        return _destroy_single_dense(dims[0])
+
+    a = [_destroy_single_dense(dim) for dim in dims]
+    Id = [eye(dim, matrix_format=MatrixFormatEnum.DENSE) for dim in dims]
     return tuple(
         tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _destroy_single(dim: int) -> QArray:
+def _destroy_single_dense(dim: int) -> QArray:
     """Bosonic annihilation operator."""
     array = jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=1)
     return asqarray(array, dims=dim)
 
 
-def create(*dims: int) -> QArray | tuple[QArray, ...]:
+@register_format_handler('destroy', MatrixFormatEnum.SPARSE_DIA)
+def destroy_sparse_dia(*dims: int) -> QArray | tuple[QArray, ...]:
+    if len(dims) == 1:
+        return _destroy_single_sparse_dia(dims[0])
+
+    a = [_destroy_single_sparse_dia(dim) for dim in dims]
+    Id = [eye(dim, matrix_format=MatrixFormatEnum.SPARSE_DIA) for dim in dims]
+
+    return tuple(
+        tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
+        for i in range(len(dims))
+    )
+
+
+def _destroy_single_sparse_dia(dim: int) -> QArray:
+    """Bosonic annihilation operator."""
+    diag = jnp.sqrt(jnp.arange(0, stop=dim, dtype=cdtype())).reshape(1, -1)
+    return SparseDIAQArray(diags=diag, offsets=(1,), dims=(dim,))
+
+
+@dispatch_matrix_format
+def create(
+    *dims: int, matrix_format: MatrixFormat = None  # noqa: ARG001
+) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
 
@@ -186,6 +249,7 @@ def create(*dims: int) -> QArray | tuple[QArray, ...]:
 
     Args:
         *dims: Hilbert space dimension of each mode.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray or tuple of qarrays, each of shape (n, n))_ Creation operator(s), with
@@ -219,24 +283,50 @@ def create(*dims: int) -> QArray | tuple[QArray, ...]:
          [0.   +0.j 0.   +0.j 0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j]
          [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j]]
     """
-    if len(dims) == 1:
-        return _create_single(dims[0])
 
-    adag = [_create_single(dim) for dim in dims]
-    Id = [eye(dim) for dim in dims]
+
+@register_format_handler('create', MatrixFormatEnum.DENSE)
+def create_dense(*dims: int) -> QArray | tuple[QArray, ...]:
+    if len(dims) == 1:
+        return _create_single_dense(dims[0])
+
+    adag = [_create_single_dense(dim) for dim in dims]
+    Id = [eye(dim, matrix_format=MatrixFormatEnum.DENSE) for dim in dims]
     return tuple(
         tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _create_single(dim: int) -> QArray:
+def _create_single_dense(dim: int) -> QArray:
     """Bosonic creation operator."""
     array = jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
     return asqarray(array, dims=dim)
 
 
-def number(dim: int | None = None) -> QArray:
+@register_format_handler('create', MatrixFormatEnum.SPARSE_DIA)
+def create_sparse_dia(*dims: int) -> QArray | tuple[QArray, ...]:
+    if len(dims) == 1:
+        return _create_single_sparse_dia(dims[0])
+
+    a = [_create_single_sparse_dia(dim) for dim in dims]
+    Id = [eye(dim, matrix_format=MatrixFormatEnum.SPARSE_DIA) for dim in dims]
+    return tuple(
+        tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
+        for i in range(len(dims))
+    )
+
+
+def _create_single_sparse_dia(dim: int) -> QArray:
+    """Bosonic creation operator."""
+    diag = jnp.sqrt(jnp.arange(1, stop=dim + 1, dtype=cdtype()))
+    diag = diag.at[-1].set(0.0)
+    diag = diag.reshape(1, -1)
+    return SparseDIAQArray(diags=diag, offsets=(-1,), dims=(dim,))
+
+
+@dispatch_matrix_format
+def number(dim: int | None = None, *, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the number operator of a bosonic mode.
 
     It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
@@ -244,6 +334,7 @@ def number(dim: int | None = None) -> QArray:
 
     Args:
         dim: Dimension of the Hilbert space.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (dim, dim))_ Number operator.
@@ -256,11 +347,22 @@ def number(dim: int | None = None) -> QArray:
          [0.+0.j 0.+0.j 2.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 3.+0.j]]
     """
+
+
+@register_format_handler('number', MatrixFormatEnum.DENSE)
+def number_dense(dim: int | None = None) -> QArray:
     array = jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
     return asqarray(array)
 
 
-def parity(dim: int) -> QArray:
+@register_format_handler('number', MatrixFormatEnum.SPARSE_DIA)
+def number_sparse_dia(dim: int | None = None) -> QArray:
+    diag = jnp.arange(0, stop=dim, dtype=cdtype()).reshape(1, -1)
+    return SparseDIAQArray(diags=diag, offsets=(0,), dims=(dim,))
+
+
+@dispatch_matrix_format
+def parity(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the parity operator of a bosonic mode.
 
     It is defined by $P = e^{i\pi a^\dag a}$, where $a$ and $a^\dag$ are the
@@ -268,6 +370,7 @@ def parity(dim: int) -> QArray:
 
     Args:
         dim: Dimension of the Hilbert space.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (dim, dim))_ Parity operator.
@@ -280,13 +383,28 @@ def parity(dim: int) -> QArray:
          [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j -1.+0.j]]
     """
+
+
+@register_format_handler('parity', MatrixFormatEnum.DENSE)
+def parity_dense(dim: int) -> QArray:
     diag_values = jnp.ones(dim, dtype=cdtype())
     diag_values = diag_values.at[1::2].set(-1)
     array = jnp.diag(diag_values)
     return asqarray(array)
 
 
-def displace(dim: int, alpha: ArrayLike) -> QArray:
+@register_format_handler('parity', MatrixFormatEnum.SPARSE_DIA)
+def parity_sparse_dia(dim: int) -> QArray:
+    diag_values = jnp.ones(dim, dtype=cdtype())
+    diag_values = diag_values.at[1::2].set(-1)
+    diag_values = diag_values.reshape(1, -1)
+    return SparseDIAQArray(diags=diag_values, offsets=(0,), dims=(dim,))
+
+
+def displace(
+    dim: int,
+    alpha: ArrayLike,
+) -> DenseQArray:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -298,6 +416,7 @@ def displace(dim: int, alpha: ArrayLike) -> QArray:
     Args:
         dim: Dimension of the Hilbert space.
         alpha _(array_like of shape (...))_: Displacement amplitude.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (..., dim, dim))_ Displacement operator.
@@ -314,7 +433,7 @@ def displace(dim: int, alpha: ArrayLike) -> QArray:
     """
     alpha = jnp.asarray(alpha, dtype=cdtype())
     alpha = alpha[..., None, None]  # (..., 1, 1)
-    a = destroy(dim)  # (n, n)
+    a = destroy(dim, matrix_format=MatrixFormatEnum.DENSE)  # (n, n)
     return (alpha * a.dag() - alpha.conj() * a).expm()
 
 
@@ -330,6 +449,7 @@ def squeeze(dim: int, z: ArrayLike) -> QArray:
     Args:
         dim: Dimension of the Hilbert space.
         z _(array_like of shape (...))_: Squeezing amplitude.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (..., dim, dim))_ Squeezing operator.
@@ -347,12 +467,12 @@ def squeeze(dim: int, z: ArrayLike) -> QArray:
     z = jnp.asarray(z, dtype=cdtype())
     z = z[..., None, None]  # (..., 1, 1)
 
-    a = destroy(dim)  # (n, n)
+    a = destroy(dim, matrix_format=MatrixFormatEnum.DENSE)  # (n, n)
     a2 = a @ a
     return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
-def quadrature(dim: int, phi: float) -> QArray:
+def quadrature(dim: int, phi: float, *, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
     It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$, where $a$ and
@@ -361,6 +481,7 @@ def quadrature(dim: int, phi: float) -> QArray:
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (dim, dim))_ Quadrature operator.
@@ -377,15 +498,16 @@ def quadrature(dim: int, phi: float) -> QArray:
          [-0.+0.5j    0.+0.j    -0.-0.707j]
          [ 0.+0.j    -0.+0.707j  0.+0.j   ]]
     """
-    a = destroy(dim)
+    a = destroy(dim, matrix_format=matrix_format)
     return 0.5 * (jnp.exp(1.0j * phi) * a.dag() + jnp.exp(-1.0j * phi) * a)
 
 
-def position(dim: int) -> QArray:
+def position(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the position operator $x = (a^\dag + a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (dim, dim))_ Position operator.
@@ -397,15 +519,16 @@ def position(dim: int) -> QArray:
          [0.5  +0.j 0.   +0.j 0.707+0.j]
          [0.   +0.j 0.707+0.j 0.   +0.j]]
     """
-    a = destroy(dim)
+    a = destroy(dim, matrix_format=matrix_format)
     return 0.5 * (a + a.dag())
 
 
-def momentum(dim: int) -> QArray:
+def momentum(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the momentum operator $p = i (a^\dag - a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (dim, dim))_ Momentum operator.
@@ -417,11 +540,12 @@ def momentum(dim: int) -> QArray:
          [ 0.+0.5j    0.+0.j    -0.-0.707j]
          [ 0.+0.j     0.+0.707j  0.+0.j   ]]
     """
-    a = destroy(dim)
+    a = destroy(dim, matrix_format=matrix_format)
     return 0.5j * (a.dag() - a)
 
 
-def sigmax() -> QArray:
+@dispatch_matrix_format
+def sigmax(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the Pauli $\sigma_x$ operator.
 
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
@@ -435,11 +559,22 @@ def sigmax() -> QArray:
         [[0.+0.j 1.+0.j]
          [1.+0.j 0.+0.j]]
     """
+
+
+@register_format_handler('sigmax', MatrixFormatEnum.DENSE)
+def sigmax_dense() -> QArray:
     array = jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
     return asqarray(array)
 
 
-def sigmay() -> QArray:
+@register_format_handler('sigmax', MatrixFormatEnum.SPARSE_DIA)
+def sigmax_sparse_dia() -> QArray:
+    diags = jnp.array([[1.0, 0.0], [0.0, 1.0]], dtype=cdtype())
+    return SparseDIAQArray(diags=diags, offsets=(-1, 1), dims=(2,))
+
+
+@dispatch_matrix_format
+def sigmay(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the Pauli $\sigma_y$ operator.
 
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
@@ -453,11 +588,22 @@ def sigmay() -> QArray:
         [[ 0.+0.j -0.-1.j]
          [ 0.+1.j  0.+0.j]]
     """
+
+
+@register_format_handler('sigmay', MatrixFormatEnum.DENSE)
+def sigmay_dense() -> QArray:
     array = jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
     return asqarray(array)
 
 
-def sigmaz() -> QArray:
+@register_format_handler('sigmay', MatrixFormatEnum.SPARSE_DIA)
+def sigmay_sparse_dia() -> QArray:
+    diags = jnp.array([[1.0j, 0.0], [0.0, -1.0j]], dtype=cdtype())
+    return SparseDIAQArray(diags=diags, offsets=(-1, 1), dims=(2,))
+
+
+@dispatch_matrix_format
+def sigmaz(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the Pauli $\sigma_z$ operator.
 
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
@@ -471,11 +617,22 @@ def sigmaz() -> QArray:
         [[ 1.+0.j  0.+0.j]
          [ 0.+0.j -1.+0.j]]
     """
+
+
+@register_format_handler('sigmaz', MatrixFormatEnum.DENSE)
+def sigmaz_dense() -> QArray:
     array = jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
     return asqarray(array)
 
 
-def sigmap() -> QArray:
+@register_format_handler('sigmaz', MatrixFormatEnum.SPARSE_DIA)
+def sigmaz_sparse_dia() -> QArray:
+    diags = jnp.array([[1.0, -1.0]], dtype=cdtype())
+    return SparseDIAQArray(diags=diags, offsets=(0,), dims=(2,))
+
+
+@dispatch_matrix_format
+def sigmap(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
@@ -489,11 +646,22 @@ def sigmap() -> QArray:
         [[0.+0.j 1.+0.j]
          [0.+0.j 0.+0.j]]
     """
+
+
+@register_format_handler('sigmap', MatrixFormatEnum.DENSE)
+def sigmap_dense() -> QArray:
     array = jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
     return asqarray(array)
 
 
-def sigmam() -> QArray:
+@register_format_handler('sigmap', MatrixFormatEnum.SPARSE_DIA)
+def sigmap_sparse_dia() -> QArray:
+    diags = jnp.array([[0.0, 1.0]], dtype=cdtype())
+    return SparseDIAQArray(diags=diags, offsets=(1,), dims=(2,))
+
+
+@dispatch_matrix_format
+def sigmam(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
@@ -507,11 +675,22 @@ def sigmam() -> QArray:
         [[0.+0.j 0.+0.j]
          [1.+0.j 0.+0.j]]
     """
+
+
+@register_format_handler('sigmam', MatrixFormatEnum.DENSE)
+def sigmam_dense() -> QArray:
     array = jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
     return asqarray(array)
 
 
-def hadamard(n: int = 1) -> QArray:
+@register_format_handler('sigmam', MatrixFormatEnum.SPARSE_DIA)
+def sigmam_sparse_dia() -> QArray:
+    diags = jnp.array([[1.0, 0.0]], dtype=cdtype())
+    return SparseDIAQArray(diags=diags, offsets=(-1,), dims=(2,))
+
+
+@dispatch_matrix_format
+def hadamard(n: int = 1, *, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
@@ -528,6 +707,7 @@ def hadamard(n: int = 1) -> QArray:
 
     Args:
         n: Number of qubits to act on.
+        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (2^n, 2^n))_ Hadamard transform operator.
@@ -544,6 +724,25 @@ def hadamard(n: int = 1) -> QArray:
          [ 0.5+0.j  0.5+0.j -0.5+0.j -0.5+0.j]
          [ 0.5+0.j -0.5+0.j -0.5+0.j  0.5-0.j]]
     """
+
+
+@register_format_handler('hadamard', MatrixFormatEnum.DENSE)
+def hadamard_dense(n: int) -> QArray:
     H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
+    return tensor(*Hs)
+
+
+@register_format_handler('hadamard', MatrixFormatEnum.SPARSE_DIA)
+def hadamard_sparse_dia(n: int) -> QArray:
+    diags = jnp.array(
+        [
+            [1.0, 0.0],
+            [1.0, -1.0],
+            [0.0, 1.0],
+        ],
+        dtype=cdtype(),
+    ) / jnp.sqrt(2)
+    H1 = SparseDIAQArray(diags=diags, offsets=(-1, 0, 1), dims=(2,))
+    Hs = H1.broadcast_to(n, 2, 2)  # (n, 2, 2)
     return tensor(*Hs)

@@ -672,10 +672,13 @@ class BatchedCallable(eqx.Module):
         # make f a valid PyTree with `Partial` and convert its output to an array
         self.f = jtu.Partial(f)
         shape = jax.eval_shape(f, 0.0).shape
-        self.indices = list(jnp.indices(shape))
+        self.indices = list(jnp.indices(shape[:-2]))
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return self.f(t)[tuple(self.indices)]
+        if len(self.indices) == 0:
+            return self.f(t)
+        else:
+            return self.f(t)[tuple(self.indices)]
 
     @property
     def dtype(self) -> tuple[int, ...]:
