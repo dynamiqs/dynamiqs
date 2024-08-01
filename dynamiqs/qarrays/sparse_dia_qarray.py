@@ -348,7 +348,18 @@ class SparseDIAQArray(QArray):
         if isinstance(other, SparseDIAQArray):
             return self._and_dia(other)
         elif isqarraylike(other):
-            return self._and_dense(other)
+            other = asqarray(other)
+            return self.to_dense() & other
+
+        return NotImplemented
+
+    def __rand__(self, other: QArrayLike) -> QArray:
+        if _is_batched_scalar(other):
+            raise TypeError('Attempted tensor product between a scalar and a QArray.')
+
+        if isqarraylike(other):
+            other = asqarray(other)
+            return other & self.to_dense()
 
         return NotImplemented
 
@@ -366,9 +377,6 @@ class SparseDIAQArray(QArray):
         # merge duplicate offsets and return
         out_offsets, out_diags = _compress_dia(out_offsets, out_diags)
         return SparseDIAQArray(dims=out_dims, offsets=out_offsets, diags=out_diags)
-
-    def _and_dense(self, other: QArrayLike) -> QArray:
-        return self.to_dense() & asqarray(other)
 
     def _pow(self, power: int) -> QArray:  # noqa: ARG002
         return NotImplemented

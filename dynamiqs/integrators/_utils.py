@@ -184,6 +184,7 @@ def _cartesian_vectorize(
             in_axes[i] = 0
             in_axes = jtu.tree_unflatten(treedef, in_axes)
             for _ in range(leaf_len):
+                print(in_axes)
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     # We flat vectorize on the first n_batch term, which is the
