@@ -276,7 +276,7 @@ class SparseDIAQArray(QArray):
 
     def __matmul__(self, other: QArrayLike) -> QArray:
         if _is_batched_scalar(other):
-            raise TypeError("Attempted matrix product between a scalar and a QArray.")
+            raise TypeError('Attempted matrix product between a scalar and a QArray.')
 
         if isinstance(other, SparseDIAQArray):
             return self._matmul_dia(other)
@@ -288,7 +288,7 @@ class SparseDIAQArray(QArray):
 
     def __rmatmul__(self, other: QArrayLike) -> QArray:
         if _is_batched_scalar(other):
-            raise TypeError("Attempted matrix product between a scalar and a QArray.")
+            raise TypeError('Attempted matrix product between a scalar and a QArray.')
 
         if isqarraylike(other):
             return self._matmul_dense(other, left_matmul=False)
@@ -309,13 +309,12 @@ class SparseDIAQArray(QArray):
                 if abs(result_offset) > N - 1:
                     continue
 
-                sA, sB = max(0, -other_offset), max(0, other_offset)
-                eA, eB = min(N, N - other_offset), min(N, N + other_offset)
-
+                diag = (
+                    self_diag[..., _dia_slice(-other_offset)]
+                    * other_diag[..., _dia_slice(other_offset)]
+                )
                 diag_dict[result_offset] = (
-                    diag_dict[result_offset]
-                    .at[..., sB:eB]
-                    .add(self_diag[..., sA:eA] * other_diag[..., sB:eB])
+                    diag_dict[result_offset].at[..., _dia_slice(other_offset)].add(diag)
                 )
 
         out_offsets = sorted(diag_dict.keys())
@@ -327,30 +326,26 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
     def _matmul_dense(self, other: DenseQArray, left_matmul: bool) -> QArray:
-        N = other.shape[-1]
         broadcast_shape = jnp.broadcast_shapes(self.shape, other.data.shape)
         out = jnp.zeros(broadcast_shape)
         for i, self_offset in enumerate(self.offsets):
             self_diag = self.diags[..., i, :]
-            start = max(0, self_offset)
-            end = min(N, N + self_offset)
-            top = max(0, -self_offset)
-            bottom = top + end - start
-
+            slice_in = _dia_slice(self_offset)
+            slice_out = _dia_slice(-self_offset)
             if left_matmul:
-                out = out.at[..., top:bottom, :].add(
-                    self_diag[..., start:end, None] * other.data[..., start:end, :]
+                out = out.at[..., slice_out, :].add(
+                    self_diag[..., slice_in, None] * other.data[..., slice_in, :]
                 )
             else:
-                out = out.at[..., :, start:end].add(
-                    self_diag[..., start:end, None].T * other.data[..., :, top:bottom]
+                out = out.at[..., :, slice_in].add(
+                    self_diag[..., slice_in, None].T * other.data[..., :, slice_out]
                 )
 
         return DenseQArray(self.dims, out)
 
     def __and__(self, other: QArrayLike) -> QArray:
         if _is_batched_scalar(other):
-            raise TypeError("Attempted tensor product between a scalar and a QArray.")
+            raise TypeError('Attempted tensor product between a scalar and a QArray.')
 
         if isinstance(other, SparseDIAQArray):
             return self._and_dia(other)
