@@ -61,9 +61,9 @@ The state at time $t$ is given by $\rho(t)=e^{\mathcal{L}t}(\rho(0))$, where $\r
 ??? Note "Solution for a time-dependent Liouvillian"
     For a time-dependent Liouvillian $\mathcal{L}(t)$, the solution at time $t$ is
     $$
-        \rho(t) = \mathcal{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right)(\rho(0)),
+        \rho(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right)(\rho(0)),
     $$
-    where $\mathcal{T}$ is the *time-ordering meta-operator*, which indicates the time-ordering of the Liouvillians upon expansion of the matrix exponential (Liouvillians at different times do not commute).
+    where $\mathscr{T}$ is the time-ordering symbol, which indicates the time-ordering of the Liouvillians upon expansion of the matrix exponential (Liouvillians at different times do not commute).
 
 The first idea is to explicitly compute the propagator to evolve the state up to time $t$. There are various ways to compute the matrix exponential, such as exact diagonalization of the Liouvillian or approximate methods such as truncated Taylos series expansions.
 

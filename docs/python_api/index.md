@@ -119,5 +119,6 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - plot_fock
         - plot_fock_evolution
         - plot_hinton
+        - gifit
         - gridplot
         - mplstyle
