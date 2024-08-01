@@ -446,12 +446,12 @@ def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
 
 def _find_offsets(x: Array) -> tuple[int, ...]:
     indices = np.nonzero(x)
-    return tuple(np.unique(indices[1] - indices[0]))
+    return tuple(np.unique(indices[-1] - indices[-2]))
 
 
 @functools.partial(jax.jit, static_argnums=(0,))
 def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
-    n = x.shape[0]
+    n = x.shape[-1]
     diags = jnp.zeros((*x.shape[:-2], len(offsets), n), dtype=x.dtype)
 
     for i, offset in enumerate(offsets):
