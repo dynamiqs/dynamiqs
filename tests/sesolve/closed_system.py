@@ -8,7 +8,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import QArray
+from dynamiqs import QArray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -47,23 +47,29 @@ class Cavity(ClosedSystem):
         delta: float
         alpha0: float
 
-    def __init__(self, *, n: int, delta: float, alpha0: float, tsave: ArrayLike):
+    def __init__(
+        self, *, n: int, delta: float, alpha0: float, tsave: ArrayLike, layout=None
+    ):
         self.n = n
         self.delta = delta
         self.alpha0 = alpha0
         self.tsave = tsave
+        self.layout = layout
 
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0)
 
     def H(self, params: PyTree) -> QArray | TimeArray:
-        return params.delta * dq.number(self.n)
+        return params.delta * dq.number(self.n, matrix_format=self.layout)
 
     def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
     def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
-        return [dq.position(self.n), dq.momentum(self.n)]
+        return [
+            dq.position(self.n, matrix_format=self.layout),
+            dq.momentum(self.n, matrix_format=self.layout),
+        ]
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t)
@@ -175,6 +181,7 @@ class TDQubit(ClosedSystem):
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave)
+dense_cavity = Cavity(n=8, delta=1.0 * Hz, alpha0=0.5, tsave=tsave, layout=dense)
 
 tsave = np.linspace(0.0, 1.0, 11)
 tdqubit = TDQubit(eps=3.0, omega=10.0, tsave=tsave)
