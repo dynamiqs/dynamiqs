@@ -80,7 +80,16 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
 
     def reshape(self, *shape: int) -> QArray:
-        raise NotImplementedError
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f"Cannot reshape to shape {shape} because"
+                f" the last two dimensions do not match current "
+                f"shape dimensions ({self.shape})"
+            )
+
+        shape = (*shape[:-2], len(self.offsets), self.diags.shape[-1])
+        diags = jnp.reshape(self.diags, shape)
+        return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
 
     def broadcast_to(self, *shape: int) -> QArray:
         if shape[-2:] != self.shape[-2:]:
@@ -393,8 +402,8 @@ def to_dense(x: SparseDIAQArray) -> DenseQArray:
         Array: A dense matrix representation of the input sparse matrix.
     """
     out = jnp.zeros(x.shape, dtype=x.dtype)
-    for offset, diag in zip(x.offsets, x.diags):
-        out += _vectorized_diag(diag, offset)
+    for i, offset in enumerate(x.offsets):
+        out += _vectorized_diag(x.diags[..., i, :], offset)
     return DenseQArray(x.dims, out)
 
 
