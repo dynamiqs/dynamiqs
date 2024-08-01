@@ -101,7 +101,7 @@ class TestSparseDIAQArray:
 
         out_dense_dia = (self.matrixA - self.sparseB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
-        out_dia_dia = self.sparseA - self.sparseB
+        out_dia_dia = (self.sparseA - self.sparseB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
     def test_mul(self, rtol=1e-05, atol=1e-08):
