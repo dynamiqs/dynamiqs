@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PyTree
-
-from .qarrays import QArray, asjaxarray
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 
 def type_str(type: Any) -> str:  # noqa: A002
@@ -21,7 +19,7 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def on_cpu(x: Array | QArray) -> bool:
+def on_cpu(x: Array) -> bool:
     # TODO: this is a temporary solution, it won't work when we have multiple devices
     return x.devices().pop().device_kind == 'cpu'
 
@@ -55,5 +53,16 @@ def _concatenate_sort(*args: Array | None) -> Array | None:
     return jnp.sort(jnp.concatenate(args))
 
 
-def _is_scalar(y):
-    return isinstance(y, ArrayLike) and asjaxarray(y).ndim == 0
+def _is_batched_scalar(y: ArrayLike) -> bool:
+    # check if a qarray-like object is a scalar or a set of scalars of shape (..., 1, 1)
+    return isinstance(y, get_args(ScalarLike)) or (
+        isinstance(y, get_args(ArrayLike))
+        and (y.ndim == 0 or y.ndim > 1 and y.shape[-2:] == (1, 1))
+    )
+
+
+def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+    if dims1 != dims2:
+        raise ValueError(
+            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        )

@@ -221,7 +221,8 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
 
     Args:
         H _(qarray_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(list of qarray_like of shape (..., n, n))_: Sequence of jump operators.
+        jump_ops _(list of qarray_like of shape (..., n, n))_: Sequence of jump
+            operators.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Lindbladian superoperator.

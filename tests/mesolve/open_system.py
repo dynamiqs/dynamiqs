@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import QArray, asqarray
+from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -56,28 +56,39 @@ class OCavity(OpenSystem):
         kappa: float
 
     def __init__(
-        self, *, n: int, delta: float, alpha0: float, kappa: float, tsave: ArrayLike
+        self,
+        *,
+        n: int,
+        delta: float,
+        alpha0: float,
+        kappa: float,
+        tsave: ArrayLike,
+        layout=None,
     ):
         self.n = n
         self.delta = delta
         self.alpha0 = alpha0
         self.kappa = kappa
         self.tsave = tsave
+        self.layout = layout
 
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0, kappa)
 
     def H(self, params: PyTree) -> QArray | TimeArray:
-        return params.delta * dq.number(self.n)
+        return params.delta * dq.number(self.n, matrix_format=self.layout)
 
     def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
-        return [jnp.sqrt(params.kappa) * dq.destroy(self.n)]
+        return [jnp.sqrt(params.kappa) * dq.destroy(self.n, matrix_format=self.layout)]
 
     def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
     def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
-        return [dq.position(self.n), dq.momentum(self.n)]
+        return [
+            dq.position(self.n, matrix_format=self.layout),
+            dq.momentum(self.n, matrix_format=self.layout),
+        ]
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
@@ -92,7 +103,7 @@ class OCavity(OpenSystem):
         return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
     def loss_state(self, state: QArray) -> Array:
-        return dq.expect(dq.number(self.n), state).real
+        return dq.expect(dq.number(self.n, matrix_format=self.layout), state).real
 
     def grads_state(self, t: float) -> PyTree:
         grad_delta = 0.0
@@ -222,6 +233,9 @@ class OTDQubit(OpenSystem):
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 ocavity = OCavity(n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave)
+dense_ocavity = OCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
+)
 
 tsave = np.linspace(0.0, 1.0, 11)
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)

@@ -1,17 +1,29 @@
-import random
-
 import jax.numpy as jnp
 import jax.random as jr
 import pytest
 
 import dynamiqs as dq
 
+# list of all pairs of operations that are legal
+# i.e. all pairs except 'batch-batch'
+# and 'batch-batch_broadcast' because of sizes
+# (1, 2, n, n) and (3, n, n)
+valid_operation_keys = [
+    ('simple', 'simple'),
+    ('simple', 'batch'),
+    ('simple', 'batch_broadcast'),
+    ('batch', 'simple'),
+    ('batch_broadcast', 'simple'),
+    ('batch_broadcast', 'batch'),
+    ('batch_broadcast', 'batch_broadcast'),
+]
+
 
 class TestSparseDIAQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         N = 10
-        key = jr.PRNGKey(42)
+        key = jr.key(42)
         keyA, keyB = jr.split(key)
         diagsA = jr.normal(keyA, (3, N))
         diagsB = jr.normal(keyB, (4, N))
@@ -26,74 +38,114 @@ class TestSparseDIAQArray:
         diagsB = diagsB.at[2, :1].set(0)
         diagsB = diagsB.at[3, :3].set(0)
 
-        self.sparseA = dq.SparseDIAQArray(diags=diagsA, offsets=offsetsA, dims=(N,))
-        self.sparseB = dq.SparseDIAQArray(diags=diagsB, offsets=offsetsB, dims=(N,))
+        # = matrix A =
+        make_dictA = lambda x: dict(
+            simple=x,
+            batch=dq.stack([x, 2 * x]),
+            batch_broadcast=dq.stack([x, 2 * x]).reshape(2, 1, N, N),
+        )
 
-        self.matrixA = dq.to_dense(self.sparseA)
-        self.matrixB = dq.to_dense(self.sparseB)
+        sparseA = dq.SparseDIAQArray(diags=diagsA, offsets=offsetsA, dims=(N,))
+        denseA = dq.to_dense(sparseA)
 
-    def test_convert(self, rtol=1e-05, atol=1e-08):
+        self.denseA = make_dictA(denseA)
+        self.sparseA = make_dictA(sparseA)
+
+        # = matrix B =
+        make_dictB = lambda x: dict(
+            simple=x,
+            batch=dq.stack([x, 2 * x, 3 * x]),
+            batch_broadcast=dq.stack([x, 2 * x, 3 * x]).reshape(1, 3, N, N),
+        )
+
+        sparseB = dq.SparseDIAQArray(diags=diagsB, offsets=offsetsB, dims=(N,))
+        denseB = dq.to_dense(sparseB)
+
+        self.denseB = make_dictB(denseB)
+        self.sparseB = make_dictB(sparseB)
+
+    @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
+    def test_convert(self, kA, rtol=1e-05, atol=1e-08):
         assert jnp.allclose(
-            self.matrixA.to_jax(),
-            dq.to_sparse_dia(self.matrixA).to_jax(),
+            self.denseA[kA].to_jax(),
+            dq.to_sparse_dia(self.denseA[kA]).to_jax(),
             rtol=rtol,
             atol=atol,
         )
 
-    def test_add(self, rtol=1e-05, atol=1e-08):
-        out_dense_dense = (self.matrixA + self.matrixB).to_jax()
-        out_dia_dia = dq.to_dense(self.sparseA + self.sparseB).to_jax()
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_add(self, kA, kB, rtol=1e-05, atol=1e-08):
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+
+        out_dense_dense = (dA + dB).to_jax()
+
+        out_dia_dia = dq.to_dense(sA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (self.sparseA + self.matrixB).to_jax()
+        out_dia_dense = (sA + dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
-        out_dense_dia = (self.matrixA + self.sparseB).to_jax()
+        out_dense_dia = (dA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    def test_sub(self, rtol=1e-05, atol=1e-08):
-        out_dense_dense = (self.matrixA - self.matrixB).to_jax()
-        out_dia_dense = self.sparseA - self.matrixB
-        assert jnp.allclose(
-            out_dense_dense, out_dia_dense.to_jax(), rtol=rtol, atol=atol
-        )
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_sub(self, kA, kB, rtol=1e-05, atol=1e-08):
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
 
-        out_dense_dia = self.matrixA - self.sparseB
-        assert jnp.allclose(
-            out_dense_dense, out_dense_dia.to_jax(), rtol=rtol, atol=atol
-        )
-        out_dia_dia = dq.to_dense(self.sparseA - self.sparseB)
-        assert jnp.allclose(out_dense_dense, out_dia_dia.to_jax(), rtol=rtol, atol=atol)
-
-    def test_mul(self, rtol=1e-05, atol=1e-08):
-        random_float = random.uniform(1.0, 10.0)
-        out_dense_left = (random_float * self.matrixA).to_jax()
-        out_dense_right = (self.matrixA * random_float).to_jax()
-        assert jnp.allclose(out_dense_left, out_dense_right, rtol=rtol, atol=atol)
-
-        out_dia_left = dq.to_dense(random_float * self.sparseA).to_jax()
-        assert jnp.allclose(out_dense_left, out_dia_left, rtol=rtol, atol=atol)
-
-        out_dia_right = dq.to_dense(self.sparseA * random_float).to_jax()
-        assert jnp.allclose(out_dense_left, out_dia_right, rtol=rtol, atol=atol)
-
-    def test_matmul(self, rtol=1e-05, atol=1e-08):
-        out_dense_dense = (self.matrixA @ self.matrixB).to_jax()
-        out_dia_dia = dq.to_dense(self.sparseA @ self.sparseB).to_jax()
+        out_dense_dense = (dA - dB).to_jax()
+        out_dia_dia = dq.to_dense(sA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (self.sparseA @ self.matrixB).to_jax()
+        out_dia_dense = (sA - dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
-        out_dense_dia = (self.matrixA @ self.sparseB).to_jax()
+        out_dense_dia = (dA - sB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_mul(self, kA, kB, rtol=1e-05, atol=1e-08):
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+
+        out_dense_dense = (dA * dB).to_jax()
+
+        out_dia_dia = dq.to_dense(sA * sB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+
+        out_dia_dense = (sA * dB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
+
+        out_dense_dia = (dA * sB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
+
+    @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
+    def test_matmul(self, kA, kB, rtol=1e-05, atol=1e-08):
+        dA, sA = self.denseA[kA], self.sparseA[kA]
+        dB, sB = self.denseB[kB], self.sparseB[kB]
+
+        out_dense_dense = (dA @ dB).to_jax()
+
+        out_dia_dia = dq.to_dense(sA @ sB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
+
+        out_dia_dense = (sA @ dB).to_jax()
+        assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
+
+        out_dense_dia = (dA @ sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     def test_kronecker(self, rtol=1e-05, atol=1e-08):
-        out_dense_dense = (self.matrixA & self.matrixB).to_jax()
-        out_dia_dia = (self.sparseA & self.sparseB).to_jax()
+        dA, sA = self.denseA['simple'], self.sparseA['simple']
+        dB, sB = self.denseB['simple'], self.sparseB['simple']
+
+        out_dense_dense = (dA & dB).to_jax()
+
+        out_dia_dia = (sA & sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (self.sparseA & self.matrixB).to_jax()
+        out_dia_dense = (sA & dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
     def test_outofbounds(self):

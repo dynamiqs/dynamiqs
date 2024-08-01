@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools as ft
 from abc import abstractmethod
 from typing import get_args
 
@@ -376,8 +377,8 @@ class TimeArray(eqx.Module):
     def __rsub__(self, y: QArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
-    def __repr__(self) -> str:
-        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+    # def __repr__(self) -> str:
+    #     return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
 
 
 class ConstantTimeArray(TimeArray):
@@ -593,7 +594,6 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
-
         if isinstance(y, get_args(ScalarLike)):
             return ConstantTimeArray(self.f + y)
         elif isqarraylike(y):
@@ -644,9 +644,7 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray(timearrays)
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return jax.tree_util.tree_reduce(
-            lambda x, y: x + y, [tarray(t) for tarray in self.timearrays]
-        )
+        return ft.reduce(lambda x, y: x + y, [tarray(t) for tarray in self.timearrays])
 
     def __mul__(self, y: QArrayLike) -> TimeArray:
         timearrays = [tarray * y for tarray in self.timearrays]
@@ -671,11 +669,18 @@ class BatchedCallable(eqx.Module):
     def __init__(self, f: callable[[float], QArray]):
         # make f a valid PyTree with `Partial` and convert its output to an array
         self.f = jtu.Partial(f)
-        shape = jax.eval_shape(f, 0.0).shape
+        eval_shape = jax.eval_shape(f, 0.0)
+        if isinstance(eval_shape, QArray):
+            shape = eval_shape.shape[:-2]
+        else:
+            shape = eval_shape.shape
         self.indices = list(jnp.indices(shape))
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return self.f(t)[tuple(self.indices)]
+        if len(self.indices) == 0:
+            return self.f(t)
+        else:
+            return self.f(t)[tuple(self.indices)]
 
     @property
     def dtype(self) -> tuple[int, ...]:

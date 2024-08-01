@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
+from math import prod
 from typing import TYPE_CHECKING
 
 import equinox as eqx
@@ -40,12 +41,22 @@ class QArray(eqx.Module):
     dims: tuple[int, ...] = eqx.field(static=True)
 
     def __check_init__(self):
-        # ensure dims is a tuple of ints
+        # === ensure dims is a tuple of ints
         if not isinstance(self.dims, tuple) or not all(
             isinstance(d, int) for d in self.dims
         ):
             raise TypeError(
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
+            )
+
+        # === ensure dims is compatible with the shape
+        # for vectorized superoperators, we allow that the shape is the square
+        # of the product of all dims
+        allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
+        if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
+            raise ValueError(
+                'Argument `dims` must be compatible with the shape of the QArray, but '
+                f'got dims {self.dims} and shape {self.shape}.'
             )
 
     @property
@@ -88,13 +99,13 @@ class QArray(eqx.Module):
             The conjugate of the quantum state.
         """
 
-    @abstractmethod
     def dag(self) -> QArray:
         """Returns the dagger of the quantum state.
 
         Returns:
             The dagger of the quantum state.
         """
+        return self.mT.conj()
 
     @abstractmethod
     def reshape(self, *shape: int) -> QArray:
@@ -297,6 +308,12 @@ class QArray(eqx.Module):
             The JAX array representation of the quantum state.
         """
 
+    def __len__(self) -> int:
+        try:
+            return self.shape[0]
+        except IndexError as err:
+            raise TypeError('len() of unsized object') from err
+
     @abstractmethod
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         pass
@@ -322,14 +339,17 @@ class QArray(eqx.Module):
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array."""
-        from .._utils import _is_scalar
+        from .._utils import _is_batched_scalar
 
-        if _is_scalar(y):
+        if _is_batched_scalar(y):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '
                 'instead.'
             )
+
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         """Element-wise multiplication with a scalar or an array on the right."""
@@ -342,17 +362,24 @@ class QArray(eqx.Module):
     def __rtruediv__(self, y: QArrayLike) -> QArray:
         return self * 1 / y
 
+    def __iter__(self):
+        for i in range(self.shape[0]):
+            yield self[i]
+
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array."""
-        from .._utils import _is_scalar
+        from .._utils import _is_batched_scalar
 
-        if _is_scalar(y):
+        if _is_batched_scalar(y):
             logging.warning(
                 'Using the `+` or `-` operator between an array and a scalar performs '
                 'element-wise addition or subtraction. For addition with a scaled '
                 'identity matrix, use e.g. `x + 2 * x.I` instead.'
             )
+
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     def __radd__(self, y: QArrayLike) -> QArray:
         """Element-wise addition with a scalar or an array on the right."""
@@ -367,7 +394,7 @@ class QArray(eqx.Module):
         return -self + y
 
     @abstractmethod
-    def __matmul__(self, y: QArrayLike) -> QArray:
+    def __matmul__(self, y: QArrayLike) -> QArray | Array:
         """Matrix multiplication with another quantum state or JAX array."""
 
     @abstractmethod
@@ -398,3 +425,10 @@ class QArray(eqx.Module):
     @abstractmethod
     def __getitem__(self, key: int | slice) -> QArray:
         pass
+
+
+def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+    if dims1 != dims2:
+        raise ValueError(
+            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        )

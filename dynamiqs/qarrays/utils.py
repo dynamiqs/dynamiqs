@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 import jax.numpy as jnp
 
+from .._utils import cdtype
 from .dense_qarray import DenseQArray
 from .sparse_dia_qarray import SparseDIAQArray
 from .types import QArray
@@ -55,15 +56,26 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         data = jnp.stack([q.data for q in qarrays], axis=axis)
         return DenseQArray(dims, data)
     elif all(isinstance(q, SparseDIAQArray) for q in qarrays):
-        offsets = qarrays[0].offsets
-        if not all(q.offsets == offsets for q in qarrays):
-            # TODO: implement stacking with different offsets
-            raise ValueError(
-                'Argument `qarrays` with elements of type `SparseDIAQArray` must have'
-                ' identical `offsets` attribute.'
+        unique_offsets = set()
+        for qarray in qarrays:
+            unique_offsets.update(qarray.offsets)
+        unique_offsets = tuple(sorted(unique_offsets))
+
+        offset_to_index = {offset: idx for idx, offset in enumerate(unique_offsets)}
+        diag_list = []
+        for qarray in qarrays:
+            add_diags_shape = qarray.diags.shape[:-2] + (
+                len(unique_offsets),
+                qarray.diags.shape[-1],
             )
-        diags = jnp.stack([q.diags for q in qarrays], axis=axis)
-        return SparseDIAQArray(dims, offsets, diags)
+            updated_diags = jnp.zeros(add_diags_shape, dtype=cdtype())
+            for i, offset in enumerate(qarray.offsets):
+                idx = offset_to_index[offset]
+                updated_diags = updated_diags.at[..., idx, :].set(
+                    qarray.diags[..., i, :]
+                )
+            diag_list.append(updated_diags)
+        return SparseDIAQArray(dims, unique_offsets, jnp.stack(diag_list))
     else:
         raise NotImplementedError(
             'Stacking qarrays with different types is not implemented.'

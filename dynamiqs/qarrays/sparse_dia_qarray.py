@@ -10,24 +10,46 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax._src.core import concrete_or_error
-from jaxtyping import Array, ArrayLike, ScalarLike
+from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
+from .._utils import _is_batched_scalar, cdtype
 from .dense_qarray import DenseQArray
-from .types import QArray, QArrayLike, asqarray
+from .types import QArray, QArrayLike, asqarray, isqarraylike
 
 __all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
 
 
 class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
-    diags: Array = eqx.field(converter=jnp.asarray)
+    diags: Array
 
-    def __post_init__(self):
+    def __init__(self, dims: tuple[int, ...], offsets: tuple[int, ...], diags: Array):
+        super().__init__(dims)
+        self.offsets, self.diags = _compress_dia(offsets, jnp.asarray(diags))
+
+    def __check_init__(self):
+        # check diags and offsets have the right type and shape before compressing them
+        if not isinstance(self.offsets, tuple):
+            raise TypeError(
+                'Argument `offsets` of `SparseDIAQArray` must be a tuple but got '
+                f'{type(self.offsets)}'
+            )
+
+        if self.diags.ndim < 2 or self.diags.shape[-2] != len(self.offsets):
+            raise ValueError(
+                'Argument `diags` of `SparseDIAQArray` must be of shape '
+                f'(..., len(offsets), prod(dims)), but got {self.diags.shape}'
+            )
+
+        # if the code is jitted, disable following checks
+        if isinstance(self.diags, jax.core.Tracer):
+            return
+
         # check that diagonals contain zeros outside the bounds of the matrix
-        for offset, diag in zip(self.offsets, self.diags):
-            if (offset < 0 and jnp.any(diag[offset:] != 0)) or (
-                offset > 0 and jnp.any(diag[:offset] != 0)
+        for i, offset in enumerate(self.offsets):
+            if (offset < 0 and jnp.any(self.diags[..., i, offset:] != 0)) or (
+                offset > 0 and jnp.any(self.diags[..., i, :offset] != 0)
             ):
                 raise ValueError(
                     'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
@@ -41,39 +63,55 @@ class SparseDIAQArray(QArray):
     @property
     def shape(self) -> tuple[int, ...]:
         N = self.diags.shape[-1]
-        return (N, N)
+        return (*self.diags.shape[:-2], N, N)
 
     @property
-    def mT(self):
-        raise NotImplementedError
+    def mT(self) -> QArray:
+        # initialize the output diagonals
+        out_diags = jnp.zeros_like(self.diags)
 
-    @property
-    def ndim(self):
-        raise NotImplementedError
+        # compute output offsets
+        out_offsets = tuple(-x for x in self.offsets)
+
+        # loop over each offset and fill the output
+        for i, self_offset in enumerate(self.offsets):
+            self_slice = _dia_slice(self_offset)
+            out_slice = _dia_slice(-self_offset)
+            out_diags = out_diags.at[..., i, out_slice].set(
+                self.diags[..., i, self_slice]
+            )
+
+        return SparseDIAQArray(self.dims, out_offsets, out_diags)
 
     def conj(self) -> QArray:
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
 
-    def dag(self) -> QArray:
-        N = self.shape[-1]
-        diags = jnp.zeros_like(self.diags)
-        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
-            start = max(0, self_offset)
-            end = min(N, N + self_offset)
-            diags = diags.at[i, start - self_offset : end - self_offset].set(
-                self_diag[start:end].conj()
-            )
-        offsets = tuple(-x for x in self.offsets)
-        return SparseDIAQArray(self.dims, offsets, diags)
-
     def reshape(self, *shape: int) -> QArray:
-        raise NotImplementedError
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f'Cannot reshape to shape {shape} because'
+                f' the last two dimensions do not match current '
+                f'shape dimensions ({self.shape})'
+            )
+
+        shape = (*shape[:-2], len(self.offsets), self.diags.shape[-1])
+        diags = jnp.reshape(self.diags, shape)
+        return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
 
     def broadcast_to(self, *shape: int) -> QArray:
-        raise NotImplementedError
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f'Cannot broadcast to shape {shape} because'
+                f' the last two dimensions do not match current '
+                f'shape dimensions ({self.shape})'
+            )
 
-    def ptrace(self, keep: tuple[int, ...]) -> QArray:  # noqa: ARG002
-        return NotImplemented
+        shape = (*shape[:-2], len(self.offsets), self.diags.shape[-1])
+        diags = jnp.broadcast_to(self.diags, shape)
+        return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
+
+    def ptrace(self, keep: tuple[int, ...]) -> QArray:
+        raise NotImplementedError
 
     def powm(self):
         raise NotImplementedError
@@ -81,21 +119,17 @@ class SparseDIAQArray(QArray):
     def expm(self):
         raise NotImplementedError
 
-    def unit(self) -> SparseDIAQArray:
-        return SparseDIAQArray(self.offsets, self.diags / self.norm(), self.dims)
-
     def norm(self) -> Array:
-        raise NotImplementedError
+        return self.trace()
 
     def trace(self) -> Array:
-        main_diag_mask = jnp.asarray(self.offsets) == 0
-        return jax.lax.cond(
-            jnp.any(main_diag_mask),
-            lambda: jnp.sum(self.diags[jnp.argmax(main_diag_mask)]).astype(jnp.float32),
-            lambda: jnp.array(0.0, dtype=jnp.float32),
-        )
+        main_diag_mask = np.asarray(self.offsets) == 0
+        if np.any(main_diag_mask):
+            return jnp.sum(self.diags[..., main_diag_mask, :], axis=(-1, -2))
+        else:
+            return jnp.zeros(self.shape[:-2])
 
-    def sum(self):
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
         raise NotImplementedError
 
     def squeeze(self):
@@ -125,192 +159,286 @@ class SparseDIAQArray(QArray):
     def to_jax(self) -> Array:
         return self.to_dense().to_jax()
 
-    def __len__(self):
-        raise NotImplementedError
-
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
-        raise NotImplementedError
+        raise self.to_dense().__array__(dtype=dtype, copy=copy)
 
-    def __mul__(self, other: Array | SparseDIAQArray) -> QArray:
-        if isinstance(other, get_args(ScalarLike)):
-            diags, offsets = other * self.diags, self.offsets
-            return SparseDIAQArray(offsets=offsets, diags=diags, dims=self.dims)
-        elif isinstance(other, Array):
-            return self._mul_dense(other)
+    def __mul__(self, other: QArrayLike) -> QArray:
+        super().__mul__(other)
+
+        if _is_batched_scalar(other):
+            return self._mul_scalar(other)
         elif isinstance(other, SparseDIAQArray):
-            _check_compatible_dims(self.dims, other.dims)
             return self._mul_sparse(other)
+        elif isqarraylike(other):
+            other = asqarray(other)
+            return self._mul_dense(other)
 
         return NotImplemented
 
-    def _mul_dense(self, other: Array) -> QArray:
-        N = other.shape[0]
-        out_diags = jnp.zeros_like(self.diags)
-        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
-            start = max(0, self_offset)
-            end = min(N, N + self_offset)
-            other_diag = jnp.diagonal(other, self_offset)
-            out_diags = out_diags.at[i, start:end].set(
-                other_diag * self_diag[start:end]
+    def _mul_scalar(self, other: QArrayLike) -> QArray:
+        diags, offsets = other * self.diags, self.offsets
+        return SparseDIAQArray(self.dims, offsets, diags)
+
+    def _mul_sparse(self, other: SparseDIAQArray) -> QArray:
+        # we check that the offsets are unique, as they should with the class __init__
+        assert len(set(self.offsets)) == len(self.offsets)
+        assert len(set(other.offsets)) == len(other.offsets)
+
+        # compute the output offsets as the intersection of offsets
+        out_offsets, self_ind, other_ind = np.intersect1d(
+            self.offsets, other.offsets, assume_unique=True, return_indices=True
+        )
+
+        # initialize the output diagonals
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        out_shape = (*batch_shape, len(out_offsets), self.shape[-1])
+        out_diags = jnp.zeros(out_shape, dtype=cdtype())
+
+        # loop over each output offset and fill the output
+        for i in range(len(out_offsets)):
+            self_diag = self.diags[..., self_ind[i], :]
+            other_diag = other.diags[..., other_ind[i], :]
+            out_diag = self_diag * other_diag
+            out_diags = out_diags.at[..., i, :].set(out_diag)
+
+        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
+
+    def _mul_dense(self, other: QArrayLike) -> QArray:
+        # initialize the output diagonals
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        out_shape = (*batch_shape, len(self.offsets), self.shape[-1])
+        out_diags = jnp.zeros(out_shape, dtype=cdtype())
+
+        # loop over each diagonal of the sparse matrix and fill the output
+        for i, self_offset in enumerate(self.offsets):
+            self_slice = _dia_slice(self_offset)
+            other_diag = jnp.diagonal(
+                other.data, offset=self_offset, axis1=-2, axis2=-1
             )
+            out_diag = other_diag * self.diags[..., i, self_slice]
+            out_diags = out_diags.at[..., i, self_slice].set(out_diag)
 
         return SparseDIAQArray(self.dims, self.offsets, out_diags)
 
-    def _mul_sparse(self, other: SparseDIAQArray) -> QArray:
-        out_diags, out_offsets = [], []
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            for other_offset, other_diag in zip(other.offsets, other.diags):
-                if self_offset != other_offset:
-                    continue
-                out_diags.append(self_diag * other_diag)
-                out_offsets.append(other_offset)
-
-        return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.stack(out_diags))
-
-    def __truediv__(self, y: QArrayLike) -> QArray:
+    def __truediv__(self, other: QArrayLike) -> QArray:
         raise NotImplementedError
 
-    def __add__(self, other: ScalarLike | ArrayLike | QArray) -> QArray:
-        if isinstance(other, ScalarLike):
-            if other == 0:
-                return self
-            warnings.warn(
-                '`to_dense` was called on a SparseDIAQArray due to addition with a '
-                'scalar. The array is no longer in sparse format.',
-                stacklevel=2,
-            )
-            return self.to_dense() + other
-        elif isinstance(other, ArrayLike):
-            warnings.warn(
-                '`to_dense` was called on a SparseDIAQArray due to addition with a '
-                'dense array. The array is no longer in sparse format.',
-                stacklevel=2,
-            )
-            return self.to_dense() + other
+    def __add__(self, other: QArrayLike) -> QArray:
+        super().__add__(other)
+
+        warning_dense_addition = (
+            'A sparse array has been converted to dense format due to '
+            'addition with a scalar or dense array.'
+        )
+
+        if _is_batched_scalar(other):
+            warnings.warn(warning_dense_addition, stacklevel=2)
+            return self._add_scalar(other)
         elif isinstance(other, SparseDIAQArray):
-            _check_compatible_dims(self.dims, other.dims)
             return self._add_sparse(other)
-        elif isinstance(other, DenseQArray):
-            _check_compatible_dims(self.dims, other.dims)
-            return self.to_dense() + other
+        elif isqarraylike(other):
+            warnings.warn(warning_dense_addition, stacklevel=2)
+            other = asqarray(other)
+            return self._add_dense(other)
 
         return NotImplemented
+
+    def _add_scalar(self, other: QArrayLike) -> QArray:
+        return self.to_dense() + other
 
     def _add_sparse(self, other: SparseDIAQArray) -> QArray:
-        out_offsets_diags = dict(zip(self.offsets, self.diags))
-        for other_offset, other_diag in zip(other.offsets, other.diags):
-            if other_offset in out_offsets_diags:
-                out_offsets_diags[other_offset] += other_diag
-            else:
-                out_offsets_diags[other_offset] = other_diag
+        # compute the output offsets
+        out_offsets = np.union1d(self.offsets, other.offsets)
 
-        out_offsets = tuple(sorted(out_offsets_diags.keys()))
-        out_diags = jnp.stack([out_offsets_diags[offset] for offset in out_offsets])
+        # initialize the output diagonals
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        diags_shape = (*batch_shape, len(out_offsets), self.diags.shape[-1])
+        out_diags = jnp.zeros(diags_shape, dtype=cdtype())
 
-        return SparseDIAQArray(self.dims, out_offsets, out_diags)
+        # loop over each offset and fill the output
+        for i, offset in enumerate(out_offsets):
+            if offset in self.offsets:
+                self_diag = self.diags[..., self.offsets.index(offset), :]
+                out_diags = out_diags.at[..., i, :].add(self_diag)
+            if offset in other.offsets:
+                other_diag = other.diags[..., other.offsets.index(offset), :]
+                out_diags = out_diags.at[..., i, :].add(other_diag)
 
-    def __matmul__(self, other: Array | SparseDIAQArray) -> QArray:
-        if isinstance(other, Array):
-            return self._matmul_dense(left_matmul=True, other=other)
-        elif isinstance(other, SparseDIAQArray):
-            return self._matmul_dia(other=other)
+        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
+
+    def _add_dense(self, other: QArrayLike) -> QArray:
+        return self.to_dense() + other
+
+    def __matmul__(self, other: QArrayLike) -> QArray:
+        if _is_batched_scalar(other):
+            raise TypeError('Attempted matrix product between a scalar and a QArray.')
+
+        if isinstance(other, SparseDIAQArray):
+            return self._matmul_dia(other)
+        elif isqarraylike(other):
+            other = asqarray(other)
+            return self._matmul_dense(other, left_matmul=True)
 
         return NotImplemented
 
-    def __rmatmul__(self, other: Array) -> QArray:
-        if isinstance(other, Array):
-            return self._matmul_dense(left_matmul=False, other=other)
+    def __rmatmul__(self, other: QArrayLike) -> QArray:
+        if _is_batched_scalar(other):
+            raise TypeError('Attempted matrix product between a scalar and a QArray.')
+
+        if isqarraylike(other):
+            return self._matmul_dense(other, left_matmul=False)
 
         return NotImplemented
-
-    def _matmul_dense(self, left_matmul: bool, other: Array) -> QArray:
-        N = other.shape[0]
-        out = jnp.zeros_like(other)
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            start = max(0, self_offset)
-            end = min(N, N + self_offset)
-            top = max(0, -self_offset)
-            bottom = top + end - start
-
-            if left_matmul:
-                out = out.at[top:bottom, :].add(
-                    self_diag[start:end, None] * other[start:end, :]
-                )
-            else:
-                out = out.at[:, start:end].add(
-                    self_diag[start:end, None].T * other[:, top:bottom]
-                )
-
-        return DenseQArray(self.dims, out)
 
     def _matmul_dia(self, other: SparseDIAQArray) -> QArray:
-        N = other.diags.shape[1]
-        diag_dict = defaultdict(lambda: jnp.zeros(N))
+        N = other.diags.shape[-1]
+        broadcast_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        diag_dict = defaultdict(
+            lambda: jnp.zeros((*broadcast_shape, N), dtype=cdtype())
+        )
 
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            for other_offset, other_diag in zip(other.offsets, other.diags):
+        for i, self_offset in enumerate(self.offsets):
+            self_diag = self.diags[..., i, :]
+            for j, other_offset in enumerate(other.offsets):
+                other_diag = other.diags[..., j, :]
                 result_offset = self_offset + other_offset
 
                 if abs(result_offset) > N - 1:
                     continue
 
-                sA, sB = max(0, -other_offset), max(0, other_offset)
-                eA, eB = min(N, N - other_offset), min(N, N + other_offset)
-
+                diag = (
+                    self_diag[..., _dia_slice(-other_offset)]
+                    * other_diag[..., _dia_slice(other_offset)]
+                )
                 diag_dict[result_offset] = (
-                    diag_dict[result_offset]
-                    .at[sB:eB]
-                    .add(self_diag[sA:eA] * other_diag[sB:eB])
+                    diag_dict[result_offset].at[..., _dia_slice(other_offset)].add(diag)
                 )
 
         out_offsets = sorted(diag_dict.keys())
         out_diags = [diag_dict[offset] for offset in out_offsets]
 
-        return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
+        out_diags = jnp.stack(out_diags)
+        out_diags = jnp.moveaxis(out_diags, 0, -2)
 
-    def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
-        # === Compute the Kronecker product of diagonals
+        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
+
+    def _matmul_dense(self, other: DenseQArray, left_matmul: bool) -> QArray:
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.data.shape[:-2])
+        out_shape = (*batch_shape, self.shape[-2], other.shape[-1])
+        out = jnp.zeros(out_shape, dtype=cdtype())
+        for i, self_offset in enumerate(self.offsets):
+            self_diag = self.diags[..., i, :]
+            slice_in = _dia_slice(self_offset)
+            slice_out = _dia_slice(-self_offset)
+            if left_matmul:
+                out = out.at[..., slice_out, :].add(
+                    self_diag[..., slice_in, None] * other.data[..., slice_in, :]
+                )
+            else:
+                out = out.at[..., :, slice_in].add(
+                    self_diag[..., slice_in, None].T * other.data[..., :, slice_out]
+                )
+
+        return DenseQArray(self.dims, out)
+
+    def __and__(self, other: QArrayLike) -> QArray:
+        if _is_batched_scalar(other):
+            raise TypeError('Attempted tensor product between a scalar and a QArray.')
+
+        if isinstance(other, SparseDIAQArray):
+            return self._and_dia(other)
+        elif isqarraylike(other):
+            other = asqarray(other)
+            return self.to_dense() & other
+
+        return NotImplemented
+
+    def __rand__(self, other: QArrayLike) -> QArray:
+        if _is_batched_scalar(other):
+            raise TypeError('Attempted tensor product between a scalar and a QArray.')
+
+        if isqarraylike(other):
+            other = asqarray(other)
+            return other & self.to_dense()
+
+        return NotImplemented
+
+    def _and_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
+        # compute new offsets
         N = other.diags.shape[-1]
         self_offsets = np.asarray(self.offsets)
         other_offsets = np.asarray(other.offsets)
-        out_offsets = np.ravel(self_offsets[:, None] * N + other_offsets)
-        tmp_diags = jnp.kron(self.diags, other.diags)
+        out_offsets = tuple(np.ravel(self_offsets[:, None] * N + other_offsets))
 
-        # === Merge duplicate diagonals
-        unique_offsets, inverse_indices = np.unique(out_offsets, return_inverse=True)
-        num_diags = unique_offsets.shape[0]
-        out_diags = jnp.zeros_like(tmp_diags)
-        for i in range(num_diags):
-            mask = inverse_indices == i
-            out_diags = out_diags.at[..., i, :].set(
-                jnp.sum(tmp_diags[..., mask, :], axis=-2)
-            )
-        out_offsets = tuple(o.item() for o in unique_offsets)
+        # compute new diagonals and dimensions
+        out_diags = jnp.kron(self.diags, other.diags)
+        out_dims = self.dims + other.dims
 
-        return SparseDIAQArray(
-            offsets=out_offsets, diags=out_diags, dims=self.dims + other.dims
-        )
-
-    def __and__(self, other: QArrayLike) -> QArray:
-        if isinstance(other, SparseDIAQArray):
-            return self._kronecker_dia(other=other)
-        elif isinstance(other, get_args(QArrayLike)):
-            return self.to_dense() & asqarray(other)
-
-        return NotImplemented
+        # merge duplicate offsets and return
+        out_offsets, out_diags = _compress_dia(out_offsets, out_diags)
+        return SparseDIAQArray(dims=out_dims, offsets=out_offsets, diags=out_diags)
 
     def _pow(self, power: int) -> QArray:  # noqa: ARG002
         return NotImplemented
 
     def __getitem__(self, key: int | slice) -> QArray:
-        return NotImplemented
+        full = slice(None, None, None)
 
+        if key in (full, Ellipsis):
+            return self
 
-def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
-    if dims1 != dims2:
-        raise ValueError(
-            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        if isinstance(key, (int, slice)):
+            is_key_valid = self.ndim > 2
+        elif isinstance(key, tuple):
+            if Ellipsis in key:
+                ellipsis_key = key.index(Ellipsis)
+                key = (
+                    key[:ellipsis_key]
+                    + (full,) * (self.ndim - len(key) + 1)
+                    + key[ellipsis_key + 1 :]
+                )
+
+            is_key_valid = (
+                len(key) <= self.ndim - 2
+                or (len(key) == self.ndim - 1 and key[-1] == full)
+                or (len(key) == self.ndim and key[-2] == full and key[-1] == full)
+            )
+        else:
+            raise IndexError('Should never happen')
+
+        if not is_key_valid:
+            raise NotImplementedError(
+                'Getting items for non batching dimensions of '
+                'SparseDIA is not supported yet'
+            )
+
+        return SparseDIAQArray(
+            diags=self.diags[key], offsets=self.offsets, dims=self.dims
         )
+
+
+def _dia_slice(offset: int) -> slice:
+    # Return the slice that selects the non-zero elements of a diagonal of given offset.
+    # For example, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
+    # _dia_slice(2) will return the slice(2, None) to select [a, b, ..., z].
+    return slice(offset, None) if offset >= 0 else slice(None, offset)
+
+
+def _compress_dia(offsets: tuple[int, ...], diags: ArrayLike) -> SparseDIAQArray:
+    # compute unique offsets
+    out_offsets, inverse_ind = np.unique(offsets, return_inverse=True)
+
+    # initialize output diagonals
+    diags_shape = (*diags.shape[:-2], len(out_offsets), diags.shape[-1])
+    out_diags = jnp.zeros(diags_shape, dtype=cdtype())
+
+    # loop over each offset and fill the output
+    for i in range(len(out_offsets)):
+        mask = inverse_ind == i
+        diag = jnp.sum(diags[..., mask, :], axis=-2)
+        out_diags = out_diags.at[..., i, :].set(diag)
+
+    return tuple(out_offsets), out_diags
 
 
 def to_dense(x: SparseDIAQArray) -> DenseQArray:
@@ -322,42 +450,25 @@ def to_dense(x: SparseDIAQArray) -> DenseQArray:
     Returns:
         Array: A dense matrix representation of the input sparse matrix.
     """
-    N = x.shape[-1]
-    out = jnp.zeros((N, N))
-    for offset, diag in zip(x.offsets, x.diags):
-        start = max(0, offset)
-        end = min(N, N + offset)
-        out += jnp.diag(diag[start:end], k=offset)
+    out = jnp.zeros(x.shape, dtype=cdtype())
+    for i, offset in enumerate(x.offsets):
+        out += _vectorized_diag(x.diags[..., i, :], offset)
     return DenseQArray(x.dims, out)
 
 
-def _find_offsets(other: ArrayLike) -> tuple[int, ...]:
-    indices = np.nonzero(other)
-    return tuple(np.unique(indices[1] - indices[0]))
+@functools.partial(jnp.vectorize, signature='(n)->(n,n)', excluded={1})
+def _vectorized_diag(diag: Array, offset: int) -> Array:
+    return jnp.diag(diag[_dia_slice(offset)], k=offset)
 
 
-@functools.partial(jax.jit, static_argnums=(0,))
-def _construct_diags(offsets: tuple[int, ...], other: ArrayLike) -> Array:
-    n = other.shape[0]
-    diags = jnp.zeros((len(offsets), n))
-
-    for i, offset in enumerate(offsets):
-        start = max(0, offset)
-        end = min(n, n + offset)
-        diagonal = jnp.diagonal(other, offset=offset)
-        diags = diags.at[i, start:end].set(diagonal)
-
-    return diags
-
-
-def to_sparse_dia(x: DenseQArray | ArrayLike | SparseDIAQArray) -> SparseDIAQArray:
-    r"""Returns the input matrix in the `SparseDIAQArray` format.
+def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
+    r"""Convert the input to a sparse DIA qarray.
 
     Args:
-        x: Matrix to turn from dense to SparseDIA format.
+        x: Input data, in any qarray-like format.
 
     Returns:
-        `SparseDIAQArray` object
+        The sparse DIA matrix representation of the input matrix.
     """
     if isinstance(x, SparseDIAQArray):
         return x
@@ -366,10 +477,28 @@ def to_sparse_dia(x: DenseQArray | ArrayLike | SparseDIAQArray) -> SparseDIAQArr
         x = x.to_jax()
     elif isinstance(x, get_args(ArrayLike)):
         dims = (x.shape[-1],)
+        x = jnp.asarray(x)
     else:
-        raise TypeError
+        raise TypeError('Input must be a `QArrayLike` object.')
 
     concrete_or_error(None, x, '`to_sparse_dia` does not support tracing.')
     offsets = _find_offsets(x)
     diags = _construct_diags(offsets, x)
     return SparseDIAQArray(dims=dims, offsets=offsets, diags=diags)
+
+
+def _find_offsets(x: Array) -> tuple[int, ...]:
+    indices = np.nonzero(x)
+    return tuple(np.unique(indices[-1] - indices[-2]))
+
+
+@functools.partial(jax.jit, static_argnums=(0,))
+def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
+    n = x.shape[-1]
+    diags = jnp.zeros((*x.shape[:-2], len(offsets), n), dtype=cdtype())
+
+    for i, offset in enumerate(offsets):
+        diagonal = jnp.diagonal(x, offset=offset, axis1=-2, axis2=-1)
+        diags = diags.at[..., i, _dia_slice(offset)].set(diagonal)
+
+    return diags

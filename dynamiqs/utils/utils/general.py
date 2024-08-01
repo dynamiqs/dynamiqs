@@ -228,7 +228,8 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
-    return (x * y.mT).sum((-2, -1))
+    # todo: fix perf
+    return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
 
 
 def _hdim(x: QArrayLike) -> int:
@@ -349,7 +350,7 @@ def tensor(*args: QArrayLike) -> QArray:
         (60, 1)
     """  # noqa: E501
     args = [asqarray(arg) for arg in args]
-    return reduce(lambda x, y: x & y, args)  # TODO: use jax.lax.reduce
+    return reduce(lambda x, y: x & y, args)  # TODO: (guilmin) use jax.lax.reduce
 
 
 def expect(O: QArrayLike, x: QArrayLike) -> Array:
