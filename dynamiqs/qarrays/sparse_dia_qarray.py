@@ -272,7 +272,7 @@ class SparseDIAQArray(QArray):
 
         if isinstance(other, SparseDIAQArray):
             return self._matmul_dia(other)
-        elif isinstance(other, get_args(QArrayLike)):
+        elif isinstance(other, DenseQArray):
             return self._matmul_dense(other, left_matmul=True)
 
         return NotImplemented
@@ -317,22 +317,24 @@ class SparseDIAQArray(QArray):
 
         return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
-    def _matmul_dense(self, other: QArrayLike, left_matmul: bool) -> QArray:
-        N = other.shape[0]
-        out = jnp.zeros_like(other)
-        for self_offset, self_diag in zip(self.offsets, self.diags):
+    def _matmul_dense(self, other: DenseQArray, left_matmul: bool) -> QArray:
+        N = other.shape[-1]
+        broadcast_shape = jnp.broadcast_shapes(self.shape, other.data.shape)
+        out = jnp.zeros(broadcast_shape)
+        for i, self_offset in enumerate(self.offsets):
+            self_diag = self.diags[..., i, :]
             start = max(0, self_offset)
             end = min(N, N + self_offset)
             top = max(0, -self_offset)
             bottom = top + end - start
 
             if left_matmul:
-                out = out.at[top:bottom, :].add(
-                    self_diag[start:end, None] * other[start:end, :]
+                out = out.at[..., top:bottom, :].add(
+                    self_diag[..., start:end, None] * other.data[..., start:end, :]
                 )
             else:
-                out = out.at[:, start:end].add(
-                    self_diag[start:end, None].T * other[:, top:bottom]
+                out = out.at[..., :, start:end].add(
+                    self_diag[..., start:end, None].T * other.data[..., :, top:bottom]
                 )
 
         return DenseQArray(self.dims, out)
