@@ -50,10 +50,12 @@ class QArray(eqx.Module):
             )
 
         # ensure dims is compatible with the shape
-        if prod(self.dims) != self.shape[-1]:
+        if (not self.isket() and prod(self.dims) != self.shape[-1]) or (
+            self.isket() and prod(self.dims) != self.shape[-2]
+        ):
             raise ValueError(
-                "Argument `dims` must be compatible with the shape of the QArray, but "
-                f"got dims {self.dims} and shape {self.shape}."
+                'Argument `dims` must be compatible with the shape of the QArray, but '
+                f'got dims {self.dims} and shape {self.shape}.'
             )
 
     @property
@@ -309,7 +311,7 @@ class QArray(eqx.Module):
         try:
             return self.shape[0]
         except IndexError as err:
-            raise TypeError("len() of unsized object") from err
+            raise TypeError('len() of unsized object') from err
 
     @abstractmethod
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
@@ -422,6 +424,7 @@ class QArray(eqx.Module):
     @abstractmethod
     def __getitem__(self, key: int | slice) -> QArray:
         pass
+
 
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:

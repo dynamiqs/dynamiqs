@@ -201,7 +201,7 @@ class SparseDIAQArray(QArray):
         out_diags = jnp.zeros(out_shape, dtype=cdtype())
 
         # loop over each output offset and fill the output
-        for i, offset in enumerate(out_offsets):
+        for i in range(len(out_offsets)):
             self_diag = self.diags[..., self_ind[i], :]
             other_diag = other.diags[..., other_ind[i], :]
             out_diag = self_diag * other_diag
