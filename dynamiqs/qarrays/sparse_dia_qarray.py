@@ -205,7 +205,7 @@ class SparseDIAQArray(QArray):
             self_diag = self.diags[..., self_ind[i], :]
             other_diag = other.diags[..., other_ind[i], :]
             out_diag = self_diag * other_diag
-            out_diags = out_diags.at[..., i, _dia_slice(offset)].set(out_diag)
+            out_diags = out_diags.at[..., i, :].set(out_diag)
 
         return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
@@ -218,7 +218,9 @@ class SparseDIAQArray(QArray):
         # loop over each diagonal of the sparse matrix and fill the output
         for i, self_offset in enumerate(self.offsets):
             self_slice = _dia_slice(self_offset)
-            other_diag = jnp.diagonal(other, offset=self_offset, axis1=-2, axis2=-1)
+            other_diag = jnp.diagonal(
+                other.data, offset=self_offset, axis1=-2, axis2=-1
+            )
             out_diag = other_diag * self.diags[..., i, self_slice]
             out_diags = out_diags.at[..., i, self_slice].set(out_diag)
 
@@ -299,7 +301,9 @@ class SparseDIAQArray(QArray):
     def _matmul_dia(self, other: SparseDIAQArray) -> QArray:
         N = other.diags.shape[-1]
         broadcast_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
-        diag_dict = defaultdict(lambda: jnp.zeros((*broadcast_shape, N)))
+        diag_dict = defaultdict(
+            lambda: jnp.zeros((*broadcast_shape, N), dtype=cdtype())
+        )
 
         for i, self_offset in enumerate(self.offsets):
             self_diag = self.diags[..., i, :]
@@ -328,7 +332,7 @@ class SparseDIAQArray(QArray):
 
     def _matmul_dense(self, other: DenseQArray, left_matmul: bool) -> QArray:
         broadcast_shape = jnp.broadcast_shapes(self.shape, other.data.shape)
-        out = jnp.zeros(broadcast_shape)
+        out = jnp.zeros(broadcast_shape, dtype=cdtype())
         for i, self_offset in enumerate(self.offsets):
             self_diag = self.diags[..., i, :]
             slice_in = _dia_slice(self_offset)
