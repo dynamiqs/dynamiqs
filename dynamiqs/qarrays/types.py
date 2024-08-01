@@ -54,7 +54,7 @@ def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray
 
     x = jnp.asarray(x)
     if dims is None:
-        dims = (x.shape[-2],)  # TODO: fix for bra
+        dims = (x.shape[-2],) if x.shape[-2] != 1 else (x.shape[-1],)
     elif isinstance(dims, int):
         dims = (dims,)
     return DenseQArray(dims, x)
