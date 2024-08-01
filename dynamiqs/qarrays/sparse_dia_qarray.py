@@ -40,10 +40,9 @@ class SparseDIAQArray(QArray):
         if isinstance(self.diags, jax.core.Tracer):
             return
 
-        diags = jnp.swapaxes(self.diags, -2, 0)
-        for offset, diag in zip(self.offsets, diags):
-            if (offset < 0 and jnp.any(diag[..., offset:] != 0)) or (
-                offset > 0 and jnp.any(diag[..., :offset] != 0)
+        for i, offset in enumerate(self.offsets):
+            if (offset < 0 and jnp.any(self.diags[..., i, offset:] != 0)) or (
+                offset > 0 and jnp.any(self.diags[..., i, :offset] != 0)
             ):
                 raise ValueError(
                     'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
@@ -76,18 +75,14 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def broadcast_to(self, *shape: int) -> QArray:
-
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
                 f"Cannot broadcast to shape {shape} because"
                 f" the last two dimensions do not match current "
-                f"shape dimensions ({self.shape[:-2], self.shape[-1], self.shape[-1]})"
+                f"shape dimensions ({self.shape})"
             )
 
-        shape = list(shape)
-        shape[-1] = self.diags.shape[-1]
-        shape[-2] = len(self.offsets)
-
+        shape = (*shape[:-2], len(self.offsets), self.diags.shape[-1])
         diags = jnp.broadcast_to(self.diags, shape)
         return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
 
@@ -316,9 +311,34 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def __getitem__(self, key: int | slice) -> QArray:
-        if self.ndim <= 2:
+        full = slice(None, None, None)
+
+        if key in (full, Ellipsis):
+            return self
+
+        if isinstance(key, (int, slice)):
+            is_key_valid = self.ndim > 2
+        elif isinstance(key, tuple):
+            if Ellipsis in key:
+                ellipsis_key = key.index(Ellipsis)
+                key = (
+                    key[:ellipsis_key]
+                    + (full,) * (self.ndim - len(key) + 1)
+                    + key[ellipsis_key + 1 :]
+                )
+
+            is_key_valid = (
+                len(key) <= self.ndim - 2
+                or (len(key) == self.ndim - 1 and key[-1] == full)
+                or (len(key) == self.ndim and key[-2] == full and key[-1] == full)
+            )
+        else:
+            raise IndexError("Should never happen")
+
+        if not is_key_valid:
             raise NotImplementedError(
-                "Getting items for non batched SparseDIA " "arrays is not supported yet"
+                "Getting items for non batching dimensions of "
+                "SparseDIA is not supported yet"
             )
 
         return SparseDIAQArray(

@@ -11,18 +11,18 @@ __all__ = [
 ]
 
 
-class MatrixFormat(Enum):
+class MatrixFormatEnum(Enum):
     DENSE = "dense"
     SPARSE_DIA = "sparse_dia"
 
 
-dia = MatrixFormat.SPARSE_DIA
-dense = MatrixFormat.DENSE
+dia = MatrixFormatEnum.SPARSE_DIA
+dense = MatrixFormatEnum.DENSE
 
-MatrixFormatType = Literal["dense", "sparse_dia"]
+MatrixFormat = Literal["dense", "sparse_dia"]
 
 global_matrix_format = None
-DEFAULT_MATRIX_FORMAT = MatrixFormat.SPARSE_DIA
+DEFAULT_MATRIX_FORMAT = MatrixFormatEnum.DENSE
 
 dispatch_dict = {}
 
@@ -51,7 +51,7 @@ def dispatch_matrix_format(func: Callable) -> Callable:
 
 
 def register_format_handler(
-    function_name: str, matrix_format: MatrixFormat
+    function_name: str, matrix_format: MatrixFormatEnum
 ) -> Callable:
     def wrapper(func: Callable) -> Callable:
         dispatch_dict[(function_name, matrix_format)] = func
@@ -61,10 +61,10 @@ def register_format_handler(
 
 
 def set_matrix_format(
-    matrix_format: Literal[MatrixFormat.DENSE, MatrixFormat.SPARSE_DIA],
+    matrix_format: Literal[MatrixFormatEnum.DENSE, MatrixFormatEnum.SPARSE_DIA],
 ):
     global global_matrix_format  # noqa: PLW0603
-    accepted_values = set(MatrixFormat)
+    accepted_values = set(MatrixFormatEnum)
     if matrix_format in accepted_values:
         global_matrix_format = matrix_format
     else:
