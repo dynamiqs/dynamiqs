@@ -46,13 +46,21 @@ class SparseDIAQArray(QArray):
 
     @property
     def mT(self) -> QArray:
-        diags = jnp.zeros_like(self.diags)
-        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+        # initialize the output diagonals
+        out_diags = jnp.zeros_like(self.diags)
+
+        # compute output offsets
+        out_offsets = tuple(-x for x in self.offsets)
+
+        # loop over each offset and fill the output
+        for i, self_offset in enumerate(self.offsets):
             self_slice = _dia_slice(self_offset)
             out_slice = _dia_slice(-self_offset)
-            diags = diags.at[..., i, out_slice].set(self_diag[self_slice])
-        offsets = tuple(-x for x in self.offsets)
-        return SparseDIAQArray(self.dims, offsets, diags)
+            out_diags = out_diags.at[..., i, out_slice].set(
+                self.diags[..., i, self_slice]
+            )
+
+        return SparseDIAQArray(self.dims, out_offsets, out_diags)
 
     def conj(self) -> QArray:
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
@@ -129,28 +137,43 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def _mul_dense(self, other: QArrayLike) -> QArray:
-        out_shape = jnp.broadcast_shapes(self.shape, other.shape)
+        # initialize the output diagonals
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        out_shape = (*batch_shape, len(self.offsets), self.shape[-1])
         out_diags = jnp.zeros(out_shape, dtype=self.dtype)
-        for i, (self_offset, self_diag) in enumerate(zip(self.offsets, self.diags)):
+
+        # loop over each diagonal of the sparse matrix and fill the output
+        for i, self_offset in enumerate(self.offsets):
             self_slice = _dia_slice(self_offset)
-            other_diag = jnp.diagonal(other, self_offset)
-            out_diag = other_diag * self_diag[self_slice]
+            other_diag = jnp.diagonal(other, offset=self_offset, axis1=-2, axis2=-1)
+            out_diag = other_diag * self.diags[..., i, self_slice]
             out_diags = out_diags.at[..., i, self_slice].set(out_diag)
 
         return SparseDIAQArray(self.dims, self.offsets, out_diags)
 
     def _mul_sparse(self, other: SparseDIAQArray) -> QArray:
-        out_offsets = np.intersect1d(self.offsets, other.offsets)
-        out_diags = jnp.zeros()
-        out_diags, out_offsets = [], []
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            for other_offset, other_diag in zip(other.offsets, other.diags):
-                if self_offset != other_offset:
-                    continue
-                out_diags.append(self_diag * other_diag)
-                out_offsets.append(other_offset)
+        # compress the diagonals of both matrices
+        self = _compress_diags(self)
+        other = _compress_diags(other)
 
-        return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.stack(out_diags))
+        # compute the output offsets as the intersection of offsets
+        out_offsets, self_ind, other_ind = np.intersect1d(
+            self.offsets, other.offsets, return_indices=True
+        )
+
+        # initialize the output diagonals
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        out_shape = (*batch_shape, len(out_offsets), self.shape[-1])
+        out_diags = jnp.zeros(out_shape, dtype=self.dtype)
+
+        # loop over each output offset and fill the output
+        for i, offset in enumerate(out_offsets):
+            self_diag = self.diags[..., self.offsets.index(offset), :]
+            other_diag = other.diags[..., other.offsets.index(offset), :]
+            out_diag = self_diag * other_diag
+            out_diags = out_diags.at[..., i, _dia_slice(offset)].set(out_diag)
+
+        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
     def __truediv__(self, other: QArrayLike) -> QArray:
         raise NotImplementedError
@@ -252,29 +275,19 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
 
     def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
-        # === compute the Kronecker product of diagonals
+        # compute new offsets
         N = other.diags.shape[-1]
         self_offsets = np.asarray(self.offsets)
         other_offsets = np.asarray(other.offsets)
-        out_offsets = np.ravel(self_offsets[:, None] * N + other_offsets)
-        tmp_diags = jnp.kron(self.diags, other.diags)
+        out_offsets = tuple(np.ravel(self_offsets[:, None] * N + other_offsets))
 
-        # === merge duplicate diagonals
-        unique_offsets, inverse_indices = np.unique(out_offsets, return_inverse=True)
-        num_diags = unique_offsets.shape[0]
-        out_diags = jnp.zeros(
-            (*tmp_diags.shape[:-2], num_diags, tmp_diags.shape[-1]), dtype=self.dtype
-        )
-        for i in range(num_diags):
-            mask = inverse_indices == i
-            out_diags = out_diags.at[..., i, :].set(
-                jnp.sum(tmp_diags[..., mask, :], axis=-2)
-            )
-        out_offsets = tuple(o.item() for o in unique_offsets)
+        # compute new diagonals and dimensions
+        out_diags = jnp.kron(self.diags, other.diags)
+        out_dims = self.dims + other.dims
 
-        return SparseDIAQArray(
-            offsets=out_offsets, diags=out_diags, dims=self.dims + other.dims
-        )
+        # merge duplicate diagonals and return
+        out = SparseDIAQArray(dims=out_dims, offsets=out_offsets, diags=out_diags)
+        return _compress_diags(out)
 
     def __and__(self, other: QArrayLike) -> QArray:
         if isinstance(other, SparseDIAQArray):
@@ -296,6 +309,23 @@ def _dia_slice(offset: int) -> slice:
     # For exemple, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
     # _dia_slice(2) will return the slice(2, None) to select [a, b, ..., z].
     return slice(offset, None) if offset >= 0 else slice(None, offset)
+
+
+def _compress_diags(x: SparseDIAQArray) -> SparseDIAQArray:
+    # compute unique offsets
+    offsets, inverse_ind = np.unique(x.offsets, return_inverse=True)
+
+    # initialize output diagonals
+    diags_shape = (*x.diags.shape[:-2], len(offsets), x.diags.shape[-1])
+    out_diags = jnp.zeros(diags_shape, dtype=x.dtype)
+
+    # loop over each offset and fill the output
+    for i in range(len(offsets)):
+        mask = inverse_ind == i
+        diag = jnp.sum(x.diags[..., mask, :], axis=-2)
+        out_diags = out_diags.at[..., i, :].set(diag)
+
+    return SparseDIAQArray(dims=x.dims, offsets=tuple(offsets), diags=out_diags)
 
 
 def to_dense(x: SparseDIAQArray) -> DenseQArray:
@@ -336,7 +366,7 @@ def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
         dims = (x.shape[-1],)
         x = jnp.asarray(x)
     else:
-        raise TypeError("Input must be a `QArrayLike` object.")
+        raise TypeError('Input must be a `QArrayLike` object.')
 
     concrete_or_error(None, x, '`to_sparse_dia` does not support tracing.')
     offsets = _find_offsets(x)
@@ -347,6 +377,7 @@ def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
 def _find_offsets(x: Array) -> tuple[int, ...]:
     indices = np.nonzero(x)
     return tuple(np.unique(indices[1] - indices[0]))
+
 
 @functools.partial(jax.jit, static_argnums=(0,))
 def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
