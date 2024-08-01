@@ -228,7 +228,8 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
-    return (x * y.mT).sum((-2, -1))
+    # todo: fix perf
+    return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
 
 
 def _hdim(x: QArrayLike) -> int:
