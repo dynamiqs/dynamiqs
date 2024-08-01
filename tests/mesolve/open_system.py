@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import QArray, asqarray
+from dynamiqs import QArray, asqarray, dia
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
