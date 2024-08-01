@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
-from dynamiqs import QArray, asqarray, dia
+from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -233,8 +233,8 @@ class OTDQubit(OpenSystem):
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
 ocavity = OCavity(n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave)
-dense_cavity = OCavity(
-    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dia
+dense_ocavity = OCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
 )
 
 tsave = np.linspace(0.0, 1.0, 11)
