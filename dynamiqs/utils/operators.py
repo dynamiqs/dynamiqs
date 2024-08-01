@@ -9,8 +9,8 @@ from jax.typing import ArrayLike
 from .._utils import cdtype
 from ..qarrays import DenseQArray, QArray, SparseDIAQArray, asqarray
 from .matrix_format_selector import (
-    MatrixFormatEnum,
     MatrixFormat,
+    MatrixFormatEnum,
     dispatch_matrix_format,
     register_format_handler,
 )

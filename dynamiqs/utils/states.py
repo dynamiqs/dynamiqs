@@ -255,9 +255,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         return tensor(*[coherent(d, a) for d, a in zip(dim, alpha)])
 
     # fact: dim is now an integer
-
-    ket = displace(int(dim), alpha) @ fock(int(dim), 0)
-    return ket
+    return displace(int(dim), alpha) @ fock(int(dim), 0)
 
 
 def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
@@ -318,7 +316,7 @@ def ground() -> QArray:
         [[0.+0.j],
          [1.+0.j]]
     """
-    return jnp.array([[0], [1]], dtype=cdtype())
+    return asqarray(jnp.array([[0], [1]], dtype=cdtype()), dims=(2,))
 
 
 def excited() -> QArray:
@@ -339,4 +337,4 @@ def excited() -> QArray:
         [[1.+0.j],
          [0.+0.j]]
     """
-    return jnp.array([[1], [0]], dtype=cdtype())
+    return asqarray(jnp.array([[1], [0]], dtype=cdtype()), dims=(2,))
