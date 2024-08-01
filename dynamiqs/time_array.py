@@ -645,9 +645,7 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray(timearrays)
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return ft.reduce(
-            lambda x, y: x + y, [tarray(t) for tarray in self.timearrays]
-        )
+        return ft.reduce(lambda x, y: x + y, [tarray(t) for tarray in self.timearrays])
 
     def __mul__(self, y: QArrayLike) -> TimeArray:
         timearrays = [tarray * y for tarray in self.timearrays]
