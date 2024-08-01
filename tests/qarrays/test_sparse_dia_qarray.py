@@ -39,7 +39,6 @@ class TestSparseDIAQArray:
         diagsB = diagsB.at[3, :3].set(0)
 
         # = matrix A =
-
         make_dictA = lambda x: dict(
             simple=x,
             batch=dq.stack([x, 2 * x]),
@@ -97,7 +96,6 @@ class TestSparseDIAQArray:
         dB, sB = self.denseB[kB], self.sparseB[kB]
 
         out_dense_dense = (dA - dB).to_jax()
-
         out_dia_dia = dq.to_dense(sA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 

@@ -257,17 +257,18 @@ class SparseDIAQArray(QArray):
         out_offsets = np.union1d(self.offsets, other.offsets)
 
         # initialize the output diagonals
-        diags_shape = (*self.diags.shape[:-2], len(out_offsets), self.diags.shape[-1])
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        diags_shape = (*batch_shape, len(out_offsets), self.diags.shape[-1])
         out_diags = jnp.zeros(diags_shape, dtype=cdtype())
 
         # loop over each offset and fill the output
         for i, offset in enumerate(out_offsets):
             if offset in self.offsets:
                 self_diag = self.diags[..., self.offsets.index(offset), :]
-                out_diags = out_diags.at[..., i, _dia_slice(offset)].add(self_diag)
+                out_diags = out_diags.at[..., i, :].add(self_diag)
             if offset in other.offsets:
                 other_diag = other.diags[..., other.offsets.index(offset), :]
-                out_diags = out_diags.at[..., i, _dia_slice(offset)].add(other_diag)
+                out_diags = out_diags.at[..., i, :].add(other_diag)
 
         return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
