@@ -64,7 +64,7 @@ class TestSparseDIAQArray:
         self.denseB = make_dictB(denseB)
         self.sparseB = make_dictB(sparseB)
 
-    @pytest.mark.parametrize("kA", ['simple', 'batch', 'batch_broadcast'])
+    @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_convert(self, kA, rtol=1e-05, atol=1e-08):
         print(self.denseB[kA].to_jax().shape)
         assert jnp.allclose(
@@ -74,7 +74,7 @@ class TestSparseDIAQArray:
             atol=atol,
         )
 
-    @pytest.mark.parametrize("kA, kB", valid_operation_keys)
+    @pytest.mark.parametrize('kA, kB', valid_operation_keys)
     def test_add(self, kA, kB, rtol=1e-05, atol=1e-08):
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
@@ -90,7 +90,7 @@ class TestSparseDIAQArray:
         out_dense_dia = (dA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    @pytest.mark.parametrize("kA, kB", valid_operation_keys)
+    @pytest.mark.parametrize('kA, kB', valid_operation_keys)
     def test_sub(self, kA, kB, rtol=1e-05, atol=1e-08):
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
@@ -105,7 +105,7 @@ class TestSparseDIAQArray:
         out_dense_dia = (dA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    @pytest.mark.parametrize("kA, kB", valid_operation_keys)
+    @pytest.mark.parametrize('kA, kB', valid_operation_keys)
     def test_mul(self, kA, kB, rtol=1e-05, atol=1e-08):
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
@@ -121,7 +121,7 @@ class TestSparseDIAQArray:
         out_dense_dia = (dA * sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    @pytest.mark.parametrize("kA, kB", valid_operation_keys)
+    @pytest.mark.parametrize('kA, kB', valid_operation_keys)
     def test_matmul(self, kA, kB, rtol=1e-05, atol=1e-08):
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]

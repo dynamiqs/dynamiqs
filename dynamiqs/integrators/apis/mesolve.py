@@ -128,7 +128,7 @@ def mesolve(
     tsave = jnp.asarray(tsave)
     if not (isinstance(exp_ops, list) or exp_ops is None):
         raise TypeError(
-            f"`exp_ops` must be instance of `list` but got `{exp_ops.__class__}`"
+            f'`exp_ops` must be instance of `list` but got `{exp_ops.__class__}`'
         )
     exp_ops = [asqarray(exp_op) for exp_op in exp_ops] if exp_ops is not None else None
 

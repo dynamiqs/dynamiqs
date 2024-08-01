@@ -2,22 +2,18 @@ import functools as ft
 from enum import Enum
 from typing import Callable, Literal
 
-__all__ = [
-    "dia",
-    "dense",
-    "set_matrix_format",
-]
+__all__ = ['dia', 'dense', 'set_matrix_format']
 
 
 class MatrixFormatEnum(Enum):
-    DENSE = "dense"
-    SPARSE_DIA = "sparse_dia"
+    DENSE = 'dense'
+    SPARSE_DIA = 'sparse_dia'
 
 
 dia = MatrixFormatEnum.SPARSE_DIA
 dense = MatrixFormatEnum.DENSE
 
-MatrixFormat = Literal["dense", "sparse_dia"]
+MatrixFormat = Literal['dense', 'sparse_dia']
 
 global_matrix_format = None
 DEFAULT_MATRIX_FORMAT = MatrixFormatEnum.SPARSE_DIA
@@ -29,18 +25,18 @@ def dispatch_matrix_format(func: Callable) -> Callable:
     @ft.wraps(func)
     def wrapper(*args, **kwargs):
         global global_matrix_format  # noqa: PLW0602
-        matrix_format = kwargs.pop("matrix_format", None)
+        matrix_format = kwargs.pop('matrix_format', None)
         matrix_format = matrix_format or global_matrix_format or DEFAULT_MATRIX_FORMAT
 
         key = (func.__name__, matrix_format)
         if key not in dispatch_dict:
-            handlers_list = "\n- ".join(list(map(str, dispatch_dict.keys())))
+            handlers_list = '\n- '.join(list(map(str, dispatch_dict.keys())))
             raise RuntimeError(
                 f"There is no handler for method '{func.__name__}' "
                 f"and matrix format '{matrix_format}'.\nRegistered handlers "
-                f"are \n- {handlers_list}\n"
-                f"This error should never happen, if you encounter it, please "
-                f"open a ticket at https://github.com/dynamiqs/dynamiqs/issues."
+                f'are \n- {handlers_list}\n'
+                f'This error should never happen, if you encounter it, please '
+                f'open a ticket at https://github.com/dynamiqs/dynamiqs/issues.'
             )
 
         return dispatch_dict[key](*args, **kwargs)

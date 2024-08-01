@@ -594,7 +594,6 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f, self._disc_ts)
 
     def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
-
         if isinstance(y, get_args(ScalarLike)):
             return ConstantTimeArray(self.f + y)
         elif isqarraylike(y):

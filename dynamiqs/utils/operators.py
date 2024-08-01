@@ -142,7 +142,8 @@ def zero_sparse_dia(*dims: int) -> QArray:
 
 @dispatch_matrix_format
 def destroy(
-    *dims: int, matrix_format: MatrixFormat = None  # noqa: ARG001
+    *dims: int,
+    matrix_format: MatrixFormat = None,  # noqa: ARG001
 ) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
@@ -234,7 +235,8 @@ def _destroy_single_sparse_dia(dim: int) -> QArray:
 
 @dispatch_matrix_format
 def create(
-    *dims: int, matrix_format: MatrixFormat = None  # noqa: ARG001
+    *dims: int,
+    matrix_format: MatrixFormat = None,  # noqa: ARG001
 ) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
@@ -401,10 +403,7 @@ def parity_sparse_dia(dim: int) -> QArray:
     return SparseDIAQArray(diags=diag_values, offsets=(0,), dims=(dim,))
 
 
-def displace(
-    dim: int,
-    alpha: ArrayLike,
-) -> DenseQArray:
+def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -735,14 +734,9 @@ def hadamard_dense(n: int) -> QArray:
 
 @register_format_handler('hadamard', MatrixFormatEnum.SPARSE_DIA)
 def hadamard_sparse_dia(n: int) -> QArray:
-    diags = jnp.array(
-        [
-            [1.0, 0.0],
-            [1.0, -1.0],
-            [0.0, 1.0],
-        ],
-        dtype=cdtype(),
-    ) / jnp.sqrt(2)
+    diags = jnp.array([[1.0, 0.0], [1.0, -1.0], [0.0, 1.0]], dtype=cdtype()) / jnp.sqrt(
+        2
+    )
     H1 = SparseDIAQArray(diags=diags, offsets=(-1, 0, 1), dims=(2,))
     Hs = H1.broadcast_to(n, 2, 2)  # (n, 2, 2)
     return tensor(*Hs)
