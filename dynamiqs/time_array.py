@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools as ft
 from abc import abstractmethod
 from typing import get_args
 
@@ -644,9 +645,7 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray(timearrays)
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return jax.tree_util.tree_reduce(
-            lambda x, y: x + y, [tarray(t) for tarray in self.timearrays]
-        )
+        return ft.reduce(lambda x, y: x + y, [tarray(t) for tarray in self.timearrays])
 
     def __mul__(self, y: QArrayLike) -> TimeArray:
         timearrays = [tarray * y for tarray in self.timearrays]
