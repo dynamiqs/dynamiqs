@@ -84,7 +84,7 @@ class OCavity(OpenSystem):
     def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> [QArray]:  # noqa: ARG002
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
         return [
             dq.position(self.n, matrix_format=self.layout),
             dq.momentum(self.n, matrix_format=self.layout),
@@ -93,7 +93,7 @@ class OCavity(OpenSystem):
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         return dq.coherent_dm(self.n, self._alpha(t))
 
     def expect(self, t: float) -> Array:
@@ -102,7 +102,7 @@ class OCavity(OpenSystem):
         exp_p = alpha_t.imag
         return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         return dq.expect(dq.number(self.n, matrix_format=self.layout), state).real
 
     def grads_state(self, t: float) -> PyTree:
@@ -156,7 +156,7 @@ class OTDQubit(OpenSystem):
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> QArray:  # noqa: ARG002
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
         return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
@@ -182,7 +182,7 @@ class OTDQubit(OpenSystem):
         exp_z = eta * jnp.cos(theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         return dq.expect(dq.sigmaz(), state).real
 
     def grads_state(self, t: float) -> PyTree:
