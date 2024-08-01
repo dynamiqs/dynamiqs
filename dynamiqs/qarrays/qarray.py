@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
+from math import prod
 from typing import TYPE_CHECKING
 
 import equinox as eqx
@@ -46,6 +47,13 @@ class QArray(eqx.Module):
         ):
             raise TypeError(
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
+            )
+
+        # ensure dims is compatible with the shape
+        if prod(self.dims) != self.shape[-1]:
+            raise ValueError(
+                "Argument `dims` must be compatible with the shape of the QArray, but "
+                f"got dims {self.dims} and shape {self.shape}."
             )
 
     @property

@@ -5,8 +5,6 @@ from typing import Callable, Literal
 __all__ = [
     "dia",
     "dense",
-    "dispatch_matrix_format",
-    "register_format_handler",
     "set_matrix_format",
 ]
 
