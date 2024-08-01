@@ -278,7 +278,7 @@ class MEPropagatorResult(Result):
             - `H` has shape _(2, 3, n, n)_,
             - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
 
-            then `states` has shape _(2, 3, ntsave, n, n)_.
+            then `propagators` has shape _(2, 3, ntsave, n, n)_.
 
         See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)

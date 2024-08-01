@@ -12,6 +12,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - mesolve
         - smesolve
         - sepropagator
+        - mepropagator
 
 ## Core
 
