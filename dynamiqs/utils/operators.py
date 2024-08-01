@@ -38,7 +38,7 @@ __all__ = [
 
 
 @dispatch_matrix_format
-def eye(*dims: int, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def eye(*dims: int, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the identity operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -89,7 +89,7 @@ def eye_sparse_dia(*dims: int) -> QArray:
 
 
 @dispatch_matrix_format
-def zero(*dims: int, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def zero(*dims: int, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the null operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -135,15 +135,12 @@ def zero_dense(*dims: int) -> QArray:
 
 @register_format_handler('zero', MatrixFormatEnum.SPARSE_DIA)
 def zero_sparse_dia(*dims: int) -> QArray:
-    return SparseDIAQArray(
-        diags=jnp.zeros((0, np.prod(dims))), offsets=tuple(), dims=dims
-    )
+    return SparseDIAQArray(diags=jnp.zeros((0, np.prod(dims))), offsets=(), dims=dims)
 
 
 @dispatch_matrix_format
 def destroy(
-    *dims: int,
-    matrix_format: MatrixFormat = None,  # noqa: ARG001
+    *dims: int, matrix_format: MatrixFormat = None
 ) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
@@ -235,8 +232,7 @@ def _destroy_single_sparse_dia(dim: int) -> QArray:
 
 @dispatch_matrix_format
 def create(
-    *dims: int,
-    matrix_format: MatrixFormat = None,  # noqa: ARG001
+    *dims: int, matrix_format: MatrixFormat = None
 ) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
@@ -544,7 +540,7 @@ def momentum(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
 
 
 @dispatch_matrix_format
-def sigmax(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def sigmax(*, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the Pauli $\sigma_x$ operator.
 
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
@@ -573,7 +569,7 @@ def sigmax_sparse_dia() -> QArray:
 
 
 @dispatch_matrix_format
-def sigmay(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def sigmay(*, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the Pauli $\sigma_y$ operator.
 
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
@@ -602,7 +598,7 @@ def sigmay_sparse_dia() -> QArray:
 
 
 @dispatch_matrix_format
-def sigmaz(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def sigmaz(*, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the Pauli $\sigma_z$ operator.
 
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
@@ -631,7 +627,7 @@ def sigmaz_sparse_dia() -> QArray:
 
 
 @dispatch_matrix_format
-def sigmap(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def sigmap(*, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
@@ -660,7 +656,7 @@ def sigmap_sparse_dia() -> QArray:
 
 
 @dispatch_matrix_format
-def sigmam(*, matrix_format: MatrixFormat = None) -> QArray:  # noqa: ARG001
+def sigmam(*, matrix_format: MatrixFormat = None) -> QArray:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.

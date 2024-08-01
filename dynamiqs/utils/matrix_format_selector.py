@@ -23,7 +23,7 @@ dispatch_dict = {}
 
 def dispatch_matrix_format(func: Callable) -> Callable:
     @ft.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> callable:
         global global_matrix_format  # noqa: PLW0602
         matrix_format = kwargs.pop('matrix_format', None)
         matrix_format = matrix_format or global_matrix_format or DEFAULT_MATRIX_FORMAT

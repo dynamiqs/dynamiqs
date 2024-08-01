@@ -52,7 +52,7 @@ class QArray(eqx.Module):
         # === ensure dims is compatible with the shape
         # for vectorized superoperators, we allow that the shape is the square
         # of the product of all dims
-        allowed_shapes = (prod(self.dims), prod(self.dims)**2)
+        allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
         if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
                 'Argument `dims` must be compatible with the shape of the QArray, but '

@@ -6,7 +6,6 @@ from .closed_system import dense_cavity
 
 
 class TestSESolvePropagator(IntegratorTester):
-
     def test_correctness(self):
         self._test_correctness(dense_cavity, Propagator())
 
