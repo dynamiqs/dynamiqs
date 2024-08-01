@@ -166,8 +166,14 @@ class SparseDIAQArray(QArray):
         super().__mul__(other)
 
         if _is_batched_scalar(other):
-            diags, offsets = other * self.diags, self.offsets
-            return SparseDIAQArray(offsets=offsets, diags=diags, dims=self.dims)
+            if jnp.all(other == 0):
+                offsets = ()
+                shape = (*self.shape[:-2], len(offsets), self.shape[-1])
+                diags = jnp.zeros(shape, dtype=self.dtype)
+                return SparseDIAQArray(self.dims, offsets, diags)
+            else:
+                diags, offsets = other * self.diags, self.offsets
+                return SparseDIAQArray(self.dims, offsets, diags)
         elif isinstance(other, SparseDIAQArray):
             return self._mul_sparse(other)
         elif isinstance(other, get_args(QArrayLike)):
@@ -191,9 +197,13 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, self.offsets, out_diags)
 
     def _mul_sparse(self, other: SparseDIAQArray) -> QArray:
+        # we check that the offsets are unique, as they should with the class __init__
+        assert len(set(self.offsets)) == len(self.offsets)
+        assert len(set(other.offsets)) == len(other.offsets)
+
         # compute the output offsets as the intersection of offsets
         out_offsets, self_ind, other_ind = np.intersect1d(
-            self.offsets, other.offsets, return_indices=True
+            self.offsets, other.offsets, assume_unique=True, return_indices=True
         )
 
         # initialize the output diagonals
@@ -203,8 +213,8 @@ class SparseDIAQArray(QArray):
 
         # loop over each output offset and fill the output
         for i, offset in enumerate(out_offsets):
-            self_diag = self.diags[..., self.offsets.index(offset), :]
-            other_diag = other.diags[..., other.offsets.index(offset), :]
+            self_diag = self.diags[..., self_ind[i], :]
+            other_diag = other.diags[..., other_ind[i], :]
             out_diag = self_diag * other_diag
             out_diags = out_diags.at[..., i, _dia_slice(offset)].set(out_diag)
 
