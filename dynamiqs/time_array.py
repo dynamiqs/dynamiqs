@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools as ft
 from abc import abstractmethod
 from typing import get_args
 
@@ -644,7 +645,7 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray(timearrays)
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return jax.tree_util.tree_reduce(
+        return ft.reduce(
             lambda x, y: x + y, [tarray(t) for tarray in self.timearrays]
         )
 
@@ -672,7 +673,7 @@ class BatchedCallable(eqx.Module):
         # make f a valid PyTree with `Partial` and convert its output to an array
         self.f = jtu.Partial(f)
         shape = jax.eval_shape(f, 0.0).shape
-        self.indices = list(jnp.indices(shape[:-2]))
+        self.indices = list(jnp.indices(shape))
 
     def __call__(self, t: ScalarLike) -> QArray:
         if len(self.indices) == 0:

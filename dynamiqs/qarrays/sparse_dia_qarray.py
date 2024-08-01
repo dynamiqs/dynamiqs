@@ -323,8 +323,9 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
     def _matmul_dense(self, other: DenseQArray, left_matmul: bool) -> QArray:
-        broadcast_shape = jnp.broadcast_shapes(self.shape, other.data.shape)
-        out = jnp.zeros(broadcast_shape, dtype=cdtype())
+        batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.data.shape[:-2])
+        out_shape = (*batch_shape, self.shape[-2], other.shape[-1])
+        out = jnp.zeros(out_shape, dtype=cdtype())
         for i, self_offset in enumerate(self.offsets):
             self_diag = self.diags[..., i, :]
             slice_in = _dia_slice(self_offset)
