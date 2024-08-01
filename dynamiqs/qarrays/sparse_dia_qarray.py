@@ -282,11 +282,14 @@ class SparseDIAQArray(QArray):
         return DenseQArray(self.dims, out)
 
     def _matmul_dia(self, other: SparseDIAQArray) -> QArray:
-        N = other.diags.shape[1]
-        diag_dict = defaultdict(lambda: jnp.zeros(N))
+        N = other.diags.shape[-1]
+        broadcast_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
+        diag_dict = defaultdict(lambda: jnp.zeros((*broadcast_shape, N)))
 
-        for self_offset, self_diag in zip(self.offsets, self.diags):
-            for other_offset, other_diag in zip(other.offsets, other.diags):
+        for i, self_offset in enumerate(self.offsets):
+            self_diag = self.diags[..., i, :]
+            for j, other_offset in enumerate(other.offsets):
+                other_diag = other.diags[..., j, :]
                 result_offset = self_offset + other_offset
 
                 if abs(result_offset) > N - 1:
@@ -297,14 +300,17 @@ class SparseDIAQArray(QArray):
 
                 diag_dict[result_offset] = (
                     diag_dict[result_offset]
-                    .at[sB:eB]
-                    .add(self_diag[sA:eA] * other_diag[sB:eB])
+                    .at[..., sB:eB]
+                    .add(self_diag[..., sA:eA] * other_diag[..., sB:eB])
                 )
 
         out_offsets = sorted(diag_dict.keys())
         out_diags = [diag_dict[offset] for offset in out_offsets]
 
-        return SparseDIAQArray(self.dims, tuple(out_offsets), jnp.vstack(out_diags))
+        out_diags = jnp.stack(out_diags)
+        out_diags = jnp.moveaxis(out_diags, 0, -2)
+
+        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
 
     def _kronecker_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
         # compute new offsets
