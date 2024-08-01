@@ -419,7 +419,7 @@ class SparseDIAQArray(QArray):
 
 def _dia_slice(offset: int) -> slice:
     # Return the slice that selects the non-zero elements of a diagonal of given offset.
-    # For exemple, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
+    # For example, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
     # _dia_slice(2) will return the slice(2, None) to select [a, b, ..., z].
     return slice(offset, None) if offset >= 0 else slice(None, offset)
 
