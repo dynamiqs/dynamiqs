@@ -68,7 +68,7 @@ class TestSparseDIAQArray:
         out_dense_dia = (denseA @ sparseB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    def test_add_batch_2(self, rtol=1e-05, atol=1e-08):
+    def test_add_batch_broadcast(self, rtol=1e-05, atol=1e-08):
         # same as `test_matmul_batch` but with different batching axes
         n = self.matrixA.shape[-1]
 
@@ -145,7 +145,7 @@ class TestSparseDIAQArray:
         out_dense_dia = (denseA @ sparseB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
-    def test_matmul_batch_2(self, rtol=1e-05, atol=1e-08):
+    def test_matmul_batch_broadcast(self, rtol=1e-05, atol=1e-08):
         # same as `test_matmul_batch` but with different batching axes
         n = self.matrixA.shape[-1]
 

@@ -22,24 +22,31 @@ __all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
 
 class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
-    diags: Array = eqx.field(converter=jnp.asarray)
+    diags: Array
 
-    def __post_init__(self):
-        # check that diagonals contain zeros outside the bounds of the matrix
+    def __init__(self, dims: tuple[int, ...], offsets: tuple[int, ...], diags: Array):
+        super().__init__(dims)
+        self.offsets, self.diags = _compress_dia(offsets, jnp.asarray(diags))
 
-        if self.diags.ndim < 2 or (
-            self.diags.shape[-2] != len(self.offsets)
-            or self.diags.shape[-1] != np.prod(self.dims)
-        ):
-            raise ValueError(
-                f"Diagonals of `SparseDIAQArray` must be of shape (..., len(offsets), prod(dims)) "
-                f"ie (..., {len(self.offsets)}, {np.prod(self.dims)}) but got {self.diags.shape}"
+    def __check_init__(self):
+        # check diags and offsets have the right type and shape before compressing them
+        if not isinstance(self.offsets, tuple):
+            raise TypeError(
+                'Argument `offsets` of `SparseDIAQArray` must be a tuple but got '
+                f'{type(self.offsets)}'
             )
 
-        # if the code is jitted, disable checks
+        if self.diags.ndim < 2 or self.diags.shape[-2] != len(self.offsets):
+            raise ValueError(
+                'Argument `diags` of `SparseDIAQArray` must be of shape '
+                f'(..., len(offsets), prod(dims)), but got {self.diags.shape}'
+            )
+
+        # if the code is jitted, disable following checks
         if isinstance(self.diags, jax.core.Tracer):
             return
 
+        # check that diagonals contain zeros outside the bounds of the matrix
         for i, offset in enumerate(self.offsets):
             if (offset < 0 and jnp.any(self.diags[..., i, offset:] != 0)) or (
                 offset > 0 and jnp.any(self.diags[..., i, :offset] != 0)
@@ -85,9 +92,9 @@ class SparseDIAQArray(QArray):
     def broadcast_to(self, *shape: int) -> QArray:
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
-                f"Cannot broadcast to shape {shape} because"
-                f" the last two dimensions do not match current "
-                f"shape dimensions ({self.shape})"
+                f'Cannot broadcast to shape {shape} because'
+                f' the last two dimensions do not match current '
+                f'shape dimensions ({self.shape})'
             )
 
         shape = (*shape[:-2], len(self.offsets), self.diags.shape[-1])
@@ -175,10 +182,6 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, self.offsets, out_diags)
 
     def _mul_sparse(self, other: SparseDIAQArray) -> QArray:
-        # compress the diagonals of both matrices
-        self = _compress_diags(self)
-        other = _compress_diags(other)
-
         # compute the output offsets as the intersection of offsets
         out_offsets, self_ind, other_ind = np.intersect1d(
             self.offsets, other.offsets, return_indices=True
@@ -308,9 +311,9 @@ class SparseDIAQArray(QArray):
         out_diags = jnp.kron(self.diags, other.diags)
         out_dims = self.dims + other.dims
 
-        # merge duplicate diagonals and return
-        out = SparseDIAQArray(dims=out_dims, offsets=out_offsets, diags=out_diags)
-        return _compress_diags(out)
+        # merge duplicate offsets and return
+        out_offsets, out_diags = _compress_dia(out_offsets, out_diags)
+        return SparseDIAQArray(dims=out_dims, offsets=out_offsets, diags=out_diags)
 
     def __and__(self, other: QArrayLike) -> QArray:
         if isinstance(other, SparseDIAQArray):
@@ -346,12 +349,12 @@ class SparseDIAQArray(QArray):
                 or (len(key) == self.ndim and key[-2] == full and key[-1] == full)
             )
         else:
-            raise IndexError("Should never happen")
+            raise IndexError('Should never happen')
 
         if not is_key_valid:
             raise NotImplementedError(
-                "Getting items for non batching dimensions of "
-                "SparseDIA is not supported yet"
+                'Getting items for non batching dimensions of '
+                'SparseDIA is not supported yet'
             )
 
         return SparseDIAQArray(
@@ -366,21 +369,21 @@ def _dia_slice(offset: int) -> slice:
     return slice(offset, None) if offset >= 0 else slice(None, offset)
 
 
-def _compress_diags(x: SparseDIAQArray) -> SparseDIAQArray:
+def _compress_dia(offsets: tuple[int, ...], diags: ArrayLike) -> SparseDIAQArray:
     # compute unique offsets
-    offsets, inverse_ind = np.unique(x.offsets, return_inverse=True)
+    out_offsets, inverse_ind = np.unique(offsets, return_inverse=True)
 
     # initialize output diagonals
-    diags_shape = (*x.diags.shape[:-2], len(offsets), x.diags.shape[-1])
-    out_diags = jnp.zeros(diags_shape, dtype=x.dtype)
+    diags_shape = (*diags.shape[:-2], len(out_offsets), diags.shape[-1])
+    out_diags = jnp.zeros(diags_shape, dtype=diags.dtype)
 
     # loop over each offset and fill the output
-    for i in range(len(offsets)):
+    for i in range(len(out_offsets)):
         mask = inverse_ind == i
-        diag = jnp.sum(x.diags[..., mask, :], axis=-2)
+        diag = jnp.sum(diags[..., mask, :], axis=-2)
         out_diags = out_diags.at[..., i, :].set(diag)
 
-    return SparseDIAQArray(dims=x.dims, offsets=tuple(offsets), diags=out_diags)
+    return tuple(out_offsets), out_diags
 
 
 def to_dense(x: SparseDIAQArray) -> DenseQArray:
