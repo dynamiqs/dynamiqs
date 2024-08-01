@@ -156,7 +156,7 @@ class DenseQArray(QArray):
 
         return DenseQArray(self.dims, data)
 
-    def __matmul__(self, y: QArrayLike) -> QArray:
+    def __matmul__(self, y: QArrayLike) -> QArray | Array:
         super().__matmul__(y)
 
         if isinstance(y, DenseQArray):
@@ -167,6 +167,9 @@ class DenseQArray(QArray):
             data = self.data @ asjaxarray(y)
         else:
             return NotImplemented
+
+        if self.isbra() and y.isket():
+            return data
 
         return DenseQArray(dims, data)
 

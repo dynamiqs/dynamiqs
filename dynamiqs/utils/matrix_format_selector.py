@@ -20,7 +20,7 @@ dense = MatrixFormatEnum.DENSE
 MatrixFormat = Literal["dense", "sparse_dia"]
 
 global_matrix_format = None
-DEFAULT_MATRIX_FORMAT = MatrixFormatEnum.DENSE
+DEFAULT_MATRIX_FORMAT = MatrixFormatEnum.SPARSE_DIA
 
 dispatch_dict = {}
 

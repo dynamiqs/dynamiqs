@@ -393,7 +393,7 @@ class QArray(eqx.Module):
         return -self + y
 
     @abstractmethod
-    def __matmul__(self, y: QArrayLike) -> QArray:
+    def __matmul__(self, y: QArrayLike) -> QArray | Array:
         """Matrix multiplication with another quantum state or JAX array."""
 
     @abstractmethod
