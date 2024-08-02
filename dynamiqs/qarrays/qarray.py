@@ -341,7 +341,7 @@ class QArray(eqx.Module):
         """Element-wise multiplication with a scalar or an array."""
         from .._utils import _is_batched_scalar
 
-        if _is_batched_scalar(y):
+        if not _is_batched_scalar(y):
             logging.warning(
                 'Using the `*` operator between two arrays performs element-wise '
                 'multiplication. For matrix multiplication, use the `@` operator '

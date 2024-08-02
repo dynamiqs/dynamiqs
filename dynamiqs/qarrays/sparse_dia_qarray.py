@@ -22,11 +22,7 @@ __all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
 
 class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
-    diags: Array
-
-    def __init__(self, dims: tuple[int, ...], offsets: tuple[int, ...], diags: Array):
-        super().__init__(dims)
-        self.offsets, self.diags = _compress_dia(offsets, jnp.asarray(diags))
+    diags: Array = eqx.field(converter=jnp.asarray)
 
     def __check_init__(self):
         # check diags and offsets have the right type and shape before compressing them
