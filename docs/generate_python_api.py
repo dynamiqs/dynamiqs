@@ -14,7 +14,7 @@ PATHS_TO_PARSE = [
     ('dynamiqs/utils/jax_utils.py', 'dq'),
     ('dynamiqs/utils/vectorization.py', 'dq'),
     ('dynamiqs/utils/optimal_control.py', 'dq'),
-    ('dynamiqs/utils/random.py', 'dq'),
+    ('dynamiqs/utils/rand.py', 'dq'),
     ('dynamiqs/time_array.py', 'dq'),
     ('dynamiqs/solver.py', 'dq.solver'),
     ('dynamiqs/gradient.py', 'dq.gradient'),

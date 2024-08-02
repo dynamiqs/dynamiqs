@@ -242,13 +242,13 @@ nav:
           - Quantum optimal control:
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
-          - Random arrays:
-              - rand_real: python_api/utils/random/rand_real.md
-              - rand_complex: python_api/utils/random/rand_complex.md
-              - rand_herm: python_api/utils/random/rand_herm.md
-              - rand_psd: python_api/utils/random/rand_psd.md
-              - rand_dm: python_api/utils/random/rand_dm.md
-              - rand_ket: python_api/utils/random/rand_ket.md
+          - Random arrays (dq.rand):
+              - real: python_api/utils/rand/real.md
+              - imag: python_api/utils/rand/imag.md
+              - herm: python_api/utils/rand/herm.md
+              - psd: python_api/utils/rand/psd.md
+              - dm: python_api/utils/rand/dm.md
+              - ket: python_api/utils/rand/ket.md
           - Plotting:
               - plot_wigner: python_api/plots/plot_wigner.md
               - plot_wigner_mosaic: python_api/plots/plot_wigner_mosaic.md

@@ -159,11 +159,11 @@ def plot_hinton(
         ![plot_hinton_cnot](/figs_code/plot_hinton_cnot.png){.fig-half}
 
         >>> key = jax.random.PRNGKey(42)
-        >>> x = dq.rand_complex(key, (16, 16))
+        >>> x = dq.rand.imag(key, (16, 16))
         >>> dq.plot_hinton(x)
-        >>> renderfig('plot_hinton_rand_complex')
+        >>> renderfig('plot_hinton_rand_imag')
 
-        ![plot_hinton_rand_complex](/figs_code/plot_hinton_rand_complex.png){.fig-half}
+        ![plot_hinton_rand_imag](/figs_code/plot_hinton_rand_imag.png){.fig-half}
 
         >>> _, axs = dq.gridplot(2)
         >>> psi = dq.unit(dq.fock(4, 0) - dq.fock(4, 2))
