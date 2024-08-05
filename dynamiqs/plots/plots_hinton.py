@@ -159,7 +159,7 @@ def plot_hinton(
         ![plot_hinton_cnot](/figs_code/plot_hinton_cnot.png){.fig-half}
 
         >>> key = jax.random.PRNGKey(42)
-        >>> x = dq.rand.imag(key, (16, 16))
+        >>> x = dq.rand.complex(key, (16, 16))
         >>> dq.plot_hinton(x)
         >>> renderfig('plot_hinton_rand_imag')
 

@@ -6,7 +6,7 @@ from jaxtyping import PRNGKeyArray
 
 from .utils import dag, unit
 
-__all__ = ['real', 'imag', 'herm', 'psd', 'dm', 'ket']
+__all__ = ['real', 'complex', 'herm', 'psd', 'dm', 'ket']
 
 
 def real(
@@ -41,7 +41,7 @@ def real(
     return jax.random.uniform(key, shape=shape, minval=min, maxval=max)
 
 
-def imag(
+def complex(  # noqa: A001
     key: PRNGKeyArray, shape: int | tuple[int, ...], *, rmax: float = 1.0
 ) -> Array:
     r"""Returns an array of uniformly distributed random complex numbers.
@@ -51,7 +51,7 @@ def imag(
 
     Note-: Uniform sampling in the complex plane
         Here are three common options to generate random complex numbers,
-        `dq.rand.imag()` returns the last one:
+        `dq.rand.complex()` returns the last one:
 
         ```python
         _, (ax0, ax1, ax2) = dq.gridplot(3, sharexy=True)
@@ -69,7 +69,7 @@ def imag(
 
         # option 3: uniformly distributed in a disk (in dynamiqs)
         key = jax.random.PRNGKey(42)
-        x = dq.rand.imag(key, n)
+        x = dq.rand.complex(key, n)
         ax2.scatter(x.real, x.imag, s=1.0)
         renderfig('rand_imag')
         ```
@@ -86,7 +86,7 @@ def imag(
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.imag(key, (2, 3), rmax=5.0)
+        >>> dq.rand.complex(key, (2, 3), rmax=5.0)
         Array([[ 1.341+4.17j ,  3.978-0.979j, -2.592-0.946j],
                [-4.428+1.744j, -0.53 +1.668j,  2.582+0.65j ]], dtype=complex64)
     """
@@ -116,7 +116,7 @@ def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
-    x = imag(key, shape)
+    x = complex(key, shape)
     return 0.5 * (x + dag(x))
 
 
@@ -141,7 +141,7 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
-    x = imag(key, shape)
+    x = complex(key, shape)
     return x @ dag(x)
 
 
@@ -190,5 +190,5 @@ def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, 1), but is shape={shape}.'
         )
-    x = imag(key, shape)
+    x = complex(key, shape)
     return unit(x)
