@@ -413,9 +413,6 @@ class ConstantTimeArray(TimeArray):
     def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
         return self.array
 
-    def pulse_value_at_time(self, t: ScalarLike) -> Array:
-        return self.__call__(t)
-
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ConstantTimeArray(self.array * y)
 
@@ -468,12 +465,7 @@ class PWCTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
-    def __call__(self, t: ScalarLike) -> Array:
-        value = self.pulse_value_at_time(t)
-
-        return value.reshape(*value.shape, 1, 1) * self.array
-
-    def pulse_value_at_time(self, t: ScalarLike) -> Array:
+    def prefactor(self, t: ScalarLike) -> Array:
         def _zero(_: float) -> Array:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
@@ -484,6 +476,9 @@ class PWCTimeArray(TimeArray):
         return lax.cond(
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
+
+    def __call__(self, t: ScalarLike) -> Array:
+        return self.prefactor(t)[..., None, None] * self.array
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array * y)
@@ -535,12 +530,11 @@ class ModulatedTimeArray(TimeArray):
         f = self.f.conj()
         return ModulatedTimeArray(f, self.array.conj(), self._disc_ts)
 
-    def __call__(self, t: ScalarLike) -> Array:
-        values = self.pulse_value_at_time(t)
-        return values.reshape(*values.shape, 1, 1) * self.array
-
-    def pulse_value_at_time(self, t: ScalarLike) -> Array:
+    def prefactor(self, t: ScalarLike) -> Array:
         return self.f(t)
+
+    def __call__(self, t: ScalarLike) -> Array:
+        return self.prefactor(t)[..., None, None] * self.array
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array * y, self._disc_ts)
@@ -594,9 +588,6 @@ class CallableTimeArray(TimeArray):
 
     def __call__(self, t: ScalarLike) -> Array:
         return self.f(t)
-
-    def pulse_value_at_time(self, t: ScalarLike):
-        return self.__call__(t)
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         f = self.f * y
