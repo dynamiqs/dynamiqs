@@ -2,16 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import (
-    Options,
-    constant,
-    eye,
-    pwc,
-    rand_herm,
-    sepropagator,
-    sigmax,
-    sigmay,
-)
+from dynamiqs import Options, constant, eye, pwc, rand, sepropagator, sigmax, sigmay
 from dynamiqs.solver import Tsit5
 
 from ..integrator_tester import IntegratorTester
@@ -36,7 +27,7 @@ class TestSEPropagator(IntegratorTester):
     def test_correctness_complex(
         self, nH, save_states, solver, ysave_atol: float = 1e-3
     ):
-        H = constant(rand_herm(jax.random.PRNGKey(42), (*nH, 2, 2)))
+        H = constant(rand.herm(jax.random.PRNGKey(42), (*nH, 2, 2)))
         t = 10.0
         tsave = jnp.linspace(1.0, t, 3)
         options = Options(save_states=save_states, t0=0.0)

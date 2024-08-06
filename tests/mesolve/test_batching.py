@@ -8,10 +8,10 @@ import dynamiqs as dq
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 3
     kH, *kLs, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), nkeys)
-    H = dq.rand_herm(kH, (*nH, n, n))
-    Ls = [dq.rand_herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
-    psi0 = dq.rand_ket(kpsi0, (*npsi0, n, 1))
-    Es = dq.rand_complex(kEs, (nEs, n, n))
+    H = dq.rand.herm(kH, (*nH, n, n))
+    Ls = [dq.rand.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
+    psi0 = dq.rand.ket(kpsi0, (*npsi0, n, 1))
+    Es = dq.rand.complex(kEs, (nEs, n, n))
     return H, Ls, psi0, Es
 
 
