@@ -244,7 +244,7 @@ nav:
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
           - Random arrays (dq.rand):
               - real: python_api/utils/rand/real.md
-              - imag: python_api/utils/rand/imag.md
+              - complex: python_api/utils/rand/complex.md
               - herm: python_api/utils/rand/herm.md
               - psd: python_api/utils/rand/psd.md
               - dm: python_api/utils/rand/dm.md

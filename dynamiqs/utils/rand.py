@@ -71,10 +71,10 @@ def complex(  # noqa: A001
         key = jax.random.PRNGKey(42)
         x = dq.rand.complex(key, n)
         ax2.scatter(x.real, x.imag, s=1.0)
-        renderfig('rand_imag')
+        renderfig('rand_complex')
         ```
 
-        ![rand_imag](/figs_code/rand_imag.png){.fig}
+        ![rand_complex](/figs_code/rand_complex.png){.fig}
 
     Args:
         key: A PRNG key used as the random key.
