@@ -89,6 +89,8 @@ def _floquet_propagator(
     gradient: Gradient | None = None,
     options=Options(),
 ) -> SEPropagatorResult:
+    """this utility is only to ensure that we only save the final propagator, so that
+    we know the shape of the output"""
     options = eqx.tree_at(
         lambda x: x.save_states, options, False, is_leaf=lambda x: x is None
     )
@@ -111,10 +113,7 @@ def _floquet_0(
     # quasi energies to the region -pi/T, pi/T
     omega_d = 2.0 * jnp.pi / T
     quasi_es = jnp.angle(evals) / T
-    quasi_es = jnp.mod(quasi_es, omega_d)
     quasi_es = jnp.where(quasi_es > 0.5 * omega_d, quasi_es - omega_d, quasi_es)
-    # quasi_es = jnp.mod(quasi_es, 2.0 * jnp.pi / T)
-    # quasi_es = jnp.where(quasi_es > jnp.pi / T, quasi_es - 2.0 * jnp.pi / T, quasi_es)
     evecs = jnp.swapaxes(evecs, axis1=-1, axis2=-2)[..., None]
     saved = Saved(evecs, quasi_es, None)
     return FloquetResult(
