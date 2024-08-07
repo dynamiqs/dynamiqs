@@ -108,7 +108,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Plotting
 
-::: dynamiqs.plots
+::: dynamiqs.plot
     options:
         table: true
         members:
