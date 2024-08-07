@@ -180,7 +180,7 @@ def mplstyle(*, usetex: bool = False):
 
         After (dynamiqs Matplotlib style):
 
-        >>> dq.mplstyle()
+        >>> dq.plot.mplstyle()
         >>> fig, ax = plt.subplots(1, 1)
         >>> for y in ys:
         ...     ax.plot(x, y)
@@ -343,7 +343,7 @@ def gifit(
         ...     plt.plot(x, y)
         >>> phis = np.linspace(0, 2 * np.pi, 101)
         >>> filename = 'docs/figs_code/cos.gif'
-        >>> plot_cos_gif = dq.gifit(
+        >>> plot_cos_gif = dq.plot.gifit(
         ...     plot_cos, fps=25, filename=filename, dpi=150, display=False
         ... )
         >>> plot_cos_gif(phis)
@@ -353,7 +353,7 @@ def gifit(
         >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(24, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
-        >>> plot_fock_gif = dq.gifit(
+        >>> plot_fock_gif = dq.plot.gifit(
         ...     dq.plot.fock, fps=25, filename=filename, dpi=150, display=False
         ... )
         >>> plot_fock_gif(states)
