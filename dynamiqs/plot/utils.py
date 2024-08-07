@@ -354,7 +354,7 @@ def gifit(
         >>> states = dq.coherent(24, alphas)
         >>> filename = 'docs/figs_code/coherent_evolution.gif'
         >>> plot_fock_gif = dq.gifit(
-        ...     dq.plot_fock, fps=25, filename=filename, dpi=150, display=False
+        ...     dq.plot.fock, fps=25, filename=filename, dpi=150, display=False
         ... )
         >>> plot_fock_gif(states)
 

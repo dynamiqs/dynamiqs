@@ -250,13 +250,13 @@ nav:
               - dm: python_api/random/dm.md
               - ket: python_api/random/ket.md
           - Plotting (dq.plot):
-              - plot_wigner: python_api/plot/plot_wigner.md
-              - plot_wigner_mosaic: python_api/plot/plot_wigner_mosaic.md
-              - plot_wigner_gif: python_api/plot/plot_wigner_gif.md
-              - plot_pwc_pulse: python_api/plot/plot_pwc_pulse.md
-              - plot_fock: python_api/plot/plot_fock.md
-              - plot_fock_evolution: python_api/plot/plot_fock_evolution.md
-              - plot_hinton: python_api/plot/plot_hinton.md
+              - wigner: python_api/plot/wigner.md
+              - wigner_mosaic: python_api/plot/wigner_mosaic.md
+              - wigner_gif: python_api/plot/wigner_gif.md
+              - pwc_pulse: python_api/plot/pwc_pulse.md
+              - fock: python_api/plot/fock.md
+              - fock_evolution: python_api/plot/fock_evolution.md
+              - hinton: python_api/plot/hinton.md
               - gifit: python_api/plot/gifit.md
               - gridplot: python_api/plot/gridplot.md
               - mplstyle: python_api/plot/mplstyle.md
