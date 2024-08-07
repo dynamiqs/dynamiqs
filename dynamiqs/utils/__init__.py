@@ -1,4 +1,3 @@
-from . import rand
 from .jax_utils import *
 from .operators import *
 from .optimal_control import *
