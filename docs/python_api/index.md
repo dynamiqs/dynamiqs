@@ -102,7 +102,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Random arrays (dq.random)
 
-::: dynamiqs.utils.random
+::: dynamiqs.random
     options:
         table: true
 
