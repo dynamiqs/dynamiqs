@@ -21,7 +21,7 @@ PATHS_TO_PARSE = [
     ('dynamiqs/result.py', 'dq'),
     ('dynamiqs/options.py', 'dq'),
     # directories
-    ('dynamiqs/plot', 'dq'),
+    ('dynamiqs/plot', 'dq.plot'),
     ('dynamiqs/utils/utils', 'dq'),
     ('dynamiqs/integrators/', 'dq'),
 ]
