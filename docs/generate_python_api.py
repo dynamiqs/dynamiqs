@@ -22,7 +22,7 @@ PATHS_TO_PARSE = [
     ('dynamiqs/options.py', 'dq'),
     # directories
     ('dynamiqs/plot', 'dq.plot'),
-    ('dynamiqs/utils/utils', 'dq'),
+    ('dynamiqs/utils/quantum_utils', 'dq'),
     ('dynamiqs/integrators/', 'dq'),
 ]
 

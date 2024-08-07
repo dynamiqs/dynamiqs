@@ -7,8 +7,8 @@ from jaxtyping import ArrayLike
 
 from .._checks import check_shape
 from .operators import eye
-from .utils import dag
-from .utils.general import _bkron
+from .quantum_utils import dag
+from .quantum_utils.general import _bkron
 
 __all__ = [
     'operator_to_vector',

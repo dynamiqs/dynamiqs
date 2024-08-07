@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from .._checks import check_shape, check_times
-from ..utils.utils import isdm, isket
+from ..utils.quantum_utils import isdm, isket
 from .utils import (
     add_colorbar,
     colors,

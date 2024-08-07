@@ -12,7 +12,7 @@ from ...options import Options
 from ...result import MEResult, Result, Saved, SEPropagatorResult, SEResult
 from ...solver import Solver
 from ...time_array import TimeArray
-from ...utils.utils import expect
+from ...utils.quantum_utils import expect
 
 
 class AbstractIntegrator(eqx.Module):

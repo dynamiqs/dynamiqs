@@ -198,34 +198,34 @@ nav:
               - ground: python_api/utils/states/ground.md
               - excited: python_api/utils/states/excited.md
           - Quantum utilities:
-              - dag: python_api/utils/utils/dag.md
-              - powm: python_api/utils/utils/powm.md
-              - expm: python_api/utils/utils/expm.md
-              - cosm: python_api/utils/utils/cosm.md
-              - sinm: python_api/utils/utils/sinm.md
-              - trace: python_api/utils/utils/trace.md
-              - tracemm: python_api/utils/utils/tracemm.md
-              - ptrace: python_api/utils/utils/ptrace.md
-              - tensor: python_api/utils/utils/tensor.md
-              - expect: python_api/utils/utils/expect.md
-              - norm: python_api/utils/utils/norm.md
-              - unit: python_api/utils/utils/unit.md
-              - dissipator: python_api/utils/utils/dissipator.md
-              - lindbladian: python_api/utils/utils/lindbladian.md
-              - isket: python_api/utils/utils/isket.md
-              - isbra: python_api/utils/utils/isbra.md
-              - isdm: python_api/utils/utils/isdm.md
-              - isop: python_api/utils/utils/isop.md
-              - isherm: python_api/utils/utils/isherm.md
-              - toket: python_api/utils/utils/toket.md
-              - tobra: python_api/utils/utils/tobra.md
-              - todm: python_api/utils/utils/todm.md
-              - proj: python_api/utils/utils/proj.md
-              - braket: python_api/utils/utils/braket.md
-              - overlap: python_api/utils/utils/overlap.md
-              - fidelity: python_api/utils/utils/fidelity.md
-              - entropy_vn: python_api/utils/utils/entropy_vn.md
-              - wigner: python_api/utils/utils/wigner.md
+              - dag: python_api/utils/quantum_utils/dag.md
+              - powm: python_api/utils/quantum_utils/powm.md
+              - expm: python_api/utils/quantum_utils/expm.md
+              - cosm: python_api/utils/quantum_utils/cosm.md
+              - sinm: python_api/utils/quantum_utils/sinm.md
+              - trace: python_api/utils/quantum_utils/trace.md
+              - tracemm: python_api/utils/quantum_utils/tracemm.md
+              - ptrace: python_api/utils/quantum_utils/ptrace.md
+              - tensor: python_api/utils/quantum_utils/tensor.md
+              - expect: python_api/utils/quantum_utils/expect.md
+              - norm: python_api/utils/quantum_utils/norm.md
+              - unit: python_api/utils/quantum_utils/unit.md
+              - dissipator: python_api/utils/quantum_utils/dissipator.md
+              - lindbladian: python_api/utils/quantum_utils/lindbladian.md
+              - isket: python_api/utils/quantum_utils/isket.md
+              - isbra: python_api/utils/quantum_utils/isbra.md
+              - isdm: python_api/utils/quantum_utils/isdm.md
+              - isop: python_api/utils/quantum_utils/isop.md
+              - isherm: python_api/utils/quantum_utils/isherm.md
+              - toket: python_api/utils/quantum_utils/toket.md
+              - tobra: python_api/utils/quantum_utils/tobra.md
+              - todm: python_api/utils/quantum_utils/todm.md
+              - proj: python_api/utils/quantum_utils/proj.md
+              - braket: python_api/utils/quantum_utils/braket.md
+              - overlap: python_api/utils/quantum_utils/overlap.md
+              - fidelity: python_api/utils/quantum_utils/fidelity.md
+              - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
+              - wigner: python_api/utils/quantum_utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md
