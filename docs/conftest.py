@@ -20,7 +20,7 @@ def _jax_set_printoptions():
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
 def _mplstyle():
-    dynamiqs.plots.utils.mplstyle()
+    dynamiqs.plot.utils.mplstyle()
 
 
 @pytest.fixture(scope='session', autouse=True)
