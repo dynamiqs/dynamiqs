@@ -250,16 +250,16 @@ nav:
               - dm: python_api/random/dm.md
               - ket: python_api/random/ket.md
           - Plotting:
-              - plot_wigner: python_api/plots/plot_wigner.md
-              - plot_wigner_mosaic: python_api/plots/plot_wigner_mosaic.md
-              - plot_wigner_gif: python_api/plots/plot_wigner_gif.md
-              - plot_pwc_pulse: python_api/plots/plot_pwc_pulse.md
-              - plot_fock: python_api/plots/plot_fock.md
-              - plot_fock_evolution: python_api/plots/plot_fock_evolution.md
-              - plot_hinton: python_api/plots/plot_hinton.md
-              - gifit: python_api/plots/gifit.md
-              - gridplot: python_api/plots/gridplot.md
-              - mplstyle: python_api/plots/mplstyle.md
+              - plot_wigner: python_api/plot/plot_wigner.md
+              - plot_wigner_mosaic: python_api/plot/plot_wigner_mosaic.md
+              - plot_wigner_gif: python_api/plot/plot_wigner_gif.md
+              - plot_pwc_pulse: python_api/plot/plot_pwc_pulse.md
+              - plot_fock: python_api/plot/plot_fock.md
+              - plot_fock_evolution: python_api/plot/plot_fock_evolution.md
+              - plot_hinton: python_api/plot/plot_hinton.md
+              - gifit: python_api/plot/gifit.md
+              - gridplot: python_api/plot/gridplot.md
+              - mplstyle: python_api/plot/mplstyle.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

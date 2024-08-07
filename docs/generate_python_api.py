@@ -21,7 +21,7 @@ PATHS_TO_PARSE = [
     ('dynamiqs/result.py', 'dq'),
     ('dynamiqs/options.py', 'dq'),
     # directories
-    ('dynamiqs/plots', 'dq'),
+    ('dynamiqs/plot', 'dq'),
     ('dynamiqs/utils/utils', 'dq'),
     ('dynamiqs/integrators/', 'dq'),
 ]
@@ -49,11 +49,11 @@ def get_elements_from_all(file_path):
 
 # generate a documentation file for each function of each file/directory
 for path, namespace in PATHS_TO_PARSE:
-    # start with e.g. 'dynamiqs/utils/operators.py' or 'dynamiqs/plots'
+    # start with e.g. 'dynamiqs/utils/operators.py' or 'dynamiqs/plot'
     src_path = Path(path)
-    # convert to e.g 'python_api/utils/operators' or 'python_api/plots'
+    # convert to e.g 'python_api/utils/operators' or 'python_api/plot'
     doc_path = Path('python_api', *src_path.parts[1:]).with_suffix('')
-    # convert to e.g 'dynamiqs.utils.operators' or 'dynamiqs.plots'
+    # convert to e.g 'dynamiqs.utils.operators' or 'dynamiqs.plot'
     identifier = src_path.with_suffix('').as_posix().replace('/', '.')
 
     # for a directory, we get the functions from the `__init__.py` file
