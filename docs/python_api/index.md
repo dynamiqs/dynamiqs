@@ -100,9 +100,9 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
 
-### Random arrays (dq.rand)
+### Random arrays (dq.random)
 
-::: dynamiqs.utils.rand
+::: dynamiqs.utils.random
     options:
         table: true
 

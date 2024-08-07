@@ -1,4 +1,4 @@
-from . import rand
+from . import random
 from .jax_utils import *
 from .operators import *
 from .optimal_control import *

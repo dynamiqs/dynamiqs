@@ -32,7 +32,7 @@ def real(
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.real(key, (2, 5), max=5.0)
+        >>> dq.random.real(key, (2, 5), max=5.0)
         Array([[3.22 , 1.613, 0.967, 4.432, 4.21 ],
                [0.96 , 1.726, 1.262, 3.16 , 3.274]], dtype=float32)
     """
@@ -51,7 +51,7 @@ def complex(  # noqa: A001
 
     Note-: Uniform sampling in the complex plane
         Here are three common options to generate random complex numbers,
-        `dq.rand.complex()` returns the last one:
+        `dq.random.complex()` returns the last one:
 
         ```python
         _, (ax0, ax1, ax2) = dq.gridplot(3, sharexy=True)
@@ -69,12 +69,12 @@ def complex(  # noqa: A001
 
         # option 3: uniformly distributed in a disk (in dynamiqs)
         key = jax.random.PRNGKey(42)
-        x = dq.rand.complex(key, n)
+        x = dq.random.complex(key, n)
         ax2.scatter(x.real, x.imag, s=1.0)
-        renderfig('rand_complex')
+        renderfig('random_complex')
         ```
 
-        ![rand_complex](/figs_code/rand_complex.png){.fig}
+        ![rand_complex](/figs_code/random_complex.png){.fig}
 
     Args:
         key: A PRNG key used as the random key.
@@ -86,7 +86,7 @@ def complex(  # noqa: A001
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.complex(key, (2, 3), rmax=5.0)
+        >>> dq.random.complex(key, (2, 3), rmax=5.0)
         Array([[ 1.341+4.17j ,  3.978-0.979j, -2.592-0.946j],
                [-4.428+1.744j, -0.53 +1.668j,  2.582+0.65j ]], dtype=complex64)
     """
@@ -108,7 +108,7 @@ def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.herm(key, (2, 2))
+        >>> dq.random.herm(key, (2, 2))
         Array([[-0.291+0.j   ,  0.473-0.446j],
                [ 0.473+0.446j,  0.13 +0.j   ]], dtype=complex64)
     """
@@ -132,7 +132,7 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.psd(key, (2, 2))
+        >>> dq.random.psd(key, (2, 2))
         Array([[1.145+0.j  , 0.582+0.33j],
                [0.582-0.33j, 0.844+0.j  ]], dtype=complex64)
 
@@ -158,7 +158,7 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.dm(key, (2, 2))
+        >>> dq.random.dm(key, (2, 2))
         Array([[0.576+0.j   , 0.293+0.166j],
                [0.293-0.166j, 0.424+0.j   ]], dtype=complex64)
     """
@@ -182,7 +182,7 @@ def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand.ket(key, (2, 1))
+        >>> dq.random.ket(key, (2, 1))
         Array([[-0.004+0.083j],
                [-0.26 +0.962j]], dtype=complex64)
     """
