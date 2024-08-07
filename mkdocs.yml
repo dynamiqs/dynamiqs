@@ -249,7 +249,7 @@ nav:
               - psd: python_api/random/psd.md
               - dm: python_api/random/dm.md
               - ket: python_api/random/ket.md
-          - Plotting:
+          - Plotting (dq.plot):
               - plot_wigner: python_api/plot/plot_wigner.md
               - plot_wigner_mosaic: python_api/plot/plot_wigner_mosaic.md
               - plot_wigner_gif: python_api/plot/plot_wigner_gif.md

@@ -106,7 +106,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
 
-### Plotting
+### Plotting (dq.plot)
 
 ::: dynamiqs.plot
     options:
