@@ -17,7 +17,7 @@ from .utils import (
     sample_cmap,
 )
 
-__all__ = ['fock', 'fock_evolution']
+__all__ = ['plot_fock', 'plot_fock_evolution']
 
 
 def _populations(x: ArrayLike) -> Array:
@@ -33,7 +33,7 @@ def _populations(x: ArrayLike) -> Array:
 
 
 @optional_ax
-def fock(
+def plot_fock(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
@@ -50,20 +50,20 @@ def fock(
 
     Examples:
         >>> psi = dq.coherent(16, 2.0)
-        >>> dq.plot.fock(psi)
+        >>> dq.plot_fock(psi)
         >>> renderfig('plot_fock')
 
         ![plot_fock](/figs_code/plot_fock.png){.fig}
 
         >>> # the even cat state has only even photon number components
         >>> psi = dq.unit(dq.coherent(32, 3.0) + dq.coherent(32, -3.0))
-        >>> dq.plot.fock(psi, allxticks=False, ymax=None)
+        >>> dq.plot_fock(psi, allxticks=False, ymax=None)
         >>> renderfig('plot_fock_even_cat')
 
         ![plot_fock_even_cat](/figs_code/plot_fock_even_cat.png){.fig}
 
-        >>> dq.plot.fock(dq.coherent(16, 1.0), alpha=0.5)
-        >>> dq.plot.fock(dq.coherent(16, 2.0), ax=plt.gca(), alpha=0.5, color='red')
+        >>> dq.plot_fock(dq.coherent(16, 1.0), alpha=0.5)
+        >>> dq.plot_fock(dq.coherent(16, 2.0), ax=plt.gca(), alpha=0.5, color='red')
         >>> renderfig('plot_fock_coherent')
 
         ![plot_fock_coherent](/figs_code/plot_fock_coherent.png){.fig}
@@ -91,7 +91,7 @@ def fock(
 
 
 @optional_ax
-def fock_evolution(
+def plot_fock_evolution(
     states: ArrayLike,
     *,
     ax: Axes | None = None,
@@ -114,13 +114,13 @@ def fock_evolution(
         >>> H = 2.0 * (a + dq.dag(a))
         >>> tsave = jnp.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot.fock_evolution(result.states, times=tsave)
+        >>> dq.plot_fock_evolution(result.states, times=tsave)
         >>> renderfig('plot_fock_evolution')
 
         ![plot_fock_evolution](/figs_code/plot_fock_evolution.png){.fig}
 
         Use the log scale option to visualise low populations:
-        >>> dq.plot.fock_evolution(result.states, times=tsave, logscale=True)
+        >>> dq.plot_fock_evolution(result.states, times=tsave, logscale=True)
         >>> renderfig('plot_fock_evolution_log')
 
         ![plot_fock_evolution_log](/figs_code/plot_fock_evolution_log.png){.fig}
