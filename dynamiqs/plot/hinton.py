@@ -165,7 +165,7 @@ def hinton(
 
         ![plot_hinton_random_complex](/figs_code/plot_hinton_random_complex.png){.fig-half}
 
-        >>> _, axs = dq.gridplot(2)
+        >>> _, axs = dq.plot.grid(2)
         >>> psi = dq.unit(dq.fock(4, 0) - dq.fock(4, 2))
         >>> dq.plot.hinton(dq.todm(psi), ax=next(axs))
         >>> rho = dq.unit(dq.fock_dm(4, 0) + dq.fock_dm(4, 2))
@@ -174,7 +174,7 @@ def hinton(
 
         ![plot_hinton_fock02](/figs_code/plot_hinton_fock02.png){.fig-half}
 
-        >>> _, axs = dq.gridplot(2)
+        >>> _, axs = dq.plot.grid(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
         >>> dq.plot.hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
         >>> dq.plot.hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')

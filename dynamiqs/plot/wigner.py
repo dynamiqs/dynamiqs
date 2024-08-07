@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from .._checks import check_shape
 from ..utils import wigner as compute_wigner
-from .utils import add_colorbar, colors, figax, gridplot, optional_ax
+from .utils import add_colorbar, colors, figax, grid, optional_ax
 
 __all__ = ['wigner', 'wigner_mosaic', 'wigner_gif']
 
@@ -205,7 +205,7 @@ def wigner_mosaic(
         n = nstates
 
     # create grid of plot
-    _, axs = gridplot(
+    _, axs = grid(
         n,
         nrows=nrows,
         w=w,

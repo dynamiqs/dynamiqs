@@ -258,7 +258,7 @@ nav:
               - fock_evolution: python_api/plot/fock_evolution.md
               - hinton: python_api/plot/hinton.md
               - gifit: python_api/plot/gifit.md
-              - gridplot: python_api/plot/gridplot.md
+              - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
   - Community:
       - community/index.md
