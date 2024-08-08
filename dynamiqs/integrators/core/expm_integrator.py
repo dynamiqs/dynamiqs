@@ -59,12 +59,11 @@ class ExpmIntegrator(BaseIntegrator):
     def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
         # === extract the states and expects or the propagators at the save times ts
         t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
-        if self.options.save_states:
-            saved = eqx.tree_at(lambda x: x.ysave, saved, saved.ysave[t_idxs])
-        if saved.Esave is not None:
-            saved = eqx.tree_at(lambda x: x.Esave, saved, saved.Esave[t_idxs])
-        if saved.extra is not None:
-            saved = eqx.tree_at(lambda x: x.extra, saved, saved.extra[t_idxs])
+        saved = Saved(
+            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
+            saved.Esave[t_idxs] if saved.Esave is not None else None,
+            saved.extra[t_idxs] if saved.extra is not None else None,
+        )
 
         return super().collect_saved(saved, ylast)
 
