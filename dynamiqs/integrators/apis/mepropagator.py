@@ -30,7 +30,7 @@ def mepropagator(
     jump_ops: list[ArrayLike | TimeArray],
     tsave: ArrayLike,
     *,
-    solver: Solver | None = None,
+    solver: Solver = Expm(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MEPropagatorResult:
@@ -101,7 +101,7 @@ def mepropagator(
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_mepropagator(
     H: TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    jump_ops: list[TimeArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -147,9 +147,9 @@ def _vectorized_mepropagator(
 
 def _mepropagator(
     H: TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    jump_ops: list[TimeArray],
     tsave: Array,
-    solver: Solver | None,
+    solver: Solver,
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
