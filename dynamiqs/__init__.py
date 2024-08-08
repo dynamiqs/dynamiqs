@@ -1,6 +1,6 @@
 from importlib.metadata import version
 
-from . import dark, plot
+from . import dark, plot, random
 from .integrators import *
 from .options import *
 from .result import *
