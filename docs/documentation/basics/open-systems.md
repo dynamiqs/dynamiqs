@@ -126,3 +126,18 @@ Array([[0.368+0.j, 0.   +0.j],
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`][dynamiqs.mesolve] API documentation.
+
+You can also directly compute the propagator with the [`dq.mepropagator()`][dynamiqs.mepropagator] solver. Continuing the last example:
+
+```python
+res = dq.mepropagator(H, jump_ops, tsave)
+print(res.propagators[-1])  # print the final propagator
+```
+
+```text title="Output"
+|██████████| 100.0% ◆ elapsed 2.56ms ◆ remaining 0.00ms
+Array([[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
+       [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
+       [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
+       [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]], dtype=complex64)
+```
