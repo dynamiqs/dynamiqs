@@ -38,7 +38,7 @@ class ExpmIntegrator(BaseIntegrator):
                 'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
-    def _diff_eq_rhs(self, t: float) -> Array:
+    def _generator(self, t: float) -> Array:
         raise NotImplementedError
 
     def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
@@ -65,7 +65,7 @@ class ExpmIntegrator(BaseIntegrator):
         delta_ts = jnp.diff(times)  # (ntimes-1,)
 
         # === batch-compute the propagators on each time interval
-        Hs = jax.vmap(self._diff_eq_rhs)(times[:-1])  # (ntimes-1, n, n)
+        Hs = jax.vmap(self._generator)(times[:-1])  # (ntimes-1, n, n)
         step_propagators = expm(delta_ts[:, None, None] * Hs)  # (ntimes-1, n, n)
 
         # === combine the propagators together
@@ -83,7 +83,7 @@ class ExpmIntegrator(BaseIntegrator):
 
 
 class SEExpmIntegrator(ExpmIntegrator):
-    def _diff_eq_rhs(self, t: float) -> Array:
+    def _generator(self, t: float) -> Array:
         return -1j * self.H(t)
 
 
@@ -97,5 +97,5 @@ class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
                 'Solver `Expm` requires constant or piecewise constant jump operators.'
             )
 
-    def _diff_eq_rhs(self, t: float) -> Array:
+    def _generator(self, t: float) -> Array:
         return slindbladian(self.H(t), [L(t) for L in self.Ls])
