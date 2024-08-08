@@ -12,7 +12,7 @@ from dynamiqs.result import Saved
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
-from .abstract_integrator import BaseIntegrator
+from .abstract_integrator import BaseIntegrator, MEIntegrator
 
 
 class ExpmIntegrator(BaseIntegrator):
@@ -32,9 +32,11 @@ class ExpmIntegrator(BaseIntegrator):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # check that Hamiltonian is time-independent
+        # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
-            raise TypeError('Solver `Expm` requires a piece-wise constant Hamiltonian.')
+            raise TypeError(
+                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+            )
 
     def _diff_eq_rhs(self, t: float) -> Array:
         raise NotImplementedError
@@ -85,6 +87,15 @@ class SEExpmIntegrator(ExpmIntegrator):
         return -1j * self.H(t)
 
 
-class MEExpmIntegrator(ExpmIntegrator):
+class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # check that all jump operators are constant or pwc, or a sum of constant/pwc
+        if not all(ispwc(L) for L in self.Ls):
+            raise TypeError(
+                'Solver `Expm` requires constant or piecewise constant jump operators.'
+            )
+
     def _diff_eq_rhs(self, t: float) -> Array:
         return slindbladian(self.H(t), [L(t) for L in self.Ls])
