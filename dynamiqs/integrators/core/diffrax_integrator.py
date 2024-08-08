@@ -171,6 +171,14 @@ class Kvaerno5Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Kvaerno5()
 
 
+class SEDiffraxIntegrator(DiffraxIntegrator):
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define Schrödinger term d|psi>/dt = - i H |psi>
+        vector_field = lambda t, y, _: -1j * self.H(t) @ y
+        return dx.ODETerm(vector_field)
+
+
 class MEDiffraxIntegrator(DiffraxIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -200,12 +208,4 @@ class MEDiffraxIntegrator(DiffraxIntegrator):
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
             return tmp + dag(tmp)
 
-        return dx.ODETerm(vector_field)
-
-
-class SEDiffraxIntegrator(DiffraxIntegrator):
-    @property
-    def terms(self) -> dx.AbstractTerm:
-        # define Schrödinger term d|psi>/dt = - i H |psi>
-        vector_field = lambda t, y, _: -1j * self.H(t) @ y
         return dx.ODETerm(vector_field)

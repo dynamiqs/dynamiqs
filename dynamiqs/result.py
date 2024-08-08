@@ -8,7 +8,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult', 'MEPropagatorResult', 'SEPropagatorResult']
+__all__ = ['SEResult', 'MEResult', 'SEPropagatorResult', 'MEPropagatorResult']
 
 
 def memory_bytes(x: Array) -> int:

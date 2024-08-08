@@ -15,6 +15,7 @@ class MESolveExpmIntegrator(MEExpmIntegrator, MESolveIntegrator):
         if not all(ispwc(L) for L in self.Ls):
             raise TypeError('Solver `Expm` requires time-independent jump operators.')
 
+        # convert to vectorized form
         self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
 
     def save(self, y: Array) -> Saved:

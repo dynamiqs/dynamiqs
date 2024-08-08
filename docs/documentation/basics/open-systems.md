@@ -56,7 +56,7 @@ There are three common ideas for solving the Lindblad master equation.
 
 ### Computing the propagator
 
-The state at time $t$ is given by $\rho(t)=e^{\mathcal{L}t}(\rho(0))$, where $\rho(0)$ is the state at time $t=0$. The superoperator $e^{\mathcal{L}t}$ is called the **propagator**, in vectorized form it is a matrix of size $n^2\times n^2$.
+The state at time $t$ is given by $\rho(t)=e^{t\mathcal{L}}(\rho(0))$, where $\rho(0)$ is the state at time $t=0$. The superoperator $e^{t\mathcal{L}}$ is called the **propagator**, in vectorized form it is a matrix of size $n^2\times n^2$.
 
 ??? Note "Solution for a time-dependent Liouvillian"
     For a time-dependent Liouvillian $\mathcal{L}(t)$, the solution at time $t$ is
