@@ -34,34 +34,32 @@ def mepropagator(
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MEPropagatorResult:
-    r"""Compute the superoperator propagator associated with time evolution
-    under the Lindblad master equation.
+    r"""Compute the propagator of the Lindblad master equation.
 
-    This function computes the superoperator propagator $U(t)$ at time $t$ of the master
-    equation (with $\hbar=1$)
+    This function computes the propagator $\mathcal{U}(t)$ at time $t$ of the Lindblad
+    master equation (with $\hbar=1$)
     $$
-        U(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right),
+        \mathcal{U}(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right),
     $$
     where $\mathscr{T}$ is the time-ordering symbol and $\mathcal{L}$ is the system's
-    Liouvillian (see the [Open systems](../../documentation/basics/open-systems.md) tutorial
-    for more details). The formula simplifies to $U(t)=e^{\mathcal{L}t}$ if the Liouvillian
-    does not depend on time.
+    Liouvillian. The formula simplifies to $\mathcal{U}(t)=e^{t\mathcal{L}}$ if the
+    Liouvillian does not depend on time.
 
     Warning:
-        This function does not yet support non constant or non piecewise constant Hamiltonians
-        or jump operators.
+        This function only supports constant or piecewise constant Hamiltonians and jump
+        operators. Support for arbitrary time dependence will be added soon.
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.constant()`][dynamiqs.constant],
-        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+        [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
 
     Note-: Running multiple simulations concurrently
-        The Hamiltonian `H` and the jump operators `jump_ops` can be batched to solve
-        for multiple propagators concurrently. All other arguments are common to every
+        The Hamiltonian `H` and the jump operators `jump_ops` can be batched to compute
+        multiple propagators concurrently. All other arguments are common to every
         batch. See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
@@ -70,11 +68,12 @@ def mepropagator(
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
             List of jump operators.
-        tsave _(array-like of shape (ntsave,))_: Times at which the states and
-            expectation values are saved. The equation is solved from `tsave[0]` to
-            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+        tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
+            saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
+            to `tsave[-1]` if `t0` is specified in `options`.
         solver: Solver for the integration. Defaults to
-            [`Expm`][dynamiqs.solver.Expm].
+            [`dq.solver.Expm`][dynamiqs.solver.Expm] (explicit matrix exponentiation),
+            which is the only supported solver for now.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
