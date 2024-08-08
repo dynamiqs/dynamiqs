@@ -55,8 +55,8 @@ class ExpmIntegrator(BaseIntegrator):
     def run(self) -> PyTree:
         # === find all times at which to stop in [t0, t1]
         # find all times where the solution should be saved (self.ts) or at which the
-        # Hamiltonian changes (self.H.discontinuity_ts)
-        disc_ts = self.H.discontinuity_ts
+        # generator changes (self.discontinuity_ts)
+        disc_ts = self.discontinuity_ts
         if disc_ts is not None:
             disc_ts = disc_ts.clip(self.t0, self.t1)
         times = _concatenate_sort(jnp.asarray([self.t0]), self.ts, disc_ts)  # (ntimes,)
