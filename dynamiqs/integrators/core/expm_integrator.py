@@ -57,14 +57,15 @@ class ExpmIntegrator(BaseIntegrator):
         raise NotImplementedError
 
     def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
-        # === extract the states and expects at the save times ts
-        t_idxs = jnp.searchsorted(times[1:], self.ts)
+        # === extract the states and expects or the propagators at the save times ts
+        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         if self.options.save_states:
             saved = eqx.tree_at(lambda x: x.ysave, saved, saved.ysave[t_idxs])
         if saved.Esave is not None:
             saved = eqx.tree_at(lambda x: x.Esave, saved, saved.Esave[t_idxs])
         if saved.extra is not None:
             saved = eqx.tree_at(lambda x: x.extra, saved, saved.extra[t_idxs])
+
         return super().collect_saved(saved, ylast)
 
     def run(self) -> PyTree:
@@ -79,17 +80,19 @@ class ExpmIntegrator(BaseIntegrator):
         # === compute time differences (null for times outside [t0, t1])
         delta_ts = jnp.diff(times)  # (ntimes-1,)
 
-        # === batch-compute the propagators on each time interval
-        Hs = jax.vmap(self._generator)(times[:-1])  # (ntimes-1, n, n)
-        step_propagators = expm(delta_ts[:, None, None] * Hs)  # (ntimes-1, n, n)
+        # === batch-compute the propagators $e^{\Delta t A}$ on each time interval
+        As = jax.vmap(self._generator)(times[:-1])  # (ntimes-1, N, N)
+        step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
         def step(carry: Array, x: Array) -> tuple[Array, Array]:
             # note the ordering x @ carry: we accumulate propagators from the left
-            U_next = x @ carry
-            return U_next, self.save(U_next)
+            x_next = x @ carry
+            return x_next, self.save(x_next)
 
-        ylast, saved = jax.lax.scan(step, self.y0, step_propagators)  # (ntimes-1, n, n)
+        ylast, saved = jax.lax.scan(step, self.y0, step_propagators)
+        # saved has shape (ntimes-1, N, 1) if y0 has shape (N, 1) -> compute states
+        # saved has shape (ntimes-1, N, N) if y0 has shape (N, N) -> compute propagators
 
         # === save the propagators
         nsteps = (delta_ts != 0).sum()
@@ -99,7 +102,7 @@ class ExpmIntegrator(BaseIntegrator):
 
 class SEExpmIntegrator(ExpmIntegrator):
     def _generator(self, t: float) -> Array:
-        return -1j * self.H(t)
+        return -1j * self.H(t)  # (n, n)
 
 
 class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
@@ -113,4 +116,4 @@ class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
             )
 
     def _generator(self, t: float) -> Array:
-        return slindbladian(self.H(t), [L(t) for L in self.Ls])
+        return slindbladian(self.H(t), [L(t) for L in self.Ls])  # (n^2, n^2)
