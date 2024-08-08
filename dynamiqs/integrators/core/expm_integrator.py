@@ -16,6 +16,21 @@ from .abstract_integrator import BaseIntegrator, MEIntegrator
 
 
 class ExpmIntegrator(BaseIntegrator):
+    # Base solver to solve a linear ODE of the form $dX/dt = AX$ by computing
+    # propagators. The matrix $A$ of shape (N, N) is a constant or piecewise constant
+    # *generator*. The *propagator* between time $t0$ and $t1$ is a matrix of shape
+    # (N, N) defined by $U(t0, t1) = e^{(t0-t1) A}$.
+    #
+    # We solve two different equations:
+    # - for sesolve/sepropagator, we solve the Schrödinger equation with $N = n$ and
+    #   $A = -iH$ with H the Hamiltonian,
+    # - for mesolve/mepropagator, we solve the Lindblad master equation, the problem is
+    #   vectorized, $N = n^2$ and $A = \mathcal{L}$ with $\mathcal{L}$ the Liouvillian.
+    #
+    # We compute different objects:
+    # - for sesolve/mesolve, the state $X$ is an (N, 1) column vector,
+    # - for sepropagator/mepropagator, the state $X$ is an (N, N) matrix.
+
     class Infos(eqx.Module):
         nsteps: Array
 
