@@ -20,7 +20,6 @@ from .._utils import (
     _flat_vectorize,
     catch_xla_runtime_error,
     get_integrator_class,
-    ispwc,
 )
 from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
 
@@ -154,13 +153,6 @@ def _mepropagator(
     options: Options,
 ) -> MEPropagatorResult:
     # === select integrator class
-    if solver is not None or Expm() and not ispwc(H):
-        raise NotImplementedError(
-            'Support for time-dependent Hamiltonians for'
-            'mepropagator is a work in progress.'
-        )
-    solver = Expm()
-
     integrators = {Expm: MEPropagatorExpmIntegrator}
     integrator_class = get_integrator_class(integrators, solver)
 
