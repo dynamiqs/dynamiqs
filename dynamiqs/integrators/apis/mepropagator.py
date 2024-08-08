@@ -182,6 +182,6 @@ def _check_mepropagator_args(H: TimeArray, jump_ops: list[TimeArray]):
 
     if len(jump_ops) == 0:
         logging.warning(
-            'Argument `jump_ops` is an empty list, consider using '
-            '`dq.sepropagator()` to compute the propagator.'
+            'Argument `jump_ops` is an empty list, consider using `dq.sepropagator()`'
+            ' to compute propagators for the Schrödinger equation.'
         )
