@@ -7,9 +7,9 @@ import dynamiqs as dq
 
 def rand_sesolve_args(n, nH, npsi0, nEs):
     kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
-    H = dq.rand_herm(kH, (*nH, n, n))
-    psi0 = dq.rand_ket(kpsi0, (*npsi0, n, 1))
-    Es = dq.rand_complex(kEs, (nEs, n, n))
+    H = dq.random.herm(kH, (*nH, n, n))
+    psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
+    Es = dq.random.complex(kEs, (nEs, n, n))
     return H, psi0, Es
 
 

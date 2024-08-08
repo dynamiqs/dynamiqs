@@ -7,11 +7,11 @@ from matplotlib.axes import Axes
 from .._checks import check_times
 from .utils import colors, optional_ax
 
-__all__ = ['plot_pwc_pulse']
+__all__ = ['pwc_pulse']
 
 
 @optional_ax
-def plot_pwc_pulse(
+def pwc_pulse(
     times: ArrayLike,
     values: ArrayLike,
     *,
@@ -29,8 +29,8 @@ def plot_pwc_pulse(
         >>> n = 20
         >>> times = jnp.linspace(0, 1.0, n + 1)
         >>> key = jax.random.PRNGKey(42)
-        >>> values = dq.rand_complex(key, n)
-        >>> dq.plot_pwc_pulse(times, values)
+        >>> values = dq.random.complex(key, n)
+        >>> dq.plot.pwc_pulse(times, values)
         >>> renderfig('plot_pwc_pulse')
 
         ![plot_pwc_pulse](/figs_code/plot_pwc_pulse.png){.fig}
