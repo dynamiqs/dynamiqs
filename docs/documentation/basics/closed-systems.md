@@ -112,8 +112,7 @@ Array([[0.  +0.j   ],
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
 
-You can also directly compute the propagator with the [`dq.sepropagator()`][dynamiqs.sepropagator] solver. Continuing the last
-example:
+You can also directly compute the propagator with the [`dq.sepropagator()`][dynamiqs.sepropagator] solver. Continuing the last example:
 
 ```python
 res = dq.sepropagator(H, tsave)
@@ -121,7 +120,6 @@ print(res.propagators[-1])  # print the final propagator
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 2.56ms ◆ remaining 0.00ms
-[[ 0.5403023+0.j -0.8414707+0.j]
- [ 0.8414707+0.j  0.5403023+0.j]]
+Array([[0.54-0.841j 0.  +0.j   ]
+       [0.  +0.j    0.54+0.841j]], dtype=complex64)
 ```
