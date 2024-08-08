@@ -12,16 +12,7 @@ from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
 from ...result import SEResult
-from ...solver import (
-    Dopri5,
-    Dopri8,
-    Euler,
-    Kvaerno3,
-    Kvaerno5,
-    Propagator,
-    Solver,
-    Tsit5,
-)
+from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
 from .._utils import (
     _astimearray,
@@ -38,7 +29,7 @@ from ..sesolve.diffrax_integrator import (
     SESolveKvaerno5Integrator,
     SESolveTsit5Integrator,
 )
-from ..sesolve.propagator_integrator import SESolvePropagatorIntegrator
+from ..sesolve.expm_integrator import SESolveExpmIntegrator
 
 
 def sesolve(
@@ -95,7 +86,7 @@ def sesolve(
             [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
-            [`Propagator`][dynamiqs.solver.Propagator]).
+            [`Expm`][dynamiqs.solver.Expm]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
@@ -181,7 +172,7 @@ def _sesolve(
         Tsit5: SESolveTsit5Integrator,
         Kvaerno3: SESolveKvaerno3Integrator,
         Kvaerno5: SESolveKvaerno5Integrator,
-        Propagator: SESolvePropagatorIntegrator,
+        Expm: SESolveExpmIntegrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
 
