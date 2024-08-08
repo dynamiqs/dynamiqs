@@ -1,0 +1,197 @@
+/*
+File: home.css
+Description: CSS for the homepage
+*/
+
+/* Remove sidebars */
+@media screen and (min-width:76.25em) {
+    .md-sidebar--primary,
+    .md-sidebar--secondary {
+        display: none
+    }
+}
+
+/* Background */
+.home-background {
+    z-index: -1;
+    position: absolute;
+    width: 100%;
+    height: 580px;
+    background-color: var(--md-primary-fg-color);
+    background-image: var(--homepage-gradient);
+    transition: 0.5s;
+    background-size: 200% auto;
+}
+
+.tx-container:hover+.home-background {
+    background-position: right center;
+    background-size: 100% auto;
+}
+
+.waves {
+    position: absolute;
+    bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    min-width: 60em;
+}
+
+.waves-front {
+    height: 100px;
+    fill: rgba(var(--md-default-bg-color-base), 1.0);
+}
+
+.waves-back {
+    height: 140px;
+    fill: rgba(var(--md-default-bg-color-base), 0.5);
+}
+
+@media screen and (min-width:60em) and (max-width:76.25em) {
+    .home-background {
+        height: 480px;
+    }
+}
+
+/* Hero text and image */
+.tx-hero {
+    margin: 32px 2.8rem 0 2.8rem;
+    color: var(--md-primary-bg-color);
+    justify-content: center;
+}
+
+.tx-hero h1 {
+    margin-bottom: 1rem;
+    color: currentColor;
+    font-weight: 700;
+    font-size: 3em;
+}
+
+.tx-hero p {
+    font-size: 1.08em;
+    font-weight: 300;
+}
+
+.tx-hero__content {
+    padding-bottom: 1rem;
+    margin-top: 3.5rem;
+    margin-bottom: 3.5rem;
+    margin-left: 3rem;
+    margin-right: auto;
+}
+
+.tx-hero__image {
+    width: 9rem;
+    height: 9rem;
+    order: 0;
+    margin-right: 0;
+}
+
+@media screen and (max-width:30em) {
+    .tx-hero h1 {
+        font-size: 1.4rem
+    }
+}
+
+@media screen and (max-width:60em) {
+    .tx-hero__image {
+        margin-right: 0 auto;
+        margin: 0 auto;
+    }
+
+    .tx-hero__content {
+        text-align: center;
+        margin-left: auto;
+        margin-top: 1.5rem;
+    }
+
+    .tx-hero__content p {
+        text-align: center;
+    }
+}
+
+@media screen and (min-width:60em) {
+    .tx-hero {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tx-hero__content {
+        max-width: 22rem;
+        margin-top: 3.5rem;
+        margin-bottom: 3.5rem;
+        margin-left: 3rem;
+        margin-right: auto;
+        align-items: center;
+    }
+}
+
+/* Feature items */
+.top-hr {
+    margin-top: 3rem;
+}
+
+@media screen and (min-width:76.25em) {
+    .top-hr {
+        width: 100%;
+        display: flex;
+        max-width: 61rem;
+        margin-right: auto;
+        margin-left: auto;
+        padding: 0 .2rem;
+    }
+
+    .feature-item {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* Buttons */
+.tx-hero .md-button {
+    margin-top: .5rem;
+    margin-right: .5rem;
+    color: var(--md-primary-bg-color)
+}
+
+.tx-hero .md-button--primary {
+    background-color: var(--md-primary-bg-color);
+    color: var(--homepage-button-font-color);
+    border-color: var(--md-primary-bg-color)
+}
+
+.tx-hero .md-button:focus,
+.tx-hero .md-button:hover {
+    background-color: var(--homepage-button-hover-color);
+    color: var(--md-primary-bg-color);
+    border-color: var(--homepage-button-hover-color);
+}
+
+/* Feature boxes */
+.feature-item {
+    background: var(--md-default-bg-header-color);
+    box-sizing: border-box;
+    padding: 20px 40px 30px 40px;
+    margin: 30px;
+}
+
+.feature-item h3 {
+    font-size: 1rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    font-family: 'Lato', sans-serif;
+    font-weight: 500;
+}
+
+.feature-item p {
+    font-size: 0.65rem;
+    line-height: 1.5em;
+    display: block;
+}
+
+.feature-item p a {
+    color: var(--md-accent-fg-color);
+    font-weight: bold;
+}
