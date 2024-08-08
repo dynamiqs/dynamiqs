@@ -10,7 +10,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...utils.utils.general import dag
+from ...utils.quantum_utils.general import dag
 from .abstract_integrator import BaseIntegrator
 
 

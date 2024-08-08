@@ -9,7 +9,7 @@ from jaxtyping import PyTree
 from dynamiqs._utils import _concatenate_sort
 from dynamiqs.result import Saved
 
-from ...utils.utils.general import expm
+from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
 from .abstract_integrator import BaseIntegrator
