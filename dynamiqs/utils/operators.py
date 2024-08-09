@@ -85,7 +85,9 @@ def eye_dense(*dims: int) -> QArray:
 @register_format_handler('eye', MatrixFormatEnum.SPARSE_DIA)
 def eye_sparse_dia(*dims: int) -> QArray:
     dim = prod(dims)
-    return SparseDIAQArray(diags=jnp.ones((1, dim)), offsets=(0,), dims=dims)
+    return SparseDIAQArray(
+        diags=jnp.ones((1, dim), dtype=cdtype()), offsets=(0,), dims=dims
+    )
 
 
 @dispatch_matrix_format
@@ -135,7 +137,9 @@ def zero_dense(*dims: int) -> QArray:
 
 @register_format_handler('zero', MatrixFormatEnum.SPARSE_DIA)
 def zero_sparse_dia(*dims: int) -> QArray:
-    return SparseDIAQArray(diags=jnp.zeros((0, np.prod(dims))), offsets=(), dims=dims)
+    return SparseDIAQArray(
+        diags=jnp.zeros((0, np.prod(dims)), dtype=cdtype()), offsets=(), dims=dims
+    )
 
 
 @dispatch_matrix_format
