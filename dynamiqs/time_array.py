@@ -472,7 +472,7 @@ class PWCTimeArray(TimeArray):
         def _zero(_: float) -> Array:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
-        def _pwc(t: float) -> QArray:
+        def _pwc(t: float) -> Array:
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
