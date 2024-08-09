@@ -9,6 +9,7 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.types import QArrayLike
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
@@ -32,7 +33,7 @@ from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
 def sepropagator(
-    H: ArrayLike | TimeArray,
+    H: QArrayLike | TimeArray,
     tsave: ArrayLike,
     *,
     solver: Solver | None = None,
@@ -68,7 +69,7 @@ def sepropagator(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
             or from `t0` to `tsave[-1]` if `t0` is specified in `options`.

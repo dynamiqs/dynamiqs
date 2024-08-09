@@ -7,8 +7,8 @@ import diffrax as dx
 import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
-from jax import Array
 
+from ...qarrays import QArray
 from ...utils.quantum_utils.general import dag
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import FixedStepIntegrator
@@ -57,7 +57,7 @@ class MESolveRouchon1Integrator(FixedStepIntegrator, MESolveIntegrator):
     diffrax_solver: dx.AbstractSolver = Rouchon1DXSolver()
 
     @property
-    def Id(self) -> Array:
+    def Id(self) -> QArray:
         return jnp.eye(self.H.shape[-1], dtype=self.H.dtype)
 
     @property
@@ -69,14 +69,24 @@ class MESolveRouchon1Integrator(FixedStepIntegrator, MESolveIntegrator):
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
 
-            Ls = jnp.stack([L(t0) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-
+            Ls_tot = 0
+            LdL_tot = 0
+            second_term = jnp.zeros_like(y0)
             delta_t = t1 - t0
-            M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL) * delta_t
-            Mks = Ls * jnp.sqrt(delta_t)
+            for L in self.Ls:
+                L_t0 = L(t0)
+                Lsd = dag(L_t0)
+                LdL = Lsd @ L_t0
 
-            return M0 @ y0 @ dag(M0) + jnp.sum(Mks @ y0 @ dag(Mks), axis=0)
+                Ls_tot = Ls_tot + L_t0
+                LdL_tot = LdL_tot + LdL
+
+                Mk = L_t0 * jnp.sqrt(delta_t)
+
+                second_term = second_term + Mk @ y0 @ dag(Mk)
+
+            M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL_tot) * delta_t
+
+            return M0 @ y0 @ dag(M0) + second_term
 
         return AbstractRouchonTerm(kraus_map)

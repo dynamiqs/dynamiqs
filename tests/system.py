@@ -4,8 +4,9 @@ from abc import ABC, abstractmethod
 
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import PyTree
 
+from dynamiqs import QArray, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
@@ -20,23 +21,23 @@ class System(ABC):
         self.params_default = None
 
     @abstractmethod
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeArray:
         """Compute the Hamiltonian."""
 
     @abstractmethod
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> QArray:
         """Compute the initial state."""
 
     @abstractmethod
-    def Es(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> [QArray]:
         """Compute the expectation value operators."""
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         """Compute the exact state at a given time."""
         raise NotImplementedError
 
-    def states(self, t: Array) -> Array:
-        return jnp.stack([self.state(t_.item()) for t_ in t])
+    def states(self, t: Array) -> QArray:
+        return stack([self.state(t_.item()) for t_ in t])
 
     def expect(self, t: float) -> Array:
         """Compute the exact (complex) expectation values at a given time."""

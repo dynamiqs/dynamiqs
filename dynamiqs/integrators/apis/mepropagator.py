@@ -10,6 +10,7 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.types import QArrayLike
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
 from ...time_array import Shape, TimeArray
@@ -25,8 +26,8 @@ from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
 
 
 def mepropagator(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    H: QArrayLike | TimeArray,
+    jump_ops: list[QArrayLike | TimeArray],
     tsave: ArrayLike,
     *,
     solver: Solver = Expm(),  # noqa: B008
@@ -64,8 +65,8 @@ def mepropagator(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-array, each of shape (...Lk, n, n))_:
             List of jump operators.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`

@@ -3,12 +3,14 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays import QArray
 from ...result import (
     MEPropagatorResult,
     MEResult,
@@ -30,9 +32,9 @@ class AbstractIntegrator(eqx.Module):
 
 class BaseIntegrator(AbstractIntegrator):
     ts: Array
-    y0: Array
+    y0: QArray
     H: TimeArray
-    Es: Array
+    Es: list[QArray] | None
     solver: Solver
     gradient: Gradient | None
     options: Options
@@ -54,13 +56,13 @@ class BaseIntegrator(AbstractIntegrator):
         if self.options.save_states:
             ysave = y
         if self.Es is not None and len(self.Es) > 0:
-            Esave = expect(self.Es, y)
+            Esave = jnp.asarray([expect(E, y) for E in self.Es])
         if self.options.save_extra is not None:
             extra = self.options.save_extra(y)
 
         return Saved(ysave, Esave, extra)
 
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+    def collect_saved(self, saved: Saved, ylast: QArray) -> Saved:
         # if save_states is False save only last state
         if not self.options.save_states:
             saved = eqx.tree_at(

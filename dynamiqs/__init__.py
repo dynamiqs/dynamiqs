@@ -3,6 +3,7 @@ from importlib.metadata import version
 from . import dark, plot, random
 from .integrators import *
 from .options import *
+from .qarrays import *
 from .result import *
 from .time_array import *
 from .utils import *

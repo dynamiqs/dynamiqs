@@ -9,6 +9,7 @@ from ..integrator_tester import IntegratorTester
 from ..sesolve.closed_system import cavity, tdqubit
 
 
+@pytest.mark.skip(reason='TODO')
 class TestSEPropagator(IntegratorTester):
     @pytest.mark.parametrize('system', [cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):

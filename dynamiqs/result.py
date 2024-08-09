@@ -6,6 +6,7 @@ from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
+from .qarrays import QArray, asjaxarray
 from .solver import Solver
 
 __all__ = ['SEResult', 'MEResult', 'SEPropagatorResult', 'MEPropagatorResult']
@@ -25,13 +26,15 @@ def memory_str(x: Array) -> str:
         return f'{mem / 1024**3:.2f} Gb'
 
 
-def array_str(x: Array | None) -> str | None:
+def array_str(x: Array | QArray | None) -> str | None:
+    # TODO: implement memory_str for QArray rather than converting to JAX array
+    x = asjaxarray(x)
     return None if x is None else f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: Array
+    ysave: QArray
     Esave: Array | None
     extra: PyTree | None
 
@@ -45,7 +48,7 @@ class Result(eqx.Module):
     infos: PyTree | None
 
     @property
-    def states(self) -> Array:
+    def states(self) -> QArray:
         return self._saved.ysave
 
     @property
@@ -92,7 +95,7 @@ class SEResult(Result):
     r"""Result of the Schrödinger equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, 1))_: Saved states.
+        states _(qarray of shape (..., ntsave, n, 1))_: Saved states.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -142,7 +145,7 @@ class MEResult(Result):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, n))_: Saved states.
+        states _(qarray of shape (..., ntsave, n, n))_: Saved states.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -194,7 +197,7 @@ class SEPropagatorResult(Result):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        propagators _(qarray of shape (..., ntsave, n, n))_: Saved propagators.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -212,11 +215,11 @@ class SEPropagatorResult(Result):
     """
 
     @property
-    def propagators(self) -> Array:
+    def propagators(self) -> QArray:
         return self._saved.ysave
 
     @property
-    def states(self) -> Array:
+    def states(self) -> QArray:
         raise AttributeError(
             '`SEPropagatorResult` object has no attribute `states`. To access'
             ' saved propagators, use the `propagators` attribute.'
@@ -245,7 +248,7 @@ class MEPropagatorResult(Result):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators.
+        propagators _(qarray of shape (..., ntsave, n^2, n^2))_: Saved propagators.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -286,11 +289,11 @@ class MEPropagatorResult(Result):
     """
 
     @property
-    def propagators(self) -> Array:
+    def propagators(self) -> QArray:
         return self._saved.ysave
 
     @property
-    def states(self) -> Array:
+    def states(self) -> QArray:
         raise AttributeError(
             '`MEPropagatorResult` object has no attribute `states`. To access'
             ' saved propagators, use the `propagators` attribute.'
