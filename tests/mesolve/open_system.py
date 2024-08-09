@@ -172,7 +172,7 @@ class OTDQubit(OpenSystem):
         rho_11 = 0.5 * (1 - eta * jnp.cos(theta))
         rho_01 = 0.5j * eta * jnp.sin(theta)
         rho_10 = -0.5j * eta * jnp.sin(theta)
-        return asqarray(jnp.array([[rho_00, rho_01], [rho_10, rho_11]]))
+        return asqarray([[rho_00, rho_01], [rho_10, rho_11]])
 
     def expect(self, t: float) -> Array:
         theta = self._theta(t)
