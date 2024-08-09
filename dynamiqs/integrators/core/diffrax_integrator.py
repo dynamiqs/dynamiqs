@@ -202,6 +202,8 @@ class MEDiffraxIntegrator(DiffraxIntegrator):
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             tmp = -1j * self.H(t) @ y
             Ls = [L(t) for L in self.Ls]
+            # note: benchmarks show that using stacking or a for loop yields equivalent
+            # execution speeds for this code segment
             for L in Ls:
                 Ldag = L.dag()
                 L_y = L @ y
