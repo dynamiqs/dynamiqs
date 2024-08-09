@@ -28,7 +28,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         Stacked qarray.
 
     Examples:
-        >>> dq.stack([dq.fock(3, 0), dq.fock(3, 1)]).shape
+        >>> dq.stack([dq.fock(3, 0), dq.fock(3, 1)])
         DenseQArray: shape=(2, 3, 1), dims=(3,), dtype=complex64
         [[[1.+0.j]
           [0.+0.j]
