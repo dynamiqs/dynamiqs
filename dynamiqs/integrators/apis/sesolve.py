@@ -100,7 +100,8 @@ def sesolve(
     H = _astimearray(H)
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
-    exp_ops = [asqarray(exp_op) for exp_op in exp_ops] if exp_ops is not None else None
+    if exp_ops is not None:
+        exp_ops = [asqarray(E) for E in exp_ops]
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
@@ -198,8 +199,5 @@ def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: list[QArray] | None
 
     # === check exp_ops shape
     if exp_ops is not None:
-        if not isinstance(exp_ops, list):
-            raise TypeError(f'Argument `exp_ops` must be a list, got {type(exp_ops)}.')
-
-        for exp_op in exp_ops:
-            check_shape(exp_op, 'exp_ops', '(n, n)')
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')
