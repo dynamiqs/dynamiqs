@@ -50,9 +50,9 @@ The state at time $t$ is given by $\ket{\psi(t)}=e^{-iHt}\ket{\psi(0)}$, where $
 ??? Note "Solution for a time-dependent Hamiltonian"
     For a time-dependent Hamiltonian $H(t)$, the solution at time $t$ is
     $$
-        \ket{\psi(t)} = \mathcal{T}\exp\left(-i\int_0^tH(t')\dt'\right)\ket{\psi(0)},
+        \ket{\psi(t)} = \mathscr{T}\exp\left(-i\int_0^tH(t')\dt'\right)\ket{\psi(0)},
     $$
-    where $\mathcal{T}$ is the *time-ordering meta-operator*, which indicates the time-ordering of the Hamiltonians upon expansion of the matrix exponential (Hamiltonians at different times do not commute).
+    where $\mathscr{T}$ is the time-ordering symbol, which indicates the time-ordering of the Hamiltonians upon expansion of the matrix exponential (Hamiltonians at different times do not commute).
 
 The first idea is to explicitly compute the propagator to evolve the state up to time $t$. There are various ways to compute the matrix exponential, such as exact diagonalization of the Hamiltonian or approximate methods such as truncated Taylor series expansions.
 
@@ -111,3 +111,15 @@ Array([[0.  +0.j   ],
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
+
+You can also directly compute the propagator with the [`dq.sepropagator()`][dynamiqs.sepropagator] solver. Continuing the last example:
+
+```python
+res = dq.sepropagator(H, tsave)
+print(res.propagators[-1])  # print the final propagator
+```
+
+```text title="Output"
+Array([[0.54-0.841j 0.  +0.j   ]
+       [0.  +0.j    0.54+0.841j]], dtype=complex64)
+```

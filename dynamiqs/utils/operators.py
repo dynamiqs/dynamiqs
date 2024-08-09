@@ -14,7 +14,7 @@ from .matrix_format_selector import (
     dispatch_matrix_format,
     register_format_handler,
 )
-from .utils import tensor
+from .quantum_utils import tensor
 
 __all__ = [
     'eye',
