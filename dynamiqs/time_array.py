@@ -709,7 +709,7 @@ class BatchedCallable(eqx.Module):
         f = lambda t: jnp.squeeze(self.f(t), i)
         return BatchedCallable(f)
 
-    def __add__(self, y: ArrayLike | ScalarLike) -> BatchedCallable:
+    def __add__(self, y: ScalarLike) -> BatchedCallable:
         return BatchedCallable(lambda t: self.f(t) + y)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
