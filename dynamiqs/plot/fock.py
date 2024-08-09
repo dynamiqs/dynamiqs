@@ -7,6 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from .._checks import check_shape, check_times
+from ..qarrays.types import QArrayLike, asjaxarray
 from ..utils.quantum_utils import isdm, isket
 from .utils import (
     add_colorbar,
@@ -34,7 +35,7 @@ def _populations(x: ArrayLike) -> Array:
 
 @optional_ax
 def fock(
-    state: ArrayLike,
+    state: QArrayLike,
     *,
     ax: Axes | None = None,
     allxticks: bool = False,
@@ -68,7 +69,7 @@ def fock(
 
         ![plot_fock_coherent](/figs_code/plot_fock_coherent.png){.fig}
     """
-    state = jnp.asarray(state)
+    state = asjaxarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     n = state.shape[0]
@@ -92,7 +93,7 @@ def fock(
 
 @optional_ax
 def fock_evolution(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     ax: Axes | None = None,
     times: ArrayLike | None = None,
@@ -125,7 +126,7 @@ def fock_evolution(
 
         ![plot_fock_evolution_log](/figs_code/plot_fock_evolution_log.png){.fig}
     """
-    states = jnp.asarray(states)
+    states = asjaxarray(states)
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
     if times is not None:
