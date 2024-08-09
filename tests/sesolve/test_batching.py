@@ -11,7 +11,7 @@ def rand_sesolve_args(n, nH, npsi0, nEs):
     H = dq.random.herm(kH, (*nH, n, n))
     psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
     Es = dq.random.complex(kEs, (nEs, n, n))
-    Es = [asqarray(e) for e in Es]
+    Es = [asqarray(E) for E in Es]
     return H, psi0, Es
 
 
