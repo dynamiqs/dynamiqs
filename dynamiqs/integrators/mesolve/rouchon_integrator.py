@@ -9,7 +9,6 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...qarrays import QArray
-from ...utils.quantum_utils.general import dag
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import FixedStepIntegrator
 
@@ -64,29 +63,22 @@ class MESolveRouchon1Integrator(FixedStepIntegrator, MESolveIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             # The Rouchon update for a single loss channel is:
-            #   rho_{k+1} = M0 @ rho @ M0d + \sum M1 @ rho @ M1d
+            #   rho_{k+1} = M0 @ rho @ M0d + M1 @ rho @ M1d
             # with
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
 
-            Ls_tot = 0
-            LdL_tot = 0
-            second_term = jnp.zeros_like(y0)
             delta_t = t1 - t0
-            for L in self.Ls:
-                L_t0 = L(t0)
-                Lsd = dag(L_t0)
-                LdL = Lsd @ L_t0
+            Ls = [L(t0) for L in self.Ls]
+            Lsdag = [L.dag() for L in Ls]
 
-                Ls_tot = Ls_tot + L_t0
-                LdL_tot = LdL_tot + LdL
+            # === compute M0
+            LdagL = [Ldag @ L for L, Ldag in zip(Ls, Lsdag)]
+            M0 = self.Id - (1j * self.H(t0) + 0.5 * sum(LdagL)) * delta_t
 
-                Mk = L_t0 * jnp.sqrt(delta_t)
+            # === compute Mk
+            Mks = [delta_t * L @ y0 @ Ldag for L, Ldag in zip(Ls, Lsdag)]
 
-                second_term = second_term + Mk @ y0 @ dag(Mk)
-
-            M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL_tot) * delta_t
-
-            return M0 @ y0 @ dag(M0) + second_term
+            return M0 @ y0 @ M0.dag() + sum(Mks)
 
         return AbstractRouchonTerm(kraus_map)
