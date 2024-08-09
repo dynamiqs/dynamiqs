@@ -43,7 +43,7 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [0.]]
 
         For a batched array:
-        >>> rhos = jnp.stack([dq.coherent_dm(16, i) for i in range(5)])
+        >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         (5, 16, 16)
         >>> len(dq.to_qutip(rhos))
