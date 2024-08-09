@@ -117,7 +117,7 @@ class TDQubit(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega)
 
-    def H(self, params: PyTree) -> TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeArray:
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 

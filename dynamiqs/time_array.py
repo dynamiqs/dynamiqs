@@ -472,7 +472,7 @@ class PWCTimeArray(TimeArray):
         def _zero(_: float) -> Array:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
-        def _pwc(t: float) -> QArray:
+        def _pwc(t: float) -> Array:
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
@@ -709,7 +709,7 @@ class BatchedCallable(eqx.Module):
         f = lambda t: jnp.squeeze(self.f(t), i)
         return BatchedCallable(f)
 
-    def __add__(self, y: ArrayLike | ScalarLike) -> BatchedCallable:
+    def __add__(self, y: ScalarLike) -> BatchedCallable:
         return BatchedCallable(lambda t: self.f(t) + y)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:

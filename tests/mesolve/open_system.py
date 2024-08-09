@@ -21,7 +21,7 @@ from ..system import System
 
 class OpenSystem(System):
     @abstractmethod
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
         """Compute the jump operators."""
 
     def run(
@@ -146,7 +146,7 @@ class OTDQubit(OpenSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega, gamma)
 
-    def H(self, params: PyTree) -> TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeArray:
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 
@@ -172,7 +172,7 @@ class OTDQubit(OpenSystem):
         rho_11 = 0.5 * (1 - eta * jnp.cos(theta))
         rho_01 = 0.5j * eta * jnp.sin(theta)
         rho_10 = -0.5j * eta * jnp.sin(theta)
-        return asqarray(jnp.array([[rho_00, rho_01], [rho_10, rho_11]]))
+        return asqarray([[rho_00, rho_01], [rho_10, rho_11]])
 
     def expect(self, t: float) -> Array:
         theta = self._theta(t)

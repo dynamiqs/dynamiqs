@@ -107,7 +107,7 @@ class DenseQArray(QArray):
     def __repr__(self) -> str:
         return (
             f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
-            f'dtype={self.dtype}'
+            f'dtype={self.dtype}\n{self.data}'
         )
 
     def __mul__(self, y: QArrayLike) -> QArray:

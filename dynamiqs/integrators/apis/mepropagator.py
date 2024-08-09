@@ -14,6 +14,7 @@ from ...qarrays.types import QArrayLike
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
 from ...time_array import Shape, TimeArray
+from ...utils.matrix_format_selector import dense
 from ...utils.operators import eye
 from .._utils import (
     _astimearray,
@@ -161,7 +162,7 @@ def _mepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1] ** 2)
+    y0 = eye(H.shape[-1] ** 2, format=dense)
     integrator = integrator_class(
         tsave, y0, H, None, solver, gradient, options, jump_ops
     )
