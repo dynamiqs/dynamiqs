@@ -117,7 +117,7 @@ def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
     x = complex(key, shape)
-    return 0.5 * (x + dag(x))
+    return 0.5 * (x + dag(x).to_jax())
 
 
 def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
@@ -142,7 +142,7 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
     x = complex(key, shape)
-    return x @ dag(x)
+    return x @ dag(x).to_jax()
 
 
 def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
@@ -167,7 +167,7 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
     x = psd(key, shape)
-    return unit(x)
+    return unit(x).to_jax()
 
 
 def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
@@ -191,4 +191,4 @@ def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
             f'Argument `shape` must be of the form (..., n, 1), but is shape={shape}.'
         )
     x = complex(key, shape)
-    return unit(x)
+    return unit(x).to_jax()
