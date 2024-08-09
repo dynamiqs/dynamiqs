@@ -201,11 +201,11 @@ class MEDiffraxIntegrator(DiffraxIntegrator):
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             tmp = -1j * self.H(t) @ y
-            for L in self.Ls:
-                Lt = L(t)
-                Ltdag = Lt.dag()
-                Lt_y = Lt @ y
-                tmp += 0.5 * (Lt_y @ Ltdag - Ltdag @ Lt_y)
+            Ls = [L(t) for L in self.Ls]
+            for L in Ls:
+                Ldag = L.dag()
+                L_y = L @ y
+                tmp += 0.5 * (L_y @ Ldag - Ldag @ L_y)
             return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)
