@@ -50,7 +50,7 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def ptrace(self, keep: tuple[int, ...]) -> QArray:
-        from ..utils.utils.general import ptrace
+        from ..utils.quantum_utils.general import ptrace
 
         dims = tuple(self.dims[dim] for dim in keep)
         data = ptrace(self.data, keep, self.dims)
@@ -65,7 +65,7 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def norm(self) -> Array:
-        from ..utils.utils.general import norm
+        from ..utils.quantum_utils.general import norm
 
         return norm(self.data)
 

@@ -112,8 +112,9 @@ class SparseDIAQArray(QArray):
     def powm(self):
         raise NotImplementedError
 
-    def expm(self):
-        raise NotImplementedError
+    def expm(self, *, max_squarings: int = 16) -> QArray:
+        # todo: implement dia specific method or raise warning for dense conversion
+        return to_dense(self).expm(max_squarings=max_squarings)
 
     def norm(self) -> Array:
         return self.trace()

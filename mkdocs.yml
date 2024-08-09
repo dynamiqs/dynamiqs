@@ -142,6 +142,8 @@ nav:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
           - smesolve: python_api/integrators/smesolve.md
+          - sepropagator: python_api/integrators/sepropagator.md
+          - mepropagator: python_api/integrators/mepropagator.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -158,7 +160,7 @@ nav:
               - Euler: python_api/solver/Euler.md
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
-              - Propagator: python_api/solver/Propagator.md
+              - Expm: python_api/solver/Expm.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
@@ -166,6 +168,8 @@ nav:
           - Results:
               - SEResult: python_api/result/SEResult.md
               - MEResult: python_api/result/MEResult.md
+              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
+              - MEPropagatorResult: python_api/result/MEPropagatorResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
@@ -195,34 +199,34 @@ nav:
               - ground: python_api/utils/states/ground.md
               - excited: python_api/utils/states/excited.md
           - Quantum utilities:
-              - dag: python_api/utils/utils/dag.md
-              - powm: python_api/utils/utils/powm.md
-              - expm: python_api/utils/utils/expm.md
-              - cosm: python_api/utils/utils/cosm.md
-              - sinm: python_api/utils/utils/sinm.md
-              - trace: python_api/utils/utils/trace.md
-              - tracemm: python_api/utils/utils/tracemm.md
-              - ptrace: python_api/utils/utils/ptrace.md
-              - tensor: python_api/utils/utils/tensor.md
-              - expect: python_api/utils/utils/expect.md
-              - norm: python_api/utils/utils/norm.md
-              - unit: python_api/utils/utils/unit.md
-              - dissipator: python_api/utils/utils/dissipator.md
-              - lindbladian: python_api/utils/utils/lindbladian.md
-              - isket: python_api/utils/utils/isket.md
-              - isbra: python_api/utils/utils/isbra.md
-              - isdm: python_api/utils/utils/isdm.md
-              - isop: python_api/utils/utils/isop.md
-              - isherm: python_api/utils/utils/isherm.md
-              - toket: python_api/utils/utils/toket.md
-              - tobra: python_api/utils/utils/tobra.md
-              - todm: python_api/utils/utils/todm.md
-              - proj: python_api/utils/utils/proj.md
-              - braket: python_api/utils/utils/braket.md
-              - overlap: python_api/utils/utils/overlap.md
-              - fidelity: python_api/utils/utils/fidelity.md
-              - entropy_vn: python_api/utils/utils/entropy_vn.md
-              - wigner: python_api/utils/utils/wigner.md
+              - dag: python_api/utils/quantum_utils/dag.md
+              - powm: python_api/utils/quantum_utils/powm.md
+              - expm: python_api/utils/quantum_utils/expm.md
+              - cosm: python_api/utils/quantum_utils/cosm.md
+              - sinm: python_api/utils/quantum_utils/sinm.md
+              - trace: python_api/utils/quantum_utils/trace.md
+              - tracemm: python_api/utils/quantum_utils/tracemm.md
+              - ptrace: python_api/utils/quantum_utils/ptrace.md
+              - tensor: python_api/utils/quantum_utils/tensor.md
+              - expect: python_api/utils/quantum_utils/expect.md
+              - norm: python_api/utils/quantum_utils/norm.md
+              - unit: python_api/utils/quantum_utils/unit.md
+              - dissipator: python_api/utils/quantum_utils/dissipator.md
+              - lindbladian: python_api/utils/quantum_utils/lindbladian.md
+              - isket: python_api/utils/quantum_utils/isket.md
+              - isbra: python_api/utils/quantum_utils/isbra.md
+              - isdm: python_api/utils/quantum_utils/isdm.md
+              - isop: python_api/utils/quantum_utils/isop.md
+              - isherm: python_api/utils/quantum_utils/isherm.md
+              - toket: python_api/utils/quantum_utils/toket.md
+              - tobra: python_api/utils/quantum_utils/tobra.md
+              - todm: python_api/utils/quantum_utils/todm.md
+              - proj: python_api/utils/quantum_utils/proj.md
+              - braket: python_api/utils/quantum_utils/braket.md
+              - overlap: python_api/utils/quantum_utils/overlap.md
+              - fidelity: python_api/utils/quantum_utils/fidelity.md
+              - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
+              - wigner: python_api/utils/quantum_utils/wigner.md
           - QArray utilities:
               - stack: python_api/qarrays/utils/stack.md
           - JAX-related utilities:
@@ -241,23 +245,24 @@ nav:
           - Quantum optimal control:
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
-          - Random arrays:
-              - rand_real: python_api/utils/random/rand_real.md
-              - rand_complex: python_api/utils/random/rand_complex.md
-              - rand_herm: python_api/utils/random/rand_herm.md
-              - rand_psd: python_api/utils/random/rand_psd.md
-              - rand_dm: python_api/utils/random/rand_dm.md
-              - rand_ket: python_api/utils/random/rand_ket.md
-          - Plotting:
-              - plot_wigner: python_api/plots/plot_wigner.md
-              - plot_wigner_mosaic: python_api/plots/plot_wigner_mosaic.md
-              - plot_wigner_gif: python_api/plots/plot_wigner_gif.md
-              - plot_pwc_pulse: python_api/plots/plot_pwc_pulse.md
-              - plot_fock: python_api/plots/plot_fock.md
-              - plot_fock_evolution: python_api/plots/plot_fock_evolution.md
-              - plot_hinton: python_api/plots/plot_hinton.md
-              - gridplot: python_api/plots/gridplot.md
-              - mplstyle: python_api/plots/mplstyle.md
+          - Random arrays (dq.random):
+              - real: python_api/random/real.md
+              - complex: python_api/random/complex.md
+              - herm: python_api/random/herm.md
+              - psd: python_api/random/psd.md
+              - dm: python_api/random/dm.md
+              - ket: python_api/random/ket.md
+          - Plotting (dq.plot):
+              - wigner: python_api/plot/wigner.md
+              - wigner_mosaic: python_api/plot/wigner_mosaic.md
+              - wigner_gif: python_api/plot/wigner_gif.md
+              - pwc_pulse: python_api/plot/pwc_pulse.md
+              - fock: python_api/plot/fock.md
+              - fock_evolution: python_api/plot/fock_evolution.md
+              - hinton: python_api/plot/hinton.md
+              - gifit: python_api/plot/gifit.md
+              - grid: python_api/plot/grid.md
+              - mplstyle: python_api/plot/mplstyle.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

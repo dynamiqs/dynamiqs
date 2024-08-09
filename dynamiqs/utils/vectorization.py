@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import jax.tree_util as jtu
 import numpy as np
 
 from .._checks import check_shape
 from ..qarrays import QArray, QArrayLike, asqarray
 from .operators import eye
-from .utils import dag
+from .quantum_utils import dag
 
 __all__ = [
     'operator_to_vector',
@@ -232,6 +231,4 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
     check_shape(H, 'H', '(..., n, n)')
     for jump_op in jump_ops:
         check_shape(jump_op, 'jump_ops', '(..., n, n)')
-    return -1j * (spre(H) - spost(H)) + jtu.tree_reduce(
-        lambda x, y: x + y, jtu.tree_map(sdissipator, jump_ops)
-    )
+    return -1j * (spre(H) - spost(H)) + sum(sdissipator(L) for L in jump_ops)

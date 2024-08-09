@@ -1,25 +1,19 @@
 from __future__ import annotations
 
-import diffrax as dx
-
 from ..core.abstract_integrator import SESolveIntegrator
 from ..core.diffrax_integrator import (
-    DiffraxIntegrator,
     Dopri5Integrator,
     Dopri8Integrator,
     EulerIntegrator,
     Kvaerno3Integrator,
     Kvaerno5Integrator,
+    SEDiffraxIntegrator,
     Tsit5Integrator,
 )
 
 
-class SESolveDiffraxIntegrator(DiffraxIntegrator, SESolveIntegrator):
-    @property
-    def terms(self) -> dx.AbstractTerm:
-        # define Schrödinger term d|psi>/dt = - i H |psi>
-        vector_field = lambda t, y, _: -1j * self.H(t) @ y
-        return dx.ODETerm(vector_field)
+class SESolveDiffraxIntegrator(SEDiffraxIntegrator, SESolveIntegrator):
+    pass
 
 
 class SESolveEulerIntegrator(SESolveDiffraxIntegrator, EulerIntegrator):

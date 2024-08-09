@@ -17,9 +17,9 @@ from ...solver import (
     Dopri5,
     Dopri8,
     Euler,
+    Expm,
     Kvaerno3,
     Kvaerno5,
-    Propagator,
     Rouchon1,
     Solver,
     Tsit5,
@@ -40,7 +40,7 @@ from ..mesolve.diffrax_integrator import (
     MESolveKvaerno5Integrator,
     MESolveTsit5Integrator,
 )
-from ..mesolve.propagator_integrator import MESolvePropagatorIntegrator
+from ..mesolve.expm_integrator import MESolveExpmIntegrator
 from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 
@@ -79,8 +79,8 @@ def mesolve(
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.constant()`][dynamiqs.constant],
-        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+        [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
@@ -111,7 +111,7 @@ def mesolve(
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
-            [`Propagator`][dynamiqs.solver.Propagator]).
+            [`Expm`][dynamiqs.solver.Expm]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
@@ -218,7 +218,7 @@ def _mesolve(
         Tsit5: MESolveTsit5Integrator,
         Kvaerno3: MESolveKvaerno3Integrator,
         Kvaerno5: MESolveKvaerno5Integrator,
-        Propagator: MESolvePropagatorIntegrator,
+        Expm: MESolveExpmIntegrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
 

@@ -9,7 +9,7 @@ from .options import Options
 from .qarrays import QArray, asjaxarray
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult']
+__all__ = ['SEResult', 'MEResult', 'SEPropagatorResult', 'MEPropagatorResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -191,3 +191,128 @@ class MEResult(Result):
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
+
+
+class SEPropagatorResult(Result):
+    r"""Result of the Schrödinger equation integration to obtain the propagator.
+
+    Attributes:
+        propagators _(qarray of shape (..., ntsave, n, n))_: Saved propagators.
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+
+    Note-: Result of running multiple simulations concurrently
+        The resulting propagators are batched according to the leading
+        dimensions of the Hamiltonian `H`. For example if `H` has shape
+        _(2, 3, n, n)_, then `propagators` has shape _(2, 3, ntsave, n, n)_.
+
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
+    """
+
+    @property
+    def propagators(self) -> QArray:
+        return self._saved.ysave
+
+    @property
+    def states(self) -> QArray:
+        raise AttributeError(
+            '`SEPropagatorResult` object has no attribute `states`. To access'
+            ' saved propagators, use the `propagators` attribute.'
+        )
+
+    @property
+    def expects(self) -> Array | None:
+        raise AttributeError('`SEPropagatorResult` object has no attribute `expects`.')
+
+    @property
+    def extra(self) -> PyTree | None:
+        raise AttributeError('`SEPropagatorResult` object has no attribute `extra`.')
+
+    def _str_parts(self) -> dict[str, str]:
+        return {
+            'Solver     ': type(self.solver).__name__,
+            'Gradient   ': (
+                type(self.gradient).__name__ if self.gradient is not None else None
+            ),
+            'Propagators': array_str(self.propagators),
+            'Infos      ': self.infos if self.infos is not None else None,
+        }
+
+
+class MEPropagatorResult(Result):
+    r"""Result of the Lindblad master equation integration to obtain the propagator.
+
+    Attributes:
+        propagators _(qarray of shape (..., ntsave, n^2, n^2))_: Saved propagators.
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+
+    Note-: Result of running multiple simulations concurrently
+        The resulting propagators are batched according to the
+        leading dimensions of the Hamiltonian `H` and jump operators `jump_ops`.
+        The behaviour depends on the value of the `cartesian_batching` option
+
+        === "If `cartesian_batching = True` (default value)"
+            The results leading dimensions are
+            ```
+            ... = ...H, ...L0, ...L1, (...)
+            ```
+            For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+
+            then `propagators` has shape _(2, 3, 4, 5, 6, ntsave, n, n)_.
+        === "If `cartesian_batching = False`"
+            The results leading dimensions are
+            ```
+            ... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
+            ```
+            For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+
+            then `propagators` has shape _(2, 3, ntsave, n, n)_.
+
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
+    """
+
+    @property
+    def propagators(self) -> QArray:
+        return self._saved.ysave
+
+    @property
+    def states(self) -> QArray:
+        raise AttributeError(
+            '`MEPropagatorResult` object has no attribute `states`. To access'
+            ' saved propagators, use the `propagators` attribute.'
+        )
+
+    @property
+    def expects(self) -> Array | None:
+        raise AttributeError('`MEPropagatorResult` object has no attribute `expects`.')
+
+    @property
+    def extra(self) -> PyTree | None:
+        raise AttributeError('`MEPropagatorResult` object has no attribute `extra`.')
+
+    def _str_parts(self) -> dict[str, str]:
+        return {
+            'Solver     ': type(self.solver).__name__,
+            'Gradient   ': (
+                type(self.gradient).__name__ if self.gradient is not None else None
+            ),
+            'Propagators': array_str(self.propagators),
+            'Infos      ': self.infos if self.infos is not None else None,
+        }

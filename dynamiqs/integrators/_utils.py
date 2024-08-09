@@ -11,7 +11,13 @@ from jaxtyping import PyTree
 from .._utils import obj_type_str
 from ..qarrays import QArrayLike, asqarray
 from ..solver import Solver, _ODEAdaptiveStep
-from ..time_array import ConstantTimeArray, Shape, TimeArray
+from ..time_array import (
+    ConstantTimeArray,
+    PWCTimeArray,
+    Shape,
+    SummedTimeArray,
+    TimeArray,
+)
 from .core.abstract_integrator import AbstractIntegrator
 
 
@@ -28,6 +34,16 @@ def _astimearray(x: QArrayLike | TimeArray) -> TimeArray:
                 'Argument must be a qarray-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
+
+
+def ispwc(x: TimeArray) -> bool:
+    # check if a time array is constant or piecewise constant
+    if isinstance(x, (ConstantTimeArray, PWCTimeArray)):
+        return True
+    elif isinstance(x, SummedTimeArray):
+        return all(ispwc(timearray) for timearray in x.timearrays)
+    else:
+        return False
 
 
 def catch_xla_runtime_error(func: callable) -> callable:

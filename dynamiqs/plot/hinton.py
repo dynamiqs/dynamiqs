@@ -15,7 +15,7 @@ from matplotlib.colors import Normalize
 from .._checks import check_shape
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
-__all__ = ['plot_hinton']
+__all__ = ['hinton']
 
 
 def _normalize(x: ArrayLike, vmin: float, vmax: float) -> Array:
@@ -119,7 +119,7 @@ def _plot_hinton(
 
 
 @optional_ax
-def plot_hinton(
+def hinton(
     x: ArrayLike,
     *,
     ax: Axes | None = None,
@@ -140,50 +140,50 @@ def plot_hinton(
 
     Examples:
         >>> rho = dq.coherent_dm(16, 2.0)
-        >>> dq.plot_hinton(jnp.abs(rho))
+        >>> dq.plot.hinton(jnp.abs(rho))
         >>> renderfig('plot_hinton_coherent')
 
         ![plot_hinton_coherent](/figs_code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
         >>> H = dq.dag(a) @ a + 2.0 * (a + dq.dag(a))
-        >>> dq.plot_hinton(jnp.abs(H))
+        >>> dq.plot.hinton(jnp.abs(H))
         >>> renderfig('plot_hinton_hamiltonian')
 
         ![plot_hinton_hamiltonian](/figs_code/plot_hinton_hamiltonian.png){.fig-half}
 
         >>> cnot = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
-        >>> dq.plot_hinton(cnot, tickslabel=['00', '01', '10', '11'])
+        >>> dq.plot.hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
         ![plot_hinton_cnot](/figs_code/plot_hinton_cnot.png){.fig-half}
 
         >>> key = jax.random.PRNGKey(42)
-        >>> x = dq.rand_complex(key, (16, 16))
-        >>> dq.plot_hinton(x)
-        >>> renderfig('plot_hinton_rand_complex')
+        >>> x = dq.random.complex(key, (16, 16))
+        >>> dq.plot.hinton(x)
+        >>> renderfig('plot_hinton_random_complex')
 
-        ![plot_hinton_rand_complex](/figs_code/plot_hinton_rand_complex.png){.fig-half}
+        ![plot_hinton_random_complex](/figs_code/plot_hinton_random_complex.png){.fig-half}
 
-        >>> _, axs = dq.gridplot(2)
+        >>> _, axs = dq.plot.grid(2)
         >>> psi = dq.unit(dq.fock(4, 0) - dq.fock(4, 2))
-        >>> dq.plot_hinton(dq.todm(psi), ax=next(axs))
+        >>> dq.plot.hinton(dq.todm(psi), ax=next(axs))
         >>> rho = dq.unit(dq.fock_dm(4, 0) + dq.fock_dm(4, 2))
-        >>> dq.plot_hinton(rho, ax=next(axs))
+        >>> dq.plot.hinton(rho, ax=next(axs))
         >>> renderfig('plot_hinton_fock02')
 
         ![plot_hinton_fock02](/figs_code/plot_hinton_fock02.png){.fig-half}
 
-        >>> _, axs = dq.gridplot(2)
+        >>> _, axs = dq.plot.grid(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
-        >>> dq.plot_hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
-        >>> dq.plot_hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
+        >>> dq.plot.hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
+        >>> dq.plot.hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
         >>> renderfig('plot_hinton_real')
 
         ![plot_hinton_real](/figs_code/plot_hinton_real.png){.fig-half}
 
         >>> x = np.random.uniform(-1.0, 1.0, (100, 100))
-        >>> dq.plot_hinton(x, vmin=-1.0, vmax=1.0, ewidth=0, clear=True, w=20)
+        >>> dq.plot.hinton(x, vmin=-1.0, vmax=1.0, ewidth=0, clear=True, w=20)
         >>> renderfig('plot_hinton_large')
 
         ![plot_hinton_large](/figs_code/plot_hinton_large.png){.fig}

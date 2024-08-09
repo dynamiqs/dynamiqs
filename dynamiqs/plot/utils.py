@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+import pathlib
+import shutil
+from collections.abc import Iterable, Sequence
 from functools import wraps
 from math import ceil
+from typing import TypeVar
 
+import imageio as iio
+import IPython.display as ipy
 import matplotlib
 import matplotlib as mpl
 import numpy as np
 from cycler import cycler
+from jax.typing import ArrayLike
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
@@ -15,13 +21,14 @@ from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import FixedLocator, MaxNLocator, MultipleLocator, NullLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from tqdm import tqdm
 
-__all__ = ['gridplot', 'mplstyle']
+__all__ = ['gifit', 'grid', 'mplstyle']
 # __all__ = [
 #     'linmap',
 #     'figax',
 #     'optional_ax',
-#     'gridplot',
+#     'grid',
 #     'mplstyle',
 #     'integer_ticks',
 #     'sample_cmap',
@@ -76,7 +83,7 @@ def optional_ax(func: callable) -> callable:
     return wrapper
 
 
-def gridplot(
+def grid(
     n: int,
     nrows: int = 1,
     *,
@@ -112,13 +119,13 @@ def gridplot(
 
         by
 
-        >>> _, axs = dq.gridplot(6, 2, sharexy=True)  # 6 subplots, 2 rows
+        >>> _, axs = dq.plot.grid(6, 2, sharexy=True)  # 6 subplots, 2 rows
         >>> for y in ys:
         ...     next(axs).plot(x, y)
         [...]
-        >>> renderfig('gridplot')
+        >>> renderfig('plot_grid')
 
-        ![gridplot](/figs_code/gridplot.png){.fig}
+        ![plot_grid](/figs_code/plot_grid.png){.fig}
     """
     h = w if h is None else h
     ncols = ceil(n / nrows)
@@ -173,7 +180,7 @@ def mplstyle(*, usetex: bool = False):
 
         After (dynamiqs Matplotlib style):
 
-        >>> dq.mplstyle()
+        >>> dq.plot.mplstyle()
         >>> fig, ax = plt.subplots(1, 1)
         >>> for y in ys:
         ...     ax.plot(x, y)
@@ -287,3 +294,114 @@ def add_colorbar(
     plt.colorbar(mappable=mappable, cax=cax)
     cax.grid(False)
     return cax
+
+
+T = TypeVar('T')
+
+
+def gifit(
+    plot_function: callable[[T, ...], None],
+    gif_duration: float = 5.0,
+    fps: int = 10,
+    filename: str = '.tmp/dynamiqs/gifit.gif',
+    dpi: int = 72,
+    display: bool = True,
+) -> callable[[Sequence[T], ...], None]:
+    """Transform a plot function into a function that creates an animated GIF.
+
+    This function takes a plot function that normally operates on a single input and
+    returns a function that creates a GIF from a sequence of inputs.
+
+    Warning:
+        This function creates files in the current working directory under
+        `.tmp/dynamiqs` to store the GIF frames. The directory is automatically deleted
+        when the function ends. Specify the argument `filename` to save the GIF
+        on your disk.
+
+    Note:
+        By default, the GIF is displayed in Jupyter notebook environments.
+
+    Args:
+        plot_function: Plot function which must take as first positional argument the
+            input that will be sequenced over by the new function. It must create a
+            matplotlib `Figure` object and not close it.
+        gif_duration: GIF duration in seconds.
+        fps: GIF frames per seconds.
+        filename: Save path of the GIF file.
+        dpi: GIF resolution.
+        display: If `True`, the GIF is displayed in Jupyter notebook environments.
+
+    Returns:
+        A new function with the same signature as `plot_function` which accepts a
+            sequence of inputs and creates a GIF by applying the original
+            `plot_function` to each element in the sequence.
+
+    Examples:
+        >>> def plot_cos(phi):
+        ...     x = np.linspace(0, 1.0, 501)
+        ...     y = np.cos(2 * np.pi * x + phi)
+        ...     plt.plot(x, y)
+        >>> phis = np.linspace(0, 2 * np.pi, 101)
+        >>> filename = 'docs/figs_code/cos.gif'
+        >>> plot_cos_gif = dq.plot.gifit(
+        ...     plot_cos, fps=25, filename=filename, dpi=150, display=False
+        ... )
+        >>> plot_cos_gif(phis)
+
+        ![plot_cos](/figs_code/cos.gif){.fig}
+
+        >>> alphas = jnp.linspace(0.0, 3.0, 51)
+        >>> states = dq.coherent(24, alphas)
+        >>> filename = 'docs/figs_code/coherent_evolution.gif'
+        >>> plot_fock_gif = dq.plot.gifit(
+        ...     dq.plot.fock, fps=25, filename=filename, dpi=150, display=False
+        ... )
+        >>> plot_fock_gif(states)
+
+        ![plot_coherent_evolution](/figs_code/coherent_evolution.gif){.fig}
+    """
+
+    @wraps(plot_function)
+    def wrapper(items: ArrayLike, *args, **kwargs) -> None:
+        nframes = int(gif_duration * fps)
+
+        nitems = len(items)
+        if nframes >= nitems:
+            indices = np.arange(nitems)
+        else:
+            indices = np.round(np.linspace(0, nitems - 1, nframes)).astype(int)
+
+        try:
+            # create temporary directory
+            tmpdir = pathlib.Path('./.tmp/dynamiqs')
+            tmpdir.mkdir(parents=True, exist_ok=True)
+
+            frames = []
+            for i, idx in enumerate(tqdm(indices)):
+                # ensure previous plot is closed
+                plt.close()
+
+                # plot frame
+                plot_function(items[idx], *args, **kwargs)
+
+                # save frame in temporary file
+                frame_filename = tmpdir / f'tmp-{i}.png'
+                plt.gcf().savefig(frame_filename, bbox_inches='tight', dpi=dpi)
+                plt.close()
+
+                # read frame with imageio
+                frame = iio.v3.imread(frame_filename)
+                frames.append(frame)
+
+            # duration: duration per frame in ms
+            # loop=0: loop the GIF forever
+            # rescale duration to account for eventual duplicate frames
+            duration = int(1000 / fps * nframes / len(indices))
+            iio.v3.imwrite(filename, frames, format='GIF', duration=duration, loop=0)
+            if display:
+                ipy.display(ipy.Image(filename))
+        finally:
+            if tmpdir.exists():
+                shutil.rmtree(tmpdir, ignore_errors=True)
+
+    return wrapper
