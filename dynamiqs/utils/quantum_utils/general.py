@@ -512,7 +512,7 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
     return L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL
 
 
-def lindbladian(H: QArrayLike, jump_ops: QArrayLike, rho: QArrayLike) -> QArray:
+def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> QArray:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -529,7 +529,8 @@ def lindbladian(H: QArrayLike, jump_ops: QArrayLike, rho: QArrayLike) -> QArray:
 
     Args:
         H _(qarray_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(qarray_like of shape (N, ..., n, n))_: Sequence of jump operators.
+        jump_ops _(list of qarray_like, each of shape (, ..., n, n))_: List of jump
+            operators.
         rho _(qarray_like of shape (..., n, n))_: Density matrix.
 
     Returns:
@@ -549,8 +550,15 @@ def lindbladian(H: QArrayLike, jump_ops: QArrayLike, rho: QArrayLike) -> QArray:
     H = asqarray(H)
     jump_ops = asqarray(jump_ops)
     rho = asqarray(rho)
+
+    # === check H shape
     check_shape(H, 'H', '(..., n, n)')
-    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
+
+    # === check jump_ops shape
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
+
+    # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
     return -1j * (H @ rho - rho @ H) + dissipator(jump_ops, rho).sum(0)
