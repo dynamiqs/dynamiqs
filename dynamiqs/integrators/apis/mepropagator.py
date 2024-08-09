@@ -161,9 +161,7 @@ def _mepropagator(
 
     # === init integrator
     y0 = eye(H.shape[-1] ** 2)
-    integrator = integrator_class(
-        tsave, y0, H, None, solver, gradient, options, jump_ops
-    )
+    integrator = integrator_class(tsave, y0, H, solver, gradient, options, jump_ops)
 
     # === run integrator
     result = integrator.run()

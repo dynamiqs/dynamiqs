@@ -11,7 +11,7 @@ from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
 from ...utils.quantum_utils.general import dag
-from .abstract_integrator import BaseIntegrator
+from .abstract_integrator import BaseIntegrator, MEIntegrator
 
 
 class DiffraxIntegrator(BaseIntegrator):
@@ -179,7 +179,7 @@ class SEDiffraxIntegrator(DiffraxIntegrator):
         return dx.ODETerm(vector_field)
 
 
-class MEDiffraxIntegrator(DiffraxIntegrator):
+class MEDiffraxIntegrator(DiffraxIntegrator, MEIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt

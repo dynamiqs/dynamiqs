@@ -8,7 +8,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SEResult', 'MEResult', 'SEPropagatorResult', 'MEPropagatorResult']
+__all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -32,8 +32,15 @@ def array_str(x: Array | None) -> str | None:
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
     ysave: Array
+
+
+class SolveSaved(Saved):
     Esave: Array | None
     extra: PyTree | None
+
+
+class PropagatorSaved(Saved):
+    pass
 
 
 class Result(eqx.Module):
@@ -44,9 +51,18 @@ class Result(eqx.Module):
     _saved: Saved
     infos: PyTree | None
 
+
+class SolveResult(Result):
     @property
     def states(self) -> Array:
         return self._saved.ysave
+
+    @property
+    def final_states(self) -> Array:
+        if self.options.save_states:
+            return self.states[..., -1, :, :]
+        else:
+            return self.states
 
     @property
     def expects(self) -> Array | None:
@@ -88,11 +104,35 @@ class Result(eqx.Module):
         raise NotImplementedError
 
 
-class SEResult(Result):
+class PropagatorResult(Result):
+    @property
+    def propagators(self) -> Array:
+        return self._saved.ysave
+
+    @property
+    def final_propagators(self) -> Array:
+        if self.options.save_states:
+            return self.propagators[..., -1, :, :]
+        else:
+            return self.propagators
+
+    def _str_parts(self) -> dict[str, str]:
+        return {
+            'Solver     ': type(self.solver).__name__,
+            'Gradient   ': (
+                type(self.gradient).__name__ if self.gradient is not None else None
+            ),
+            'Propagators': array_str(self.propagators),
+            'Infos      ': self.infos if self.infos is not None else None,
+        }
+
+
+class SESolveResult(SolveResult):
     r"""Result of the Schrödinger equation integration.
 
     Attributes:
         states _(array of shape (..., ntsave, n, 1))_: Saved states.
+        final_states _(array of shape (..., n, 1))_: Saved final states.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -138,11 +178,12 @@ class SEResult(Result):
     """
 
 
-class MEResult(Result):
+class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
     Attributes:
         states _(array of shape (..., ntsave, n, n))_: Saved states.
+        final_states _(array of shape (..., n, 1))_: Saved final states.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -190,11 +231,12 @@ class MEResult(Result):
     """
 
 
-class SEPropagatorResult(Result):
+class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
         propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        final_propagators _(array of shape (..., n, n))_: Saved final propagators.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -211,41 +253,13 @@ class SEPropagatorResult(Result):
         tutorial for more details.
     """
 
-    @property
-    def propagators(self) -> Array:
-        return self._saved.ysave
 
-    @property
-    def states(self) -> Array:
-        raise AttributeError(
-            '`SEPropagatorResult` object has no attribute `states`. To access'
-            ' saved propagators, use the `propagators` attribute.'
-        )
-
-    @property
-    def expects(self) -> Array | None:
-        raise AttributeError('`SEPropagatorResult` object has no attribute `expects`.')
-
-    @property
-    def extra(self) -> PyTree | None:
-        raise AttributeError('`SEPropagatorResult` object has no attribute `extra`.')
-
-    def _str_parts(self) -> dict[str, str]:
-        return {
-            'Solver     ': type(self.solver).__name__,
-            'Gradient   ': (
-                type(self.gradient).__name__ if self.gradient is not None else None
-            ),
-            'Propagators': array_str(self.propagators),
-            'Infos      ': self.infos if self.infos is not None else None,
-        }
-
-
-class MEPropagatorResult(Result):
+class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
         propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators.
+        final_propagators _(array of shape (..., n^2, n^2))_: Saved final propagators.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -284,32 +298,3 @@ class MEPropagatorResult(Result):
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
-
-    @property
-    def propagators(self) -> Array:
-        return self._saved.ysave
-
-    @property
-    def states(self) -> Array:
-        raise AttributeError(
-            '`MEPropagatorResult` object has no attribute `states`. To access'
-            ' saved propagators, use the `propagators` attribute.'
-        )
-
-    @property
-    def expects(self) -> Array | None:
-        raise AttributeError('`MEPropagatorResult` object has no attribute `expects`.')
-
-    @property
-    def extra(self) -> PyTree | None:
-        raise AttributeError('`MEPropagatorResult` object has no attribute `extra`.')
-
-    def _str_parts(self) -> dict[str, str]:
-        return {
-            'Solver     ': type(self.solver).__name__,
-            'Gradient   ': (
-                type(self.gradient).__name__ if self.gradient is not None else None
-            ),
-            'Propagators': array_str(self.propagators),
-            'Infos      ': self.infos if self.infos is not None else None,
-        }

@@ -7,12 +7,17 @@ from jax import Array
 from jaxtyping import PyTree
 
 from dynamiqs._utils import _concatenate_sort
-from dynamiqs.result import Saved
+from dynamiqs.result import PropagatorSaved, Saved, SolveSaved
 
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
-from .abstract_integrator import BaseIntegrator, MEIntegrator
+from .abstract_integrator import (
+    BaseIntegrator,
+    MEIntegrator,
+    PropagatorIntegrator,
+    SolveIntegrator,
+)
 
 
 class ExpmIntegrator(BaseIntegrator):
@@ -56,16 +61,10 @@ class ExpmIntegrator(BaseIntegrator):
     def _generator(self, t: float) -> Array:
         raise NotImplementedError
 
-    def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
-        # === extract the states and expects or the propagators at the save times ts
-        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
-        saved = Saved(
-            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
-            saved.Esave[t_idxs] if saved.Esave is not None else None,
-            saved.extra[t_idxs] if saved.extra is not None else None,
-        )
-
-        return super().collect_saved(saved, ylast)
+    def _find_time_idxs(self, times: Array) -> Array:
+        # === useful for extracting states, propagators and/or expects at the save
+        # times ts
+        return jnp.searchsorted(times[1:], self.ts)  # (nts,)
 
     def run(self) -> PyTree:
         # === find all times at which to stop in [t0, t1]
@@ -97,6 +96,30 @@ class ExpmIntegrator(BaseIntegrator):
         nsteps = (delta_ts != 0).sum()
         saved = self.collect_saved(saved, ylast, times)
         return self.result(saved, infos=self.Infos(nsteps))
+
+
+class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
+    def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
+        t_idxs = self._find_time_idxs(times)
+        saved = PropagatorSaved(
+            saved.ysave[t_idxs] if self.options.save_states else saved.ysave
+        )
+        saved = super().collect_saved(saved, ylast)
+
+        return saved  # noqa: RET504
+
+
+class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
+    def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
+        t_idxs = self._find_time_idxs(times)
+        saved = SolveSaved(
+            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
+            saved.Esave[t_idxs] if saved.Esave is not None else None,
+            saved.extra[t_idxs] if saved.extra is not None else None,
+        )
+        saved = super().collect_saved(saved, ylast)
+
+        return saved  # noqa: RET504
 
 
 class SEExpmIntegrator(ExpmIntegrator):
