@@ -241,7 +241,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
         >>> alpha1 = np.linspace(0, 1, 5)
         >>> alpha2 = np.linspace(0, 1, 7)
-        >>> dq.coherent((8, 8), (alphas1[None, ...], alphas2[:, None]))
+        >>> dq.coherent((8, 8), (alpha1[None, :], alpha2[:, None])).shape
         (7, 5, 64, 1)
     """
     dim = asjaxarray(dim)
@@ -317,7 +317,7 @@ def ground() -> QArray:
     Examples:
         >>> dq.ground()
         DenseQArray: shape=(2, 1), dims=(2,), dtype=complex64
-        [[0.+0.j],
+        [[0.+0.j]
          [1.+0.j]]
     """
     return asqarray(jnp.array([[0], [1]], dtype=cdtype()), dims=(2,))
@@ -338,7 +338,7 @@ def excited() -> QArray:
     Examples:
         >>> dq.excited()
         DenseQArray: shape=(2, 1), dims=(2,), dtype=complex64
-        [[1.+0.j],
+        [[1.+0.j]
          [0.+0.j]]
     """
     return asqarray(jnp.array([[1], [0]], dtype=cdtype()), dims=(2,))
