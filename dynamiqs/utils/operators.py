@@ -436,7 +436,7 @@ def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
     return (alpha * a.dag() - alpha.conj() * a).expm()
 
 
-def squeeze(dim: int, z: ArrayLike) -> QArray:
+def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
