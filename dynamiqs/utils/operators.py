@@ -688,8 +688,7 @@ def sigmam_sparse_dia() -> QArray:
     return SparseDIAQArray(diags=diags, offsets=(-1,), dims=(2,))
 
 
-@dispatch_matrix_format
-def hadamard(n: int = 1, *, matrix_format: MatrixFormat = None) -> QArray:
+def hadamard(n: int = 1) -> QArray:
     r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
@@ -706,7 +705,6 @@ def hadamard(n: int = 1, *, matrix_format: MatrixFormat = None) -> QArray:
 
     Args:
         n: Number of qubits to act on.
-        matrix_format: The format of the matrix, either 'dq.dense' or 'dq.dia'
 
     Returns:
         _(qarray of shape (2^n, 2^n))_ Hadamard transform operator.
@@ -723,20 +721,6 @@ def hadamard(n: int = 1, *, matrix_format: MatrixFormat = None) -> QArray:
          [ 0.5+0.j  0.5+0.j -0.5+0.j -0.5+0.j]
          [ 0.5+0.j -0.5+0.j -0.5+0.j  0.5-0.j]]
     """
-
-
-@register_format_handler('hadamard', MatrixFormatEnum.DENSE)
-def hadamard_dense(n: int) -> QArray:
     H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
-    return tensor(*Hs)
-
-
-@register_format_handler('hadamard', MatrixFormatEnum.SPARSE_DIA)
-def hadamard_sparse_dia(n: int) -> QArray:
-    diags = jnp.array([[1.0, 0.0], [1.0, -1.0], [0.0, 1.0]], dtype=cdtype()) / jnp.sqrt(
-        2
-    )
-    H1 = SparseDIAQArray(diags=diags, offsets=(-1, 0, 1), dims=(2,))
-    Hs = H1.broadcast_to(n, 2, 2)  # (n, 2, 2)
     return tensor(*Hs)
