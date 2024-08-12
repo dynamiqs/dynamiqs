@@ -11,13 +11,14 @@ from jaxtyping import ArrayLike
 from ..._checks import check_shape
 from ..._utils import on_cpu
 from ...qarrays import asjaxarray
+from ...qarrays.types import QArrayLike
 from .general import todm
 
 __all__ = ['wigner']
 
 
 def wigner(
-    state: ArrayLike,
+    state: QArrayLike,
     xmax: float = 6.0,
     ymax: float = 6.0,
     npixels: int = 201,
@@ -35,7 +36,8 @@ def wigner(
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Args:
-        state _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        state _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density
+            matrix.
         xmax: Maximum absolute value of the $x$ coordinate.
         ymax: Maximum absolute value of the $y$ coordinate.
         npixels: Number of pixels in each direction.
@@ -54,6 +56,7 @@ def wigner(
                 `yvec` if specified.
             - **w** _(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))_ -- Wigner distribution.
     """  # noqa: E501
+    state = asjaxarray(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
     # === transfer state to CPU if float64

@@ -220,15 +220,20 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
 
     Args:
         H _(qarray_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(list of qarray_like of shape (..., n, n))_: Sequence of jump
+        jump_ops _(list of qarray_like, each of shape (..., n, n))_: List of jump
             operators.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Lindbladian superoperator.
     """
     H = asqarray(H)
-    jump_ops = list(map(asqarray, jump_ops))
+    jump_ops = [asqarray(L) for L in jump_ops]
+
+    # === check H shape
     check_shape(H, 'H', '(..., n, n)')
-    for jump_op in jump_ops:
-        check_shape(jump_op, 'jump_ops', '(..., n, n)')
+
+    # === check jump_ops shape
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
+
     return -1j * (spre(H) - spost(H)) + sum(sdissipator(L) for L in jump_ops)

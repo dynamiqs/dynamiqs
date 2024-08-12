@@ -13,7 +13,7 @@ def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
     psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
     Es = dq.random.complex(kEs, (nEs, n, n))
-    Es = [asqarray(e) for e in Es]
+    Es = [asqarray(E) for E in Es]
     return H, Ls, psi0, Es
 
 

@@ -29,7 +29,7 @@ class System(ABC):
         """Compute the initial state."""
 
     @abstractmethod
-    def Es(self, params: PyTree) -> [QArray]:
+    def Es(self, params: PyTree) -> list[QArray]:
         """Compute the expectation value operators."""
 
     def state(self, t: float) -> QArray:
@@ -46,7 +46,7 @@ class System(ABC):
     def expects(self, t: Array) -> Array:
         return jnp.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         """Compute an example loss function from a given state."""
         raise NotImplementedError
 

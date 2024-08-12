@@ -9,6 +9,7 @@ from jaxtyping import PyTree
 from dynamiqs._utils import _concatenate_sort
 from dynamiqs.result import Saved
 
+from ...qarrays.qarray import QArray
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
@@ -53,10 +54,10 @@ class ExpmIntegrator(BaseIntegrator):
                 'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
-    def _generator(self, t: float) -> Array:
+    def _generator(self, t: float) -> QArray:
         raise NotImplementedError
 
-    def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
+    def collect_saved(self, saved: Saved, ylast: QArray, times: Array) -> Saved:
         # === extract the states and expects or the propagators at the save times ts
         t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         saved = Saved(
@@ -84,7 +85,7 @@ class ExpmIntegrator(BaseIntegrator):
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
-        def step(carry: Array, x: Array) -> tuple[Array, Array]:
+        def step(carry: QArray, x: QArray) -> tuple[QArray, QArray]:
             # note the ordering x @ carry: we accumulate propagators from the left
             x_next = x @ carry
             return x_next, self.save(x_next)
@@ -100,7 +101,7 @@ class ExpmIntegrator(BaseIntegrator):
 
 
 class SEExpmIntegrator(ExpmIntegrator):
-    def _generator(self, t: float) -> Array:
+    def _generator(self, t: float) -> QArray:
         return -1j * self.H(t)  # (n, n)
 
 
@@ -114,5 +115,5 @@ class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
                 'Solver `Expm` requires constant or piecewise constant jump operators.'
             )
 
-    def _generator(self, t: float) -> Array:
+    def _generator(self, t: float) -> QArray:
         return slindbladian(self.H(t), [L(t) for L in self.Ls])  # (n^2, n^2)
