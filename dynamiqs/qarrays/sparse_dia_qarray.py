@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import re
 import warnings
 from collections import defaultdict
 from typing import get_args
@@ -78,6 +79,10 @@ class SparseDIAQArray(QArray):
             )
 
         return SparseDIAQArray(self.dims, out_offsets, out_diags)
+
+    @property
+    def ndiags(self) -> int:
+        return len(self.offsets)
 
     def conj(self) -> QArray:
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
@@ -159,6 +164,19 @@ class SparseDIAQArray(QArray):
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         raise self.to_dense().__array__(dtype=dtype, copy=copy)
+
+    def __repr__(self) -> str:
+        # === array representation with dots instead of zeros
+        # match '0. +0.j' with any number of spaces
+        pattern = r'0\.\s*\+0\.j'
+        # replace with a centered dot of the same length as the matched string
+        replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
+        data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
+
+        return (
+            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
+            f'dtype={self.dtype}, ndiags={self.ndiags}\n{data_str}'
+        )
 
     def __mul__(self, other: QArrayLike) -> QArray:
         super().__mul__(other)

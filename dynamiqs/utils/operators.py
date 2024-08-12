@@ -57,21 +57,21 @@ def eye(*dims: int, matrix_format: MatrixFormat = None) -> QArray:
     Examples:
         Single-mode $I_4$:
         >>> dq.eye(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j]]
 
         Multi-mode $I_2 \otimes I_3$:
         >>> dq.eye(2, 3)
-        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
-        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
+        SparseDIAQArray: shape=(6, 6), dims=(2, 3), dtype=complex64, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]]
     """
 
 
@@ -85,7 +85,9 @@ def eye_dense(*dims: int) -> QArray:
 @register_format_handler('eye', MatrixFormatEnum.SPARSE_DIA)
 def eye_sparse_dia(*dims: int) -> QArray:
     dim = prod(dims)
-    return SparseDIAQArray(diags=jnp.ones((1, dim)), offsets=(0,), dims=dims)
+    return SparseDIAQArray(
+        diags=jnp.ones((1, dim), dtype=cdtype()), offsets=(0,), dims=dims
+    )
 
 
 @dispatch_matrix_format
@@ -108,21 +110,21 @@ def zero(*dims: int, matrix_format: MatrixFormat = None) -> QArray:
     Examples:
         Single-mode $0_4$:
         >>> dq.zero(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=0
+        [[  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]]
 
         Multi-mode $0_2 \otimes 0_3$:
         >>> dq.zero(2, 3)
-        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
-        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(6, 6), dims=(2, 3), dtype=complex64, ndiags=0
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
     """
 
 
@@ -135,7 +137,9 @@ def zero_dense(*dims: int) -> QArray:
 
 @register_format_handler('zero', MatrixFormatEnum.SPARSE_DIA)
 def zero_sparse_dia(*dims: int) -> QArray:
-    return SparseDIAQArray(diags=jnp.zeros((0, np.prod(dims))), offsets=(), dims=dims)
+    return SparseDIAQArray(
+        diags=jnp.zeros((0, np.prod(dims)), dtype=cdtype()), offsets=(), dims=dims
+    )
 
 
 @dispatch_matrix_format
@@ -164,30 +168,30 @@ def destroy(
     Examples:
         Single-mode $a$:
         >>> dq.destroy(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 1.732+0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
+        [[    ⋅     1.   +0.j     ⋅         ⋅    ]
+         [    ⋅         ⋅     1.414+0.j     ⋅    ]
+         [    ⋅         ⋅         ⋅     1.732+0.j]
+         [    ⋅         ⋅         ⋅         ⋅    ]]
 
         Mult-mode $a\otimes I_3$ and $I_2\otimes b$:
         >>> a, b = dq.destroy(2, 3)
         >>> a
-        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
-        [[0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(6, 6), dims=(2, 3), dtype=complex64, ndiags=1
+        [[  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
         >>> b
-        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
-        [[0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]]
+        SparseDIAQArray: shape=(6, 6), dims=(2, 3), dtype=complex64, ndiags=1
+        [[    ⋅     1.   +0.j     ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅     1.414+0.j     ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅     1.   +0.j     ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅     1.414+0.j]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]]
     """
 
 
@@ -256,30 +260,30 @@ def create(
     Examples:
         Single-mode $a^\dag$:
         >>> dq.create(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 1.732+0.j 0.   +0.j]]
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
+        [[    ⋅         ⋅         ⋅         ⋅    ]
+         [1.   +0.j     ⋅         ⋅         ⋅    ]
+         [    ⋅     1.414+0.j     ⋅         ⋅    ]
+         [    ⋅         ⋅     1.732+0.j     ⋅    ]]
 
         Mult-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
         >>> adag, bdag = dq.create(2, 3)
         >>> adag
-        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
-        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(6, 6), dims=(2, 3), dtype=complex64, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [1.+0.j   ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]]
         >>> bdag
-        DenseQArray: shape=(6, 6), dims=(2, 3), dtype=complex64
-        [[0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [1.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 1.414+0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 1.   +0.j 0.   +0.j 0.   +0.j]
-         [0.   +0.j 0.   +0.j 0.   +0.j 0.   +0.j 1.414+0.j 0.   +0.j]]
+        SparseDIAQArray: shape=(6, 6), dims=(2, 3), dtype=complex64, ndiags=1
+        [[    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [1.   +0.j     ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅     1.414+0.j     ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅     1.   +0.j     ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅     1.414+0.j     ⋅    ]]
     """
 
 
@@ -339,11 +343,11 @@ def number(dim: int | None = None, *, matrix_format: MatrixFormat = None) -> QAr
 
     Examples:
         >>> dq.number(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[0.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 2.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 3.+0.j]]
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅    2.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    3.+0.j]]
     """
 
 
@@ -375,11 +379,11 @@ def parity(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.parity(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
-         [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
-         [ 0.+0.j  0.+0.j  1.+0.j  0.+0.j]
-         [ 0.+0.j  0.+0.j  0.+0.j -1.+0.j]]
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
+        [[ 1.+0.j    ⋅       ⋅       ⋅   ]
+         [   ⋅    -1.+0.j    ⋅       ⋅   ]
+         [   ⋅       ⋅     1.+0.j    ⋅   ]
+         [   ⋅       ⋅       ⋅    -1.+0.j]]
     """
 
 
@@ -432,7 +436,7 @@ def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
     return (alpha * a.dag() - alpha.conj() * a).expm()
 
 
-def squeeze(dim: int, z: ArrayLike) -> QArray:
+def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
@@ -483,15 +487,15 @@ def quadrature(dim: int, phi: float, *, matrix_format: MatrixFormat = None) -> Q
 
     Examples:
         >>> dq.quadrature(3, 0.0)
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
-        [[0.   +0.j 0.5  +0.j 0.   +0.j]
-         [0.5  +0.j 0.   +0.j 0.707+0.j]
-         [0.   +0.j 0.707+0.j 0.   +0.j]]
+        SparseDIAQArray: shape=(3, 3), dims=(3,), dtype=complex64, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j]
+         [    ⋅     0.707+0.j     ⋅    ]]
         >>> dq.quadrature(3, jnp.pi / 2)
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
-        [[ 0.+0.j    -0.-0.5j    0.+0.j   ]
-         [-0.+0.5j    0.+0.j    -0.-0.707j]
-         [ 0.+0.j    -0.+0.707j  0.+0.j   ]]
+        SparseDIAQArray: shape=(3, 3), dims=(3,), dtype=complex64, ndiags=2
+        [[   ⋅       -0.-0.5j      ⋅      ]
+         [-0.+0.5j      ⋅       -0.-0.707j]
+         [   ⋅       -0.+0.707j    ⋅      ]]
     """
     a = destroy(dim, matrix_format=matrix_format)
     return 0.5 * (jnp.exp(1.0j * phi) * a.dag() + jnp.exp(-1.0j * phi) * a)
@@ -509,10 +513,10 @@ def position(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.position(3)
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
-        [[0.   +0.j 0.5  +0.j 0.   +0.j]
-         [0.5  +0.j 0.   +0.j 0.707+0.j]
-         [0.   +0.j 0.707+0.j 0.   +0.j]]
+        SparseDIAQArray: shape=(3, 3), dims=(3,), dtype=complex64, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j]
+         [    ⋅     0.707+0.j     ⋅    ]]
     """
     a = destroy(dim, matrix_format=matrix_format)
     return 0.5 * (a + a.dag())
@@ -530,10 +534,10 @@ def momentum(dim: int, *, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.momentum(3)
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
-        [[ 0.+0.j    -0.-0.5j    0.+0.j   ]
-         [ 0.+0.5j    0.+0.j    -0.-0.707j]
-         [ 0.+0.j     0.+0.707j  0.+0.j   ]]
+        SparseDIAQArray: shape=(3, 3), dims=(3,), dtype=complex64, ndiags=2
+        [[  ⋅       0.-0.5j     ⋅      ]
+         [0.+0.5j     ⋅       0.-0.707j]
+         [  ⋅       0.+0.707j   ⋅      ]]
     """
     a = destroy(dim, matrix_format=matrix_format)
     return 0.5j * (a.dag() - a)
@@ -550,9 +554,9 @@ def sigmax(*, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.sigmax()
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
-        [[0.+0.j 1.+0.j]
-         [1.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=2
+        [[  ⋅    1.+0.j]
+         [1.+0.j   ⋅   ]]
     """
 
 
@@ -579,9 +583,9 @@ def sigmay(*, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.sigmay()
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
-        [[ 0.+0.j -0.-1.j]
-         [ 0.+1.j  0.+0.j]]
+        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=2
+        [[  ⋅    0.-1.j]
+         [0.+1.j   ⋅   ]]
     """
 
 
@@ -608,9 +612,9 @@ def sigmaz(*, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.sigmaz()
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
-        [[ 1.+0.j  0.+0.j]
-         [ 0.+0.j -1.+0.j]]
+        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        [[ 1.+0.j    ⋅   ]
+         [   ⋅    -1.+0.j]]
     """
 
 
@@ -637,9 +641,9 @@ def sigmap(*, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.sigmap()
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
-        [[0.+0.j 1.+0.j]
-         [0.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        [[  ⋅    1.+0.j]
+         [  ⋅      ⋅   ]]
     """
 
 
@@ -666,9 +670,9 @@ def sigmam(*, matrix_format: MatrixFormat = None) -> QArray:
 
     Examples:
         >>> dq.sigmam()
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
-        [[0.+0.j 0.+0.j]
-         [1.+0.j 0.+0.j]]
+        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        [[  ⋅      ⋅   ]
+         [1.+0.j   ⋅   ]]
     """
 
 
