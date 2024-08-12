@@ -69,10 +69,10 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
     Examples:
         >>> dq.cd_gate(2, 0.1)
         DenseQArray: shape=(4, 4), dims=(2, 2), dtype=complex64
-        [[ 0.999+0.j,  0.   +0.j, -0.05 +0.j,  0.   +0.j],
-         [ 0.   +0.j,  0.999+0.j,  0.   +0.j,  0.05 +0.j],
-         [ 0.05 +0.j,  0.   +0.j,  0.999+0.j,  0.   +0.j],
-         [ 0.   +0.j, -0.05 +0.j,  0.   +0.j,  0.999+0.j]]
+        [[ 0.999+0.j  0.   +0.j -0.05 +0.j  0.   +0.j]
+         [ 0.   +0.j  0.999+0.j  0.   +0.j  0.05 +0.j]
+         [ 0.05 +0.j  0.   +0.j  0.999+0.j  0.   +0.j]
+         [ 0.   +0.j -0.05 +0.j  0.   +0.j  0.999+0.j]]
         >>> dq.cd_gate(3, [0.1, 0.2]).shape
         (2, 6, 6)
     """
@@ -81,4 +81,4 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
     e = fock(2, 1)  # (2, 1)
     disp_plus = displace(dim, alpha / 2)  # (..., dim, dim)
     disp_minus = displace(dim, -alpha / 2)  # (..., dim, dim)
-    return disp_plus & g.proj() + disp_minus & e.proj()
+    return (disp_plus & g.proj()) + (disp_minus & e.proj())

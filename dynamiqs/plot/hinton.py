@@ -13,6 +13,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
 from .._checks import check_shape
+from ..qarrays.types import QArrayLike, asjaxarray
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['hinton']
@@ -120,7 +121,7 @@ def _plot_hinton(
 
 @optional_ax
 def hinton(
-    x: ArrayLike,
+    x: QArrayLike,
     *,
     ax: Axes | None = None,
     cmap: str | None = None,
@@ -188,7 +189,7 @@ def hinton(
 
         ![plot_hinton_large](/figs_code/plot_hinton_large.png){.fig}
     """  # noqa: E501
-    x = jnp.asarray(x)
+    x = asjaxarray(x)
     check_shape(x, 'x', '(n, n)')
 
     # set different defaults, areas and colors for real matrix, positive real matrix

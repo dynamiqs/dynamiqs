@@ -42,6 +42,12 @@ def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray
     if isinstance(x, QArray):
         return x
 
+    # TODO: improve this fix
+    if isinstance(x, list) and all(isinstance(x_, QArray) for x_ in x):
+        from .utils import stack
+
+        return stack(x)
+
     from .dense_qarray import DenseQArray
 
     # TODO: check if is bra, ket, dm or op

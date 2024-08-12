@@ -109,8 +109,9 @@ class SparseDIAQArray(QArray):
     def ptrace(self, keep: tuple[int, ...]) -> QArray:
         raise NotImplementedError
 
-    def powm(self):
-        raise NotImplementedError
+    def powm(self, n: int) -> QArray:
+        # todo: implement dia specific method or raise warning for dense conversion
+        return to_dense(self).powm(n)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         # todo: implement dia specific method or raise warning for dense conversion
