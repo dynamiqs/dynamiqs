@@ -143,7 +143,6 @@ def mcsolve(
     )
 
 
-@catch_xla_runtime_error
 def _vectorized_mcsolve(
     H: TimeArray,
     jump_ops: list[TimeArray],
@@ -198,6 +197,7 @@ def _vectorized_mcsolve(
     return f(H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options)
 
 
+@partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
 def _mcsolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -219,6 +219,12 @@ def _mcsolve(
     no_jump_state = no_jump_result.final_state
     p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))
     operands = (H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options, p_nojump)
+    # jump_results, jump_times, num_jumps = jax.lax.cond(
+    #     1 - p_nojump > 1e-3,
+    #     _run_jump_trajs,
+    #     _dark_state,
+    #     *operands,
+    # )
     jump_results, jump_times, num_jumps = _run_jump_trajs(*operands)
     if no_jump_result.expects is not None:
         jump_expects = jnp.mean(jump_results.expects, axis=0)
@@ -230,6 +236,8 @@ def _mcsolve(
     return mcresult
 
 
+@catch_xla_runtime_error
+@partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
 def _run_jump_trajs(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -265,6 +273,40 @@ def _run_jump_trajs(
         gradient,
         options,
     )
+
+
+@partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
+def _dark_state(
+    H: ArrayLike | TimeArray,
+    jump_ops: list[ArrayLike | TimeArray],
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    key: PRNGKey,
+    exp_ops: Array | None,
+    solver: Solver,
+    root_finder: AbstractRootFinder,
+    gradient: Gradient | None,
+    options: Options,
+    p_nojump: float,
+):
+    f = jax.vmap(
+            _single_traj,
+            in_axes=(None, None, None, None, 0, None, None, None, None, None),
+        )
+    random_numbers = jax.random.uniform(key, shape=(options.ntraj,), minval=p_nojump)
+    result = f(
+        H,
+        jump_ops,
+        psi0,
+        tsave,
+        random_numbers,
+        exp_ops,
+        solver,
+        root_finder,
+        gradient,
+        options,
+    )
+    return result, tsave[-1] * jnp.ones(options.ntraj), jnp.zeros(options.ntraj)
 
 
 # @partial(jax.jit, static_argnames=('solver', 'root_finder', 'gradient', 'options'))
@@ -323,6 +365,7 @@ def one_jump_only(
     after_jump_result = _jump_trajs(
         H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, root_finder, gradient, options
     )
+    jax.debug.breakpoint()
     result = interpolate_states_and_expects(
         tsave, new_tsave, before_jump_result, after_jump_result, jump_time, options
     )
