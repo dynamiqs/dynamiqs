@@ -10,10 +10,10 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays.types import QArrayLike
+from ...qarrays.utils import dense
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
-from ...utils.matrix_format_selector import dense
 from ...utils.operators import eye
 from .._utils import (
     _astimearray,
@@ -156,7 +156,7 @@ def _sepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1], format=dense)
+    y0 = eye(H.shape[-1], layout=dense)
     integrator = integrator_class(tsave, y0, H, None, solver, gradient, options)
 
     # === run integrator
