@@ -11,11 +11,13 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import (
     MEPropagatorResult,
-    MEResult,
+    MESolveResult,
+    PropagatorSaved,
     Result,
     Saved,
     SEPropagatorResult,
-    SEResult,
+    SESolveResult,
+    SolveSaved,
 )
 from ...solver import Solver
 from ...time_array import TimeArray
@@ -32,7 +34,6 @@ class BaseIntegrator(AbstractIntegrator):
     ts: Array
     y0: Array
     H: TimeArray
-    Es: Array
     solver: Solver
     gradient: Gradient | None
     options: Options
@@ -49,16 +50,9 @@ class BaseIntegrator(AbstractIntegrator):
     def discontinuity_ts(self) -> Array | None:
         return self.H.discontinuity_ts
 
-    def save(self, y: PyTree) -> Saved:
-        ysave, Esave, extra = None, None, None
-        if self.options.save_states:
-            ysave = y
-        if self.Es is not None and len(self.Es) > 0:
-            Esave = expect(self.Es, y)
-        if self.options.save_extra is not None:
-            extra = self.options.save_extra(y)
-
-        return Saved(ysave, Esave, extra)
+    @abstractmethod
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        pass
 
     def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
         # if save_states is False save only last state
@@ -66,6 +60,30 @@ class BaseIntegrator(AbstractIntegrator):
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast, is_leaf=lambda x: x is None
             )
+        return saved
+
+    @abstractmethod
+    def save(self, y: PyTree) -> Saved:
+        pass
+
+
+class SolveIntegrator(BaseIntegrator):
+    Es: Array
+
+    def save(self, y: PyTree) -> Saved:
+        ysave, Esave, extra = None, None, None
+
+        if self.options.save_states:
+            ysave = y
+        if self.Es is not None and len(self.Es) > 0:
+            Esave = expect(self.Es, y)
+        if self.options.save_extra is not None:
+            extra = self.options.save_extra(y)
+
+        return SolveSaved(ysave, Esave, extra)
+
+    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+        saved = super().collect_saved(saved, ylast)
 
         # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
         Esave = saved.Esave
@@ -75,9 +93,11 @@ class BaseIntegrator(AbstractIntegrator):
 
         return saved
 
-    @abstractmethod
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        pass
+
+class PropagatorIntegrator(BaseIntegrator):
+    def save(self, y: PyTree) -> Saved:
+        ysave = y if self.options.save_states else None
+        return PropagatorSaved(ysave)
 
 
 class MEIntegrator(BaseIntegrator):
@@ -89,24 +109,28 @@ class MEIntegrator(BaseIntegrator):
         return _concatenate_sort(*ts)
 
 
-class SESolveIntegrator(BaseIntegrator):
+class SESolveIntegrator(SolveIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return SEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+        return SESolveResult(
+            self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
 
 
-class MESolveIntegrator(MEIntegrator):
+class MESolveIntegrator(SolveIntegrator, MEIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return MEResult(self.ts, self.solver, self.gradient, self.options, saved, infos)
+        return MESolveResult(
+            self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
 
 
-class SEPropagatorIntegrator(BaseIntegrator):
+class SEPropagatorIntegrator(PropagatorIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return SEPropagatorResult(
             self.ts, self.solver, self.gradient, self.options, saved, infos
         )
 
 
-class MEPropagatorIntegrator(MEIntegrator):
+class MEPropagatorIntegrator(PropagatorIntegrator, MEIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return MEPropagatorResult(
             self.ts, self.solver, self.gradient, self.options, saved, infos
