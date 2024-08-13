@@ -226,6 +226,7 @@ def _mesolve(
     integrator = integrator_class(
         tsave, rho0, H, solver, gradient, options, jump_ops, exp_ops
     )
+
     # === run integrator
     result = integrator.run()
 
