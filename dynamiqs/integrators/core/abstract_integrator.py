@@ -72,6 +72,7 @@ class SolveIntegrator(BaseIntegrator):
 
     def save(self, y: PyTree) -> Saved:
         ysave, Esave, extra = None, None, None
+
         if self.options.save_states:
             ysave = y
         if self.Es is not None and len(self.Es) > 0:
@@ -83,19 +84,19 @@ class SolveIntegrator(BaseIntegrator):
 
     def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
         saved = super().collect_saved(saved, ylast)
+
+        # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
         Esave = saved.Esave
         if Esave is not None:
             Esave = Esave.swapaxes(-1, -2)
             saved = eqx.tree_at(lambda x: x.Esave, saved, Esave)
+
         return saved
 
 
 class PropagatorIntegrator(BaseIntegrator):
     def save(self, y: PyTree) -> Saved:
-        ysave = None
-        if self.options.save_states:
-            ysave = y
-
+        ysave = y if self.options.save_states else None
         return PropagatorSaved(ysave)
 
 
