@@ -61,11 +61,6 @@ class ExpmIntegrator(BaseIntegrator):
     def _generator(self, t: float) -> Array:
         raise NotImplementedError
 
-    def _find_time_idxs(self, times: Array) -> Array:
-        # === useful for extracting states, propagators and/or expects at the save
-        # times ts
-        return jnp.searchsorted(times[1:], self.ts)  # (nts,)
-
     def run(self) -> PyTree:
         # === find all times at which to stop in [t0, t1]
         # find all times where the solution should be saved (self.ts) or at which the
@@ -100,26 +95,24 @@ class ExpmIntegrator(BaseIntegrator):
 
 class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
     def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
-        t_idxs = self._find_time_idxs(times)
+        # extract propagators at the save times ts
+        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         saved = PropagatorSaved(
             saved.ysave[t_idxs] if self.options.save_states else saved.ysave
         )
-        saved = super().collect_saved(saved, ylast)
-
-        return saved  # noqa: RET504
+        return super().collect_saved(saved, ylast)
 
 
 class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
     def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
-        t_idxs = self._find_time_idxs(times)
+        # extract states, expects and extra at the save times ts
+        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         saved = SolveSaved(
             saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
             saved.Esave[t_idxs] if saved.Esave is not None else None,
             saved.extra[t_idxs] if saved.extra is not None else None,
         )
-        saved = super().collect_saved(saved, ylast)
-
-        return saved  # noqa: RET504
+        return super().collect_saved(saved, ylast)
 
 
 class SEExpmIntegrator(ExpmIntegrator):
