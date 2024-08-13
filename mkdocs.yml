@@ -229,6 +229,7 @@ nav:
               - wigner: python_api/utils/quantum_utils/wigner.md
           - QArray utilities:
               - stack: python_api/qarrays/utils/stack.md
+              - set_layout: python_api/qarrays/utils/set_layout.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md

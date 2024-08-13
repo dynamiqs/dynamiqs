@@ -4,6 +4,7 @@ from . import dark, plot, random
 from .integrators import *
 from .options import *
 from .qarrays import *
+from .qarrays.utils import dense, dia
 from .result import *
 from .time_array import *
 from .utils import *
