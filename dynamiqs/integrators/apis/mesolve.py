@@ -117,9 +117,9 @@ def mesolve(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the Lindblad
-            master  equation integration. Use the attributes `states` and `expects`
-            to access saved quantities, more details in
+        [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the
+            Lindblad master equation integration. Use the attributes `states` and
+            `expects` to access saved quantities, more details in
             [`dq.MESolveResult`][dynamiqs.MESolveResult].
     """  # noqa: E501
     # === convert arguments
