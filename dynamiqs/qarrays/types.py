@@ -4,12 +4,19 @@ from typing import Any, Union, get_args
 
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .qarray import QArray
 
-__all__ = ['QArray', 'QArrayLike', 'asqarray', 'asjaxarray', 'isqarraylike']
+__all__ = [
+    'QArray',
+    'QArrayLike',
+    'asqarray',
+    'asjaxarray',
+    'isqarraylike',
+    'sparsedia',
+]
 
 # In this file we define an extended array type named `QArrayLike`. Most
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
@@ -68,3 +75,29 @@ def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray
 
 def asjaxarray(x: QArrayLike) -> Array:
     return x.to_jax() if isinstance(x, QArray) else jnp.asarray(x)
+
+
+def sparsedia(
+    offsets_diags: dict[int, ArrayLike],
+    dims: int | tuple[int, ...] | None = None,
+    dtype: DTypeLike | None = None,
+) -> QArray:  # todo: fix return type (circular import)
+    from .sparse_dia_qarray import SparseDIAQArray
+
+    # === offsets
+    offsets = tuple(offsets_diags.keys())
+
+    # === diags
+    # stack arrays in a square matrix by padding each according to its offset
+    pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
+    diags = [jnp.asarray(diag) for diag in offsets_diags.values()]
+    diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
+    diags = jnp.stack(diags, dtype=dtype)
+
+    # === dims
+    if dims is None:
+        dims = (diags.shape[-1],)
+    elif isinstance(dims, int):
+        dims = (dims,)
+
+    return SparseDIAQArray(diags=diags, offsets=offsets, dims=dims)
