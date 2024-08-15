@@ -43,6 +43,10 @@ class PropagatorSaved(Saved):
     pass
 
 
+class FloquetSaved(Saved):
+    quasi_es: Array
+
+
 class Result(eqx.Module):
     tsave: Array
     solver: Solver
@@ -124,6 +128,16 @@ class PropagatorResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {'Propagators': array_str(self.propagators)}
+
+
+class FloquetResult(Result):
+    @property
+    def floquet_modes(self) -> Array:
+        return self._saved.ysave
+
+    @property
+    def quasi_energies(self) -> Array:
+        return self._saved.quasi_es
 
 
 class SESolveResult(SolveResult):
