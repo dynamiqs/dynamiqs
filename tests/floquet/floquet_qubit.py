@@ -8,7 +8,7 @@ from jaxtyping import PyTree
 
 from dynamiqs import basis, dag, sigmap, sigmaz
 from dynamiqs.gradient import Gradient
-from dynamiqs.integrators.apis.floquet import floquet
+from dynamiqs.integrators.apis.floquet import floquet, floquet_t
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
 from dynamiqs.solver import Solver
@@ -22,8 +22,6 @@ class FloquetQubit(System):
         omega: float
         omega_d: float
         amp: float
-        t_mode: float
-        floquet_mode_0: FloquetResult | None
 
     def run(
         self,
@@ -39,8 +37,6 @@ class FloquetQubit(System):
         return floquet(
             H,
             T,
-            tsave=[0, params.t_mode],
-            floquet_result_0=params.floquet_mode_0,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -48,20 +44,15 @@ class FloquetQubit(System):
 
     def __init__(
         self,
-        *,
         omega: float,
         omega_d: float,
         amp: float,
-        t_mode: float,
-        floquet_mode_0: FloquetResult | None = None,
     ):
         self.omega = omega
         self.omega_d = omega_d
         self.amp = amp
-        self.t_mode = t_mode
-        self.floquet_mode_0 = floquet_mode_0
 
-        self.params_default = self.Params(omega, omega_d, amp, t_mode, floquet_mode_0)
+        self.params_default = self.Params(omega, omega_d, amp)
 
     def H(self, params: PyTree) -> CallableTimeArray:
         def H_func(t):
@@ -80,12 +71,12 @@ class FloquetQubit(System):
         w1 = jnp.sin(0.5 * theta) * basis(2, 0) + jnp.exp(
             -1j * self.omega_d * t
         ) * jnp.cos(0.5 * theta) * basis(2, 1)
-        return jnp.stack([w0, w1])
+        return jnp.column_stack([w0, w1])
 
-    def quasi_energies(self) -> Array:
+    def true_quasi_energies(self) -> Array:
         delta_Omega = self.omega - self.omega_d
         Omega_R = jnp.sqrt(delta_Omega**2 + self.amp**2)
-        quasi_es = jnp.asarray([-0.5 * Omega_R, 0.5 * Omega_R])
+        quasi_es = jnp.asarray([0.5 * Omega_R, -0.5 * Omega_R])
         quasi_es = jnp.mod(quasi_es, self.omega_d)
         return jnp.where(
             quasi_es > 0.5 * self.omega_d, quasi_es - self.omega_d, quasi_es
@@ -96,3 +87,54 @@ class FloquetQubit(System):
 
     def Es(self, params: PyTree) -> Array:
         raise NotImplementedError
+
+
+class FloquetQubit_t(FloquetQubit):
+    class Params(NamedTuple):
+        omega: float
+        omega_d: float
+        amp: float
+        tsave: Array
+        floquet_modes_0: Array | None
+        quasi_energies: Array | None
+
+    def run(
+        self,
+        solver: Solver,
+        *,
+        gradient: Gradient | None = None,
+        options: Options = Options(),  # noqa: B008
+        params: PyTree | None = None,
+    ) -> FloquetResult:
+        params = self.params_default if params is None else params
+        H = self.H(params)
+        T = 2.0 * jnp.pi / params.omega_d
+        return floquet_t(
+            H,
+            T,
+            tsave=params.tsave,
+            floquet_modes_0=params.floquet_modes_0,
+            quasi_energies=params.quasi_energies,
+            solver=solver,
+            gradient=gradient,
+            options=options,
+        )
+
+    def __init__(
+        self,
+        omega: float,
+        omega_d: float,
+        amp: float,
+        tsave: Array,
+        *,
+        floquet_modes_0: Array | None = None,
+        quasi_energies: Array | None = None,
+    ):
+        self.omega = omega
+        self.omega_d = omega_d
+        self.amp = amp
+        self.tsave = tsave
+        self.floquet_modes_0 = floquet_modes_0
+        self.quasi_energies = quasi_energies
+
+        self.params_default = self.Params(omega, omega_d, amp, tsave, floquet_modes_0, quasi_energies)
