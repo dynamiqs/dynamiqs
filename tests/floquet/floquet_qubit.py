@@ -34,20 +34,9 @@ class FloquetQubit(System):
         params = self.params_default if params is None else params
         H = self.H(params)
         T = 2.0 * jnp.pi / params.omega_d
-        return floquet(
-            H,
-            T,
-            solver=solver,
-            gradient=gradient,
-            options=options,
-        )
+        return floquet(H, T, solver=solver, gradient=gradient, options=options)
 
-    def __init__(
-        self,
-        omega: float,
-        omega_d: float,
-        amp: float,
-    ):
+    def __init__(self, omega: float, omega_d: float, amp: float):
         self.omega = omega
         self.omega_d = omega_d
         self.amp = amp
@@ -137,4 +126,6 @@ class FloquetQubit_t(FloquetQubit):
         self.floquet_modes_0 = floquet_modes_0
         self.quasi_energies = quasi_energies
 
-        self.params_default = self.Params(omega, omega_d, amp, tsave, floquet_modes_0, quasi_energies)
+        self.params_default = self.Params(
+            omega, omega_d, amp, tsave, floquet_modes_0, quasi_energies
+        )

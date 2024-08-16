@@ -2,10 +2,10 @@ import jax
 import jax.numpy as jnp
 import pytest
 
+from dynamiqs.options import Options
 from dynamiqs.solver import Tsit5
 
 from ..integrator_tester import IntegratorTester
-from dynamiqs.options import Options
 from .floquet_qubit import FloquetQubit, FloquetQubit_t
 
 
@@ -34,13 +34,22 @@ class TestFloquet(IntegratorTester):
         )
         assert jnp.all(quasi_errs <= ysave_atol)
 
-    @pytest.mark.parametrize('omega', 2.0 * jnp.pi * jnp.array([2.5, ]))
-    @pytest.mark.parametrize('amp', 2.0 * jnp.pi * jnp.array([0.01, ]))
-    @pytest.mark.parametrize('omega_d_frac', [0.9, ])
-    @pytest.mark.parametrize('t', [0.3, 0.8])
+    @pytest.mark.parametrize('omega', 2.0 * jnp.pi * jnp.array([2.5]))
+    @pytest.mark.parametrize('amp', 2.0 * jnp.pi * jnp.array([0.01]))
+    @pytest.mark.parametrize('omega_d_frac', [0.9])
+    @pytest.mark.parametrize('t', [0.1, 0.3])
     @pytest.mark.parametrize('precompute_0_for_t', [True, False])
     @pytest.mark.parametrize('save_states', [True, False])
-    def test_correctness_t(self, omega, amp, omega_d_frac, t, save_states, precompute_0_for_t, ysave_atol: float = 1e-3):
+    def test_correctness_t(
+        self,
+        omega,
+        amp,
+        omega_d_frac,
+        t,
+        save_states,
+        precompute_0_for_t,
+        ysave_atol: float = 1e-3,
+    ):
         omega_d = omega_d_frac * omega
         tsave = jnp.linspace(0.0, t, 4)
         if precompute_0_for_t:
@@ -52,13 +61,20 @@ class TestFloquet(IntegratorTester):
             floquet_modes_0 = None
             quasi_energies = None
         floquet_qubit = FloquetQubit_t(
-            omega, omega_d, amp, tsave, floquet_modes_0=floquet_modes_0, quasi_energies=quasi_energies
+            omega,
+            omega_d,
+            amp,
+            tsave,
+            floquet_modes_0=floquet_modes_0,
+            quasi_energies=quasi_energies,
         )
-        floquet_result = floquet_qubit.run(Tsit5(), options=Options(save_states=save_states))
+        floquet_result = floquet_qubit.run(
+            Tsit5(), options=Options(save_states=save_states)
+        )
         floquet_modes = floquet_result.floquet_modes
         state_phases = jnp.angle(floquet_modes[..., 0, :])
         floquet_modes = jnp.einsum(
-            "...ij,...j->...ij", floquet_modes, jnp.exp(-1j * state_phases)
+            '...ij,...j->...ij', floquet_modes, jnp.exp(-1j * state_phases)
         )
         quasi_energies = floquet_result.quasi_energies
         if save_states:
@@ -78,4 +94,3 @@ class TestFloquet(IntegratorTester):
             quasi_energies[idxs] - true_quasi_energies, axis=-1
         )
         assert jnp.all(quasi_errs <= ysave_atol)
-

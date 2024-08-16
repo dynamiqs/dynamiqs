@@ -243,6 +243,8 @@ def _floquet_t(
 
 
 def _broadcast_floquet_args(H: TimeArray, T: Array) -> [Array, Array, Array]:
+    if len(T.shape) == 0 and len(H.shape[:-2]) != 0:
+        T = T[None]
     broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], T.shape)
     H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
     T = jnp.broadcast_to(T, broadcast_shape)
