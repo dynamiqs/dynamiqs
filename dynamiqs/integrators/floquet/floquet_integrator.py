@@ -37,7 +37,7 @@ class FloquetIntegrator(BaseIntegrator):
         return self.result(saved, infos=U_result.infos)
 
 
-class FloquetIntegratort(FloquetIntegrator):
+class FloquetIntegrator_t(FloquetIntegrator):
     floquet_modes_0: Array | None
     quasi_energies: Array | None
 

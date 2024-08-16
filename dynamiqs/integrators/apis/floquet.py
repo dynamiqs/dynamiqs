@@ -10,7 +10,7 @@ from ..._checks import check_shape
 from ...gradient import Gradient
 from ...integrators.floquet.floquet_integrator import (
     FloquetIntegrator,
-    FloquetIntegratort,
+    FloquetIntegrator_t,
 )
 from ...options import Options
 from ...result import FloquetResult, Saved
@@ -231,7 +231,7 @@ def _floquet_t(
     solver.assert_supports_gradient(gradient)
 
     # === integrator class is always FloquetIntegratort
-    integrator = FloquetIntegratort(
+    integrator = FloquetIntegrator_t(
         tsave, None, H, solver, gradient, options, T, floquet_modes_0, quasi_energies
     )
 
