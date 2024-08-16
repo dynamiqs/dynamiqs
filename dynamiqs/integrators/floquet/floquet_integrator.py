@@ -18,7 +18,7 @@ class FloquetIntegrator(BaseIntegrator):
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return FloquetResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
+            None, self.solver, self.gradient, self.options, saved, infos
         )
 
     def run(self) -> PyTree:
@@ -41,6 +41,11 @@ class FloquetIntegrator_t(FloquetIntegrator):
     floquet_modes_0: Array | None
     quasi_energies: Array | None
 
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return FloquetResult(
+            self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
+
     def run(self) -> PyTree:
         U_result = sepropagator(
             self.H,
@@ -52,6 +57,7 @@ class FloquetIntegrator_t(FloquetIntegrator):
         # floquet modes are stored as column vectors, so the multiplication
         # by the phases addresses each column vector individually
         floquet_modes_t = U_result.propagators @ self.floquet_modes_0
-        floquet_modes_t = floquet_modes_t * jnp.exp(1j * self.quasi_energies * self.t1)
+        quasi_e_t = self.quasi_energies[None, None] * self.ts[:, None, None]
+        floquet_modes_t = floquet_modes_t * jnp.exp(1j * quasi_e_t)
         saved = FloquetSaved(floquet_modes_t, self.quasi_energies)
         return self.result(saved, infos=U_result.infos)
