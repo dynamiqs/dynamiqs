@@ -187,7 +187,7 @@ def _vectorized_floquet_t(
 
     if floquet_modes_0 is not None:
         f_modes_0_batch = Shape(floquet_modes_0.shape[:-2])
-        q_energies_batch = Shape(floquet_modes_0.shape[:-1])
+        q_energies_batch = Shape(quasi_energies.shape[:-1])
     else:
         f_modes_0_batch = Shape()
         q_energies_batch = Shape()
