@@ -23,7 +23,7 @@ __all__ = ['floquet', 'floquet_t']
 
 def floquet(
     H: ArrayLike | TimeArray,
-    T: ArrayLike,
+    T: float | ArrayLike,
     *,
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,

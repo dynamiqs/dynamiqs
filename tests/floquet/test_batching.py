@@ -6,9 +6,28 @@ import dynamiqs as dq
 from dynamiqs import floquet, floquet_t, timecallable
 
 
+@pytest.mark.parametrize('nH', [(3,), (3, 4)])
+def test_batching_tc(nH):
+    n = 6
+    ntsave = 5
+    T = 3.4
+    tsave = jnp.linspace(0.0, 1.0, ntsave)
+    key = jax.random.PRNGKey(84)
+    _H = dq.random.herm(key, (*nH, n, n))
+    omega_d = 2.0 * jnp.pi / T
+
+    H = timecallable(lambda t: jnp.cos(omega_d * t) * _H)
+    result_0 = dq.floquet(H, T, safe=True)
+    assert result_0.floquet_modes.shape == (*nH, n, n)
+    assert result_0.quasi_energies.shape == (*nH, n)
+
+    result_t = dq.floquet_t(H, T, tsave=tsave, safe=True)
+    assert result_t.floquet_modes.shape == (*nH, ntsave, n, n)
+    assert result_t.quasi_energies.shape == (*nH, n)
+
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('T', [1.0, [1.0]])
-def test_batching(nH, T):
+def test_batching_constant(nH, T):
     n = 2
     ntsave = 5
     tsave = jnp.linspace(0.0, 1.0, ntsave)
