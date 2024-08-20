@@ -59,7 +59,7 @@ def mcsolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
-    key: PRNGKey = PRNGKey(42),
+    keys: list[PRNGKey] = [PRNGKey(42),],
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     root_finder: AbstractRootFinder = optx.Newton(1e-5, 1e-5, optx.rms_norm),
@@ -133,13 +133,14 @@ def mcsolve(
     jump_ops = [_astimearray(L) for L in jump_ops]
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
+    keys = jnp.asarray(keys)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === check arguments
     _check_mcsolve_args(H, jump_ops, psi0, tsave, exp_ops)
 
     return _vectorized_mcsolve(
-        H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options
+        H, jump_ops, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options
     )
 
 
@@ -148,7 +149,7 @@ def _vectorized_mcsolve(
     jump_ops: list[TimeArray],
     psi0: Array,
     tsave: Array,
-    key: PRNGKey,
+    keys: PRNGKey,
     exp_ops: Array | None,
     solver: Solver,
     root_finder: AbstractRootFinder,
@@ -197,13 +198,50 @@ def _vectorized_mcsolve(
     return f(H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options)
 
 
+def _mcsolve_integrator(
+    solver: Solver,
+    gradient: Gradient | None,
+):
+    solvers = {
+        Euler: MCSolveEulerIntegrator,
+        Dopri5: MCSolveDopri5Integrator,
+        Dopri8: MCSolveDopri8Integrator,
+        Tsit5: MCSolveTsit5Integrator,
+        Kvaerno3: MCSolveKvaerno3Integrator,
+        Kvaerno5: MCSolveKvaerno5Integrator,
+    }
+    integrator_class = get_integrator_class(solvers, solver)
+    solver.assert_supports_gradient(gradient)
+    return integrator_class
+
+
+def _mcsolve_jump(
+    H: ArrayLike | TimeArray,
+    jump_ops: list[ArrayLike | TimeArray],
+    psi0: ArrayLike,
+    tsave: ArrayLike,
+    key: PRNGKey,
+    rand: float,
+    exp_ops: Array | None,
+    solver: Solver,
+    root_finder: AbstractRootFinder,
+    gradient: Gradient | None,
+    options: Options,
+):
+    integrator_class = _mcsolve_integrator(solver, gradient)
+    jump_integrator = integrator_class(
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, key, root_finder,
+    )
+    return jump_integrator.run()
+
+
 @partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
 def _mcsolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
     tsave: ArrayLike,
-    key: PRNGKey,
+    keys: list[PRNGKey],
     exp_ops: Array | None,
     solver: Solver,
     root_finder: AbstractRootFinder,
@@ -211,20 +249,25 @@ def _mcsolve(
     options: Options,
 ) -> MCResult:
     # simulate no-jump trajectory
-    rand0 = 0.0
-    no_jump_result = _single_traj(
-        H, jump_ops, psi0, tsave, rand0, exp_ops, solver, root_finder, gradient, options
+    integrator_class = _mcsolve_integrator(solver, gradient)
+    no_jump_integrator = integrator_class(
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, 0.0, PRNGKey(0), root_finder,
     )
-    # extract the no-jump probability
-    no_jump_state = no_jump_result.final_state
-    p_nojump = jnp.abs(jnp.einsum("id,id->", jnp.conj(no_jump_state), no_jump_state))
-    operands = (H, jump_ops, psi0, tsave, key, exp_ops, solver, root_finder, gradient, options, p_nojump)
-    # jump_results, jump_times, num_jumps = jax.lax.cond(
-    #     1 - p_nojump > 1e-3,
-    #     _run_jump_trajs,
-    #     _dark_state,
-    #     *operands,
-    # )
+    no_jump_result = no_jump_integrator.run()
+    p_nojump = no_jump_result.p_nojump
+
+    def _jump(_key):
+        key_1, key_2 = jax.random.split(_key, num=2)
+        rand = jax.random.uniform(key_1, minval=p_nojump)
+        jump_integrator = integrator_class(
+            tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, _key, root_finder,
+        )
+        return jump_integrator.run()
+
+    jump_result = jax.vmap(_jump)(keys)
+    # TODO how best to do this?
+    mcresult = MCResult(tsave, no_jump_result, jump_result, p_nojump)
+
     jump_results, jump_times, num_jumps = _run_jump_trajs(*operands)
     if no_jump_result.expects is not None:
         jump_expects = jnp.mean(jump_results.expects, axis=0)
@@ -333,10 +376,9 @@ def _single_traj(
     }
     integrator_class = get_integrator_class(solvers, solver)
     solver.assert_supports_gradient(gradient)
-    new_rand = jnp.where(1 - rand < 1e-3, 0.0, rand)
     # jax.debug.breakpoint()
     integrator = integrator_class(
-        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, new_rand, root_finder,
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
     )
     return integrator.run()
 
