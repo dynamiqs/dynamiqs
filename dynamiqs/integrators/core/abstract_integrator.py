@@ -6,6 +6,7 @@ from diffrax import Event
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
+from jax.random import PRNGKey
 from jaxtyping import PyTree, Scalar
 from optimistix import AbstractRootFinder
 
@@ -98,6 +99,7 @@ class MESolveIntegrator(BaseIntegrator):
 
 class MCSolveIntegrator(BaseIntegrator):
     Ls: list[Array | TimeArray] | None = None
+    key: PRNGKey = PRNGKey(42)
     rand: float = 0.0
     root_finder: AbstractRootFinder | None = None
 
