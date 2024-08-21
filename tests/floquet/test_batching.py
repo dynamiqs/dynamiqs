@@ -7,7 +7,7 @@ from dynamiqs import timecallable, modulated
 
 
 @pytest.mark.parametrize(
-    'nH,nT',
+    ('nH', 'nT'),
     [
         ((), ()),
         ((3,), ()),
@@ -28,9 +28,9 @@ def test_batching(nH, nT, H_type):
     key = jax.random.PRNGKey(84)
     key_1, key_2, key_3 = jax.random.split(key, 3)
     Ts = dq.random.real(key_3, (*nT,), min=0.5)
-    if H_type is 'constant':
+    if H_type == 'constant':
         H = dq.random.herm(key_1, (*nH, n, n))
-    elif H_type is 'modulated':
+    elif H_type == 'modulated':
         _H = dq.random.herm(key_1, (n, n))
         f_pref = dq.random.real(key_2, (*nH,))
         broadcast_shape = jnp.broadcast_shapes(nH, nT)
