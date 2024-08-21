@@ -221,7 +221,7 @@ def _floquet_t(
     options: Options,
 ) -> FloquetResult:
     if floquet_modes_0 is None:
-        floquet_result_0 = floquet(
+        floquet_result_0 = _floquet(
             H, T, solver=solver, gradient=gradient, options=options
         )
         floquet_modes_0 = floquet_result_0.floquet_modes
