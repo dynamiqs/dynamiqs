@@ -7,7 +7,7 @@ from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
 
-from ..apis.sepropagator import sepropagator
+from ..apis.sepropagator import _sepropagator
 from ..core.abstract_integrator import BaseIntegrator
 
 __all__ = ['FloquetIntegrator']
@@ -23,7 +23,7 @@ class FloquetIntegrator(BaseIntegrator):
 
     def run(self) -> PyTree:
         options = eqx.tree_at(lambda x: x.save_states, self.options, False)
-        U_result = sepropagator(
+        U_result = _sepropagator(
             self.H, self.ts, solver=self.solver, gradient=self.gradient, options=options
         )
         evals, evecs = jnp.linalg.eig(U_result.propagators)
@@ -47,7 +47,7 @@ class FloquetIntegrator_t(FloquetIntegrator):
         )
 
     def run(self) -> PyTree:
-        U_result = sepropagator(
+        U_result = _sepropagator(
             self.H,
             self.ts,
             solver=self.solver,
