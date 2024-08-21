@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from dynamiqs import timecallable, modulated
+from dynamiqs import modulated, timecallable
 
 
 @pytest.mark.parametrize(
