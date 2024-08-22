@@ -30,9 +30,9 @@ def floquet(
     options: Options = Options(),  # noqa: B008
     safe: bool = False,
 ) -> FloquetResult:
-    r"""Compute Floquet modes $\Phi_{m}(0)$ and quasi energies $\epsilon_m$.
+    r"""Compute Floquet modes $\Phi_{m}(0)$ and quasienergies $\epsilon_m$.
 
-    For a periodically driven system, the Floquet modes $\Phi_{m}(0)$ and quasi energies
+    For a periodically driven system, the Floquet modes $\Phi_{m}(0)$ and quasienergies
     $\epsilon_m$ are defined by the eigenvalue equation
     $$
         U(0, T)\Phi_{m}(0) = \exp(-i \epsilon_{m} T)\Phi_{m}(0),
@@ -45,7 +45,7 @@ def floquet(
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
         T _(array-like of shape (...H))_: Period of the drive. T should have the same
             shape as ...H or should be broadcastable to that shape. This is to allow
-            batching over Hamiltonians with differing drive frequencies
+            batching over Hamiltonians with differing drive frequencies.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
@@ -55,7 +55,7 @@ def floquet(
     Returns:
         [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
             Floquet computation. Use the attribute `floquet_modes` to access the saved
-            Floquet modes, and the attribute `quasi_energies` the associated quasi
+            Floquet modes, and the attribute `quasienergies` the associated quasi
             energies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
     """
     # === convert arguments
@@ -82,7 +82,7 @@ def _vectorized_floquet(
     # we vectorize over H. Different batch Hamiltonians may be periodic with
     # varying periods, so T must be broadcastable to the same shape as H.
 
-    out_axes = FloquetResult(False, False, False, False, 0, 0)
+    out_axes = FloquetResult(0, False, False, False, 0, 0, 0)
 
     n_batch = (H.in_axes, Shape(T.shape), Shape(), Shape(), Shape())
     f = _flat_vectorize(_floquet, n_batch, out_axes)
@@ -115,15 +115,16 @@ def floquet_t(
     *,
     tsave: ArrayLike,
     floquet_modes_0: Array | None = None,
-    quasi_energies: Array | None = None,
+    quasienergies: Array | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
     safe: bool = False,
 ) -> FloquetResult:
-    r"""Compute Floquet modes $\Phi_{m}(t)$ and quasi energies $\epsilon_m$.
+    r"""Compute Floquet modes $\Phi_{m}(t)$ and quasienergies $\epsilon_m$.
 
-    The Floquet modes $\Phi_{m}(t)$ are obtained via the Floquet modes $\Phi_{m}(0)$ via
+    The Floquet modes $\Phi_{m}(t)$ are obtained from the Floquet modes $\Phi_{m}(0)$
+    via
     $$
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(0, t)\Phi_{m}(0).
     $$
@@ -133,11 +134,16 @@ def floquet_t(
         T _(array-like of shape (...H))_: Period of the drive. T should have the same
             shape as ...H or should be broadcastable to that shape. This is to allow
             batching over Hamiltonians with differing drive frequencies.
-        tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet modes
-        floquet_modes_0 _(array-like of shape (...H, n, n))_: floquet modes at t=0. The
-            shape of floquet_modes_0 should be the same as that of H
-        quasi_energies _(array-like of shape (...H, n))_: previously obtained quasi
-            energies.
+        tsave _(array-like of shape (ntsave,) or (...H, ntsave))_: Times at which to
+            compute floquet modes. `tsave` is allowed to have batch dimensions to allow
+            for cases where `H` is batched over different drive frequencies. In this
+            case, it makes sense to ask for the Floquet modes at different times for
+            different batch dimensions.
+        floquet_modes_0 _(array-like of shape (...H, n, n) or None)_: floquet modes at
+            `t=0`. The shape of floquet_modes_0 should be the same as that of H. If not
+             supplied they are computed on the fly
+        quasienergies _(array-like of shape (...H, n))_: Previously obtained
+            quasienergies.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
@@ -147,7 +153,7 @@ def floquet_t(
     Returns:
         [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
             Floquet computation. Use the attribute `floquet_modes` to access the saved
-            Floquet modes, and the attribute `quasi_energies` the associated quasi
+            Floquet modes, and the attribute `quasienergies` the associated quasi
             energies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
     """
     # === convert arguments
@@ -165,7 +171,7 @@ def floquet_t(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_floquet_t(
-        H, T, tsave, floquet_modes_0, quasi_energies, solver, gradient, options
+        H, T, tsave, floquet_modes_0, quasienergies, solver, gradient, options
     )
 
 
@@ -176,7 +182,7 @@ def _vectorized_floquet_t(
     T: Array,
     tsave: Array,
     floquet_modes_0: Array | None,
-    quasi_energies: Array | None,
+    quasienergies: Array | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -187,12 +193,12 @@ def _vectorized_floquet_t(
 
     if floquet_modes_0 is not None:
         f_modes_0_batch = Shape(floquet_modes_0.shape[:-2])
-        q_energies_batch = Shape(quasi_energies.shape[:-1])
+        q_energies_batch = Shape(quasienergies.shape[:-1])
     else:
         f_modes_0_batch = Shape()
         q_energies_batch = Shape()
 
-    out_axes = FloquetResult(0, False, False, False, 0, 0)
+    out_axes = FloquetResult(0, False, False, False, 0, 0, 0)
 
     n_batch = (
         H.in_axes,
@@ -207,7 +213,7 @@ def _vectorized_floquet_t(
     f = _flat_vectorize(_floquet_t, n_batch, out_axes)
 
     # === apply vectorized function
-    return f(H, T, tsave, floquet_modes_0, quasi_energies, solver, gradient, options)
+    return f(H, T, tsave, floquet_modes_0, quasienergies, solver, gradient, options)
 
 
 def _floquet_t(
@@ -215,7 +221,7 @@ def _floquet_t(
     T: Array,
     tsave: Array,
     floquet_modes_0: Array | None,
-    quasi_energies: Array | None,
+    quasienergies: Array | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -225,14 +231,14 @@ def _floquet_t(
             H, T, solver=solver, gradient=gradient, options=options
         )
         floquet_modes_0 = floquet_result_0.floquet_modes
-        quasi_energies = floquet_result_0.quasi_energies
+        quasienergies = floquet_result_0.quasienergies
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === integrator class is always FloquetIntegratort
     integrator = FloquetIntegrator_t(
-        tsave, None, H, solver, gradient, options, T, floquet_modes_0, quasi_energies
+        tsave, None, H, solver, gradient, options, T, floquet_modes_0, quasienergies
     )
 
     # === run integrator
@@ -243,8 +249,6 @@ def _floquet_t(
 
 
 def _broadcast_floquet_args(H: TimeArray, T: Array) -> [Array, Array, Array]:
-    if len(T.shape) == 0 and len(H.shape[:-2]) != 0:
-        T = T[None]
     broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], T.shape)
     H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
     T = jnp.broadcast_to(T, broadcast_shape)

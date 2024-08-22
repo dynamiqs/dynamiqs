@@ -49,8 +49,8 @@ def test_batching(nH, nT, H_type):
 
     result_0 = dq.floquet(H, Ts, safe=True)
     assert result_0.floquet_modes.shape == (*nH, n, n)
-    assert result_0.quasi_energies.shape == (*nH, n)
+    assert result_0.quasienergies.shape == (*nH, n)
 
     result_t = dq.floquet_t(H, Ts, tsave=tsave, safe=True)
     assert result_t.floquet_modes.shape == (*nH, ntsave, n, n)
-    assert result_t.quasi_energies.shape == (*nH, n)
+    assert result_t.quasienergies.shape == (*nH, n)

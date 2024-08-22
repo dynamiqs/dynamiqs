@@ -62,7 +62,7 @@ class FloquetQubit(System):
         ) * jnp.cos(0.5 * theta) * basis(2, 1)
         return jnp.column_stack([w0, w1])
 
-    def true_quasi_energies(self) -> Array:
+    def true_quasienergies(self) -> Array:
         delta_Omega = self.omega - self.omega_d
         Omega_R = jnp.sqrt(delta_Omega**2 + self.amp**2)
         quasi_es = jnp.asarray([0.5 * Omega_R, -0.5 * Omega_R])
@@ -85,7 +85,7 @@ class FloquetQubit_t(FloquetQubit):
         amp: float
         tsave: Array
         floquet_modes_0: Array | None
-        quasi_energies: Array | None
+        quasienergies: Array | None
 
     def run(
         self,
@@ -103,7 +103,7 @@ class FloquetQubit_t(FloquetQubit):
             T,
             tsave=params.tsave,
             floquet_modes_0=params.floquet_modes_0,
-            quasi_energies=params.quasi_energies,
+            quasienergies=params.quasienergies,
             solver=solver,
             gradient=gradient,
             options=options,
@@ -117,15 +117,15 @@ class FloquetQubit_t(FloquetQubit):
         tsave: Array,
         *,
         floquet_modes_0: Array | None = None,
-        quasi_energies: Array | None = None,
+        quasienergies: Array | None = None,
     ):
         self.omega = omega
         self.omega_d = omega_d
         self.amp = amp
         self.tsave = tsave
         self.floquet_modes_0 = floquet_modes_0
-        self.quasi_energies = quasi_energies
+        self.quasienergies = quasienergies
 
         self.params_default = self.Params(
-            omega, omega_d, amp, tsave, floquet_modes_0, quasi_energies
+            omega, omega_d, amp, tsave, floquet_modes_0, quasienergies
         )

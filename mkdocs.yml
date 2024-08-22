@@ -144,6 +144,8 @@ nav:
           - smesolve: python_api/integrators/smesolve.md
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
+          - floquet: python_api/integrators/floquet.md
+          - floquet_t: python_api/integrators/floquet_t.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -170,6 +172,7 @@ nav:
               - MESolveResult: python_api/result/MESolveResult.md
               - SEPropagatorResult: python_api/result/SEPropagatorResult.md
               - MEPropagatorResult: python_api/result/MEPropagatorResult.md
+              - FloquetResult: python_api/result/FloquetResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md

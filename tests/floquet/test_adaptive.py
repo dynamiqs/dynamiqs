@@ -18,20 +18,18 @@ class TestFloquet(IntegratorTester):
         floquet_qubit_0 = FloquetQubit(omega, omega_d, amp)
         floquet_result_0 = floquet_qubit_0.run(Tsit5())
         floquet_modes_0 = floquet_result_0.floquet_modes
-        quasi_energies = floquet_result_0.quasi_energies
+        quasienergies = floquet_result_0.quasienergies
         true_floquet_modes_0 = floquet_qubit_0.state(0)
-        true_quasi_energies = floquet_qubit_0.true_quasi_energies()
+        true_quasienergies = floquet_qubit_0.true_quasienergies()
         # sort them appropriately for comparison
         idxs = jnp.argmin(
-            jnp.abs(quasi_energies - true_quasi_energies[..., None]), axis=1
+            jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
         state_errs = jnp.linalg.norm(
             floquet_modes_0[:, idxs] - true_floquet_modes_0, axis=(0, 1)
         )
         assert jnp.all(state_errs <= ysave_atol)
-        quasi_errs = jnp.linalg.norm(
-            quasi_energies[idxs] - true_quasi_energies, axis=-1
-        )
+        quasi_errs = jnp.linalg.norm(quasienergies[idxs] - true_quasienergies, axis=-1)
         assert jnp.all(quasi_errs <= ysave_atol)
 
     @pytest.mark.parametrize('omega', 2.0 * jnp.pi * jnp.array([2.5]))
@@ -56,17 +54,17 @@ class TestFloquet(IntegratorTester):
             floquet_qubit_0 = FloquetQubit(omega, omega_d, amp)
             floquet_result_0 = floquet_qubit_0.run(Tsit5())
             floquet_modes_0 = floquet_result_0.floquet_modes
-            quasi_energies = floquet_result_0.quasi_energies
+            quasienergies = floquet_result_0.quasienergies
         else:
             floquet_modes_0 = None
-            quasi_energies = None
+            quasienergies = None
         floquet_qubit = FloquetQubit_t(
             omega,
             omega_d,
             amp,
             tsave,
             floquet_modes_0=floquet_modes_0,
-            quasi_energies=quasi_energies,
+            quasienergies=quasienergies,
         )
         floquet_result = floquet_qubit.run(
             Tsit5(), options=Options(save_states=save_states)
@@ -76,21 +74,19 @@ class TestFloquet(IntegratorTester):
         floquet_modes = jnp.einsum(
             '...ij,...j->...ij', floquet_modes, jnp.exp(-1j * state_phases)
         )
-        quasi_energies = floquet_result.quasi_energies
+        quasienergies = floquet_result.quasienergies
         if save_states:
             true_floquet_modes = jax.vmap(floquet_qubit.state)(tsave)
         else:
             true_floquet_modes = floquet_qubit.state(t)
-        true_quasi_energies = floquet_qubit.true_quasi_energies()
+        true_quasienergies = floquet_qubit.true_quasienergies()
         # sort them appropriately for comparison
         idxs = jnp.argmin(
-            jnp.abs(quasi_energies - true_quasi_energies[..., None]), axis=1
+            jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
         state_errs = jnp.linalg.norm(
             floquet_modes[:, idxs] - true_floquet_modes, axis=(-1, -2)
         )
         assert jnp.all(state_errs <= ysave_atol)
-        quasi_errs = jnp.linalg.norm(
-            quasi_energies[idxs] - true_quasi_energies, axis=-1
-        )
+        quasi_errs = jnp.linalg.norm(quasienergies[idxs] - true_quasienergies, axis=-1)
         assert jnp.all(quasi_errs <= ysave_atol)
