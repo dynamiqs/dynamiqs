@@ -63,6 +63,8 @@ def floquet(
     T = jnp.asarray(T)
 
     # === broadcast arguments
+    # Different batch Hamiltonians may be periodic with varying periods, so T must be
+    # broadcastable to the same shape as H.
     H, T, _ = _broadcast_floquet_args(H, T)
 
     # === check arguments
@@ -79,12 +81,14 @@ def _vectorized_floquet(
     H: TimeArray, T: Array, solver: Solver, gradient: Gradient | None, options: Options
 ) -> FloquetResult:
     # === vectorize function
-    # we vectorize over H. Different batch Hamiltonians may be periodic with
-    # varying periods, so T must be broadcastable to the same shape as H.
+    # We flat vectorize over H and T. `n_batch` is a pytree, with each leaf of this
+    # pytree giving the number of times this leaf should be vmapped on.
+    n_batch = (H.in_axes, Shape(T.shape), Shape(), Shape(), Shape())
 
+    # the result is vectorized over `tsave`, `_saved`, `infos` and T
     out_axes = FloquetResult(0, False, False, False, 0, 0, 0)
 
-    n_batch = (H.in_axes, Shape(T.shape), Shape(), Shape(), Shape())
+    # compute vectorized function with flat batching strategy
     f = _flat_vectorize(_floquet, n_batch, out_axes)
 
     # === apply vectorized function
@@ -139,9 +143,9 @@ def floquet_t(
             for cases where `H` is batched over different drive frequencies. In this
             case, it makes sense to ask for the Floquet modes at different times for
             different batch dimensions.
-        floquet_modes_0 _(array-like of shape (...H, n, n) or None)_: floquet modes at
-            `t=0`. The shape of floquet_modes_0 should be the same as that of H. If not
-             supplied they are computed on the fly
+        floquet_modes_0 _(array-like of shape (...H, n, n, 1) or None)_: floquet modes
+             at t=0`. The shape of floquet_modes_0 should be the same as that of H. If
+             not supplied they are computed on the fly
         quasienergies _(array-like of shape (...H, n))_: Previously obtained
             quasienergies.
         solver: Solver for the integration.
@@ -162,6 +166,9 @@ def floquet_t(
     tsave = jnp.asarray(tsave)
     # TODO check_times for tsave but for now we are allowing it to be multidimensional
 
+    # === broadcast arguments
+    # Different batch Hamiltonians may be periodic with varying periods, so T must be
+    # broadcastable to the same shape as H.
     H, T, broadcast_shape = _broadcast_floquet_args(H, T)
     tsave = jnp.broadcast_to(tsave, broadcast_shape + tsave.shape[-1:])
 
@@ -198,8 +205,8 @@ def _vectorized_floquet_t(
         f_modes_0_batch = Shape()
         q_energies_batch = Shape()
 
-    out_axes = FloquetResult(0, False, False, False, 0, 0, 0)
-
+    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
+    # this leaf should be vmapped on.
     n_batch = (
         H.in_axes,
         Shape(T.shape),
@@ -210,6 +217,11 @@ def _vectorized_floquet_t(
         Shape(),
         Shape(),
     )
+
+    # the result is vectorized over `tsave`, `_saved`, `infos` and T
+    out_axes = FloquetResult(0, False, False, False, 0, 0, 0)
+
+    # compute vectorized function with flat batching strategy
     f = _flat_vectorize(_floquet_t, n_batch, out_axes)
 
     # === apply vectorized function
@@ -258,6 +270,7 @@ def _broadcast_floquet_args(H: TimeArray, T: Array) -> [Array, Array, Array]:
 def _check_floquet_args(H: TimeArray, T: Array, safe: bool = False):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
+
     # === check that the Hamiltonian is periodic with the supplied period
     if safe:
         _check_periodic(H, T)
