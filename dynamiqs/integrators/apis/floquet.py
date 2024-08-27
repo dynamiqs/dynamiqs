@@ -273,15 +273,10 @@ def _check_floquet_args(H: TimeArray, T: Array, safe: bool = False):
 
     # === check that the Hamiltonian is periodic with the supplied period
     if safe:
-        _check_periodic(H, T)
-
-
-def _check_periodic(H: TimeArray, T: Array):
-    # === check that the Hamiltonian is periodic with the supplied period
-    n_batch = (H.in_axes, Shape(T.shape))
-    out_axes = Saved(0)
-    H_0 = _flat_vectorize(lambda _H, _T: Saved(_H(0.0)), n_batch, out_axes)(H, T)
-    H_T = _flat_vectorize(lambda _H, _T: Saved(_H(_T)), n_batch, out_axes)(H, T)
-    periodic = jnp.allclose(H_0.ysave, H_T.ysave)
-    if not periodic:
-        raise ValueError('The Hamiltonian H is not periodic with the supplied period T')
+        n_batch = (H.in_axes, Shape(T.shape))
+        out_axes = Saved(0)
+        H_0 = _flat_vectorize(lambda _H, _T: Saved(_H(0.0)), n_batch, out_axes)(H, T)
+        H_T = _flat_vectorize(lambda _H, _T: Saved(_H(_T)), n_batch, out_axes)(H, T)
+        periodic = jnp.allclose(H_0.ysave, H_T.ysave)
+        if not periodic:
+            raise ValueError('The Hamiltonian H is not periodic with the supplied period T')
