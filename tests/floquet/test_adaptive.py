@@ -26,7 +26,7 @@ class TestFloquet(IntegratorTester):
             jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
         state_errs = jnp.linalg.norm(
-            floquet_modes_0[:, idxs] - true_floquet_modes_0, axis=(0, 1)
+            floquet_modes_0[idxs] - true_floquet_modes_0, axis=(0, 1)
         )
         assert jnp.all(state_errs <= ysave_atol)
         quasi_errs = jnp.linalg.norm(quasienergies[idxs] - true_quasienergies, axis=-1)
@@ -70,9 +70,9 @@ class TestFloquet(IntegratorTester):
             Tsit5(), options=Options(save_states=save_states)
         )
         floquet_modes = floquet_result.floquet_modes
-        state_phases = jnp.angle(floquet_modes[..., 0, :])
+        state_phases = jnp.angle(floquet_modes[..., :, 0, 0])
         floquet_modes = jnp.einsum(
-            '...ij,...j->...ij', floquet_modes, jnp.exp(-1j * state_phases)
+            '...ijk,...i->...ijk', floquet_modes, jnp.exp(-1j * state_phases)
         )
         quasienergies = floquet_result.quasienergies
         if save_states:

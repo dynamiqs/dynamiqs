@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from dynamiqs import basis, dag, sigmap, sigmaz
+from dynamiqs import basis, dag, sigmaz
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet, floquet_t
 from dynamiqs.options import Options
@@ -44,9 +44,11 @@ class FloquetQubit(System):
         self.params_default = self.Params(omega, omega_d, amp)
 
     def H(self, params: PyTree) -> CallableTimeArray:
+        sigmap = basis(2, 1) @ dag(basis(2, 0))
+
         def H_func(t):
             H0 = -0.5 * params.omega * sigmaz()
-            H1 = 0.5 * params.amp * sigmap() * jnp.exp(1j * params.omega_d * t)
+            H1 = 0.5 * params.amp * sigmap * jnp.exp(-1j * params.omega_d * t)
             return H0 + H1 + dag(H1)
 
         return timecallable(H_func)
@@ -60,7 +62,7 @@ class FloquetQubit(System):
         w1 = jnp.sin(0.5 * theta) * basis(2, 0) + jnp.exp(
             -1j * self.omega_d * t
         ) * jnp.cos(0.5 * theta) * basis(2, 1)
-        return jnp.column_stack([w0, w1])
+        return jnp.stack([w0, w1])
 
     def true_quasienergies(self) -> Array:
         delta_Omega = self.omega - self.omega_d

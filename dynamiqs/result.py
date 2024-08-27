@@ -140,7 +140,7 @@ class FloquetResult(Result):
     """Result of the Floquet integration.
 
     Attributes:
-        floquet_modes _(array of shape (..., n, n) or (..., ntsave, n, n))_: Saved
+        floquet_modes _(array of shape (..., n, n, 1) or (..., ntsave, n, n, 1))_: Saved
             Floquet modes. Output from [`dq.floquet`][dynamiqs.floquet] has the former
             shape, while output from [`dq.floquet_t`][dynamiqs.floquet_t] has the latter
             shape.

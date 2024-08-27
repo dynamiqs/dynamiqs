@@ -192,7 +192,7 @@ def _vectorized_floquet_t(
     # over H and T we batch over tsave and floquet_result_0
 
     if floquet_modes_0 is not None:
-        f_modes_0_batch = Shape(floquet_modes_0.shape[:-2])
+        f_modes_0_batch = Shape(floquet_modes_0.shape[:-3])
         q_energies_batch = Shape(quasienergies.shape[:-1])
     else:
         f_modes_0_batch = Shape()
@@ -236,7 +236,7 @@ def _floquet_t(
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === integrator class is always FloquetIntegratort
+    # === integrator class is always FloquetIntegrator_t
     integrator = FloquetIntegrator_t(
         tsave, None, H, solver, gradient, options, T, floquet_modes_0, quasienergies
     )
