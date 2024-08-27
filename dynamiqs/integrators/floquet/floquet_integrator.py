@@ -30,7 +30,7 @@ class FloquetIntegrator(BaseIntegrator):
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
         # normalize quasienergies to the region -pi/T, pi/T
         omega_d = 2.0 * jnp.pi / self.T
-        # minus sign and divide by T to account for e.g. e^{-iHT}
+        # minus sign and divide by T to account for e^{-i\epsilon T}
         quasiens = jnp.angle(-evals) / self.T
         quasiens = jnp.where(quasiens > 0.5 * omega_d, quasiens - omega_d, quasiens)
         # want to save floquet modes with shape ijk where i indexes the modes, j has
