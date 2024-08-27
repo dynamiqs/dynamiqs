@@ -279,4 +279,6 @@ def _check_floquet_args(H: TimeArray, T: Array, safe: bool = False):
         H_T = _flat_vectorize(lambda _H, _T: Saved(_H(_T)), n_batch, out_axes)(H, T)
         periodic = jnp.allclose(H_0.ysave, H_T.ysave)
         if not periodic:
-            raise ValueError('The Hamiltonian H is not periodic with the supplied period T')
+            raise ValueError(
+                'The Hamiltonian H is not periodic with the supplied period T'
+            )
