@@ -90,7 +90,7 @@ class ExpmIntegrator(BaseIntegrator):
         # === save the propagators
         nsteps = (delta_ts != 0).sum()
         saved = self.collect_saved(saved, ylast, times)
-        return self.result(saved, infos=self.Infos(nsteps))
+        return self.result(saved, ylast, infos=self.Infos(nsteps))
 
 
 class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):

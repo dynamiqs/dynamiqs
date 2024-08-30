@@ -51,7 +51,7 @@ class BaseIntegrator(AbstractIntegrator):
         return self.H.discontinuity_ts
 
     @abstractmethod
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: Saved, ylast: Array, infos: PyTree | None = None) -> Result:
         pass
 
     def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
@@ -110,28 +110,28 @@ class MEIntegrator(BaseIntegrator):
 
 
 class SESolveIntegrator(SolveIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: Saved, ylast: Array, infos: PyTree | None = None) -> Result:
         return SESolveResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
+            self.ts, self.solver, self.gradient, self.options, saved, infos, ylast
         )
 
 
 class MESolveIntegrator(SolveIntegrator, MEIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: Saved, ylast: Array, infos: PyTree | None = None) -> Result:
         return MESolveResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
+            self.ts, self.solver, self.gradient, self.options, saved, infos, ylast
         )
 
 
 class SEPropagatorIntegrator(PropagatorIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: Saved, ylast: Array, infos: PyTree | None = None) -> Result:
         return SEPropagatorResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
+            self.ts, self.solver, self.gradient, self.options, saved, infos, ylast
         )
 
 
 class MEPropagatorIntegrator(PropagatorIntegrator, MEIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+    def result(self, saved: Saved, ylast: Array, infos: PyTree | None = None) -> Result:
         return MEPropagatorResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
+            self.ts, self.solver, self.gradient, self.options, saved, infos, ylast
         )

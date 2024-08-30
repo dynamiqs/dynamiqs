@@ -79,16 +79,11 @@ class Result(eqx.Module):
 
 
 class SolveResult(Result):
+    final_state: Array
+
     @property
     def states(self) -> Array:
         return self._saved.ysave
-
-    @property
-    def final_state(self) -> Array:
-        if self.options.save_states:
-            return self.states[..., -1, :, :]
-        else:
-            return self.states
 
     @property
     def expects(self) -> Array | None:
@@ -101,29 +96,28 @@ class SolveResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'States  ': array_str(self.states),
-            'Expects ': array_str(self.expects),
-            'Extra   ': (
+            'States     ': array_str(self.states),
+            'Final state': array_str(self.final_state),
+            'Expects    ': array_str(self.expects),
+            'Extra      ': (
                 eqx.tree_pformat(self.extra) if self.extra is not None else None
             ),
         }
 
 
 class PropagatorResult(Result):
+    final_propagator: Array
+
     @property
     def propagators(self) -> Array:
         return self._saved.ysave
 
-    @property
-    def final_propagator(self) -> Array:
-        if self.options.save_states:
-            return self.propagators[..., -1, :, :]
-        else:
-            return self.propagators
-
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {'Propagators': array_str(self.propagators)}
+        return d | {
+            'Propagators     ': array_str(self.propagators),
+            'Final propagator': array_str(self.final_propagator),
+        }
 
 
 class SESolveResult(SolveResult):

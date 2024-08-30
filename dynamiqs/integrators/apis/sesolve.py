@@ -142,8 +142,8 @@ def _vectorized_sesolve(
         Shape(),
     )
 
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = SESolveResult(False, False, False, False, 0, 0)
+    # the result is vectorized over `_saved` `final_state` and `infos`
+    out_axes = SESolveResult(False, False, False, False, 0, 0, 0)
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
