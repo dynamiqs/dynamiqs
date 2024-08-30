@@ -118,7 +118,7 @@ def _vectorized_sepropagator(
     # we vectorize over H, all other arguments are not vectorized
     n_batch = (H.in_axes, Shape(), Shape(), Shape(), Shape())
 
-    # the result is vectorized over `_saved` `final_state` and `infos`
+    # the result is vectorized over `_saved` `infos` and `final_state`
     out_axes = SEPropagatorResult(False, False, False, False, 0, 0, 0)
 
     # compute vectorized function

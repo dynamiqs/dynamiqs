@@ -142,7 +142,7 @@ def _vectorized_sesolve(
         Shape(),
     )
 
-    # the result is vectorized over `_saved` `final_state` and `infos`
+    # the result is vectorized over `_saved` `infos` and `final_state`
     out_axes = SESolveResult(False, False, False, False, 0, 0, 0)
 
     # compute vectorized function with given batching strategy
