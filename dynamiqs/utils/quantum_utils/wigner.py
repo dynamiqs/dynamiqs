@@ -6,6 +6,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 from jax import Array, lax
+from jax.scipy.special import factorial
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
@@ -91,18 +92,21 @@ def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
     a = 0.5 * g * (x + 1.0j * p)
     a2 = jnp.abs(a) ** 2
 
-    w = 2 * state[0, -1] * jnp.ones_like(a)
     state = state * (2 * jnp.ones((n, n)) - eye(n))
-
-    def loop(i: int, w: Array) -> Array:
-        i = n - 2 - i
-        w = w * (2 * a * (i + 1) ** (-0.5))
-        return w + (_laguerre_series(i, 4 * a2, state, n))
-
-    w = lax.fori_loop(0, n - 1, loop, w)
+    gs = _batched_laguerre_series(jnp.arange(n), 4 * a2, state, n)
+    fs = _exponential_series(2 * a, n)
+    w = jnp.sum(gs * fs, axis=0)
 
     return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
 
+def _exponential_series(x: Array, n: int) -> Array:
+    r"""Return an array containing all elements of the exponential series up to n,
+    i.e. the array [1, x, x^2/\sqrt{2!}, x^3/\sqrt{3!}, ..., x^n/\sqrt{n!}].
+    """
+    def term(i: int) -> Array:
+        return x**i / jnp.sqrt(factorial(i))
+
+    return jax.vmap(term)(jnp.arange(n))
 
 def _diag_element(mat: jnp.array, diag: int, element: int) -> float:
     r"""Return the element of a matrix `mat` at `jnp.diag(mat, diag)[element]`.
@@ -149,3 +153,5 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
     return lax.cond(n - i == 1, n_1, lambda: lax.cond(n - i == 2, n_2, n_other))
+
+_batched_laguerre_series = jax.vmap(_laguerre_series, in_axes=(0, None, None, None))
