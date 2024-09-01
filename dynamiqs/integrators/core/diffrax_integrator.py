@@ -9,6 +9,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
+from ...qarrays.utils import stack
 from .abstract_integrator import BaseIntegrator
 
 
@@ -200,14 +201,10 @@ class MEDiffraxIntegrator(DiffraxIntegrator):
         # induced on the dynamics.
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            tmp = -1j * self.H(t) @ y
-            Ls = [L(t) for L in self.Ls]
-            # note: benchmarks show that using stacking or a for loop yields equivalent
-            # execution speeds for this code segment
-            for L in Ls:
-                Ldag = L.dag()
-                L_y = L @ y
-                tmp += 0.5 * (L_y @ Ldag - Ldag @ L_y)
+            Ls = stack([L(t) for L in self.Ls])
+            Lsd = Ls.dag()
+            LdL = (Lsd @ Ls).sum(0)
+            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
             return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)

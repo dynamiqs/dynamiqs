@@ -72,8 +72,8 @@ class DenseQArray(QArray):
     def trace(self) -> Array:
         return self.data.trace(axis1=-1, axis2=-2)
 
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        return self.data.sum(axis=axis)
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array | QArray:
+        return DenseQArray(self.dims, self.data.sum(axis=axis))
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
         return self.data.squeeze(axis=axis)
