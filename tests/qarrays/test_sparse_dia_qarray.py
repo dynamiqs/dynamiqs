@@ -158,3 +158,21 @@ class TestSparseDIAQArray:
         error_str = 'must contain zeros outside the matrix bounds'
         with pytest.raises(ValueError, match=error_str):
             dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
+
+    @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
+    def test_pow(self, k, rtol=1e-05, atol=1e-08):
+        d, s = self.denseA[k], self.sparseA[k]
+
+        out_dense = (d**3).to_jax()
+        out_dia = dq.to_dense(s**3).to_jax()
+
+        assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
+
+    @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
+    def test_powm(self, k, rtol=1e-05, atol=1e-08):
+        d, s = self.denseA[k], self.sparseA[k]
+
+        out_dense = d.powm(3).to_jax()
+        out_dia = s.powm(3).to_jax()
+
+        assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
