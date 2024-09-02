@@ -30,7 +30,7 @@ def _mpl_backend():
 
 
 # doctest fixture
-@pytest.fixture()
+@pytest.fixture
 def renderfig():
     def savefig_docs(figname):
         filename = f'docs/figs_docs/{figname}.png'

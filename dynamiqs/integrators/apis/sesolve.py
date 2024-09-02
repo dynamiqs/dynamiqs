@@ -11,7 +11,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays import QArray, QArrayLike, asqarray
-from ...result import SEResult
+from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
 from .._utils import (
@@ -41,7 +41,7 @@ def sesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> SEResult:
+) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
@@ -91,10 +91,10 @@ def sesolve(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.SEResult`][dynamiqs.SEResult] object holding the result of the
+        [`dq.SESolveResult`][dynamiqs.SESolveResult] object holding the result of the
             Schrödinger equation integration. Use the attributes `states` and `expects`
             to access saved quantities, more details in
-            [`dq.SEResult`][dynamiqs.SEResult].
+            [`dq.SESolveResult`][dynamiqs.SESolveResult].
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
@@ -122,7 +122,7 @@ def _vectorized_sesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> SEResult:
+) -> SESolveResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
 
@@ -144,7 +144,7 @@ def _vectorized_sesolve(
     )
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = SEResult(False, False, False, False, 0, 0)
+    out_axes = SESolveResult(False, False, False, False, 0, 0)
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
@@ -164,7 +164,7 @@ def _sesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> SEResult:
+) -> SESolveResult:
     # === select integrator class
     integrators = {
         Euler: SESolveEulerIntegrator,
@@ -181,7 +181,7 @@ def _sesolve(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, psi0, H, exp_ops, solver, gradient, options)
+    integrator = integrator_class(tsave, psi0, H, solver, gradient, options, exp_ops)
 
     # === run integrator
     result = integrator.run()

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from ..core.abstract_integrator import SEPropagatorIntegrator
-from ..core.expm_integrator import SEExpmIntegrator
+from ..core.expm_integrator import PropagatorExpmIntegrator, SEExpmIntegrator
 
 
-class SEPropagatorExpmIntegrator(SEExpmIntegrator, SEPropagatorIntegrator):
+class SEPropagatorExpmIntegrator(
+    PropagatorExpmIntegrator, SEExpmIntegrator, SEPropagatorIntegrator
+):
     pass
