@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from enum import Enum
 
 import jax.numpy as jnp
+import numpy as np
+from qutip import Qobj
 
+from .._checks import check_shape
 from .._utils import cdtype
+from ..utils.quantum_utils import isbra, isket, isop
+from ..utils.quantum_utils.general import _hdim
 from .dense_qarray import DenseQArray
 from .sparse_dia_qarray import SparseDIAQArray
-from .types import QArray
+from .types import QArray, QArrayLike
 
-__all__ = ['stack', 'set_layout']
+__all__ = ['stack', 'to_qutip']
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
@@ -82,64 +86,66 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
             'Stacking qarrays with different types is not implemented.'
         )
 
-
-class Layout(Enum):
-    DENSE = 0
-    DIA = 1
-
-
-dense = Layout.DENSE
-dia = Layout.DIA
-
-_DEFAULT_LAYOUT = dia
-
-
-def set_layout(layout: Layout):
-    """Configure the default matrix layout for operators supporting this option.
-
-    Two layouts are supported by most operators (see the list of available operators in
-    the [Python API](/python_api/index.html#operators)):
-
-    - `dq.dense`: JAX native dense layout,
-    - `dq.dia`: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
-
-    Note:
-        The default layout upon importing dynamiqs is `dq.dia`.
+def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
+    r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
+    quantum objects if it has more than two dimensions).
 
     Args:
-        layout: Default matrix layout for operators (`dq.dense` or `dq.dia`).
+        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+            density matrix or operator.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
+            Hilbert space of the composite system, defaults to `None` (a single system
+            with the same dimension as `x`).
+
+    Returns:
+        QuTiP quantum object or list of QuTiP quantum objects.
 
     Examples:
-        >>> dq.eye(4)
-        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
-        [[1.+0.j   ⋅      ⋅      ⋅   ]
-         [  ⋅    1.+0.j   ⋅      ⋅   ]
-         [  ⋅      ⋅    1.+0.j   ⋅   ]
-         [  ⋅      ⋅      ⋅    1.+0.j]]
-        >>> dq.set_layout(dq.dense)
-        >>> dq.eye(4)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
-        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
-         [0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
-    """
-    if not isinstance(layout, Layout):
-        raise TypeError(
-            f'Argument `layout` must be `dq.dense` or `dq.dia`, but is `{layout}`'
-        )
+        >>> psi = dq.fock(3, 1)
+        >>> psi
+        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        [[0.+0.j]
+         [1.+0.j]
+         [0.+0.j]]
+        >>> dq.to_qutip(psi)
+        Quantum object: dims = [[3], [1]], shape = (3, 1), type = ket
+        Qobj data =
+        [[0.]
+         [1.]
+         [0.]]
+        For a batched array:
+        >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
+        >>> rhos.shape
+        (5, 16, 16)
+        >>> len(dq.to_qutip(rhos))
+        5
+        Note that the tensor product structure is inferred automatically for qarrays. It
+        can be specified with the `dims` argument for other types.
+        >>> I = dq.eye(3, 2)
+        >>> dq.to_qutip(I)
+        Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
+        Qobj data =
+        [[1. 0. 0. 0. 0. 0.]
+         [0. 1. 0. 0. 0. 0.]
+         [0. 0. 1. 0. 0. 0.]
+         [0. 0. 0. 1. 0. 0.]
+         [0. 0. 0. 0. 1. 0.]
+         [0. 0. 0. 0. 0. 1.]]
+    """  # noqa: E501
+    if isinstance(x, QArray):
+        dims = x.dims
 
-    global _DEFAULT_LAYOUT  # noqa: PLW0603
-    _DEFAULT_LAYOUT = layout
+    x = np.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
-
-def get_layout(layout: Layout | None = None) -> Layout:
-    if layout is None:
-        return _DEFAULT_LAYOUT
-    elif isinstance(layout, Layout):
-        return layout
+    if x.ndim > 2:
+        return [to_qutip(sub_x, dims=dims) for sub_x in x]
     else:
-        raise TypeError(
-            'Argument `layout` must be `dq.dense`, `dq.dia` or `None`, but is'
-            f' `{layout}`.'
-        )
+        dims = [_hdim(x)] if dims is None else list(dims)
+        if isket(x):  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]
+            dims = [dims, [1] * len(dims)]
+        elif isbra(x):  # [[1], [3]] or for composite systems [[1, 1], [3, 4]]
+            dims = [[1] * len(dims), dims]
+        elif isop(x):  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
+            dims = [dims, dims]
+        return Qobj(x, dims=dims)

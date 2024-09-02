@@ -293,7 +293,7 @@ class QArray(eqx.Module):
         return proj(self)
 
     @abstractmethod
-    def to_qutip(self) -> Qobj:
+    def to_qutip(self) -> Qobj | list[Qobj]:
         """Convert the quantum state to a QuTiP object.
 
         Returns:
