@@ -157,7 +157,7 @@ def _sepropagator(
 
     # === init integrator
     y0 = eye(H.shape[-1], layout=dense)
-    integrator = integrator_class(tsave, y0, H, None, solver, gradient, options)
+    integrator = integrator_class(tsave, y0, H, solver, gradient, options)
 
     # === run integrator
     result = integrator.run()

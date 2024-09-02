@@ -34,7 +34,8 @@ class Options(eqx.Module):
             This can be used to save additional arbitrary data during the
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers (see
-            [`SEResult`][dynamiqs.SEResult] or [`MEResult`][dynamiqs.MEResult]).
+            [`SESolveResult`][dynamiqs.SESolveResult] or
+            [`MESolveResult`][dynamiqs.MESolveResult]).
     """
 
     save_states: bool = True
