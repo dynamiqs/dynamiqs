@@ -229,6 +229,7 @@ nav:
               - wigner: python_api/utils/quantum_utils/wigner.md
           - QArray utilities:
               - stack: python_api/qarrays/utils/stack.md
+              - to_qutip: python_api/qarrays/utils/to_qutip.md
           - Global settings:
               - set_device: python_api/utils/global_settings/set_device.md
               - set_precision: python_api/utils/global_settings/set_precision.md
