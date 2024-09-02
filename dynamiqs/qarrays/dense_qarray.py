@@ -93,7 +93,7 @@ class DenseQArray(QArray):
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
-    def to_qutip(self) -> Qobj:
+    def to_qutip(self) -> Qobj | list[Qobj]:
         if self.ndim > 2:
             return [x.to_qutip() for x in self.data]
         else:

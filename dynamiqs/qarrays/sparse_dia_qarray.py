@@ -162,7 +162,7 @@ class SparseDIAQArray(QArray):
     def isherm(self) -> bool:
         raise NotImplementedError
 
-    def to_qutip(self) -> Qobj:
+    def to_qutip(self) -> Qobj | list[Qobj]:
         return self.to_dense().to_qutip()
 
     def to_jax(self) -> Array:
