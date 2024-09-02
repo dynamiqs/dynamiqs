@@ -7,8 +7,8 @@ from jax.typing import ArrayLike
 
 from .._utils import cdtype
 from ..qarrays import DenseQArray, QArray, asqarray, sparsedia
+from ..qarrays.layout import Layout, dense
 from ..qarrays.sparse_dia_qarray import SparseDIAQArray
-from ..qarrays.utils import Layout, dense
 from .global_settings import get_layout
 from .quantum_utils import tensor
 

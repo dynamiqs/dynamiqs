@@ -4,7 +4,7 @@ from typing import Literal
 
 import jax
 
-from ..qarrays.utils import Layout, dense, dia
+from ..qarrays.layout import Layout, dense, dia
 
 __all__ = ['set_device', 'set_precision', 'set_matmul_precision', 'set_layout']
 
