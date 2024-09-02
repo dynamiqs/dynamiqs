@@ -86,6 +86,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
             'Stacking qarrays with different types is not implemented.'
         )
 
+
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
     quantum objects if it has more than two dimensions).
