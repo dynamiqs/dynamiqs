@@ -34,7 +34,7 @@ def _mplstyle():
 
 
 # doctest fixture
-@pytest.fixture()
+@pytest.fixture
 def default_mpl_style():
     def set_default_mpl_style():
         matplotlib.rcParams.update(matplotlib.rcParamsDefault)
@@ -49,7 +49,7 @@ def _mpl_backend():
 
 
 # doctest fixture
-@pytest.fixture()
+@pytest.fixture
 def renderfig():
     def savefig_code(figname):
         filename = f'docs/figs_code/{figname}.png'
