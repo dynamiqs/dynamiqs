@@ -192,8 +192,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array_like of shape (...) or (len(dim), ...) or
-            list of array_like of shape (...))_: Coherent state
+        alpha _(array_like of shape (...) or (len(dim), ...))_: Coherent state
             amplitude for each mode. If `dim` is a tuple, the first dimension of
             `alpha` should match the length of `dim`.
 
