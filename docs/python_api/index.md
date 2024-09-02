@@ -43,6 +43,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - Rouchon1
         - Rouchon2
         - Expm
+        - Milstein
 
 ### Gradients (dq.gradient)
 

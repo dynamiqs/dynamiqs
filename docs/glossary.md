@@ -4,3 +4,5 @@
 *[Array-like objects]: e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs
 *[PWC]: piecewise constant
 *[SME]: stochastic master equation
+*[SMEs]: stochastic master equations
+*[PRNG]: pseudorandom number generator

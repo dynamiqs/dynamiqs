@@ -161,6 +161,7 @@ nav:
               - Rouchon1: python_api/solver/Rouchon1.md
               - Rouchon2: python_api/solver/Rouchon2.md
               - Expm: python_api/solver/Expm.md
+              - Milstein: python_api/solver/Milstein.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
@@ -168,6 +169,7 @@ nav:
           - Results:
               - SESolveResult: python_api/result/SESolveResult.md
               - MESolveResult: python_api/result/MESolveResult.md
+              - SMESolveResult: python_api/result/SMESolveResult.md
               - SEPropagatorResult: python_api/result/SEPropagatorResult.md
               - MEPropagatorResult: python_api/result/MEPropagatorResult.md
       - Utilities:

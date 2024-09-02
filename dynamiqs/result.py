@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
+__all__ = [
+    'SESolveResult',
+    'MESolveResult',
+    'SMESolveResult',
+    'SEPropagatorResult',
+    'MEPropagatorResult',
+]
 
 
 def memory_bytes(x: Array) -> int:
@@ -37,6 +43,10 @@ class Saved(eqx.Module):
 class SolveSaved(Saved):
     Esave: Array | None
     extra: PyTree | None
+
+
+class SMESolveSaved(SolveSaved):
+    Jsave: Array
 
 
 class PropagatorSaved(Saved):
@@ -228,6 +238,78 @@ class MESolveResult(SolveResult):
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
+
+
+class SMESolveResult(SolveResult):
+    r"""Result of the diffusive SME integration.
+
+    For the shape indications we name `ntrajs` the number of trajectories
+    (`ntrajs = len(keys)`) and `nLm` the number of loss channels for which the
+    measurement efficiency is not null.
+
+    Attributes:
+        states _(array of shape (..., ntrajs, ntsave, n, n))_: Saved states.
+        final_state _(array of shape (..., ntrajs, n, n))_: Saved final state.
+        measurements _(array of shape (..., ntrajs, nLm, ntmeas-1))_: Saved
+            measurements.
+        expects _(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)_: Saved
+            expectation values, if specified by `exp_ops`.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        tmeas _(array of shape (ntmeas,))_: Times for which measurement signals are
+            averaged and saved.
+        keys _(PRNG key array of shape (ntrajs,))_: PRNG keys used to sample the Wiener
+            processes.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+
+    Note-: Result of running multiple simulations concurrently
+        The resulting states, measurements and expectation values are batched according
+        to the leading dimensions of the Hamiltonian `H` and initial state `rho0`. The
+        behaviour depends on the value of the `cartesian_batching` option
+
+        === "If `cartesian_batching = True` (default value)"
+            The results leading dimensions are
+            ```
+            ... = ...H, ...rho0
+            ```
+            For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `rho0` has shape _(4, n, n)_,
+
+            then `states` has shape _(2, 3, 4, ntrajs, ntsave, n, n)_.
+
+        === "If `cartesian_batching = False`"
+            The results leading dimensions are
+            ```
+            ... = ...H = ...rho0  # (once broadcasted)
+            ```
+            For example if:
+
+            - `H` has shape _(2, 3, n, n)_,
+            - `rho0` has shape _(3, n, n)_,
+
+            then `states` has shape _(2, 3, ntrajs, ntsave, n, n)_.
+
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
+    """
+
+    tmeas: Array
+    keys: PRNGKeyArray
+
+    @property
+    def measurements(self) -> Array:
+        return self._saved.Jsave
+
+    def _str_parts(self) -> dict[str, str]:
+        d = super()._str_parts()
+        return d | {'Measurements': array_str(self.measurements)}
 
 
 class SEPropagatorResult(PropagatorResult):
