@@ -82,9 +82,11 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
             'Stacking qarrays with different types is not implemented.'
         )
 
+
 class Layout(Enum):
     DENSE = 0
     DIA = 1
+
 
 dense = Layout.DENSE
 dia = Layout.DIA

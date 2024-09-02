@@ -94,6 +94,7 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
 
 _DEFAULT_LAYOUT = dia
 
+
 def set_layout(layout: Literal['dense', 'dia']):
     """Configure the default matrix layout for operators supporting this option.
 
@@ -132,6 +133,7 @@ def set_layout(layout: Literal['dense', 'dia']):
 
     global _DEFAULT_LAYOUT  # noqa: PLW0603
     _DEFAULT_LAYOUT = layouts[layout]
+
 
 def get_layout(layout: Layout | None = None) -> Layout:
     if layout is None:
