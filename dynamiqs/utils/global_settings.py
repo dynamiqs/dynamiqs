@@ -101,11 +101,11 @@ def set_layout(layout: Literal['dense', 'dia']):
     Two layouts are supported by most operators (see the list of available operators in
     the [Python API](../../index.md#operators)):
 
-    - `dense`: JAX native dense layout,
-    - `dia`: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
+    - `'dense'`: JAX native dense layout,
+    - `'dia'`: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
 
     Note:
-        The default layout upon importing dynamiqs is `dq.dia`.
+        The default layout upon importing dynamiqs is `'dia'`.
 
     Args:
         layout _(string 'dense' or 'dia')_: Default matrix layout for operators.
