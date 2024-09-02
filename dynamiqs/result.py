@@ -59,11 +59,11 @@ class Result(eqx.Module):
 
     def _str_parts(self) -> dict[str, str | None]:
         return {
-            'Solver     ': type(self.solver).__name__,
-            'Gradient   ': (
+            'Solver': type(self.solver).__name__,
+            'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
-            'Infos      ': self.infos if self.infos is not None else None,
+            'Infos': self.infos if self.infos is not None else None,
         }
 
     def __str__(self) -> str:
@@ -101,11 +101,9 @@ class SolveResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'States  ': array_str(self.states),
-            'Expects ': array_str(self.expects),
-            'Extra   ': (
-                eqx.tree_pformat(self.extra) if self.extra is not None else None
-            ),
+            'States': array_str(self.states),
+            'Expects': array_str(self.expects),
+            'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
 
 
