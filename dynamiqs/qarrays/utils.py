@@ -98,7 +98,7 @@ def set_layout(layout: Layout):
     """Configure the default matrix layout for operators supporting this option.
 
     Two layouts are supported by most operators (see the list of available operators in
-    the [Python API](../../index.md#operators)):
+    the [Python API](/python_api/index.html#operators)):
 
     - `dq.dense`: JAX native dense layout,
     - `dq.dia`: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
