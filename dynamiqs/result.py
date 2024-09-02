@@ -182,7 +182,7 @@ class MESolveResult(SolveResult):
 
     Attributes:
         states _(array of shape (..., ntsave, n, n))_: Saved states.
-        final_state _(array of shape (..., n, 1))_: Saved final state.
+        final_state _(array of shape (..., n, n))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
