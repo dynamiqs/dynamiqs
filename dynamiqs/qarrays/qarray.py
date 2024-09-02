@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
-from equinox.internal._omega import _Metaω
+from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jax import Array, Device
 from qutip import Qobj
 
