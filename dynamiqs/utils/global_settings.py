@@ -4,7 +4,9 @@ from typing import Literal
 
 import jax
 
-__all__ = ['set_device', 'set_precision', 'set_matmul_precision']
+from ..qarrays.utils import Layout, dense, dia
+
+__all__ = ['set_device', 'set_precision', 'set_matmul_precision', 'set_layout']
 
 
 def set_device(device: Literal['cpu', 'gpu', 'tpu']):
@@ -87,4 +89,57 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
         raise ValueError(
             f"Argument `matmul_precision` should be a string 'low', 'high', or"
             f" 'highest', but is '{matmul_precision}'."
+        )
+
+
+_DEFAULT_LAYOUT = dia
+
+def set_layout(layout: Literal['dense', 'dia']):
+    """Configure the default matrix layout for operators supporting this option.
+
+    Two layouts are supported by most operators (see the list of available operators in
+    the [Python API](../../index.md#operators)):
+
+    - `dense`: JAX native dense layout,
+    - `dia`: dynamiqs sparse diagonal layout, only non-zero diagonals are stored.
+
+    Note:
+        The default layout upon importing dynamiqs is `dq.dia`.
+
+    Args:
+        layout _(string 'dense' or 'dia')_: Default matrix layout for operators.
+
+    Examples:
+        >>> dq.eye(4)
+        SparseDIAQArray: shape=(4, 4), dims=(4,), dtype=complex64, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j]]
+        >>> dq.set_layout('dense')
+        >>> dq.eye(4)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 1.+0.j]]
+    """
+    layouts = {'dense': dense, 'dia': dia}
+    if layout not in layouts:
+        raise ValueError(
+            f"Argument `layout` should be a string 'dense' or 'dia', but is {layout}."
+        )
+
+    global _DEFAULT_LAYOUT  # noqa: PLW0603
+    _DEFAULT_LAYOUT = layouts[layout]
+
+def get_layout(layout: Layout | None = None) -> Layout:
+    if layout is None:
+        return _DEFAULT_LAYOUT
+    elif isinstance(layout, Layout):
+        return layout
+    else:
+        raise TypeError(
+            'Argument `layout` must be `dq.dense`, `dq.dia` or `None`, but is'
+            f' `{layout}`.'
         )
