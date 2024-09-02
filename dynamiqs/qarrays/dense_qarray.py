@@ -94,9 +94,16 @@ class DenseQArray(QArray):
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj:
-        from ..utils.jax_utils import to_qutip
-
-        return to_qutip(self.data, dims=self.dims)
+        if self.ndim > 2:
+            return [x.to_qutip() for x in self.data]
+        else:
+            if self.isket():  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]
+                dims = [list(self.dims), [1] * len(self.dims)]
+            elif self.isbra():  # [[1], [3]] or for composite systems [[1, 1], [3, 4]]
+                dims = [[1] * len(self.dims), list(self.dims)]
+            elif self.isop():  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
+                dims = [list(self.dims), list(self.dims)]
+            return Qobj(np.asarray(self.data), dims=dims)
 
     def to_jax(self) -> Array:
         return self.data

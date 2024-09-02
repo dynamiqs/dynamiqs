@@ -163,7 +163,7 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def to_qutip(self) -> Qobj:
-        raise NotImplementedError
+        return self.to_dense().to_qutip()
 
     def to_jax(self) -> Array:
         return self.to_dense().to_jax()
