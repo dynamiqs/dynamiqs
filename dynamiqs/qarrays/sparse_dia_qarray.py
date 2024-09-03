@@ -139,7 +139,35 @@ class SparseDIAQArray(QArray):
             return jnp.zeros(self.shape[:-2])
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        raise NotImplementedError
+        if axis is None:
+            # sum over all elements, return an Array
+            return jnp.sum(self.diags)
+        elif isinstance(axis, int):
+            if (axis % self.ndim - self.ndim) in [-1, -2]:
+                # sum over one of the last two dimensions, not supported yet: it
+                # requires picking the proper elements of each diagonal
+                raise NotImplementedError
+            # sum over a batch dimension, return a QArray
+            diags = jnp.sum(self.diags, axis=axis)
+            return SparseDIAQArray(self.dims, self.offsets, diags)
+        elif isinstance(axis, tuple) and all(isinstance(a, int) for a in axis):
+            axis = tuple(a % self.ndim - self.ndim for a in axis)
+            if -1 in axis and -2 in axis:
+                # sum over last two dimensions, return an Array
+                return jnp.sum(self.diags, axis=axis)
+            elif -1 in axis or -2 in axis:
+                # sum over one of the last two dimensions, not supported yet
+                raise NotImplementedError
+            else:
+                # sum over a batch dimension, return a QArray
+                diags = jnp.sum(self.diags, axis=axis)
+                return SparseDIAQArray(self.dims, self.offset, diags)
+        else:
+            raise TypeError(
+                '`axis` must be an integer, a tuple of integers or `None`, but got '
+                f'{axis}.'
+            )
+
 
     def squeeze(self):
         raise NotImplementedError
