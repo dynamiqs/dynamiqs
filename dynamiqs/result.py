@@ -99,7 +99,6 @@ class SolveResult(Result):
         d = super()._str_parts()
         return d | {
             'States': array_str(self.states),
-            'Final State': array_str(self.final_state),
             'Expects': array_str(self.expects),
             'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
@@ -116,10 +115,7 @@ class PropagatorResult(Result):
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {
-            'Propagators': array_str(self.propagators),
-            'Final Propagator': array_str(self.final_propagator),
-        }
+        return d | {'Propagators': array_str(self.propagators)}
 
 
 class SESolveResult(SolveResult):
