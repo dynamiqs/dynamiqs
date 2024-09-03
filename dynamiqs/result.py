@@ -85,10 +85,7 @@ class SolveResult(Result):
 
     @property
     def final_state(self) -> Array:
-        if self.options.save_states:
-            return self.states[..., -1, :, :]
-        else:
-            return self.states
+        return self.states[..., -1, :, :]
 
     @property
     def expects(self) -> Array | None:
@@ -102,6 +99,7 @@ class SolveResult(Result):
         d = super()._str_parts()
         return d | {
             'States': array_str(self.states),
+            'Final State': array_str(self.final_state),
             'Expects': array_str(self.expects),
             'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
@@ -114,21 +112,23 @@ class PropagatorResult(Result):
 
     @property
     def final_propagator(self) -> Array:
-        if self.options.save_states:
-            return self.propagators[..., -1, :, :]
-        else:
-            return self.propagators
+        return self.propagators[..., -1, :, :]
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {'Propagators': array_str(self.propagators)}
+        return d | {
+            'Propagators': array_str(self.propagators),
+            'Final Propagator': array_str(self.final_propagator),
+        }
 
 
 class SESolveResult(SolveResult):
     r"""Result of the Schrödinger equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, 1))_: Saved states.
+        states _(array of shape (..., ntsave, n, 1))_: Saved states, with
+            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
+            `ntsave = 1` otherwise.
         final_state _(array of shape (..., n, 1))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
@@ -179,7 +179,9 @@ class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, n))_: Saved states.
+        states _(array of shape (..., ntsave, n, n))_: Saved states, with
+            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
+            `ntsave = 1` otherwise.
         final_state _(array of shape (..., n, n))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
@@ -232,7 +234,9 @@ class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators, with
+            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
+            `ntsave = 1` otherwise.
         final_propagator _(array of shape (..., n, n))_: Saved final propagator.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
@@ -255,7 +259,9 @@ class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators.
+        propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators, with
+            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
+            `ntsave = 1` otherwise.
         final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
