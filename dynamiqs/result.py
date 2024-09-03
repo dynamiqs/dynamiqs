@@ -122,9 +122,9 @@ class SESolveResult(SolveResult):
     r"""Result of the Schrödinger equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, 1))_: Saved states, with
-            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
-            `ntsave = 1` otherwise.
+        states _(array of shape (..., nsave, n, 1))_: Saved states, with
+            `nsave = len(tsave)` if `options.save_states` is set to `True` and
+            `nsave = 1` otherwise.
         final_state _(array of shape (..., n, 1))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
@@ -175,9 +175,9 @@ class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, n))_: Saved states, with
-            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
-            `ntsave = 1` otherwise.
+        states _(array of shape (..., nsave, n, n))_: Saved states, with
+            `nsave = len(tsave)` if `options.save_states` is set to `True` and
+            `nsave = 1` otherwise.
         final_state _(array of shape (..., n, n))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
@@ -230,9 +230,9 @@ class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators, with
-            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
-            `ntsave = 1` otherwise.
+        propagators _(array of shape (..., nsave, n, n))_: Saved propagators, with
+            `nsave = len(tsave)` if `options.save_states` is set to `True` and
+            `nsave = 1` otherwise.
         final_propagator _(array of shape (..., n, n))_: Saved final propagator.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
@@ -255,9 +255,9 @@ class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators, with
-            `ntsave = len(tsave)` if `options.save_states` is set to `True` and
-            `ntsave = 1` otherwise.
+        propagators _(array of shape (..., nsave, n^2, n^2))_: Saved propagators, with
+            `nsave = len(tsave)` if `options.save_states` is set to `True` and
+            `nsave = 1` otherwise.
         final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
