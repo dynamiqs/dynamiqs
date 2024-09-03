@@ -93,8 +93,8 @@ class DenseQArray(QArray):
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
-    def to_qutip(self) -> Qobj:
-        from ..utils.jax_utils import to_qutip
+    def to_qutip(self) -> Qobj | list[Qobj]:
+        from .utils import to_qutip
 
         return to_qutip(self.data, dims=self.dims)
 

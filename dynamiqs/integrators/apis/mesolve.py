@@ -12,7 +12,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays import QArray, QArrayLike, asqarray
-from ...result import MEResult
+from ...result import MESolveResult
 from ...solver import (
     Dopri5,
     Dopri8,
@@ -54,7 +54,7 @@ def mesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> MEResult:
+) -> MESolveResult:
     r"""Solve the Lindblad master equation.
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
@@ -116,10 +116,10 @@ def mesolve(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.MEResult`][dynamiqs.MEResult] object holding the result of the Lindblad
-            master  equation integration. Use the attributes `states` and `expects`
-            to access saved quantities, more details in
-            [`dq.MEResult`][dynamiqs.MEResult].
+        [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the
+            Lindblad master equation integration. Use the attributes `states` and
+            `expects` to access saved quantities, more details in
+            [`dq.MESolveResult`][dynamiqs.MESolveResult].
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
@@ -154,14 +154,14 @@ def _vectorized_mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> MEResult:
+) -> MESolveResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = MEResult(False, False, False, False, 0, 0)
+    out_axes = MESolveResult(False, False, False, False, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(
@@ -205,7 +205,7 @@ def _mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> MEResult:
+) -> MESolveResult:
     # === select integrator class
     integrators = {
         Euler: MESolveEulerIntegrator,
@@ -224,7 +224,7 @@ def _mesolve(
 
     # === init integrator
     integrator = integrator_class(
-        tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops
+        tsave, rho0, H, solver, gradient, options, jump_ops, exp_ops
     )
 
     # === run integrator

@@ -10,7 +10,7 @@ from jaxtyping import PyTree
 
 from .._utils import obj_type_str
 from ..qarrays import QArrayLike, asqarray
-from ..solver import Solver, _ODEAdaptiveStep
+from ..solver import Solver, _DEAdaptiveStep
 from ..time_array import (
     ConstantTimeArray,
     PWCTimeArray,
@@ -61,7 +61,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
                 'EqxRuntimeError: The maximum number of solver steps was reached. '
             )
             if eqx_max_steps_error_msg in str(e):
-                default_max_steps = _ODEAdaptiveStep.max_steps
+                default_max_steps = _DEAdaptiveStep.max_steps
                 raise RuntimeError(
                     'The maximum number of solver steps has been reached (the default'
                     f' value is `max_steps={default_max_steps:_}`). Try increasing'

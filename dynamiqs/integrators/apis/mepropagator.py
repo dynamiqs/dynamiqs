@@ -10,8 +10,8 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.layout import dense
 from ...qarrays.types import QArrayLike
-from ...qarrays.utils import dense
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
 from ...time_array import Shape, TimeArray
@@ -163,9 +163,7 @@ def _mepropagator(
 
     # === init integrator
     y0 = eye(H.shape[-1] ** 2, layout=dense)
-    integrator = integrator_class(
-        tsave, y0, H, None, solver, gradient, options, jump_ops
-    )
+    integrator = integrator_class(tsave, y0, H, solver, gradient, options, jump_ops)
 
     # === run integrator
     result = integrator.run()

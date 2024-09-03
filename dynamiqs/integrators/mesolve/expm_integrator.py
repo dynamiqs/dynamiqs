@@ -3,10 +3,10 @@ from jax import Array
 from ...result import Saved
 from ...utils.vectorization import operator_to_vector, vector_to_operator
 from ..core.abstract_integrator import MESolveIntegrator
-from ..core.expm_integrator import MEExpmIntegrator
+from ..core.expm_integrator import MEExpmIntegrator, SolveExpmIntegrator
 
 
-class MESolveExpmIntegrator(MEExpmIntegrator, MESolveIntegrator):
+class MESolveExpmIntegrator(SolveExpmIntegrator, MEExpmIntegrator, MESolveIntegrator):
     def __init__(self, *args):
         super().__init__(*args)
 

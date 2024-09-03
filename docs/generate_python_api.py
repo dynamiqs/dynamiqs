@@ -11,7 +11,7 @@ PATHS_TO_PARSE = [
     # files
     ('dynamiqs/utils/operators.py', 'dq'),
     ('dynamiqs/utils/states.py', 'dq'),
-    ('dynamiqs/utils/jax_utils.py', 'dq'),
+    ('dynamiqs/utils/global_settings.py', 'dq'),
     ('dynamiqs/utils/vectorization.py', 'dq'),
     ('dynamiqs/utils/optimal_control.py', 'dq'),
     ('dynamiqs/random.py', 'dq.random'),

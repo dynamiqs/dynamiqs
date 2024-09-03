@@ -88,9 +88,9 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
 
-### JAX-related utilities
+### Global settings
 
-::: dynamiqs.utils.jax_utils
+::: dynamiqs.utils.global_settings
     options:
         table: true
 

@@ -115,8 +115,14 @@ class SparseDIAQArray(QArray):
         raise NotImplementedError
 
     def powm(self, n: int) -> QArray:
-        # todo: implement dia specific method or raise warning for dense conversion
-        return to_dense(self).powm(n)
+        if n == 0:
+            eye = jnp.eye(self.shape[-1], dtype=self.dtype)
+            batched_eye = jnp.broadcast_to(eye, self.shape)
+            return SparseDIAQArray(self.dims, self.offsets, batched_eye)
+        if n == 1:
+            return self
+        else:
+            return self @ self.powm(n - 1)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         # todo: implement dia specific method or raise warning for dense conversion
@@ -156,8 +162,8 @@ class SparseDIAQArray(QArray):
     def isherm(self) -> bool:
         raise NotImplementedError
 
-    def to_qutip(self) -> Qobj:
-        raise NotImplementedError
+    def to_qutip(self) -> Qobj | list[Qobj]:
+        return self.to_dense().to_qutip()
 
     def to_jax(self) -> Array:
         return self.to_dense().to_jax()
@@ -394,8 +400,8 @@ class SparseDIAQArray(QArray):
         out_offsets, out_diags = _compress_dia(out_offsets, out_diags)
         return SparseDIAQArray(dims=out_dims, offsets=out_offsets, diags=out_diags)
 
-    def _pow(self, power: int) -> QArray:  # noqa: ARG002
-        return NotImplemented
+    def _pow(self, power: int) -> QArray:
+        return SparseDIAQArray(self.dims, self.offsets, self.diags**power)
 
     def __getitem__(self, key: int | slice) -> QArray:
         full = slice(None, None, None)

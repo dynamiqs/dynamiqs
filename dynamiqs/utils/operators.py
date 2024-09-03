@@ -6,8 +6,10 @@ import jax.numpy as jnp
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from ..qarrays import DenseQArray, QArray, SparseDIAQArray, asqarray
-from ..qarrays.utils import Layout, dense, get_layout
+from ..qarrays import DenseQArray, QArray, asqarray, sparsedia
+from ..qarrays.layout import Layout, dense
+from ..qarrays.sparse_dia_qarray import SparseDIAQArray
+from .global_settings import get_layout
 from .quantum_utils import tensor
 
 __all__ = [
@@ -73,7 +75,7 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diag = jnp.ones(dim, dtype=cdtype())
-        return SparseDIAQArray(diags=diag[None, :], offsets=(0,), dims=dims)
+        return sparsedia({0: diag}, dims=dims)
 
 
 def zero(*dims: int, layout: Layout | None = None) -> QArray:
@@ -170,7 +172,13 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
          [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]]
     """
     layout = get_layout(layout)
-    destroy_single = _destroy_single_dense if layout is dense else _destroy_single_dia
+
+    def destroy_single(dim: int) -> QArray:
+        diag = jnp.sqrt(jnp.arange(1, dim, dtype=cdtype()))
+        if layout is dense:
+            return asqarray(jnp.diag(diag, k=1))
+        else:
+            return sparsedia({1: diag})
 
     if len(dims) == 1:
         return destroy_single(dims[0])
@@ -181,18 +189,6 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
         tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
-
-
-def _destroy_single_dense(dim: int) -> QArray:
-    """Bosonic annihilation operator."""
-    array = jnp.diag(jnp.sqrt(jnp.arange(1, dim, dtype=cdtype())), k=1)
-    return asqarray(array, dims=dim)
-
-
-def _destroy_single_dia(dim: int) -> QArray:
-    """Bosonic annihilation operator."""
-    diag = jnp.sqrt(jnp.arange(0, dim, dtype=cdtype()))
-    return SparseDIAQArray(diags=diag[None, :], offsets=(1,), dims=(dim,))
 
 
 def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
@@ -244,7 +240,13 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
          [    ⋅         ⋅         ⋅         ⋅     1.414+0.j     ⋅    ]]
     """
     layout = get_layout(layout)
-    create_single = _create_single_dense if layout is dense else _create_single_dia
+
+    def create_single(dim: int) -> QArray:
+        diag = jnp.sqrt(jnp.arange(1, dim, dtype=cdtype()))
+        if layout is dense:
+            return asqarray(jnp.diag(diag, k=-1))
+        else:
+            return sparsedia({-1: diag})
 
     if len(dims) == 1:
         return create_single(dims[0])
@@ -255,18 +257,6 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
-
-
-def _create_single_dense(dim: int) -> QArray:
-    """Bosonic creation operator."""
-    array = jnp.diag(jnp.sqrt(jnp.arange(1, dim, dtype=cdtype())), k=-1)
-    return asqarray(array, dims=dim)
-
-
-def _create_single_dia(dim: int) -> QArray:
-    """Bosonic creation operator."""
-    diag = jnp.sqrt(jnp.arange(1, dim + 1, dtype=cdtype())).at[-1].set(0.0)
-    return SparseDIAQArray(diags=diag[None, :], offsets=(-1,), dims=(dim,))
 
 
 def number(dim: int | None = None, *, layout: Layout | None = None) -> QArray:
@@ -293,10 +283,9 @@ def number(dim: int | None = None, *, layout: Layout | None = None) -> QArray:
     layout = get_layout(layout)
     diag = jnp.arange(0, stop=dim, dtype=cdtype())
     if layout is dense:
-        array = jnp.diag(diag)
-        return asqarray(array)
+        return asqarray(jnp.diag(diag))
     else:
-        return SparseDIAQArray(diags=diag[None, :], offsets=(0,), dims=(dim,))
+        return sparsedia({0: diag})
 
 
 def parity(dim: int, *, layout: Layout | None = None) -> QArray:
@@ -323,10 +312,9 @@ def parity(dim: int, *, layout: Layout | None = None) -> QArray:
     layout = get_layout(layout)
     diag = jnp.ones(dim, dtype=cdtype()).at[1::2].set(-1)
     if layout is dense:
-        array = jnp.diag(diag)
-        return asqarray(array)
+        return asqarray(jnp.diag(diag))
     else:
-        return SparseDIAQArray(diags=diag[None, :], offsets=(0,), dims=(dim,))
+        return sparsedia({0: diag})
 
 
 def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
@@ -488,8 +476,7 @@ def sigmax(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
         return asqarray(array)
     else:
-        diags = jnp.array([[1.0, 0.0], [0.0, 1.0]], dtype=cdtype())
-        return SparseDIAQArray(diags=diags, offsets=(-1, 1), dims=(2,))
+        return sparsedia({-1: [1.0], 1: [1.0]}, dtype=cdtype())
 
 
 def sigmay(*, layout: Layout | None = None) -> QArray:
@@ -514,8 +501,7 @@ def sigmay(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
         return asqarray(array)
     else:
-        diags = jnp.array([[1.0j, 0.0], [0.0, -1.0j]], dtype=cdtype())
-        return SparseDIAQArray(diags=diags, offsets=(-1, 1), dims=(2,))
+        return sparsedia({-1: [1j], 1: [-1j]}, dtype=cdtype())
 
 
 def sigmaz(*, layout: Layout | None = None) -> QArray:
@@ -540,8 +526,7 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
         return asqarray(array)
     else:
-        diag = jnp.array([1.0, -1.0], dtype=cdtype())
-        return SparseDIAQArray(diags=diag[None, :], offsets=(0,), dims=(2,))
+        return sparsedia({0: [1.0, -1.0]}, dtype=cdtype())
 
 
 def sigmap(*, layout: Layout | None = None) -> QArray:
@@ -567,8 +552,7 @@ def sigmap(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
         return asqarray(array)
     else:
-        diag = jnp.array([0.0, 1.0], dtype=cdtype())
-        return SparseDIAQArray(diags=diag[None, :], offsets=(1,), dims=(2,))
+        return sparsedia({1: [1.0]}, dtype=cdtype())
 
 
 def sigmam(*, layout: Layout | None = None) -> QArray:
@@ -594,8 +578,7 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
         return asqarray(array)
     else:
-        diag = jnp.array([1.0, 0.0], dtype=cdtype())
-        return SparseDIAQArray(diags=diag[None, :], offsets=(-1,), dims=(2,))
+        return sparsedia({-1: [1.0]}, dtype=cdtype())
 
 
 def hadamard(n: int = 1) -> QArray:
