@@ -85,9 +85,9 @@ def powm(x: QArrayLike, n: int) -> QArray:
 
     Examples:
         >>> dq.powm(dq.sigmax(), 2)
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
-        [[1.+0.j 0.+0.j]
-         [0.+0.j 1.+0.j]]
+        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        [[1.+0.j   ⋅   ]
+         [  ⋅    1.+0.j]]
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
