@@ -181,11 +181,11 @@ class QArray(eqx.Module):
         return entropy_vn(self)
 
     @abstractmethod
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         pass
 
     @abstractmethod
-    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         pass
 
     @abstractmethod
@@ -432,3 +432,9 @@ def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
         raise ValueError(
             f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
+
+
+def _in_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool:
+    axis = (axis,) if isinstance(axis, int) else axis
+    last_two_dims = (-1, -2, ndim - 1, ndim - 2)
+    return axis is None or any(a in last_two_dims for a in axis)
