@@ -542,10 +542,11 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
         >>> L = [a, dq.dag(a) @ a]
         >>> rho = dq.fock_dm(4, 1)
         >>> dq.lindbladian(H, L, rho)
-        Array([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
+        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        [[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
+         [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
+         [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
+         [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
     """
     H = asqarray(H)
     jump_ops = asqarray(jump_ops)
