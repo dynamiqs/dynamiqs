@@ -436,5 +436,4 @@ def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
 
 def _in_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool:
     axis = (axis,) if isinstance(axis, int) else axis
-    last_two_dims = (-1, -2, ndim - 1, ndim - 2)
-    return axis is None or any(a in last_two_dims for a in axis)
+    return axis is None or any(a % ndim in [ndim - 1, ndim - 2] for a in axis)
