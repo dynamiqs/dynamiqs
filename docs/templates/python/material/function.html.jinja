@@ -2,8 +2,12 @@
 
 {% block heading scoped %}
 
-	{% if config.namespace %}
+	{% set class = function.parent if not root else None %}
+
+	{% if not class.name and config.namespace %}
 		{% set function_full_name = config.namespace + "." + function_name %}
+	{% elif class.name %}
+		{% set function_full_name = class.name + "." + function_name %}
 	{% else %}
 		{% set function_full_name = function_name %}
 	{% endif %}
