@@ -10,7 +10,7 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .._utils import _is_batched_scalar
-from .qarray import QArray
+from .qarray import QArray, _in_last_two_dims
 from .types import QArrayLike, asjaxarray, isqarraylike
 
 __all__ = ['DenseQArray']
@@ -72,11 +72,23 @@ class DenseQArray(QArray):
     def trace(self) -> Array:
         return self.data.trace(axis1=-1, axis2=-2)
 
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        return self.data.sum(axis=axis)
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        data = self.data.sum(axis=axis)
 
-    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        return self.data.squeeze(axis=axis)
+        # return array if last two dimensions are modified, qarray otherwise
+        if _in_last_two_dims(axis, self.ndim):
+            return data
+        else:
+            return DenseQArray(self.dims, data)
+
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        data = self.data.squeeze(axis=axis)
+
+        # return array if last two dimensions are modified, qarray otherwise
+        if _in_last_two_dims(axis, self.ndim):
+            return data
+        else:
+            return DenseQArray(self.dims, data)
 
     def _eigh(self) -> tuple[Array, Array]:
         return jnp.linalg.eigh(self.data)
