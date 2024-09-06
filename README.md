@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="./docs/media/dynamiqs-logo.png" width="520" alt="dynamiqs library logo">
+    <img src="./docs/media/dynamiqs-logo.png" width="520" alt="Dynamiqs library logo">
 </h1>
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
@@ -8,11 +8,11 @@
 
 High-performance quantum systems simulation with JAX.
 
-**dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/python_api/index.html) for a list of all implemented functions.
 
-The main features of **dynamiqs** are:
+The main features of **Dynamiqs** are:
 
 - Running simulations on **CPUs** and **GPUs** with high-performance.
 - Executing many simulations **concurrently** by batching over Hamiltonians, initial states or jump operators.
@@ -114,7 +114,7 @@ Gradient w.r.t. alpha=1.81
 
 ## More features!
 
-Below are some cool features of **dynamiqs** that are either already available or planned for the near future.
+Below are some cool features of **Dynamiqs** that are either already available or planned for the near future.
 
 **Solvers**
 
@@ -151,11 +151,11 @@ Below are some cool features of **dynamiqs** that are either already available o
 - Simulate using propagators solvers based on **Krylov subspace methods**.
 - **Benchmark code** to compare solvers and performance for different systems.
 
-## The dynamiqs project
+## The Dynamiqs project
 
 **Philosophy**
 
-There is a noticeable gap in the availability of an open-source library that simplifies gradient-based parameter estimation and quantum optimal control. In addition, faster simulations of large systems are essential to accelerate the development of quantum technologies. The **dynamiqs** library addresses both of these needs. It aims to be a fast and reliable building block for **GPU-accelerated** and **differentiable** solvers. We also work to make the library compatible with the existing Python ecosystem (i.e. JAX and QuTiP) to allow easy interfacing with other libraries.
+There is a noticeable gap in the availability of an open-source library that simplifies gradient-based parameter estimation and quantum optimal control. In addition, faster simulations of large systems are essential to accelerate the development of quantum technologies. The **Dynamiqs** library addresses both of these needs. It aims to be a fast and reliable building block for **GPU-accelerated** and **differentiable** solvers. We also work to make the library compatible with the existing Python ecosystem (i.e. JAX and QuTiP) to allow easy interfacing with other libraries.
 
 **Team and sponsoring**
 
@@ -173,17 +173,17 @@ If you're curious, have questions or suggestions, wish to contribute or simply w
 
 We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to get in touch to discuss what would suit you. Please refer to [CONTRIBUTING.md](https://github.com/dynamiqs/dynamiqs/blob/main/CONTRIBUTING.md) for detailed instructions.
 
-## Citing dynamiqs
+## Citing Dynamiqs
 
 If you have found this library useful in your academic research, you can cite:
 
 ```bibtex
 @unpublished{guilmin2024dynamiqs,
-  title  = {dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
+  title  = {Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
   author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois},
   year   = {2024},
   url    = {https://github.com/dynamiqs/dynamiqs}
 }
 ```
 
-> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.
+> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.
