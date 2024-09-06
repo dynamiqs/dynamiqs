@@ -3,10 +3,10 @@ from jaxtyping import PyTree
 from ...result import Saved
 from ...utils.vectorization import operator_to_vector, vector_to_operator
 from ..core.abstract_integrator import MESolveIntegrator
-from ..core.expm_integrator import MEExpmIntegrator, SolveExpmIntegrator
+from ..core.expm_integrator import MEExpmIntegrator
 
 
-class MESolveExpmIntegrator(SolveExpmIntegrator, MEExpmIntegrator, MESolveIntegrator):
+class MESolveExpmIntegrator(MEExpmIntegrator, MESolveIntegrator):
     def __init__(self, *args):
         super().__init__(*args)
 

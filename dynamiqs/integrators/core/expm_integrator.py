@@ -11,12 +11,7 @@ from dynamiqs._utils import _concatenate_sort
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
-from .abstract_integrator import (
-    BaseIntegrator,
-    MEIntegrator,
-    PropagatorIntegrator,
-    SolveIntegrator,
-)
+from .abstract_integrator import BaseIntegrator, MEIntegrator
 
 
 class ExpmIntegrator(BaseIntegrator):
@@ -95,14 +90,6 @@ class ExpmIntegrator(BaseIntegrator):
 
         nsteps = (delta_ts != 0).sum()
         return self.result(saved, infos=self.Infos(nsteps))
-
-
-class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
-    pass
-
-
-class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
-    pass
 
 
 class SEExpmIntegrator(ExpmIntegrator):
