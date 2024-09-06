@@ -127,7 +127,8 @@ def mesolve(
     jump_ops = [_astimearray(L) for L in jump_ops]
     rho0 = jnp.asarray(rho0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    if exp_ops is not None:
+        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_mesolve_args(H, jump_ops, rho0, exp_ops)

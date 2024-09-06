@@ -75,7 +75,7 @@ class SolveIntegrator(BaseIntegrator):
 
         if self.options.save_states:
             ysave = y
-        if self.Es is not None and len(self.Es) > 0:
+        if self.Es is not None:
             Esave = expect(self.Es, y)
         if self.options.save_extra is not None:
             extra = self.options.save_extra(y)
