@@ -1,4 +1,4 @@
-from jax import Array
+from jaxtyping import PyTree
 
 from ...result import Saved
 from ...utils.vectorization import operator_to_vector, vector_to_operator
@@ -13,7 +13,7 @@ class MESolveExpmIntegrator(SolveExpmIntegrator, MEExpmIntegrator, MESolveIntegr
         # convert to vectorized form
         self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
 
-    def save(self, y: Array) -> Saved:
+    def save(self, y: PyTree) -> Saved:
         # TODO: implement bexpect for vectorized operators and convert at the end
         #       instead ofat each step
         y = vector_to_operator(y)
