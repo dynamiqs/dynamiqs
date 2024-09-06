@@ -89,22 +89,22 @@ class ExpmIntegrator(BaseIntegrator):
 
         # === save the propagators
         nsteps = (delta_ts != 0).sum()
-        saved = self.collect_saved(saved, ylast[None], times)
+        saved = self.postprocess_saved(saved, ylast[None], times)
         return self.result(saved, infos=self.Infos(nsteps))
 
 
 class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
-    def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
+    def postprocess_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
         # extract propagators at the save times ts
         t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         saved = PropagatorSaved(
             saved.ysave[t_idxs] if self.options.save_states else saved.ysave
         )
-        return super().collect_saved(saved, ylast)
+        return super().postprocess_saved(saved, ylast)
 
 
 class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
-    def collect_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
+    def postprocess_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
         # extract states, expects and extra at the save times ts
         t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         saved = SolveSaved(
@@ -112,7 +112,7 @@ class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
             saved.Esave[t_idxs] if saved.Esave is not None else None,
             saved.extra[t_idxs] if saved.extra is not None else None,
         )
-        return super().collect_saved(saved, ylast)
+        return super().postprocess_saved(saved, ylast)
 
 
 class SEExpmIntegrator(ExpmIntegrator):

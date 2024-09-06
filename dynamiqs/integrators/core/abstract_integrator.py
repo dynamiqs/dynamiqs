@@ -54,7 +54,7 @@ class BaseIntegrator(AbstractIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         pass
 
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+    def postprocess_saved(self, saved: Saved, ylast: Array) -> Saved:
         # if save_states is False save only last state
         if not self.options.save_states:
             saved = eqx.tree_at(
@@ -76,8 +76,8 @@ class SolveIntegrator(BaseIntegrator):
         extra = self.options.save_extra(y) if self.options.save_extra else None
         return SolveSaved(ysave, Esave, extra)
 
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
-        saved = super().collect_saved(saved, ylast)
+    def postprocess_saved(self, saved: Saved, ylast: Array) -> Saved:
+        saved = super().postprocess_saved(saved, ylast)
         # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
         if saved.Esave is not None:
             saved = eqx.tree_at(lambda x: x.Esave, saved, saved.Esave.swapaxes(-1, -2))
