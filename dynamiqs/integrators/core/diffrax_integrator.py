@@ -66,8 +66,7 @@ class DiffraxIntegrator(BaseIntegrator):
             )
 
         # === collect and return results
-        save_a, save_b = solution.ys
-        saved = self.collect_saved(save_a, save_b[0])
+        saved = self.collect_saved(*solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
     @abstractmethod
