@@ -69,11 +69,11 @@ class Result(eqx.Module):
 
     def _str_parts(self) -> dict[str, str | None]:
         return {
-            'Solver     ': type(self.solver).__name__,
-            'Gradient   ': (
+            'Solver': type(self.solver).__name__,
+            'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
-            'Infos      ': self.infos if self.infos is not None else None,
+            'Infos': self.infos if self.infos is not None else None,
         }
 
     def __str__(self) -> str:
@@ -95,10 +95,7 @@ class SolveResult(Result):
 
     @property
     def final_state(self) -> Array:
-        if self.options.save_states:
-            return self.states[..., -1, :, :]
-        else:
-            return self.states
+        return self.states[..., -1, :, :]
 
     @property
     def expects(self) -> Array | None:
@@ -111,11 +108,9 @@ class SolveResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'States  ': array_str(self.states),
-            'Expects ': array_str(self.expects),
-            'Extra   ': (
-                eqx.tree_pformat(self.extra) if self.extra is not None else None
-            ),
+            'States': array_str(self.states),
+            'Expects': array_str(self.expects),
+            'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
 
 
@@ -126,10 +121,7 @@ class PropagatorResult(Result):
 
     @property
     def final_propagator(self) -> Array:
-        if self.options.save_states:
-            return self.propagators[..., -1, :, :]
-        else:
-            return self.propagators
+        return self.propagators[..., -1, :, :]
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
@@ -178,8 +170,10 @@ class FloquetResult(Result):
 class SESolveResult(SolveResult):
     r"""Result of the Schrödinger equation integration.
 
+
     Attributes:
-        states _(array of shape (..., ntsave, n, 1))_: Saved states.
+        states _(array of shape (..., nsave, n, 1))_: Saved states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_state _(array of shape (..., n, 1))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
@@ -230,8 +224,9 @@ class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, n))_: Saved states.
-        final_state _(array of shape (..., n, 1))_: Saved final state.
+        states _(array of shape (..., nsave, n, n))_: Saved states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+        final_state _(array of shape (..., n, n))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -283,7 +278,8 @@ class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        propagators _(array of shape (..., nsave, n, n))_: Saved propagators with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_propagator _(array of shape (..., n, n))_: Saved final propagator.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
@@ -306,7 +302,8 @@ class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators.
+        propagators _(array of shape (..., nsave, n^2, n^2))_: Saved propagators with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
