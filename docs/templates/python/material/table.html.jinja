@@ -1,0 +1,53 @@
+{% if root_members %}
+  {% set members_list = config.members %}
+{% else %}
+  {% set members_list = none %}
+{% endif %}
+{% if config.show_category_heading %}
+  {% set extra_level = 1 %}
+{% else %}
+  {% set extra_level = 0 %}
+{% endif %}
+<table>
+  <colgroup>
+    <col span="1" style="width: 30%;">
+    <col span="1" style="width: 70%;">
+  </colgroup>
+  <tbody>
+    {% set classes = obj.classes|filter_objects(filters=config.filters, members_list=members_list, keep_no_docstrings=config.show_if_no_docstring) %}
+    {% set functions = obj.functions|filter_objects(filters=config.filters, members_list=members_list, keep_no_docstrings=config.show_if_no_docstring) %}
+    {% set methods = classes + functions %}
+    {% if methods %}
+      {% with heading_level = heading_level + extra_level %}
+        {% for method in methods|order_members(config.members_order, members_list) %}
+          {% if not method.is_explicitely_exported %}
+            <tr>
+              <td class="fixed_height">
+                <a href={{ "/python_api/" ~ (method.path | replace('dynamiqs.', '') | replace(".", "/")) ~ ".html" }}>
+                  <code>{{ method.name }}</code>
+                </a>
+              </td>
+              {% if "__init__" in method.members and method.members["__init__"].has_docstring %}
+                {% with docstring_sections = method.members["__init__"].docstring.parsed %}
+                  {% with section = (docstring_sections|selectattr('kind.value', 'eq', "text")|first) %}
+                    {% set text = section.value|convert_markdown(heading_level, html_id) %}
+                    {% set first_sentence = text.split('</p>')[0] %}
+                    <td class="fixed_height">{{ first_sentence }}</td>
+                  {% endwith %}
+                {% endwith %}
+              {% elif method.has_docstring %}
+                {% with docstring_sections = method.docstring.parsed %}
+                  {% with section = (docstring_sections|selectattr('kind.value', 'eq', "text")|first) %}
+                    {% set text = section.value|convert_markdown(heading_level, html_id) %}
+                    {% set first_sentence = text.split('</p>')[0] %}
+                    <td class="fixed_height">{{ first_sentence }}</td>
+                  {% endwith %}
+                {% endwith %}
+              {% endif %}
+            </tr>
+          {% endif %}
+        {% endfor %}
+      {% endwith %}
+    {% endif %}
+  </tbody>
+</table>

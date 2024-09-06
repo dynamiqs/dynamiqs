@@ -1,8 +1,6 @@
 {{ log.debug("Rendering " + module.path) }}
-
 <div class="doc doc-object doc-module">
   {% with html_id = module.path %}
-
     {% if root %}
       {% set show_full_path = config.show_root_full_path %}
       {% set root_members = True %}
@@ -12,51 +10,46 @@
     {% else %}
       {% set show_full_path = config.show_object_full_path %}
     {% endif %}
-
     {% if not root or config.show_root_heading %}
-
-        {% with module_name = module.path if show_full_path else module.name %}
-          {% if not config.table %}
-            {% if config.separate_signature %}
-              <span class="doc doc-object-name doc-module-name">{{ module_name }}</span>
-            {% else %}
-              <code>{{ module_name }}</code>
-            {% endif %}
+      {% with module_name = module.path if show_full_path else module.name %}
+        {% if not config.table %}
+          {% if config.show_symbol_type_heading %}
+            <code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>
           {% endif %}
-        {% endwith %}
-        {% with labels = module.labels %}
-          {% include "labels.html" with context %}
-        {% endwith %}
-
+          {% if config.separate_signature %}
+            <span class="doc doc-object-name doc-module-name">{{ module_name }}</span>
+          {% else %}
+            <code>{{ module_name }}</code>
+          {% endif %}
+        {% endif %}
+      {% endwith %}
+      {% with labels = module.labels %}
+        {% include "labels"|get_template with context %}
+      {% endwith %}
     {% else %}
-
       {% if config.show_root_toc_entry %}
         {% filter heading(heading_level,
-            role="module",
-            id=html_id,
-            toc_label=module.path if config.show_root_full_path else module.name,
-            hidden=True) %}
+          role="module",
+          id=html_id,
+          toc_label=module.path if config.show_root_full_path else module.name,
+          hidden=True) %}
         {% endfilter %}
       {% endif %}
       {% set heading_level = heading_level - 1 %}
-
     {% endif %}
-
     <div class="doc doc-contents {% if root %}first{% endif %}">
       {% with docstring_sections = module.docstring.parsed %}
-        {% include "docstring.html" with context %}
+        {% include "docstring"|get_template with context %}
       {% endwith %}
-
       {% with obj = module %}
         {% set root = False %}
         {% set heading_level = heading_level + 1 %}
         {% if config.table %}
-          {% include "table.html" with context %}
+          {% include "table"|get_template with context %}
         {% else %}
-          {% include "children.html" with context %}
+          {% include "children"|get_template with context %}
         {% endif %}
       {% endwith %}
     </div>
-
   {% endwith %}
 </div>
