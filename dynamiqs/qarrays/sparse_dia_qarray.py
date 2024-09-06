@@ -16,6 +16,7 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar, cdtype
 from .dense_qarray import DenseQArray
+from .qarray import _in_last_two_dims, _include_last_two_dims
 from .types import QArray, QArrayLike, asqarray, isqarraylike
 
 __all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
@@ -139,38 +140,24 @@ class SparseDIAQArray(QArray):
             return jnp.zeros(self.shape[:-2])
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        if axis is None:
-            # sum over all elements, return an Array
-            return jnp.sum(self.diags)
-        elif isinstance(axis, int):
-            if (axis % self.ndim - self.ndim) in [-1, -2]:
-                # sum over one of the last two dimensions, not supported yet: it
-                # requires picking the proper elements of each diagonal
-                raise NotImplementedError
-            # sum over a batch dimension, return a QArray
-            diags = jnp.sum(self.diags, axis=axis)
-            return SparseDIAQArray(self.dims, self.offsets, diags)
-        elif isinstance(axis, tuple) and all(isinstance(a, int) for a in axis):
-            axis = tuple(a % self.ndim - self.ndim for a in axis)
-            if -1 in axis and -2 in axis:
-                # sum over last two dimensions, return an Array
-                return jnp.sum(self.diags, axis=axis)
-            elif -1 in axis or -2 in axis:
-                # sum over one of the last two dimensions, not supported yet
-                raise NotImplementedError
+        # return array if last two dimensions are modified, qarray otherwise
+        if _in_last_two_dims(axis, self.ndim):
+            if _include_last_two_dims(axis, self.ndim):
+                return self.diags.sum(axis)
             else:
-                # sum over a batch dimension, return a QArray
-                diags = jnp.sum(self.diags, axis=axis)
-                return SparseDIAQArray(self.dims, self.offset, diags)
+                return self.to_jax().sum(axis)
         else:
-            raise TypeError(
-                '`axis` must be an integer, a tuple of integers or `None`, but got '
-                f'{axis}.'
-            )
+            return SparseDIAQArray(self.dims, self.offsets, self.diags.sum(axis))
 
-
-    def squeeze(self):
-        raise NotImplementedError
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # return array if last two dimensions are modified, qarray otherwise
+        if _in_last_two_dims(axis, self.ndim):
+            if _include_last_two_dims(axis, self.ndim):
+                return self.diags.squeeze(axis)
+            else:
+                return self.to_jax().squeeze(axis)
+        else:
+            return SparseDIAQArray(self.dims, self.offsets, self.diags.squeeze(axis))
 
     def _eigh(self) -> tuple[Array, Array]:
         raise NotImplementedError
