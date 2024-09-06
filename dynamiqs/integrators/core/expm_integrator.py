@@ -7,7 +7,6 @@ from jax import Array
 from jaxtyping import PyTree
 
 from dynamiqs._utils import _concatenate_sort
-from dynamiqs.result import PropagatorSaved, Saved, SolveSaved
 
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
@@ -88,32 +87,22 @@ class ExpmIntegrator(BaseIntegrator):
         # saved has shape (ntimes-1, N, N) if y0 has shape (N, N) -> compute propagators
 
         # === save the propagators
+        # extract propagators at the save times ts
+        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
+        saved = jax.tree.map(lambda x: x[t_idxs], saved)
+
+        saved = self.postprocess_saved(saved, ylast[None])
+
         nsteps = (delta_ts != 0).sum()
-        saved = self.postprocess_saved(saved, ylast[None], times)
         return self.result(saved, infos=self.Infos(nsteps))
 
 
 class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
-    def postprocess_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
-        # extract propagators at the save times ts
-        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
-        saved = PropagatorSaved(
-            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
-            saved.extra[t_idxs] if saved.extra is not None else None,
-        )
-        return super().postprocess_saved(saved, ylast)
+    pass
 
 
 class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
-    def postprocess_saved(self, saved: Saved, ylast: Array, times: Array) -> Saved:
-        # extract states, expects and extra at the save times ts
-        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
-        saved = SolveSaved(
-            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
-            saved.Esave[t_idxs] if saved.Esave is not None else None,
-            saved.extra[t_idxs] if saved.extra is not None else None,
-        )
-        return super().postprocess_saved(saved, ylast)
+    pass
 
 
 class SEExpmIntegrator(ExpmIntegrator):
