@@ -15,7 +15,7 @@ from qutip import Qobj
 if TYPE_CHECKING:  # avoid circular import by importing only during type checking
     from .types import QArrayLike
 
-__all__ = ["QArray"]
+__all__ = ['QArray']
 
 
 class QArray(eqx.Module):
@@ -46,7 +46,7 @@ class QArray(eqx.Module):
             isinstance(d, int) for d in self.dims
         ):
             raise TypeError(
-                f"Argument `dims` must be a tuple of ints, but is {self.dims}."
+                f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
 
         # === ensure dims is compatible with the shape
@@ -55,8 +55,8 @@ class QArray(eqx.Module):
         allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
         if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
-                "Argument `dims` must be compatible with the shape of the QArray, but "
-                f"got dims {self.dims} and shape {self.shape}."
+                'Argument `dims` must be compatible with the shape of the QArray, but '
+                f'got dims {self.dims} and shape {self.shape}.'
             )
 
     @property
@@ -312,7 +312,7 @@ class QArray(eqx.Module):
         try:
             return self.shape[0]
         except IndexError as err:
-            raise TypeError("len() of unsized object") from err
+            raise TypeError('len() of unsized object') from err
 
     @abstractmethod
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
@@ -328,8 +328,8 @@ class QArray(eqx.Module):
 
     def __repr__(self) -> str:
         return (
-            f"{type(self).__name__}: shape={self.shape}, dims={self.dims}, "
-            f"dtype={self.dtype}"
+            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
+            f'dtype={self.dtype}'
         )
 
     def __neg__(self) -> QArray:
@@ -343,9 +343,9 @@ class QArray(eqx.Module):
 
         if not _is_batched_scalar(y):
             logging.warning(
-                "Using the `*` operator between two arrays performs element-wise "
-                "multiplication. For matrix multiplication, use the `@` operator "
-                "instead."
+                'Using the `*` operator between two arrays performs element-wise '
+                'multiplication. For matrix multiplication, use the `@` operator '
+                'instead.'
             )
 
         if isinstance(y, QArray):
@@ -373,9 +373,9 @@ class QArray(eqx.Module):
 
         if _is_batched_scalar(y):
             logging.warning(
-                "Using the `+` or `-` operator between an array and a scalar performs "
-                "element-wise addition or subtraction. For addition with a scaled "
-                "identity matrix, use e.g. `x + 2 * x.I` instead."
+                'Using the `+` or `-` operator between an array and a scalar performs '
+                'element-wise addition or subtraction. For addition with a scaled '
+                'identity matrix, use e.g. `x + 2 * x.I` instead.'
             )
 
         if isinstance(y, QArray):
@@ -413,8 +413,8 @@ class QArray(eqx.Module):
             return _Metaω.__rpow__(power, self)
         else:
             logging.warning(
-                "Using the `**` operator performs element-wise power. For matrix "
-                "power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead."
+                'Using the `**` operator performs element-wise power. For matrix '
+                'power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
             )
             return self._pow(power)
 
@@ -430,7 +430,7 @@ class QArray(eqx.Module):
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f"QArrays have incompatible dimensions. Got {dims1} and {dims2}."
+            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
 
 
