@@ -1,0 +1,76 @@
+{{ log.debug("Rendering functions section") }}
+{% if config.docstring_section_style == "table" %}
+  {% block table_style %}
+    <p>
+      <strong>{{ section.title or "Methods:" }}</strong>
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ "Name" }}</th>
+          <th>{{ "Description" }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for function in section.value %}
+          {% if not function.name == "__init__" or not config.merge_init_into_class %}
+            <tr>
+              <td>
+                <code><span data-autorefs-optional-hover="{{ class.path }}.{{ function.name }}">{{ function.name }}</span></code>
+              </td>
+              <td>
+                <div class="doc-md-description">{{ function.description|convert_markdown(heading_level, html_id) }}</div>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endblock table_style %}
+{% elif config.docstring_section_style == "list" %}
+  {% block list_style %}
+    <p>
+      <strong>{{ section.title or "Methods" }}</strong>
+    </p>
+    <ul>
+      {% for function in section.value %}
+        {% if not function.name == "__init__" or not config.merge_init_into_class %}
+          <li class="field-body">
+            <b>{{ function.name }}</b>
+            –
+            <div class="doc-md-description">{{ function.description|convert_markdown(heading_level, html_id) }}</div>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  {% endblock list_style %}
+{% elif config.docstring_section_style == "spacy" %}
+  {% block spacy_style %}
+    <table>
+      <thead>
+        <tr>
+          <th>
+            <b>{{ (section.title or "Methods:").rstrip(":").upper() }}</b>
+          </th>
+          <th>
+            <b>{{ "Description" }}</b>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for function in section.value %}
+          {% if not function.name == "__init__" or not config.merge_init_into_class %}
+            <tr>
+              <td>
+                <code><span data-autorefs-optional-hover="{{ class.path }}.{{ function.name }}">{{ function.name }}</span></code>
+              </td>
+              <td class="doc-function-details">
+                <div class="doc-md-description">{{ function.description|convert_markdown(heading_level, html_id) }}</div>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endblock spacy_style %}
+{% endif %}
