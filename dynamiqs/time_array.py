@@ -35,11 +35,11 @@ def constant(array: QArrayLike) -> ConstantTimeArray:
     Examples:
         >>> H = dq.constant(dq.sigmaz())
         >>> H(0.0)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
         >>> H(1.0)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
     """
@@ -84,19 +84,19 @@ def pwc(times: ArrayLike, values: ArrayLike, array: QArrayLike) -> PWCTimeArray:
         >>> array = dq.sigmaz()
         >>> H = dq.pwc(times, values, array)
         >>> H(-0.5)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[  ⋅      ⋅   ]
          [  ⋅      ⋅   ]]
         >>> H(0.0)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 3.+0.j    ⋅   ]
          [   ⋅    -3.+0.j]]
         >>> H(0.5)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 3.+0.j    ⋅   ]
          [   ⋅    -3.+0.j]]
         >>> H(1.0)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[-2.+0.j    ⋅   ]
          [   ⋅     2.+0.j]]
     """
@@ -148,11 +148,11 @@ def modulated(
         >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
         >>> H = dq.modulated(f, dq.sigmax())
         >>> H(0.5)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=2
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
         [[   ⋅    -1.+0.j]
          [-1.+0.j    ⋅   ]]
         >>> H(1.0)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=2
+        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
         [[  ⋅    1.+0.j]
          [1.+0.j   ⋅   ]]
     """
