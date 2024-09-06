@@ -3,7 +3,7 @@
 This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.
 
 ```python
-import Dynamiqs as dq
+import dynamiqs as dq
 ```
 
 ## Main differences with QuTiP
