@@ -117,7 +117,7 @@ class DenseQArray(QArray):
         return np.asarray(self.data, dtype=dtype)
 
     def __repr__(self) -> str:
-        return super().__repr__() + f'\n{self.data}'
+        return super().__repr__() + f', layout=dense\n{self.data}'
 
     def __mul__(self, y: QArrayLike) -> QArray:
         super().__mul__(y)

@@ -327,10 +327,13 @@ class QArray(eqx.Module):
         return np.asarray(self)
 
     def __repr__(self) -> str:
-        return (
-            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
-            f'dtype={self.dtype}'
-        )
+        if self.isket():
+            kind = 'Ket'
+        elif self.isbra():
+            kind = 'Bra'
+        else:
+            kind = 'Operator'
+        return f'{kind}: shape={self.shape}, dims={self.dims}, dtype={self.dtype}'
 
     def __neg__(self) -> QArray:
         """Negate the quantum state."""
