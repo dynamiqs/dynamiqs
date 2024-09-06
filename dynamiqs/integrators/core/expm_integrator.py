@@ -98,7 +98,8 @@ class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
         # extract propagators at the save times ts
         t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
         saved = PropagatorSaved(
-            saved.ysave[t_idxs] if self.options.save_states else saved.ysave
+            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
+            saved.extra[t_idxs] if saved.extra is not None else None,
         )
         return super().postprocess_saved(saved, ylast)
 

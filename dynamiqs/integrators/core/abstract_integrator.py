@@ -72,9 +72,9 @@ class SolveIntegrator(BaseIntegrator):
 
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_states else None
-        Esave = expect(self.Es, y) if self.Es is not None else None
         extra = self.options.save_extra(y) if self.options.save_extra else None
-        return SolveSaved(ysave, Esave, extra)
+        Esave = expect(self.Es, y) if self.Es is not None else None
+        return SolveSaved(ysave, extra, Esave)
 
     def postprocess_saved(self, saved: Saved, ylast: Array) -> Saved:
         saved = super().postprocess_saved(saved, ylast)
@@ -87,7 +87,8 @@ class SolveIntegrator(BaseIntegrator):
 class PropagatorIntegrator(BaseIntegrator):
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_states else None
-        return PropagatorSaved(ysave)
+        extra = self.options.save_extra(y) if self.options.save_extra else None
+        return PropagatorSaved(ysave, extra)
 
 
 class MEIntegrator(BaseIntegrator):
