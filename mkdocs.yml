@@ -1,5 +1,5 @@
 site_name: dynamiqs
-site_url: "https://www.dynamiqs.org"
+site_url: "https://www.dynamiqs.org/"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
 repo_name: dynamiqs
@@ -46,6 +46,10 @@ extra:
       link: https://github.com/dynamiqs/dynamiqs
     - icon: fontawesome/brands/slack
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
+  version:
+    provider: mike
+    alias: true
+    default: latest
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
@@ -85,6 +89,8 @@ plugins:
             line_length: 88
             show_bases: false
             merge_init_into_class: true
+  - mike:
+      canonical_version: latest
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
