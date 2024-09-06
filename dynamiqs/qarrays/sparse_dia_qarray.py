@@ -16,6 +16,7 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar, cdtype
 from .dense_qarray import DenseQArray
+from .qarray import _in_last_two_dims, _include_last_two_dims
 from .types import QArray, QArrayLike, asqarray, isqarraylike
 
 __all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
@@ -139,10 +140,24 @@ class SparseDIAQArray(QArray):
             return jnp.zeros(self.shape[:-2])
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
-        raise NotImplementedError
+        # return array if last two dimensions are modified, qarray otherwise
+        if _in_last_two_dims(axis, self.ndim):
+            if _include_last_two_dims(axis, self.ndim):
+                return self.diags.sum(axis)
+            else:
+                return self.to_jax().sum(axis)
+        else:
+            return SparseDIAQArray(self.dims, self.offsets, self.diags.sum(axis))
 
-    def squeeze(self):
-        raise NotImplementedError
+    def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # return array if last two dimensions are modified, qarray otherwise
+        if _in_last_two_dims(axis, self.ndim):
+            if _include_last_two_dims(axis, self.ndim):
+                return self.diags.squeeze(axis)
+            else:
+                return self.to_jax().squeeze(axis)
+        else:
+            return SparseDIAQArray(self.dims, self.offsets, self.diags.squeeze(axis))
 
     def _eigh(self) -> tuple[Array, Array]:
         raise NotImplementedError
