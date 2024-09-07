@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax.tree_util as jtu
-from jax import Array
 from jaxtyping import PyTree, ScalarLike
 
 from ._utils import tree_str_inline
 from .progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgressMeter
+from .qarrays.qarray import QArray
 
 __all__ = ['Options']
 
@@ -41,7 +41,7 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | None = TqdmProgressMeter()
     t0: ScalarLike | None = None
-    save_extra: callable[[Array], PyTree] | None = None
+    save_extra: callable[[QArray], PyTree] | None = None
 
     def __init__(
         self,
@@ -50,7 +50,7 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),  # noqa: B008
         t0: ScalarLike | None = None,
-        save_extra: callable[[Array], PyTree] | None = None,
+        save_extra: callable[[QArray], PyTree] | None = None,
     ):
         if progress_meter is None:
             progress_meter = NoProgressMeter()
