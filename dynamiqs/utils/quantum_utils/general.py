@@ -465,10 +465,10 @@ def unit(x: QArrayLike) -> QArray:
 
     Examples:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
-        >>> dq.norm(psi)
+        >>> psi.norm()
         Array(1.414, dtype=float32)
         >>> psi = dq.unit(psi)
-        >>> dq.norm(psi)
+        >>> psi.norm()
         Array(1., dtype=float32)
     """
     x = asqarray(x)
@@ -538,8 +538,8 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
 
     Examples:
         >>> a = dq.destroy(4)
-        >>> H = dq.dag(a) @ a
-        >>> L = [a, dq.dag(a) @ a]
+        >>> H = a.dag() @ a
+        >>> L = [a, a.dag() @ a]
         >>> rho = dq.fock_dm(4, 1)
         >>> dq.lindbladian(H, L, rho)
         QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
@@ -681,7 +681,7 @@ def toket(x: QArrayLike) -> QArray:
         _(qarray of shape (..., n, 1))_ Ket.
 
     Examples:
-        >>> psi = dq.tobra(dq.fock(3, 0))  # shape: (1, 3)
+        >>> psi = dq.fock(3, 0).tobra()  # shape: (1, 3)
         >>> psi
         QArray: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j 0.-0.j]]
@@ -806,7 +806,7 @@ def braket(x: QArrayLike, y: QArrayLike) -> Array:
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
-        >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
+        >>> fock01 = (dq.fock(3, 0) + dq.fock(3, 1)).unit()
         >>> dq.braket(fock0, fock01)
         Array(0.707+0.j, dtype=complex64)
     """
@@ -971,7 +971,7 @@ def entropy_vn(x: QArrayLike) -> Array:
         _(array of shape (...))_ Real-valued Von Neumann entropy.
 
     Examples:
-        >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
         >>> dq.entropy_vn(rho)
         Array(0.693, dtype=float32)
         >>> psis = [dq.fock(16, i) for i in range(5)]
