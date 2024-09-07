@@ -88,11 +88,11 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
-    r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
+    r"""Convert a qarray-like object into a QuTiP quantum object (or a list of QuTiP
     quantum objects if it has more than two dimensions).
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
             density matrix or operator.
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
             Hilbert space of the composite system, defaults to `None` (a single system
