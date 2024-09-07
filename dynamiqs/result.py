@@ -28,8 +28,11 @@ def memory_str(x: Array) -> str:
 
 def array_str(x: Array | QArray | None) -> str | None:
     # TODO: implement memory_str for QArray rather than converting to JAX array
+    if x is None:
+        return None
+    class_name = type(x).__name__
     x = asjaxarray(x)
-    return None if x is None else f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
+    return f'{class_name} {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
 # the Saved object holds quantities saved during the equation integration
