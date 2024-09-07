@@ -12,6 +12,7 @@ import dynamiqs as dq
 from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
+from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
 from dynamiqs.time_array import TimeArray
@@ -63,7 +64,7 @@ class OCavity(OpenSystem):
         alpha0: float,
         kappa: float,
         tsave: ArrayLike,
-        layout=None,
+        layout: Layout,
     ):
         self.n = n
         self.delta = delta
@@ -76,18 +77,18 @@ class OCavity(OpenSystem):
         self.params_default = self.Params(delta, alpha0, kappa)
 
     def H(self, params: PyTree) -> QArray | TimeArray:
-        return params.delta * dq.number(self.n, matrix_format=self.layout)
+        return params.delta * dq.number(self.n, layout=self.layout)
 
     def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
-        return [jnp.sqrt(params.kappa) * dq.destroy(self.n, matrix_format=self.layout)]
+        return [jnp.sqrt(params.kappa) * dq.destroy(self.n, layout=self.layout)]
 
     def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
     def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
         return [
-            dq.position(self.n, matrix_format=self.layout),
-            dq.momentum(self.n, matrix_format=self.layout),
+            dq.position(self.n, layout=self.layout),
+            dq.momentum(self.n, layout=self.layout),
         ]
 
     def _alpha(self, t: float) -> Array:
@@ -103,7 +104,7 @@ class OCavity(OpenSystem):
         return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
     def loss_state(self, state: QArray) -> Array:
-        return dq.expect(dq.number(self.n, matrix_format=self.layout), state).real
+        return dq.expect(dq.number(self.n, layout=self.layout), state).real
 
     def grads_state(self, t: float) -> PyTree:
         grad_delta = 0.0
@@ -232,9 +233,11 @@ class OTDQubit(OpenSystem):
 # # gradients
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
-ocavity = OCavity(n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave)
 dense_ocavity = OCavity(
     n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
+)
+dia_ocavity = OCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dq.dia
 )
 
 tsave = np.linspace(0.0, 1.0, 11)
