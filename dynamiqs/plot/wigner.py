@@ -201,8 +201,7 @@ def wigner_mosaic(
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
-    if nstates < n:
-        n = nstates
+    n = min(nstates, n)
 
     # create grid of plot
     _, axs = grid(
