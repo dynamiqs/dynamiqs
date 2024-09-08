@@ -22,11 +22,10 @@ class FloquetIntegrator(BaseIntegrator):
         )
 
     def run(self) -> PyTree:
-        options = eqx.tree_at(lambda x: x.save_states, self.options, False)
         U_result = _sepropagator(
-            self.H, self.ts, solver=self.solver, gradient=self.gradient, options=options
+            self.H, self.ts, solver=self.solver, gradient=self.gradient, options=self.options
         )
-        evals, evecs = jnp.linalg.eig(U_result.propagators)
+        evals, evecs = jnp.linalg.eig(U_result.final_propagator)
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
         # normalize quasienergies to the region -pi/T, pi/T
         omega_d = 2.0 * jnp.pi / self.T
