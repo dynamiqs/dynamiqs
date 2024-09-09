@@ -57,6 +57,10 @@ class Result(eqx.Module):
     def to_numpy(self) -> Result:
         raise NotImplementedError
 
+    def block_until_ready(self) -> Result:
+        _ = self._saved.ysave.block_until_ready()
+        return self
+
     def _str_parts(self) -> dict[str, str | None]:
         return {
             'Solver': type(self.solver).__name__,
