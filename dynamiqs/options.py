@@ -29,15 +29,13 @@ class Options(eqx.Module):
             If gradients are computed, the progress meter only displays during the
             forward pass.
         t0: Initial time. If `None`, defaults to the first time in `tsave`.
-        t1: Final time. If `None`, defaults to the last time in `tsave`.
         save_extra _(function, optional)_: A function with signature
             `f(Array) -> PyTree` that takes a state as input and returns a PyTree.
             This can be used to save additional arbitrary data during the
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers (see
-            [`SEResult`][dynamiqs.SEResult] or [`MEResult`][dynamiqs.MEResult]).
-        ntraj: number of trajectories for mcsolve
-        one_jump_only: whether or not to only allow one jump in mcsolve
+            [`SESolveResult`][dynamiqs.SESolveResult] or
+            [`MESolveResult`][dynamiqs.MESolveResult]).
     """
 
     save_states: bool = True
@@ -45,7 +43,6 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | None = TqdmProgressMeter()
     t0: ScalarLike | None = None
-    t1: ScalarLike | None
     save_extra: callable[[Array], PyTree] | None = None
     ntraj: int = 10
     one_jump_only: bool = False
@@ -57,7 +54,6 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),  # noqa: B008
         t0: ScalarLike | None = None,
-        t1: ScalarLike | None = None,
         save_extra: callable[[Array], PyTree] | None = None,
         ntraj: int = 10,
         one_jump_only: bool = False,
@@ -70,7 +66,6 @@ class Options(eqx.Module):
         self.cartesian_batching = cartesian_batching
         self.progress_meter = progress_meter
         self.t0 = t0
-        self.t1 = t1
         self.ntraj = ntraj
         self.one_jump_only = one_jump_only
 

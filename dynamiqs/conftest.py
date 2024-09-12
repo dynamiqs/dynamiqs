@@ -30,11 +30,11 @@ def _jax_set_printoptions():
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
 def _mplstyle():
-    dynamiqs.plots.utils.mplstyle()
+    dynamiqs.plot.utils.mplstyle()
 
 
 # doctest fixture
-@pytest.fixture()
+@pytest.fixture
 def default_mpl_style():
     def set_default_mpl_style():
         matplotlib.rcParams.update(matplotlib.rcParamsDefault)
@@ -49,7 +49,7 @@ def _mpl_backend():
 
 
 # doctest fixture
-@pytest.fixture()
+@pytest.fixture
 def renderfig():
     def savefig_code(figname):
         filename = f'docs/figs_code/{figname}.png'

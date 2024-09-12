@@ -14,10 +14,10 @@ from matplotlib.colors import Normalize
 from tqdm import tqdm
 
 from .._checks import check_shape
-from ..utils import wigner
-from .utils import add_colorbar, colors, figax, gridplot, optional_ax
+from ..utils import wigner as compute_wigner
+from .utils import add_colorbar, colors, figax, grid, optional_ax
 
-__all__ = ['plot_wigner', 'plot_wigner_mosaic', 'plot_wigner_gif']
+__all__ = ['wigner', 'wigner_mosaic', 'wigner_gif']
 
 
 @optional_ax
@@ -73,7 +73,7 @@ def plot_wigner_data(
 
 
 @optional_ax
-def plot_wigner(
+def wigner(
     state: ArrayLike,
     *,
     ax: Axes | None = None,
@@ -102,25 +102,25 @@ def plot_wigner(
 
     Examples:
         >>> psi = dq.coherent(16, 2.0)
-        >>> dq.plot_wigner(psi)
+        >>> dq.plot.wigner(psi)
         >>> renderfig('plot_wigner_coh')
 
         ![plot_wigner_coh](/figs_code/plot_wigner_coh.png){.fig-half}
 
         >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
-        >>> dq.plot_wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
+        >>> dq.plot.wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
         >>> renderfig('plot_wigner_cat')
 
         ![plot_wigner_cat](/figs_code/plot_wigner_cat.png){.fig-half}
 
         >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
-        >>> dq.plot_wigner(psi, xmax=2.0, cross=True)
+        >>> dq.plot.wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
         ![plot_wigner_01](/figs_code/plot_wigner_01.png){.fig-half}
 
         >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
-        >>> dq.plot_wigner(psi, npixels=201, clear=True)
+        >>> dq.plot.wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 
         ![plot_wigner_4legged](/figs_code/plot_wigner_4legged.png){.fig-half}
@@ -129,7 +129,7 @@ def plot_wigner(
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
-    _, _, w = wigner(state, xmax, ymax, npixels)
+    _, _, w = compute_wigner(state, xmax, ymax, npixels)
 
     plot_wigner_data(
         w,
@@ -145,7 +145,7 @@ def plot_wigner(
     )
 
 
-def plot_wigner_mosaic(
+def wigner_mosaic(
     states: ArrayLike,
     *,
     n: int = 8,
@@ -165,11 +165,11 @@ def plot_wigner_mosaic(
     Warning:
         Documentation redaction in progress.
 
-    See [`dq.plot_wigner()`][dynamiqs.plot_wigner] for more details.
+    See [`dq.plot.wigner()`][dynamiqs.plot.wigner] for more details.
 
     Examples:
         >>> psis = [dq.fock(3, i) for i in range(3)]
-        >>> dq.plot_wigner_mosaic(psis)
+        >>> dq.plot.wigner_mosaic(psis)
         >>> renderfig('plot_wigner_mosaic_fock')
 
         ![plot_wigner_mosaic_fock](/figs_code/plot_wigner_mosaic_fock.png){.fig}
@@ -181,7 +181,7 @@ def plot_wigner_mosaic(
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = jnp.linspace(0, 1.0, 101)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
+        >>> dq.plot.wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
         >>> renderfig('plot_wigner_mosaic_cat')
 
         ![plot_wigner_mosaic_cat](/figs_code/plot_wigner_mosaic_cat.png){.fig}
@@ -192,7 +192,7 @@ def plot_wigner_mosaic(
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
+        >>> dq.plot.wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
         >>> renderfig('plot_wigner_mosaic_kerr')
 
         ![plot_wigner_mosaic_kerr](/figs_code/plot_wigner_mosaic_kerr.png){.fig}
@@ -201,11 +201,10 @@ def plot_wigner_mosaic(
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
-    if nstates < n:
-        n = nstates
+    n = min(nstates, n)
 
     # create grid of plot
-    _, axs = gridplot(
+    _, axs = grid(
         n,
         nrows=nrows,
         w=w,
@@ -217,7 +216,7 @@ def plot_wigner_mosaic(
 
     ymax = xmax if ymax is None else ymax
     selected_indexes = np.linspace(0, nstates, n, dtype=int)
-    _, _, wig = wigner(states[selected_indexes], xmax, ymax, npixels)
+    _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels)
 
     # plot individual wigner
     for i, ax in enumerate(axs):
@@ -236,7 +235,7 @@ def plot_wigner_mosaic(
         ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
 
 
-def plot_wigner_gif(
+def wigner_gif(
     states: ArrayLike,
     *,
     gif_duration: float = 5.0,
@@ -267,7 +266,7 @@ def plot_wigner_gif(
     Note:
         By default, the GIF is displayed in Jupyter notebook environments.
 
-    See [`dq.plot_wigner()`][dynamiqs.plot_wigner] for more details.
+    See [`dq.plot.wigner()`][dynamiqs.plot.wigner] for more details.
 
     Examples:
         >>> n = 16
@@ -277,7 +276,7 @@ def plot_wigner_gif(
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = jnp.linspace(0, 1.0, 1001)
         >>> result = dq.mesolve(H, jump_ops, psi0, tsave)
-        >>> dq.plot_wigner_gif(
+        >>> dq.plot.wigner_gif(
         ...     result.states,
         ...     fps=25,  # 25 frames per second
         ...     xmax=4.0,
@@ -295,7 +294,7 @@ def plot_wigner_gif(
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 1001)
         >>> result = dq.sesolve(H, psi0, tsave)
-        >>> dq.plot_wigner_gif(
+        >>> dq.plot.wigner_gif(
         ...     result.states,
         ...     gif_duration=10.0,  # 10 seconds GIF
         ...     fps=25,
@@ -314,7 +313,7 @@ def plot_wigner_gif(
     ymax = xmax if ymax is None else ymax
     nframes = int(gif_duration * fps)
     selected_indexes = np.linspace(0, len(states), nframes, dtype=int)
-    _, _, wig = wigner(states[selected_indexes], xmax, ymax, npixels)
+    _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels)
 
     try:
         # create temporary directory

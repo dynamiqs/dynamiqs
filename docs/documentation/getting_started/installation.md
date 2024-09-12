@@ -1,7 +1,10 @@
 # Installation
 
-We will soon make a first release of the library on PyPi. In the meantime, you can install directly from source:
+You can install dynamiqs with `pip`:
 
 ```shell
-pip install git+https://github.com/dynamiqs/dynamiqs.git
+pip install dynamiqs
 ```
+
+!!! Note
+    If you're using a GPU, please refer to the [JAX installation](https://jax.readthedocs.io/en/latest/installation.html) documentation page for detailed instructions on how to install JAX for your device.

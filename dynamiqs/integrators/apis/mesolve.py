@@ -12,20 +12,20 @@ from ..._checks import check_shape, check_times
 from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
-from ...result import MEResult
+from ...result import MESolveResult
 from ...solver import (
     Dopri5,
     Dopri8,
     Euler,
+    Expm,
     Kvaerno3,
     Kvaerno5,
-    Propagator,
     Rouchon1,
     Solver,
     Tsit5,
 )
 from ...time_array import Shape, TimeArray
-from ...utils.utils import todm
+from ...utils.quantum_utils import todm
 from .._utils import (
     _astimearray,
     _cartesian_vectorize,
@@ -41,7 +41,7 @@ from ..mesolve.diffrax_integrator import (
     MESolveKvaerno5Integrator,
     MESolveTsit5Integrator,
 )
-from ..mesolve.propagator_integrator import MESolvePropagatorIntegrator
+from ..mesolve.expm_integrator import MESolveExpmIntegrator
 from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 
@@ -55,7 +55,7 @@ def mesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> MEResult:
+) -> MESolveResult:
     r"""Solve the Lindblad master equation.
 
     This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
@@ -80,8 +80,8 @@ def mesolve(
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.constant()`][dynamiqs.constant],
-        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+        [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
@@ -112,15 +112,15 @@ def mesolve(
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
-            [`Propagator`][dynamiqs.solver.Propagator]).
+            [`Expm`][dynamiqs.solver.Expm]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.MEResult`][dynamiqs.MEResult] object holding the result of the Lindblad
-            master  equation integration. Use the attributes `states` and `expects`
-            to access saved quantities, more details in
-            [`dq.MEResult`][dynamiqs.MEResult].
+        [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the
+            Lindblad master equation integration. Use the attributes `states` and
+            `expects` to access saved quantities, more details in
+            [`dq.MESolveResult`][dynamiqs.MESolveResult].
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
@@ -154,7 +154,7 @@ def _vectorized_mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> MEResult:
+) -> MESolveResult:
     # === vectorize function
     # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
@@ -205,7 +205,7 @@ def _mesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> MEResult:
+) -> MESolveResult:
     # === select integrator class
     integrators = {
         Euler: MESolveEulerIntegrator,
@@ -215,7 +215,7 @@ def _mesolve(
         Tsit5: MESolveTsit5Integrator,
         Kvaerno3: MESolveKvaerno3Integrator,
         Kvaerno5: MESolveKvaerno5Integrator,
-        Propagator: MESolvePropagatorIntegrator,
+        Expm: MESolveExpmIntegrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
 
@@ -224,7 +224,7 @@ def _mesolve(
 
     # === init integrator
     integrator = integrator_class(
-        tsave, rho0, H, exp_ops, solver, gradient, options, jump_ops
+        tsave, rho0, H, solver, gradient, options, jump_ops, exp_ops
     )
 
     # === run integrator

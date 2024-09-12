@@ -9,7 +9,7 @@ from jax.typing import ArrayLike
 from .._checks import check_type_int
 from .._utils import cdtype
 from .operators import displace
-from .utils import tensor, todm
+from .quantum_utils import tensor, todm
 
 __all__ = [
     'fock',
@@ -130,13 +130,14 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
             product of Fock states, with _n = prod(dims)_.
 
     Examples:
-        Single-mode Fock state $\ket{1}$:
+        Single-mode Fock state $\ket{1}\bra{1}$:
         >>> dq.fock_dm(3, 1)
         Array([[0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
 
-        Batched single-mode Fock states $\{\ket{0}\!, \ket{1}\!, \ket{2}\}$:
+        Batched single-mode Fock states $\{\ket{0}\bra{0}\!, \ket{1}\bra{1}\!,
+        \ket{2}\bra{2}\}$:
         >>> dq.fock_dm(3, [0, 1, 2])
         Array([[[1.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 0.+0.j],
@@ -150,7 +151,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                 [0.+0.j, 0.+0.j, 0.+0.j],
                 [0.+0.j, 0.+0.j, 1.+0.j]]], dtype=complex64)
 
-        Multi-mode Fock state $\ket{1,0}$:
+        Multi-mode Fock state $\ket{1,0}\bra{1,0}$:
         >>> dq.fock_dm((3, 2), (1, 0))
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -159,8 +160,8 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
 
-        Batched multi-mode Fock states $\{\ket{0,0}\!, \ket{0,1}\!, \ket{1,1}\!,
-        \ket{2,0}\}$:
+        Batched multi-mode Fock states $\{\ket{0,0}\bra{0,0}\!, \ket{0,1}\bra{0,1}\!,
+        \ket{1,1}\bra{1,1}\!, \ket{2,0}\bra{2,0}\}$:
         >>> number = [(0, 0), (0, 1), (1, 1), (2, 0)]
         >>> dq.fock_dm((3, 2), number).shape
         (4, 6, 6)
@@ -267,23 +268,26 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
             product of coherent states, with _n = prod(dims)_.
 
     Examples:
-        Single-mode coherent state $\ket{\alpha}$:
+        Single-mode coherent state $\ket{\alpha}\bra{\alpha}$:
         >>> dq.coherent_dm(4, 0.5)
         Array([[0.779+0.j, 0.389+0.j, 0.137+0.j, 0.042+0.j],
                [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
                [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
                [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]], dtype=complex64)
 
-        Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
+        Batched single-mode coherent states $\{\ket{\alpha_0}\bra{\alpha_0}\!,
+        \ket{\alpha_1}\bra{\alpha_1}\}$:
         >>> dq.coherent_dm(4, [0.5, 0.5j]).shape
         (2, 4, 4)
 
-        Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
+        Multi-mode coherent state
+        $\ket{\alpha}\bra{\alpha}\otimes\ket{\beta}\bra{\beta}$:
         >>> dq.coherent_dm((2, 3), (0.5, 0.5j)).shape
         (6, 6)
 
-        Batched multi-mode coherent states $\{\ket{\alpha_0}\otimes\ket{\beta_0}\!,
-        \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
+        Batched multi-mode coherent states
+        $\{\ket{\alpha_0}\bra{\alpha_0}\otimes\ket{\beta_0}\bra{\beta_0}\!,
+        \ket{\alpha_1}\bra{\alpha_1}\otimes\ket{\beta_1}\bra{\beta_1}\}$:
         >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
         >>> dq.coherent_dm((4, 6), alpha).shape
         (2, 24, 24)

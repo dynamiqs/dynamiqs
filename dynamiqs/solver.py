@@ -8,7 +8,6 @@ from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = [
-    'Propagator',
     'Expm',
     'Euler',
     'Rouchon1',
@@ -47,22 +46,28 @@ class Solver(eqx.Module):
         return tree_str_inline(self)
 
 
-# === propagator solvers options
-class Propagator(Solver):
-    r"""Quantum propagator method.
+# === expm solver options
+class Expm(Solver):
+    r"""Explicit matrix exponentiation to compute propagators.
 
-    Explicitly compute the propagator to evolve the state between each time in
-    `tsave`.
+    Explicitly batch-compute the propagators for all time intervals in `tsave`. These
+    propagators are then iteratively applied:
 
-    For the Schrödinger equation with constant Hamiltonian $H$, the propagator to
-    evolve the state from time $t_0$ to time $t_1$ is an $n\times n$ matrix given by
+    - starting from the initial state for [`dq.sesolve()`][dynamiqs.sesolve] and
+      [`dq.mesolve()`][dynamiqs.mesolve], to compute states for all times in `tsave`,
+    - starting from the identity matrix for [`dq.sepropagator()`][dynamiqs.sepropagator]
+      and [`dq.mepropagator()`][dynamiqs.mepropagator], to compute propagators for all
+      times in `tsave`.
+
+    For the Schrödinger equation with constant Hamiltonian $H$, the propagator from
+    time $t_0$ to time $t_1$ is an $n\times n$ matrix given by
     $$
         U(t_0, t_1) = \exp(-i (t_1 - t_0) H).
     $$
 
     For the Lindblad master equation with constant Liouvillian $\mathcal{L}$, the
-    problem is vectorized and the propagator to evolve the state from time $t_0$ to
-    time $t_1$ is an $n^2\times n^2$ matrix given by
+    problem is vectorized and the propagator from time $t_0$ to time $t_1$ is an
+    $n^2\times n^2$ matrix given by
     $$
         \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
     $$
@@ -71,27 +76,9 @@ class Propagator(Solver):
         This solver is not recommended for open systems of large dimension, due to
         the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian exponential.
 
-    Warning: Constant Hamiltonian and jump operators only
-        The propagator method only supports constant Hamiltonian and jump
-        operators. Piecewise-constant problems will also be supported in the future.
-
-    Note-: Supported gradients
-        This solver supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
-    """
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
-
-    # dummy init to have the signature in the documentation
-    def __init__(self):
-        pass
-
-
-class Expm(Solver):
-    r"""Explicit matrix exponentiation to compute propagators.
-
     Warning:
-        This solver only supports constant or piecewise constant Hamiltonian.
+        This solver only supports constant or piecewise constant Hamiltonian and jump
+        operators.
 
     Note-: Supported gradients
         This solver supports differentiation with
@@ -105,16 +92,16 @@ class Expm(Solver):
         pass
 
 
-# === generic ODE solvers options
-class _ODESolver(Solver):
+# === generic ODE/SDE solvers options
+class _DESolver(Solver):
     pass
 
 
-class _ODEFixedStep(_ODESolver):
+class _DEFixedStep(_DESolver):
     dt: float
 
 
-class _ODEAdaptiveStep(_ODESolver):
+class _DEAdaptiveStep(_DESolver):
     rtol: float = 1e-6
     atol: float = 1e-6
     safety_factor: float = 0.9
@@ -124,7 +111,7 @@ class _ODEAdaptiveStep(_ODESolver):
 
 
 # === public solvers options
-class Euler(_ODEFixedStep):
+class Euler(_DEFixedStep):
     """Euler method (fixed step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -149,7 +136,7 @@ class Euler(_ODEFixedStep):
         super().__init__(dt)
 
 
-class Rouchon1(_ODEFixedStep):
+class Rouchon1(_DEFixedStep):
     """First-order Rouchon method (fixed step size ODE solver).
 
     Args:
@@ -180,7 +167,7 @@ class Rouchon1(_ODEFixedStep):
     # normalize: Literal['sqrt', 'cholesky'] | None = None
 
 
-class Rouchon2(_ODEFixedStep):
+class Rouchon2(_DEFixedStep):
     """Second-order Rouchon method (fixed step size ODE solver).
 
     Warning:
@@ -202,7 +189,7 @@ class Rouchon2(_ODEFixedStep):
         super().__init__(dt)
 
 
-class Dopri5(_ODEAdaptiveStep):
+class Dopri5(_DEAdaptiveStep):
     """Dormand-Prince method of order 5 (adaptive step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -237,7 +224,7 @@ class Dopri5(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Dopri8(_ODEAdaptiveStep):
+class Dopri8(_DEAdaptiveStep):
     """Dormand-Prince method of order 8 (adaptive step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -272,7 +259,7 @@ class Dopri8(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Tsit5(_ODEAdaptiveStep):
+class Tsit5(_DEAdaptiveStep):
     """Tsitouras method of order 5 (adaptive step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -307,7 +294,7 @@ class Tsit5(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Kvaerno3(_ODEAdaptiveStep):
+class Kvaerno3(_DEAdaptiveStep):
     """Kvaerno's method of order 3 (adaptive step size and implicit ODE solver).
 
     This method is suitable for stiff problems, typically those with Hamiltonians or
@@ -353,7 +340,7 @@ class Kvaerno3(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Kvaerno5(_ODEAdaptiveStep):
+class Kvaerno5(_DEAdaptiveStep):
     """Kvaerno's method of order 5 (adaptive step size and implicit ODE solver).
 
     This method is suitable for stiff problems, typically those with Hamiltonians or

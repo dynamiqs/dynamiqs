@@ -12,6 +12,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - mesolve
         - smesolve
         - sepropagator
+        - mepropagator
 
 ## Core
 
@@ -41,7 +42,6 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
         - Euler
         - Rouchon1
         - Rouchon2
-        - Propagator
         - Expm
 
 ### Gradients (dq.gradient)
@@ -78,7 +78,7 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Quantum utilities
 
-::: dynamiqs.utils.utils
+::: dynamiqs.utils.quantum_utils
     options:
         table: true
 
@@ -100,24 +100,25 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
 
-### Random arrays
+### Random arrays (dq.random)
 
-::: dynamiqs.utils.random
+::: dynamiqs.random
     options:
         table: true
 
-### Plotting
+### Plotting (dq.plot)
 
-::: dynamiqs.plots
+::: dynamiqs.plot
     options:
         table: true
         members:
-        - plot_wigner
-        - plot_wigner_mosaic
-        - plot_wigner_gif
-        - plot_pwc_pulse
-        - plot_fock
-        - plot_fock_evolution
-        - plot_hinton
-        - gridplot
+        - wigner
+        - wigner_mosaic
+        - wigner_gif
+        - pwc_pulse
+        - fock
+        - fock_evolution
+        - hinton
+        - gifit
+        - grid
         - mplstyle

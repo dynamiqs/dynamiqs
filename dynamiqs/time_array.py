@@ -465,7 +465,7 @@ class PWCTimeArray(TimeArray):
     def conj(self) -> TimeArray:
         return PWCTimeArray(self.times, self.values.conj(), self.array.conj())
 
-    def __call__(self, t: ScalarLike) -> Array:
+    def prefactor(self, t: ScalarLike) -> Array:
         def _zero(_: float) -> Array:
             return jnp.zeros_like(self.values[..., 0])  # (...)
 
@@ -473,11 +473,12 @@ class PWCTimeArray(TimeArray):
             idx = jnp.searchsorted(self.times, t, side='right') - 1
             return self.values[..., idx]  # (...)
 
-        value = lax.cond(
+        return lax.cond(
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
-        return value.reshape(*value.shape, 1, 1) * self.array
+    def __call__(self, t: ScalarLike) -> Array:
+        return self.prefactor(t)[..., None, None] * self.array
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array * y)
@@ -529,9 +530,11 @@ class ModulatedTimeArray(TimeArray):
         f = self.f.conj()
         return ModulatedTimeArray(f, self.array.conj(), self._disc_ts)
 
+    def prefactor(self, t: ScalarLike) -> Array:
+        return self.f(t)
+
     def __call__(self, t: ScalarLike) -> Array:
-        values = self.f(t)
-        return values.reshape(*values.shape, 1, 1) * self.array
+        return self.prefactor(t)[..., None, None] * self.array
 
     def __mul__(self, y: ArrayLike) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array * y, self._disc_ts)

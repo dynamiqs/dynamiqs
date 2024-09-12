@@ -7,8 +7,8 @@ from jaxtyping import ArrayLike
 from .._checks import check_shape
 from .._utils import cdtype
 from ..utils.operators import displace
+from ..utils.quantum_utils import tensor, tobra
 from ..utils.states import fock
-from ..utils.utils import tensor, tobra
 
 __all__ = ['snap_gate', 'cd_gate']
 

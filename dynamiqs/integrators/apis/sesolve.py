@@ -11,17 +11,8 @@ from ..._checks import check_shape, check_times
 from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
-from ...result import SEResult
-from ...solver import (
-    Dopri5,
-    Dopri8,
-    Euler,
-    Kvaerno3,
-    Kvaerno5,
-    Propagator,
-    Solver,
-    Tsit5,
-)
+from ...result import SESolveResult
+from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
 from .._utils import (
     _astimearray,
@@ -38,7 +29,7 @@ from ..sesolve.diffrax_integrator import (
     SESolveKvaerno5Integrator,
     SESolveTsit5Integrator,
 )
-from ..sesolve.propagator_integrator import SESolvePropagatorIntegrator
+from ..sesolve.expm_integrator import SESolveExpmIntegrator
 
 
 def sesolve(
@@ -50,7 +41,7 @@ def sesolve(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> SEResult:
+) -> SESolveResult:
     r"""Solve the Schrödinger equation.
 
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
@@ -68,8 +59,7 @@ def sesolve(
 
     Note-: Defining a time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
-        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
@@ -96,16 +86,15 @@ def sesolve(
             [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
-            [`Propagator`][dynamiqs.solver.Propagator]).
-
+            [`Expm`][dynamiqs.solver.Expm]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.SEResult`][dynamiqs.SEResult] object holding the result of the
+        [`dq.SESolveResult`][dynamiqs.SESolveResult] object holding the result of the
             Schrödinger equation integration. Use the attributes `states` and `expects`
             to access saved quantities, more details in
-            [`dq.SEResult`][dynamiqs.SEResult].
+            [`dq.SESolveResult`][dynamiqs.SESolveResult].
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
@@ -132,7 +121,7 @@ def _vectorized_sesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> SEResult:
+) -> SESolveResult:
     # === vectorize function
     # we vectorize over H and psi0, all other arguments are not vectorized
 
@@ -154,7 +143,7 @@ def _vectorized_sesolve(
     )
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = SEResult(False, False, False, False, 0, 0, 0)
+    out_axes = SESolveResult(False, False, False, False, 0, 0)
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
@@ -174,7 +163,7 @@ def _sesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> SEResult:
+) -> SESolveResult:
     # === select integrator class
     integrators = {
         Euler: SESolveEulerIntegrator,
@@ -183,7 +172,7 @@ def _sesolve(
         Tsit5: SESolveTsit5Integrator,
         Kvaerno3: SESolveKvaerno3Integrator,
         Kvaerno5: SESolveKvaerno5Integrator,
-        Propagator: SESolvePropagatorIntegrator,
+        Expm: SESolveExpmIntegrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
 
@@ -191,7 +180,7 @@ def _sesolve(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, psi0, H, exp_ops, solver, gradient, options)
+    integrator = integrator_class(tsave, psi0, H, solver, gradient, options, exp_ops)
 
     # === run integrator
     result = integrator.run()

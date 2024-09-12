@@ -4,12 +4,12 @@ import jax
 from jax import Array
 from jaxtyping import PRNGKeyArray
 
-from .utils import dag, unit
+from .utils.quantum_utils import dag, unit
 
-__all__ = ['rand_real', 'rand_complex', 'rand_herm', 'rand_psd', 'rand_dm', 'rand_ket']
+__all__ = ['real', 'complex', 'herm', 'psd', 'dm', 'ket']
 
 
-def rand_real(
+def real(
     key: PRNGKeyArray,
     shape: int | tuple[int, ...],
     *,
@@ -32,7 +32,7 @@ def rand_real(
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand_real(key, (2, 5), max=5.0)
+        >>> dq.random.real(key, (2, 5), max=5.0)
         Array([[3.22 , 1.613, 0.967, 4.432, 4.21 ],
                [0.96 , 1.726, 1.262, 3.16 , 3.274]], dtype=float32)
     """
@@ -41,7 +41,7 @@ def rand_real(
     return jax.random.uniform(key, shape=shape, minval=min, maxval=max)
 
 
-def rand_complex(
+def complex(  # noqa: A001
     key: PRNGKeyArray, shape: int | tuple[int, ...], *, rmax: float = 1.0
 ) -> Array:
     r"""Returns an array of uniformly distributed random complex numbers.
@@ -51,10 +51,10 @@ def rand_complex(
 
     Note-: Uniform sampling in the complex plane
         Here are three common options to generate random complex numbers,
-        `dq.rand_complex()` returns the last one:
+        `dq.random.complex()` returns the last one:
 
         ```python
-        _, (ax0, ax1, ax2) = dq.gridplot(3, sharexy=True)
+        _, (ax0, ax1, ax2) = dq.plot.grid(3, sharexy=True)
         ax0.set(xlim=(-1.1, 1.1), ylim=(-1.1, 1.1))
 
         n = 10_000
@@ -69,12 +69,12 @@ def rand_complex(
 
         # option 3: uniformly distributed in a disk (in dynamiqs)
         key = jax.random.PRNGKey(42)
-        x = dq.rand_complex(key, n)
+        x = dq.random.complex(key, n)
         ax2.scatter(x.real, x.imag, s=1.0)
-        renderfig('rand_complex')
+        renderfig('random_complex')
         ```
 
-        ![rand_complex](/figs_code/rand_complex.png){.fig}
+        ![rand_complex](/figs_code/random_complex.png){.fig}
 
     Args:
         key: A PRNG key used as the random key.
@@ -86,7 +86,7 @@ def rand_complex(
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand_complex(key, (2, 3), rmax=5.0)
+        >>> dq.random.complex(key, (2, 3), rmax=5.0)
         Array([[ 1.341+4.17j ,  3.978-0.979j, -2.592-0.946j],
                [-4.428+1.744j, -0.53 +1.668j,  2.582+0.65j ]], dtype=complex64)
     """
@@ -96,7 +96,7 @@ def rand_complex(
     return x[..., 0] + 1j * x[..., 1]
 
 
-def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     """Returns a random complex Hermitian matrix.
 
     Args:
@@ -108,7 +108,7 @@ def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand_herm(key, (2, 2))
+        >>> dq.random.herm(key, (2, 2))
         Array([[-0.291+0.j   ,  0.473-0.446j],
                [ 0.473+0.446j,  0.13 +0.j   ]], dtype=complex64)
     """
@@ -116,11 +116,11 @@ def rand_herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
-    x = rand_complex(key, shape)
+    x = complex(key, shape)
     return 0.5 * (x + dag(x))
 
 
-def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     """Returns a random complex positive semi-definite matrix.
 
     Args:
@@ -132,7 +132,7 @@ def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand_psd(key, (2, 2))
+        >>> dq.random.psd(key, (2, 2))
         Array([[1.145+0.j  , 0.582+0.33j],
                [0.582-0.33j, 0.844+0.j  ]], dtype=complex64)
 
@@ -141,11 +141,11 @@ def rand_psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
-    x = rand_complex(key, shape)
+    x = complex(key, shape)
     return x @ dag(x)
 
 
-def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     """Returns a random density matrix (hermitian, positive semi-definite, and unit
     trace).
 
@@ -158,7 +158,7 @@ def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand_dm(key, (2, 2))
+        >>> dq.random.dm(key, (2, 2))
         Array([[0.576+0.j   , 0.293+0.166j],
                [0.293-0.166j, 0.424+0.j   ]], dtype=complex64)
     """
@@ -166,11 +166,11 @@ def rand_dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, n), but is shape={shape}.'
         )
-    x = rand_psd(key, shape)
+    x = psd(key, shape)
     return unit(x)
 
 
-def rand_ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     """Returns a random ket with unit norm.
 
     Args:
@@ -182,7 +182,7 @@ def rand_ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
-        >>> dq.rand_ket(key, (2, 1))
+        >>> dq.random.ket(key, (2, 1))
         Array([[-0.004+0.083j],
                [-0.26 +0.962j]], dtype=complex64)
     """
@@ -190,5 +190,5 @@ def rand_ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
         raise ValueError(
             f'Argument `shape` must be of the form (..., n, 1), but is shape={shape}.'
         )
-    x = rand_complex(key, shape)
+    x = complex(key, shape)
     return unit(x)

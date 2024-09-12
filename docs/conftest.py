@@ -20,7 +20,7 @@ def _jax_set_printoptions():
 # doctest fixture
 @pytest.fixture(scope='session', autouse=True)
 def _mplstyle():
-    dynamiqs.plots.utils.mplstyle()
+    dynamiqs.plot.utils.mplstyle()
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -30,7 +30,7 @@ def _mpl_backend():
 
 
 # doctest fixture
-@pytest.fixture()
+@pytest.fixture
 def renderfig():
     def savefig_docs(figname):
         filename = f'docs/figs_docs/{figname}.png'

@@ -56,14 +56,14 @@ There are three common ideas for solving the Lindblad master equation.
 
 ### Computing the propagator
 
-The state at time $t$ is given by $\rho(t)=e^{\mathcal{L}t}(\rho(0))$, where $\rho(0)$ is the state at time $t=0$. The superoperator $e^{\mathcal{L}t}$ is called the **propagator**, in vectorized form it is a matrix of size $n^2\times n^2$.
+The state at time $t$ is given by $\rho(t)=e^{t\mathcal{L}}(\rho(0))$, where $\rho(0)$ is the state at time $t=0$. The superoperator $e^{t\mathcal{L}}$ is called the **propagator**, in vectorized form it is a matrix of size $n^2\times n^2$.
 
 ??? Note "Solution for a time-dependent Liouvillian"
     For a time-dependent Liouvillian $\mathcal{L}(t)$, the solution at time $t$ is
     $$
-        \rho(t) = \mathcal{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right)(\rho(0)),
+        \rho(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right)(\rho(0)),
     $$
-    where $\mathcal{T}$ is the *time-ordering meta-operator*, which indicates the time-ordering of the Liouvillians upon expansion of the matrix exponential (Liouvillians at different times do not commute).
+    where $\mathscr{T}$ is the time-ordering symbol, which indicates the time-ordering of the Liouvillians upon expansion of the matrix exponential (Liouvillians at different times do not commute).
 
 The first idea is to explicitly compute the propagator to evolve the state up to time $t$. There are various ways to compute the matrix exponential, such as exact diagonalization of the Liouvillian or approximate methods such as truncated Taylos series expansions.
 
@@ -126,3 +126,18 @@ Array([[0.368+0.j, 0.   +0.j],
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`][dynamiqs.mesolve] API documentation.
+
+You can also directly compute the propagator with the [`dq.mepropagator()`][dynamiqs.mepropagator] solver. Continuing the last example:
+
+```python
+res = dq.mepropagator(H, jump_ops, tsave)
+print(res.propagators[-1])  # print the final propagator
+```
+
+```text title="Output"
+|██████████| 100.0% ◆ elapsed 2.56ms ◆ remaining 0.00ms
+Array([[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
+       [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
+       [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
+       [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]], dtype=complex64)
+```

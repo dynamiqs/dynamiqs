@@ -11,9 +11,23 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
-from .._utils import _astimearray, catch_xla_runtime_error, get_integrator_class, ispwc
-from ..sepropagator.dynamiqs_integrator import SEPropagatorDynamiqsIntegrator
+from ...time_array import Shape, TimeArray
+from ...utils.operators import eye
+from .._utils import (
+    _astimearray,
+    _cartesian_vectorize,
+    catch_xla_runtime_error,
+    get_integrator_class,
+    ispwc,
+)
+from ..sepropagator.diffrax_integrator import (
+    SEPropagatorDopri5Integrator,
+    SEPropagatorDopri8Integrator,
+    SEPropagatorEulerIntegrator,
+    SEPropagatorKvaerno3Integrator,
+    SEPropagatorKvaerno5Integrator,
+    SEPropagatorTsit5Integrator,
+)
 from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
@@ -42,8 +56,7 @@ def sepropagator(
 
     Note-: Defining a time-dependent Hamiltonian
         If the Hamiltonian depends on time, it can be converted to a time-array using
-        [`dq.constant()`][dynamiqs.constant], [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
+        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
         tutorial for more details.
@@ -89,11 +102,32 @@ def sepropagator(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _sepropagator(H, tsave, solver, gradient, options)
+    return _vectorized_sepropagator(H, tsave, solver, gradient, options)
 
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+def _vectorized_sepropagator(
+    H: TimeArray,
+    tsave: Array,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> SEPropagatorResult:
+    # === vectorize function
+    # we vectorize over H, all other arguments are not vectorized
+    n_batch = (H.in_axes, Shape(), Shape(), Shape(), Shape())
+
+    # the result is vectorized over `_saved` and `infos`
+    out_axes = SEPropagatorResult(False, False, False, False, 0, 0)
+
+    # compute vectorized function
+    f = _cartesian_vectorize(_sepropagator, n_batch, out_axes)
+
+    # === apply vectorized function
+    return f(H, tsave, solver, gradient, options)
+
+
 def _sepropagator(
     H: TimeArray,
     tsave: Array,
@@ -107,12 +141,12 @@ def _sepropagator(
 
     integrators = {
         Expm: SEPropagatorExpmIntegrator,
-        Euler: SEPropagatorDynamiqsIntegrator,
-        Dopri5: SEPropagatorDynamiqsIntegrator,
-        Dopri8: SEPropagatorDynamiqsIntegrator,
-        Tsit5: SEPropagatorDynamiqsIntegrator,
-        Kvaerno3: SEPropagatorDynamiqsIntegrator,
-        Kvaerno5: SEPropagatorDynamiqsIntegrator,
+        Euler: SEPropagatorEulerIntegrator,
+        Dopri5: SEPropagatorDopri5Integrator,
+        Dopri8: SEPropagatorDopri8Integrator,
+        Tsit5: SEPropagatorTsit5Integrator,
+        Kvaerno3: SEPropagatorKvaerno3Integrator,
+        Kvaerno5: SEPropagatorKvaerno5Integrator,
     }
     integrator_class = get_integrator_class(integrators, solver)
 
@@ -120,7 +154,8 @@ def _sepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, None, H, None, solver, gradient, options)
+    y0 = eye(H.shape[-1])
+    integrator = integrator_class(tsave, y0, H, solver, gradient, options)
 
     # === run integrator
     result = integrator.run()
