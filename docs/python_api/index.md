@@ -49,18 +49,28 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.gradient
     options:
         table: true
+        members:
+        - Autograd
+        - CheckpointAutograd
 
 ### Options
 
 ::: dynamiqs.options
     options:
         table: true
+        members:
+        - Options
 
 ### Results
 
 ::: dynamiqs.result
     options:
         table: true
+        members:
+        - SESolveResult
+        - MESolveResult
+        - SEPropagatorResult
+        - MEPropagatorResult
 
 ## Utilities
 
@@ -69,42 +79,128 @@ The **dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.utils.operators
     options:
         table: true
+        members:
+        - eye
+        - zero
+        - destroy
+        - create
+        - number
+        - parity
+        - displace
+        - squeeze
+        - quadrature
+        - position
+        - momentum
+        - sigmax
+        - sigmay
+        - sigmaz
+        - sigmap
+        - sigmam
+        - hadamard
+
 
 ### States
 
 ::: dynamiqs.utils.states
     options:
         table: true
+        members:
+        - fock
+        - fock_dm
+        - basis
+        - basis_dm
+        - coherent
+        - coherent_dm
+        - ground
+        - excited
+
 
 ### Quantum utilities
 
 ::: dynamiqs.utils.quantum_utils
     options:
         table: true
+        members:
+        - dag
+        - powm
+        - expm
+        - cosm
+        - sinm
+        - trace
+        - tracemm
+        - ptrace
+        - tensor
+        - expect
+        - norm
+        - unit
+        - dissipator
+        - lindbladian
+        - isket
+        - isbra
+        - isdm
+        - isop
+        - isherm
+        - toket
+        - tobra
+        - todm
+        - proj
+        - braket
+        - overlap
+        - fidelity
+        - entropy_vn
+        - wigner
+
 
 ### JAX-related utilities
 
 ::: dynamiqs.utils.jax_utils
     options:
         table: true
+        members:
+        - to_qutip
+        - set_device
+        - set_precision
+        - set_matmul_precision
+
 
 ### Vectorization
 
 ::: dynamiqs.utils.vectorization
     options:
         table: true
+        members:
+        - operator_to_vector
+        - vector_to_operator
+        - spre
+        - spost
+        - sprepost
+        - sdissipator
+        - slindbladian
+
 
 ### Quantum optimal control
 
 ::: dynamiqs.utils.optimal_control
     options:
         table: true
+        members:
+        - snap_gate
+        - cd_gate
+
 
 ### Random arrays (dq.random)
 
 ::: dynamiqs.random
     options:
         table: true
+        members:
+        - real
+        - complex
+        - herm
+        - psd
+        - dm
+        - ket
+
 
 ### Plotting (dq.plot)
 
