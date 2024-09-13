@@ -59,7 +59,7 @@ dev = [
     "mkdocs-simple-hooks",
     "mkdocs-glightbox",
     "mkdocs-exclude",
-    "sybil>=6<7.0",  # todo: https://github.com/simplistix/sybil/issues/128
+    "sybil>=6,<7.0",  # todo: https://github.com/simplistix/sybil/issues/128
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
 ]
