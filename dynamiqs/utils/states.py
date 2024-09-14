@@ -195,31 +195,31 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
         >>> dq.coherent(4, 0.5)
-        Array([[0.882+0.j],
-               [0.441+0.j],
-               [0.156+0.j],
-               [0.047+0.j]], dtype=complex64)
+        Array([[0.8824947 +0.j],
+               [0.44128302+0.j],
+               [0.1556681 +0.j],
+               [0.04732665+0.j]], dtype=complex64)
 
         Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
         >>> dq.coherent(4, [0.5, 0.5j])
-        Array([[[ 0.882+0.j   ],
-                [ 0.441+0.j   ],
-                [ 0.156+0.j   ],
-                [ 0.047+0.j   ]],
+        Array([[[ 0.88249475+0.j        ],
+                [ 0.44128302+0.j        ],
+                [ 0.15566808+0.j        ],
+                [ 0.04732665+0.j        ]],
         <BLANKLINE>
-               [[ 0.882+0.j   ],
-                [ 0.   +0.441j],
-                [-0.156+0.j   ],
-                [ 0.   -0.047j]]], dtype=complex64)
+               [[ 0.88249475+0.j        ],
+                [ 0.        +0.44128302j],
+                [-0.15566808+0.j        ],
+                [ 0.        -0.04732665j]]], dtype=complex64)
 
         Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
         >>> dq.coherent((2, 3), (0.5, 0.5j))
-        Array([[ 0.775+0.j   ],
-               [ 0.   +0.386j],
-               [-0.146+0.j   ],
-               [ 0.423+0.j   ],
-               [ 0.   +0.211j],
-               [-0.08 +0.j   ]], dtype=complex64)
+        Array([[ 0.77457166+0.j        ],
+               [ 0.        +0.38596284j],
+               [-0.1456793 +0.j        ],
+               [ 0.42315042+0.j        ],
+               [ 0.        +0.21085247j],
+               [-0.07958496+0.j        ]], dtype=complex64)
 
         Batched multi-mode coherent states $\{\ket{\alpha_0}\otimes\ket{\beta_0}\!,
         \ket{\alpha_1}\otimes\ket{\beta_1}\}$:
@@ -270,10 +270,10 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
     Examples:
         Single-mode coherent state $\ket{\alpha}\bra{\alpha}$:
         >>> dq.coherent_dm(4, 0.5)
-        Array([[0.779+0.j, 0.389+0.j, 0.137+0.j, 0.042+0.j],
-               [0.389+0.j, 0.195+0.j, 0.069+0.j, 0.021+0.j],
-               [0.137+0.j, 0.069+0.j, 0.024+0.j, 0.007+0.j],
-               [0.042+0.j, 0.021+0.j, 0.007+0.j, 0.002+0.j]], dtype=complex64)
+        Array([[0.77879685+0.j, 0.38942993+0.j, 0.13737626+0.j, 0.04176551+0.j],
+               [0.38942993+0.j, 0.1947307 +0.j, 0.06869369+0.j, 0.02088444+0.j],
+               [0.13737626+0.j, 0.06869369+0.j, 0.02423256+0.j, 0.00736725+0.j],
+               [0.04176551+0.j, 0.02088444+0.j, 0.00736725+0.j, 0.00223981+0.j]],      dtype=complex64)
 
         Batched single-mode coherent states $\{\ket{\alpha_0}\bra{\alpha_0}\!,
         \ket{\alpha_1}\bra{\alpha_1}\}$:
@@ -291,7 +291,7 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         >>> alpha = [(0.5, 0.5j), (0.5j, 0.5)]
         >>> dq.coherent_dm((4, 6), alpha).shape
         (2, 24, 24)
-    """
+    """  # noqa: E501
     return todm(coherent(dim, alpha))
 
 
