@@ -107,8 +107,8 @@ def expm(x: ArrayLike, *, max_squarings: int = 16) -> Array:
 
     Examples:
         >>> dq.expm(dq.sigmaz())
-        Array([[2.718282  +0.j, 0.        +0.j],
-               [0.        +0.j, 0.36787945+0.j]], dtype=complex64)
+        Array([[2.718+0.j, 0.   +0.j],
+               [0.   +0.j, 0.368+0.j]], dtype=complex64)
     """
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, n)')
@@ -381,7 +381,7 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
         >>> O = dq.number(16)
         >>> psi = dq.coherent(16, 2.0)
         >>> dq.expect(O, psi)
-        Array(3.9999948+0.j, dtype=complex64)
+        Array(4.+0.j, dtype=complex64)
         >>> psis = [dq.fock(16, i) for i in range(5)]
         >>> dq.expect(O, psis).shape
         (5,)
@@ -430,7 +430,7 @@ def norm(x: ArrayLike) -> Array:
         For a ket:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
         >>> dq.norm(psi)
-        Array(1.4142135, dtype=float32)
+        Array(1.414, dtype=float32)
 
         For a density matrix:
         >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
@@ -462,10 +462,10 @@ def unit(x: ArrayLike) -> Array:
     Examples:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
         >>> dq.norm(psi)
-        Array(1.4142135, dtype=float32)
+        Array(1.414, dtype=float32)
         >>> psi = dq.unit(psi)
         >>> dq.norm(psi)
-        Array(0.99999994, dtype=float32)
+        Array(1., dtype=float32)
     """
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
@@ -493,11 +493,11 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
         >>> dq.dissipator(L, rho)
-        Array([[ 0.       +0.j,  0.       +0.j,  0.       +0.j,  0.       +0.j],
-               [ 0.       +0.j,  1.9999999+0.j,  0.       +0.j,  0.       +0.j],
-               [ 0.       +0.j,  0.       +0.j, -1.9999999+0.j,  0.       +0.j],
-               [ 0.       +0.j,  0.       +0.j,  0.       +0.j,  0.       +0.j]],      dtype=complex64)
-    """  # noqa: E501
+        Array([[ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
+               [ 0.+0.j,  2.+0.j,  0.+0.j,  0.+0.j],
+               [ 0.+0.j,  0.+0.j, -2.+0.j,  0.+0.j],
+               [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
+    """
     L = jnp.asarray(L)
     rho = jnp.asarray(rho)
     check_shape(L, 'L', '(..., n, n)')
@@ -788,7 +788,7 @@ def braket(x: ArrayLike, y: ArrayLike) -> Array:
         >>> fock0 = dq.fock(3, 0)
         >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
         >>> dq.braket(fock0, fock01)
-        Array(0.70710677+0.j, dtype=complex64)
+        Array(0.707+0.j, dtype=complex64)
     """
     x = jnp.asarray(x)
     y = jnp.asarray(y)
@@ -953,7 +953,7 @@ def entropy_vn(x: ArrayLike) -> Array:
     Examples:
         >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
         >>> dq.entropy_vn(rho)
-        Array(0.6931472, dtype=float32)
+        Array(0.693, dtype=float32)
         >>> psis = [dq.fock(16, i) for i in range(5)]
         >>> dq.entropy_vn(psis).shape
         (5,)

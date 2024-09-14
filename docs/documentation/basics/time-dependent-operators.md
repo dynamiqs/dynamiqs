@@ -39,8 +39,8 @@ $$
 >>> Hy = dq.modulated(g, dq.sigmay())
 >>> H = dq.sigmaz() + 2 * Hx - Hy
 >>> H(1.0)
-Array([[ 1.+0.000000e+00j,  2.-8.742278e-08j],
-       [ 2.+8.742278e-08j, -1.+0.000000e+00j]], dtype=complex64)
+Array([[ 1.+0.j,  2.-0.j],
+       [ 2.+0.j, -1.+0.j]], dtype=complex64)
 ```
 
 Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeArray`][dynamiqs.TimeArray] API page.
