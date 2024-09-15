@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
@@ -23,7 +22,11 @@ class FloquetIntegrator(BaseIntegrator):
 
     def run(self) -> PyTree:
         U_result = _sepropagator(
-            self.H, self.ts, solver=self.solver, gradient=self.gradient, options=self.options
+            self.H,
+            self.ts,
+            solver=self.solver,
+            gradient=self.gradient,
+            options=self.options,
         )
         evals, evecs = jnp.linalg.eig(U_result.final_propagator)
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
