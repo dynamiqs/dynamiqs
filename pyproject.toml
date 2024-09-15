@@ -1,8 +1,22 @@
 [project]
 name = "dynamiqs"
-version = "0.2.0"
+description = "High-performance quantum systems simulation with JAX (GPU-accelerated & differentiable solvers)."
+authors = [
+  { name = "Pierre Guilmin", email = "pierreguilmin@gmail.com" },
+  { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
+  { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
+  { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
+]
+dynamic = ["version"]
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 requires-python = ">=3.9"
-description = "Quantum systems simulation with JAX."
 dependencies = [
     "qutip>=4.7.5,<5.0",
     "scipy",
@@ -20,6 +34,11 @@ dependencies = [
     "tqdm",
 ]
 
+[project.urls]
+Homepage = "https://github.com/dynamiqs/dynamiqs"
+Documentation = "https://www.dynamiqs.org/"
+Repository = "https://github.com/dynamiqs/dynamiqs"
+
 [build-system]
 requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
@@ -29,7 +48,7 @@ dev = [
     "taskipy",
     "ruff",
     "codespell",
-    "pytest>=7.0,<8.0",
+    "pytest>=8.0",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
@@ -42,6 +61,7 @@ dev = [
     "mkdocs-exclude",
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
+    "flit",
 ]
 
 [tool.ruff]
