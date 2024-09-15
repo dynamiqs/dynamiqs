@@ -17,7 +17,7 @@ from optimistix import AbstractRootFinder
 
 from ..._checks import check_shape, check_times
 from ..._utils import cdtype
-from ...utils.utils.general import unit, dag
+from ...utils.quantum_utils import unit, dag
 from ...gradient import Gradient
 from ...options import Options
 
@@ -28,7 +28,7 @@ from ...solver import (
     Euler,
     Kvaerno3,
     Kvaerno5,
-    Propagator,
+    Expm,
     Rouchon1,
     Solver,
     Tsit5,
@@ -157,7 +157,7 @@ def _vectorized_mcsolve(
     options: Options,
 ) -> MCResult:
     # === vectorize function
-    # we vectorize over H, jump_ops and psi0, all other arguments are not vectorized
+    # we vectorize over H, jump_ops, psi0 and keys, all other arguments are not vectorized
     # below we will have another layer of vectorization over ntraj
 
     out_axes = MCResult(False, 0, 0, 0, 0, 0, 0)
@@ -214,25 +214,25 @@ def _mcsolve_integrator(
     solver.assert_supports_gradient(gradient)
     return integrator_class
 
-
-def _mcsolve_jump(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    key: PRNGKey,
-    rand: float,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
-):
-    integrator_class = _mcsolve_integrator(solver, gradient)
-    jump_integrator = integrator_class(
-        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, key, root_finder,
-    )
-    return jump_integrator.run()
+#
+# def _mcsolve_jump(
+#     H: ArrayLike | TimeArray,
+#     jump_ops: list[ArrayLike | TimeArray],
+#     psi0: ArrayLike,
+#     tsave: ArrayLike,
+#     key: PRNGKey,
+#     rand: float,
+#     exp_ops: Array | None,
+#     solver: Solver,
+#     root_finder: AbstractRootFinder,
+#     gradient: Gradient | None,
+#     options: Options,
+# ):
+#     integrator_class = _mcsolve_integrator(solver, gradient)
+#     jump_integrator = integrator_class(
+#         tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, key, root_finder,
+#     )
+#     return jump_integrator.run()
 
 
 @partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
@@ -255,6 +255,11 @@ def _mcsolve(
     )
     no_jump_result = no_jump_integrator.run()
     p_nojump = no_jump_result.p_nojump
+    # TODO dark-state check goes here
+    f = jax.vmap(
+        _mcsolve_jumps,
+        in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
+    )
 
     def _jump(_key):
         key_1, key_2 = jax.random.split(_key, num=2)
@@ -268,7 +273,8 @@ def _mcsolve(
     # TODO how best to do this?
     mcresult = MCResult(tsave, no_jump_result, jump_result, p_nojump)
 
-    jump_results, jump_times, num_jumps = _run_jump_trajs(*operands)
+    #TODO this logic wants to be in the result
+    jump_results, jump_times, num_jumps = _mcsolve_jumps(*operands)
     if no_jump_result.expects is not None:
         jump_expects = jnp.mean(jump_results.expects, axis=0)
         no_jump_expects = no_jump_result.expects
@@ -281,7 +287,7 @@ def _mcsolve(
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
-def _run_jump_trajs(
+def _mcsolve_jumps(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
@@ -293,144 +299,13 @@ def _run_jump_trajs(
     gradient: Gradient | None,
     options: Options,
     p_nojump: float,
-):
-    # TODO split earlier so that not reusing key for different batch dimensions
-    key_1, key_2 = jax.random.split(key, num=2)
-    random_numbers = jax.random.uniform(key_1, shape=(options.ntraj,), minval=p_nojump)
-    # run all single trajectories at once
-    traj_keys = jax.random.split(key_2, num=options.ntraj)
-    f = jax.vmap(
-        one_jump_only,
-        in_axes=(None, None, None, None, 0, 0, None, None, None, None, None),
-    )
-    return f(
-        H,
-        jump_ops,
-        psi0,
-        tsave,
-        traj_keys,
-        random_numbers,
-        exp_ops,
-        solver,
-        root_finder,
-        gradient,
-        options,
-    )
-
-
-@partial(jax.jit, static_argnames=["solver", "root_finder", "gradient", "options"])
-def _dark_state(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    key: PRNGKey,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
-    p_nojump: float,
-):
-    f = jax.vmap(
-            _single_traj,
-            in_axes=(None, None, None, None, 0, None, None, None, None, None),
-        )
-    random_numbers = jax.random.uniform(key, shape=(options.ntraj,), minval=p_nojump)
-    result = f(
-        H,
-        jump_ops,
-        psi0,
-        tsave,
-        random_numbers,
-        exp_ops,
-        solver,
-        root_finder,
-        gradient,
-        options,
-    )
-    return result, tsave[-1] * jnp.ones(options.ntraj), jnp.zeros(options.ntraj)
-
-
-# @partial(jax.jit, static_argnames=('solver', 'root_finder', 'gradient', 'options'))
-def _single_traj(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    rand: Array,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
-):
-    """function that actually performs the time evolution"""
-    solvers = {
-        Euler: MCSolveEulerIntegrator,
-        Dopri5: MCSolveDopri5Integrator,
-        Dopri8: MCSolveDopri8Integrator,
-        Tsit5: MCSolveTsit5Integrator,
-        Kvaerno3: MCSolveKvaerno3Integrator,
-        Kvaerno5: MCSolveKvaerno5Integrator,
-    }
-    integrator_class = get_integrator_class(solvers, solver)
-    solver.assert_supports_gradient(gradient)
-    # jax.debug.breakpoint()
-    integrator = integrator_class(
-        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
-    )
-    return integrator.run()
-
-
-def one_jump_only(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    key: PRNGKey,
-    rand: float,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
-):
-    key_1, key_2 = jax.random.split(key)
-    before_jump_result = _jump_trajs(
-        H, jump_ops, psi0, tsave, key_1, rand, exp_ops, solver, root_finder, gradient, options
-    )
-    jump_time = before_jump_result.final_time
-    new_psi0 = before_jump_result.final_state
-    new_tsave = jnp.linspace(jump_time, tsave[-1], len(tsave))
-    # don't allow another jump
-    after_jump_result = _jump_trajs(
-        H, jump_ops, new_psi0, new_tsave, key_2, 0.0, exp_ops, solver, root_finder, gradient, options
-    )
-    jax.debug.breakpoint()
-    result = interpolate_states_and_expects(
-        tsave, new_tsave, before_jump_result, after_jump_result, jump_time, options
-    )
-    return result, jump_time, 1
-
-
-def loop_over_jumps(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
-    key: PRNGKey,
-    rand: float,
-    exp_ops: Array | None,
-    solver: Solver,
-    root_finder: AbstractRootFinder,
-    gradient: Gradient | None,
-    options: Options,
 ):
     """loop over jumps until the simulation reaches the final time"""
+    key_1, key_2 = jax.random.split(key, num=2)
+    rand_float = jax.random.uniform(key_1, minval=p_nojump)
+
     def while_cond(t_state_key_solver):
         prev_result, prev_t_jump, prev_num_jumps, prev_key = t_state_key_solver
-        # jax.debug.breakpoint()
         return prev_result.final_time < tsave[-1]
 
     def while_body(t_state_key_solver):
@@ -442,7 +317,7 @@ def loop_over_jumps(
         # tsave_after_jump has spacings not consistent with tsave, but
         # we will interpolate later
         new_tsave = jnp.linspace(new_t0, tsave[-1], len(tsave))
-        next_result = _jump_trajs(
+        result, psi_after_jump, next_key = _jump_trajs(
             H,
             jump_ops,
             new_psi0,
@@ -455,9 +330,6 @@ def loop_over_jumps(
             gradient,
             options,
         )
-        # result = interpolate_states_and_expects(
-        #     tsave, new_tsave, prev_result, next_result, new_t0, options
-        # )
         t_jump = jnp.where(
             next_result.final_time < tsave[-1], next_result.final_time, prev_t_jump
         )
@@ -478,7 +350,6 @@ def loop_over_jumps(
     )
     return final_result, last_t_jump, total_num_jumps
 
-
 def _jump_trajs(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
@@ -494,22 +365,22 @@ def _jump_trajs(
 ):
     """for the jump trajectories, call _single_traj and then apply a
     jump if t < tsave[-1]"""
-    rand_key, sample_key = jax.random.split(key)
-    # solve until jump or tsave[-1]
-    res_before_jump = _single_traj(
-        H, jump_ops, psi0, tsave, rand, exp_ops, solver, root_finder, gradient, options
+    integrator_class = _mcsolve_integrator(solver, gradient)
+    next_key, sample_key = jax.random.split(key)
+    jump_integrator = integrator_class(
+        tsave, psi0, H, exp_ops, solver, gradient, options, jump_ops, rand, root_finder,
     )
-    t_jump = res_before_jump.final_time
-    psi_before_jump = res_before_jump.final_state
+    # solve until jump or tsave[-1]
+    result = jump_integrator.run()
+    t_jump = result.infos["final_time"]
+    psi_before_jump = result.final_state
     # select and apply a random jump operator, renormalize
     jump_op = sample_jump_ops(t_jump, psi_before_jump, jump_ops, sample_key)
     # if t = tsave[-1], this is reason for solver termination (no jump)
-    psi = jnp.where(
+    psi_after_jump = jnp.where(
         t_jump < tsave[-1], unit(jump_op @ psi_before_jump), psi_before_jump
     )
-    # save this state as the new final state
-    result = eqx.tree_at(lambda res: res._saved.ylast, res_before_jump, psi)
-    return result
+    return result, psi_after_jump, next_key
 
 
 def interpolate_states_and_expects(

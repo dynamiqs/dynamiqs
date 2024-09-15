@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import diffrax as dx
 import jax.numpy as jnp
+import jax
+from jax import Array
 from jaxtyping import PyTree, Scalar
 import equinox as eqx
 
-from ...utils.utils import dag
+from ...utils.quantum_utils import dag
 from ..core.abstract_integrator import MCSolveIntegrator
 from ..core.diffrax_integrator import (
     DiffraxIntegrator,
@@ -46,6 +48,7 @@ class MCSolveDiffraxIntegrator(DiffraxIntegrator, MCSolveIntegrator):
         """loop over jumps until the simulation reaches the final time"""
 
         def outer_while_cond(_save_state):
+            prev_result, prev_t_jump, prev_num_jumps, prev_key = t_state_key_solver
             return prev_result.final_time < tsave[-1]
 
         def outer_while_body(t_state_key_solver):

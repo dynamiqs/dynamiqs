@@ -7,6 +7,7 @@ import diffrax as dx
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
+import jax.numpy as jnp
 
 from ...gradient import Autograd, CheckpointAutograd
 from ...utils.quantum_utils.general import dag
@@ -23,7 +24,7 @@ class DiffraxIntegrator(BaseIntegrator):
     max_steps: dx.AbstractVar[int]
     diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
     terms: dx.AbstractVar[dx.AbstractTerm]
-    event: dx.Event | None
+    event: dx.Event | None = None
 
     def __init__(self, *args):
         # pass all init arguments to `BaseIntegrator`
@@ -68,7 +69,8 @@ class DiffraxIntegrator(BaseIntegrator):
 
         # === collect and return results
         saved = self.collect_saved(*solution.ys)
-        return self.result(saved, solution.ts[-1][0], infos=self.infos(solution.stats))
+        infos = solution.stats | {"final_time": solution.ts[-1][0]}
+        return self.result(saved, infos=self.infos(infos))
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:

@@ -49,7 +49,6 @@ class Result(eqx.Module):
     gradient: Gradient | None
     options: Options
     _saved: Saved
-    final_time: Array
     infos: PyTree | None
 
     def to_qutip(self) -> Result:

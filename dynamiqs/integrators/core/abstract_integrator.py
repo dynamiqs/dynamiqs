@@ -25,8 +25,7 @@ from ...result import (
 )
 from ...solver import Solver
 from ...time_array import TimeArray
-from ...utils.quantum_utils import expect
-from ...utils.utils import expect, unit
+from ...utils.quantum_utils import expect, unit
 
 
 class AbstractIntegrator(eqx.Module):
@@ -107,8 +106,6 @@ class PropagatorIntegrator(BaseIntegrator):
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_states else None
         return PropagatorSaved(ysave)
-
-
 
 
 class MEIntegrator(BaseIntegrator):
