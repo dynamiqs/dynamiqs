@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ..._utils import on_cpu
+from ..._utils import cdtype, on_cpu
 
 __all__ = [
     'dag',
@@ -969,3 +969,25 @@ def entropy_vn(x: ArrayLike) -> Array:
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
+
+
+def eig_callback_cpu(x: Array) -> tuple[Array, Array]:
+    """Wraps jnp.linalg.eig so that it can be jit-ed on a machine with GPUs,
+    see https://github.com/google/jax/issues/1259#issuecomment-2112907161
+    """
+
+    def _eig_cpu(_x: Array) -> tuple[Array, Array]:
+        # Force this computation to be performed on the cpu by jit-ing and
+        # explicitly specifying the device.
+        with jax.default_device(jax.devices('cpu')[0]):
+            return jax.jit(jnp.linalg.eig)(_x)
+
+    return jax.pure_callback(
+        _eig_cpu,
+        (
+            jnp.ones(x.shape[:-1], dtype=cdtype()),
+            jnp.ones(x.shape, dtype=cdtype()),
+        ),
+        x.astype(cdtype()),
+        vectorized=True,
+    )

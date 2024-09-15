@@ -8,6 +8,7 @@ from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
 
 from ..apis.sepropagator import _sepropagator
 from ..core.abstract_integrator import BaseIntegrator
+from ...utils.quantum_utils.general import eig_callback_cpu
 
 __all__ = ['FloquetIntegrator']
 
@@ -28,7 +29,7 @@ class FloquetIntegrator(BaseIntegrator):
             gradient=self.gradient,
             options=self.options,
         )
-        evals, evecs = jnp.linalg.eig(U_result.final_propagator)
+        evals, evecs = eig_callback_cpu(U_result.final_propagator)
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
         # normalize quasienergies to the region -pi/T, pi/T
         omega_d = 2.0 * jnp.pi / self.T
