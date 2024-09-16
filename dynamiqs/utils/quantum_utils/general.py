@@ -972,8 +972,8 @@ def entropy_vn(x: ArrayLike) -> Array:
 
 
 def eig_callback_cpu(x: Array) -> tuple[Array, Array]:
-    """Wraps jnp.linalg.eig so that it can be jit-ed on a machine with GPUs,
-    see https://github.com/google/jax/issues/1259#issuecomment-2112907161
+    """Wraps jnp.linalg.eig so that it can be jit-ed on a machine with GPUs.
+    See https://github.com/google/jax/issues/1259#issuecomment-2112907161.
     """
 
     def _eig_cpu(_x: Array) -> tuple[Array, Array]:
@@ -984,10 +984,7 @@ def eig_callback_cpu(x: Array) -> tuple[Array, Array]:
 
     return jax.pure_callback(
         _eig_cpu,
-        (
-            jnp.ones(x.shape[:-1], dtype=cdtype()),
-            jnp.ones(x.shape, dtype=cdtype()),
-        ),
+        (jnp.ones(x.shape[:-1], dtype=cdtype()), jnp.ones(x.shape, dtype=cdtype())),
         x.astype(cdtype()),
         vectorized=True,
     )

@@ -6,9 +6,9 @@ from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
 
+from ...utils.quantum_utils.general import eig_callback_cpu
 from ..apis.sepropagator import _sepropagator
 from ..core.abstract_integrator import BaseIntegrator
-from ...utils.quantum_utils.general import eig_callback_cpu
 
 __all__ = ['FloquetIntegrator']
 
