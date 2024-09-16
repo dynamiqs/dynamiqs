@@ -1,6 +1,6 @@
 # Installation
 
-You can install dynamiqs with `pip`:
+You can install Dynamiqs with `pip`:
 
 ```shell
 pip install dynamiqs

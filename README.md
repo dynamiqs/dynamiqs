@@ -26,7 +26,7 @@ We hope that this library will prove useful to the community for e.g. simulation
 
 ## Installation
 
-You can install dynamiqs with `pip`:
+You can install Dynamiqs with `pip`:
 
 ```shell
 pip install dynamiqs
