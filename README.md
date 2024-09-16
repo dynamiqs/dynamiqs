@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="./docs/media/dynamiqs-logo.png" width="520" alt="Dynamiqs library logo">
+    <img src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/dynamiqs-logo.png?raw=true" width="520" alt="Dynamiqs library logo">
 </h1>
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
@@ -26,11 +26,14 @@ We hope that this library will prove useful to the community for e.g. simulation
 
 ## Installation
 
-We will soon make a first release of the library on PyPi. In the meantime, you can install directly from source:
+You can install dynamiqs with `pip`:
 
 ```shell
-pip install git+https://github.com/dynamiqs/dynamiqs.git
+pip install dynamiqs
 ```
+
+> [!Note]
+> If you're using a GPU, please refer to the [JAX installation](https://jax.readthedocs.io/en/latest/installation.html) documentation page for detailed instructions on how to install JAX for your device.
 
 ## Examples
 

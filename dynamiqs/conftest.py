@@ -64,5 +64,11 @@ pytest_collect_file = Sybil(
     parsers=[DocTestParser(optionflags=ELLIPSIS), PythonCodeBlockParser()],
     patterns=['*.py'],
     setup=sybil_setup,
-    fixtures=['renderfig', 'default_mpl_style'],
+    fixtures=[
+        '_jax_set_printoptions',
+        '_mplstyle',
+        'default_mpl_style',
+        '_mpl_backend',
+        'renderfig',
+    ],
 ).pytest()
