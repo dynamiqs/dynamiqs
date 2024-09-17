@@ -119,6 +119,27 @@ Gradient w.r.t. kappa : -0.9048
 Gradient w.r.t. alpha0: 1.8097
 ```
 
+> [!Note]
+> On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
+>
+> $$
+> \nabla_\theta\ \bar{n} = \begin{pmatrix}
+>   \partial\bar{n} / \partial\omega \\
+>   \partial\bar{n} / \partial\kappa \\
+>   \partial\bar{n} / \partial\alpha_0
+> \end{pmatrix}
+> = \begin{pmatrix}
+>   0\\
+>   -\alpha_0^2 T e^{-\kappa T} \\
+>   2 \alpha_0 e^{-\kappa T}
+> \end{pmatrix}
+> \approx \begin{pmatrix}
+>   0.0 \\
+>   -0.9048 \\
+>   1.8097
+> \end{pmatrix}
+> $$
+
 ## More features!
 
 Below are some cool features of **Dynamiqs** that are either already available or planned for the near future.
