@@ -68,14 +68,14 @@ def population(omega, kappa, alpha0):
 # compute gradient with respect to omega, kappa and alpha
 grad_population = jax.grad(population, argnums=(0, 1, 2))
 grads = grad_population(omega, kappa, alpha0)
-print(f'Gradient w.r.t. omega ={grads[0]:.2f}')
-print(f'Gradient w.r.t. kappa ={grads[1]:.2f}')
-print(f'Gradient w.r.t. alpha0={grads[2]:.2f}')
+print(f'Gradient w.r.t. omega : {grads[0]:.4f}')
+print(f'Gradient w.r.t. kappa : {grads[1]:.4f}')
+print(f'Gradient w.r.t. alpha0: {grads[2]:.4f}')
 ```
 
 ```text title="Output"
 |██████████| 100.0% ◆ elapsed 86.63ms ◆ remaining 0.00ms
-Gradient w.r.t. omega =0.00
-Gradient w.r.t. kappa =-0.90
-Gradient w.r.t. alpha0=1.81
+Gradient w.r.t. omega : 0.0000
+Gradient w.r.t. kappa : -0.9048
+Gradient w.r.t. alpha0: 1.8097
 ```
