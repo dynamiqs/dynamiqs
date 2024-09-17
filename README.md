@@ -1,5 +1,9 @@
 <h1 align="center">
-    <img src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/dynamiqs-logo.png?raw=true" width="520" alt="dynamiqs library logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/media/logo-typeface-lighttype.png?raw=true">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/media/logo-typeface-darktype.png?raw=true">
+    <img alt="Dynamiqs logo" width="360" src="./docs/media/logo-typeface-lighttype.png?raw=true">
+  </picture>
 </h1>
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
@@ -8,11 +12,11 @@
 
 High-performance quantum systems simulation with JAX.
 
-**dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/python_api/index.html) for a list of all implemented functions.
 
-The main features of **dynamiqs** are:
+The main features of **Dynamiqs** are:
 
 - Running simulations on **CPUs** and **GPUs** with high-performance.
 - Executing many simulations **concurrently** by batching over Hamiltonians, initial states or jump operators.
@@ -26,7 +30,7 @@ We hope that this library will prove useful to the community for e.g. simulation
 
 ## Installation
 
-You can install dynamiqs with `pip`:
+You can install Dynamiqs with `pip`:
 
 ```shell
 pip install dynamiqs
@@ -39,23 +43,23 @@ pip install dynamiqs
 
 ### Simulate a lossy quantum harmonic oscillator
 
-This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$.
+This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$, starting from the initial coherent state $\ket{\alpha_0}$.
 
 ```python
 import dynamiqs as dq
 import jax.numpy as jnp
 
 # parameters
-n = 128      # Hilbert space dimension
-omega = 1.0  # frequency
-kappa = 0.1  # decay rate
-alpha = 1.0  # initial coherent state amplitude
+n = 128       # Hilbert space dimension
+omega = 1.0   # frequency
+kappa = 0.1   # decay rate
+alpha0 = 1.0  # initial coherent state amplitude
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
 H = omega * dq.dag(a) @ a
 jump_ops = [jnp.sqrt(kappa) * a]
-psi0 = dq.coherent(n, alpha)
+psi0 = dq.coherent(n, alpha0)
 tsave = jnp.linspace(0, 1.0, 101)
 
 # run simulation
@@ -73,7 +77,7 @@ States  : Array complex64 (101, 128, 128) | 12.62 Mb
 
 ### Compute gradients with respect to some parameters
 
-Suppose that in the above example, we want to compute the gradient of the number of photons in the final state, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(t_f)]$, with respect to the decay rate $\kappa$ and the initial coherent state amplitude $\alpha$.
+Suppose that in the above example, we want to compute the gradient of the number of photons in the final state at time $T$, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(T)]$, with respect to the frequency $\omega$, the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$.
 
 ```python
 import dynamiqs as dq
@@ -81,18 +85,18 @@ import jax.numpy as jnp
 import jax
 
 # parameters
-n = 128      # Hilbert space dimension
-omega = 1.0  # frequency
-kappa = 0.1  # decay rate
-alpha = 1.0  # initial coherent state amplitude
+n = 128       # Hilbert space dimension
+omega = 1.0   # frequency
+kappa = 0.1   # decay rate
+alpha0 = 1.0  # initial coherent state amplitude
 
-def population(omega, kappa, alpha):
+def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
     # initialize operators, initial state and saving times
     a = dq.destroy(n)
     H = omega * dq.dag(a) @ a
     jump_ops = [jnp.sqrt(kappa) * a]
-    psi0 = dq.coherent(n, alpha)
+    psi0 = dq.coherent(n, alpha0)
     tsave = jnp.linspace(0, 1.0, 101)
 
     # run simulation
@@ -102,22 +106,43 @@ def population(omega, kappa, alpha):
 
 # compute gradient with respect to omega, kappa and alpha
 grad_population = jax.grad(population, argnums=(0, 1, 2))
-grads = grad_population(omega, kappa, alpha)
-print(f'Gradient w.r.t. omega={grads[0]:.2f}')
-print(f'Gradient w.r.t. kappa={grads[1]:.2f}')
-print(f'Gradient w.r.t. alpha={grads[2]:.2f}')
+grads = grad_population(omega, kappa, alpha0)
+print(f'Gradient w.r.t. omega : {grads[0]:.4f}')
+print(f'Gradient w.r.t. kappa : {grads[1]:.4f}')
+print(f'Gradient w.r.t. alpha0: {grads[2]:.4f}')
 ```
 
 ```text
 |██████████| 100.0% ◆ elapsed 86.63ms ◆ remaining 0.00ms
-Gradient w.r.t. omega=0.00
-Gradient w.r.t. kappa=-0.90
-Gradient w.r.t. alpha=1.81
+Gradient w.r.t. omega : 0.0000
+Gradient w.r.t. kappa : -0.9048
+Gradient w.r.t. alpha0: 1.8097
 ```
+
+> [!Note]
+> On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
+>
+> $$
+> \nabla_\theta\ \bar{n} = \begin{pmatrix}
+>   \partial\bar{n} / \partial\omega \\
+>   \partial\bar{n} / \partial\kappa \\
+>   \partial\bar{n} / \partial\alpha_0
+> \end{pmatrix}
+> = \begin{pmatrix}
+>   0\\
+>   -\alpha_0^2 T e^{-\kappa T} \\
+>   2 \alpha_0 e^{-\kappa T}
+> \end{pmatrix}
+> \approx \begin{pmatrix}
+>   0.0 \\
+>   -0.9048 \\
+>   1.8097
+> \end{pmatrix}
+> $$
 
 ## More features!
 
-Below are some cool features of **dynamiqs** that are either already available or planned for the near future.
+Below are some cool features of **Dynamiqs** that are either already available or planned for the near future.
 
 **Solvers**
 
@@ -154,11 +179,11 @@ Below are some cool features of **dynamiqs** that are either already available o
 - Simulate using propagators solvers based on **Krylov subspace methods**.
 - **Benchmark code** to compare solvers and performance for different systems.
 
-## The dynamiqs project
+## The Dynamiqs project
 
 **Philosophy**
 
-There is a noticeable gap in the availability of an open-source library that simplifies gradient-based parameter estimation and quantum optimal control. In addition, faster simulations of large systems are essential to accelerate the development of quantum technologies. The **dynamiqs** library addresses both of these needs. It aims to be a fast and reliable building block for **GPU-accelerated** and **differentiable** solvers. We also work to make the library compatible with the existing Python ecosystem (i.e. JAX and QuTiP) to allow easy interfacing with other libraries.
+There is a noticeable gap in the availability of an open-source library that simplifies gradient-based parameter estimation and quantum optimal control. In addition, faster simulations of large systems are essential to accelerate the development of quantum technologies. The **Dynamiqs** library addresses both of these needs. It aims to be a fast and reliable building block for **GPU-accelerated** and **differentiable** solvers. We also work to make the library compatible with the existing Python ecosystem (i.e. JAX and QuTiP) to allow easy interfacing with other libraries.
 
 **Team and sponsoring**
 
@@ -176,17 +201,17 @@ If you're curious, have questions or suggestions, wish to contribute or simply w
 
 We warmly welcome all contributions. If you're a junior developer or physicist, you can start with a small utility function, and move on to bigger problems as you discover the library's internals. If you're more experienced and want to implement more advanced features, don't hesitate to get in touch to discuss what would suit you. Please refer to [CONTRIBUTING.md](https://github.com/dynamiqs/dynamiqs/blob/main/CONTRIBUTING.md) for detailed instructions.
 
-## Citing dynamiqs
+## Citing Dynamiqs
 
 If you have found this library useful in your academic research, you can cite:
 
 ```bibtex
 @unpublished{guilmin2024dynamiqs,
-  title  = {dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
+  title  = {Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
   author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois},
   year   = {2024},
   url    = {https://github.com/dynamiqs/dynamiqs}
 }
 ```
 
-> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.
+> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.

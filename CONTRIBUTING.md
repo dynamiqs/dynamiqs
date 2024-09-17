@@ -1,4 +1,4 @@
-# Contributing to dynamiqs
+# Contributing to Dynamiqs
 
 ## Requirements
 
