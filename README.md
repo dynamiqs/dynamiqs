@@ -77,7 +77,7 @@ States  : Array complex64 (101, 128, 128) | 12.62 Mb
 
 ### Compute gradients with respect to some parameters
 
-Suppose that in the above example, we want to compute the gradient of the number of photons in the final state, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(t_f)]$, with respect to the frequency $\omega$, the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$.
+Suppose that in the above example, we want to compute the gradient of the number of photons in the final state at time $T$, $\bar{n} = \mathrm{Tr}[a^\dagger a \rho(T)]$, with respect to the frequency $\omega$, the decay rate $\kappa$ and the initial coherent state amplitude $\alpha_0$.
 
 ```python
 import dynamiqs as dq
