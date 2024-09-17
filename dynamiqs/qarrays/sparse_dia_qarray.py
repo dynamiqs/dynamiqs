@@ -184,7 +184,7 @@ class SparseDIAQArray(QArray):
         return self.to_dense().to_jax()
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
-        raise self.to_dense().__array__(dtype=dtype, copy=copy)
+        return self.to_dense().__array__(dtype=dtype, copy=copy)
 
     def __repr__(self) -> str:
         # === array representation with dots instead of zeros
