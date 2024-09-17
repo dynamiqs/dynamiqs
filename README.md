@@ -1,5 +1,9 @@
 <h1 align="center">
-    <img src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/dynamiqs-logo.png?raw=true" width="520" alt="Dynamiqs library logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/media/logo-typeface-lighttype.png?raw=true">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/media/logo-typeface-darktype.png?raw=true">
+    <img alt="Dynamiqs logo" width="420" src="./docs/media/logo-typeface-lighttype.png?raw=true">
+  </picture>
 </h1>
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
