@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./docs/media/logo-typeface-lighttype.png?raw=true">
     <source media="(prefers-color-scheme: light)" srcset="./docs/media/logo-typeface-darktype.png?raw=true">
-    <img alt="Dynamiqs logo" width="420" src="./docs/media/logo-typeface-lighttype.png?raw=true">
+    <img alt="Dynamiqs logo" width="360" src="./docs/media/logo-typeface-lighttype.png?raw=true">
   </picture>
 </h1>
 
