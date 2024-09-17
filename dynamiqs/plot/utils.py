@@ -178,7 +178,7 @@ def mplstyle(*, usetex: bool = False):
 
         ![mplstyle_before](/figs_code/mplstyle_before.png){.fig}
 
-        After (dynamiqs Matplotlib style):
+        After (Dynamiqs Matplotlib style):
 
         >>> dq.plot.mplstyle()
         >>> fig, ax = plt.subplots(1, 1)

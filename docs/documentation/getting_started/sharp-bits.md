@@ -1,6 +1,6 @@
 # The sharp bits 🔪
 
-This page highlight common pitfalls that users may encounter when learning to use dynamiqs.
+This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -10,11 +10,11 @@ import dynamiqs as dq
 
 <!-- If modifications are made in this section, ensure to also update the tutorials/time-dependent-operators.md document to reflect these changes in the "Differences with QuTiP" warning admonition at the top of the file. -->
 
-The syntax in dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.
+The syntax in Dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.
 
 ### Floating-point precision
 
-In dynamiqs, all arrays are represented by default with **single-precision** floating-point numbers (`float32` or `complex64`), whereas the default in QuTiP or NumPy is double-precision (`float64` or `complex128`). We made this choice to match JAX's default, and for **performance** reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using [`dq.set_precision()`][dynamiqs.set_precision]:
+In Dynamiqs, all arrays are represented by default with **single-precision** floating-point numbers (`float32` or `complex64`), whereas the default in QuTiP or NumPy is double-precision (`float64` or `complex128`). We made this choice to match JAX's default, and for **performance** reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using [`dq.set_precision()`][dynamiqs.set_precision]:
 ```python
 dq.set_precision('double')  # 'simple' by default
 ```
@@ -35,7 +35,7 @@ dq.set_precision('simple')
 
 ### Adding a scalar to an operator
 
-In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch or JAX. In dynamiqs, adding a scalar to an array performs an element-wise addition. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**:
+In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch or JAX. In Dynamiqs, adding a scalar to an array performs an element-wise addition. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**:
 
 === ":material-check: Correct"
     ```pycon
@@ -54,7 +54,7 @@ In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the
 
 ### Multiplying two operators
 
-In QuTiP, the `*` symbol is used to multiply two operators. This convention also differs from common scientific libraries. In dynamiqs, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication:
+In QuTiP, the `*` symbol is used to multiply two operators. This convention also differs from common scientific libraries. In Dynamiqs, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication:
 
 === ":material-check: Correct"
     ```pycon
@@ -90,8 +90,8 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
 
 Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
 
-??? Note "Why is there no `.dag()` method in dynamiqs?"
-    To guarantee optimum performances and straightforward compatibility with the JAX ecosystem, dynamiqs does not subclass JAX arrays. As a consequence, we can't define a custom `.dag()` method on arrays. Note that this will possibly change in the future, as we are working on an extension that will allow defining custom methods on arrays.
+??? Note "Why is there no `.dag()` method in Dynamiqs?"
+    To guarantee optimum performances and straightforward compatibility with the JAX ecosystem, Dynamiqs does not subclass JAX arrays. As a consequence, we can't define a custom `.dag()` method on arrays. Note that this will possibly change in the future, as we are working on an extension that will allow defining custom methods on arrays.
 
 
 ## Using a for loop

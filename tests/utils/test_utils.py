@@ -15,7 +15,7 @@ def test_ket_fidelity_correctness():
     phi = qt.rand_ket(n, seed=43)
     qt_fid = qt.fidelity(psi, phi) ** 2
 
-    # dynamiqs
+    # Dynamiqs
     psi = jnp.asarray(psi)
     phi = jnp.asarray(phi)
     dq_fid = dq.fidelity(psi, phi).item()
@@ -41,7 +41,7 @@ def test_dm_fidelity_correctness():
     sigma = qt.rand_dm(n, n, seed=43)
     qt_fid = qt.fidelity(rho, sigma) ** 2
 
-    # dynamiqs
+    # Dynamiqs
     rho = jnp.asarray(rho)
     sigma = jnp.asarray(sigma)
     dq_fid = dq.fidelity(rho, sigma).item()
@@ -67,7 +67,7 @@ def test_ket_dm_fidelity_correctness():
     rho = qt.rand_dm(n, n, seed=43)
     qt_fid = qt.fidelity(psi, rho) ** 2
 
-    # dynamiqs
+    # Dynamiqs
     psi = jnp.asarray(psi)
     rho = jnp.asarray(rho)
     dq_fid_ket_dm = dq.fidelity(psi, rho).item()

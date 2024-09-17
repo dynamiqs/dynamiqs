@@ -1,6 +1,6 @@
 # Batching simulations
 
-Batching allows **running many independent simulations concurrently**. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
+Batching allows **running many independent simulations concurrently**. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in Dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -10,7 +10,7 @@ import timeit
 
 ## Batching in short
 
-Batching in dynamiqs is achieved by **passing a list of Hamiltonians, initial states, or jump operators** to the simulation functions. The result of a batched simulation is a single array that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians $\{\sigma_x, \sigma_y, \sigma_z\}$ and the four initial states $\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}$:
+Batching in Dynamiqs is achieved by **passing a list of Hamiltonians, initial states, or jump operators** to the simulation functions. The result of a batched simulation is a single array that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians $\{\sigma_x, \sigma_y, \sigma_z\}$ and the four initial states $\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}$:
 
 ```python
 # define three Hamiltonians
@@ -42,7 +42,7 @@ Importantly, **batched simulations are not run sequentially in a `for` loop**. W
 
 ## Batching modes
 
-There are two ways to batch simulations in dynamiqs: **cartesian batching** and **flat batching**.
+There are two ways to batch simulations in Dynamiqs: **cartesian batching** and **flat batching**.
 
 ### Cartesian batching
 
@@ -135,8 +135,8 @@ There are multiple ways to create a batched argument.
     omega = jnp.linspace(0.0, 1.0, 21)
     H = omega[:, None, None] * dq.sigmaz()  # (21, 2, 2)
     ```
-=== "Using dynamiqs functions"
-    Or you can use dynamiqs utility functions directly:
+=== "Using Dynamiqs functions"
+    Or you can use Dynamiqs utility functions directly:
     ```python
     # define several initial states
     alpha = [1.0, 2.0, 3.0]
@@ -162,7 +162,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
     eps = jnp.linspace(0.0, 10.0, 11)[:, None, None]
     H = omega * dq.sigmaz() + eps * dq.sigmaz()  # (21, 11, 2, 2)
     ```
-=== "Using dynamiqs functions"
+=== "Using Dynamiqs functions"
     ```python
     # define several initial states
     alpha_real = jnp.linspace(0, 1.0, 5)
