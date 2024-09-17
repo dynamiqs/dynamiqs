@@ -43,7 +43,7 @@ pip install dynamiqs
 
 ### Simulate a lossy quantum harmonic oscillator
 
-This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$, starting from the initial coherent state $\ket{\alpha_0}$ of complex amplitude $\alpha_0$.
+This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$, starting from the initial coherent state $\ket{\alpha_0}$.
 
 ```python
 import dynamiqs as dq
