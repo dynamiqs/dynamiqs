@@ -39,7 +39,7 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-copyright: "&copy Copyright 2023, Dynamiqs developers."
+copyright: "&copy Copyright 2023-2024, Dynamiqs developers."
 extra:
   social:
     - icon: fontawesome/brands/github
