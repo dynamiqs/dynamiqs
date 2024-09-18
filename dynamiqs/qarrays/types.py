@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Union, get_args
 
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike, DTypeLike
 from qutip import Qobj
@@ -48,12 +49,13 @@ def isqarraylike(x: Any) -> bool:
 def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray:
     if isinstance(x, QArray):
         return x
-
-    # TODO: improve this fix
-    if isinstance(x, list) and all(isinstance(x_, QArray) for x_ in x):
+    elif isinstance(x, Qobj):
+        dims = tuple(np.max(x.dims, axis=0)) if dims is None else dims
+        return asqarray(x.data.to_array(), dims)
+    elif isinstance(x, list):
         from .utils import stack
 
-        return stack(x)
+        return stack(asqarray(_x, dims) for _x in x)
 
     from .dense_qarray import DenseQArray
 
