@@ -1,6 +1,6 @@
 from ..core.abstract_integrator import SESolveIntegrator
-from ..core.expm_integrator import SEExpmIntegrator, SolveExpmIntegrator
+from ..core.expm_integrator import SEExpmIntegrator
 
 
-class SESolveExpmIntegrator(SolveExpmIntegrator, SEExpmIntegrator, SESolveIntegrator):
+class SESolveExpmIntegrator(SEExpmIntegrator, SESolveIntegrator):
     pass
