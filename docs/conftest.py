@@ -59,5 +59,5 @@ class PyconCodeBlockParser(PythonCodeBlockParser):
 pytest_collect_file = Sybil(
     parsers=[PythonCodeBlockParser(), PyconCodeBlockParser(), SkipParser()],
     patterns=['*.md'],
-    fixtures=['renderfig'],
+    fixtures=['_jax_set_printoptions', '_mplstyle', '_mpl_backend', 'renderfig'],
 ).pytest()

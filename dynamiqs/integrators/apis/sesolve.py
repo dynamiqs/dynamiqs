@@ -100,7 +100,8 @@ def sesolve(
     H = _astimearray(H)
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    if exp_ops is not None:
+        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
