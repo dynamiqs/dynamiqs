@@ -43,7 +43,7 @@ class QArray(eqx.Module):
     def __check_init__(self):
         # === ensure dims is a tuple of ints
         if not isinstance(self.dims, tuple) or not all(
-            isinstance(d, int) for d in self.dims
+            isinstance(d, int) or np.issubdtype(d.dtype, int) for d in self.dims
         ):
             raise TypeError(
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
