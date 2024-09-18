@@ -6,12 +6,12 @@ from dynamiqs import Options, constant, eye, pwc, random, sepropagator, sigmax, 
 from dynamiqs.solver import Tsit5
 
 from ..integrator_tester import IntegratorTester
-from ..sesolve.closed_system import cavity, tdqubit
+from ..sesolve.closed_system import dense_cavity, tdqubit
 
 
 @pytest.mark.skip(reason='TODO')
 class TestSEPropagator(IntegratorTester):
-    @pytest.mark.parametrize('system', [cavity, tdqubit])
+    @pytest.mark.parametrize('system', [dense_cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):
         params = system.params_default
         H = system.H(params)

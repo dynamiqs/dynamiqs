@@ -10,11 +10,11 @@ def test_global_dispatch():
     assert isinstance(dq.eye(dim), dq.SparseDIAQArray)
     assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
 
-    dq.set_layout(dq.dense)
+    dq.set_layout('dense')
     assert isinstance(dq.eye(dim), dq.DenseQArray)
     assert isinstance(dq.eye(dim, layout=dq.dia), dq.SparseDIAQArray)
 
-    dq.set_layout(dq.dia)
+    dq.set_layout('dia')
     assert isinstance(dq.eye(dim), dq.SparseDIAQArray)
     assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
 
