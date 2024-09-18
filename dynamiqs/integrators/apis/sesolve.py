@@ -15,10 +15,10 @@ from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
 from .._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    astimearray,
+    cartesian_vectorize,
     catch_xla_runtime_error,
+    flat_vectorize,
     get_integrator_class,
 )
 from ..sesolve.diffrax_integrator import (
@@ -97,7 +97,7 @@ def sesolve(
             [`dq.SESolveResult`][dynamiqs.SESolveResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
+    H = astimearray(H)
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
@@ -148,9 +148,9 @@ def _vectorized_sesolve(
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
+        f = cartesian_vectorize(_sesolve, n_batch, out_axes)
     else:
-        f = _flat_vectorize(_sesolve, n_batch, out_axes)
+        f = flat_vectorize(_sesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)

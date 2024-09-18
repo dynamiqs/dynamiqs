@@ -16,8 +16,8 @@ from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, T
 from ...time_array import Shape, TimeArray
 from ...utils.operators import eye
 from .._utils import (
-    _astimearray,
-    _cartesian_vectorize,
+    astimearray,
+    cartesian_vectorize,
     catch_xla_runtime_error,
     get_integrator_class,
     ispwc,
@@ -95,7 +95,7 @@ def sepropagator(
             [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
+    H = astimearray(H)
     tsave = jnp.asarray(tsave)
 
     # === check arguments
@@ -124,7 +124,7 @@ def _vectorized_sepropagator(
     out_axes = SEPropagatorResult(False, False, False, False, 0, 0)
 
     # compute vectorized function
-    f = _cartesian_vectorize(_sepropagator, n_batch, out_axes)
+    f = cartesian_vectorize(_sepropagator, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, tsave, solver, gradient, options)

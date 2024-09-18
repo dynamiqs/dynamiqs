@@ -26,10 +26,10 @@ from ...solver import (
 )
 from ...time_array import Shape, TimeArray
 from .._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    astimearray,
+    cartesian_vectorize,
     catch_xla_runtime_error,
+    flat_vectorize,
     get_integrator_class,
 )
 from ..mesolve.diffrax_integrator import (
@@ -122,8 +122,8 @@ def mesolve(
             [`dq.MESolveResult`][dynamiqs.MESolveResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
-    jump_ops = [_astimearray(L) for L in jump_ops]
+    H = astimearray(H)
+    jump_ops = [astimearray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
@@ -188,9 +188,9 @@ def _vectorized_mesolve(
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
+        f = cartesian_vectorize(_mesolve, n_batch, out_axes)
     else:
-        f = _flat_vectorize(_mesolve, n_batch, out_axes)
+        f = flat_vectorize(_mesolve, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)

@@ -21,7 +21,7 @@ from ..time_array import (
 from .core.abstract_integrator import AbstractIntegrator
 
 
-def _astimearray(x: QArrayLike | TimeArray) -> TimeArray:
+def astimearray(x: QArrayLike | TimeArray) -> TimeArray:
     if isinstance(x, TimeArray):
         return x
     else:
@@ -102,7 +102,7 @@ def tree_false_to_none(
     return jtu.tree_map(lambda x: x if x is not False else None, tree, is_leaf=is_leaf)
 
 
-def _flat_vectorize(  # noqa: C901
+def flat_vectorize(  # noqa: C901
     f: TimeArray,
     n_batch_false: PyTree[int | False],
     out_axes_false: PyTree[int | False],
@@ -175,7 +175,7 @@ def _flat_vectorize(  # noqa: C901
     return wrap
 
 
-def _cartesian_vectorize(
+def cartesian_vectorize(
     f: TimeArray,
     n_batch_false: PyTree[int | False],
     out_axes_false: PyTree[int | False],
@@ -205,6 +205,6 @@ def _cartesian_vectorize(
     # We flat vectorize on the first n_batch term, which is the
     # Hamiltonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
-    return _flat_vectorize(
+    return flat_vectorize(
         f, n_batch_false[:1] + (False,) * len(n_batch_false[1:]), out_axes_false
     )

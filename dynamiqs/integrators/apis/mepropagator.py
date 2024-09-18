@@ -17,10 +17,10 @@ from ...solver import Expm, Solver
 from ...time_array import Shape, TimeArray
 from ...utils.operators import eye
 from .._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    astimearray,
+    cartesian_vectorize,
     catch_xla_runtime_error,
+    flat_vectorize,
     get_integrator_class,
 )
 from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
@@ -85,8 +85,8 @@ def mepropagator(
             [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
-    jump_ops = [_astimearray(L) for L in jump_ops]
+    H = astimearray(H)
+    jump_ops = [astimearray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
 
     # === check arguments
@@ -138,9 +138,9 @@ def _vectorized_mepropagator(
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_mepropagator, n_batch, out_axes)
+        f = cartesian_vectorize(_mepropagator, n_batch, out_axes)
     else:
-        f = _flat_vectorize(_mepropagator, n_batch, out_axes)
+        f = flat_vectorize(_mepropagator, n_batch, out_axes)
 
     # === apply vectorized function
     return f(H, jump_ops, tsave, solver, gradient, options)
