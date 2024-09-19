@@ -113,7 +113,9 @@ def mesolve(
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
             [`Expm`][dynamiqs.solver.Expm]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
