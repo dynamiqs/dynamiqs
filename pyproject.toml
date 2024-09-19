@@ -18,7 +18,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "qutip>=4.7.5,<5.0",
+    "qutip>=4.7.5",
     "scipy",
     "numpy",
     "matplotlib",
