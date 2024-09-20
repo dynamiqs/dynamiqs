@@ -85,7 +85,9 @@ def sepropagator(
             [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
