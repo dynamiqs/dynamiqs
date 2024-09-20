@@ -4,7 +4,7 @@ from abc import abstractmethod
 
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree, Scalar
+from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
@@ -17,6 +17,7 @@ from ...result import (
     Saved,
     SEPropagatorResult,
     SESolveResult,
+    SMESolveResult,
     SolveSaved,
 )
 from ...solver import Solver
@@ -109,6 +110,23 @@ class MEIntegrator(BaseIntegrator):
         return _concatenate_sort(*ts)
 
 
+class SMEIntegrator(BaseIntegrator):
+    tmeas: Array
+    key: PRNGKeyArray
+    Lcs: list[TimeArray]  # (nLc, n, n)
+    Lms: list[TimeArray]  # (nLm, n, n)
+    etas: Array  # (nLm,)
+
+    @property
+    def Ls(self) -> list[TimeArray]:
+        return self.Lcs + self.Lms  # (nLc + nLm, n, n)
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(*ts)
+
+
 class SESolveIntegrator(SolveIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return SESolveResult(
@@ -120,6 +138,29 @@ class MESolveIntegrator(SolveIntegrator, MEIntegrator):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return MESolveResult(
             self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
+
+
+class SMESolveIntegrator(SolveIntegrator, SMEIntegrator):
+    def save(self, y: PyTree) -> Saved:
+        return super().save(y.rho)
+
+    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
+        saved = super().collect_saved(saved, ylast)
+        # reorder Jsave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
+        Jsave = saved.Jsave.swapaxes(-1, -2)
+        return eqx.tree_at(lambda x: x.Jsave, saved, Jsave)
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return SMESolveResult(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            self.tmeas,
+            self.key,
         )
 
 

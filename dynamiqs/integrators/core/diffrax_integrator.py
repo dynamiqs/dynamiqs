@@ -10,8 +10,9 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...utils.quantum_utils.general import dag
-from .abstract_integrator import BaseIntegrator, MEIntegrator
+from ...result import Saved, SMESolveSaved
+from ...utils.quantum_utils.general import dag, trace, tracemm
+from .abstract_integrator import BaseIntegrator, MEIntegrator, SMEIntegrator
 
 
 class DiffraxIntegrator(BaseIntegrator):
@@ -24,10 +25,17 @@ class DiffraxIntegrator(BaseIntegrator):
     max_steps: dx.AbstractVar[int]
     diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
     terms: dx.AbstractVar[dx.AbstractTerm]
+    saveat: dx.SaveAt
 
     def __init__(self, *args):
         # pass all init arguments to `BaseIntegrator`
         super().__init__(*args)
+
+        # prepare saveat argument
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        save_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        save_b = dx.SubSaveAt(t1=True)  # save last state
+        self.saveat = dx.SaveAt(subs=[save_a, save_b])
 
     def run(self) -> PyTree:
         with warnings.catch_warnings():
@@ -37,12 +45,7 @@ class DiffraxIntegrator(BaseIntegrator):
             # closed
             warnings.simplefilter('ignore', FutureWarning)
 
-            # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
+            # === prepare adjoint argument
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
             elif isinstance(self.gradient, CheckpointAutograd):
@@ -58,7 +61,7 @@ class DiffraxIntegrator(BaseIntegrator):
                 t1=self.ts[-1],
                 dt0=self.dt0,
                 y0=self.y0,
-                saveat=saveat,
+                saveat=self.saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
                 max_steps=self.max_steps,
@@ -66,9 +69,14 @@ class DiffraxIntegrator(BaseIntegrator):
             )
 
         # === collect and return results
-        save_a, save_b = solution.ys
-        saved = self.collect_saved(save_a, save_b[0])
+        saved = self.solution_to_saved(solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
+
+    def solution_to_saved(self, ys: PyTree) -> Saved:
+        # === collect and return results
+        save_a, save_b = ys
+        saved, ylast = save_a, save_b
+        return self.collect_saved(saved, ylast)
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -171,6 +179,10 @@ class Kvaerno5Integrator(AdaptiveStepIntegrator):
     diffrax_solver = dx.Kvaerno5()
 
 
+class MilsteinIntegrator(AdaptiveStepIntegrator):
+    diffrax_solver = dx.HalfSolver(dx.ItoMilstein())
+
+
 class SEDiffraxIntegrator(DiffraxIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -209,3 +221,103 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEIntegrator):
             return tmp + dag(tmp)
 
         return dx.ODETerm(vector_field)
+
+
+# state for the diffrax solver for SMEs
+class Y(eqx.Module):
+    rho: Array
+    dYt: Array
+
+
+class MeasurementTerm(dx.ControlTerm):
+    def prod(self, vf: dx.VF, control: dx.Control) -> dx.Y:
+        dW = control
+        rho = (vf.rho * dW[:, None, None]).sum(0)  # (n, n)
+        return Y(rho, dW)
+
+
+class SMEDiffraxIntegrator(DiffraxIntegrator, SMEIntegrator):
+    wiener: dx.VirtualBrownianTree
+
+    def __init__(self, *args):
+        # === pass all init arguments to `BaseSolver`
+        super().__init__(*args)
+
+        # === define save function to save measurement results
+        fn = lambda t, y, args: y.dYt  # noqa: ARG005
+        save_c = dx.SubSaveAt(ts=self.tmeas, fn=fn)  # save measurement results
+        self.saveat.subs.append(save_c)
+
+        # === define initial augmented state
+        self.y0 = Y(self.y0, jnp.empty(len(self.etas)))
+
+        # === define wiener process
+        self.wiener = dx.VirtualBrownianTree(
+            self.t0, self.t1, tol=1e-3, shape=(len(self.etas),), key=self.key
+        )  # todo: fix hard-coded tol
+
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # === define deterministic term
+        # This contains everything before the "dt" in the SME:
+        # - lindblad term for drho
+        # - sqrt(eta) Tr[(L+Ld) @ rho] for dYt
+        def vector_field_deterministic(t, y, _):  # noqa: ANN001, ANN202
+            # state
+            Ls = jnp.stack([L(t) for L in self.Ls])
+            Lsd = dag(Ls)
+            LdL = (Lsd @ Ls).sum(0)
+            H = self.H(t)
+            tmp = (-1j * H - 0.5 * LdL) @ y.rho + 0.5 * (Ls @ y.rho @ Lsd).sum(0)
+            rho = tmp + dag(tmp)
+
+            # signal
+            Lms = jnp.stack([L(t) for L in self.Lms])
+            tr_Lms_rho = tracemm(Lms, y.rho)
+            dYt = jnp.sqrt(self.etas) * (tr_Lms_rho + tr_Lms_rho.conj()).real  # (nLm,)
+
+            return Y(rho, dYt)
+
+        lindblad_term = dx.ODETerm(vector_field_deterministic)
+
+        # === define stochastic term
+        # This contains everything before the "dWt" in the SME:
+        # - measurement backaction term for drho
+        # - simply dWt for dYt
+        def vector_field_stochastic(t, y, _):  # noqa: ANN001, ANN202
+            # \sqrt\eta (L @ rho + rho @ Ld - Tr[L @ rho + rho @ Ld] rho) dWt
+            Lms = jnp.stack([L(t) for L in self.Lms])
+            Lms_rho = Lms @ y.rho
+            tmp = Lms_rho + dag(Lms_rho)
+            tr = trace(tmp).real
+
+            # state
+            etas = self.etas[:, None, None]  # (nLm, n, n)
+            tr = tr[:, None, None]  # (nLm, n, n)
+            rho = jnp.sqrt(etas) * (tmp - tr * y.rho)  # (nLm, n, n)
+
+            # signal
+            # we use jnp.empty because this quantity is ignored later, in prod() we
+            # throw the stochastic part away because there is no signal-dependent term
+            # in the stochastic part, it's just dYt = deterministic + dWt
+            dYt = jnp.empty(len(self.etas))
+
+            return Y(rho, dYt)
+
+        control = self.wiener
+        measurement_term = MeasurementTerm(vector_field_stochastic, control)
+
+        # === combine and return both terms
+        return dx.MultiTerm(lindblad_term, measurement_term)
+
+    def solution_to_saved(self, ys: PyTree) -> Saved:
+        # === collect and return results
+        save_a, save_b, save_c = ys
+        saved, ylast, integrated_dYt = save_a, save_b, save_c
+
+        # Diffrax integrates the state from t0 to t1. In this case, the state is
+        # (rho, dYt). So we recover the signal by simply diffing the resulting array.
+        Jsave = jnp.diff(integrated_dYt, axis=0)
+
+        saved = SMESolveSaved(saved.ysave, saved.Esave, saved.extra, Jsave)
+        return self.collect_saved(saved, ylast)
