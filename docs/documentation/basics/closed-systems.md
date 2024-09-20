@@ -106,7 +106,7 @@ print(res.states[-1])             # print the final state
 
 ```text title="Output"
 |██████████| 100.0% ◆ elapsed 2.52ms ◆ remaining 0.00ms
-Ket: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
 [[0.  +0.j   ]
  [0.54+0.841j]]
 ```
@@ -121,7 +121,7 @@ print(res.propagators[-1])  # print the final propagator
 ```
 
 ```text title="Output"
-Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
 [[0.54-0.841j 0.  +0.j   ]
  [0.  +0.j    0.54+0.841j]]
 ```

@@ -121,7 +121,7 @@ print(res.states[-1])                       # print the final state
 
 ```text title="Output"
 |██████████| 100.0% ◆ elapsed 1.75ms ◆ remaining 0.00ms
-Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
 [[0.368+0.j 0.   +0.j]
  [0.   +0.j 0.632+0.j]]
 ```

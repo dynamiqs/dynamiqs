@@ -206,11 +206,11 @@ def timecallable(
         >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
         >>> H = dq.timecallable(f)
         >>> H(0.5)
-        Operator: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
         [[0.5 0. ]
          [0.  0.5]]
         >>> H(1.0)
-        Operator: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
         [[1. 0.]
          [0. 0.]]
     """

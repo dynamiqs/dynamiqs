@@ -33,7 +33,7 @@ print(result)
 ==== MESolveResult ====
 Solver  : Tsit5
 Infos   : 7 steps (7 accepted, 0 rejected)
-States  : DenseQArray complex64 (101, 128, 128) | 12.62 Mb
+States  : QArray complex64 (101, 128, 128) | 12.62 Mb
 ```
 
 ## Compute gradients with respect to some parameters
