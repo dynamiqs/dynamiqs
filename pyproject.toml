@@ -9,7 +9,7 @@ authors = [
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
-readme = "README.md"
+readme = "README_PYPI.md"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
