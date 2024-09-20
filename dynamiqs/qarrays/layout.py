@@ -8,6 +8,9 @@ class Layout(Enum):
     def __repr__(self) -> str:
         return self.value
 
+    def __str__(self) -> str:
+        return repr(self)
+
 
 dense = Layout.DENSE
 dia = Layout.DIA

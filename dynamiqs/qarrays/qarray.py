@@ -335,7 +335,7 @@ class QArray(eqx.Module):
 
     def __repr__(self) -> str:
         return (
-            f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype},'
+            f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
             f'layout={self.layout}'
         )
 
