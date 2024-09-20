@@ -87,7 +87,9 @@ def sesolve(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Expm`][dynamiqs.solver.Expm]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
@@ -101,7 +103,7 @@ def sesolve(
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops]
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)

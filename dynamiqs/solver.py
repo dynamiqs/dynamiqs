@@ -82,7 +82,7 @@ class Expm(Solver):
 
     Note-: Supported gradients
         This solver supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
@@ -126,7 +126,8 @@ class Euler(_DEFixedStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -145,7 +146,8 @@ class Rouchon1(_DEFixedStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -179,7 +181,8 @@ class Rouchon2(_DEFixedStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -206,7 +209,8 @@ class Dopri5(_DEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -241,7 +245,8 @@ class Dopri8(_DEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -276,7 +281,8 @@ class Tsit5(_DEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -322,7 +328,8 @@ class Kvaerno3(_DEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -368,7 +375,8 @@ class Kvaerno5(_DEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)

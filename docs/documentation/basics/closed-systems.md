@@ -89,7 +89,7 @@ There are two main types of ODE solvers:
 
 ^^Time complexity^^: $O(n^2\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
 
-## Using dynamiqs
+## Using Dynamiqs
 
 You can create the state and Hamiltonian using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian:
 
