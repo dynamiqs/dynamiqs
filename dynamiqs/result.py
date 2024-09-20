@@ -8,7 +8,13 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
+__all__ = [
+    'SESolveResult',
+    'MESolveResult',
+    'SEPropagatorResult',
+    'MEPropagatorResult',
+    'FloquetResult',
+]
 
 
 def memory_bytes(x: Array) -> int:
@@ -41,6 +47,10 @@ class SolveSaved(Saved):
 
 class PropagatorSaved(Saved):
     pass
+
+
+class FloquetSaved(Saved):
+    quasiens: Array
 
 
 class Result(eqx.Module):
@@ -120,6 +130,45 @@ class PropagatorResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {'Propagators': array_str(self.propagators)}
+
+
+class FloquetResult(Result):
+    """Result of the Floquet integration.
+
+    Attributes:
+        floquet_modes _(array of shape (..., n, n, 1) or (..., ntsave, n, n, 1))_: Saved
+            Floquet modes. Output from [`dq.floquet`][dynamiqs.floquet] has the former
+            shape, while output from [`dq.floquet_t`][dynamiqs.floquet_t] has the latter
+            shape.
+        quasienergies _(array of shape (..., n))_: Saved quasienergies
+        T _(array of shape (...))_: Drive period
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+
+    Note-: Result of running multiple simulations concurrently
+        The resulting Floquet modes and quasienergies are batched according to the
+        leading dimensions of the Hamiltonian `H`. The supplied drive period T must be
+        supplied to [`dq.floquet`][dynamiqs.floquet] with shape that is broadcastable to
+        the shape of `H`. The `cartesian_batching` flag is not relevant and does not
+        affect the results.
+
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
+    """
+
+    T: Array
+
+    @property
+    def floquet_modes(self) -> Array:
+        return self._saved.ysave
+
+    @property
+    def quasienergies(self) -> Array:
+        return self._saved.quasiens
 
 
 class SESolveResult(SolveResult):

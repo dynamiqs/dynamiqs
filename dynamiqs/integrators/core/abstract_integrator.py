@@ -62,10 +62,6 @@ class BaseIntegrator(AbstractIntegrator):
             )
         return saved
 
-    @abstractmethod
-    def save(self, y: PyTree) -> Saved:
-        pass
-
 
 class SolveIntegrator(BaseIntegrator):
     Es: Array
