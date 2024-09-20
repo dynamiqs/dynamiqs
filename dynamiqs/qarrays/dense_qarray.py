@@ -10,6 +10,7 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .._utils import _is_batched_scalar
+from .layout import Layout, dense
 from .qarray import QArray, _in_last_two_dims
 from .types import QArrayLike, asjaxarray, isqarraylike
 
@@ -27,6 +28,10 @@ class DenseQArray(QArray):
     @property
     def dtype(self) -> jnp.dtype:
         return self.data.dtype
+
+    @property
+    def layout(self) -> Layout:
+        return dense
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -117,7 +122,7 @@ class DenseQArray(QArray):
         return np.asarray(self.data, dtype=dtype)
 
     def __repr__(self) -> str:
-        return super().__repr__() + f', layout=dense\n{self.data}'
+        return super().__repr__() + f'\n{self.data}'
 
     def __mul__(self, y: QArrayLike) -> QArray:
         super().__mul__(y)
