@@ -236,8 +236,8 @@ class Shape(tuple):
 class TimeArray(eqx.Module):
     r"""Base class for time-dependent arrays.
 
-    A time-array is a callable object that returns a QArray for any time $t$. It is
-    used to define time-dependent operators for dynamiqs solvers.
+    A time-array is a callable object that returns a qarray for any time $t$. It is
+    used to define time-dependent operators for Dynamiqs solvers.
 
     Attributes:
         dtype _(numpy.dtype)_: Data type.

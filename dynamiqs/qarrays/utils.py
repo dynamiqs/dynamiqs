@@ -109,22 +109,24 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [1.+0.j]
          [0.+0.j]]
         >>> dq.to_qutip(psi)
-        Quantum object: dims = [[3], [1]], shape = (3, 1), type = ket
+        Quantum object: dims=[[3], [1]], shape=(3, 1), type='ket', dtype=Dense
         Qobj data =
         [[0.]
          [1.]
          [0.]]
+
         For a batched array:
         >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         (5, 16, 16)
         >>> len(dq.to_qutip(rhos))
         5
+
         Note that the tensor product structure is inferred automatically for qarrays. It
         can be specified with the `dims` argument for other types.
         >>> I = dq.eye(3, 2)
         >>> dq.to_qutip(I)
-        Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
+        Quantum object: dims=[[3, 2], [3, 2]], shape=(6, 6), type='oper', dtype=Dense, isherm=True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
          [0. 1. 0. 0. 0. 0.]

@@ -1,12 +1,12 @@
-# What is dynamiqs ?
+# What is Dynamiqs ?
 
 ## In a nutshell
 
-**dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 See the [Python API](../../python_api/index.md) for a list of available functions and classes.
 
-The main features of **dynamiqs** are:
+The main features of **Dynamiqs** are:
 
 - Running simulations on **CPUs** and **GPUs** with high-performance.
 - Executing many simulations **concurrently** by batching over Hamiltonians, initial states or jump operators.
@@ -18,11 +18,11 @@ We hope that this library will prove useful to the community for e.g. simulation
 !!! Warning
     This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
 
-## The dynamiqs project
+## The Dynamiqs project
 
 ### Philosophy
 
-There is a noticeable gap in the availability of an open-source library that simplifies gradient-based parameter estimation and quantum optimal control. In addition, faster simulations of large systems are essential to accelerate the development of quantum technologies. The **dynamiqs** library addresses both of these needs. It aims to be a fast and reliable building block for **GPU-accelerated** and **differentiable** solvers. We also work to make the library compatible with the existing Python ecosystem (i.e. JAX and QuTiP) to allow easy interfacing with other libraries.
+There is a noticeable gap in the availability of an open-source library that simplifies gradient-based parameter estimation and quantum optimal control. In addition, faster simulations of large systems are essential to accelerate the development of quantum technologies. The **Dynamiqs** library addresses both of these needs. It aims to be a fast and reliable building block for **GPU-accelerated** and **differentiable** solvers. We also work to make the library compatible with the existing Python ecosystem (i.e. JAX and QuTiP) to allow easy interfacing with other libraries.
 
 ### Team and sponsoring
 
@@ -34,7 +34,7 @@ Development started in early 2023, the library was originally based on PyTorch w
 
 ## More features!
 
-Below are some cool features of **dynamiqs** that are either already available or planned for the near future.
+Below are some cool features of **Dynamiqs** that are either already available or planned for the near future.
 
 ### Solvers
 
