@@ -88,4 +88,4 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
 
 ## Using a for loop
 
-If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](../basics/batching-simulations.md) tutorial, and the associated gain in performance.
+If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. This functionality is explained in detail in the [Batching simulations](../basics/batching-simulations.md) tutorial, together with the associated gain in performance.
