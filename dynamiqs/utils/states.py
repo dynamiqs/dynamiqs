@@ -40,14 +40,14 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     Examples:
         Single-mode Fock state $\ket{1}$:
         >>> dq.fock(3, 1)
-        Ket: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[0.+0.j]
          [1.+0.j]
          [0.+0.j]]
 
         Batched single-mode Fock states $\{\ket{0}\!, \ket{1}\!, \ket{2}\}$:
         >>> dq.fock(3, [0, 1, 2])
-        Ket: shape=(3, 3, 1), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 3, 1), dims=(3,), dtype=complex64, layout=dense
         [[[1.+0.j]
           [0.+0.j]
           [0.+0.j]]
@@ -62,7 +62,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
         Multi-mode Fock state $\ket{1,0}$:
         >>> dq.fock((3, 2), (1, 0))
-        Ket: shape=(6, 1), dims=(3, 2), dtype=complex64, layout=dense
+        QArray: shape=(6, 1), dims=(3, 2), dtype=complex64, layout=dense
         [[0.+0.j]
          [0.+0.j]
          [1.+0.j]
@@ -137,7 +137,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
     Examples:
         Single-mode Fock state $\ket{1}\bra{1}$:
         >>> dq.fock_dm(3, 1)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
         [[0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 1.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]]
@@ -145,7 +145,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
         Batched single-mode Fock states $\{\ket{0}\bra{0}\!, \ket{1}\bra{1}\!,
         \ket{2}\bra{2}\}$:
         >>> dq.fock_dm(3, [0, 1, 2])
-        Operator: shape=(3, 3, 3), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 3, 3), dims=(3,), dtype=complex64, layout=dense
         [[[1.+0.j 0.+0.j 0.+0.j]
           [0.+0.j 0.+0.j 0.+0.j]
           [0.+0.j 0.+0.j 0.+0.j]]
@@ -160,7 +160,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
         Multi-mode Fock state $\ket{1,0}\bra{1,0}$:
         >>> dq.fock_dm((3, 2), (1, 0))
-        Operator: shape=(6, 6), dims=(3, 2), dtype=complex64, layout=dense
+        QArray: shape=(6, 6), dims=(3, 2), dtype=complex64, layout=dense
         [[0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]
@@ -206,7 +206,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
     Examples:
         Single-mode coherent state $\ket{\alpha}$:
         >>> dq.coherent(4, 0.5)
-        Ket: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 1), dims=(4,), dtype=complex64, layout=dense
         [[0.882+0.j]
          [0.441+0.j]
          [0.156+0.j]
@@ -214,7 +214,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
         Batched single-mode coherent states $\{\ket{\alpha_0}\!, \ket{\alpha_1}\}$:
         >>> dq.coherent(4, [0.5, 0.5j])
-        Ket: shape=(2, 4, 1), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(2, 4, 1), dims=(4,), dtype=complex64, layout=dense
         [[[ 0.882+0.j   ]
           [ 0.441+0.j   ]
           [ 0.156+0.j   ]
@@ -228,7 +228,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
         Multi-mode coherent state $\ket{\alpha}\otimes\ket{\beta}$:
         >>> dq.coherent((2, 3), (0.5, 0.5j))
-        Ket: shape=(6, 1), dims=(2, 3), dtype=complex64, layout=dense
+        QArray: shape=(6, 1), dims=(2, 3), dtype=complex64, layout=dense
         [[ 0.775+0.j   ]
          [ 0.   +0.386j]
          [-0.146+0.j   ]
@@ -275,7 +275,7 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
     Examples:
         Single-mode coherent state $\ket{\alpha}\bra{\alpha}$:
         >>> dq.coherent_dm(4, 0.5)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[0.779+0.j 0.389+0.j 0.137+0.j 0.042+0.j]
          [0.389+0.j 0.195+0.j 0.069+0.j 0.021+0.j]
          [0.137+0.j 0.069+0.j 0.024+0.j 0.007+0.j]
@@ -315,7 +315,7 @@ def ground() -> QArray:
 
     Examples:
         >>> dq.ground()
-        Ket: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
         [[0.+0.j]
          [1.+0.j]]
     """
@@ -336,7 +336,7 @@ def excited() -> QArray:
 
     Examples:
         >>> dq.excited()
-        Ket: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]]
     """

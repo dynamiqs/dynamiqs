@@ -58,11 +58,11 @@ def dag(x: QArrayLike) -> QArray:
 
     Examples:
         >>> dq.fock(2, 0)
-        Ket: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]]
         >>> dq.dag(dq.fock(2, 0))
-        Bra: shape=(1, 2), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(1, 2), dims=(2,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j]]
     """
     x = asqarray(x)
@@ -85,7 +85,7 @@ def powm(x: QArrayLike, n: int) -> QArray:
 
     Examples:
         >>> dq.powm(dq.sigmax(), 2)
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[1.+0.j   ⋅   ]
          [  ⋅    1.+0.j]]
     """
@@ -112,7 +112,7 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
 
     Examples:
         >>> dq.expm(dq.sigmaz())
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[2.718+0.j 0.   +0.j]
          [0.   +0.j 0.368+0.j]]
     """
@@ -139,7 +139,7 @@ def cosm(x: QArrayLike) -> QArray:
 
     Examples:
         >>> dq.cosm(jnp.pi * dq.sigmax())
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[-1.+0.j  0.+0.j]
          [ 0.+0.j -1.+0.j]]
     """
@@ -166,7 +166,7 @@ def sinm(x: QArrayLike) -> QArray:
 
     Examples:
         >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[0.-0.j 1.-0.j]
          [1.-0.j 0.-0.j]]
     """
@@ -496,7 +496,7 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
         >>> dq.dissipator(L, rho)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  2.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j -2.+0.j  0.+0.j]
@@ -542,7 +542,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
         >>> L = [a, dq.dag(a) @ a]
         >>> rho = dq.fock_dm(4, 1)
         >>> dq.lindbladian(H, L, rho)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
@@ -683,10 +683,10 @@ def toket(x: QArrayLike) -> QArray:
     Examples:
         >>> psi = dq.tobra(dq.fock(3, 0))  # shape: (1, 3)
         >>> psi
-        Bra: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j 0.-0.j]]
         >>> dq.toket(psi)  # shape: (3, 1)
-        Ket: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]
          [0.+0.j]]
@@ -707,17 +707,17 @@ def tobra(x: QArrayLike) -> QArray:
         x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
-        _(qarray of shape (..., 1, n))_ Bra.
+        _(qarray of shape (..., 1, n))_ QArray.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
         >>> psi
-        Ket: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]
          [0.+0.j]]
         >>> dq.tobra(psi)  # shape: (1, 3)
-        Bra: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j 0.-0.j]]
     """
     x = asqarray(x)
@@ -746,12 +746,12 @@ def todm(x: QArrayLike) -> QArray:
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
         >>> psi
-        Ket: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]
          [0.+0.j]]
         >>> dq.todm(psi)  # shape: (3, 3)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]]
@@ -780,7 +780,7 @@ def proj(x: QArrayLike) -> QArray:
     Examples:
         >>> psi = dq.fock(3, 0)
         >>> dq.proj(psi)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]]

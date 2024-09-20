@@ -52,7 +52,7 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
     Examples:
         Single-mode $I_4$:
         >>> dq.eye(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
         [[1.+0.j   ⋅      ⋅      ⋅   ]
          [  ⋅    1.+0.j   ⋅      ⋅   ]
          [  ⋅      ⋅    1.+0.j   ⋅   ]
@@ -60,7 +60,7 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
 
         Multi-mode $I_2 \otimes I_3$:
         >>> dq.eye(2, 3)
-        Operator: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
         [[1.+0.j   ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]
@@ -97,7 +97,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
     Examples:
         Single-mode $0_4$:
         >>> dq.zero(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0
         [[  ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅   ]
@@ -105,7 +105,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
 
         Multi-mode $0_2 \otimes 0_3$:
         >>> dq.zero(2, 3)
-        Operator: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0
         [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
@@ -146,7 +146,7 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
     Examples:
         Single-mode $a$:
         >>> dq.destroy(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
         [[    ⋅     1.   +0.j     ⋅         ⋅    ]
          [    ⋅         ⋅     1.414+0.j     ⋅    ]
          [    ⋅         ⋅         ⋅     1.732+0.j]
@@ -155,7 +155,7 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
         Multi-mode $a\otimes I_3$ and $I_2\otimes b$:
         >>> a, b = dq.destroy(2, 3)
         >>> a
-        Operator: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
         [[  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]
@@ -163,7 +163,7 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
         >>> b
-        Operator: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
         [[    ⋅     1.   +0.j     ⋅         ⋅         ⋅         ⋅    ]
          [    ⋅         ⋅     1.414+0.j     ⋅         ⋅         ⋅    ]
          [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
@@ -214,7 +214,7 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
     Examples:
         Single-mode $a^\dag$:
         >>> dq.create(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
         [[    ⋅         ⋅         ⋅         ⋅    ]
          [1.   +0.j     ⋅         ⋅         ⋅    ]
          [    ⋅     1.414+0.j     ⋅         ⋅    ]
@@ -223,7 +223,7 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         Multi-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
         >>> adag, bdag = dq.create(2, 3)
         >>> adag
-        Operator: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
         [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
@@ -231,7 +231,7 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
          [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]]
         >>> bdag
-        Operator: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
         [[    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
          [1.   +0.j     ⋅         ⋅         ⋅         ⋅         ⋅    ]
          [    ⋅     1.414+0.j     ⋅         ⋅         ⋅         ⋅    ]
@@ -274,7 +274,7 @@ def number(dim: int | None = None, *, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.number(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
         [[  ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅    1.+0.j   ⋅      ⋅   ]
          [  ⋅      ⋅    2.+0.j   ⋅   ]
@@ -303,7 +303,7 @@ def parity(dim: int, *, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.parity(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅       ⋅       ⋅   ]
          [   ⋅    -1.+0.j    ⋅       ⋅   ]
          [   ⋅       ⋅     1.+0.j    ⋅   ]
@@ -335,7 +335,7 @@ def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
 
     Examples:
         >>> dq.displace(4, 0.5)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 0.882+0.j -0.441+0.j  0.156+0.j -0.047+0.j]
          [ 0.441+0.j  0.662+0.j -0.542+0.j  0.27 +0.j]
          [ 0.156+0.j  0.542+0.j  0.442+0.j -0.697+0.j]
@@ -367,7 +367,7 @@ def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
 
     Examples:
         >>> dq.squeeze(4, 0.5)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 0.938+0.j  0.   +0.j  0.346+0.j  0.   +0.j]
          [ 0.   +0.j  0.818+0.j  0.   +0.j  0.575+0.j]
          [-0.346+0.j  0.   +0.j  0.938+0.j  0.   +0.j]
@@ -398,12 +398,12 @@ def quadrature(dim: int, phi: float, *, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.quadrature(3, 0.0)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
         [[    ⋅     0.5  +0.j     ⋅    ]
          [0.5  +0.j     ⋅     0.707+0.j]
          [    ⋅     0.707+0.j     ⋅    ]]
         >>> dq.quadrature(3, jnp.pi / 2)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
         [[   ⋅       -0.-0.5j      ⋅      ]
          [-0.+0.5j      ⋅       -0.-0.707j]
          [   ⋅       -0.+0.707j    ⋅      ]]
@@ -424,7 +424,7 @@ def position(dim: int, *, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.position(3)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
         [[    ⋅     0.5  +0.j     ⋅    ]
          [0.5  +0.j     ⋅     0.707+0.j]
          [    ⋅     0.707+0.j     ⋅    ]]
@@ -445,7 +445,7 @@ def momentum(dim: int, *, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.momentum(3)
-        Operator: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
         [[  ⋅       0.-0.5j     ⋅      ]
          [0.+0.5j     ⋅       0.-0.707j]
          [  ⋅       0.+0.707j   ⋅      ]]
@@ -467,7 +467,7 @@ def sigmax(*, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.sigmax()
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
         [[  ⋅    1.+0.j]
          [1.+0.j   ⋅   ]]
     """
@@ -492,7 +492,7 @@ def sigmay(*, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.sigmay()
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
         [[  ⋅    0.-1.j]
          [0.+1.j   ⋅   ]]
     """
@@ -517,7 +517,7 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.sigmaz()
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
     """
@@ -542,7 +542,7 @@ def sigmap(*, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.sigmap()
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[  ⋅    1.+0.j]
          [  ⋅      ⋅   ]]
     """
@@ -568,7 +568,7 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
 
     Examples:
         >>> dq.sigmam()
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[  ⋅      ⋅   ]
          [1.+0.j   ⋅   ]]
     """
@@ -604,11 +604,11 @@ def hadamard(n: int = 1) -> QArray:
 
     Examples:
         >>> dq.hadamard()
-        Operator: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[ 0.707+0.j  0.707+0.j]
          [ 0.707+0.j -0.707+0.j]]
         >>> dq.hadamard(2)
-        Operator: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
         [[ 0.5+0.j  0.5+0.j  0.5+0.j  0.5+0.j]
          [ 0.5+0.j -0.5+0.j  0.5+0.j -0.5+0.j]
          [ 0.5+0.j  0.5+0.j -0.5+0.j -0.5+0.j]

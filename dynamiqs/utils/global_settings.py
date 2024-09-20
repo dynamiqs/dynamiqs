@@ -112,14 +112,14 @@ def set_layout(layout: Literal['dense', 'dia']):
 
     Examples:
         >>> dq.eye(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
         [[1.+0.j   ⋅      ⋅      ⋅   ]
          [  ⋅    1.+0.j   ⋅      ⋅   ]
          [  ⋅      ⋅    1.+0.j   ⋅   ]
          [  ⋅      ⋅      ⋅    1.+0.j]]
         >>> dq.set_layout('dense')
         >>> dq.eye(4)
-        Operator: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 1.+0.j 0.+0.j]
