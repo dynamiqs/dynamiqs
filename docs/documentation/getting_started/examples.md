@@ -18,7 +18,7 @@ alpha0 = 1.0  # initial coherent state amplitude
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
-H = omega * dq.dag(a) @ a
+H = omega * a.dag() @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
 tsave = jnp.linspace(0, 1.0, 101)
@@ -29,11 +29,11 @@ print(result)
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 66.94ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 40.81ms ◆ remaining 0.00ms
 ==== MESolveResult ====
 Solver  : Tsit5
 Infos   : 7 steps (7 accepted, 0 rejected)
-States  : Array complex64 (101, 128, 128) | 12.62 Mb
+States  : QArray complex64 (101, 128, 128) | 12.62 Mb
 ```
 
 ## Compute gradients with respect to some parameters
@@ -55,7 +55,7 @@ def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
     # initialize operators, initial state and saving times
     a = dq.destroy(n)
-    H = omega * dq.dag(a) @ a
+    H = omega * a.dag() @ a
     jump_ops = [jnp.sqrt(kappa) * a]
     psi0 = dq.coherent(n, alpha0)
     tsave = jnp.linspace(0, 1.0, 101)

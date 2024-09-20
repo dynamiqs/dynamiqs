@@ -19,14 +19,14 @@ from .qarrays.types import isqarraylike
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
 
-def constant(array: QArrayLike) -> ConstantTimeArray:
+def constant(qarray: QArrayLike) -> ConstantTimeArray:
     r"""Instantiate a constant time-array.
 
     A constant time-array is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
     constant array.
 
     Args:
-        array _(qarray_like of shape (..., n, n))_: Constant array $O_0$.
+        qarray _(qarray_like of shape (..., n, n))_: Constant qarray $O_0$.
 
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -43,12 +43,12 @@ def constant(array: QArrayLike) -> ConstantTimeArray:
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
     """
-    array = asqarray(array)
-    check_shape(array, 'array', '(..., n, n)')
-    return ConstantTimeArray(array)
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(..., n, n)')
+    return ConstantTimeArray(qarray)
 
 
-def pwc(times: ArrayLike, values: ArrayLike, array: QArrayLike) -> PWCTimeArray:
+def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeArray:
     r"""Instantiate a piecewise constant (PWC) time-array.
 
     A PWC time-array takes constant values over some time intervals. It is defined by
@@ -72,7 +72,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: QArrayLike) -> PWCTimeArray:
             of the time intervals, where _N_ is the number of time intervals.
         values _(array_like of shape (..., N))_: Constant values $c_k$ for each time
             interval.
-        array _(qarray_like of shape (n, n))_: Constant array $O_0$.
+        qarray _(qarray_like of shape (n, n))_: Constant qarray $O_0$.
 
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -113,15 +113,15 @@ def pwc(times: ArrayLike, values: ArrayLike, array: QArrayLike) -> PWCTimeArray:
         )
 
     # array
-    array = asqarray(array)
-    check_shape(array, 'array', '(n, n)')
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(n, n)')
 
-    return PWCTimeArray(times, values, array)
+    return PWCTimeArray(times, values, qarray)
 
 
 def modulated(
     f: callable[[float], Scalar | Array],
-    array: QArrayLike,
+    qarray: QArrayLike,
     *,
     discontinuity_ts: ArrayLike | None = None,
 ) -> ModulatedTimeArray:
@@ -136,7 +136,7 @@ def modulated(
         f _(function returning scalar or array of shape (...))_: Function with signature
             `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
-        array _(qarray_like of shape (n, n))_: Constant array $O_0$.
+        qarray _(qarray_like of shape (n, n))_: Constant qarray $O_0$.
         discontinuity_ts _(array_like, optional)_: Times at which there is a
             discontinuous jump in the function values.
 
@@ -163,8 +163,8 @@ def modulated(
         )
 
     # array
-    array = asqarray(array)
-    check_shape(array, 'array', '(n, n)')
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(n, n)')
 
     # discontinuity_ts
     if discontinuity_ts is not None:
@@ -174,7 +174,7 @@ def modulated(
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
-    return ModulatedTimeArray(f, array, discontinuity_ts)
+    return ModulatedTimeArray(f, qarray, discontinuity_ts)
 
 
 def timecallable(
@@ -184,8 +184,8 @@ def timecallable(
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
     time-dependent operator. The function $f$ is defined by passing a Python function
-    with signature `f(t: float) -> QArray` that returns a qarray of shape
-    _(..., n, n)_ for any time $t$.
+    with signature `f(t: float) -> QArray` that returns a qarray of shape _(..., n, n)_
+    for any time $t$.
 
     Warning: The function `f` must return a `QArray` (not a qarray-like object!)
         An error is raised if the function `f` does not return a `QArray`. This error
@@ -193,8 +193,8 @@ def timecallable(
         conversions at every time step of the numerical integration.
 
     Args:
-        f _(function returning qarray of shape (..., n, n))_: Function with signature
-            `(t: float) -> QArray` that returns the array $f(t)$.
+        f _(function returning qarray of shape (..., n, n))_: Function with
+            signature `(t: float) -> QArray` that returns the qarray $f(t)$.
         discontinuity_ts _(array_like, optional)_: Times at which there is a
             discontinuous jump in the function values.
 
@@ -203,14 +203,16 @@ def timecallable(
             returning $O(t)$ for any time $t$.
 
     Examples:
-        >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
+        >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
         >>> H = dq.timecallable(f)
         >>> H(0.5)
-        Array([[0.5, 0. ],
-               [0. , 0.5]], dtype=float32)
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        [[0.5 0. ]
+         [0.  0.5]]
         >>> H(1.0)
-        Array([[1., 0.],
-               [0., 0.]], dtype=float32)
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        [[1. 0.]
+         [0. 0.]]
     """
     # check f is callable
     if not callable(f):
@@ -253,7 +255,7 @@ class TimeArray(eqx.Module):
         Time-arrays support elementary operations:
 
         - negation (`__neg__`),
-        - left-and-right element-wise addition/subtraction with other arrays or
+        - left-and-right element-wise addition/subtraction with other arrays, qarrays or
             time-arrays (`__add__`, `__radd__`, `__sub__`, `__rsub__`),
         - left-and-right element-wise multiplication with other arrays (`__mul__`,
             `__rmul__`).

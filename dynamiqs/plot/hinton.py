@@ -141,14 +141,14 @@ def hinton(
 
     Examples:
         >>> rho = dq.coherent_dm(16, 2.0)
-        >>> dq.plot.hinton(jnp.abs(rho))
+        >>> dq.plot.hinton(jnp.abs(rho.to_jax()))
         >>> renderfig('plot_hinton_coherent')
 
         ![plot_hinton_coherent](/figs_code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
-        >>> H = dq.dag(a) @ a + 2.0 * (a + dq.dag(a))
-        >>> dq.plot.hinton(jnp.abs(H))
+        >>> H = a.dag() @ a + 2.0 * (a + a.dag())
+        >>> dq.plot.hinton(jnp.abs(H.to_jax()))
         >>> renderfig('plot_hinton_hamiltonian')
 
         ![plot_hinton_hamiltonian](/figs_code/plot_hinton_hamiltonian.png){.fig-half}
@@ -167,9 +167,9 @@ def hinton(
         ![plot_hinton_random_complex](/figs_code/plot_hinton_random_complex.png){.fig-half}
 
         >>> _, axs = dq.plot.grid(2)
-        >>> psi = dq.unit(dq.fock(4, 0) - dq.fock(4, 2))
-        >>> dq.plot.hinton(dq.todm(psi), ax=next(axs))
-        >>> rho = dq.unit(dq.fock_dm(4, 0) + dq.fock_dm(4, 2))
+        >>> psi = (dq.fock(4, 0) - dq.fock(4, 2)).unit()
+        >>> dq.plot.hinton(psi.todm(), ax=next(axs))
+        >>> rho = (dq.fock_dm(4, 0) + dq.fock_dm(4, 2)).unit()
         >>> dq.plot.hinton(rho, ax=next(axs))
         >>> renderfig('plot_hinton_fock02')
 

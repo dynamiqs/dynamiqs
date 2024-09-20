@@ -67,12 +67,12 @@ def test_batching_boris():
     # first modulated operator (1, 5, 9, 9)
     omega1 = jnp.linspace(0, 1, 5)[None, :]
     f = lambda t: jnp.cos(omega1 * t)
-    H1 = dq.modulated(f, a + dq.dag(a))
+    H1 = dq.modulated(f, a + a.dag())
 
     # second modulated operator 2 (7, 1, 9, 9)
     omega2 = jnp.linspace(0, 1, 7)[:, None]
     f = lambda t: jnp.cos(omega2 * t)
-    H2 = dq.modulated(f, 1j * a - 1j * dq.dag(a))
+    H2 = dq.modulated(f, 1j * a - 1j * a.dag())
 
     # Hamiltonian
     H = H1 + H2

@@ -137,7 +137,7 @@ def test_jit_ptrace():
     a = dq.random.ket(20, key=key1)
     b = dq.random.ket(30, key=key2)
 
-    ab = dq.tensor(a, b)
+    ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
     assert jnp.allclose(a, ap, 1e-3)
@@ -147,7 +147,7 @@ def test_jit_ptrace():
     a = dq.random.dm(20, key=key3)
     b = dq.random.dm(30, key=key4)
 
-    ab = dq.tensor(a, b)
+    ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
     assert jnp.allclose(a, ap, 1e-3)
