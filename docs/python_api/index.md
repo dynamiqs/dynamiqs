@@ -156,6 +156,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 ::: dynamiqs.qarrays.utils
     options:
         table: true
+        members:
+        - stack
+        - to_qutip
 
 ### Global settings
 
@@ -163,10 +166,10 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - to_qutip
         - set_device
         - set_precision
         - set_matmul_precision
+        - set_layout
 
 
 ### Vectorization

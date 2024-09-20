@@ -30,7 +30,7 @@ class Options(eqx.Module):
             forward pass.
         t0: Initial time. If `None`, defaults to the first time in `tsave`.
         save_extra _(function, optional)_: A function with signature
-            `f(Array) -> PyTree` that takes a state or propagator as input and returns
+            `f(QArray) -> PyTree` that takes a state or propagator as input and returns
             a PyTree. This can be used to save additional arbitrary data during the
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.

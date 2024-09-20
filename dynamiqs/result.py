@@ -236,19 +236,11 @@ class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-    <<<<<<< HEAD
-        propagators _(qarray of shape (..., ntsave, n, n))_: Saved propagators.
-        final_propagator _(qarray of shape (..., n, n))_: Saved final propagator.
-    =======
-        propagators _(array of shape (..., nsave, n, n))_: Saved propagators with
+        propagators _(qarray of shape (..., nsave, n, n))_: Saved propagators with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_propagator _(array of shape (..., n, n))_: Saved final propagator.
-    <<<<<<< HEAD
-    >>>>>>> main
-    =======
+        final_propagator _(qarray of shape (..., n, n))_: Saved final propagator.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-    >>>>>>> main
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -270,19 +262,11 @@ class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-    <<<<<<< HEAD
-        propagators _(qarray of shape (..., ntsave, n^2, n^2))_: Saved propagators.
-        final_propagator _(qarray of shape (..., n^2, n^2))_: Saved final propagator.
-    =======
-        propagators _(array of shape (..., nsave, n^2, n^2))_: Saved propagators with
+        propagators _(qarray of shape (..., nsave, n^2, n^2))_: Saved propagators with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
-    <<<<<<< HEAD
-    >>>>>>> main
-    =======
+        final_propagator _(qarray of shape (..., n^2, n^2))_: Saved final propagator.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-    >>>>>>> main
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
