@@ -51,7 +51,7 @@ def asqarray(x: QArrayLike, dims: int | tuple[int, ...] | None = None) -> QArray
         return x
     elif isinstance(x, Qobj):
         dims = tuple(np.max(x.dims, axis=0)) if dims is None else dims
-        return asqarray(x.data.to_array(), dims)
+        return asqarray(x.full(), dims)
     elif isinstance(x, list):
         from .utils import stack
 
