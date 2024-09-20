@@ -34,7 +34,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
     Examples:
         >>> dq.stack([dq.fock(3, 0), dq.fock(3, 1)])
-        DenseQArray: shape=(2, 3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(2, 3, 1), dims=(3,), dtype=complex64, layout=dense
         [[[1.+0.j]
           [0.+0.j]
           [0.+0.j]]
@@ -104,7 +104,7 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     Examples:
         >>> psi = dq.fock(3, 1)
         >>> psi
-        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[0.+0.j]
          [1.+0.j]
          [0.+0.j]]
