@@ -79,9 +79,6 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 
 The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by setting `cartesian_batching=False` in [`dq.Options`][dynamiqs.Options]. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
 
-??? Note "What is broadcasting?"
-    JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the [NumPy documentation on broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html).
-
 === "`dq.sesolve`"
     For `dq.sesolve`, the returned array has shape:
     ```
@@ -114,6 +111,8 @@ The simulation runs for each set of Hamiltonians, jump operators and initial sta
 
     For example for `dq.sesolve()` with `H` of shape _(2, 3, n, n)_, `psi0` can be of shape: _(n, 1)_, _(3, n, 1)_, _(2, 1, n, 1)_, _(2, 3, n, 1)_, _(..., 2, 3, n, 1)_, etc. By playing with the arguments shape, you have complete freedom over the simulation you want to run.
 
+??? Note "What is broadcasting?"
+    JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the [NumPy documentation on broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html).
 
 ## Creating batched arguments
 
