@@ -10,7 +10,7 @@ def test_coherent():
     n1, n2 = 8, 8
 
     # Short tensor product
-    state1 = dq.tensor(dq.coherent(n1, alpha1), dq.coherent(n2, alpha2))
+    state1 = dq.coherent(n1, alpha1) & dq.coherent(n2, alpha2)
     state2 = dq.coherent((n1, n2), (alpha1, alpha2))
     assert np.allclose(state1, state2)
 
@@ -20,20 +20,20 @@ def test_coherent():
     assert np.allclose(state1, state2)
 
     # Short batching + tensor product
-    state1 = dq.tensor(dq.coherent(n1, alphas1), dq.coherent(n2, alpha2)[None, ...])
+    state1 = dq.coherent(n1, alphas1) & dq.coherent(n2, alpha2)[None, ...]
     state2 = dq.coherent((n1, n2), (alphas1, alpha2))
     assert np.allclose(state1, state2)
 
     # Double short batching + tensor product
-    state1 = dq.tensor(
-        dq.coherent(n1, alphas1)[None, ...], dq.coherent(n2, alphas2)[:, None, ...]
+    state1 = (
+        dq.coherent(n1, alphas1)[None, ...] & dq.coherent(n2, alphas2)[:, None, ...]
     )
     state2 = dq.coherent((n1, n2), (alphas1, alphas2[:, None]))
     assert np.allclose(state1, state2)
 
     # Double short batching + tensor product with single full array
-    state1 = dq.tensor(
-        dq.coherent(n1, alphas1)[None, ...], dq.coherent(n2, alphas2)[:, None, ...]
+    state1 = (
+        dq.coherent(n1, alphas1)[None, ...] & dq.coherent(n2, alphas2)[:, None, ...]
     )
     state2 = dq.coherent((n1, n2), (alphas1[None, ...], alphas2[:, None]))
     assert np.allclose(state1, state2)

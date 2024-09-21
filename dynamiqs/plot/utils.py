@@ -178,7 +178,7 @@ def mplstyle(*, usetex: bool = False):
 
         ![mplstyle_before](/figs_code/mplstyle_before.png){.fig}
 
-        After (dynamiqs Matplotlib style):
+        After (Dynamiqs Matplotlib style):
 
         >>> dq.plot.mplstyle()
         >>> fig, ax = plt.subplots(1, 1)
@@ -232,12 +232,8 @@ def mplstyle(*, usetex: bool = False):
             'lines.linewidth': 2.0,
             # fonts
             'text.usetex': usetex,
-            'text.latex.preamble': r'\usepackage{amsfonts}\usepackage{braket}',
-            'font.family': 'serif',
-            'font.serif': 'Times New Roman',
-            # if usetex=False, matplotlib uses mathtext, for which we choose the STIX
-            # font which is designed to blend well with Times
-            'mathtext.fontset': 'stix',
+            'text.latex.preamble': r'\usepackage{braket}',
+            'font.family': 'sans-serif',
         }
     )
 

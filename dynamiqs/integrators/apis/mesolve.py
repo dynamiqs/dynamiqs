@@ -112,7 +112,9 @@ def mesolve(
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
             [`Rouchon2`][dynamiqs.solver.Rouchon2],
             [`Expm`][dynamiqs.solver.Expm]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
@@ -127,7 +129,7 @@ def mesolve(
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops]
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_mesolve_args(H, jump_ops, rho0, exp_ops)

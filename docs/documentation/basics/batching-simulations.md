@@ -1,6 +1,6 @@
 # Batching simulations
 
-Batching allows **running many independent simulations concurrently**. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.
+Batching allows **running many independent simulations concurrently**. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in Dynamiqs.
 
 ```python
 import dynamiqs as dq
@@ -10,7 +10,7 @@ import timeit
 
 ## Batching in short
 
-Batching in dynamiqs is achieved by **passing a list of Hamiltonians, initial states, or jump operators** to the simulation functions. The result of a batched simulation is a single array that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians $\{\sigma_x, \sigma_y, \sigma_z\}$ and the four initial states $\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}$:
+Batching in Dynamiqs is achieved by **passing a list of Hamiltonians, initial states, or jump operators** to the simulation functions. The result of a batched simulation is a single qarray that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians $\{\sigma_x, \sigma_y, \sigma_z\}$ and the four initial states $\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}$:
 
 ```python
 # define three Hamiltonians
@@ -19,8 +19,8 @@ H = [dq.sigmax(), dq.sigmay(), dq.sigmaz()]  # (3, 2, 2)
 # define four initial states
 g = dq.basis(2, 0)
 e = dq.basis(2, 1)
-plus = dq.unit(g + e)
-minus = dq.unit(g - e)
+plus = (g + e).unit()
+minus = (g - e).unit()
 psi = [g, e, plus, minus]  # (4, 2, 1)
 
 # run the simulation
@@ -33,7 +33,7 @@ print(f'Shape of result.states: {result.states.shape}')
 Shape of result.states: (3, 4, 11, 2, 1)
 ```
 
-The returned states is an array with shape _(3, 4, 11, 2, 1)_, where _3_ is the number of Hamiltonians, _4_ is the number of initial states, _11_ is the number of saved states, and _(2, 1)_ is the shape of a single state.
+The returned states is a qarray with shape _(3, 4, 11, 2, 1)_, where _3_ is the number of Hamiltonians, _4_ is the number of initial states, _11_ is the number of saved states, and _(2, 1)_ is the shape of a single state.
 
 !!! Note
     All relevant `result` attributes are batched. For example if you specified `exp_ops`, the resulting expectation values `result.expects` will be an array with shape _(3, 4, len(exp_ops), 11)_.
@@ -42,14 +42,14 @@ Importantly, **batched simulations are not run sequentially in a `for` loop**. W
 
 ## Batching modes
 
-There are two ways to batch simulations in dynamiqs: **cartesian batching** and **flat batching**.
+There are two ways to batch simulations in Dynamiqs: **cartesian batching** and **flat batching**.
 
 ### Cartesian batching
 
 The simulation runs for all possible combinations of Hamiltonians, jump operators and initial states. This is the default mode.
 
 === "`dq.sesolve`"
-    For `dq.sesolve`, the returned array has shape:
+    For `dq.sesolve`, the returned qarray has shape:
     ```
     result.states.shape = (...H, ...psi0, ntsave, n, 1)
     ```
@@ -62,7 +62,7 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
         then `result.states` has shape _(2, 3, 4, ntsave, n, 1)_.
 
 === "`dq.mesolve`"
-    For `dq.mesolve`, the returned array has shape:
+    For `dq.mesolve`, the returned qarray has shape:
     ```
     result.states.shape = (...H, ...L0, ...L1,  (...), ...rho0, ntsave, n, n)
     ```
@@ -80,7 +80,7 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by setting `cartesian_batching=False` in [`dq.Options`][dynamiqs.Options]. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
 
 === "`dq.sesolve`"
-    For `dq.sesolve`, the returned array has shape:
+    For `dq.sesolve`, the returned qarray has shape:
     ```
     result.states.shape = (..., ntsave, n, 1)
     ```
@@ -93,7 +93,7 @@ The simulation runs for each set of Hamiltonians, jump operators and initial sta
         then `result.states` has shape _(2, 3, ntsave, n, 1)_.
 
 === "`dq.mesolve`"
-    For `dq.mesolve`, the returned array has shape:
+    For `dq.mesolve`, the returned qarray has shape:
     ```
     result.states.shape = (..., ntsave, n, n)
     ```
@@ -134,8 +134,8 @@ There are multiple ways to create a batched argument.
     omega = jnp.linspace(0.0, 1.0, 21)
     H = omega[:, None, None] * dq.sigmaz()  # (21, 2, 2)
     ```
-=== "Using dynamiqs functions"
-    Or you can use dynamiqs utility functions directly:
+=== "Using Dynamiqs functions"
+    Or you can use Dynamiqs utility functions directly:
     ```python
     # define several initial states
     alpha = [1.0, 2.0, 3.0]
@@ -161,7 +161,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
     eps = jnp.linspace(0.0, 10.0, 11)[:, None, None]
     H = omega * dq.sigmaz() + eps * dq.sigmaz()  # (21, 11, 2, 2)
     ```
-=== "Using dynamiqs functions"
+=== "Using Dynamiqs functions"
     ```python
     # define several initial states
     alpha_real = jnp.linspace(0, 1.0, 5)
@@ -198,7 +198,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0.0, 1.0, 11)  # (11,)
-    >>> f = lambda t: thetas[:, None, None] * jnp.array([[t, 0], [0, 1 - t]])
+    >>> f = lambda t: thetas[:, None, None] * dq.asqarray([[t, 0], [0, 1 - t]])
     >>> H = dq.timecallable(f)
     >>> H.shape
     (11, 2, 2)

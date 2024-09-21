@@ -58,11 +58,11 @@ def dag(x: QArrayLike) -> QArray:
 
     Examples:
         >>> dq.fock(2, 0)
-        DenseQArray: shape=(2, 1), dims=(2,), dtype=complex64
+        QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]]
         >>> dq.dag(dq.fock(2, 0))
-        DenseQArray: shape=(1, 2), dims=(2,), dtype=complex64
+        QArray: shape=(1, 2), dims=(2,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j]]
     """
     x = asqarray(x)
@@ -85,7 +85,7 @@ def powm(x: QArrayLike, n: int) -> QArray:
 
     Examples:
         >>> dq.powm(dq.sigmax(), 2)
-        SparseDIAQArray: shape=(2, 2), dims=(2,), dtype=complex64, ndiags=1
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[1.+0.j   ⋅   ]
          [  ⋅    1.+0.j]]
     """
@@ -112,7 +112,7 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
 
     Examples:
         >>> dq.expm(dq.sigmaz())
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[2.718+0.j 0.   +0.j]
          [0.   +0.j 0.368+0.j]]
     """
@@ -139,7 +139,7 @@ def cosm(x: QArrayLike) -> QArray:
 
     Examples:
         >>> dq.cosm(jnp.pi * dq.sigmax())
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[-1.+0.j  0.+0.j]
          [ 0.+0.j -1.+0.j]]
     """
@@ -166,7 +166,7 @@ def sinm(x: QArrayLike) -> QArray:
 
     Examples:
         >>> dq.sinm(0.5 * jnp.pi * dq.sigmax())
-        DenseQArray: shape=(2, 2), dims=(2,), dtype=complex64
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[0.-0.j 1.-0.j]
          [1.-0.j 0.-0.j]]
     """
@@ -465,10 +465,10 @@ def unit(x: QArrayLike) -> QArray:
 
     Examples:
         >>> psi = dq.fock(4, 0) + dq.fock(4, 1)
-        >>> dq.norm(psi)
+        >>> psi.norm()
         Array(1.414, dtype=float32)
         >>> psi = dq.unit(psi)
-        >>> dq.norm(psi)
+        >>> psi.norm()
         Array(1., dtype=float32)
     """
     x = asqarray(x)
@@ -496,7 +496,7 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
         >>> dq.dissipator(L, rho)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  2.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j -2.+0.j  0.+0.j]
@@ -538,11 +538,11 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
 
     Examples:
         >>> a = dq.destroy(4)
-        >>> H = dq.dag(a) @ a
-        >>> L = [a, dq.dag(a) @ a]
+        >>> H = a.dag() @ a
+        >>> L = [a, a.dag() @ a]
         >>> rho = dq.fock_dm(4, 1)
         >>> dq.lindbladian(H, L, rho)
-        DenseQArray: shape=(4, 4), dims=(4,), dtype=complex64
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 1.+0.j  0.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
@@ -681,12 +681,12 @@ def toket(x: QArrayLike) -> QArray:
         _(qarray of shape (..., n, 1))_ Ket.
 
     Examples:
-        >>> psi = dq.tobra(dq.fock(3, 0))  # shape: (1, 3)
+        >>> psi = dq.fock(3, 0).tobra()  # shape: (1, 3)
         >>> psi
-        DenseQArray: shape=(1, 3), dims=(3,), dtype=complex64
+        QArray: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j 0.-0.j]]
         >>> dq.toket(psi)  # shape: (3, 1)
-        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]
          [0.+0.j]]
@@ -707,17 +707,17 @@ def tobra(x: QArrayLike) -> QArray:
         x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
-        _(qarray of shape (..., 1, n))_ Bra.
+        _(qarray of shape (..., 1, n))_ QArray.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
         >>> psi
-        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]
          [0.+0.j]]
         >>> dq.tobra(psi)  # shape: (1, 3)
-        DenseQArray: shape=(1, 3), dims=(3,), dtype=complex64
+        QArray: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.-0.j 0.-0.j 0.-0.j]]
     """
     x = asqarray(x)
@@ -746,12 +746,12 @@ def todm(x: QArrayLike) -> QArray:
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
         >>> psi
-        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j]
          [0.+0.j]
          [0.+0.j]]
         >>> dq.todm(psi)  # shape: (3, 3)
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]]
@@ -780,7 +780,7 @@ def proj(x: QArrayLike) -> QArray:
     Examples:
         >>> psi = dq.fock(3, 0)
         >>> dq.proj(psi)
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j]]
@@ -806,7 +806,7 @@ def braket(x: QArrayLike, y: QArrayLike) -> Array:
 
     Examples:
         >>> fock0 = dq.fock(3, 0)
-        >>> fock01 = dq.unit(dq.fock(3, 0) + dq.fock(3, 1))
+        >>> fock01 = (dq.fock(3, 0) + dq.fock(3, 1)).unit()
         >>> dq.braket(fock0, fock01)
         Array(0.707+0.j, dtype=complex64)
     """
@@ -971,7 +971,7 @@ def entropy_vn(x: QArrayLike) -> Array:
         _(array of shape (...))_ Real-valued Von Neumann entropy.
 
     Examples:
-        >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
         >>> dq.entropy_vn(rho)
         Array(0.693, dtype=float32)
         >>> psis = [dq.fock(16, i) for i in range(5)]

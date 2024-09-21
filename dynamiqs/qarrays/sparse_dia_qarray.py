@@ -16,6 +16,7 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar, cdtype
 from .dense_qarray import DenseQArray
+from .layout import Layout, dia
 from .qarray import _in_last_two_dims, _include_last_two_dims
 from .types import QArray, QArrayLike, asqarray, isqarraylike
 
@@ -57,6 +58,10 @@ class SparseDIAQArray(QArray):
     @property
     def dtype(self) -> jnp.dtype:
         return self.diags.dtype
+
+    @property
+    def layout(self) -> Layout:
+        return dia
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -193,11 +198,7 @@ class SparseDIAQArray(QArray):
         # replace with a centered dot of the same length as the matched string
         replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
-
-        return (
-            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
-            f'dtype={self.dtype}, ndiags={self.ndiags}\n{data_str}'
-        )
+        return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
     def __mul__(self, other: QArrayLike) -> QArray:
         super().__mul__(other)

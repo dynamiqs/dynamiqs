@@ -34,7 +34,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
     Examples:
         >>> dq.stack([dq.fock(3, 0), dq.fock(3, 1)])
-        DenseQArray: shape=(2, 3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(2, 3, 1), dims=(3,), dtype=complex64, layout=dense
         [[[1.+0.j]
           [0.+0.j]
           [0.+0.j]]
@@ -88,11 +88,11 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
-    r"""Convert an array-like object into a QuTiP quantum object (or a list of QuTiP
+    r"""Convert a qarray-like object into a QuTiP quantum object (or a list of QuTiP
     quantum objects if it has more than two dimensions).
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
             density matrix or operator.
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
             Hilbert space of the composite system, defaults to `None` (a single system
@@ -104,27 +104,29 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     Examples:
         >>> psi = dq.fock(3, 1)
         >>> psi
-        DenseQArray: shape=(3, 1), dims=(3,), dtype=complex64
+        QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[0.+0.j]
          [1.+0.j]
          [0.+0.j]]
         >>> dq.to_qutip(psi)
-        Quantum object: dims = [[3], [1]], shape = (3, 1), type = ket
+        Quantum object: dims=[[3], [1]], shape=(3, 1), type='ket', dtype=Dense
         Qobj data =
         [[0.]
          [1.]
          [0.]]
+
         For a batched array:
         >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         (5, 16, 16)
         >>> len(dq.to_qutip(rhos))
         5
+
         Note that the tensor product structure is inferred automatically for qarrays. It
         can be specified with the `dims` argument for other types.
         >>> I = dq.eye(3, 2)
         >>> dq.to_qutip(I)
-        Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
+        Quantum object: dims=[[3, 2], [3, 2]], shape=(6, 6), type='oper', dtype=Dense, isherm=True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
          [0. 1. 0. 0. 0. 0.]

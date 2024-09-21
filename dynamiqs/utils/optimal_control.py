@@ -31,7 +31,7 @@ def snap_gate(phase: ArrayLike) -> QArray:
 
     Examples:
         >>> dq.snap_gate([0, 1, 2])
-        DenseQArray: shape=(3, 3), dims=(3,), dtype=complex64
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
         [[ 1.   +0.j     0.   +0.j     0.   +0.j   ]
          [ 0.   +0.j     0.54 +0.841j  0.   +0.j   ]
          [ 0.   +0.j     0.   +0.j    -0.416+0.909j]]
@@ -68,7 +68,7 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
 
     Examples:
         >>> dq.cd_gate(2, 0.1)
-        DenseQArray: shape=(4, 4), dims=(2, 2), dtype=complex64
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
         [[ 0.999+0.j  0.   +0.j -0.05 +0.j  0.   +0.j]
          [ 0.   +0.j  0.999+0.j  0.   +0.j  0.05 +0.j]
          [ 0.05 +0.j  0.   +0.j  0.999+0.j  0.   +0.j]

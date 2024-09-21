@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from functools import partial
 
 import jax
@@ -9,7 +8,6 @@ from jax import Array, lax
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ..._utils import on_cpu
 from ...qarrays import asjaxarray
 from ...qarrays.types import QArrayLike
 from .general import todm
@@ -29,11 +27,6 @@ def wigner(
     r"""Compute the Wigner distribution of a ket or density matrix.
 
     The Wigner distribution is computed on a grid of coordinates $(x, y)$.
-
-    Warning:
-        Wigner computation is not yet supported on GPU for double precision (float64).
-        If this is needed don't hesitate to
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Args:
         state _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density
@@ -58,17 +51,6 @@ def wigner(
     """  # noqa: E501
     state = asjaxarray(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
-
-    # === transfer state to CPU if float64
-    if not on_cpu(state) and state.dtype == jnp.complex128:
-        logging.warning(
-            'Wigner computation is not yet supported on GPU for double precision '
-            '(float64). The `state` array will be copied to the CPU to compute the '
-            'Wigner distribution. Performance penalty is expected. If this is a '
-            "problem for you, don't hesitate to "
-            'open an issue on GitHub: https://github.com/dynamiqs/dynamiqs/issues/new.'
-        )
-        state = jax.device_put(state, jax.devices(backend='cpu')[0])
 
     # === convert state to density matrix
     state = asjaxarray(todm(state))

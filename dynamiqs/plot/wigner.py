@@ -107,19 +107,19 @@ def wigner(
 
         ![plot_wigner_coh](/figs_code/plot_wigner_coh.png){.fig-half}
 
-        >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
+        >>> psi = (dq.coherent(16, 2) + dq.coherent(16, -2)).unit()
         >>> dq.plot.wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
         >>> renderfig('plot_wigner_cat')
 
         ![plot_wigner_cat](/figs_code/plot_wigner_cat.png){.fig-half}
 
-        >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
+        >>> psi = (dq.fock(2, 0) + dq.fock(2, 1)).unit()
         >>> dq.plot.wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
         ![plot_wigner_01](/figs_code/plot_wigner_01.png){.fig-half}
 
-        >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
+        >>> psi = sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]).unit()
         >>> dq.plot.wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 
@@ -188,7 +188,7 @@ def wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> H = a.dag() @ a.dag() @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -290,7 +290,7 @@ def wigner_gif(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> H = a.dag() @ a.dag() @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 1001)
         >>> result = dq.sesolve(H, psi0, tsave)

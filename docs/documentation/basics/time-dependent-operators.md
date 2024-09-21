@@ -1,6 +1,6 @@
 # Time-dependent operators
 
-This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
+This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in Dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
 
 ```python
 import dynamiqs as dq
@@ -9,7 +9,7 @@ import jax.numpy as jnp
 
 ## The [`TimeArray`][dynamiqs.TimeArray] type
 
-In dynamiqs, time-dependent operators are defined with [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
+In Dynamiqs, time-dependent operators are defined with [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
 $$
     H_x(t)=\cos(2\pi t)\sigma_x
 $$
@@ -48,7 +48,7 @@ $$
 $$
 for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using array-like objects. They can also be instantiated as [`TimeArray`][dynamiqs.TimeArray] instances using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $\sigma_z$, you can use any of the following syntaxes:
 
-=== "dynamiqs"
+=== "Dynamiqs"
     ```python
     import dynamiqs as dq
     sz = dq.sigmaz()
@@ -84,7 +84,7 @@ $$
 $$
 where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant operator.
 
-In dynamiqs, PWC operators are defined by three array-like objects:
+In Dynamiqs, PWC operators are defined by three array-like objects:
 
 - `times`: the time points $(t_0, \ldots, t_N)$ defining the boundaries of the time intervals, of shape _(N+1,)_,
 - `values`: the constant values $(c_0, \ldots, c_{N-1})$ for each time interval, of shape _(..., N)_,
@@ -159,7 +159,7 @@ A modulated operator is defined by
 $$
     O(t) = f(t) O_0
 $$
-where $f(t)$ is an time-dependent scalar. In dynamiqs, modulated operators are defined by:
+where $f(t)$ is an time-dependent scalar. In Dynamiqs, modulated operators are defined by:
 
 - `f`: a Python function with signature `f(t: float) -> Scalar | Array` that returns the modulating factor $f(t)$ for any time $t$, as a scalar or an array of shape _(...)_,
 - `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
@@ -218,7 +218,7 @@ An arbitrary time-dependent operator is defined by
 $$
     O(t) = f(t)
 $$
-where $f(t)$ is a time-dependent operator. In dynamiqs, arbitrary time-dependent operators are defined by:
+where $f(t)$ is a time-dependent operator. In Dynamiqs, arbitrary time-dependent operators are defined by:
 
 - `f`: a Python function with signature `f(t: float) -> Array` that returns the operator $f(t)$ for any time $t$, as an array of shape _(..., n, n)_.
 

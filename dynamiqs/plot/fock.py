@@ -57,7 +57,7 @@ def fock(
         ![plot_fock](/figs_code/plot_fock.png){.fig}
 
         >>> # the even cat state has only even photon number components
-        >>> psi = dq.unit(dq.coherent(32, 3.0) + dq.coherent(32, -3.0))
+        >>> psi = (dq.coherent(32, 3.0) + dq.coherent(32, -3.0)).unit()
         >>> dq.plot.fock(psi, allxticks=False, ymax=None)
         >>> renderfig('plot_fock_even_cat')
 
@@ -112,7 +112,7 @@ def fock_evolution(
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> psi0 = dq.coherent(n, 0.0)
-        >>> H = 2.0 * (a + dq.dag(a))
+        >>> H = 2.0 * (a + a.dag())
         >>> tsave = jnp.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot.fock_evolution(result.states, times=tsave)

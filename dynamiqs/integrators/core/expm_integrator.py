@@ -7,18 +7,12 @@ from jax import Array
 from jaxtyping import PyTree
 
 from dynamiqs._utils import _concatenate_sort
-from dynamiqs.result import PropagatorSaved, Saved, SolveSaved
 
 from ...qarrays.qarray import QArray
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
-from .abstract_integrator import (
-    BaseIntegrator,
-    MEIntegrator,
-    PropagatorIntegrator,
-    SolveIntegrator,
-)
+from .abstract_integrator import BaseIntegrator, MEIntegrator
 
 
 class ExpmIntegrator(BaseIntegrator):
@@ -89,31 +83,14 @@ class ExpmIntegrator(BaseIntegrator):
         # saved has shape (ntimes-1, N, N) if y0 has shape (N, N) -> compute propagators
 
         # === save the propagators
-        nsteps = (delta_ts != 0).sum()
-        saved = self.collect_saved(saved, ylast[None], times)
-        return self.result(saved, infos=self.Infos(nsteps))
-
-
-class PropagatorExpmIntegrator(ExpmIntegrator, PropagatorIntegrator):
-    def collect_saved(self, saved: Saved, ylast: QArray, times: Array) -> Saved:
         # extract propagators at the save times ts
         t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
-        saved = PropagatorSaved(
-            saved.ysave[t_idxs] if self.options.save_states else saved.ysave
-        )
-        return super().collect_saved(saved, ylast)
+        saved = jax.tree.map(lambda x: x[t_idxs], saved)
 
+        saved = self.postprocess_saved(saved, ylast[None])
 
-class SolveExpmIntegrator(ExpmIntegrator, SolveIntegrator):
-    def collect_saved(self, saved: Saved, ylast: QArray, times: Array) -> Saved:
-        # extract states, expects and extra at the save times ts
-        t_idxs = jnp.searchsorted(times[1:], self.ts)  # (nts,)
-        saved = SolveSaved(
-            saved.ysave[t_idxs] if self.options.save_states else saved.ysave,
-            saved.Esave[t_idxs] if saved.Esave is not None else None,
-            saved.extra[t_idxs] if saved.extra is not None else None,
-        )
-        return super().collect_saved(saved, ylast)
+        nsteps = (delta_ts != 0).sum()
+        return self.result(saved, infos=self.Infos(nsteps))
 
 
 class SEExpmIntegrator(ExpmIntegrator):
