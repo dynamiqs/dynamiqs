@@ -5,7 +5,7 @@ from jaxtyping import PyTree
 
 from ...result import PropagatorSaved, Saved, SolveSaved
 from ...utils.quantum_utils import expect
-from .abstract_integrator import OptionsInterface, SolveInterface
+from .interfaces import OptionsInterface, SolveInterface
 
 
 class SaveMixin(OptionsInterface):
