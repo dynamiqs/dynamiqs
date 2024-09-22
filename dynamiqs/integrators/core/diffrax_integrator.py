@@ -12,8 +12,9 @@ from jaxtyping import PyTree
 from ...gradient import Autograd, CheckpointAutograd
 from ...result import Result
 from ...utils.quantum_utils.general import dag
-from .abstract_integrator import BaseIntegrator, MEInterface, SEIntegrator
+from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
+from .interfaces import SEInterface, MEInterface
 
 
 class DiffraxIntegrator(BaseIntegrator, SaveMixin):
@@ -182,10 +183,10 @@ class Kvaerno5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kva
 # fmt: on
 
 
-class SEDiffraxIntegrator(DiffraxIntegrator, SEIntegrator):
+class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
     """Integrator solving the Schrödinger equation with Diffrax."""
 
-    # subclasses should implement: diffrax_solver
+    # subclasses should implement: diffrax_solver, discontinuity_ts
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -197,7 +198,7 @@ class SEDiffraxIntegrator(DiffraxIntegrator, SEIntegrator):
 class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
     """Integrator solving the Lindblad master equation with Diffrax."""
 
-    # subclasses should implement: diffrax_solver
+    # subclasses should implement: diffrax_solver, discontinuity_ts
 
     @property
     def terms(self) -> dx.AbstractTerm:
