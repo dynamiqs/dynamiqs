@@ -17,10 +17,74 @@ from qutip import Qobj
 from .._utils import _is_batched_scalar, cdtype
 from .dense_qarray import DenseQArray
 from .layout import Layout, dia
-from .qarray import _in_last_two_dims, _include_last_two_dims
-from .types import QArray, QArrayLike, asqarray, isqarraylike
+from .qarray import _in_last_two_dims, _include_last_two_dims,
+    isqarraylike,
+)
 
-__all__ = ['SparseDIAQArray', 'to_dense', 'to_sparse_dia']
+__all__ = ['SparseDIAQArray']
+
+
+def _sparsedia_to_dense(x: SparseDIAQArray) -> DenseQArray:
+    out = jnp.zeros(x.shape, dtype=cdtype())
+    for i, offset in enumerate(x.offsets):
+        out += _vectorized_diag(x.diags[..., i, :], offset)
+    return DenseQArray(x.dims, out)
+
+
+@functools.partial(jnp.vectorize, signature='(n)->(n,n)', excluded={1})
+def _vectorized_diag(diag: Array, offset: int) -> Array:
+    return jnp.diag(diag[_dia_slice(offset)], k=offset)
+
+
+def _array_to_sparsedia(x: Array, dims: tuple[int, ...]) -> SparseDIAQArray:
+    concrete_or_error(None, x, '`_array_to_sparsedia` does not support tracing.')
+    offsets = _find_offsets(x)
+    diags = _construct_diags(offsets, x)
+    return SparseDIAQArray(dims=dims, offsets=offsets, diags=diags)
+
+
+def _find_offsets(x: Array) -> tuple[int, ...]:
+    indices = np.nonzero(x)
+    return tuple(np.unique(indices[-1] - indices[-2]))
+
+
+@functools.partial(jax.jit, static_argnums=(0,))
+def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
+    n = x.shape[-1]
+    diags = jnp.zeros((*x.shape[:-2], len(offsets), n), dtype=cdtype())
+
+    for i, offset in enumerate(offsets):
+        diagonal = jnp.diagonal(x, offset=offset, axis1=-2, axis2=-1)
+        diags = diags.at[..., i, _dia_slice(offset)].set(diagonal)
+
+    return diags
+
+
+def _sparsedia_to_qobj(x: SparseDIAQArray) -> Qobj | list[Qobj]:
+    return x.to_dense().to_qutip()
+
+def _sparsedia_constructor(
+    offsets_diags: dict[int, ArrayLike],
+    dims: int | tuple[int, ...] | None = None,
+    dtype: DTypeLike | None = None,
+) -> SparseDIAQArray:
+    # === offsets
+    offsets = tuple(offsets_diags.keys())
+
+    # === diags
+    # stack arrays in a square matrix by padding each according to its offset
+    pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
+    diags = [jnp.asarray(diag) for diag in offsets_diags.values()]
+    diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
+    diags = jnp.stack(diags, dtype=dtype)
+
+    # === dims
+    if dims is None:
+        dims = (diags.shape[-1],)
+    elif isinstance(dims, int):
+        dims = (dims,)
+
+    return SparseDIAQArray(diags=diags, offsets=offsets, dims=dims)
 
 
 class SparseDIAQArray(QArray):
@@ -477,66 +541,3 @@ def _compress_dia(offsets: tuple[int, ...], diags: ArrayLike) -> SparseDIAQArray
         out_diags = out_diags.at[..., i, :].set(diag)
 
     return tuple(out_offsets), out_diags
-
-
-def to_dense(x: SparseDIAQArray) -> DenseQArray:
-    r"""Convert a sparse `QArray` into a dense `Qarray`.
-
-    Args:
-        x: A sparse matrix, containing diagonals and their offsets.
-
-    Returns:
-        Array: A dense matrix representation of the input sparse matrix.
-    """
-    out = jnp.zeros(x.shape, dtype=cdtype())
-    for i, offset in enumerate(x.offsets):
-        out += _vectorized_diag(x.diags[..., i, :], offset)
-    return DenseQArray(x.dims, out)
-
-
-@functools.partial(jnp.vectorize, signature='(n)->(n,n)', excluded={1})
-def _vectorized_diag(diag: Array, offset: int) -> Array:
-    return jnp.diag(diag[_dia_slice(offset)], k=offset)
-
-
-def to_sparse_dia(x: QArrayLike) -> SparseDIAQArray:
-    r"""Convert the input to a sparse DIA qarray.
-
-    Args:
-        x: Input data, in any qarray-like format.
-
-    Returns:
-        The sparse DIA matrix representation of the input matrix.
-    """
-    if isinstance(x, SparseDIAQArray):
-        return x
-    elif isinstance(x, DenseQArray):
-        dims = x.dims
-        x = x.to_jax()
-    elif isinstance(x, get_args(ArrayLike)):
-        dims = (x.shape[-1],)
-        x = jnp.asarray(x)
-    else:
-        raise TypeError('Input must be a `QArrayLike` object.')
-
-    concrete_or_error(None, x, '`to_sparse_dia` does not support tracing.')
-    offsets = _find_offsets(x)
-    diags = _construct_diags(offsets, x)
-    return SparseDIAQArray(dims=dims, offsets=offsets, diags=diags)
-
-
-def _find_offsets(x: Array) -> tuple[int, ...]:
-    indices = np.nonzero(x)
-    return tuple(np.unique(indices[-1] - indices[-2]))
-
-
-@functools.partial(jax.jit, static_argnums=(0,))
-def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
-    n = x.shape[-1]
-    diags = jnp.zeros((*x.shape[:-2], len(offsets), n), dtype=cdtype())
-
-    for i, offset in enumerate(offsets):
-        diagonal = jnp.diagonal(x, offset=offset, axis1=-2, axis2=-1)
-        diags = diags.at[..., i, _dia_slice(offset)].set(diagonal)
-
-    return diags

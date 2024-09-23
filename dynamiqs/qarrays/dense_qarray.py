@@ -20,6 +20,20 @@ __all__ = ['DenseQArray']
 _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 
+def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
+    if x.ndim > 2:
+        return [_dense_to_qobj(sub_x, dims=x.dims) for sub_x in x]
+    else:
+        dims = list(x.dims)
+        if x.isket():  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]
+            dims = [dims, [1] * len(dims)]
+        elif x.isbra():  # [[1], [3]] or for composite systems [[1, 1], [3, 4]]
+            dims = [[1] * len(dims), dims]
+        elif x.isop():  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
+            dims = [dims, dims]
+        return Qobj(x, dims=dims)
+
+
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
