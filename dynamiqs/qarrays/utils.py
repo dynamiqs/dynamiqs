@@ -3,18 +3,13 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import jax.numpy as jnp
-import numpy as np
-from qutip import Qobj
 
-from .._checks import check_shape
 from .._utils import cdtype
-from ..utils.quantum_utils import isbra, isket, isop
-from ..utils.quantum_utils.general import _hdim
 from .dense_qarray import DenseQArray
 from .qarray import QArray
 from .sparse_dia_qarray import SparseDIAQArray
 
-__all__ = ['stack', 'to_qutip']
+__all__ = ['stack']
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:

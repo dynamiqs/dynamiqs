@@ -124,9 +124,7 @@ class DenseQArray(QArray):
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj | list[Qobj]:
-        from .utils import to_qutip
-
-        return to_qutip(self.data, dims=self.dims)
+        return _dense_to_qobj(self)
 
     def to_jax(self) -> Array:
         return self.data
@@ -145,7 +143,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data * y.data
         elif isqarraylike(y):
-            data = self.data * asjaxarray(y)
+            data = self.data * _getjaxarray(y)
         else:
             return NotImplemented
 
@@ -159,15 +157,13 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data / y.data
         elif isqarraylike(y):
-            data = self.data / asjaxarray(y)
+            data = self.data / _getjaxarray(y)
         else:
             return NotImplemented
 
         return DenseQArray(self.dims, data)
 
     def __add__(self, y: QArray) -> QArray:
-        from .sparse_dia_qarray import SparseDIAQArray
-
         super().__add__(y)
 
         if _is_batched_scalar(y):
@@ -175,9 +171,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
         elif isinstance(y, get_args(ArrayLike)):
-            data = self.data + asjaxarray(y)
-        elif isinstance(y, SparseDIAQArray):
-            return y.__add__(self)
+            data = self.data + _getjaxarray(y)
         else:
             return NotImplemented
 
@@ -191,7 +185,7 @@ class DenseQArray(QArray):
             data = self.data @ y.data
         elif isqarraylike(y):
             dims = self.dims
-            data = self.data @ asjaxarray(y)
+            data = self.data @ _getjaxarray(y)
         else:
             return NotImplemented
 
@@ -208,20 +202,25 @@ class DenseQArray(QArray):
             data = y.data @ self.data
         elif isqarraylike(y):
             dims = self.dims
-            data = asjaxarray(y) @ self.data
+            data = _getjaxarray(y) @ self.data
         else:
             return NotImplemented
 
         return DenseQArray(dims, data)
 
-    def __and__(self, y: QArray) -> QArray:
+    def __and__(self, y: QArrayLike) -> QArray:
         super().__and__(y)
-        dims = self.dims + y.dims
 
         if isinstance(y, DenseQArray):
+            dims = self.dims + y.dims
             data = _bkron(self.data, y.data)
-        else:
+        elif isinstance(y, QArray):
             return NotImplemented
+        else:
+            y = _getjaxarray(y)
+            y_dims = (y.shape[-2],) if y.shape[-2] != 1 else (y.shape[-1],)
+            dims = self.dims + y_dims
+            data = _bkron(self.data, y)
 
         return DenseQArray(dims, data)
 
@@ -232,3 +231,13 @@ class DenseQArray(QArray):
     def __getitem__(self, key: int | slice) -> QArray:
         data = self.data[key]
         return DenseQArray(self.dims, data)
+
+def _getjaxarray(x: QArrayLike) -> Array:
+    if isinstance(x, DenseQArray):
+        return x.data
+    elif isinstance(x, QArray):
+        return x.to_jax()
+    elif isinstance(x, list):
+        return jnp.asarray(_getjaxarray(sub_x) for sub_x in x)
+    else:
+        return jnp.asarray(x)
