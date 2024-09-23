@@ -11,17 +11,18 @@ import dynamiqs as dq
 import jax.numpy as jnp
 
 # parameters
-n = 128       # Hilbert space dimension
-omega = 1.0   # frequency
-kappa = 0.1   # decay rate
-alpha0 = 1.0  # initial coherent state amplitude
+n = 128            # Hilbert space dimension
+omega = 1.0        # frequency
+kappa = 0.1        # decay rate
+alpha0 = 1.0       # initial coherent state amplitude
+tend = 2 * jnp.pi  # total evolution time (one full revolution)
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
 H = omega * dq.dag(a) @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
-tsave = jnp.linspace(0, 1.0, 101)
+tsave = jnp.linspace(0, tend, 101)
 
 # run simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -29,10 +30,10 @@ print(result)
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 66.94ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 477.95ms ◆ remaining 0.00ms
 ==== MESolveResult ====
 Solver  : Tsit5
-Infos   : 7 steps (7 accepted, 0 rejected)
+Infos   : 116 steps (107 accepted, 9 rejected)
 States  : Array complex64 (101, 128, 128) | 12.62 Mb
 ```
 
@@ -46,10 +47,11 @@ import jax.numpy as jnp
 import jax
 
 # parameters
-n = 128       # Hilbert space dimension
-omega = 1.0   # frequency
-kappa = 0.1   # decay rate
-alpha0 = 1.0  # initial coherent state amplitude
+n = 128            # Hilbert space dimension
+omega = 1.0        # frequency
+kappa = 0.1        # decay rate
+alpha0 = 1.0       # initial coherent state amplitude
+tend = 2 * jnp.pi  # total evolution time (one full revolution)
 
 def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
@@ -58,7 +60,7 @@ def population(omega, kappa, alpha0):
     H = omega * dq.dag(a) @ a
     jump_ops = [jnp.sqrt(kappa) * a]
     psi0 = dq.coherent(n, alpha0)
-    tsave = jnp.linspace(0, 1.0, 101)
+    tsave = jnp.linspace(0, tend, 101)
 
     # run simulation
     result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -74,10 +76,10 @@ print(f'Gradient w.r.t. alpha0: {grads[2]:.4f}')
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 86.63ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 444.31ms ◆ remaining 0.00ms
 Gradient w.r.t. omega : 0.0000
-Gradient w.r.t. kappa : -0.9048
-Gradient w.r.t. alpha0: 1.8097
+Gradient w.r.t. kappa : -3.3520
+Gradient w.r.t. alpha0: 1.0670
 ```
 
 !!! Note
@@ -96,7 +98,7 @@ Gradient w.r.t. alpha0: 1.8097
     \end{pmatrix}
     \approx \begin{pmatrix}
       0.0 \\
-      -0.9048 \\
-      1.8097
+      -3.3520 \\
+      1.0670
     \end{pmatrix}
     $$
