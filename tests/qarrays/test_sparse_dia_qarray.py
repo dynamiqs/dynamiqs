@@ -46,7 +46,7 @@ class TestSparseDIAQArray:
         )
 
         sparseA = dq.SparseDIAQArray(diags=diagsA, offsets=offsetsA, dims=(N,))
-        denseA = dq.to_dense(sparseA)
+        denseA = dq.asdense(sparseA)
 
         self.denseA = make_dictA(denseA)
         self.sparseA = make_dictA(sparseA)
@@ -59,7 +59,7 @@ class TestSparseDIAQArray:
         )
 
         sparseB = dq.SparseDIAQArray(diags=diagsB, offsets=offsetsB, dims=(N,))
-        denseB = dq.to_dense(sparseB)
+        denseB = dq.asdense(sparseB)
 
         self.denseB = make_dictB(denseB)
         self.sparseB = make_dictB(sparseB)
@@ -68,7 +68,7 @@ class TestSparseDIAQArray:
     def test_convert(self, kA, rtol=1e-05, atol=1e-08):
         assert jnp.allclose(
             self.denseA[kA].to_jax(),
-            dq.to_sparse_dia(self.denseA[kA]).to_jax(),
+            dq.assparsedia(self.denseA[kA]).to_jax(),
             rtol=rtol,
             atol=atol,
         )
@@ -80,7 +80,7 @@ class TestSparseDIAQArray:
 
         out_dense_dense = (dA + dB).to_jax()
 
-        out_dia_dia = dq.to_dense(sA + sB).to_jax()
+        out_dia_dia = dq.asdense(sA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         out_dia_dense = (sA + dB).to_jax()
@@ -95,7 +95,7 @@ class TestSparseDIAQArray:
         dB, sB = self.denseB[kB], self.sparseB[kB]
 
         out_dense_dense = (dA - dB).to_jax()
-        out_dia_dia = dq.to_dense(sA - sB).to_jax()
+        out_dia_dia = dq.asdense(sA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         out_dia_dense = (sA - dB).to_jax()
@@ -111,7 +111,7 @@ class TestSparseDIAQArray:
 
         out_dense_dense = (dA * dB).to_jax()
 
-        out_dia_dia = dq.to_dense(sA * sB).to_jax()
+        out_dia_dia = dq.asdense(sA * sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         out_dia_dense = (sA * dB).to_jax()
@@ -127,7 +127,7 @@ class TestSparseDIAQArray:
 
         out_dense_dense = (dA @ dB).to_jax()
 
-        out_dia_dia = dq.to_dense(sA @ sB).to_jax()
+        out_dia_dia = dq.asdense(sA @ sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         out_dia_dense = (sA @ dB).to_jax()
@@ -164,7 +164,7 @@ class TestSparseDIAQArray:
         d, s = self.denseA[k], self.sparseA[k]
 
         out_dense = (d**3).to_jax()
-        out_dia = dq.to_dense(s**3).to_jax()
+        out_dia = dq.asdense(s**3).to_jax()
 
         assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
 
