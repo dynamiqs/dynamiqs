@@ -117,7 +117,7 @@ class SparseDIAQArray(QArray):
         diags = jnp.broadcast_to(self.diags, shape)
         return SparseDIAQArray(diags=diags, offsets=self.offsets, dims=self.dims)
 
-    def ptrace(self, *keep: tuple[int, ...]) -> QArray:
+    def ptrace(self, *keep: int) -> QArray:
         raise NotImplementedError
 
     def powm(self, n: int) -> QArray:

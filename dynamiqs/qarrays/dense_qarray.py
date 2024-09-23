@@ -54,7 +54,7 @@ class DenseQArray(QArray):
         data = jnp.broadcast_to(self.data, shape)
         return DenseQArray(self.dims, data)
 
-    def ptrace(self, *keep: tuple[int, ...]) -> QArray:
+    def ptrace(self, *keep: int) -> QArray:
         from ..utils.quantum_utils.general import ptrace
 
         dims = tuple(self.dims[dim] for dim in keep)
