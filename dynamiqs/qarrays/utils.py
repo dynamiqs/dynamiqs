@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from .._utils import cdtype
 from .dense_qarray import DenseQArray
 from .qarray import QArray
-from .sparse_dia_qarray import SparseDIAQArray
+from .sparsedia_qarray import SparseDIAQArray
 
 __all__ = ['stack']
 

@@ -9,7 +9,7 @@ from .._utils import cdtype
 from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense
 from ..qarrays.qarray import QArray
-from ..qarrays.sparse_dia_qarray import SparseDIAQArray, _sparsedia_constructor
+from ..qarrays.sparsedia_qarray import SparseDIAQArray, _sparsedia_constructor
 from ..qarrays.type_conversion import asqarray
 from .global_settings import get_layout
 from .quantum_utils import tensor

@@ -9,7 +9,7 @@ from qutip import Qobj
 
 from .dense_qarray import DenseQArray, _dense_to_qobj
 from .qarray import QArray, QArrayLike
-from .sparse_dia_qarray import (
+from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
     _sparsedia_to_dense,
