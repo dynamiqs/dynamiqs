@@ -134,7 +134,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def ptrace(self, keep: tuple[int, ...]) -> QArray:
+    def ptrace(self, *keep: tuple[int, ...]) -> QArray:
         """Returns the partial trace of the quantum state.
 
         Args:
