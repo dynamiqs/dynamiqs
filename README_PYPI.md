@@ -44,7 +44,7 @@ import dynamiqs as dq
 import jax.numpy as jnp
 
 # parameters
-n = 128            # Hilbert space dimension
+n = 16             # Hilbert space dimension
 omega = 1.0        # frequency
 kappa = 0.1        # decay rate
 alpha0 = 1.0       # initial coherent state amplitude
@@ -63,11 +63,11 @@ print(result)
 ```
 
 ```text
-|██████████| 100.0% ◆ elapsed 477.95ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 6.30ms ◆ remaining 0.00ms
 ==== MESolveResult ====
-Solver  : Tsit5
-Infos   : 116 steps (107 accepted, 9 rejected)
-States  : Array complex64 (101, 128, 128) | 12.62 Mb
+Solver : Tsit5
+Infos  : 40 steps (40 accepted, 0 rejected)
+States : Array complex64 (101, 16, 16) | 202.00 Kb
 ```
 
 ### Compute gradients with respect to some parameters
@@ -80,7 +80,7 @@ import jax.numpy as jnp
 import jax
 
 # parameters
-n = 128            # Hilbert space dimension
+n = 16             # Hilbert space dimension
 omega = 1.0        # frequency
 kappa = 0.1        # decay rate
 alpha0 = 1.0       # initial coherent state amplitude
@@ -109,7 +109,7 @@ print(f'Gradient w.r.t. alpha0: {grads[2]:.4f}')
 ```
 
 ```text
-|██████████| 100.0% ◆ elapsed 444.31ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 5.94ms ◆ remaining 0.00ms
 Gradient w.r.t. omega : 0.0000
 Gradient w.r.t. kappa : -3.3520
 Gradient w.r.t. alpha0: 1.0670
