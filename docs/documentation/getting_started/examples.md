@@ -29,7 +29,7 @@ result = dq.mesolve(H, jump_ops, psi0, tsave)
 print(result)
 ```
 
-```text
+```text title="Output"
 |██████████| 100.0% ◆ elapsed 6.30ms ◆ remaining 0.00ms
 ==== MESolveResult ====
 Solver : Tsit5
