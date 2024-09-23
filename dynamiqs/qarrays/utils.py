@@ -11,8 +11,8 @@ from .._utils import cdtype
 from ..utils.quantum_utils import isbra, isket, isop
 from ..utils.quantum_utils.general import _hdim
 from .dense_qarray import DenseQArray
+from .qarray import QArray
 from .sparse_dia_qarray import SparseDIAQArray
-from .types import QArray, QArrayLike
 
 __all__ = ['stack', 'to_qutip']
 

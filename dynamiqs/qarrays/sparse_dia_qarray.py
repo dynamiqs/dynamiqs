@@ -15,9 +15,13 @@ from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
 from .._utils import _is_batched_scalar, cdtype
-from .dense_qarray import DenseQArray
+from .dense_qarray import DenseQArray, _getjaxarray
 from .layout import Layout, dia
-from .qarray import _in_last_two_dims, _include_last_two_dims,
+from .qarray import (
+    QArray,
+    QArrayLike,
+    _in_last_two_dims,
+    _include_last_two_dims,
     isqarraylike,
 )
 

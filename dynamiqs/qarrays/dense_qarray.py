@@ -11,8 +11,7 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar
 from .layout import Layout, dense
-from .qarray import QArray, _in_last_two_dims
-from .types import QArrayLike, asjaxarray, isqarraylike
+from .qarray import QArray, QArrayLike, _in_last_two_dims, isqarraylike
 
 __all__ = ['DenseQArray']
 
