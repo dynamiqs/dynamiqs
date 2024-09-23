@@ -3,7 +3,8 @@ from __future__ import annotations
 import numpy as np
 
 from .._checks import check_shape
-from ..qarrays import QArray, QArrayLike, asqarray
+from ..qarrays.qarray import QArray, QArrayLike
+from ..qarrays.type_conversion import asqarray
 from .operators import eye
 from .quantum_utils import dag
 

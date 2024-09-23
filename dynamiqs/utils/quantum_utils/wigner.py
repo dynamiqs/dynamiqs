@@ -8,8 +8,8 @@ from jax import Array, lax
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ...qarrays import asjaxarray
-from ...qarrays.types import QArrayLike
+from ...qarrays.qarray import QArrayLike
+from ...qarrays.type_conversion import asjaxarray
 from .general import todm
 
 __all__ = ['wigner']

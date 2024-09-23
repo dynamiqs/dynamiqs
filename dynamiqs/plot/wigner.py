@@ -13,7 +13,8 @@ from matplotlib.colors import Normalize
 from tqdm import tqdm
 
 from .._checks import check_shape
-from ..qarrays import QArrayLike, asjaxarray, asqarray
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.type_conversion import asjaxarray, asqarray
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, figax, grid, optional_ax
 

@@ -10,8 +10,9 @@ from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
 from ..._utils import on_cpu
-from ...qarrays import QArray, QArrayLike, asqarray
 from ...qarrays.dense_qarray import DenseQArray
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.type_conversion import asqarray
 
 __all__ = [
     'dag',

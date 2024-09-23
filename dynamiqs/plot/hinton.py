@@ -13,7 +13,8 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
 from .._checks import check_shape
-from ..qarrays.types import QArrayLike, asjaxarray
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.type_conversion import asjaxarray
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['hinton']

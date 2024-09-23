@@ -9,7 +9,8 @@ from jax._src.lib import xla_client
 from jaxtyping import PyTree
 
 from .._utils import obj_type_str
-from ..qarrays import QArrayLike, asqarray
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.type_conversion import asqarray
 from ..solver import Solver, _DEAdaptiveStep
 from ..time_array import (
     ConstantTimeArray,

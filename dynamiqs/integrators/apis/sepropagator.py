@@ -10,7 +10,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays.layout import dense
-from ...qarrays.types import QArrayLike
+from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import Shape, TimeArray
