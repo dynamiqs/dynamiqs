@@ -4,25 +4,25 @@ First time using Dynamiqs? Below are a few basic examples to help you get starte
 
 ## Simulate a lossy quantum harmonic oscillator
 
-This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$, starting from the initial coherent state $\ket{\alpha_0}$.
+This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$ from time $0$ to time $T$, starting from the initial coherent state $\ket{\alpha_0}$.
 
 ```python
 import dynamiqs as dq
 import jax.numpy as jnp
 
 # parameters
-n = 16             # Hilbert space dimension
-omega = 1.0        # frequency
-kappa = 0.1        # decay rate
-alpha0 = 1.0       # initial coherent state amplitude
-tend = 2 * jnp.pi  # total evolution time (one full revolution)
+n = 16          # Hilbert space dimension
+omega = 1.0     # frequency
+kappa = 0.1     # decay rate
+alpha0 = 1.0    # initial coherent state amplitude
+T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
 H = omega * dq.dag(a) @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
-tsave = jnp.linspace(0, tend, 101)
+tsave = jnp.linspace(0, T, 101)
 
 # run simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -47,11 +47,11 @@ import jax.numpy as jnp
 import jax
 
 # parameters
-n = 16             # Hilbert space dimension
-omega = 1.0        # frequency
-kappa = 0.1        # decay rate
-alpha0 = 1.0       # initial coherent state amplitude
-tend = 2 * jnp.pi  # total evolution time (one full revolution)
+n = 16          # Hilbert space dimension
+omega = 1.0     # frequency
+kappa = 0.1     # decay rate
+alpha0 = 1.0    # initial coherent state amplitude
+T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
@@ -60,7 +60,7 @@ def population(omega, kappa, alpha0):
     H = omega * dq.dag(a) @ a
     jump_ops = [jnp.sqrt(kappa) * a]
     psi0 = dq.coherent(n, alpha0)
-    tsave = jnp.linspace(0, tend, 101)
+    tsave = jnp.linspace(0, T, 101)
 
     # run simulation
     result = dq.mesolve(H, jump_ops, psi0, tsave)
