@@ -67,7 +67,7 @@ print(result)
 ==== MESolveResult ====
 Solver : Tsit5
 Infos  : 40 steps (40 accepted, 0 rejected)
-States : Array complex64 (101, 16, 16) | 202.00 Kb
+States : Array complex64 (101, 16, 16) | 202.0 Kb
 ```
 
 ### Compute gradients with respect to some parameters
