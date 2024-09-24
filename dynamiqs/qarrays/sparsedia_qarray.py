@@ -10,7 +10,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax._src.core import concrete_or_error
-from jaxtyping import Array, ArrayLike, DTypeLike
+from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
 from .._utils import _is_batched_scalar, cdtype
@@ -65,29 +65,6 @@ def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
 
 def _sparsedia_to_qobj(x: SparseDIAQArray) -> Qobj | list[Qobj]:
     return x.to_dense().to_qutip()
-
-def _sparsedia_constructor(
-    offsets_diags: dict[int, ArrayLike],
-    dims: int | tuple[int, ...] | None = None,
-    dtype: DTypeLike | None = None,
-) -> SparseDIAQArray:
-    # === offsets
-    offsets = tuple(offsets_diags.keys())
-
-    # === diags
-    # stack arrays in a square matrix by padding each according to its offset
-    pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
-    diags = [jnp.asarray(diag) for diag in offsets_diags.values()]
-    diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
-    diags = jnp.stack(diags, dtype=dtype)
-
-    # === dims
-    if dims is None:
-        dims = (diags.shape[-1],)
-    elif isinstance(dims, int):
-        dims = (dims,)
-
-    return SparseDIAQArray(diags=diags, offsets=offsets, dims=dims)
 
 
 class SparseDIAQArray(QArray):

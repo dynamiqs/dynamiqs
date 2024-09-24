@@ -4,7 +4,7 @@ import warnings
 
 import jax.numpy as jnp
 import numpy as np
-from jaxtyping import Array
+from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .dense_qarray import DenseQArray, _dense_to_qobj
@@ -17,7 +17,7 @@ from .sparsedia_qarray import (
 )
 from .utils import stack
 
-__all__ = ['asqarray', 'asdense', 'assparsedia', 'asjaxarray', 'asqobj']
+__all__ = ['asqarray', 'asdense', 'assparsedia', 'asjaxarray', 'asqobj', 'sparsedia']
 
 
 def asqarray(x: QArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
@@ -143,14 +143,35 @@ def _warn_qarray_dims(x: QArrayLike, dims: tuple[int, ...] | None = None):
         )
 
 
+def sparsedia(
+    offsets_diags: dict[int, ArrayLike],
+    dims: tuple[int, ...] | None = None,
+    dtype: DTypeLike | None = None,
+) -> SparseDIAQArray:
+    # === offsets
+    offsets = tuple(offsets_diags.keys())
+
+    # === diags
+    # stack arrays in a square matrix by padding each according to its offset
+    pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
+    diags = [jnp.asarray(diag) for diag in offsets_diags.values()]
+    diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
+    diags = jnp.stack(diags, dtype=dtype)
+
+    # === dims
+    n = diags.shape[-1]
+    shape = (*diags.shape[:-2], n, n)
+    dims = (n,) if dims is None else dims
+    _check_dims_match_shape(shape, dims)
+
+    return SparseDIAQArray(diags=diags, offsets=offsets, dims=dims)
+
+
 def _init_dims(x: Array, dims: tuple[int, ...] | None = None) -> tuple[int, ...]:
     if dims is None:
         dims = (x.shape[-2],) if x.shape[-2] != 1 else (x.shape[-1],)
-    elif np.prod(dims) != np.max(x.shape[-2:]):
-        raise ValueError(
-            'The provided `dims` are incompatible with the input array. '
-            f'Got dims={dims} and x.shape={x.shape}.'
-        )
+
+    _check_dims_match_shape(x.shape, dims)
 
     # TODO: check if is bra, ket, dm or op
     # if not (isbra(data) or isket(data) or isdm(data) or isop(data)):
@@ -160,3 +181,11 @@ def _init_dims(x: Array, dims: tuple[int, ...] | None = None) -> tuple[int, ...]
     # )
 
     return dims
+
+
+def _check_dims_match_shape(shape: tuple[int, ...], dims: tuple[int, ...]):
+    if np.prod(dims) != np.max(shape[-2:]):
+        raise ValueError(
+            'The provided `dims` are incompatible with the input array. '
+            f'Got dims={dims} and shape={shape}.'
+        )
