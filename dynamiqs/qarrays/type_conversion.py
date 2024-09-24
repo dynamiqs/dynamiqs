@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 
 import jax.numpy as jnp
 import numpy as np
@@ -31,8 +32,9 @@ def asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         return x
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
-    elif isinstance(x, list):
-        return stack(asdense(sub_x, dims=dims) for sub_x in x)
+    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
+        # TODO: generalize to any nested sequence with the appropriate shape
+        return stack([asdense(sub_x, dims=dims) for sub_x in x])
 
     x = jnp.asarray(x)
     dims = _init_dims(x, dims)
@@ -47,8 +49,9 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
     elif isinstance(x, DenseQArray):
         dims = x.dims
         x = x.to_jax()
-    elif isinstance(x, list):
-        return stack(assparsedia(sub_x, dims=dims) for sub_x in x)
+    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
+        # TODO: generalize to any nested sequence with the appropriate shape
+        return stack([assparsedia(sub_x, dims=dims) for sub_x in x])
 
     x = jnp.asarray(x)
     dims = _init_dims(x, dims)
@@ -58,8 +61,9 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
 def asjaxarray(x: QArrayLike) -> Array:
     if isinstance(x, QArray):
         return x.to_jax()
-    elif isinstance(x, list):
-        return jnp.asarray(asjaxarray(sub_x) for sub_x in x)
+    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
+        # TODO: generalize to any nested sequence with the appropriate shape
+        return jnp.asarray([asjaxarray(sub_x) for sub_x in x])
     else:
         return jnp.asarray(x)
 
@@ -118,7 +122,8 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
         return _dense_to_qobj(x)
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
-    elif isinstance(x, list):
+    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
+        # TODO: generalize to any nested sequence with the appropriate shape
         return [asqobj(sub_x, dims=dims) for sub_x in x]
 
     x = jnp.asarray(x)
