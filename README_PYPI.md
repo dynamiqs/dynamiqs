@@ -37,24 +37,25 @@ pip install dynamiqs
 
 ### Simulate a lossy quantum harmonic oscillator
 
-This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$, starting from the initial coherent state $\ket{\alpha_0}$.
+This first example shows simulation of a lossy harmonic oscillator with Hamiltonian $H=\omega a^\dagger a$ and a single jump operator $L=\sqrt{\kappa} a$ from time $0$ to time $T$, starting from the initial coherent state $\ket{\alpha_0}$.
 
 ```python
 import dynamiqs as dq
 import jax.numpy as jnp
 
 # parameters
-n = 128       # Hilbert space dimension
-omega = 1.0   # frequency
-kappa = 0.1   # decay rate
-alpha0 = 1.0  # initial coherent state amplitude
+n = 16          # Hilbert space dimension
+omega = 1.0     # frequency
+kappa = 0.1     # decay rate
+alpha0 = 1.0    # initial coherent state amplitude
+T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
 H = omega * dq.dag(a) @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
-tsave = jnp.linspace(0, 1.0, 101)
+tsave = jnp.linspace(0, T, 101)
 
 # run simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -62,11 +63,11 @@ print(result)
 ```
 
 ```text
-|██████████| 100.0% ◆ elapsed 66.94ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 6.30ms ◆ remaining 0.00ms
 ==== MESolveResult ====
-Solver  : Tsit5
-Infos   : 7 steps (7 accepted, 0 rejected)
-States  : Array complex64 (101, 128, 128) | 12.62 Mb
+Solver : Tsit5
+Infos  : 40 steps (40 accepted, 0 rejected)
+States : Array complex64 (101, 16, 16) | 202.0 Kb
 ```
 
 ### Compute gradients with respect to some parameters
@@ -79,10 +80,11 @@ import jax.numpy as jnp
 import jax
 
 # parameters
-n = 128       # Hilbert space dimension
-omega = 1.0   # frequency
-kappa = 0.1   # decay rate
-alpha0 = 1.0  # initial coherent state amplitude
+n = 16          # Hilbert space dimension
+omega = 1.0     # frequency
+kappa = 0.1     # decay rate
+alpha0 = 1.0    # initial coherent state amplitude
+T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
@@ -91,7 +93,7 @@ def population(omega, kappa, alpha0):
     H = omega * dq.dag(a) @ a
     jump_ops = [jnp.sqrt(kappa) * a]
     psi0 = dq.coherent(n, alpha0)
-    tsave = jnp.linspace(0, 1.0, 101)
+    tsave = jnp.linspace(0, T, 101)
 
     # run simulation
     result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -107,10 +109,10 @@ print(f'Gradient w.r.t. alpha0: {grads[2]:.4f}')
 ```
 
 ```text
-|██████████| 100.0% ◆ elapsed 86.63ms ◆ remaining 0.00ms
+|██████████| 100.0% ◆ elapsed 5.94ms ◆ remaining 0.00ms
 Gradient w.r.t. omega : 0.0000
-Gradient w.r.t. kappa : -0.9048
-Gradient w.r.t. alpha0: 1.8097
+Gradient w.r.t. kappa : -3.3520
+Gradient w.r.t. alpha0: 1.0670
 ```
 
 ℹ️ On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
@@ -128,8 +130,8 @@ $$
 \end{pmatrix}
 \approx \begin{pmatrix}
   0.0 \\
-  -0.9048 \\
-  1.8097
+  -3.3520 \\
+  1.0670
 \end{pmatrix}
 $$
 
