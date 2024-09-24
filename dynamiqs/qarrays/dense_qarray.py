@@ -23,14 +23,18 @@ def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
     if x.ndim > 2:
         return [_dense_to_qobj(sub_x, dims=x.dims) for sub_x in x]
     else:
-        dims = list(x.dims)
-        if x.isket():  # [[3], [1]] or for composite systems [[3, 4], [1, 1]]
-            dims = [dims, [1] * len(dims)]
-        elif x.isbra():  # [[1], [3]] or for composite systems [[1, 1], [3, 4]]
-            dims = [[1] * len(dims), dims]
-        elif x.isop():  # [[3], [3]] or for composite systems [[3, 4], [3, 4]]
-            dims = [dims, dims]
+        dims = _dims_to_qutip(x.dims, x.shape)
         return Qobj(x, dims=dims)
+
+def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
+    dims = list(dims)
+    if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
+        dims = [dims, [1] * len(dims)]
+    elif shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
+        dims = [[1] * len(dims), dims]
+    elif shape[-1] == shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
+        dims = [dims, dims]
+    return dims
 
 
 def _getjaxarray(x: QArrayLike) -> Array:
