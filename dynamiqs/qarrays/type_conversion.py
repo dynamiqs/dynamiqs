@@ -8,6 +8,7 @@ import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
+from .._checks import check_shape
 from .dense_qarray import DenseQArray, _dense_to_qobj, _dims_to_qutip
 from .qarray import QArray, QArrayLike, _asjaxarray
 from .sparsedia_qarray import (
@@ -120,6 +121,7 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
         return [asqobj(sub_x, dims=dims) for sub_x in x]
 
     x = jnp.asarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     dims = _init_dims(x, dims)
     dims = _dims_to_qutip(dims, x.shape)
     return Qobj(x, dims=dims)
