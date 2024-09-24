@@ -2,13 +2,6 @@
 
 This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in Dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
 
-!!! Warning "Differences with QuTiP"
-    Dynamiqs uses JAX arrays, which are different from QuTiP quantum objects. See [The sharp bits 🔪](../getting_started/sharp-bits.md) page for more details, briefly:
-
-    - use `x + 2 * dq.eye(n)` instead of `x + 2`
-    - use `x @ y` instead of `x * y`, and `dq.powm(x, 4)` instead of `x**4`
-    - use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()`
-
 ```python
 import dynamiqs as dq
 import jax.numpy as jnp
