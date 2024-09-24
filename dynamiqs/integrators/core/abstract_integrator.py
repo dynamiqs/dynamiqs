@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import ClassVar
 
 import equinox as eqx
 from jax import Array
@@ -8,35 +9,49 @@ from jaxtyping import PyTree, Scalar
 
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
-from ...options import Options
 from ...result import (
     MEPropagatorResult,
     MESolveResult,
-    PropagatorSaved,
     Result,
     Saved,
     SEPropagatorResult,
     SESolveResult,
-    SolveSaved,
 )
 from ...solver import Solver
-from ...time_array import TimeArray
-from ...utils.quantum_utils import expect
+from .interfaces import MEInterface, OptionsInterface, SEInterface, SolveInterface
 
 
 class AbstractIntegrator(eqx.Module):
+    """Abstract integrator.
+
+    Any integrator should inherit from this class and implement the `run()` method
+    to specify the main computationally intensive logic. This class is intentionally
+    kept abstract to simplify the implementation of new integrators from scratch.
+    """
+
+    # subclasses should implement: run()
+
     @abstractmethod
     def run(self) -> PyTree:
         pass
 
 
-class BaseIntegrator(AbstractIntegrator):
+class BaseIntegrator(AbstractIntegrator, OptionsInterface):
+    """Integrator evolving an initial state over a set of times.
+
+    This integrator evolves the initial pytree `y0` over a set of times specified by
+    `ts`. It support multiple `solver` and `gradient`, can be parameterized with
+    `options`, and return a `result` object.
+    """
+
+    # subclasses should implement: discontinuity_ts, run()
+
+    RESULT_CLASS: ClassVar[Result]
+
+    y0: PyTree
     ts: Array
-    y0: Array
-    H: TimeArray
     solver: Solver
     gradient: Gradient | None
-    options: Options
 
     @property
     def t0(self) -> Scalar:
@@ -47,61 +62,30 @@ class BaseIntegrator(AbstractIntegrator):
         return self.ts[-1]
 
     @property
+    @abstractmethod
+    def discontinuity_ts(self) -> Array | None:
+        pass
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return self.RESULT_CLASS(
+            self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
+
+
+class SEIntegrator(BaseIntegrator, SEInterface):
+    """Integrator for the Schrödinger equation."""
+
+    # subclasses should implement: run()
+
+    @property
     def discontinuity_ts(self) -> Array | None:
         return self.H.discontinuity_ts
 
-    @abstractmethod
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        pass
 
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
-        # if save_states is False save only last state
-        if not self.options.save_states:
-            saved = eqx.tree_at(
-                lambda x: x.ysave, saved, ylast, is_leaf=lambda x: x is None
-            )
-        return saved
+class MEIntegrator(BaseIntegrator, MEInterface):
+    """Integrator for the Lindblad master equation."""
 
-    @abstractmethod
-    def save(self, y: PyTree) -> Saved:
-        pass
-
-
-class SolveIntegrator(BaseIntegrator):
-    Es: Array
-
-    def save(self, y: PyTree) -> Saved:
-        ysave, Esave, extra = None, None, None
-
-        if self.options.save_states:
-            ysave = y
-        if self.Es is not None and len(self.Es) > 0:
-            Esave = expect(self.Es, y)
-        if self.options.save_extra is not None:
-            extra = self.options.save_extra(y)
-
-        return SolveSaved(ysave, Esave, extra)
-
-    def collect_saved(self, saved: Saved, ylast: Array) -> Saved:
-        saved = super().collect_saved(saved, ylast)
-
-        # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
-        Esave = saved.Esave
-        if Esave is not None:
-            Esave = Esave.swapaxes(-1, -2)
-            saved = eqx.tree_at(lambda x: x.Esave, saved, Esave)
-
-        return saved
-
-
-class PropagatorIntegrator(BaseIntegrator):
-    def save(self, y: PyTree) -> Saved:
-        ysave = y if self.options.save_states else None
-        return PropagatorSaved(ysave)
-
-
-class MEIntegrator(BaseIntegrator):
-    Ls: list[TimeArray]
+    # subclasses should implement: run()
 
     @property
     def discontinuity_ts(self) -> Array | None:
@@ -109,29 +93,33 @@ class MEIntegrator(BaseIntegrator):
         return _concatenate_sort(*ts)
 
 
-class SESolveIntegrator(SolveIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return SESolveResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
-        )
+class SEPropagatorIntegrator(SEIntegrator):
+    """Integrator computing the propagator of the Schrödinger equation."""
+
+    # subclasses should implement: run()
+
+    RESULT_CLASS = SEPropagatorResult
 
 
-class MESolveIntegrator(SolveIntegrator, MEIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return MESolveResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
-        )
+class MEPropagatorIntegrator(MEIntegrator):
+    """Integrator computing the propagator of the Lindblad master equation."""
+
+    # subclasses should implement: run()
+
+    RESULT_CLASS = MEPropagatorResult
 
 
-class SEPropagatorIntegrator(PropagatorIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return SEPropagatorResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
-        )
+class SESolveIntegrator(SEIntegrator, SolveInterface):
+    """Integrator computing the time evolution of the Schrödinger equation."""
+
+    # subclasses should implement: run()
+
+    RESULT_CLASS = SESolveResult
 
 
-class MEPropagatorIntegrator(PropagatorIntegrator, MEIntegrator):
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return MEPropagatorResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
-        )
+class MESolveIntegrator(MEIntegrator, SolveInterface):
+    """Integrator computing the time evolution of the Lindblad master equation."""
+
+    # subclasses should implement: run()
+
+    RESULT_CLASS = MESolveResult

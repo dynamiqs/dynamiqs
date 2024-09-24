@@ -103,7 +103,7 @@ Also called the **quantum-jump** approach.
 
 !!! Warning "Work in progress."
 
-## Using dynamiqs
+## Using Dynamiqs
 
 You can create the state, Hamiltonian and jump operators using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 

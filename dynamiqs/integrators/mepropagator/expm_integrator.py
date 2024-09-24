@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from ..core.abstract_integrator import MEPropagatorIntegrator
-from ..core.expm_integrator import MEExpmIntegrator, PropagatorExpmIntegrator
+from ..core.expm_integrator import MEExpmIntegrator
 
 
-class MEPropagatorExpmIntegrator(
-    PropagatorExpmIntegrator, MEExpmIntegrator, MEPropagatorIntegrator
-):
-    pass
+class MEPropagatorExpmIntegrator(MEExpmIntegrator, MEPropagatorIntegrator):
+    """Integrator computing the propagator of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """

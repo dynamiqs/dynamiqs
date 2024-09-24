@@ -1,9 +1,5 @@
 <h1 align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/media/logo-typeface-lighttype.png?raw=true">
-    <source media="(prefers-color-scheme: light)" srcset="./docs/media/logo-typeface-darktype.png?raw=true">
-    <img alt="Dynamiqs logo" width="360" src="./docs/media/logo-typeface-darktype.png?raw=true">
-  </picture>
+    <img alt="Dynamiqs logo" width="360" src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/logo-typeface-darktype.png?raw=true">
 </h1>
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
@@ -25,8 +21,7 @@ The main features of **Dynamiqs** are:
 
 We hope that this library will prove useful to the community for e.g. simulation of large quantum systems, gradient-based parameter estimation or quantum optimal control. The library is designed for large-scale problems, but also runs efficiently on CPUs for smaller problems.
 
-> [!WARNING]
-> This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
+⚠️ This library is under active development and while the APIs and solvers are still finding their footing, we're working hard to make it worth the wait. Check back soon for the grand opening!
 
 ## Installation
 
@@ -36,8 +31,7 @@ You can install Dynamiqs with `pip`:
 pip install dynamiqs
 ```
 
-> [!Note]
-> If you're using a GPU, please refer to the [JAX installation](https://jax.readthedocs.io/en/latest/installation.html) documentation page for detailed instructions on how to install JAX for your device.
+ℹ️ If you're using a GPU, please refer to the [JAX installation](https://jax.readthedocs.io/en/latest/installation.html) documentation page for detailed instructions on how to install JAX for your device.
 
 ## Examples
 
@@ -121,26 +115,25 @@ Gradient w.r.t. kappa : -3.3520
 Gradient w.r.t. alpha0: 1.0670
 ```
 
-> [!Note]
-> On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
->
-> $$
-> \nabla_\theta\ \bar{n} = \begin{pmatrix}
->   \partial\bar{n} / \partial\omega \\
->   \partial\bar{n} / \partial\kappa \\
->   \partial\bar{n} / \partial\alpha_0
-> \end{pmatrix}
-> = \begin{pmatrix}
->   0\\
->   -\alpha_0^2 T e^{-\kappa T} \\
->   2 \alpha_0 e^{-\kappa T}
-> \end{pmatrix}
-> \approx \begin{pmatrix}
->   0.0 \\
->   -3.3520 \\
->   1.0670
-> \end{pmatrix}
-> $$
+ℹ️ On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
+
+$$
+\nabla_\theta\ \bar{n} = \begin{pmatrix}
+  \partial\bar{n} / \partial\omega \\
+  \partial\bar{n} / \partial\kappa \\
+  \partial\bar{n} / \partial\alpha_0
+\end{pmatrix}
+= \begin{pmatrix}
+  0\\
+  -\alpha_0^2 T e^{-\kappa T} \\
+  2 \alpha_0 e^{-\kappa T}
+\end{pmatrix}
+\approx \begin{pmatrix}
+  0.0 \\
+  -3.3520 \\
+  1.0670
+\end{pmatrix}
+$$
 
 ## More features!
 

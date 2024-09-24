@@ -119,7 +119,9 @@ def smesolve(
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration.
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
     """  # noqa: E501
     return NotImplementedError
