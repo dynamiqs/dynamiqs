@@ -33,6 +33,17 @@ def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
         return Qobj(x, dims=dims)
 
 
+def _getjaxarray(x: QArrayLike) -> Array:
+    if isinstance(x, DenseQArray):
+        return x.data
+    elif isinstance(x, QArray):
+        return x.to_jax()
+    elif isinstance(x, list):
+        return jnp.asarray(_getjaxarray(sub_x) for sub_x in x)
+    else:
+        return jnp.asarray(x)
+
+
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
@@ -231,13 +242,3 @@ class DenseQArray(QArray):
     def __getitem__(self, key: int | slice) -> QArray:
         data = self.data[key]
         return DenseQArray(self.dims, data)
-
-def _getjaxarray(x: QArrayLike) -> Array:
-    if isinstance(x, DenseQArray):
-        return x.data
-    elif isinstance(x, QArray):
-        return x.to_jax()
-    elif isinstance(x, list):
-        return jnp.asarray(_getjaxarray(sub_x) for sub_x in x)
-    else:
-        return jnp.asarray(x)
