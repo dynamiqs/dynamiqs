@@ -447,31 +447,19 @@ class SparseDIAQArray(QArray):
 
         return DenseQArray(self.dims, out)
 
-    def __and__(self, other: QArrayLike) -> QArray:
-        if _is_batched_scalar(other):
-            raise TypeError('Attempted tensor product between a scalar and a QArray.')
-
+    def __and__(self, other: QArray) -> QArray:
         if isinstance(other, SparseDIAQArray):
             return self._and_dia(other)
         elif isinstance(other, DenseQArray):
             return self.to_dense() & other
-        elif isqarraylike(other):
-            other = _getjaxarray(other)
-            return self.to_dense() & other
+        else:
+            return NotImplemented
 
-        return NotImplemented
-
-    def __rand__(self, other: QArrayLike) -> QArray:
-        if _is_batched_scalar(other):
-            raise TypeError('Attempted tensor product between a scalar and a QArray.')
-
+    def __rand__(self, other: QArray) -> QArray:
         if isinstance(other, DenseQArray):
             return other & self.to_dense()
-        elif isqarraylike(other):
-            other = _getjaxarray(other)
-            return other & self.to_dense()
-
-        return NotImplemented
+        else:
+            return NotImplemented
 
     def _and_dia(self, other: SparseDIAQArray) -> SparseDIAQArray:
         # compute new offsets

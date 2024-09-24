@@ -219,19 +219,14 @@ class DenseQArray(QArray):
 
         return DenseQArray(dims, data)
 
-    def __and__(self, y: QArrayLike) -> QArray:
+    def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
 
         if isinstance(y, DenseQArray):
             dims = self.dims + y.dims
             data = _bkron(self.data, y.data)
-        elif isinstance(y, QArray):
-            return NotImplemented
         else:
-            y = _getjaxarray(y)
-            y_dims = (y.shape[-2],) if y.shape[-2] != 1 else (y.shape[-1],)
-            dims = self.dims + y_dims
-            data = _bkron(self.data, y)
+            return NotImplemented
 
         return DenseQArray(dims, data)
 
