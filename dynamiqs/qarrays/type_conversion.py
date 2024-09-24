@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .dense_qarray import DenseQArray, _dense_to_qobj, _dims_to_qutip
-from .qarray import QArray, QArrayLike
+from .qarray import QArray, QArrayLike, _asjaxarray
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
@@ -59,14 +59,7 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
 
 
 def asjaxarray(x: QArrayLike) -> Array:
-    if isinstance(x, QArray):
-        return x.to_jax()
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence with the appropriate shape
-        return jnp.asarray([asjaxarray(sub_x) for sub_x in x])
-    else:
-        return jnp.asarray(x)
-
+    return _asjaxarray(x)
 
 def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert a qarray-like object into a QuTiP Qobj (or a list of QuTiP Qobj if it

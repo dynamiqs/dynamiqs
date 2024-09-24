@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
+from collections.abc import Sequence
 from math import prod
 from typing import Any, Union, get_args
 
@@ -42,6 +43,14 @@ def isqarraylike(x: Any) -> bool:
     elif isinstance(x, list):
         return all(isqarraylike(sub_x) for sub_x in x)
     return False
+
+def _asjaxarray(x: QArrayLike) -> Array:
+    if isinstance(x, QArray):
+        return x.to_jax()
+    elif isinstance(x, Sequence):
+        return jnp.asarray([_asjaxarray(sub_x) for sub_x in x])
+    else:
+        return jnp.asarray(x)
 
 
 class QArray(eqx.Module):

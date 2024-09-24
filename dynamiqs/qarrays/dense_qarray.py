@@ -11,7 +11,7 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _in_last_two_dims, isqarraylike
+from .qarray import QArray, QArrayLike, _asjaxarray, _in_last_two_dims, isqarraylike
 
 __all__ = ['DenseQArray']
 
@@ -35,17 +35,6 @@ def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
     elif shape[-1] == shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
         dims = [dims, dims]
     return dims
-
-
-def _getjaxarray(x: QArrayLike) -> Array:
-    if isinstance(x, DenseQArray):
-        return x.data
-    elif isinstance(x, QArray):
-        return x.to_jax()
-    elif isinstance(x, list):
-        return jnp.asarray(_getjaxarray(sub_x) for sub_x in x)
-    else:
-        return jnp.asarray(x)
 
 
 class DenseQArray(QArray):
@@ -158,7 +147,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data * y.data
         elif isqarraylike(y):
-            data = self.data * _getjaxarray(y)
+            data = self.data * _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -172,7 +161,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data / y.data
         elif isqarraylike(y):
-            data = self.data / _getjaxarray(y)
+            data = self.data / _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -186,7 +175,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
         elif isinstance(y, get_args(ArrayLike)):
-            data = self.data + _getjaxarray(y)
+            data = self.data + _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -200,7 +189,7 @@ class DenseQArray(QArray):
             data = self.data @ y.data
         elif isqarraylike(y):
             dims = self.dims
-            data = self.data @ _getjaxarray(y)
+            data = self.data @ _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -217,7 +206,7 @@ class DenseQArray(QArray):
             data = y.data @ self.data
         elif isqarraylike(y):
             dims = self.dims
-            data = _getjaxarray(y) @ self.data
+            data = _asjaxarray(y) @ self.data
         else:
             return NotImplemented
 
