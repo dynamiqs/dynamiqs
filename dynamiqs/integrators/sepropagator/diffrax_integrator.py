@@ -13,28 +13,16 @@ from ..core.diffrax_integrator import (
 
 
 class SEPropagatorDiffraxIntegrator(SEDiffraxIntegrator, SEPropagatorIntegrator):
-    pass
+    """Integrator computing the propagator of the Schrödinger equation using the Diffrax
+    library."""
 
 
-class SEPropagatorEulerIntegrator(SEPropagatorDiffraxIntegrator, EulerIntegrator):
-    pass
-
-
-class SEPropagatorDopri5Integrator(SEPropagatorDiffraxIntegrator, Dopri5Integrator):
-    pass
-
-
-class SEPropagatorDopri8Integrator(SEPropagatorDiffraxIntegrator, Dopri8Integrator):
-    pass
-
-
-class SEPropagatorTsit5Integrator(SEPropagatorDiffraxIntegrator, Tsit5Integrator):
-    pass
-
-
-class SEPropagatorKvaerno3Integrator(SEPropagatorDiffraxIntegrator, Kvaerno3Integrator):
-    pass
-
-
-class SEPropagatorKvaerno5Integrator(SEPropagatorDiffraxIntegrator, Kvaerno5Integrator):
-    pass
+# fmt: off
+# ruff: noqa
+class SEPropagatorEulerIntegrator(SEPropagatorDiffraxIntegrator, EulerIntegrator): pass
+class SEPropagatorDopri5Integrator(SEPropagatorDiffraxIntegrator, Dopri5Integrator): pass
+class SEPropagatorDopri8Integrator(SEPropagatorDiffraxIntegrator, Dopri8Integrator): pass
+class SEPropagatorTsit5Integrator(SEPropagatorDiffraxIntegrator, Tsit5Integrator): pass
+class SEPropagatorKvaerno3Integrator(SEPropagatorDiffraxIntegrator, Kvaerno3Integrator): pass
+class SEPropagatorKvaerno5Integrator(SEPropagatorDiffraxIntegrator, Kvaerno5Integrator): pass
+# fmt: on

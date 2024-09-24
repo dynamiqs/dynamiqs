@@ -86,14 +86,6 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
            [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
 
-### Computing matrix adjoint
-
-Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
-
-??? Note "Why is there no `.dag()` method in Dynamiqs?"
-    To guarantee optimum performances and straightforward compatibility with the JAX ecosystem, Dynamiqs does not subclass JAX arrays. As a consequence, we can't define a custom `.dag()` method on arrays. Note that this will possibly change in the future, as we are working on an extension that will allow defining custom methods on arrays.
-
-
 ## Using a for loop
 
-If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. We explain in detail how it works in the [Batching simulations](../basics/batching-simulations.md) tutorial, and the associated gain in performance.
+If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. This functionality is explained in detail in the [Batching simulations](../basics/batching-simulations.md) tutorial, together with the associated gain in performance.
