@@ -38,6 +38,11 @@ def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
     return dims
 
 
+def _dims_from_qutip(dims: list) -> tuple[int, ...]:
+    dims = np.max(dims, axis=0)
+    return tuple([d.item() for d in dims])
+
+
 class DenseQArray(QArray):
     r"""DenseQArray is QArray that uses JAX arrays as data storage."""
 
