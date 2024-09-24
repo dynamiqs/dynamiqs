@@ -20,9 +20,10 @@ from ...result import (
     Saved,
     SEPropagatorResult,
     SESolveResult,
+    MCSolveResult
 )
 from ...solver import Solver
-from .interfaces import MEInterface, OptionsInterface, SEInterface, SolveInterface
+from .interfaces import MEInterface, OptionsInterface, SEInterface, SolveInterface, MCInterface
 from ...time_array import TimeArray
 from ...utils.quantum_utils import expect, unit
 
@@ -99,6 +100,18 @@ class MEIntegrator(BaseIntegrator, MEInterface):
         return _concatenate_sort(*ts)
 
 
+class MCIntegrator(BaseIntegrator, MCInterface):
+    """Integrator for the Monte-Carlo jump unraveling of the master equation."""
+
+    # subclasses should implement: run()
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(*ts)
+
+
+
 class SEPropagatorIntegrator(SEIntegrator):
     """Integrator computing the propagator of the Schrödinger equation."""
 
@@ -130,19 +143,11 @@ class MESolveIntegrator(MEIntegrator, SolveInterface):
 
     RESULT_CLASS = MESolveResult
 
-class MCSolveIntegrator(BaseIntegrator):
-    Ls: list[Array | TimeArray] | None = None
-    key: PRNGKey = PRNGKey(42)
-    rand: float = 0.0
-    root_finder: AbstractRootFinder | None = None
 
-    def result(self, saved: Saved, final_time: float, infos: PyTree | None = None) -> Result:
-        return Result(self.ts, self.solver, self.gradient, self.options, saved, final_time, infos)
+class MCSolveIntegrator(MCIntegrator, SolveInterface):
+    """Integrator computing the time evolution of the Monte-Carlo unraveling of the
+     master equation."""
 
-    def save(self, y: PyTree) -> Saved:
-        return super().save(unit(y))
+    # subclasses should implement: run()
 
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
-        return _concatenate_sort(*ts)
+    RESULT_CLASS = MCSolveResult

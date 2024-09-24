@@ -8,7 +8,7 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SESolveResult', 'MESolveResult', 'MCResult', 'SEPropagatorResult', 'MEPropagatorResult']
+__all__ = ['SESolveResult', 'MESolveResult', 'MCSolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
 
 
 def memory_bytes(x: Array) -> int:
@@ -228,7 +228,7 @@ class MESolveResult(SolveResult):
         tutorial for more details.
     """
 
-class MCResult(eqx.Module):
+class MCSolveResult(eqx.Module):
     """Result of Monte Carlo integration
 
     Attributes:
