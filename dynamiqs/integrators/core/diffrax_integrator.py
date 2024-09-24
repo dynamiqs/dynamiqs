@@ -10,27 +10,49 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
+from ...result import Result
 from ...utils.quantum_utils.general import dag
-from .abstract_integrator import BaseIntegrator, MEIntegrator
+from .abstract_integrator import BaseIntegrator
+from .save_mixin import SaveMixin
+from .interfaces import SEInterface, MEInterface
 
 
-class DiffraxIntegrator(BaseIntegrator):
-    # Subclasses should implement:
-    # - the attributes: stepsize_controller, dt0, max_steps, diffrax_solver, terms
-    # - the methods: result, infos
+class DiffraxIntegrator(BaseIntegrator, SaveMixin):
+    """Integrator using the Diffrax library."""
 
-    stepsize_controller: dx.AbstractVar[dx.AbstractStepSizeController]
-    dt0: dx.AbstractVar[float | None]
-    max_steps: dx.AbstractVar[int]
-    diffrax_solver: dx.AbstractVar[dx.AbstractSolver]
-    terms: dx.AbstractVar[dx.AbstractTerm]
-    event: dx.Event | None = None
+    # subclasses should implement: stepsize_controller, dt0, max_steps, diffrax_solver,
+    # terms, discontinuity_ts, infos()
 
-    def __init__(self, *args):
-        # pass all init arguments to `BaseIntegrator`
-        super().__init__(*args)
+    @property
+    @abstractmethod
+    def stepsize_controller(self) -> dx.AbstractStepSizeController:
+        pass
 
-    def run(self) -> PyTree:
+    @property
+    @abstractmethod
+    def dt0(self) -> float | None:
+        pass
+
+    @property
+    @abstractmethod
+    def max_steps(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def diffrax_solver(self) -> dx.AbstractSolver:
+        pass
+
+    @property
+    @abstractmethod
+    def terms(self) -> dx.AbstractTerm:
+        pass
+
+    @property
+    def event(self) -> dx.Event | None:
+        return None
+
+    def run(self) -> Result:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
@@ -77,10 +99,10 @@ class DiffraxIntegrator(BaseIntegrator):
         pass
 
 
-class FixedStepIntegrator(DiffraxIntegrator):
-    # Subclasses should implement:
-    # - the attributes: diffrax_solver, terms
-    # - the methods: result
+class FixedStepDiffraxIntegrator(DiffraxIntegrator):
+    """Integrator using a fixed step Diffrax solver."""
+
+    # subclasses should implement: diffrax_solver, terms, discontinuity_ts
 
     class Infos(eqx.Module):
         nsteps: Array
@@ -93,25 +115,26 @@ class FixedStepIntegrator(DiffraxIntegrator):
                 )
             return f'{self.nsteps} steps'
 
-    stepsize_controller: dx.AbstractStepSizeController = dx.ConstantStepSize()
-    max_steps: int = 100_000  # TODO: fix hard-coded max_steps
-
-    @property
-    def dt0(self) -> float:
-        return self.solver.dt
-
     def infos(self, stats: dict[str, Array]) -> PyTree:
         return self.Infos(stats['num_steps'])
 
+    @property
+    def stepsize_controller(self) -> dx.AbstractStepSizeController:
+        return dx.ConstantStepSize()
 
-class EulerIntegrator(FixedStepIntegrator):
-    diffrax_solver: dx.AbstractSolver = dx.Euler()
+    @property
+    def dt0(self) -> float | None:
+        return self.solver.dt
+
+    @property
+    def max_steps(self) -> int:
+        return 100_000  # TODO: fix hard-coded max_steps
 
 
-class AdaptiveStepIntegrator(DiffraxIntegrator):
-    # Subclasses should implement:
-    # - the attributes: diffrax_solver, terms
-    # - the methods: result
+class AdaptiveStepDiffraxIntegrator(DiffraxIntegrator):
+    """Integrator using an adaptive step Diffrax solver."""
+
+    # subclasses should implement: diffrax_solver, terms, discontinuity_ts
 
     class Infos(eqx.Module):
         nsteps: Array
@@ -130,7 +153,10 @@ class AdaptiveStepIntegrator(DiffraxIntegrator):
                 f' {self.nrejected} rejected)'
             )
 
-    dt0 = None
+    def infos(self, stats: dict[str, Array]) -> PyTree:
+        return self.Infos(
+            stats['num_steps'], stats['num_accepted_steps'], stats['num_rejected_steps']
+        )
 
     @property
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
@@ -144,36 +170,30 @@ class AdaptiveStepIntegrator(DiffraxIntegrator):
         )
 
     @property
+    def dt0(self) -> float | None:
+        return None
+
+    @property
     def max_steps(self) -> int:
         return self.solver.max_steps
 
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        return self.Infos(
-            stats['num_steps'], stats['num_accepted_steps'], stats['num_rejected_steps']
-        )
+
+# fmt: off
+# ruff: noqa
+class EulerIntegrator(FixedStepDiffraxIntegrator): diffrax_solver = dx.Euler()
+class Dopri5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri5()
+class Dopri8Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri8()
+class Tsit5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Tsit5()
+class Kvaerno3Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno3()
+class Kvaerno5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno5()
+# fmt: on
 
 
-class Dopri5Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Dopri5()
+class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
+    """Integrator solving the Schrödinger equation with Diffrax."""
 
+    # subclasses should implement: diffrax_solver, discontinuity_ts
 
-class Dopri8Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Dopri8()
-
-
-class Tsit5Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Tsit5()
-
-
-class Kvaerno3Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Kvaerno3()
-
-
-class Kvaerno5Integrator(AdaptiveStepIntegrator):
-    diffrax_solver = dx.Kvaerno5()
-
-
-class SEDiffraxIntegrator(DiffraxIntegrator):
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Schrödinger term d|psi>/dt = - i H |psi>
@@ -181,7 +201,11 @@ class SEDiffraxIntegrator(DiffraxIntegrator):
         return dx.ODETerm(vector_field)
 
 
-class MEDiffraxIntegrator(DiffraxIntegrator, MEIntegrator):
+class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
+    """Integrator solving the Lindblad master equation with Diffrax."""
+
+    # subclasses should implement: diffrax_solver, discontinuity_ts
+
     @property
     def terms(self) -> dx.AbstractTerm:
         # define Lindblad term drho/dt
