@@ -19,11 +19,11 @@ def memory_bytes(x: Array) -> int:
 def memory_str(x: Array) -> str:
     mem = memory_bytes(x)
     if mem < 1024**2:
-        return f'{mem / 1024:.2f} Kb'
+        return f'{mem / 1024:.1f} Kb'
     elif mem < 1024**3:
-        return f'{mem / 1024**2:.2f} Mb'
+        return f'{mem / 1024**2:.1f} Mb'
     else:
-        return f'{mem / 1024**3:.2f} Gb'
+        return f'{mem / 1024**3:.1f} Gb'
 
 
 def array_str(x: Array | QArray | None) -> str | None:

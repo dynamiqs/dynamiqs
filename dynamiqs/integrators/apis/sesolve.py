@@ -21,6 +21,7 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
+from ..core.abstract_integrator import SESolveIntegrator
 from ..sesolve.diffrax_integrator import (
     SESolveDopri5Integrator,
     SESolveDopri8Integrator,
@@ -177,13 +178,21 @@ def _sesolve(
         Kvaerno5: SESolveKvaerno5Integrator,
         Expm: SESolveExpmIntegrator,
     }
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: SESolveIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, psi0, H, solver, gradient, options, exp_ops)
+    integrator = integrator_class(
+        ts=tsave,
+        y0=psi0,
+        solver=solver,
+        gradient=gradient,
+        options=options,
+        H=H,
+        Es=exp_ops,
+    )
 
     # === run integrator
     result = integrator.run()

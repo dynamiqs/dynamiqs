@@ -32,6 +32,7 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
+from ..core.abstract_integrator import MESolveIntegrator
 from ..mesolve.diffrax_integrator import (
     MESolveDopri5Integrator,
     MESolveDopri8Integrator,
@@ -219,14 +220,21 @@ def _mesolve(
         Kvaerno5: MESolveKvaerno5Integrator,
         Expm: MESolveExpmIntegrator,
     }
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: MESolveIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_class(
-        tsave, rho0, H, solver, gradient, options, jump_ops, exp_ops
+        ts=tsave,
+        y0=rho0,
+        solver=solver,
+        gradient=gradient,
+        options=options,
+        H=H,
+        Ls=jump_ops,
+        Es=exp_ops,
     )
 
     # === run integrator
