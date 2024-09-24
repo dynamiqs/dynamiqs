@@ -1,3 +1,5 @@
+import warnings
+
 import jax.numpy as jnp
 import jax.random as jr
 import pytest
@@ -83,10 +85,14 @@ class TestSparseDIAQArray:
         out_dia_dia = dq.to_dense(sA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (sA + dB).to_jax()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            out_dia_dense = (sA + dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
-        out_dense_dia = (dA + sB).to_jax()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            out_dense_dia = (dA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
@@ -98,10 +104,14 @@ class TestSparseDIAQArray:
         out_dia_dia = dq.to_dense(sA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (sA - dB).to_jax()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            out_dia_dense = (sA - dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
-        out_dense_dia = (dA - sB).to_jax()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            out_dense_dia = (dA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
