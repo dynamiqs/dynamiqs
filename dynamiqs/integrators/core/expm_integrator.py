@@ -1,34 +1,43 @@
 from __future__ import annotations
 
+from abc import abstractmethod
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree
 
 from dynamiqs._utils import _concatenate_sort
 
+from ...result import Result
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
-from .abstract_integrator import BaseIntegrator, MEIntegrator
+from .abstract_integrator import AbstractIntegrator
+from .interfaces import MEInterface, SEInterface
+from .save_mixin import SaveMixin
 
 
-class ExpmIntegrator(BaseIntegrator):
-    # Base solver to solve a linear ODE of the form $dX/dt = AX$ by computing
-    # propagators. The matrix $A$ of shape (N, N) is a constant or piecewise constant
-    # *generator*. The *propagator* between time $t0$ and $t1$ is a matrix of shape
-    # (N, N) defined by $U(t0, t1) = e^{(t0-t1) A}$.
-    #
-    # We solve two different equations:
-    # - for sesolve/sepropagator, we solve the Schrödinger equation with $N = n$ and
-    #   $A = -iH$ with H the Hamiltonian,
-    # - for mesolve/mepropagator, we solve the Lindblad master equation, the problem is
-    #   vectorized, $N = n^2$ and $A = \mathcal{L}$ with $\mathcal{L}$ the Liouvillian.
-    #
-    # We compute different objects:
-    # - for sesolve/mesolve, the state $X$ is an (N, 1) column vector,
-    # - for sepropagator/mepropagator, the state $X$ is an (N, N) matrix.
+class ExpmIntegrator(AbstractIntegrator, SaveMixin):
+    r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
+    exponentiating the propagator.
+
+    The matrix $A$ of shape (N, N) is a constant or piecewise constant *generator*.
+    The *propagator* between time $t0$ and $t1$ is a matrix of shape (N, N) defined by
+    $U(t0, t1) = e^{(t0-t1) A}$.
+
+    We solve two different equations:
+    - for sesolve/sepropagator, we solve the Schrödinger equation with $N = n$ and
+      $A = -iH$ with H the Hamiltonian,
+    - for mesolve/mepropagator, we solve the Lindblad master equation, the problem is
+      vectorized, $N = n^2$ and $A = \mathcal{L}$ with $\mathcal{L}$ the Liouvillian.
+
+    We compute different objects:
+    - for sesolve/mesolve, the state $X$ is an (N, 1) column vector,
+    - for sepropagator/mepropagator, the state $X$ is an (N, N) matrix.
+    """
+
+    # subclasses should implement: discontinuity_ts, generator()
 
     class Infos(eqx.Module):
         nsteps: Array
@@ -43,19 +52,11 @@ class ExpmIntegrator(BaseIntegrator):
                 )
             return f'{self.nsteps} steps'
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    @abstractmethod
+    def generator(self, t: float) -> Array:
+        pass
 
-        # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
-        if not ispwc(self.H):
-            raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
-            )
-
-    def _generator(self, t: float) -> Array:
-        raise NotImplementedError
-
-    def run(self) -> PyTree:
+    def run(self) -> Result:
         # === find all times at which to stop in [t0, t1]
         # find all times where the solution should be saved (self.ts) or at which the
         # generator changes (self.discontinuity_ts)
@@ -68,7 +69,7 @@ class ExpmIntegrator(BaseIntegrator):
         delta_ts = jnp.diff(times)  # (ntimes-1,)
 
         # === batch-compute the propagators $e^{\Delta t A}$ on each time interval
-        As = jax.vmap(self._generator)(times[:-1])  # (ntimes-1, N, N)
+        As = jax.vmap(self.generator)(times[:-1])  # (ntimes-1, N, N)
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
@@ -92,14 +93,33 @@ class ExpmIntegrator(BaseIntegrator):
         return self.result(saved, infos=self.Infos(nsteps))
 
 
-class SEExpmIntegrator(ExpmIntegrator):
-    def _generator(self, t: float) -> Array:
+class SEExpmIntegrator(ExpmIntegrator, SEInterface):
+    """Integrator solving the Schrödinger equation by explicitly exponentiating the
+    propagator.
+    """
+
+    def __check_init__(self):
+        # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
+        if not ispwc(self.H):
+            raise TypeError(
+                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+            )
+
+    def generator(self, t: float) -> Array:
         return -1j * self.H(t)  # (n, n)
 
 
-class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
-    def __init__(self, *args):
-        super().__init__(*args)
+class MEExpmIntegrator(ExpmIntegrator, MEInterface):
+    """Integrator solving the Lindblad master equation by explicitly exponentiating the
+    propagator.
+    """
+
+    def __check_init__(self):
+        # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
+        if not ispwc(self.H):
+            raise TypeError(
+                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+            )
 
         # check that all jump operators are constant or pwc, or a sum of constant/pwc
         if not all(ispwc(L) for L in self.Ls):
@@ -107,5 +127,5 @@ class MEExpmIntegrator(ExpmIntegrator, MEIntegrator):
                 'Solver `Expm` requires constant or piecewise constant jump operators.'
             )
 
-    def _generator(self, t: float) -> Array:
+    def generator(self, t: float) -> Array:
         return slindbladian(self.H(t), [L(t) for L in self.Ls])  # (n^2, n^2)

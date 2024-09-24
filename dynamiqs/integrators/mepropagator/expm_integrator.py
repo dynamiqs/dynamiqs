@@ -5,4 +5,6 @@ from ..core.expm_integrator import MEExpmIntegrator
 
 
 class MEPropagatorExpmIntegrator(MEExpmIntegrator, MEPropagatorIntegrator):
-    pass
+    """Integrator computing the propagator of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """

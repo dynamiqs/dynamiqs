@@ -21,6 +21,7 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
+from ..core.abstract_integrator import MEPropagatorIntegrator
 from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
 
 
@@ -156,14 +157,22 @@ def _mepropagator(
 ) -> MEPropagatorResult:
     # === select integrator class
     integrators = {Expm: MEPropagatorExpmIntegrator}
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: MEPropagatorIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     y0 = eye(H.shape[-1] ** 2)
-    integrator = integrator_class(tsave, y0, H, solver, gradient, options, jump_ops)
+    integrator = integrator_class(
+        ts=tsave,
+        y0=y0,
+        solver=solver,
+        gradient=gradient,
+        options=options,
+        H=H,
+        Ls=jump_ops,
+    )
 
     # === run integrator
     result = integrator.run()
