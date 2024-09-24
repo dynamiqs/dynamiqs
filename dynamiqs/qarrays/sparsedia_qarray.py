@@ -14,11 +14,12 @@ from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
 from .._utils import _is_batched_scalar, cdtype
-from .dense_qarray import DenseQArray, _getjaxarray
+from .dense_qarray import DenseQArray
 from .layout import Layout, dia
 from .qarray import (
     QArray,
     QArrayLike,
+    _asjaxarray,
     _in_last_two_dims,
     _include_last_two_dims,
     isqarraylike,
@@ -252,7 +253,7 @@ class SparseDIAQArray(QArray):
         elif isinstance(other, SparseDIAQArray):
             return self._mul_sparse(other)
         elif isqarraylike(other):
-            other = _getjaxarray(other)
+            other = _asjaxarray(other)
             return self._mul_dense(other)
 
         return NotImplemented
@@ -318,7 +319,7 @@ class SparseDIAQArray(QArray):
             return self._add_sparse(other)
         elif isqarraylike(other):
             warnings.warn(warning_dense_addition, stacklevel=2)
-            other = _getjaxarray(other)
+            other = _asjaxarray(other)
             return self._add_dense(other)
 
         return NotImplemented
@@ -356,7 +357,7 @@ class SparseDIAQArray(QArray):
         if isinstance(other, SparseDIAQArray):
             return self._matmul_dia(other)
         elif isqarraylike(other):
-            other = _getjaxarray(other)
+            other = _asjaxarray(other)
             return self._matmul_dense(other, left_matmul=True)
 
         return NotImplemented
@@ -366,7 +367,7 @@ class SparseDIAQArray(QArray):
             raise TypeError('Attempted matrix product between a scalar and a QArray.')
 
         if isqarraylike(other):
-            other = _getjaxarray(other)
+            other = _asjaxarray(other)
             return self._matmul_dense(other, left_matmul=False)
 
         return NotImplemented
