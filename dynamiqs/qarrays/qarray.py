@@ -18,24 +18,6 @@ from .layout import Layout
 
 __all__ = ['QArray', 'QArrayLike', 'isqarraylike']
 
-# In this file we define an extended array type named `QArrayLike`. Most
-# functions in the library take a `QArrayLike` as argument and return a `QArray`.
-# `QArrayLike` can be:
-# - any numeric type (bool, int, float, complex),
-# - a JAX array,
-# - a NumPy array,
-# - a QuTiP Qobj,
-# - a dynamiqs QArray,
-# - a nested list of these types.
-# An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
-
-# extended array like type
-_QArrayLike = Union[ArrayLike, 'QArray', Qobj]
-# a type alias for nested list of _QArrayLike
-_NestedQArrayLikeList = list[Union[_QArrayLike, '_NestedQArrayLikeList']]
-# a type alias for any type compatible with asqarray
-QArrayLike = Union[_QArrayLike, _NestedQArrayLikeList]
-
 
 def isqarraylike(x: Any) -> bool:
     if isinstance(x, get_args(_QArrayLike)):
@@ -485,3 +467,21 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
     return axis is None or (
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
     )
+
+# In this file we define an extended array type named `QArrayLike`. Most
+# functions in the library take a `QArrayLike` as argument and return a `QArray`.
+# `QArrayLike` can be:
+# - any numeric type (bool, int, float, complex),
+# - a JAX array,
+# - a NumPy array,
+# - a QuTiP Qobj,
+# - a dynamiqs QArray,
+# - a nested list of these types.
+# An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
+
+# extended array like type
+_QArrayLike = Union[ArrayLike, QArray, Qobj]
+# a type alias for nested list of _QArrayLike
+_NestedQArrayLikeList = list[Union[_QArrayLike, '_NestedQArrayLikeList']]
+# a type alias for any type compatible with asqarray
+QArrayLike = Union[_QArrayLike, _NestedQArrayLikeList]
