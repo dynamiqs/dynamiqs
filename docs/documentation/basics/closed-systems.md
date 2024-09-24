@@ -89,9 +89,9 @@ There are two main types of ODE solvers:
 
 ^^Time complexity^^: $O(n^2\times\text{number of time steps})$ (complexity of the matrix-vector product at each time step).
 
-## Using dynamiqs
+## Using Dynamiqs
 
-You can create the state and Hamiltonian using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using any qarray-like object. Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
 import jax.numpy as jnp
@@ -106,8 +106,9 @@ print(res.states[-1])             # print the final state
 
 ```text title="Output"
 |██████████| 100.0% ◆ elapsed 2.52ms ◆ remaining 0.00ms
-Array([[0.  +0.j   ],
-       [0.54+0.841j]], dtype=complex64)
+QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+[[0.  +0.j   ]
+ [0.54+0.841j]]
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
@@ -120,6 +121,7 @@ print(res.propagators[-1])  # print the final propagator
 ```
 
 ```text title="Output"
-Array([[0.54-0.841j 0.  +0.j   ]
-       [0.  +0.j    0.54+0.841j]], dtype=complex64)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+[[0.54-0.841j 0.  +0.j   ]
+ [0.  +0.j    0.54+0.841j]]
 ```

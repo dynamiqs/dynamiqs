@@ -1,8 +1,22 @@
 [project]
 name = "dynamiqs"
-version = "0.2.0"
+description = "High-performance quantum systems simulation with JAX (GPU-accelerated & differentiable solvers)."
+authors = [
+  { name = "Pierre Guilmin", email = "pierreguilmin@gmail.com" },
+  { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
+  { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
+  { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
+]
+dynamic = ["version"]
+license = { file = "LICENSE" }
+readme = "README_PYPI.md"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 requires-python = ">=3.9"
-description = "Quantum systems simulation with JAX."
 dependencies = [
     "qutip>=4.7.5",
     "scipy",
@@ -14,11 +28,16 @@ dependencies = [
     "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
-    "imageio",
+    "pillow",
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
     "tqdm",
 ]
+
+[project.urls]
+Homepage = "https://github.com/dynamiqs/dynamiqs"
+Documentation = "https://www.dynamiqs.org/"
+Repository = "https://github.com/dynamiqs/dynamiqs"
 
 [build-system]
 requires = ["flit_core >=3.2,<4"]
@@ -29,7 +48,7 @@ dev = [
     "taskipy",
     "ruff",
     "codespell",
-    "pytest>=7.0,<8.0",
+    "pytest>=8.0",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
@@ -42,6 +61,7 @@ dev = [
     "mkdocs-exclude",
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
+    "flit",
 ]
 
 [tool.ruff]
@@ -115,11 +135,11 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs_code/*.png && pytest dynamiqs'
+cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs_code/*.{png,gif} && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs_docs/*.png && pytest docs'
+cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs_docs/*.{png,gif} && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]

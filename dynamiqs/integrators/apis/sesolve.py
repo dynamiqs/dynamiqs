@@ -21,6 +21,7 @@ from .._utils import (
     flat_vectorize,
     get_integrator_class,
 )
+from ..core.abstract_integrator import SESolveIntegrator
 from ..sesolve.diffrax_integrator import (
     SESolveDopri5Integrator,
     SESolveDopri8Integrator,
@@ -87,7 +88,9 @@ def sesolve(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Expm`][dynamiqs.solver.Expm]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
@@ -101,7 +104,7 @@ def sesolve(
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
-        exp_ops = [asqarray(E) for E in exp_ops]
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
@@ -175,13 +178,21 @@ def _sesolve(
         Kvaerno5: SESolveKvaerno5Integrator,
         Expm: SESolveExpmIntegrator,
     }
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: SESolveIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, psi0, H, solver, gradient, options, exp_ops)
+    integrator = integrator_class(
+        ts=tsave,
+        y0=psi0,
+        solver=solver,
+        gradient=gradient,
+        options=options,
+        H=H,
+        Es=exp_ops,
+    )
 
     # === run integrator
     result = integrator.run()

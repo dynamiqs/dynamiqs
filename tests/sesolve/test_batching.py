@@ -56,7 +56,7 @@ def test_flat_batching(npsi0):
 def test_timearray_batching():
     # generic arrays
     a = dq.destroy(4)
-    H0 = a + dq.dag(a)
+    H0 = a + a.dag()
     psi0 = dq.basis(4, 0)
     times = jnp.linspace(0.0, 1.0, 11)
 
@@ -101,10 +101,10 @@ def test_sum_batching():
     omegas = jnp.linspace(0, 2 * jnp.pi, 5)
 
     # some batched constant Hamiltonian of shape (5, 3, 3)
-    H0 = omegas[..., None, None] * dq.dag(a) @ a
+    H0 = omegas[..., None, None] * a.dag() @ a
 
     # some batched modulated Hamiltonian of shape (5, 3, 3)
-    H1 = dq.modulated(lambda t: jnp.cos(omegas * t), a + dq.dag(a))
+    H1 = dq.modulated(lambda t: jnp.cos(omegas * t), a + a.dag())
 
     # sum of both Hamiltonians, also of shape (5, 3, 3)
     H = H0 + H1

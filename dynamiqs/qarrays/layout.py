@@ -2,8 +2,14 @@ from enum import Enum
 
 
 class Layout(Enum):
-    DENSE = 0
-    DIA = 1
+    DENSE = 'dense'
+    DIA = 'dia'
+
+    def __repr__(self) -> str:
+        return self.value
+
+    def __str__(self) -> str:
+        return repr(self)
 
 
 dense = Layout.DENSE

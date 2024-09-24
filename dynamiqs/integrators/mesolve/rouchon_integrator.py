@@ -10,7 +10,8 @@ from diffrax._local_interpolation import LocalLinearInterpolation
 
 from ...qarrays import QArray
 from ..core.abstract_integrator import MESolveIntegrator
-from ..core.diffrax_integrator import FixedStepIntegrator
+from ..core.diffrax_integrator import FixedStepDiffraxIntegrator
+from ..core.save_mixin import SolveSaveMixin
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):
@@ -52,8 +53,14 @@ class Rouchon1DXSolver(RouchonDXSolver):
         return 1
 
 
-class MESolveRouchon1Integrator(FixedStepIntegrator, MESolveIntegrator):
-    diffrax_solver: dx.AbstractSolver = Rouchon1DXSolver()
+class MESolveRouchon1Integrator(
+    FixedStepDiffraxIntegrator, MESolveIntegrator, SolveSaveMixin
+):
+    """Integrator computing the time evolution of the Lindblad master equation using the
+    Rouchon 1 solver.
+    """
+
+    diffrax_solver = Rouchon1DXSolver()
 
     @property
     def Id(self) -> QArray:

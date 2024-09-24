@@ -12,6 +12,8 @@ from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jax import Array, Device
 from qutip import Qobj
 
+from .layout import Layout
+
 if TYPE_CHECKING:  # avoid circular import by importing only during type checking
     from .types import QArrayLike
 
@@ -26,7 +28,7 @@ class QArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT
+    # - the properties: dtype, layout, shape, mT
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
     #                     _abs
@@ -67,6 +69,11 @@ class QArray(eqx.Module):
         Returns:
              The data type of the quantum state.
         """
+
+    @property
+    @abstractmethod
+    def layout(self) -> Layout:
+        pass
 
     @property
     @abstractmethod
@@ -127,7 +134,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def ptrace(self, keep: tuple[int, ...]) -> QArray:
+    def ptrace(self, *keep: int) -> QArray:
         """Returns the partial trace of the quantum state.
 
         Args:
@@ -328,8 +335,8 @@ class QArray(eqx.Module):
 
     def __repr__(self) -> str:
         return (
-            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
-            f'dtype={self.dtype}'
+            f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
+            f'layout={self.layout}'
         )
 
     def __neg__(self) -> QArray:
@@ -414,7 +421,7 @@ class QArray(eqx.Module):
         else:
             logging.warning(
                 'Using the `**` operator performs element-wise power. For matrix '
-                'power, use `x @ x @ ... @ x` or `dq.powm(x, power)` instead.'
+                'power, use `x @ x @ ... @ x` or `x.powm(power)` instead.'
             )
             return self._pow(power)
 
