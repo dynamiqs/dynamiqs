@@ -13,14 +13,14 @@ def test_stack_simple(rtol=1e-05, atol=1e-08):
     sparse_m = dq.assparsedia(jax_m)
 
     assert jnp.allclose(
-        dq.stack([dense_m, 2 * dense_m]).to_jax(),
+        dq.stack([dense_m, 2 * dense_m]).asjaxarray(),
         jnp.stack([jax_m, 2 * jax_m]),
         rtol=rtol,
         atol=atol,
     )
 
     assert jnp.allclose(
-        dq.stack([sparse_m, 2 * sparse_m]).to_jax(),
+        dq.stack([sparse_m, 2 * sparse_m]).asjaxarray(),
         jnp.stack([jax_m, 2 * jax_m]),
         rtol=rtol,
         atol=atol,
@@ -45,14 +45,14 @@ def test_stack_double(rtol=1e-05, atol=1e-08):
     jax_m2 = jnp.stack([jax_m2, 2 * jax_m2, 3 * jax_m2])
 
     assert jnp.allclose(
-        dq.stack([dense_m1, dense_m2]).to_jax(),
+        dq.stack([dense_m1, dense_m2]).asjaxarray(),
         jnp.stack([jax_m1, jax_m2]),
         rtol=rtol,
         atol=atol,
     )
 
     assert jnp.allclose(
-        dq.stack([sparse_m1, sparse_m2]).to_jax(),
+        dq.stack([sparse_m1, sparse_m2]).asjaxarray(),
         jnp.stack([jax_m1, jax_m2]),
         rtol=rtol,
         atol=atol,

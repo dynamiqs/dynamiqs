@@ -64,7 +64,7 @@ def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
 
 
 def _sparsedia_to_qobj(x: SparseDIAQArray) -> Qobj | list[Qobj]:
-    return x.to_dense().to_qutip()
+    return x.to_dense().asqobj()
 
 
 class SparseDIAQArray(QArray):
@@ -194,7 +194,7 @@ class SparseDIAQArray(QArray):
             if _include_last_two_dims(axis, self.ndim):
                 return self.diags.sum(axis)
             else:
-                return self.to_jax().sum(axis)
+                return self.asjaxarray().sum(axis)
         else:
             return SparseDIAQArray(self.dims, self.offsets, self.diags.sum(axis))
 
@@ -204,7 +204,7 @@ class SparseDIAQArray(QArray):
             if _include_last_two_dims(axis, self.ndim):
                 return self.diags.squeeze(axis)
             else:
-                return self.to_jax().squeeze(axis)
+                return self.asjaxarray().squeeze(axis)
         else:
             return SparseDIAQArray(self.dims, self.offsets, self.diags.squeeze(axis))
 
@@ -226,11 +226,11 @@ class SparseDIAQArray(QArray):
     def isherm(self) -> bool:
         raise NotImplementedError
 
-    def to_qutip(self) -> Qobj | list[Qobj]:
+    def asqobj(self) -> Qobj | list[Qobj]:
         return _sparsedia_to_qobj(self)
 
-    def to_jax(self) -> Array:
-        return self.to_dense().to_jax()
+    def asjaxarray(self) -> Array:
+        return self.to_dense().asjaxarray()
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return self.to_dense().__array__(dtype=dtype, copy=copy)
@@ -241,7 +241,7 @@ class SparseDIAQArray(QArray):
         pattern = r'0\.\s*\+0\.j'
         # replace with a centered dot of the same length as the matched string
         replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
-        data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
+        data_str = re.sub(pattern, replace_with_dot, str(self.asjaxarray()))
         return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
     def __mul__(self, other: QArrayLike) -> QArray:

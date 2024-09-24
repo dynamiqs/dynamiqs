@@ -49,7 +49,7 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
         return x
     elif isinstance(x, DenseQArray):
         dims = x.dims
-        x = x.to_jax()
+        x = x.asjaxarray()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
         # TODO: generalize to any nested sequence with the appropriate shape
         return stack([assparsedia(sub_x, dims=dims) for sub_x in x])

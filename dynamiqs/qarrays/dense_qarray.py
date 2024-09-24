@@ -127,10 +127,10 @@ class DenseQArray(QArray):
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
-    def to_qutip(self) -> Qobj | list[Qobj]:
+    def asqobj(self) -> Qobj | list[Qobj]:
         return _dense_to_qobj(self)
 
-    def to_jax(self) -> Array:
+    def asjaxarray(self) -> Array:
         return self.data
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001

@@ -230,7 +230,7 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     # todo: fix perf
-    return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
+    return (x.asjaxarray() * y.asjaxarray().mT).sum((-2, -1))
 
 
 def _hdim(x: QArrayLike) -> int:
@@ -446,7 +446,7 @@ def norm(x: QArrayLike) -> Array:
 
     if isket(x) or isbra(x):
         assert isinstance(x, DenseQArray)
-        return jnp.sqrt((jnp.abs(x.to_jax()) ** 2).sum((-2, -1)))
+        return jnp.sqrt((jnp.abs(x.asjaxarray()) ** 2).sum((-2, -1)))
     else:
         return trace(x).real
 

@@ -62,10 +62,10 @@ class Result(eqx.Module):
     def extra(self) -> PyTree | None:
         return self._saved.extra
 
-    def to_qutip(self) -> Result:
+    def asqobj(self) -> Result:
         raise NotImplementedError
 
-    def to_numpy(self) -> Result:
+    def asnparray(self) -> Result:
         raise NotImplementedError
 
     def block_until_ready(self) -> Result:
