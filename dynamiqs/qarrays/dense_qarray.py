@@ -26,6 +26,7 @@ def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
         dims = _dims_to_qutip(x.dims, x.shape)
         return Qobj(x, dims=dims)
 
+
 def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
     dims = list(dims)
     if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]

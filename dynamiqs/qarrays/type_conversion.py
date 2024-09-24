@@ -62,6 +62,7 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
 def asjaxarray(x: QArrayLike) -> Array:
     return _asjaxarray(x)
 
+
 def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert a qarray-like object into a QuTiP Qobj (or a list of QuTiP Qobj if it
     has more than two dimensions).

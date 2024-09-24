@@ -294,9 +294,7 @@ class SparseDIAQArray(QArray):
         # loop over each diagonal of the sparse matrix and fill the output
         for i, self_offset in enumerate(self.offsets):
             self_slice = _dia_slice(self_offset)
-            other_diag = jnp.diagonal(
-                other, offset=self_offset, axis1=-2, axis2=-1
-            )
+            other_diag = jnp.diagonal(other, offset=self_offset, axis1=-2, axis2=-1)
             out_diag = other_diag * self.diags[..., i, self_slice]
             out_diags = out_diags.at[..., i, self_slice].set(out_diag)
 

@@ -44,6 +44,7 @@ def isqarraylike(x: Any) -> bool:
         return all(isqarraylike(sub_x) for sub_x in x)
     return False
 
+
 def _asjaxarray(x: QArrayLike) -> Array:
     if isinstance(x, QArray):
         return x.asjaxarray()

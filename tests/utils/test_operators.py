@@ -24,11 +24,13 @@ def test_operators_dispatch():
     dim = 20
 
     assert jnp.allclose(
-        dq.eye(*dims, layout=dq.dense).asjaxarray(), dq.eye(*dims, layout=dq.dia).asjaxarray()
+        dq.eye(*dims, layout=dq.dense).asjaxarray(),
+        dq.eye(*dims, layout=dq.dia).asjaxarray(),
     )
 
     assert jnp.allclose(
-        dq.zero(*dims, layout=dq.dense).asjaxarray(), dq.zero(*dims, layout=dq.dia).asjaxarray()
+        dq.zero(*dims, layout=dq.dense).asjaxarray(),
+        dq.zero(*dims, layout=dq.dia).asjaxarray(),
     )
 
     # === dq.destroy ===
@@ -58,11 +60,13 @@ def test_operators_dispatch():
     # === end dq.create ===
 
     assert jnp.allclose(
-        dq.number(dim, layout=dq.dense).asjaxarray(), dq.number(dim, layout=dq.dia).asjaxarray()
+        dq.number(dim, layout=dq.dense).asjaxarray(),
+        dq.number(dim, layout=dq.dia).asjaxarray(),
     )
 
     assert jnp.allclose(
-        dq.parity(dim, layout=dq.dense).asjaxarray(), dq.parity(dim, layout=dq.dia).asjaxarray()
+        dq.parity(dim, layout=dq.dense).asjaxarray(),
+        dq.parity(dim, layout=dq.dia).asjaxarray(),
     )
 
     assert jnp.allclose(
