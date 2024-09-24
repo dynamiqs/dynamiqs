@@ -20,6 +20,7 @@ from .._utils import (
     get_integrator_class,
     ispwc,
 )
+from ..core.abstract_integrator import SEPropagatorIntegrator
 from ..sepropagator.diffrax_integrator import (
     SEPropagatorDopri5Integrator,
     SEPropagatorDopri8Integrator,
@@ -150,14 +151,16 @@ def _sepropagator(
         Kvaerno3: SEPropagatorKvaerno3Integrator,
         Kvaerno5: SEPropagatorKvaerno5Integrator,
     }
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: SEPropagatorIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     y0 = eye(H.shape[-1])
-    integrator = integrator_class(tsave, y0, H, solver, gradient, options)
+    integrator = integrator_class(
+        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H
+    )
 
     # === run integrator
     result = integrator.run()
