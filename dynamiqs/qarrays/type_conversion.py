@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .dense_qarray import DenseQArray, _dense_to_qobj, _dims_to_qutip
+from .dense_qarray import DenseQArray, _dense_to_qobj, _dims_from_qutip, _dims_to_qutip
 from .qarray import QArray, QArrayLike, _asjaxarray
 from .sparsedia_qarray import (
     SparseDIAQArray,
@@ -33,6 +33,9 @@ def asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         return x
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
+    elif isinstance(x, Qobj):
+        dims = _dims_from_qutip(dims)
+        x = x.full()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
         # TODO: generalize to any nested sequence with the appropriate shape
         return stack([asdense(sub_x, dims=dims) for sub_x in x])
@@ -50,6 +53,11 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
     elif isinstance(x, DenseQArray):
         dims = x.dims
         x = x.asjaxarray()
+    elif isinstance(x, Qobj):
+        # TODO: improve this by directly extracting the diags and offsets in case
+        # the Qobj is already in sparse DIA format (only for QuTiP 5)
+        dims = _dims_from_qutip(dims)
+        x = x.full()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
         # TODO: generalize to any nested sequence with the appropriate shape
         return stack([assparsedia(sub_x, dims=dims) for sub_x in x])
@@ -113,7 +121,9 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
     """  # noqa: E501
     _warn_qarray_dims(x, dims)
 
-    if isinstance(x, DenseQArray):
+    if isinstance(x, Qobj):
+        return x
+    elif isinstance(x, DenseQArray):
         return _dense_to_qobj(x)
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
@@ -129,13 +139,21 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
 
 
 def _warn_qarray_dims(x: QArrayLike, dims: tuple[int, ...] | None = None):
-    if isinstance(x, QArray) and dims is not None and x.dims != dims:
-        warnings.warn(
-            f'Argument `x` is already a QArray with dims={x.dims}, but dims '
-            f'were also provided as input with dims={dims}. Ignoring the '
-            'provided `dims` and proceeding with `x.dims`.',
-            stacklevel=2,
-        )
+    if dims is not None:
+        if isinstance(x, QArray) and x.dims != dims:
+            warnings.warn(
+                f'Argument `x` is already a QArray with dims={x.dims}, but dims '
+                f'were also provided as input with dims={dims}. Ignoring the '
+                'provided `dims` and proceeding with `x.dims`.',
+                stacklevel=2,
+            )
+        elif isinstance(x, Qobj) and _dims_from_qutip(x.dims) != dims:
+            warnings.warn(
+                f'Argument `x` is already a Qobj with dims={x.dims}, but dims '
+                f'were also provided as input with dims={dims}. Ignoring the '
+                'provided `dims` and proceeding with `x.dims`.',
+                stacklevel=2,
+            )
 
 
 def sparsedia(
