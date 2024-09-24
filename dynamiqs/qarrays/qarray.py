@@ -40,7 +40,7 @@ def isqarraylike(x: Any) -> bool:
     if isinstance(x, get_args(_QArrayLike)):
         return True
     elif isinstance(x, list):
-        return all(isqarraylike(_x) for _x in x)
+        return all(isqarraylike(sub_x) for sub_x in x)
     return False
 
 
