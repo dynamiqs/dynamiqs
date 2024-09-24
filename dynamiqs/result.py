@@ -6,7 +6,8 @@ from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
-from .qarrays import QArray, asjaxarray
+from .qarrays.qarray import QArray
+from .qarrays.type_conversion import asjaxarray
 from .solver import Solver
 
 __all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']

@@ -9,7 +9,7 @@ from jaxtyping import PyTree, Scalar
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...options import Options
-from ...qarrays import QArray
+from ...qarrays.qarray import QArray
 from ...result import (
     MEPropagatorResult,
     MESolveResult,

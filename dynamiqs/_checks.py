@@ -4,7 +4,7 @@ import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
 
-from .qarrays import QArray
+from .qarrays.qarray import QArray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
