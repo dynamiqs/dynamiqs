@@ -9,8 +9,8 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .dense_qarray import DenseQArray, _dense_to_qobj, _dims_from_qutip, _dims_to_qutip
-from .qarray import QArray, QArrayLike, _asjaxarray
+from .dense_qarray import DenseQArray, _dense_to_qobj
+from .qarray import QArray, QArrayLike, _asjaxarray, _dims_from_qutip, _dims_to_qutip
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
