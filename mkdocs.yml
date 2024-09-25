@@ -49,7 +49,7 @@ extra:
   version:
     provider: mike
     alias: true
-    default: latest
+    default: stable
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
@@ -91,7 +91,7 @@ plugins:
             show_bases: false
             merge_init_into_class: true
   - mike:
-      canonical_version: latest
+      canonical_version: stable
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true

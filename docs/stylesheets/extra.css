@@ -43,11 +43,28 @@ Description: Extra CSS for the Dynamiqs documentation
 
 /* Slack and github links */
 @media screen and (min-width: 60em) {
+  [dir="ltr"] .md-header__option,
+  [dir="ltr"] .md-header__slack,
   [dir="ltr"] .md-header__source {
     margin-left: 0;
+    width: 1.6rem;
   }
-  [dir="ltr"] .md-header__slack {
-    margin-left: .8rem;
+
+  [dir="ltr"] .md-header__option {
+    margin-left: .6rem;
+  }
+
+  .md-header__button.md-icon,
+  .md-slack__icon.md-icon,
+  .md-source__icon.md-icon {
+    margin: 0 .2rem 0 .2rem;
+    padding: 0;
+    height: 1.2rem;
+  }
+
+  [dir="ltr"] .md-source__icon svg {
+    margin-left: 0;
+    margin-top: 0;
   }
 }
 
@@ -55,6 +72,25 @@ Description: Extra CSS for the Dynamiqs documentation
   .md-header__slack {
     display: none;
   }
+}
+
+.md-source__repository.md-source__repository--active {
+    display: none;
+}
+
+/* Version selector */
+[dir="ltr"] .md-header__title {
+    margin-right: 0;
+}
+
+.md-header__topic {
+    width: 100%;
+}
+
+.md-version {
+    margin-left: auto;
+    margin-right: .6rem;
+    font-size: .7rem;
 }
 
 /* Note admonition color shades */
