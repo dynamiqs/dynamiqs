@@ -17,7 +17,7 @@ class TestDenseQArray:
         assert jnp.array_equal(self.qarray.dag().data, self.data.mT.conj())
 
     def test_ptrace(self):
-        ptrace = self.qarray.ptrace((1,))
+        ptrace = self.qarray.ptrace(1)
         expected_ptrace = jnp.array([[10, 12], [18, 20]]) * (1 + 1j)
         assert jnp.array_equal(ptrace.data, expected_ptrace)
         assert ptrace.dims == (2,)
