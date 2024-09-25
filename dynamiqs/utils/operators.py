@@ -28,6 +28,7 @@ __all__ = [
     'sigmap',
     'sigmam',
     'hadamard',
+    'cnot',
 ]
 
 
@@ -516,15 +517,20 @@ def hadamard(n: int = 1) -> Array:
 
 
 def cnot() -> Array:
-    r"""Returns the CNOT operator.
+    r"""Returns the CNOT gate.
 
-    It is defined by $\CNOT = \begin{pmatrix} 1 & 0 & 0 & 0 \\
-    0 & 1 & 0 & 0 \\
-    0 & 0 & 0 & 1 \\
-    0 & 0 & 1 & 0 \end{pmatrix}$.
+    It is defined by
+    $$
+        CNOT = \begin{pmatrix}
+        1 & 0 & 0 & 0 \\\\
+        0 & 1 & 0 & 0 \\\\
+        0 & 0 & 0 & 1 \\\\
+        0 & 0 & 1 & 0
+        \end{pmatrix}
+    $$
 
     Returns:
-        (array of shape (4, 4)) CNOT operator.
+        (array of shape (4, 4)) CNOT gate.
 
     Examples:
         >>> dq.cnot()
