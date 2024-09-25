@@ -513,3 +513,32 @@ def hadamard(n: int = 1) -> Array:
     H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)
+
+
+def cnot() -> Array:
+    r"""Returns the CNOT operator.
+
+    It is defined by $\CNOT = \begin{pmatrix} 1 & 0 & 0 & 0 \\
+    0 & 1 & 0 & 0 \\
+    0 & 0 & 0 & 1 \\
+    0 & 0 & 1 & 0 \end{pmatrix}$.
+
+    Returns:
+        (array of shape (4, 4)) CNOT operator.
+
+    Examples:
+        >>> dq.cnot()
+        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 1.+0.j],
+               [0.+0.j, 1.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 0.0],
+        ],
+        dtype=cdtype(),
+    )
