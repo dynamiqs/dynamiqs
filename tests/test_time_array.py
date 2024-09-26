@@ -16,9 +16,9 @@ from dynamiqs.time_array import (
 
 def assert_equal(x, y):
     if isinstance(x, QArray):
-        x = x.to_jax()
+        x = x.asjaxarray()
     if isinstance(y, QArray):
-        y = y.to_jax()
+        y = y.asjaxarray()
     assert jnp.array_equal(x, y)
 
 

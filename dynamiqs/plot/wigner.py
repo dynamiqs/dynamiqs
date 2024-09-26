@@ -7,7 +7,8 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
 from .._checks import check_shape
-from ..qarrays import QArrayLike, asjaxarray, asqarray
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.type_conversion import asjaxarray, asqarray
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
 

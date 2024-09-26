@@ -11,13 +11,31 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar
 from .layout import Layout, dense
-from .qarray import QArray, _in_last_two_dims
-from .types import QArrayLike, asjaxarray, isqarraylike
+from .qarray import QArray, QArrayLike, _asjaxarray, _in_last_two_dims, isqarraylike
 
 __all__ = ['DenseQArray']
 
 # batched Kronecker product of two arrays
 _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
+
+
+def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
+    if x.ndim > 2:
+        return [_dense_to_qobj(sub_x, dims=x.dims) for sub_x in x]
+    else:
+        dims = _dims_to_qutip(x.dims, x.shape)
+        return Qobj(x, dims=dims)
+
+
+def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
+    dims = list(dims)
+    if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
+        dims = [dims, [1] * len(dims)]
+    elif shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
+        dims = [[1] * len(dims), dims]
+    elif shape[-1] == shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
+        dims = [dims, dims]
+    return dims
 
 
 class DenseQArray(QArray):
@@ -110,12 +128,10 @@ class DenseQArray(QArray):
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
-    def to_qutip(self) -> Qobj | list[Qobj]:
-        from .utils import to_qutip
+    def asqobj(self) -> Qobj | list[Qobj]:
+        return _dense_to_qobj(self)
 
-        return to_qutip(self.data, dims=self.dims)
-
-    def to_jax(self) -> Array:
+    def asjaxarray(self) -> Array:
         return self.data
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
@@ -132,7 +148,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data * y.data
         elif isqarraylike(y):
-            data = self.data * asjaxarray(y)
+            data = self.data * _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -146,15 +162,13 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data / y.data
         elif isqarraylike(y):
-            data = self.data / asjaxarray(y)
+            data = self.data / _asjaxarray(y)
         else:
             return NotImplemented
 
         return DenseQArray(self.dims, data)
 
     def __add__(self, y: QArray) -> QArray:
-        from .sparse_dia_qarray import SparseDIAQArray
-
         super().__add__(y)
 
         if _is_batched_scalar(y):
@@ -162,9 +176,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
         elif isinstance(y, get_args(ArrayLike)):
-            data = self.data + asjaxarray(y)
-        elif isinstance(y, SparseDIAQArray):
-            return y.__add__(self)
+            data = self.data + _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -178,7 +190,7 @@ class DenseQArray(QArray):
             data = self.data @ y.data
         elif isqarraylike(y):
             dims = self.dims
-            data = self.data @ asjaxarray(y)
+            data = self.data @ _asjaxarray(y)
         else:
             return NotImplemented
 
@@ -195,7 +207,7 @@ class DenseQArray(QArray):
             data = y.data @ self.data
         elif isqarraylike(y):
             dims = self.dims
-            data = asjaxarray(y) @ self.data
+            data = _asjaxarray(y) @ self.data
         else:
             return NotImplemented
 
@@ -203,9 +215,9 @@ class DenseQArray(QArray):
 
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
-        dims = self.dims + y.dims
 
         if isinstance(y, DenseQArray):
+            dims = self.dims + y.dims
             data = _bkron(self.data, y.data)
         else:
             return NotImplemented

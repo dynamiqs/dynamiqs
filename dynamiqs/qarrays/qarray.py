@@ -2,22 +2,38 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
+from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING
+from typing import Any, Union, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
 from equinox.internal._omega import _Metaω  # noqa: PLC2403
 from jax import Array, Device
+from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .layout import Layout
 
-if TYPE_CHECKING:  # avoid circular import by importing only during type checking
-    from .types import QArrayLike
+__all__ = ['QArray', 'QArrayLike', 'isqarraylike']
 
-__all__ = ['QArray']
+
+def isqarraylike(x: Any) -> bool:
+    if isinstance(x, get_args(_QArrayLike)):
+        return True
+    elif isinstance(x, list):
+        return all(isqarraylike(sub_x) for sub_x in x)
+    return False
+
+
+def _asjaxarray(x: QArrayLike) -> Array:
+    if isinstance(x, QArray):
+        return x.asjaxarray()
+    elif isinstance(x, Sequence):
+        return jnp.asarray([_asjaxarray(sub_x) for sub_x in x])
+    else:
+        return jnp.asarray(x)
 
 
 class QArray(eqx.Module):
@@ -34,7 +50,7 @@ class QArray(eqx.Module):
     #                     _abs
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
-    #   - conversion methods: to_qutip, to_jax, __array__
+    #   - conversion methods: asqobj, asjaxarray, __array__
     #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, _pow, __getitem__
 
@@ -300,7 +316,7 @@ class QArray(eqx.Module):
         return proj(self)
 
     @abstractmethod
-    def to_qutip(self) -> Qobj | list[Qobj]:
+    def asqobj(self) -> Qobj | list[Qobj]:
         """Convert the quantum state to a QuTiP object.
 
         Returns:
@@ -308,7 +324,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def to_jax(self) -> Array:
+    def asjaxarray(self) -> Array:
         """Convert the quantum state to a JAX array.
 
         Returns:
@@ -325,7 +341,7 @@ class QArray(eqx.Module):
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         pass
 
-    def to_numpy(self) -> np.ndarray:
+    def asnparray(self) -> np.ndarray:
         """Convert the quantum state to a NumPy array.
 
         Returns:
@@ -451,3 +467,22 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
     return axis is None or (
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
     )
+
+
+# In this file we define an extended array type named `QArrayLike`. Most
+# functions in the library take a `QArrayLike` as argument and return a `QArray`.
+# `QArrayLike` can be:
+# - any numeric type (bool, int, float, complex),
+# - a JAX array,
+# - a NumPy array,
+# - a QuTiP Qobj,
+# - a dynamiqs QArray,
+# - a nested list of these types.
+# An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
+
+# extended array like type
+_QArrayLike = Union[ArrayLike, QArray, Qobj]
+# a type alias for nested list of _QArrayLike
+_NestedQArrayLikeList = list[Union[_QArrayLike, '_NestedQArrayLikeList']]
+# a type alias for any type compatible with asqarray
+QArrayLike = Union[_QArrayLike, _NestedQArrayLikeList]

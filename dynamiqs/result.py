@@ -6,7 +6,8 @@ from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
-from .qarrays import QArray, asjaxarray
+from .qarrays.qarray import QArray
+from .qarrays.type_conversion import asjaxarray
 from .solver import Solver
 
 __all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
@@ -61,10 +62,10 @@ class Result(eqx.Module):
     def extra(self) -> PyTree | None:
         return self._saved.extra
 
-    def to_qutip(self) -> Result:
+    def asqobj(self) -> Result:
         raise NotImplementedError
 
-    def to_numpy(self) -> Result:
+    def asnparray(self) -> Result:
         raise NotImplementedError
 
     def block_until_ready(self) -> Result:

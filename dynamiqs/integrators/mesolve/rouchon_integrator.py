@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
-from ...qarrays import QArray
+from ...qarrays.qarray import QArray
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import FixedStepDiffraxIntegrator
 from ..core.save_mixin import SolveSaveMixin

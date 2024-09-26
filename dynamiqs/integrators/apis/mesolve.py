@@ -11,7 +11,8 @@ from jaxtyping import ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
-from ...qarrays import QArray, QArrayLike, asqarray
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.type_conversion import asqarray
 from ...result import MESolveResult
 from ...solver import (
     Dopri5,

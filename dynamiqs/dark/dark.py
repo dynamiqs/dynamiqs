@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import jax.numpy as jnp
 
-from ..qarrays import QArray, asqarray
+from ..qarrays.qarray import QArray
+from ..qarrays.type_conversion import asqarray
 from ..utils.operators import quadrature
 from ..utils.quantum_utils import dag
 
