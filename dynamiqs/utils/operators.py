@@ -521,7 +521,7 @@ def cnot() -> Array:
 
     It is defined by
     $$
-        CNOT = \begin{pmatrix}
+        \text{CNOT} = \begin{pmatrix}
         1 & 0 & 0 & 0 \\\\
         0 & 1 & 0 & 0 \\\\
         0 & 0 & 0 & 1 \\\\
