@@ -468,6 +468,7 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
     )
 
+
 # In this file we define an extended array type named `QArrayLike`. Most
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
 # `QArrayLike` can be:
