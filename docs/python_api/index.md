@@ -152,16 +152,25 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - wigner
 
 
-### JAX-related utilities
+### QArray utilities
 
-::: dynamiqs.utils.jax_utils
+::: dynamiqs.qarrays.utils
     options:
         table: true
         members:
+        - stack
         - to_qutip
+
+### Global settings
+
+::: dynamiqs.utils.global_settings
+    options:
+        table: true
+        members:
         - set_device
         - set_precision
         - set_matmul_precision
+        - set_layout
 
 
 ### Vectorization

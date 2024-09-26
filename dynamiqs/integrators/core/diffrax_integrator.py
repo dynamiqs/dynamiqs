@@ -5,13 +5,13 @@ from abc import abstractmethod
 
 import diffrax as dx
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
+from ...qarrays.utils import stack
+from .abstract_integrator import BaseIntegrator
 from ...result import Result
-from ...utils.quantum_utils.general import dag
 from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
 from .interfaces import SEInterface, MEInterface
@@ -222,10 +222,10 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # induced on the dynamics.
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            Ls = jnp.stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
+            Ls = stack([L(t) for L in self.Ls])
+            Lsd = Ls.dag()
             LdL = (Lsd @ Ls).sum(0)
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
-            return tmp + dag(tmp)
+            return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)

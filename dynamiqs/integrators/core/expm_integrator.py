@@ -9,6 +9,7 @@ from jax import Array
 
 from dynamiqs._utils import _concatenate_sort
 
+from ...qarrays.qarray import QArray
 from ...result import Result
 from ...utils.quantum_utils.general import expm
 from ...utils.vectorization import slindbladian
@@ -53,7 +54,7 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
             return f'{self.nsteps} steps'
 
     @abstractmethod
-    def generator(self, t: float) -> Array:
+    def generator(self, t: float) -> QArray:
         pass
 
     def run(self) -> Result:
@@ -73,7 +74,7 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together
-        def step(carry: Array, x: Array) -> tuple[Array, Array]:
+        def step(carry: QArray, x: QArray) -> tuple[QArray, QArray]:
             # note the ordering x @ carry: we accumulate propagators from the left
             x_next = x @ carry
             return x_next, self.save(x_next)
@@ -105,7 +106,7 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
                 'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
-    def generator(self, t: float) -> Array:
+    def generator(self, t: float) -> QArray:
         return -1j * self.H(t)  # (n, n)
 
 
@@ -127,5 +128,5 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
                 'Solver `Expm` requires constant or piecewise constant jump operators.'
             )
 
-    def generator(self, t: float) -> Array:
+    def generator(self, t: float) -> QArray:
         return slindbladian(self.H(t), [L(t) for L in self.Ls])  # (n^2, n^2)
