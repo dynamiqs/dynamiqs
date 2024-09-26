@@ -986,7 +986,7 @@ def get_bloch_coords(x: ArrayLike) -> Array:
     Examples:
         >>> x = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
         >>> dq.get_bloch_coords(x)
-        Array([[0.+0.j, 1.5707964-0.j, 0.+0.j]], dtype=complex64)
+        Array([[0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
     """
     ## Check if the input is a density matrix
     if isdm(x):
@@ -997,10 +997,14 @@ def get_bloch_coords(x: ArrayLike) -> Array:
 
         ## Spherical coordinates
         r = jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2) + jnp.pow(c_z, 2))
-        theta = jnp.acos(c_z / r)
-        phi = jnp.sign(c_y) * jnp.acos(
-            c_x / jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2))
-        )
+        if r == 0:
+            theta = 0.0 + 0.0j
+            phi = 0.0 + 0.0j
+        else:
+            theta = jnp.acos(c_z / r)
+            phi = jnp.sign(c_y) * jnp.acos(
+                c_x / jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2))
+            )
 
     ## Otherwise, it should be a ket
     elif isket(x):
