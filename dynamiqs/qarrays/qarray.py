@@ -36,6 +36,22 @@ def _asjaxarray(x: QArrayLike) -> Array:
         return jnp.asarray(x)
 
 
+def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
+    dims = list(dims)
+    if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
+        dims = [dims, [1] * len(dims)]
+    elif shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
+        dims = [[1] * len(dims), dims]
+    elif shape[-1] == shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
+        dims = [dims, dims]
+    return dims
+
+
+def _dims_from_qutip(dims: list) -> tuple[int, ...]:
+    dims = np.max(dims, axis=0)
+    return tuple([d.item() for d in dims])
+
+
 class QArray(eqx.Module):
     r"""Quantum array object. DenseQArray is a wrapper around JAX arrays. It offers
     convenience methods to handle more easily quantum states
