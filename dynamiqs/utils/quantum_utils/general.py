@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ..._utils import on_cpu
+from ..._utils import cdtype, on_cpu
 
 __all__ = [
     'dag',
@@ -39,6 +39,7 @@ __all__ = [
     'overlap',
     'fidelity',
     'entropy_vn',
+    'get_bloch_coords',
 ]
 
 
@@ -255,11 +256,11 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         >>> psi_abc = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
         >>> psi_abc.shape
         (60, 1)
-        >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
-        >>> rho_a.shape
+        >>> x_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
+        >>> x_a.shape
         (3, 3)
-        >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
-        >>> rho_bc.shape
+        >>> x_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
+        >>> x_bc.shape
         (20, 20)
     """
     x = jnp.asarray(x)
@@ -357,7 +358,7 @@ def expect(O: ArrayLike, x: ArrayLike) -> Array:
     The expectation value $\braket{O}$ of an operator $O$ is computed
 
     - as $\braket{O}=\braket{\psi|O|\psi}$ if `x` is a ket $\ket\psi$ or bra $\bra\psi$,
-    - as $\braket{O}=\tr{O\rho}$ if `x` is a density matrix $\rho$.
+    - as $\braket{O}=\tr{O\x}$ if `x` is a density matrix $\x$.
 
     Warning:
         The returned array is complex-valued. If the operator $O$ corresponds to a
@@ -414,7 +415,7 @@ def norm(x: ArrayLike) -> Array:
     r"""Returns the norm of a ket, bra or density matrix.
 
     For a ket or a bra, the returned norm is $\sqrt{\braket{\psi|\psi}}$. For a density
-    matrix, it is $\tr{\rho}$.
+    matrix, it is $\tr{\x}$.
 
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
@@ -433,8 +434,8 @@ def norm(x: ArrayLike) -> Array:
         Array(1.414, dtype=float32)
 
         For a density matrix:
-        >>> rho = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
-        >>> dq.norm(rho)
+        >>> x = dq.fock_dm(4, 0) + dq.fock_dm(4, 1) + dq.fock_dm(4, 2)
+        >>> dq.norm(x)
         Array(3., dtype=float32)
     """
     x = jnp.asarray(x)
@@ -473,47 +474,47 @@ def unit(x: ArrayLike) -> Array:
     return x / norm(x)[..., None, None]
 
 
-def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
+def dissipator(L: ArrayLike, x: ArrayLike) -> Array:
     r"""Applies the Lindblad dissipation superoperator to a density matrix.
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
     $$
-        \mathcal{D}[L] (\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
-        - \frac{1}{2}\rho L^\dag L.
+        \mathcal{D}[L] (\x) = L\x L^\dag - \frac{1}{2}L^\dag L \x
+        - \frac{1}{2}\x L^\dag L.
     $$
 
     Args:
         L _(array_like of shape (..., n, n))_: Jump operator.
-        rho _(array_like of shape (..., n, n))_: Density matrix.
+        x _(array_like of shape (..., n, n))_: Density matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
 
     Examples:
         >>> L = dq.destroy(4)
-        >>> rho = dq.fock_dm(4, 2)
-        >>> dq.dissipator(L, rho)
+        >>> x = dq.fock_dm(4, 2)
+        >>> dq.dissipator(L, x)
         Array([[ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  2.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j, -2.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
     """
     L = jnp.asarray(L)
-    rho = jnp.asarray(rho)
+    x = jnp.asarray(x)
     check_shape(L, 'L', '(..., n, n)')
-    check_shape(rho, 'rho', '(..., n, n)')
+    check_shape(x, 'x', '(..., n, n)')
 
     Ldag = dag(L)
     LdagL = Ldag @ L
-    return L @ rho @ Ldag - 0.5 * LdagL @ rho - 0.5 * rho @ LdagL
+    return L @ x @ Ldag - 0.5 * LdagL @ x - 0.5 * x @ LdagL
 
 
-def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
+def lindbladian(H: ArrayLike, jump_ops: ArrayLike, x: ArrayLike) -> Array:
     r"""Applies the Lindbladian superoperator to a density matrix.
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
     $$
-        \mathcal{L} (\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k] (\rho),
+        \mathcal{L} (\x) = -i[H,\x] + \sum_{k=1}^N \mathcal{D}[L_k] (\x),
     $$
 
     where $H$ is the system Hamiltonian, $\{L_k\}$ is a set of $N$ jump operators
@@ -526,7 +527,7 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
         jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
-        rho _(array_like of shape (..., n, n))_: Density matrix.
+        x _(array_like of shape (..., n, n))_: Density matrix.
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
@@ -535,8 +536,8 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
         >>> a = dq.destroy(4)
         >>> H = dq.dag(a) @ a
         >>> L = [a, dq.dag(a) @ a]
-        >>> rho = dq.fock_dm(4, 1)
-        >>> dq.lindbladian(H, L, rho)
+        >>> x = dq.fock_dm(4, 1)
+        >>> dq.lindbladian(H, L, x)
         Array([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
@@ -544,12 +545,12 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
-    rho = jnp.asarray(rho)
+    x = jnp.asarray(x)
     check_shape(H, 'H', '(..., n, n)')
     check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
-    check_shape(rho, 'rho', '(..., n, n)')
+    check_shape(x, 'x', '(..., n, n)')
 
-    return -1j * (H @ rho - rho @ H) + dissipator(jump_ops, rho).sum(0)
+    return -1j * (H @ x - x @ H) + dissipator(jump_ops, x).sum(0)
 
 
 def isket(x: ArrayLike) -> bool:
@@ -659,7 +660,7 @@ def isherm(x: ArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
 
 
 def toket(x: ArrayLike) -> Array:
-    r"""Returns the ket representation of a pure quantum state.
+    r"""Returns the ket representation of a pure quantum x.
 
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
@@ -686,7 +687,7 @@ def toket(x: ArrayLike) -> Array:
 
 
 def tobra(x: ArrayLike) -> Array:
-    r"""Returns the bra representation of a pure quantum state.
+    r"""Returns the bra representation of a pure quantum x.
 
     Args:
         x _(array_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
@@ -713,7 +714,7 @@ def tobra(x: ArrayLike) -> Array:
 
 
 def todm(x: ArrayLike) -> Array:
-    r"""Returns the density matrix representation of a quantum state.
+    r"""Returns the density matrix representation of a quantum x.
 
     Note:
         This function is an alias of [`dq.proj()`][dynamiqs.proj]. If `x` is already a
@@ -747,9 +748,9 @@ def todm(x: ArrayLike) -> Array:
 
 
 def proj(x: ArrayLike) -> Array:
-    r"""Returns the projection operator onto a pure quantum state.
+    r"""Returns the projection operator onto a pure quantum x.
 
-    The projection operator onto the state $\ket\psi$ is defined as
+    The projection operator onto the x $\ket\psi$ is defined as
     $P_{\ket\psi} = \ket\psi\bra\psi$.
 
     Args:
@@ -799,15 +800,15 @@ def braket(x: ArrayLike, y: ArrayLike) -> Array:
 
 
 def overlap(x: ArrayLike, y: ArrayLike) -> Array:
-    r"""Returns the overlap between two quantum states.
+    r"""Returns the overlap between two quantum xs.
 
     The overlap is computed
 
     - as $\lvert\braket{\psi|\varphi}\rvert^2$ if both arguments are kets $\ket\psi$
       and $\ket\varphi$,
-    - as $\lvert\bra\psi \rho \ket\psi\rvert$ if one argument is a ket $\ket\psi$ and
-      the other is a density matrix $\rho$,
-    - as $\tr{\rho^\dag\sigma}$ if both arguments are density matrices $\rho$ and
+    - as $\lvert\bra\psi \x \ket\psi\rvert$ if one argument is a ket $\ket\psi$ and
+      the other is a density matrix $\x$,
+    - as $\tr{\x^\dag\sigma}$ if both arguments are density matrices $\x$ and
       $\sigma$.
 
     Args:
@@ -841,15 +842,15 @@ def overlap(x: ArrayLike, y: ArrayLike) -> Array:
 
 
 def fidelity(x: ArrayLike, y: ArrayLike) -> Array:
-    r"""Returns the fidelity of two states, kets or density matrices.
+    r"""Returns the fidelity of two xs, kets or density matrices.
 
     The fidelity is computed
 
     - as $F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2$ if both
       arguments are kets,
-    - as $F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert$ if one arguments is a
+    - as $F(\ket\psi,\x)=\lvert\braket{\psi|\x|\psi}\rvert$ if one arguments is a
       ket and the other is a density matrix,
-    - as $F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2$ if both arguments are
+    - as $F(\x,\sigma)=\tr{\sqrt{\sqrt\x\sigma\sqrt\x}}^2$ if both arguments are
       density matrices.
 
     Warning:
@@ -942,7 +943,7 @@ def _sqrtm_gpu(x: Array) -> Array:
 def entropy_vn(x: ArrayLike) -> Array:
     r"""Returns the Von Neumann entropy of a ket or density matrix.
 
-    It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
+    It is defined by $S(\x) = -\tr{\x \ln \x}$.
 
     Args:
         x _(array_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
@@ -951,8 +952,8 @@ def entropy_vn(x: ArrayLike) -> Array:
         _(array of shape (...))_ Real-valued Von Neumann entropy.
 
     Examples:
-        >>> rho = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
-        >>> dq.entropy_vn(rho)
+        >>> x = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        >>> dq.entropy_vn(x)
         Array(0.693, dtype=float32)
         >>> psis = [dq.fock(16, i) for i in range(5)]
         >>> dq.entropy_vn(psis).shape
@@ -964,8 +965,47 @@ def entropy_vn(x: ArrayLike) -> Array:
     if isket(x):
         return jnp.zeros(x.shape[:-2])
 
-    # compute sum(w_i log(w_i)) where w_i are rho's eigenvalues
+    # compute sum(w_i log(w_i)) where w_i are x's eigenvalues
     w = jnp.linalg.eigvalsh(x)
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
+
+
+def get_bloch_coords(x: ArrayLike) -> Array:
+    r"""Returns the spherical coordinates of a ket / density matrix on the
+     Bloch sphere.
+
+    Args:
+        x _(array_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
+
+    Returns:
+        _(array of shape (1, 2))_ Spherical coordinates (theta, phi) on the
+        Bloch sphere.
+
+    Examples:
+        >>> x = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        >>> dq.get_bloch_coords(x)
+        Array([[1.5707964-0.j 0.+0.j]], dtype=complex64)
+    """
+    ## Check if the input is a density matrix
+    if isdm(x):
+        ## Cartesian coordinates
+        c_x = 2.0 * x[0][0].real
+        c_y = 2.0 * x[1][0].imag
+        c_z = 2.0 * x[0][0] - 1.0
+
+        ## Spherical coordinates
+        # Valid because r = 1 on the Bloch sphere:
+        theta = jnp.acos(c_z)
+        phi = jnp.sign(c_y) * jnp.acos(
+            c_x / jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2))
+        )
+
+    ## Otherwise, it should be a ket
+    elif isket(x):
+        ## Spherical coordinates
+        theta = 2 * jnp.acos(x[0])
+        phi = jnp.acos(x[1].real / jnp.sin(theta / 2))
+
+    return jnp.array([[theta, phi]], dtype=cdtype())

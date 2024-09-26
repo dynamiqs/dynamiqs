@@ -227,6 +227,7 @@ nav:
               - fidelity: python_api/utils/quantum_utils/fidelity.md
               - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
               - wigner: python_api/utils/quantum_utils/wigner.md
+              - get_bloch_coords: python_api/utils/quantum_utils/get_bloch_coords.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
               - set_device: python_api/utils/jax_utils/set_device.md

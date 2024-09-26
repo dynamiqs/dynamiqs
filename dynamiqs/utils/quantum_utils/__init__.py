@@ -30,4 +30,5 @@ __all__ = [
     'fidelity',
     'entropy_vn',
     'wigner',
+    'get_bloch_coords',
 ]
