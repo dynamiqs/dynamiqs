@@ -22,7 +22,7 @@ __all__ = ['QArray', 'QArrayLike', 'isqarraylike']
 def isqarraylike(x: Any) -> bool:
     if isinstance(x, get_args(_QArrayLike)):
         return True
-    elif isinstance(x, list):
+    elif isinstance(x, Sequence):
         return all(isqarraylike(sub_x) for sub_x in x)
     return False
 
@@ -477,12 +477,12 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # - a NumPy array,
 # - a QuTiP Qobj,
 # - a dynamiqs QArray,
-# - a nested list of these types.
+# - a nested sequence of these types.
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 
 # extended array like type
 _QArrayLike = Union[ArrayLike, QArray, Qobj]
-# a type alias for nested list of _QArrayLike
-_NestedQArrayLikeList = list[Union[_QArrayLike, '_NestedQArrayLikeList']]
+# a type alias for nested sequence of _QArrayLike
+_NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
 # a type alias for any type compatible with asqarray
-QArrayLike = Union[_QArrayLike, _NestedQArrayLikeList]
+QArrayLike = Union[_QArrayLike, _NestedQArrayLikeSequence]
