@@ -991,7 +991,7 @@ def get_bloch_coords(x: ArrayLike) -> Array:
     ## Check if the input is a density matrix
     if isdm(x):
         ## Cartesian coordinates
-        c_x = 2.0 * x[0][0].real
+        c_x = 2.0 * x[1][0].real
         c_y = 2.0 * x[1][0].imag
         c_z = 2.0 * x[0][0] - 1.0
 
