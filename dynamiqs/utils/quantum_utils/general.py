@@ -980,13 +980,13 @@ def get_bloch_coords(x: ArrayLike) -> Array:
         x _(array_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
 
     Returns:
-        _(array of shape (1, 2))_ Spherical coordinates (theta, phi) on the
-        Bloch sphere.
+        _(array of shape (1, 3))_
+        Spherical coordinates (r, theta, phi) on the Bloch sphere.
 
     Examples:
         >>> x = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
         >>> dq.get_bloch_coords(x)
-        Array([[1.5707964-0.j 0.+0.j]], dtype=complex64)
+        Array([[0.+0.j, 1.5707964-0.j, 0.+0.j]], dtype=complex64)
     """
     ## Check if the input is a density matrix
     if isdm(x):
@@ -996,16 +996,17 @@ def get_bloch_coords(x: ArrayLike) -> Array:
         c_z = 2.0 * x[0][0] - 1.0
 
         ## Spherical coordinates
-        # Valid because r = 1 on the Bloch sphere:
-        theta = jnp.acos(c_z)
+        r = jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2) + jnp.pow(c_z, 2))
+        theta = jnp.acos(c_z / r)
         phi = jnp.sign(c_y) * jnp.acos(
             c_x / jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2))
         )
 
     ## Otherwise, it should be a ket
     elif isket(x):
-        ## Spherical coordinates
+        ## Spherical coordinates, ket normalized
+        r = 1
         theta = 2 * jnp.acos(x[0])
         phi = jnp.acos(x[1].real / jnp.sin(theta / 2))
 
-    return jnp.array([[theta, phi]], dtype=cdtype())
+    return jnp.array([[r, theta, phi]], dtype=cdtype())
