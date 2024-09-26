@@ -530,7 +530,7 @@ def cnot() -> Array:
     $$
 
     Returns:
-        (array of shape (4, 4)) CNOT gate.
+        _(array of shape (4, 4))_ CNOT gate.
 
     Examples:
         >>> dq.cnot()
