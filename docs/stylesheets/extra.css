@@ -97,6 +97,21 @@ Description: Extra CSS for the Dynamiqs documentation
     min-width: 4rem;
 }
 
+.md-banner__inner.md-typeset {
+    font-size: .62rem;
+}
+
+.md-banner__inner {
+    margin: .4rem auto;
+    text-align: center;
+}
+
+.md-banner--warning {
+    background-color: var(--md-banner-bg-color);
+    color: var(--md-banner-fg-color);
+}
+
+
 /* Note admonition color shades */
 .md-typeset .admonition,
 .md-typeset details,

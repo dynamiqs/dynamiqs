@@ -67,6 +67,10 @@ Description: Color theme of the Dynamiqs documentation
   --homepage-gradient:  linear-gradient(to right bottom, #d15540, #d86854, #de7a68, #e38b7c, #e79d90);
   --homepage-button-hover-color: #ed9487;
   --homepage-button-font-color: #cf6656;
+
+  /* Version banner */
+  --md-banner-bg-color: #15181a;
+  --md-banner-fg-color: #f0f0f0;
 }
 
 
@@ -120,4 +124,8 @@ Description: Color theme of the Dynamiqs documentation
   --homepage-gradient: linear-gradient(to right bottom, #ae4635, #bd5c4b, #cc7261, #da8778, #e79d90);
   --homepage-button-hover-color: #8e4633;
   --homepage-button-font-color: #a64833;
+
+  /* Version banner */
+  --md-banner-bg-color: #15181a;
+  --md-banner-fg-color: #f0f0f0;
 }
