@@ -224,25 +224,64 @@ def _create_single(dim: int) -> Array:
     return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
 
 
-def number(dim: int | None = None) -> Array:
-    r"""Returns the number operator of a bosonic mode.
+def number(*dims: int) -> Array | tuple[Array, ...]:
+    r"""Returns the number operator of a bosonic mode, or a tuple of number operators
+    for a multi-mode system.
 
     It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
-    creation operators, respectively.
+    creation operators, respectively. If multiple dimensions are provided
+    $\mathtt{dims}=(n_1,\dots,n_M)$, it returns a tuple with _len(dims)_ operators
+    $(N_1,\dots,N_M)$, where $N_k$ is the number operator acting on the $k$-th
+    subsystem within the composite Hilbert space of dimension $n=\prod n_k$:
+    $$
+        N_k = I_{n_1} \otimes\dots\otimes a_{n_k}^\dag a_{n_k} \otimes\dots\otimes I_{n_M}.
+    $$
 
     Args:
-        dim: Dimension of the Hilbert space.
+        *dims: Hilbert space dimension of each mode.
 
     Returns:
-        _(array of shape (dim, dim))_ Number operator.
+        _(array or tuple of arrays, each of shape (n, n))_ Number operator(s), with
+            _n = prod(dims)_.
 
     Examples:
+        Single-mode $a^\dag a$:
         >>> dq.number(4)
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]], dtype=complex64)
-    """
+
+        Mult-mode $a^\dag a \otimes I_3$ and $I_2\otimes b^\dag b$:
+        >>> na, nb = dq.number(2, 3)
+        >>> na
+        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        >>> nb
+        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 2.+0.j]], dtype=complex64)
+    """  # noqa: E501
+    if len(dims) == 1:
+        return _number_single(dims[0])
+
+    nums = [_number_single(dim) for dim in dims]
+    Id = [eye(dim) for dim in dims]
+    return tuple(
+        tensor(*[nums[j] if i == j else Id[j] for j in range(len(dims))])
+        for i in range(len(dims))
+    )
+
+
+def _number_single(dim: int) -> Array:
+    """Bosonic number operator."""
     return jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
 
 
