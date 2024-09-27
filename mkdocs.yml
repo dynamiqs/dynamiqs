@@ -189,6 +189,7 @@ nav:
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
+              - cnot: python_api/utils/operators/cnot.md
           - States:
               - fock: python_api/utils/states/fock.md
               - fock_dm: python_api/utils/states/fock_dm.md
