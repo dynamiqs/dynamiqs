@@ -93,6 +93,10 @@ Description: Extra CSS for the Dynamiqs documentation
     font-size: .7rem;
 }
 
+.md-version__current {
+    min-width: 4rem;
+}
+
 /* Note admonition color shades */
 .md-typeset .admonition,
 .md-typeset details,
