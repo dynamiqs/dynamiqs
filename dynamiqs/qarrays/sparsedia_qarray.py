@@ -49,7 +49,7 @@ def _array_to_sparsedia(x: Array, dims: tuple[int, ...]) -> SparseDIAQArray:
 
 def _find_offsets(x: Array) -> tuple[int, ...]:
     indices = np.nonzero(x)
-    return tuple(np.unique(indices[-1] - indices[-2]))
+    return _numpy_to_tuple(np.unique(indices[-1] - indices[-2]))
 
 
 @functools.partial(jax.jit, static_argnums=(0,))
@@ -284,7 +284,7 @@ class SparseDIAQArray(QArray):
             out_diag = self_diag * other_diag
             out_diags = out_diags.at[..., i, :].set(out_diag)
 
-        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
+        return SparseDIAQArray(self.dims, _numpy_to_tuple(out_offsets), out_diags)
 
     def _mul_dense(self, other: Array) -> QArray:
         # initialize the output diagonals
@@ -345,7 +345,7 @@ class SparseDIAQArray(QArray):
                 other_diag = other.diags[..., other.offsets.index(offset), :]
                 out_diags = out_diags.at[..., i, :].add(other_diag)
 
-        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
+        return SparseDIAQArray(self.dims, _numpy_to_tuple(out_offsets), out_diags)
 
     def _add_dense(self, other: Array) -> QArray:
         return self.to_dense() + other
@@ -402,7 +402,7 @@ class SparseDIAQArray(QArray):
         out_diags = jnp.stack(out_diags)
         out_diags = jnp.moveaxis(out_diags, 0, -2)
 
-        return SparseDIAQArray(self.dims, tuple(out_offsets), out_diags)
+        return SparseDIAQArray(self.dims, _numpy_to_tuple(out_offsets), out_diags)
 
     def _matmul_dense(self, other: Array, left_matmul: bool) -> QArray:
         batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
@@ -442,7 +442,9 @@ class SparseDIAQArray(QArray):
         N = other.diags.shape[-1]
         self_offsets = np.asarray(self.offsets)
         other_offsets = np.asarray(other.offsets)
-        out_offsets = tuple(np.ravel(self_offsets[:, None] * N + other_offsets))
+        out_offsets = _numpy_to_tuple(
+            np.ravel(self_offsets[:, None] * N + other_offsets)
+        )
 
         # compute new diagonals and dimensions
         out_diags = jnp.kron(self.diags, other.diags)
@@ -512,4 +514,9 @@ def _compress_dia(offsets: tuple[int, ...], diags: ArrayLike) -> SparseDIAQArray
         diag = jnp.sum(diags[..., mask, :], axis=-2)
         out_diags = out_diags.at[..., i, :].set(diag)
 
-    return tuple(out_offsets), out_diags
+    return _numpy_to_tuple(out_offsets), out_diags
+
+
+def _numpy_to_tuple(x: np.ndarray) -> tuple:
+    assert x.ndim == 1
+    return tuple([sub_x.item() for sub_x in x])
