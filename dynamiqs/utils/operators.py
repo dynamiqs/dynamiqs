@@ -28,6 +28,13 @@ __all__ = [
     'sigmap',
     'sigmam',
     'hadamard',
+    'cnot',
+    'rx',
+    'ry',
+    'rz',
+    'tgate',
+    'sgate',
+    'toffoli',
 ]
 
 
@@ -513,3 +520,290 @@ def hadamard(n: int = 1) -> Array:
     H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)
+
+
+def cnot() -> Array:
+    r"""Returns the CNOT gate.
+
+    It is defined by
+    $$
+        \text{CNOT} = \begin{pmatrix}
+        1 & 0 & 0 & 0 \\\\
+        0 & 1 & 0 & 0 \\\\
+        0 & 0 & 0 & 1 \\\\
+        0 & 0 & 1 & 0
+        \end{pmatrix}
+    $$
+
+    Returns:
+        _(array of shape (4, 4))_ CNOT gate.
+
+    Examples:
+        >>> dq.cnot()
+        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 0.0],
+        ],
+        dtype=cdtype(),
+    )
+
+
+def rx(theta: float) -> Array:
+    r"""Returns the Rx gate through angle $\theta$ in radians around the x-axis.
+
+    It is defined by
+    $$
+        R_x(\theta) = \begin{pmatrix}
+        \cos\left(\frac{\theta}{2}\right) & -i\sin\left(\frac{\theta}{2}\right) \\\\
+        -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (2, 2)) Rx gate.
+
+    Examples:
+        >>> dq.rx(jnp.pi)
+        Array([[0.+0.j, 0.-1.j],
+               [0.-1.j, 0.+0.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [
+            [jnp.cos(theta / 2), -jnp.sin(theta / 2) * 1.0j],
+            [-jnp.sin(theta / 2) * 1.0j, jnp.cos(theta / 2)],
+        ],
+        dtype=cdtype(),
+    )
+
+
+def ry(theta: float) -> Array:
+    r"""Returns the Ry gate through angle $\theta$ in radians around the y-axis.
+
+    It is defined by
+    $$
+        R_y(\theta) = \begin{pmatrix}
+        \cos\left(\frac{\theta}{2}\right) & -\sin\left(\frac{\theta}{2}\right) \\\\
+        \sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (2, 2)) Ry gate.
+
+    Examples:
+        >>> dq.ry(jnp.pi)
+        Array([[0.+0.j, -1.+0.j],
+               [1.+0.j, 0.+0.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [
+            [jnp.cos(theta / 2), -jnp.sin(theta / 2)],
+            [jnp.sin(theta / 2), jnp.cos(theta / 2)],
+        ],
+        dtype=cdtype(),
+    )
+
+
+def rz(theta: float) -> Array:
+    r"""Returns the Rz gate through angle $\theta$ in radians around the z-axis.
+
+    It is defined by
+    $$
+        R_z(\theta) = \begin{pmatrix}
+        e^{-i\frac{\theta}{2}} & 0 \\\\
+        0 & e^{i\frac{\theta}{2}}
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (2, 2)) Rz gate.
+
+    Examples:
+        >>> dq.rz(jnp.pi)
+        Array([[0.-1.j, 0.+0.j],
+               [0.+0.j, 0.+1.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [
+            [jnp.exp(-1.0j * theta / 2), 0.0 + 0.0j],
+            [0.0 + 0.0j, jnp.exp(1.0j * theta / 2)],
+        ],
+        dtype=cdtype(),
+    )
+
+
+def tgate() -> Array:
+    r"""Returns the T gate.
+
+    It is defined by
+    $$
+        \text{T} = \begin{pmatrix}
+        1 & 0 \\\\
+        0 & e^{i\frac{\pi}{4}}
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (2, 2)) T gate.
+
+    Examples:
+        >>> dq.tgate()
+        Array([[1.+0.j, 0.+0.j],
+               [0.+0.j, 0.7071067811865476+0.7071067811865476j]], dtype=complex64)
+    """
+    return jnp.array(
+        [[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, jnp.exp(1.0j * jnp.pi / 4)]],
+        dtype=cdtype(),
+    )
+
+
+def sgate() -> Array:
+    r"""Returns the S gate.
+
+    It is defined by
+    $$
+        \text{S} = \begin{pmatrix}
+        1 & 0 \\\\
+        0 & i
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (2, 2)) S gate.
+
+    Examples:
+        >>> dq.sgate()
+        Array([[1.+0.j, 0.+0.j],
+               [0.+0.j, 0.+1.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 0.0 + 1.0j]], dtype=cdtype()
+    )
+
+
+def toffoli() -> Array:
+    r"""Returns the Toffoli gate.
+
+    It is defined by
+    $$
+        Toffoli = \begin{pmatrix}
+        1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
+        0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
+        0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\\\
+        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\\\
+        0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\\
+        0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\\\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\\\
+        0 & 0 & 0 & 0 & 0 & 0 & 1 & 0
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (8, 8)) Toffoli gate.
+
+    Examples:
+        >>> dq.toffoli()
+        Array([
+            [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+            [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+            [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+            [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+        ], dtype=complex64)
+    """
+    return jnp.array(
+        [
+            [
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+            ],
+            [
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                0.0 + 0.0j,
+                1.0 + 0.0j,
+                0.0 + 0.0j,
+            ],
+        ],
+        dtype=cdtype(),
+    )

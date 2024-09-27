@@ -97,6 +97,13 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - sigmap
         - sigmam
         - hadamard
+        - cnot
+        - rx
+        - ry
+        - rz
+        - tgate
+        - sgate
+        - toffoli
 
 
 ### States
