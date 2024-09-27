@@ -555,7 +555,6 @@ def cnot() -> Array:
         dtype=cdtype(),
     )
 
-
 def rx(theta: float) -> Array:
     r"""Returns the Rx gate through angle $\theta$ in radians around the x-axis.
 
