@@ -534,7 +534,7 @@ def rx(theta: float) -> Array:
     $$
 
     Returns:
-        (array of shape (2, 2)) Rx gate.
+        _(array of shape (2, 2))_ Rx gate.
 
     Examples:
         >>> dq.rx(jnp.pi)
@@ -562,7 +562,7 @@ def ry(theta: float) -> Array:
     $$
 
     Returns:
-        (array of shape (2, 2)) Ry gate.
+        _(array of shape (2, 2))_ Ry gate.
 
     Examples:
         >>> dq.ry(jnp.pi)
@@ -590,7 +590,7 @@ def rz(theta: float) -> Array:
     $$
 
     Returns:
-        (array of shape (2, 2)) Rz gate.
+        _(array of shape (2, 2))_ Rz gate.
 
     Examples:
         >>> dq.rz(jnp.pi)
@@ -614,7 +614,7 @@ def sgate() -> Array:
     $$
 
     Returns:
-        (array of shape (2, 2)) S gate.
+        _(array of shape (2, 2))_ S gate.
 
     Examples:
         >>> dq.sgate()
@@ -636,7 +636,7 @@ def tgate() -> Array:
     $$
 
     Returns:
-        (array of shape (2, 2)) T gate.
+        _(array of shape (2, 2))_ T gate.
 
     Examples:
         >>> dq.tgate()
@@ -692,7 +692,7 @@ def toffoli() -> Array:
     $$
 
     Returns:
-        (array of shape (8, 8)) Toffoli gate.
+        _(array of shape (8, 8))_ Toffoli gate.
 
     Examples:
         >>> dq.toffoli()
