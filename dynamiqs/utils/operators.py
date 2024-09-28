@@ -632,7 +632,7 @@ def tgate() -> Array:
         Array([[1.   +0.j   , 0.   +0.j   ],
                [0.   +0.j   , 0.707+0.707j]], dtype=complex64)
     """
-    return jnp.array([[1, 0], [0, jnp.exp(1j * jnp.pi / 4)]], dtype=cdtype())
+    return jnp.array([[1, 0], [0, (1 + 1j) / jnp.sqrt(2)]], dtype=cdtype())
 
 
 def cnot() -> Array:
