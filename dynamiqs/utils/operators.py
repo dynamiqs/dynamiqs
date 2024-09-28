@@ -28,12 +28,12 @@ __all__ = [
     'sigmap',
     'sigmam',
     'hadamard',
-    'cnot',
     'rx',
     'ry',
     'rz',
-    'tgate',
     'sgate',
+    'tgate',
+    'cnot',
     'toffoli',
 ]
 
@@ -522,39 +522,6 @@ def hadamard(n: int = 1) -> Array:
     return tensor(*Hs)
 
 
-def cnot() -> Array:
-    r"""Returns the CNOT gate.
-
-    It is defined by
-    $$
-        \text{CNOT} = \begin{pmatrix}
-        1 & 0 & 0 & 0 \\\\
-        0 & 1 & 0 & 0 \\\\
-        0 & 0 & 0 & 1 \\\\
-        0 & 0 & 1 & 0
-        \end{pmatrix}
-    $$
-
-    Returns:
-        _(array of shape (4, 4))_ CNOT gate.
-
-    Examples:
-        >>> dq.cnot()
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)
-    """
-    return jnp.array(
-        [
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-            [0.0, 0.0, 1.0, 0.0],
-        ],
-        dtype=cdtype(),
-    )
-
 def rx(theta: float) -> Array:
     r"""Returns the Rx gate through angle $\theta$ in radians around the x-axis.
 
@@ -639,6 +606,30 @@ def rz(theta: float) -> Array:
     )
 
 
+def sgate() -> Array:
+    r"""Returns the S gate.
+
+    It is defined by
+    $$
+        \text{S} = \begin{pmatrix}
+        1 & 0 \\\\
+        0 & i
+        \end{pmatrix}
+    $$
+
+    Returns:
+        (array of shape (2, 2)) S gate.
+
+    Examples:
+        >>> dq.sgate()
+        Array([[1.+0.j, 0.+0.j],
+               [0.+0.j, 0.+1.j]], dtype=complex64)
+    """
+    return jnp.array(
+        [[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 0.0 + 1.0j]], dtype=cdtype()
+    )
+
+
 def tgate() -> Array:
     r"""Returns the T gate.
 
@@ -664,27 +655,37 @@ def tgate() -> Array:
     )
 
 
-def sgate() -> Array:
-    r"""Returns the S gate.
+def cnot() -> Array:
+    r"""Returns the CNOT gate.
 
     It is defined by
     $$
-        \text{S} = \begin{pmatrix}
-        1 & 0 \\\\
-        0 & i
+        \text{CNOT} = \begin{pmatrix}
+        1 & 0 & 0 & 0 \\\\
+        0 & 1 & 0 & 0 \\\\
+        0 & 0 & 0 & 1 \\\\
+        0 & 0 & 1 & 0
         \end{pmatrix}
     $$
 
     Returns:
-        (array of shape (2, 2)) S gate.
+        _(array of shape (4, 4))_ CNOT gate.
 
     Examples:
-        >>> dq.sgate()
-        Array([[1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+1.j]], dtype=complex64)
+        >>> dq.cnot()
+        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)
     """
     return jnp.array(
-        [[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 0.0 + 1.0j]], dtype=cdtype()
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 0.0],
+        ],
+        dtype=cdtype(),
     )
 
 
