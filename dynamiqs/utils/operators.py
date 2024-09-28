@@ -365,7 +365,7 @@ def quadrature(dim: int, phi: float) -> Array:
                [ 0.+0.j   , -0.+0.707j,  0.+0.j   ]], dtype=complex64)
     """
     a = destroy(dim)
-    return 0.5 * (jnp.exp(1.0j * phi) * dag(a) + jnp.exp(-1.0j * phi) * a)
+    return 0.5 * (jnp.exp(1j * phi) * dag(a) + jnp.exp(-1j * phi) * a)
 
 
 def position(dim: int) -> Array:
@@ -419,7 +419,7 @@ def sigmax() -> Array:
         Array([[0.+0.j, 1.+0.j],
                [1.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
+    return jnp.array([[0, 1], [1, 0]], dtype=cdtype())
 
 
 def sigmay() -> Array:
@@ -435,7 +435,7 @@ def sigmay() -> Array:
         Array([[ 0.+0.j, -0.-1.j],
                [ 0.+1.j,  0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
+    return jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
 
 
 def sigmaz() -> Array:
@@ -451,7 +451,7 @@ def sigmaz() -> Array:
         Array([[ 1.+0.j,  0.+0.j],
                [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
-    return jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
+    return jnp.array([[1, 0], [0, -1]], dtype=cdtype())
 
 
 def sigmap() -> Array:
@@ -467,7 +467,7 @@ def sigmap() -> Array:
         Array([[0.+0.j, 1.+0.j],
                [0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
+    return jnp.array([[0, 1], [0, 0]], dtype=cdtype())
 
 
 def sigmam() -> Array:
@@ -483,7 +483,7 @@ def sigmam() -> Array:
         Array([[0.+0.j, 0.+0.j],
                [1.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
+    return jnp.array([[0, 0], [1, 0]], dtype=cdtype())
 
 
 def hadamard(n: int = 1) -> Array:
@@ -517,7 +517,7 @@ def hadamard(n: int = 1) -> Array:
                [ 0.5+0.j,  0.5+0.j, -0.5+0.j, -0.5+0.j],
                [ 0.5+0.j, -0.5+0.j, -0.5+0.j,  0.5-0.j]], dtype=complex64)
     """
-    H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
+    H1 = jnp.array([[1, 1], [1, -1]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)
 
@@ -543,8 +543,8 @@ def rx(theta: float) -> Array:
     """
     return jnp.array(
         [
-            [jnp.cos(theta / 2), -jnp.sin(theta / 2) * 1.0j],
-            [-jnp.sin(theta / 2) * 1.0j, jnp.cos(theta / 2)],
+            [jnp.cos(theta / 2), -jnp.sin(theta / 2) * 1j],
+            [-jnp.sin(theta / 2) * 1j, jnp.cos(theta / 2)],
         ],
         dtype=cdtype(),
     )
@@ -598,11 +598,7 @@ def rz(theta: float) -> Array:
                [0.+0.j, 0.+1.j]], dtype=complex64)
     """
     return jnp.array(
-        [
-            [jnp.exp(-1.0j * theta / 2), 0.0 + 0.0j],
-            [0.0 + 0.0j, jnp.exp(1.0j * theta / 2)],
-        ],
-        dtype=cdtype(),
+        [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
     )
 
 
@@ -625,9 +621,7 @@ def sgate() -> Array:
         Array([[1.+0.j, 0.+0.j],
                [0.+0.j, 0.+1.j]], dtype=complex64)
     """
-    return jnp.array(
-        [[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 0.0 + 1.0j]], dtype=cdtype()
-    )
+    return jnp.array([[1, 0], [0, 1j]], dtype=cdtype())
 
 
 def tgate() -> Array:
@@ -649,10 +643,7 @@ def tgate() -> Array:
         Array([[1.+0.j, 0.+0.j],
                [0.+0.j, 0.7071067811865476+0.7071067811865476j]], dtype=complex64)
     """
-    return jnp.array(
-        [[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, jnp.exp(1.0j * jnp.pi / 4)]],
-        dtype=cdtype(),
-    )
+    return jnp.array([[1, 0], [0, jnp.exp(1j * jnp.pi / 4)]], dtype=cdtype())
 
 
 def cnot() -> Array:
@@ -679,13 +670,7 @@ def cnot() -> Array:
                [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)
     """
     return jnp.array(
-        [
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-            [0.0, 0.0, 1.0, 0.0],
-        ],
-        dtype=cdtype(),
+        [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=cdtype()
     )
 
 
@@ -724,86 +709,14 @@ def toffoli() -> Array:
     """
     return jnp.array(
         [
-            [
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-            ],
-            [
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                0.0 + 0.0j,
-                1.0 + 0.0j,
-                0.0 + 0.0j,
-            ],
+            [1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 0, 0, 1, 0],
         ],
         dtype=cdtype(),
     )
