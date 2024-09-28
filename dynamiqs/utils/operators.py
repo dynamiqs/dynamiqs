@@ -523,7 +523,7 @@ def hadamard(n: int = 1) -> Array:
 
 
 def rx(theta: float) -> Array:
-    r"""Returns the Rx gate through angle $\theta$ in radians around the x-axis.
+    r"""Returns the $R_x$ gate through angle $\theta$ in radians around the x-axis.
 
     It is defined by
     $$
@@ -534,7 +534,7 @@ def rx(theta: float) -> Array:
     $$
 
     Returns:
-        _(array of shape (2, 2))_ Rx gate.
+        _(array of shape (2, 2))_ $R_x$ gate.
 
     Examples:
         >>> dq.rx(jnp.pi)
@@ -551,7 +551,7 @@ def rx(theta: float) -> Array:
 
 
 def ry(theta: float) -> Array:
-    r"""Returns the Ry gate through angle $\theta$ in radians around the y-axis.
+    r"""Returns the $R_y$ gate through angle $\theta$ in radians around the y-axis.
 
     It is defined by
     $$
@@ -562,7 +562,7 @@ def ry(theta: float) -> Array:
     $$
 
     Returns:
-        _(array of shape (2, 2))_ Ry gate.
+        _(array of shape (2, 2))_ $R_y$ gate.
 
     Examples:
         >>> dq.ry(jnp.pi)
@@ -579,7 +579,7 @@ def ry(theta: float) -> Array:
 
 
 def rz(theta: float) -> Array:
-    r"""Returns the Rz gate through angle $\theta$ in radians around the z-axis.
+    r"""Returns the $R_z$ gate through angle $\theta$ in radians around the z-axis.
 
     It is defined by
     $$
@@ -590,7 +590,7 @@ def rz(theta: float) -> Array:
     $$
 
     Returns:
-        _(array of shape (2, 2))_ Rz gate.
+        _(array of shape (2, 2))_ $R_z$ gate.
 
     Examples:
         >>> dq.rz(jnp.pi)
@@ -603,12 +603,12 @@ def rz(theta: float) -> Array:
 
 
 def sgate() -> Array:
-    r"""Returns the S gate.
+    r"""Returns the $\text{S}$ gate.
 
     It is defined by $\text{S} = \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ S gate.
+        _(array of shape (2, 2))_ $\text{S}$ gate.
 
     Examples:
         >>> dq.sgate()
@@ -619,13 +619,13 @@ def sgate() -> Array:
 
 
 def tgate() -> Array:
-    r"""Returns the T gate.
+    r"""Returns the $\text{T}$ gate.
 
     It is defined by
     $\text{T} = \begin{pmatrix} 1 & 0 \\ 0 & e^{i\frac{\pi}{4}} \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ T gate.
+        _(array of shape (2, 2))_ $\text{T}$ gate.
 
     Examples:
         >>> dq.tgate()
@@ -636,7 +636,7 @@ def tgate() -> Array:
 
 
 def cnot() -> Array:
-    r"""Returns the CNOT gate.
+    r"""Returns the $\text{CNOT}$ gate.
 
     It is defined by
     $$
@@ -649,7 +649,7 @@ def cnot() -> Array:
     $$
 
     Returns:
-        _(array of shape (4, 4))_ CNOT gate.
+        _(array of shape (4, 4))_ $\text{CNOT}$ gate.
 
     Examples:
         >>> dq.cnot()
@@ -664,11 +664,11 @@ def cnot() -> Array:
 
 
 def toffoli() -> Array:
-    r"""Returns the Toffoli gate.
+    r"""Returns the $\text{Toffoli}$ gate.
 
     It is defined by
     $$
-        Toffoli = \begin{pmatrix}
+        \text{Toffoli} = \begin{pmatrix}
             1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
             0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
             0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\\\
@@ -681,7 +681,7 @@ def toffoli() -> Array:
     $$
 
     Returns:
-        _(array of shape (8, 8))_ Toffoli gate.
+        _(array of shape (8, 8))_ $\text{Toffoli}$ gate.
 
     Examples:
         >>> dq.toffoli()
