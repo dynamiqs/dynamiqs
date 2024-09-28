@@ -605,13 +605,7 @@ def rz(theta: float) -> Array:
 def sgate() -> Array:
     r"""Returns the S gate.
 
-    It is defined by
-    $$
-        \text{S} = \begin{pmatrix}
-            1 & 0 \\\\
-            0 & i
-        \end{pmatrix}
-    $$
+    It is defined by $\text{S} = \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}$.
 
     Returns:
         _(array of shape (2, 2))_ S gate.
@@ -628,12 +622,7 @@ def tgate() -> Array:
     r"""Returns the T gate.
 
     It is defined by
-    $$
-        \text{T} = \begin{pmatrix}
-            1 & 0 \\\\
-            0 & e^{i\frac{\pi}{4}}
-        \end{pmatrix}
-    $$
+    $\text{T} = \begin{pmatrix} 1 & 0 \\ 0 & e^{i\frac{\pi}{4}} \end{pmatrix}$.
 
     Returns:
         _(array of shape (2, 2))_ T gate.
