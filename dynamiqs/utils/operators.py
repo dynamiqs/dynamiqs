@@ -528,8 +528,8 @@ def rx(theta: float) -> Array:
     It is defined by
     $$
         R_x(\theta) = \begin{pmatrix}
-        \cos\left(\frac{\theta}{2}\right) & -i\sin\left(\frac{\theta}{2}\right) \\\\
-        -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
+            \cos\left(\frac{\theta}{2}\right) & -i\sin\left(\frac{\theta}{2}\right) \\\\
+            -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
         \end{pmatrix}
     $$
 
@@ -556,8 +556,8 @@ def ry(theta: float) -> Array:
     It is defined by
     $$
         R_y(\theta) = \begin{pmatrix}
-        \cos\left(\frac{\theta}{2}\right) & -\sin\left(\frac{\theta}{2}\right) \\\\
-        \sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
+            \cos\left(\frac{\theta}{2}\right) & -\sin\left(\frac{\theta}{2}\right) \\\\
+            \sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
         \end{pmatrix}
     $$
 
@@ -584,8 +584,8 @@ def rz(theta: float) -> Array:
     It is defined by
     $$
         R_z(\theta) = \begin{pmatrix}
-        e^{-i\frac{\theta}{2}} & 0 \\\\
-        0 & e^{i\frac{\theta}{2}}
+            e^{-i\frac{\theta}{2}} & 0 \\\\
+            0 & e^{i\frac{\theta}{2}}
         \end{pmatrix}
     $$
 
@@ -608,8 +608,8 @@ def sgate() -> Array:
     It is defined by
     $$
         \text{S} = \begin{pmatrix}
-        1 & 0 \\\\
-        0 & i
+            1 & 0 \\\\
+            0 & i
         \end{pmatrix}
     $$
 
@@ -630,8 +630,8 @@ def tgate() -> Array:
     It is defined by
     $$
         \text{T} = \begin{pmatrix}
-        1 & 0 \\\\
-        0 & e^{i\frac{\pi}{4}}
+            1 & 0 \\\\
+            0 & e^{i\frac{\pi}{4}}
         \end{pmatrix}
     $$
 
@@ -652,10 +652,10 @@ def cnot() -> Array:
     It is defined by
     $$
         \text{CNOT} = \begin{pmatrix}
-        1 & 0 & 0 & 0 \\\\
-        0 & 1 & 0 & 0 \\\\
-        0 & 0 & 0 & 1 \\\\
-        0 & 0 & 1 & 0
+            1 & 0 & 0 & 0 \\\\
+            0 & 1 & 0 & 0 \\\\
+            0 & 0 & 0 & 1 \\\\
+            0 & 0 & 1 & 0
         \end{pmatrix}
     $$
 
@@ -680,14 +680,14 @@ def toffoli() -> Array:
     It is defined by
     $$
         Toffoli = \begin{pmatrix}
-        1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
-        0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
-        0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\\\
-        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\\\
-        0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\\
-        0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\\\
-        0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\\\
-        0 & 0 & 0 & 0 & 0 & 0 & 1 & 0
+            1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
+            0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\\
+            0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\\\
+            0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\\\
+            0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\\
+            0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\\\
+            0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\\\
+            0 & 0 & 0 & 0 & 0 & 0 & 1 & 0
         \end{pmatrix}
     $$
 
