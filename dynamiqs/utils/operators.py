@@ -538,8 +538,8 @@ def rx(theta: float) -> Array:
 
     Examples:
         >>> dq.rx(jnp.pi)
-        Array([[0.+0.j, 0.-1.j],
-               [0.-1.j, 0.+0.j]], dtype=complex64)
+        Array([[-0.+0.j, -0.-1.j],
+               [-0.-1.j, -0.+0.j]], dtype=complex64)
     """
     return jnp.array(
         [
@@ -566,8 +566,8 @@ def ry(theta: float) -> Array:
 
     Examples:
         >>> dq.ry(jnp.pi)
-        Array([[0.+0.j, -1.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
+        Array([[-0.+0.j, -1.+0.j],
+               [ 1.+0.j, -0.+0.j]], dtype=complex64)
     """
     return jnp.array(
         [
@@ -594,8 +594,8 @@ def rz(theta: float) -> Array:
 
     Examples:
         >>> dq.rz(jnp.pi)
-        Array([[0.-1.j, 0.+0.j],
-               [0.+0.j, 0.+1.j]], dtype=complex64)
+        Array([[-0.-1.j,  0.+0.j],
+               [ 0.+0.j, -0.+1.j]], dtype=complex64)
     """
     return jnp.array(
         [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
@@ -640,8 +640,8 @@ def tgate() -> Array:
 
     Examples:
         >>> dq.tgate()
-        Array([[1.+0.j, 0.+0.j],
-               [0.+0.j, 0.7071067811865476+0.7071067811865476j]], dtype=complex64)
+        Array([[1.   +0.j   , 0.   +0.j   ],
+               [0.   +0.j   , 0.707+0.707j]], dtype=complex64)
     """
     return jnp.array([[1, 0], [0, jnp.exp(1j * jnp.pi / 4)]], dtype=cdtype())
 
@@ -696,17 +696,15 @@ def toffoli() -> Array:
 
     Examples:
         >>> dq.toffoli()
-        Array([
-            [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-            [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-            [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-            [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-            [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-        ], dtype=complex64)
-    """
+        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]],      dtype=complex64)
+    """  # noqa: E501
     return jnp.array(
         [
             [1, 0, 0, 0, 0, 0, 0, 0],
