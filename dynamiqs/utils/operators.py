@@ -523,18 +523,21 @@ def hadamard(n: int = 1) -> Array:
 
 
 def rx(theta: float) -> Array:
-    r"""Returns the $R_x$ gate through angle $\theta$ in radians around the x-axis.
+    r"""Returns the $R_x(\theta)$ rotation gate.
 
     It is defined by
     $$
         R_x(\theta) = \begin{pmatrix}
-            \cos\left(\frac{\theta}{2}\right) & -i\sin\left(\frac{\theta}{2}\right) \\\\
-            -i\sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
+            \cos(\theta/2)   & -i\sin(\theta/2) \\\\
+            -i\sin(\theta/2) & \cos(\theta/2)
         \end{pmatrix}
     $$
 
+    Args:
+        theta: Rotation angle $\theta$ in radians.
+
     Returns:
-        _(array of shape (2, 2))_ $R_x$ gate.
+        _(array of shape (2, 2))_ $R_x(\theta)$ gate.
 
     Examples:
         >>> dq.rx(jnp.pi)
@@ -551,18 +554,21 @@ def rx(theta: float) -> Array:
 
 
 def ry(theta: float) -> Array:
-    r"""Returns the $R_y$ gate through angle $\theta$ in radians around the y-axis.
+    r"""Returns the $R_y(\theta)$ rotation gate.
 
     It is defined by
     $$
         R_y(\theta) = \begin{pmatrix}
-            \cos\left(\frac{\theta}{2}\right) & -\sin\left(\frac{\theta}{2}\right) \\\\
-            \sin\left(\frac{\theta}{2}\right) & \cos\left(\frac{\theta}{2}\right)
+            \cos(\theta/2) & -\sin(\theta/2) \\\\
+            \sin(\theta/2) & \cos(\theta/2)
         \end{pmatrix}
     $$
 
+    Args:
+        theta: Rotation angle $\theta$ in radians.
+
     Returns:
-        _(array of shape (2, 2))_ $R_y$ gate.
+        _(array of shape (2, 2))_ $R_y(\theta)$ gate.
 
     Examples:
         >>> dq.ry(jnp.pi)
@@ -579,18 +585,21 @@ def ry(theta: float) -> Array:
 
 
 def rz(theta: float) -> Array:
-    r"""Returns the $R_z$ gate through angle $\theta$ in radians around the z-axis.
+    r"""Returns the $R_z(\theta)$ rotation gate.
 
     It is defined by
     $$
         R_z(\theta) = \begin{pmatrix}
-            e^{-i\frac{\theta}{2}} & 0 \\\\
-            0 & e^{i\frac{\theta}{2}}
+            e^{-i\theta/2} & 0 \\\\
+            0              & e^{i\theta/2}
         \end{pmatrix}
     $$
 
+    Args:
+        theta: Rotation angle $\theta$ in radians.
+
     Returns:
-        _(array of shape (2, 2))_ $R_z$ gate.
+        _(array of shape (2, 2))_ $R_z(\theta)$ gate.
 
     Examples:
         >>> dq.rz(jnp.pi)
