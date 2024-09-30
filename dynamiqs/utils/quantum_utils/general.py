@@ -9,7 +9,7 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
-from ..._utils import cdtype, on_cpu
+from ..._utils import on_cpu
 
 __all__ = [
     'dag',
@@ -39,7 +39,7 @@ __all__ = [
     'overlap',
     'fidelity',
     'entropy_vn',
-    'get_bloch_coords',
+    'bloch_coordinates',
 ]
 
 
@@ -972,7 +972,7 @@ def entropy_vn(x: ArrayLike) -> Array:
     return -(w * jnp.log(w)).sum(-1)
 
 
-def get_bloch_coords(x: ArrayLike) -> Array:
+def bloch_coordinates(x: ArrayLike) -> Array:
     r"""Returns the spherical coordinates of a ket / density matrix on the
      Bloch sphere.
 
@@ -980,37 +980,41 @@ def get_bloch_coords(x: ArrayLike) -> Array:
         x _(array_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
 
     Returns:
-        _(array of shape (1, 3))_
+        _(array of shape (3,))_
         Spherical coordinates (r, theta, phi) on the Bloch sphere.
 
     Examples:
         >>> x = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
-        >>> dq.get_bloch_coords(x)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        >>> dq.bloch_coordinates(x)
+        Array([0.+0.j, 0.+0.j, 0.+0.j], dtype=float32)
     """
+    x = jnp.asarray(x)
+    check_shape(x, 'x', '(2, 1)', '(2, 2)')
+
     ## Check if the input is a density matrix
     if isdm(x):
         ## Cartesian coordinates
-        c_x = 2.0 * x[1][0].real
-        c_y = 2.0 * x[1][0].imag
-        c_z = 2.0 * x[0][0] - 1.0
+        r_x = 2 * jnp.real(x[0, 1])
+        r_y = -2 * jnp.imag(x[0, 1])
+        r_z = 2 * jnp.real(x[0, 0]) - 1
 
         ## Spherical coordinates
-        r = jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2) + jnp.pow(c_z, 2))
+        r = jnp.linalg.norm(jnp.array([r_x, r_y, r_z]))
         if r == 0:
-            theta = 0.0 + 0.0j
-            phi = 0.0 + 0.0j
+            theta = 0.0
+            phi = 0.0
         else:
-            theta = jnp.acos(c_z / r)
-            phi = jnp.sign(c_y) * jnp.acos(
-                c_x / jnp.sqrt(jnp.pow(c_x, 2) + jnp.pow(c_y, 2))
-            )
+            theta = jnp.acos(r_z / r)
+            phi = jnp.arctan2(r_y, r_x)
 
     ## Otherwise, it should be a ket
     elif isket(x):
         ## Spherical coordinates, ket normalized
         r = 1
-        theta = 2 * jnp.acos(x[0])
-        phi = jnp.acos(x[1].real / jnp.sin(theta / 2))
+        theta = 2 * jnp.acos(jnp.abs(x[0, 0]))
+        phi = jnp.angle(x[1, 0]) - jnp.angle(x[0, 0]) if jnp.abs(x[1, 0]) > 0 else 0.0
 
-    return jnp.array([[r, theta, phi]], dtype=cdtype())
+    # Normalize either way phi between 0 and 2pi
+    phi = jnp.mod(phi, 2 * np.pi)
+
+    return jnp.array([r, theta, phi], dtype=float)

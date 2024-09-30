@@ -149,8 +149,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - overlap
         - fidelity
         - entropy_vn
+        - bloch_coordinates
         - wigner
-        - get_bloch_coords
 
 
 ### JAX-related utilities

@@ -29,6 +29,6 @@ __all__ = [
     'overlap',
     'fidelity',
     'entropy_vn',
+    'bloch_coordinates',
     'wigner',
-    'get_bloch_coords',
 ]
