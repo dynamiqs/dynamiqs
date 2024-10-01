@@ -973,20 +973,63 @@ def entropy_vn(x: ArrayLike) -> Array:
 
 
 def bloch_coordinates(x: ArrayLike) -> Array:
-    r"""Returns the spherical coordinates of a ket / density matrix on the
-     Bloch sphere.
+    r"""Returns the spherical coordinates $(r, \theta, \phi)$ of a ket or density matrix
+    on the Bloch sphere.
+
+    The coordinates are such that
+    $$
+        \begin{cases}
+            0\leq r \leq 1, \\\\
+            0\leq\theta\leq\pi, \\\\
+            0\leq\phi<2\pi.
+        \end{cases}
+    $$
+
+    By convention, we choose $\phi=0$ if $\theta=0$, and $\theta=\phi=0$ if $r=0$.
 
     Args:
         x _(array_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
 
     Returns:
-        _(array of shape (3,))_
-        Spherical coordinates (r, theta, phi) on the Bloch sphere.
+        _(array of shape (3,))_ Spherical coordinates $(r, \theta, \phi)$.
 
     Examples:
-        >>> x = dq.unit(dq.fock_dm(2, 0) + dq.fock_dm(2, 1))
+        The state $\ket0$ is on the north pole at coordinates
+        $(r,\theta,\phi) = (1,0,0)$:
+        >>> x = dq.basis(2, 0)
         >>> dq.bloch_coordinates(x)
-        Array([0.+0.j, 0.+0.j, 0.+0.j], dtype=float32)
+        Array([1., 0., 0.], dtype=float32)
+
+        The state $\ket1$ is on the south pole at coordinates
+        $(r,\theta,\phi) = (1,\pi,0)$:
+        >>> x = dq.basis(2, 1)
+        >>> dq.bloch_coordinates(x)
+        Array([1.   , 3.142, 0.   ], dtype=float32)
+
+        The state $\ket+=(\ket0+\ket1)/\sqrt2$ is aligned with the $x$-axis at
+        coordinates $(r,\theta,\phi) = (1,\pi/2,0)$:
+        >>> plus = dq.unit(dq.basis(2, 0) + dq.basis(2, 1))
+        >>> dq.bloch_coordinates(plus)
+        Array([1.   , 1.571, 0.   ], dtype=float32)
+
+        The state $\ket-=(\ket0-\ket1)/\sqrt2$ is aligned with the $-x$-axis at
+        coordinates $(r,\theta,\phi) = (1,\pi/2,\pi)$:
+        >>> minus = dq.unit(dq.basis(2, 0) - dq.basis(2, 1))
+        >>> dq.bloch_coordinates(minus)
+        Array([1.   , 1.571, 3.142], dtype=float32)
+
+        A fully mixed state $\rho=0.5\ket0\bra0+0.5\ket1\bra1$ is at the center of the
+        sphere at coordinates $(r,\theta,\phi) = (0,0,0)$:
+        >>> x = 0.5 * dq.basis_dm(2, 0) + 0.5 * dq.basis_dm(2, 1)
+        >>> dq.bloch_coordinates(x)
+        Array([0., 0., 0.], dtype=float32)
+
+        A partially mixed state $\rho=0.75\ket0\bra0 + 0.25\ket1\bra1$ is halfway
+        between the sphere center and the north pole at coordinates
+        $(r,\theta,\phi) = (0.5,0,0)$:
+        >>> x = 0.75 * dq.basis_dm(2, 0) + 0.25 * dq.basis_dm(2, 1)
+        >>> dq.bloch_coordinates(x)
+        Array([0.5, 0. , 0. ], dtype=float32)
     """
     x = jnp.asarray(x)
     check_shape(x, 'x', '(2, 1)', '(2, 2)')
