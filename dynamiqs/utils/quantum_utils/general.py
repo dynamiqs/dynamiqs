@@ -1017,4 +1017,4 @@ def bloch_coordinates(x: ArrayLike) -> Array:
     # Normalize either way phi between 0 and 2pi
     phi = jnp.mod(phi, 2 * np.pi)
 
-    return jnp.array([r, theta, phi], dtype=float)
+    return jnp.array([r, theta, phi])
