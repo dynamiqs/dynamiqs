@@ -991,30 +991,35 @@ def bloch_coordinates(x: ArrayLike) -> Array:
     x = jnp.asarray(x)
     check_shape(x, 'x', '(2, 1)', '(2, 2)')
 
-    ## Check if the input is a density matrix
-    if isdm(x):
-        ## Cartesian coordinates
-        r_x = 2 * jnp.real(x[0, 1])
-        r_y = -2 * jnp.imag(x[0, 1])
-        r_z = 2 * jnp.real(x[0, 0]) - 1
+    if isket(x):
+        # Quick derivation: x = a |0> + b |1> with a = ra e^{i ta} and b = rb e^{i tb},
+        # where ra^2 + rb^2 = 1. The state remains unchanged by a phase factor, so
+        # e^{-i ta} x = ra |0> + rb e^{i (tb - ta)} |1>
+        #             = cos(theta/2) |0> + e^{i phi} sin(theta/2) |1>
+        # with theta = 2 * acos(ra) and phi = tb - ta (if rb != 0 else 0)
+        a, b = x[:, 0]
+        ra, ta = jnp.abs(a), jnp.angle(a)
+        rb, tb = jnp.abs(b), jnp.angle(b)
+        r = 1  # for a pure state
+        theta = 2 * jnp.acos(ra)
+        phi = tb - ta if rb != 0 else 0.0
+    elif isdm(x):
+        # cartesian coordinates
+        # see https://en.wikipedia.org/wiki/Bloch_sphere#u,_v,_w_representation
+        rx = 2 * x[0, 1].real
+        ry = 2 * x[1, 0].imag
+        rz = (x[0, 0] - x[1, 1]).real
 
-        ## Spherical coordinates
-        r = jnp.linalg.norm(jnp.array([r_x, r_y, r_z]))
+        # spherical coordinates
+        r = jnp.linalg.norm(jnp.array([rx, ry, rz]))
         if r == 0:
             theta = 0.0
             phi = 0.0
         else:
-            theta = jnp.acos(r_z / r)
-            phi = jnp.arctan2(r_y, r_x)
+            theta = jnp.acos(rz / r)
+            phi = jnp.arctan2(ry, rx)
 
-    ## Otherwise, it should be a ket
-    elif isket(x):
-        ## Spherical coordinates, ket normalized
-        r = 1
-        theta = 2 * jnp.acos(jnp.abs(x[0, 0]))
-        phi = jnp.angle(x[1, 0]) - jnp.angle(x[0, 0]) if jnp.abs(x[1, 0]) > 0 else 0.0
-
-    # Normalize either way phi between 0 and 2pi
-    phi = jnp.mod(phi, 2 * np.pi)
+    # map phi to [0, 2pi[
+    phi = phi % (2 * jnp.pi)
 
     return jnp.array([r, theta, phi])
