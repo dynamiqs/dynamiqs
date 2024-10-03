@@ -134,11 +134,11 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs_code/*.{png,gif} && pytest dynamiqs'
+cmd = 'echo "\n>>> pytest dynamiqs" && python remove_files.py && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs_docs/*.{png,gif} && pytest docs'
+cmd = 'echo "\n>>> pytest docs" && rm python remove_files.py && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
