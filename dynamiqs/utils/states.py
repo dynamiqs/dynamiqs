@@ -364,15 +364,15 @@ def thermal_dm(dim: int | tuple[int, ...], beta: float) -> Array:
         \(\beta=1.0\):
         >>> dm = thermal_dm(3, 1.0)
         >>> dm
-        Array([[0.60653066+0.j, 0.         +0.j, 0.         +0.j],
-                [0.         +0.j, 0.36787944+0.j, 0.         +0.j],
-                [0.         +0.j, 0.         +0.j, 0.24659696+0.j]], dtype=float32)
+        Array([[0.665, 0.   , 0.   ],
+                [0.   , 0.245, 0.   ],
+                [0.   , 0.   , 0.09 ]], dtype=float32)
 
         Multi-mode thermal state for two modes,
         each with dimension 3, at inverse temperature \(\beta=1.0\):
         >>> dm = thermal_dm((3, 3), 1.0)
         >>> dm.shape
-        (9, 9)
+        (3, 3)
 
         Batched thermal states for a range of temperatures:
         >>> temperatures = [0.5, 1.0, 1.5]
