@@ -35,6 +35,12 @@
           </div>
         </div>
       </div>
+      {% if "material/search" in config.plugins %}
+        <label class="md-header__button md-icon" for="__search">
+          {% include ".icons/material/magnify.svg" %}
+        </label>
+        {% include "partials/search.html" %}
+      {% endif %}
       {% if config.theme.palette %}
         {% if not config.theme.palette is mapping %}
           <form class="md-header__option" data-md-component="palette">
@@ -72,12 +78,6 @@
             </div>
           </div>
         </div>
-      {% endif %}
-      {% if "material/search" in config.plugins %}
-        <label class="md-header__button md-icon" for="__search">
-          {% include ".icons/material/magnify.svg" %}
-        </label>
-        {% include "partials/search.html" %}
       {% endif %}
         <div class="md-header__slack">
             <a

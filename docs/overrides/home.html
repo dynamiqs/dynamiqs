@@ -4,8 +4,38 @@
 {% block tabs %}
 {{ super() }}
 
-<!-- Link css stylesheet for homepage -->
-<link rel="stylesheet" type="text/css" href="../stylesheets/home.css" />
+<!-- Additional styles for landing page -->
+<style>
+
+/* Application header should be static for the landing page */
+.md-header {
+    position: initial;
+}
+
+/* Remove spacing, as we cannot hide it completely */
+.md-main__inner {
+    margin: 0;
+}
+
+/* Hide main content for now */
+.md-content {
+    display: none;
+}
+
+/* Hide table of contents */
+@media screen and (min-width: 60em) {
+    .md-sidebar--secondary {
+    display: none;
+    }
+}
+
+/* Hide navigation */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+    display: none;
+    }
+}
+</style>
 
 <!-- Main site Entry button descriptions -->
 <section class="tx-container">
@@ -83,8 +113,10 @@
     <div class="hr">
     </div>
 </div>
-
-
 {% endblock %}
+
+<!-- Content -->
 {% block content %}{% endblock %}
+
+<!-- Application footer -->
 {% block footer %}{% endblock %}

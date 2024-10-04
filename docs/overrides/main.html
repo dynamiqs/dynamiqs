@@ -26,3 +26,10 @@
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="{{ config.theme.favicon | url}}">
 <meta name="generator" content="mkdocs-{{ mkdocs_version }}, mkdocs-material-9.1.21">
 {% endblock %}
+
+{% block outdated %}
+  You're not viewing the latest version.
+  <a href="{{ '../' ~ base_url }}">
+    Click here to go to latest.
+  </a>
+{% endblock %}

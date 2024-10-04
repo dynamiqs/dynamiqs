@@ -23,7 +23,7 @@
           {% if not method.is_explicitely_exported %}
             <tr>
               <td class="fixed_height">
-                <a href={{ "/python_api/" ~ (method.path | replace('dynamiqs.', '') | replace(".", "/")) ~ ".html" }}>
+                <a href={{ "./" ~ (method.path | replace('dynamiqs.', '') | replace(".", "/")) ~ ".html" }}>
                   <code>{{ method.name }}</code>
                 </a>
               </td>

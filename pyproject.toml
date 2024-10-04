@@ -62,6 +62,7 @@ dev = [
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
+    "mike",
 ]
 
 [tool.ruff]
