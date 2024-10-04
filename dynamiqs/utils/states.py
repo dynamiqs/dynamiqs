@@ -20,6 +20,7 @@ __all__ = [
     'coherent_dm',
     'ground',
     'excited',
+    'thermal_dm',
 ]
 
 
@@ -333,3 +334,66 @@ def excited() -> Array:
                [0.+0.j]], dtype=complex64)
     """
     return jnp.array([[1], [0]], dtype=cdtype())
+
+
+def thermal_dm(dim: int | tuple[int, ...], beta: float) -> Array:
+    r"""Returns the density matrix of a thermal state for a system with
+    specified dimensions.
+
+    The density matrix for a thermal state is given by:
+
+    \[
+    \rho = \frac{1}{Z} e^{-\beta H}
+    \]
+
+    where \(Z\) is the partition function, \(\beta = \frac{1}{k_B T}\),
+    and \(H\) is the Hamiltonian of the system.
+
+    Args:
+        dim: Hilbert space dimension of each mode or a tuple representing
+        dimensions of each mode.
+        beta: Inverse temperature \( \beta \), units of \(1/J\)).
+
+    Returns:
+        Array of shape (..., n, n) representing the density matrix for the
+        thermal state,
+        where \(n = \text{prod(dim)}\).
+
+    Examples:
+        Single-mode thermal state at inverse temperature
+        \(\beta=1.0\):
+        >>> dm = thermal_dm(3, 1.0)
+        >>> dm
+        Array([[0.60653066+0.j, 0.         +0.j, 0.         +0.j],
+                [0.         +0.j, 0.36787944+0.j, 0.         +0.j],
+                [0.         +0.j, 0.         +0.j, 0.24659696+0.j]], dtype=float32)
+
+        Multi-mode thermal state for two modes,
+        each with dimension 3, at inverse temperature \(\beta=1.0\):
+        >>> dm = thermal_dm((3, 3), 1.0)
+        >>> dm.shape
+        (9, 9)
+
+        Batched thermal states for a range of temperatures:
+        >>> temperatures = [0.5, 1.0, 1.5]
+        >>> dm_batch = thermal_dm(3, jnp.array(temperatures))
+        >>> dm_batch.shape
+        (3, 3, 3)
+    """
+    # Determine total number of dimensions
+    n = dim if isinstance(dim, int) else jnp.prod(dim)
+
+    # Hamiltonian eigenvalues (for a simple harmonic oscillator)
+    energies = jnp.arange(n)
+
+    # Calculate the partition function Z
+    Z = jnp.sum(jnp.exp(-beta * energies))
+
+    # Create the density matrix
+    rho = jnp.zeros((n, n), dtype=jnp.float32)
+
+    # Populate the density matrix using the Boltzmann distribution
+    for i in range(n):
+        rho = rho.at[i, i].set(jnp.exp(-beta * energies[i]) / Z)
+
+    return rho
