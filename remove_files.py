@@ -1,17 +1,16 @@
-import os
 import sys
-import glob
+from pathlib import Path
 
-def remove_files(pattern):
-    files = glob.glob(pattern)
+from jax.typing import ArrayLike
+
+
+def remove_files(pattern: ArrayLike):
+    files = Path.glob.glob(pattern)
     for file in files:
-        try:
-            os.remove(file)
-            print(f"Removed: {file}")
-        except Exception as e:
-            print(f"Error removing {file}: {e}")
+        Path.unlink(file)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     if sys.platform.startswith('win'):
         # Windows
         remove_files('docs/figs_code/*.*')
