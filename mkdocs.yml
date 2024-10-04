@@ -189,7 +189,13 @@ nav:
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
+              - rx: python_api/utils/operators/rx.md
+              - ry: python_api/utils/operators/ry.md
+              - rz: python_api/utils/operators/rz.md
+              - sgate: python_api/utils/operators/sgate.md
+              - tgate: python_api/utils/operators/tgate.md
               - cnot: python_api/utils/operators/cnot.md
+              - toffoli: python_api/utils/operators/toffoli.md
           - States:
               - fock: python_api/utils/states/fock.md
               - fock_dm: python_api/utils/states/fock_dm.md
