@@ -144,17 +144,18 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         state = State(
             save_state=save_state,
             final_state=result.ys[1][0, :, :],
-            final_time=result.ts[1],
+            final_time=result.ts[1][0],
             num_jumps=0,
             key=key,
         )
+        return state
 
     def _loop_over_jumps(self, key, no_jump_prob):
         """loop over jumps until the simulation reaches the final time"""
         rand_key, sample_key = jax.random.split(key)
         rand = jax.random.uniform(rand_key, minval=no_jump_prob)
         first_result = self._run(self.y0, rand)
-        first_jump_time = first_result.ts[1]
+        first_jump_time = first_result.ts[1][0]
         time_diffs = self.ts - first_jump_time
         # want to start with a time after the jump
         time_diffs = jnp.where(time_diffs < 0, jnp.inf, time_diffs)
@@ -175,6 +176,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         )
 
         def outer_cond_fun(_state):
+            # TODO sometimes we reenter the loop even when this is false?!
             return _state.final_time < self.t1
 
         def outer_body_fun(_state):
@@ -194,7 +196,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             result_after_jump = self._run(psi_after_jump, _rand)
             # always do interpolation regardless of options.save_states
             # extract saved y values to interpolate
-            psis_after_jump = result_after_jump.ys[0]
+            psis_after_jump = result_after_jump.ys[0].ysave
             # replace infs with nans to interpolate
             psi_inf_to_nan = jnp.where(
                 jnp.isinf(psis_after_jump), jnp.nan, psis_after_jump
@@ -205,7 +207,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             )
             psi_interpolator = dx.CubicInterpolation(new_times, psi_coeffs)
 
-            final_time = result_after_jump.ts[1]
+            final_time = result_after_jump.ts[1][0]
             final_state = result_after_jump.ys[1][0]
 
             def save_ts_and_states(_save_state):

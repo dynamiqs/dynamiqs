@@ -132,6 +132,8 @@ class MCIntegrator(BaseIntegrator, MCInterface):
             self.solver,
             self.gradient,
             self.options,
+            no_jump_result,
+            jump_result,
             no_jump_prob,
             jump_times,
             num_jumps,

@@ -36,8 +36,6 @@ from ..mcsolve.diffrax_integrator import (
     MCSolveTsit5Integrator,
 )
 
-__all__ = ['mcsolve']
-
 
 def mcsolve(
     H: ArrayLike | TimeArray,
