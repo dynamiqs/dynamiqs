@@ -1,10 +1,10 @@
-import dynamiqs as dq
 import jax.numpy as jnp
-from dynamiqs import timecallable, unit
-from dynamiqs.solver import Tsit5
-from jax.random import PRNGKey
 import matplotlib.pyplot as plt
+from jax.random import PRNGKey
 
+import dynamiqs as dq
+from dynamiqs import timecallable
+from dynamiqs.solver import Tsit5
 
 omega = 2.0 * jnp.pi * 1.0
 amp = 2.0 * jnp.pi * 0.0
@@ -13,11 +13,15 @@ amp = 2.0 * jnp.pi * 0.0
 def H_func(t):
     return -0.5 * omega * dq.sigmaz() + jnp.cos(omega * t) * amp * dq.sigmax()
 
-tsave = jnp.linspace(0, 1.0, 41)
-jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1)),]
-exp_ops = [dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)), dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1))]
 
-initial_states = [dq.basis(2, 0),]
+tsave = jnp.linspace(0, 1.0, 41)
+jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1))]
+exp_ops = [
+    dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)),
+    dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1)),
+]
+
+initial_states = [dq.basis(2, 0)]
 
 num_traj = 51
 options = dq.Options(ntraj=num_traj, one_jump_only=True)
@@ -29,7 +33,7 @@ result = dq.mcsolve(
     key=PRNGKey(4242434),
     exp_ops=exp_ops,
     solver=Tsit5(),
-    options=options
+    options=options,
 )
 result_me = dq.mesolve(
     timecallable(H_func),
@@ -41,12 +45,12 @@ result_me = dq.mesolve(
 )
 
 fig, ax = plt.subplots()
-plt.plot(tsave, jnp.real(result.expects[1, 0]), label="0")
-plt.plot(tsave, jnp.real(result.expects[1, 1]), label="1")
-plt.plot(tsave, jnp.real(result_me.expects[1, 0]), ls="--", label="me 0")
-plt.plot(tsave, jnp.real(result_me.expects[1, 1]), ls="--", label="me 1")
-ax.set_ylabel("population")
-ax.set_xlabel("time [ns]")
+plt.plot(tsave, jnp.real(result.expects[1, 0]), label='0')
+plt.plot(tsave, jnp.real(result.expects[1, 1]), label='1')
+plt.plot(tsave, jnp.real(result_me.expects[1, 0]), ls='--', label='me 0')
+plt.plot(tsave, jnp.real(result_me.expects[1, 1]), ls='--', label='me 1')
+ax.set_ylabel('population')
+ax.set_xlabel('time [ns]')
 ax.legend()
 plt.show()
 

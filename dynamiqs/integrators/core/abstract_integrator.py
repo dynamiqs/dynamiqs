@@ -3,29 +3,30 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import ClassVar
 
-from diffrax import Event
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
-from jax.random import PRNGKey
 from jaxtyping import PyTree, Scalar
-from optimistix import AbstractRootFinder
 
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...result import (
+    MCSolveResult,
+    MCTrajResult,
     MEPropagatorResult,
     MESolveResult,
     Result,
     Saved,
     SEPropagatorResult,
     SESolveResult,
-    MCSolveResult
 )
 from ...solver import Solver
-from .interfaces import MEInterface, OptionsInterface, SEInterface, SolveInterface, MCInterface
-from ...time_array import TimeArray
-from ...utils.quantum_utils import expect, unit
+from .interfaces import (
+    MCInterface,
+    MEInterface,
+    OptionsInterface,
+    SEInterface,
+    SolveInterface,
+)
 
 
 class AbstractIntegrator(eqx.Module):
@@ -105,11 +106,37 @@ class MCIntegrator(BaseIntegrator, MCInterface):
 
     # subclasses should implement: run()
 
+    TRAJECTORY_RESULT_CLASS: ClassVar[Result]
+
     @property
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return _concatenate_sort(*ts)
 
+    def traj_result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return self.TRAJECTORY_RESULT_CLASS(
+            self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
+
+    def result(
+        self,
+        no_jump_result: Result,
+        jump_result: Result,
+        no_jump_prob: Array,
+        jump_times: Array,
+        num_jumps: Array,
+        infos: PyTree | None = None,
+    ) -> Result:
+        return self.RESULT_CLASS(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            no_jump_prob,
+            jump_times,
+            num_jumps,
+            infos,
+        )
 
 
 class SEPropagatorIntegrator(SEIntegrator):
@@ -146,8 +173,10 @@ class MESolveIntegrator(MEIntegrator, SolveInterface):
 
 class MCSolveIntegrator(MCIntegrator, SolveInterface):
     """Integrator computing the time evolution of the Monte-Carlo unraveling of the
-     master equation."""
+    master equation.
+    """
 
     # subclasses should implement: run()
 
     RESULT_CLASS = MCSolveResult
+    TRAJECTORY_RESULT_CLASS = MCTrajResult

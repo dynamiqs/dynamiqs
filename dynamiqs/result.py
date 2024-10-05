@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
@@ -8,7 +9,13 @@ from .gradient import Gradient
 from .options import Options
 from .solver import Solver
 
-__all__ = ['SESolveResult', 'MESolveResult', 'MCSolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
+__all__ = [
+    'SESolveResult',
+    'MESolveResult',
+    'MCSolveResult',
+    'SEPropagatorResult',
+    'MEPropagatorResult',
+]
 
 
 def memory_bytes(x: Array) -> int:
@@ -175,6 +182,7 @@ class SESolveResult(SolveResult):
         final_time _(Array)_: final solution time
     """
 
+
 class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
@@ -228,6 +236,11 @@ class MESolveResult(SolveResult):
         tutorial for more details.
     """
 
+
+class MCTrajResult(SolveResult):
+    """Result of Monte Carlo trajectories."""
+
+
 class MCSolveResult(eqx.Module):
     """Result of Monte Carlo integration
 
@@ -241,12 +254,26 @@ class MCSolveResult(eqx.Module):
     """
 
     tsave: Array
-    _no_jump_res: Result
-    _jump_res: Result
-    no_jump_prob: float
+    solver: Solver
+    gradient: Gradient | None
+    options: Options
+    _no_jump_res: MCTrajResult
+    _jump_res: MCTrajResult
+    no_jump_prob: Array
     jump_times: Array
     num_jumps: Array
-    expects: Array | None
+    infos: PyTree | None
+
+    @property
+    def expects(self) -> Array | None:
+        # TODO want to do a conditional check here?
+        # average over trajectories
+        jump_expects = jnp.mean(self._jump_res.expects, axis=0)
+        no_jump_expects = self._no_jump_res.expects
+        avg_expects = (
+            self.no_jump_prob * no_jump_expects + (1 - self.no_jump_prob) * jump_expects
+        )
+        return avg_expects
 
     @property
     def no_jump_states(self) -> Array:

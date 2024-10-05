@@ -48,9 +48,20 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
     def terms(self) -> dx.AbstractTerm:
         pass
 
-    @property
-    def event(self) -> dx.Event | None:
-        return None
+    def diffrax_arguments(self) -> tuple[dx.SaveAt, dx.AbstractAdjoint]:
+        # === prepare diffrax arguments
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+        if self.gradient is None:
+            adjoint = dx.RecursiveCheckpointAdjoint()
+        elif isinstance(self.gradient, CheckpointAutograd):
+            adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+        elif isinstance(self.gradient, Autograd):
+            adjoint = dx.DirectAdjoint()
+        return saveat, adjoint
 
     def run(self) -> Result:
         with warnings.catch_warnings():
@@ -60,19 +71,7 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             # closed
             warnings.simplefilter('ignore', FutureWarning)
 
-            # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
-            if self.gradient is None:
-                adjoint = dx.RecursiveCheckpointAdjoint()
-            elif isinstance(self.gradient, CheckpointAutograd):
-                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-            elif isinstance(self.gradient, Autograd):
-                adjoint = dx.DirectAdjoint()
-
+            saveat, adjoint = self.diffrax_arguments()
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
                 self.terms,
@@ -84,15 +83,13 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
-                event=self.event,
                 max_steps=self.max_steps,
                 progress_meter=self.options.progress_meter.to_diffrax(),
             )
 
         # === collect and return results
         saved = self.postprocess_saved(*solution.ys)
-        infos = solution.stats | {"final_time": solution.ts[-1][0]}
-        return self.result(saved, infos=self.infos(infos))
+        return self.result(saved, infos=self.infos(solution.stats))
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
@@ -252,11 +249,3 @@ class MCDiffraxIntegrator(DiffraxIntegrator, MCInterface):
             return y
 
         return dx.ODETerm(vector_field)
-
-    @property
-    def event(self) -> dx.Event | None:
-        def cond_fn(t, y, *args, **kwargs):
-            norm = jnp.linalg.norm(y)
-            return norm**2 - self.rand
-
-        return dx.Event(cond_fn, self.root_finder)

@@ -15,7 +15,7 @@ def rand_mcsolve_args(n, nH, nLs, npsi0, nEs):
     return H, Ls, psi0, Es, kmc
 
 
-@pytest.skip(reason="not working yet")
+@pytest.skip(reason='not working yet')
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('npsi0', [(), (5,)])
 @pytest.mark.parametrize('nL1', [(), (7, 8)])
@@ -41,7 +41,7 @@ def test_cartesian_batching(nH, npsi0, nL1, nL2):
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
-@pytest.mark.skip(reason="not working yet")
+@pytest.mark.skip(reason='not working yet')
 @pytest.mark.parametrize('nL1', [(), (5, 1, 4)])
 @pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
 def test_flat_batching(nL1, npsi0):
