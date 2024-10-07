@@ -5,11 +5,8 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
-
-# from jax.lax import while_loop
 import optimistix as optx
 from jax import Array
-from jax.random import PRNGKey
 from jaxtyping import ArrayLike
 from optimistix import AbstractRootFinder
 
@@ -43,7 +40,7 @@ def mcsolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
-    keys: list[PRNGKey] = jax.random.split(jax.random.key(31), num=10),  # noqa: B008
+    keys: ArrayLike = jax.random.split(jax.random.key(31), num=10),  # noqa: B008
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     root_finder: AbstractRootFinder = optx.Newton(1e-5, 1e-5, optx.rms_norm),  # noqa: B008
@@ -143,7 +140,7 @@ def _vectorized_mcsolve(
     jump_ops: list[TimeArray],
     psi0: Array,
     tsave: Array,
-    keys: PRNGKey,
+    keys: Array,
     exp_ops: Array | None,
     solver: Solver,
     root_finder: AbstractRootFinder,
@@ -198,7 +195,7 @@ def _mcsolve(
     jump_ops: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
     tsave: ArrayLike,
-    keys: list[PRNGKey],
+    keys: Array,
     exp_ops: Array | None,
     solver: Solver,
     root_finder: AbstractRootFinder,

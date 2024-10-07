@@ -4,7 +4,6 @@ import diffrax as dx
 import jax.numpy as jnp
 import jax
 import equinox as eqx
-from jax.random import PRNGKey
 import jax.tree_util as jtu
 from equinox.internal import while_loop
 
@@ -40,7 +39,7 @@ class State(eqx.Module):
     final_state: Array
     final_time: float
     num_jumps: int
-    key: PRNGKey
+    key: Array
 
 
 def _inner_buffers(save_state):
@@ -137,7 +136,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             no_jump_result, jump_result, no_jump_prob, jump_times, num_jumps
         )
 
-    def _loop_over_jumps(self, key: PRNGKey, no_jump_prob: Array) -> State:
+    def _loop_over_jumps(self, key: Array, no_jump_prob: Array) -> State:
         """loop over jumps until the simulation reaches the final time"""
         rand_key, sample_key = jax.random.split(key)
         rand = jax.random.uniform(rand_key, minval=no_jump_prob)
@@ -266,7 +265,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             kind='checkpointed',
         )
 
-    def _sample_jump_ops(self, t: Array, psi: Array, key: PRNGKey) -> Array:
+    def _sample_jump_ops(self, t: Array, psi: Array, key: Array) -> Array:
         """given a state psi at time t that should experience a jump,
         randomly sample one jump operator from among the provided jump_ops.
         The probability that a certain jump operator is selected is weighted
