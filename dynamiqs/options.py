@@ -34,6 +34,7 @@ class Options(eqx.Module):
             a PyTree. This can be used to save additional arbitrary data during the
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
+        max_jumps: Maximum number of jumps for the monto-carlo solver.
     """
 
     save_states: bool = True
@@ -42,8 +43,7 @@ class Options(eqx.Module):
     progress_meter: AbstractProgressMeter | None = TqdmProgressMeter()
     t0: ScalarLike | None = None
     save_extra: callable[[Array], PyTree] | None = None
-    ntraj: int = 10
-    one_jump_only: bool = False
+    max_jumps: int = 100
 
     def __init__(
         self,
@@ -53,8 +53,7 @@ class Options(eqx.Module):
         progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),  # noqa: B008
         t0: ScalarLike | None = None,
         save_extra: callable[[Array], PyTree] | None = None,
-        ntraj: int = 10,
-        one_jump_only: bool = False,
+        max_jumps: int = 100,
     ):
         if progress_meter is None:
             progress_meter = NoProgressMeter()
@@ -64,13 +63,12 @@ class Options(eqx.Module):
         self.cartesian_batching = cartesian_batching
         self.progress_meter = progress_meter
         self.t0 = t0
-        self.ntraj = ntraj
-        self.one_jump_only = one_jump_only
 
         # make `save_extra` a valid Pytree with `Partial`
         if save_extra is not None:
             save_extra = jtu.Partial(save_extra)
         self.save_extra = save_extra
+        self.max_jumps = max_jumps
 
     def __str__(self) -> str:
         return tree_str_inline(self)

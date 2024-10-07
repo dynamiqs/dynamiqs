@@ -14,8 +14,9 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..core.save_mixin import SolveSaveMixin
-from ...utils.quantum_utils import dag, unit, norm
+from ...utils.quantum_utils import dag, unit, norm, expect
 from ..core.abstract_integrator import MCSolveIntegrator
+from ...gradient import Autograd, CheckpointAutograd
 from ..core.diffrax_integrator import (
     Dopri5Integrator,
     Dopri8Integrator,
@@ -25,8 +26,6 @@ from ..core.diffrax_integrator import (
     MCDiffraxIntegrator,
     Tsit5Integrator,
 )
-
-MAX_JUMPS = 100
 
 
 class SaveState(eqx.Module):
@@ -69,7 +68,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
     """Integrator computing the time evolution of the Monte-Carlo unraveling of the
     Lindblad master equation using the Diffrax library."""
 
-    def _run(self, y0, rand):
+    def _run(self, y0, tsave, rand):
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
@@ -77,20 +76,30 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             # closed
             warnings.simplefilter('ignore', FutureWarning)
 
-            saveat, adjoint = self.diffrax_arguments()
+            # === prepare diffrax arguments
+            fn = lambda t, y, args: self.save(unit(y))  # noqa: ARG005
+            subsaveat_a = dx.SubSaveAt(ts=tsave, fn=fn)  # save solution regularly
+            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+            if self.gradient is None:
+                adjoint = dx.RecursiveCheckpointAdjoint()
+            elif isinstance(self.gradient, CheckpointAutograd):
+                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+            elif isinstance(self.gradient, Autograd):
+                adjoint = dx.DirectAdjoint()
 
             def cond_fn(t, y, *args, **kwargs):
-                norm = jnp.linalg.norm(y)
-                return norm**2 - rand
+                return norm(y) ** 2 - rand
 
             event = dx.Event(cond_fn, self.root_finder)
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
                 self.terms,
                 self.diffrax_solver,
-                t0=self.t0,
-                t1=self.t1,
-                dt0=self.dt0,
+                t0=tsave[0],
+                t1=tsave[-1],
+                dt0=tsave[1] - tsave[0],
                 y0=y0,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
@@ -102,22 +111,17 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         return solution
 
     def run(self):
-        no_jump_solution = self._run(self.y0, 0.0)
-        # don't need ellipses preceding 0 since this has been previously vmapped
-        final_no_jump_state = no_jump_solution.ys[1][0, :, :]
+        # === run no jump, extract no-jump probability
+        no_jump_solution = self._run(self.y0, self.ts, 0.0)
+        final_no_jump_state = no_jump_solution.ys[1][0]
         no_jump_prob = norm(final_no_jump_state) ** 2
-        # set up jump and dark state vmapped functions
+
+        # === run jump trajectories
         jump_state_fun = jax.vmap(self._loop_over_jumps, in_axes=(0, None))
-        dark_state_fun = jax.vmap(self._dark_state, in_axes=(0, None))
-        # call jump_state_fun only if no_jump_prob is below 0.999
-        jump_state = jax.lax.cond(
-            1 - no_jump_prob > 1e-3,
-            jump_state_fun,
-            dark_state_fun,
-            *(self.keys, no_jump_prob),
-        )
+        jump_state = jump_state_fun(self.keys, no_jump_prob)
         jump_times = jump_state.save_state.jump_times
         num_jumps = jump_state.num_jumps
+
         # === save and postprocess results
         no_jump_saved = self.postprocess_saved(*no_jump_solution.ys)
         no_jump_result = self.traj_result(
@@ -133,28 +137,11 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             no_jump_result, jump_result, no_jump_prob, jump_times, num_jumps
         )
 
-    def _dark_state(self, key, no_jump_prob):
-        result = self._run(self.y0, 0.0)
-        save_state = SaveState(
-            ts=result.ts[0],
-            ys=result.ys[0],
-            save_index=len(self.ts),
-            jump_times=jnp.full(MAX_JUMPS, jnp.nan),
-        )
-        state = State(
-            save_state=save_state,
-            final_state=result.ys[1][0, :, :],
-            final_time=result.ts[1][0],
-            num_jumps=0,
-            key=key,
-        )
-        return state
-
-    def _loop_over_jumps(self, key, no_jump_prob):
+    def _loop_over_jumps(self, key: PRNGKey, no_jump_prob: Array) -> State:
         """loop over jumps until the simulation reaches the final time"""
         rand_key, sample_key = jax.random.split(key)
         rand = jax.random.uniform(rand_key, minval=no_jump_prob)
-        first_result = self._run(self.y0, rand)
+        first_result = self._run(self.y0, self.ts, rand)
         first_jump_time = first_result.ts[1][0]
         time_diffs = self.ts - first_jump_time
         # want to start with a time after the jump
@@ -165,7 +152,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             ts=first_result.ts[0],
             ys=first_result.ys[0],
             save_index=save_index,
-            jump_times=jnp.full(MAX_JUMPS, jnp.nan),
+            jump_times=jnp.full(self.options.max_jumps, jnp.nan),
         )
         state = State(
             save_state=save_state,
@@ -175,29 +162,39 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             key=sample_key,
         )
 
-        def outer_cond_fun(_state):
-            # TODO sometimes we reenter the loop even when this is false?!
+        def _outer_cond_fun(_state):
             return _state.final_time < self.t1
 
-        def outer_body_fun(_state):
-            psi = _state.final_state
+        def _outer_body_fun(_state):
+            # Something funky is that jax doesn't support dynamic array sizes. This
+            # makes vmaps of loops tricky as discussed here
+            # https://github.com/patrick-kidger/equinox/issues/870.
+            # The issue is that some trajectories terminate before others do (they
+            # experience fewer jumps), but the loop body needs to keep executing until
+            # the last trajectory finishes. See comments below for the various hacks
+            # necessary for those trajectories that are "idling".
             jump_time = _state.final_time
-            # if we've (re)entered the loop, that means we terminated before the final time
-            # so we need a jump
-            # select and apply a random jump operator, renormalize
+            psi = _state.final_state
             _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
-            jump_op = self.sample_jump_ops(jump_time, psi, _sample_key)
-            # don't need conditional here on whether to apply jump?
-            psi_after_jump = unit(jump_op @ psi)
-            # new linspace over the remaining times
+            jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
+            # Need a conditional here on whether to apply the jump or not because of
+            # the idling problem.
+            psi_after_jump = jnp.where(_state.final_time < self.t1, jump_op @ psi, psi)
+            psi_after_jump = unit(psi_after_jump)
+            # Construct a new linspace over the remaining times with the same shape as
+            # self.ts (because the shape can't be dynamic!). In "idling" cases,
+            # new_times is a constant array with fill value self.t1. The interpolator
+            # dx.backward_hermite_coefficients below requires the time inputs to be
+            # monotonically strictly increasing, which would then throw an error. So in
+            # these cases we pass a placeholder of self.ts.
             new_times = jnp.linspace(jump_time, self.t1, len(self.ts))
-            # run the next leg until it either terminates for a new jump or it finishes
+            new_times = jnp.where(_state.final_time < self.t1, new_times, self.ts)
+            # This new random value should be uniform over [0, 1), not restricted to
+            # [no_jump_prob, 1) like in the first case.
             _rand = jax.random.uniform(_rand_key)
-            result_after_jump = self._run(psi_after_jump, _rand)
-            # always do interpolation regardless of options.save_states
-            # extract saved y values to interpolate
+            result_after_jump = self._run(psi_after_jump, new_times, _rand)
+            # extract saved y values to interpolate, replace infs with nans
             psis_after_jump = result_after_jump.ys[0].ysave
-            # replace infs with nans to interpolate
             psi_inf_to_nan = jnp.where(
                 jnp.isinf(psis_after_jump), jnp.nan, psis_after_jump
             )
@@ -210,13 +207,15 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             final_time = result_after_jump.ts[1][0]
             final_state = result_after_jump.ys[1][0]
 
-            def save_ts_and_states(_save_state):
-                def inner_cond_fun(__save_state):
+            def save_ts_and_states(_save_state: SaveState):
+                # Save intermediate states and expectation values. Based on the code
+                # in diffrax/_integrate.py which can be found here https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458  # noqa E501
+                def _inner_cond_fun(__save_state):
                     return (self.ts[__save_state.save_index] <= final_time) & (
                         __save_state.save_index < len(self.ts)
                     )
 
-                def inner_body_fun(__save_state):
+                def _inner_body_fun(__save_state):
                     _t = self.ts[__save_state.save_index]
                     _y = psi_interpolator.evaluate(_t)
                     _ts = __save_state.ts.at[__save_state.save_index].set(_t)
@@ -233,8 +232,8 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
                     )
 
                 save_state = while_loop(
-                    inner_cond_fun,
-                    inner_body_fun,
+                    _inner_cond_fun,
+                    _inner_body_fun,
                     _save_state,
                     max_steps=len(self.ts),
                     buffers=_inner_buffers,
@@ -259,15 +258,15 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             )
 
         return while_loop(
-            outer_cond_fun,
-            outer_body_fun,
+            _outer_cond_fun,
+            _outer_body_fun,
             state,
-            max_steps=MAX_JUMPS,
+            max_steps=self.options.max_jumps,
             buffers=_outer_buffers,
             kind='checkpointed',
         )
 
-    def sample_jump_ops(self, t, psi, key):
+    def _sample_jump_ops(self, t: Array, psi: Array, key: PRNGKey) -> Array:
         """given a state psi at time t that should experience a jump,
         randomly sample one jump operator from among the provided jump_ops.
         The probability that a certain jump operator is selected is weighted
@@ -277,8 +276,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         """
         Ls = jnp.stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
-        # i, j, k: hilbert dim indices; e: jump ops; d: index of dimension 1
-        probs = jnp.einsum('id,eij,ejk,kd->e', jnp.conj(psi), Lsd, Ls, psi)
+        probs = expect(Lsd @ Ls, psi)
         # for categorical we pass in the log of the probabilities
         logits = jnp.log(jnp.real(probs / (jnp.sum(probs))))
         # randomly sample the index of a single jump operator

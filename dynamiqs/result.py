@@ -249,8 +249,18 @@ class MCSolveResult(eqx.Module):
         final_no_jump_state _(Array)_: Saved final no-jump state
         jump_states _(Array)_: Saved states for jump trajectories
         final_jump_states _(Array)_: Saved final states for jump trajectories
+        no_jump_prob _(Array)_: No jump probability
+        jump_times _(Array)_: Times at which each trajectory experienced a jump. This
+            quantity has shape ..., options.max_jumps where the array is filled with
+            nans for the final options.max_jumps - num_jumps values
+        num_jumps _(Array)_: Number of jumps each jump trajectory experienced. The times
+            at which each jump occurred is saved in jump_times.
         expects _(Array, optional)_: Saved expectation values.
-        tsave _(Array)_: Times for which results were saved.
+                infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
     """
 
     tsave: Array
@@ -266,14 +276,14 @@ class MCSolveResult(eqx.Module):
 
     @property
     def expects(self) -> Array | None:
-        # TODO want to do a conditional check here?
-        # average over trajectories
-        jump_expects = jnp.mean(self._jump_res.expects, axis=0)
+        # Average over trajectories. Dimensions are ..., trajectories, expects, times
+        # where ... is batch so we average over axis=-3
+        jump_expects = jnp.mean(self._jump_res.expects, axis=-3)
         no_jump_expects = self._no_jump_res.expects
-        avg_expects = (
-            self.no_jump_prob * no_jump_expects + (1 - self.no_jump_prob) * jump_expects
+        no_jump_prob = jnp.expand_dims(self.no_jump_prob, axis=(-1, -2))
+        return (
+            no_jump_prob * no_jump_expects + (1 - no_jump_prob) * jump_expects
         )
-        return avg_expects
 
     @property
     def no_jump_states(self) -> Array:
@@ -295,8 +305,7 @@ class MCSolveResult(eqx.Module):
         parts = {
             'No-jump result': str(self._no_jump_res),
             'Jump result': str(self._jump_res),
-            'No-jump states  ': array_str(self.no_jump_states),
-            'Jump states  ': array_str(self.jump_states),
+            'No-jump probability  ': array_str(self.no_jump_prob),
             'Jump times  ': array_str(self.jump_times),
             'Number of jumps in each trajectory  ': array_str(self.num_jumps),
             'Expects ': array_str(self.expects) if self.expects is not None else None,

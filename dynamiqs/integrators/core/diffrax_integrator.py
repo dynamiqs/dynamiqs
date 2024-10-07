@@ -48,21 +48,6 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
     def terms(self) -> dx.AbstractTerm:
         pass
 
-    def diffrax_arguments(self) -> tuple[dx.SaveAt, dx.AbstractAdjoint]:
-        # === prepare diffrax arguments
-        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
-        if self.gradient is None:
-            adjoint = dx.RecursiveCheckpointAdjoint()
-        elif isinstance(self.gradient, CheckpointAutograd):
-            adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-        elif isinstance(self.gradient, Autograd):
-            adjoint = dx.DirectAdjoint()
-        return saveat, adjoint
-
     def run(self) -> Result:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
@@ -71,7 +56,19 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             # closed
             warnings.simplefilter('ignore', FutureWarning)
 
-            saveat, adjoint = self.diffrax_arguments()
+            # === prepare diffrax arguments
+            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+            if self.gradient is None:
+                adjoint = dx.RecursiveCheckpointAdjoint()
+            elif isinstance(self.gradient, CheckpointAutograd):
+                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+            elif isinstance(self.gradient, Autograd):
+                adjoint = dx.DirectAdjoint()
+
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
                 self.terms,
