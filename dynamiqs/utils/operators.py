@@ -228,10 +228,10 @@ def number(*dims: int) -> Array | tuple[Array, ...]:
     r"""Returns the number operator of a bosonic mode, or a tuple of number operators
     for a multi-mode system.
 
-    It is defined by $N = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
-    creation operators, respectively. If multiple dimensions are provided
-    $\mathtt{dims}=(n_1,\dots,n_M)$, it returns a tuple with _len(dims)_ operators
-    $(N_1,\dots,N_M)$, where $N_k$ is the number operator acting on the $k$-th
+    For a single mode, it is defined by $N = a^\dag a$, where $a$ and $a^\dag$ are the
+    mode annihilation and creation operators, respectively. If multiple dimensions are
+    provided $\mathtt{dims}=(n_1,\dots,n_M)$, it returns a tuple with _len(dims)_
+    operators $(N_1,\dots,N_M)$, where $N_k$ is the number operator acting on the $k$-th
     subsystem within the composite Hilbert space of dimension $n=\prod n_k$:
     $$
         N_k = I_{n_1} \otimes\dots\otimes a_{n_k}^\dag a_{n_k} \otimes\dots\otimes I_{n_M}.
