@@ -137,7 +137,7 @@ def destroy(*dims: int) -> Array | tuple[Array, ...]:
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.732+0.j],
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]], dtype=complex64)
 
-        Mult-mode $a\otimes I_3$ and $I_2\otimes b$:
+        Multi-mode $a\otimes I_3$ and $I_2\otimes b$:
         >>> a, b = dq.destroy(2, 3)
         >>> a
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
@@ -197,7 +197,7 @@ def create(*dims: int) -> Array | tuple[Array, ...]:
                [0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j],
                [0.   +0.j, 0.   +0.j, 1.732+0.j, 0.   +0.j]], dtype=complex64)
 
-        Mult-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
+        Multi-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
         >>> adag, bdag = dq.create(2, 3)
         >>> adag
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -258,7 +258,7 @@ def number(*dims: int) -> Array | tuple[Array, ...]:
                [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]], dtype=complex64)
 
-        Mult-mode $a^\dag a \otimes I_3$ and $I_2\otimes b^\dag b$:
+        Multi-mode $a^\dag a \otimes I_3$ and $I_2\otimes b^\dag b$:
         >>> na, nb = dq.number(2, 3)
         >>> na
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
