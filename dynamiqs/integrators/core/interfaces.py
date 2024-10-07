@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import equinox as eqx
 from jax import Array
 from jax.random import PRNGKey

@@ -43,7 +43,7 @@ def mcsolve(
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
-    keys: list[PRNGKey] = [PRNGKey(42)],
+    keys: list[PRNGKey] = jax.random.split(jax.random.key(31), num=10),  # noqa: B008
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     root_finder: AbstractRootFinder = optx.Newton(1e-5, 1e-5, optx.rms_norm),  # noqa: B008
@@ -53,9 +53,9 @@ def mcsolve(
     r"""Perform Monte-Carlo evolution, unraveling the master equation.
 
     We follow the algorithm outlined in Abdelhafez et al. to efficiently perform
-    Monte-Carlo sampling. First the no-jump trajectory is computed for a state vector $\ket{\psi(t)}$ at time
-    $t$, starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
-    equation with non-Hermitian Hamiltonian ($\hbar=1$)
+    Monte-Carlo sampling. First the no-jump trajectory is computed for a state vector
+    $\ket{\psi(t)}$ at time $t$, starting from an initial state $\ket{\psi_0}$,
+    according to the Schrödinger equation with non-Hermitian Hamiltonian ($\hbar=1$)
     $$
         \frac{\dd\ket{\psi(t)}}{\dt} = -i (H(t)
             -i/2 \sum_{k=1}^{N}L_{k}^{\dag}(t)L_{k}(t) ) \ket{\psi(t)},
@@ -74,8 +74,8 @@ def mcsolve(
 
     Quote: Running multiple simulations concurrently
         The Hamiltonian `H`, the jump operators `jump_ops` and the
-         initial state `psi0` can be batched to solve multiple monte-carlo equations concurrently.
-        All other arguments are common to every batch.
+        initial state `psi0` can be batched to solve multiple monte-carlo equations
+        concurrently. All other arguments are common to every batch.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
@@ -85,13 +85,20 @@ def mcsolve(
         tsave _(array-like of shape (nt,))_: Times at which the states and expectation
             values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
             from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        ntraj _(int, optional)_: Total number of trajectories to simulate, including
-            the no-jump trajectory. Defaults to 10.
-        key _(PRNGKeyArray, optional)_: random key to use for monte-carlo sampling.
+        keys _(KeyArray of shape (ntraj,))_: Total number of jump trajectories to
+            simulate, not including the no-jump trajectory. Defaults to a list of keys
+            of length 10.
         exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+        root_finder: Root finder passed to dx.diffeqsolve() to find the exact time an
+            event occurs. Can be `None`, in which case the root finding functionality
+            is not utilized. It is recommended to pass a root finder (such as the
+            default Newton root finder) so that event times are not determined by the
+            integration step sizes in diffeqsolve. However there are cases where the
+            root finding can fail, causing the whole simulation to fail. Passing `None`
+            for `root_finder` can alleviate the issue in these cases.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
 
@@ -99,7 +106,10 @@ def mcsolve(
         [`dq.Result`](/python_api/result/Result.html) object holding the result of the
             Monte-Carlo integration. It has the following attributes:
 
-            - **states** _(array of shape (bH?, brho?, ntraj, nt, n, n))_ -- Saved states.
+            - **no_jump_states** _(array of shape (bH?, bpsi0?, nt, n, 1))_ -- Saved
+                no-jump states.
+            - **jump_states** _(array of shape (bH?, bpsi0?, ntraj, nt, n, 1))_ -- Saved
+                jump states.
             - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
                 expectation values.
             - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
@@ -143,7 +153,7 @@ def _vectorized_mcsolve(
     # === vectorize function
     # we vectorize over H, jump_ops, and psi0. keys are vectorized over inside of run().
 
-    out_axes = MCSolveResult(False, False, False, False, 0, 0, 0, 0, 0, False)
+    out_axes = MCSolveResult(False, False, False, False, 0, 0, 0, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(

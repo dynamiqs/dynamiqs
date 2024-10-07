@@ -125,7 +125,6 @@ class MCIntegrator(BaseIntegrator, MCInterface):
         no_jump_prob: Array,
         jump_times: Array,
         num_jumps: Array,
-        infos: PyTree | None = None,
     ) -> Result:
         return self.RESULT_CLASS(
             self.ts,
@@ -137,7 +136,6 @@ class MCIntegrator(BaseIntegrator, MCInterface):
             no_jump_prob,
             jump_times,
             num_jumps,
-            infos,
         )
 
 
