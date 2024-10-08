@@ -122,7 +122,7 @@ def mcsolve(
             - **solver** _(Solver)_ -- Solver used.
             - **gradient** _(Gradient)_ -- Gradient used.
             - **options** _(Options)_ -- Options used.
-    """
+    """  # noqa E501
     # === convert arguments
     H = _astimearray(H)
     jump_ops = [_astimearray(L) for L in jump_ops]
