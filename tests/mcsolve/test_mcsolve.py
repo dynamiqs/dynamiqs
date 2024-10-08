@@ -55,14 +55,10 @@ def test_against_mesolve_qubit(ysave_atol=1e-1):
         keys=jax.random.split(jax.random.key(4242434), num=num_traj),
         exp_ops=exp_ops,
         options=options,
-        root_finder=None
+        root_finder=None,
     )
     meresult = dq.mesolve(
-        timecallable(H_func),
-        jump_ops,
-        initial_states,
-        tsave,
-        exp_ops=exp_ops,
+        timecallable(H_func), jump_ops, initial_states, tsave, exp_ops=exp_ops
     )
     errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
     assert jnp.all(errs <= ysave_atol)
