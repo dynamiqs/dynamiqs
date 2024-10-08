@@ -54,8 +54,8 @@ def mcsolve(
     $\ket{\psi(t)}$ at time $t$, starting from an initial state $\ket{\psi_0}$,
     according to the Schrödinger equation with non-Hermitian Hamiltonian ($\hbar=1$)
     $$
-        \frac{\dd\ket{\psi(t)}}{\dt} = -i (H(t)
-            -i/2 \sum_{k=1}^{N}L_{k}^{\dag}(t)L_{k}(t) ) \ket{\psi(t)},
+        \frac{\dd\ket{\psi(t)}}{\dt}
+        = -i [H(t) -\frac{i}{2} \sum_{k=1}^{N} L_{k}^{\dagger} (t)L_{k}(t)] \ket{\psi(t)},
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
     collection of jump operators at time $t$. We then extract the norm of the state
