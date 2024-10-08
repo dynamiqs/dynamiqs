@@ -105,8 +105,12 @@ def mcsolve(
 
             - **no_jump_states** _(array of shape (bH?, bpsi0?, nt, n, 1))_ -- Saved
                 no-jump states.
+            - **final_no_jump_state** _(array of shape (bH?, bpsi0?, n, 1))_ -- Saved
+                final no-jump state.
             - **jump_states** _(array of shape (bH?, bpsi0?, ntraj, nt, n, 1))_ -- Saved
                 jump states.
+            - **final_jump_states** _(array of shape (bH?, bpsi0?, ntraj, n, 1))_ -- Saved
+                final jump states.
             - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
                 expectation values.
             - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
