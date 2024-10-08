@@ -2,10 +2,10 @@ import jax.numpy as jnp
 import jax.random
 
 import dynamiqs as dq
-from dynamiqs import Options, mcsolve, mesolve
+from dynamiqs import Options, mcsolve, mesolve, timecallable
 
 
-def test_against_mesolve(ysave_atol=1e-1):
+def test_against_mesolve_oscillator(ysave_atol=1e-1):
     num_traj = 161
     options = Options(progress_meter=None)
     dim = 4
@@ -27,5 +27,42 @@ def test_against_mesolve(ysave_atol=1e-1):
         root_finder=None,
     )
     meresult = mesolve(H0, jump_ops, y0, tsave, exp_ops=exp_ops, options=options)
+    errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
+    assert jnp.all(errs <= ysave_atol)
+
+
+def test_against_mesolve_qubit(ysave_atol=1e-1):
+    num_traj = 161
+    options = dq.Options(progress_meter=None)
+    initial_states = [dq.basis(2, 1)]
+    omega = 2.0 * jnp.pi * 1.0
+    amp = 2.0 * jnp.pi * 0.1
+    tsave = jnp.linspace(0, 10.0, 41)
+    jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1))]
+    exp_ops = [
+        dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)),
+        dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1)),
+    ]
+
+    def H_func(t):
+        return -0.5 * omega * dq.sigmaz() + jnp.cos(omega * t) * amp * dq.sigmax()
+
+    mcresult = dq.mcsolve(
+        timecallable(H_func),
+        jump_ops,
+        initial_states,
+        tsave,
+        keys=jax.random.split(jax.random.key(4242434), num=num_traj),
+        exp_ops=exp_ops,
+        options=options,
+        root_finder=None
+    )
+    meresult = dq.mesolve(
+        timecallable(H_func),
+        jump_ops,
+        initial_states,
+        tsave,
+        exp_ops=exp_ops,
+    )
     errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
     assert jnp.all(errs <= ysave_atol)
