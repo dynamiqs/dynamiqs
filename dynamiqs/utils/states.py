@@ -337,8 +337,8 @@ def excited() -> Array:
 
 
 def thermal_dm(dim: int | tuple[int, ...], beta: float) -> Array:
-    r"""Returns the density matrix of a thermal state for a system with
-    specified dimensions.
+    r"""Returns the density matrix of a thermal state or a tensor product of thermal
+    states.
 
     The density matrix for a thermal state is given by:
 
