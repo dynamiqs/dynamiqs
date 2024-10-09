@@ -343,7 +343,7 @@ def thermal_dm(dim: int | tuple[int, ...], beta: float) -> Array:
     The density matrix for a thermal state is given by:
 
     \[
-    \rho = \frac{1}{Z} e^{-\beta H}
+    \rho_{th} = \sum_k \frac{(n_{th})^k}{(1 + n_{th})^{1+k}} \left\vert n \right\rangle\!\left\langle n\right\vert
     \]
 
     where \(Z\) is the partition function, \(\beta = \frac{1}{k_B T}\),
