@@ -336,7 +336,7 @@ def excited() -> Array:
     return jnp.array([[1], [0]], dtype=cdtype())
 
 
-def thermal_dm(dim: int | tuple[int, ...], beta: float) -> Array:
+def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
     r"""Returns the density matrix of a thermal state or a tensor product of thermal
     states.
 
