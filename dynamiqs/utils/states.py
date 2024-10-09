@@ -354,9 +354,8 @@ def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
         beta: Inverse temperature \( \beta \), units of \(1/J\)).
 
     Returns:
-        Array of shape (..., n, n) representing the density matrix for the
-        thermal state,
-        where \(n = \text{prod(dim)}\).
+        _(array of shape (..., n, n))_ Density matrix of the thermal state or 
+        tensor product of thermal states, with _n = prod(dims)_.
 
     Examples:
         Single-mode thermal state at inverse temperature
