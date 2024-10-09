@@ -134,12 +134,13 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = 'echo "\n>>> pytest dynamiqs" && python remove_files.py && pytest dynamiqs'
-help = "check code docstrings examples (doctest)"
+cmd = '''echo "\n>>> pytest dynamiqs" && (if "%OS%" == "Windows_NT" (if exist docs\\figs_code\\*.png (del /Q docs\\figs_code\\*.png) && if exist docs\\figs_code\\*.gif (del /Q docs\\figs_code\\*.gif)) else (rm -f docs/figs_code/*.{png,gif} 2>/dev/null)) && pytest dynamiqs'''
+help = "Check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm python remove_files.py && pytest docs'
+cmd = '''echo "\n>>> pytest docs" && (if "%OS%" == "Windows_NT" (if exist docs\\figs_docs\\*.png (del /Q docs\\figs_docs\\*.png) && if exist docs\\figs_docs\\*.gif (del /Q docs\\figs_docs\\*.gif)) else (rm -f docs/figs_docs/*.{png,gif} 2>/dev/null) ) && pytest docs'''
 help = "check documentation examples (doctest)"
+
 
 [tool.taskipy.tasks.doctest]
 cmd = 'task doctest-code && task doctest-docs'
