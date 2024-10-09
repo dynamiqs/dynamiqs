@@ -363,8 +363,8 @@ def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
         >>> dm = thermal_dm(3, 1.0)
         >>> dm
         Array([[0.665, 0.   , 0.   ],
-                [0.   , 0.245, 0.   ],
-                [0.   , 0.   , 0.09 ]], dtype=float32)
+                [0.  , 0.245, 0.   ],
+                [0.  , 0.   , 0.09 ]], dtype=float32)
 
         Multi-mode thermal state for two modes,
         each with dimension 3, at inverse temperature \(\beta=1.0\):
