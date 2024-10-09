@@ -350,8 +350,7 @@ def thermal_dm(dim: int | tuple[int, ...], beta: float) -> Array:
     and \(H\) is the Hamiltonian of the system.
 
     Args:
-        dim: Hilbert space dimension of each mode or a tuple representing
-        dimensions of each mode.
+        dim: Hilbert space dimension of each mode.
         beta: Inverse temperature \( \beta \), units of \(1/J\)).
 
     Returns:
