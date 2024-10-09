@@ -84,8 +84,8 @@ print(result)
 ==== SESolveResult ====
 Solver  : Dopri5
 Infos   : 56 steps (48 accepted, 8 rejected)
-States  : Array complex64 (101, 2, 1) | 1.58 Kb
-Expects : Array complex64 (1, 101) | 0.79 Kb
+States  : Array complex64 (101, 2, 1) | 1.6 Kb
+Expects : Array complex64 (1, 101) | 0.8 Kb
 ```
 
 ## IV. Analyze the results

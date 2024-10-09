@@ -28,6 +28,13 @@ __all__ = [
     'sigmap',
     'sigmam',
     'hadamard',
+    'rx',
+    'ry',
+    'rz',
+    'sgate',
+    'tgate',
+    'cnot',
+    'toffoli',
 ]
 
 
@@ -130,7 +137,7 @@ def destroy(*dims: int) -> Array | tuple[Array, ...]:
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.732+0.j],
                [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]], dtype=complex64)
 
-        Mult-mode $a\otimes I_3$ and $I_2\otimes b$:
+        Multi-mode $a\otimes I_3$ and $I_2\otimes b$:
         >>> a, b = dq.destroy(2, 3)
         >>> a
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
@@ -190,7 +197,7 @@ def create(*dims: int) -> Array | tuple[Array, ...]:
                [0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j],
                [0.   +0.j, 0.   +0.j, 1.732+0.j, 0.   +0.j]], dtype=complex64)
 
-        Mult-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
+        Multi-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
         >>> adag, bdag = dq.create(2, 3)
         >>> adag
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
@@ -223,25 +230,64 @@ def _create_single(dim: int) -> Array:
     return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
 
 
-def number(dim: int | None = None) -> Array:
-    r"""Returns the number operator of a bosonic mode.
+def number(*dims: int) -> Array | tuple[Array, ...]:
+    r"""Returns the number operator of a bosonic mode, or a tuple of number operators
+    for a multi-mode system.
 
-    It is defined by $n = a^\dag a$, where $a$ and $a^\dag$ are the annihilation and
-    creation operators, respectively.
+    For a single mode, it is defined by $N = a^\dag a$, where $a$ and $a^\dag$ are the
+    mode annihilation and creation operators, respectively. If multiple dimensions are
+    provided $\mathtt{dims}=(n_1,\dots,n_M)$, it returns a tuple with _len(dims)_
+    operators $(N_1,\dots,N_M)$, where $N_k$ is the number operator acting on the $k$-th
+    subsystem within the composite Hilbert space of dimension $n=\prod n_k$:
+    $$
+        N_k = I_{n_1} \otimes\dots\otimes a_{n_k}^\dag a_{n_k} \otimes\dots\otimes I_{n_M}.
+    $$
 
     Args:
-        dim: Dimension of the Hilbert space.
+        *dims: Hilbert space dimension of each mode.
 
     Returns:
-        _(array of shape (dim, dim))_ Number operator.
+        _(array or tuple of arrays, each of shape (n, n))_ Number operator(s), with
+            _n = prod(dims)_.
 
     Examples:
+        Single-mode $a^\dag a$:
         >>> dq.number(4)
         Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
                [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]], dtype=complex64)
-    """
+
+        Multi-mode $a^\dag a \otimes I_3$ and $I_2\otimes b^\dag b$:
+        >>> na, nb = dq.number(2, 3)
+        >>> na
+        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        >>> nb
+        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 2.+0.j]], dtype=complex64)
+    """  # noqa: E501
+    if len(dims) == 1:
+        return _number_single(dims[0])
+
+    nums = [_number_single(dim) for dim in dims]
+    Id = [eye(dim) for dim in dims]
+    return tuple(
+        tensor(*[nums[j] if i == j else Id[j] for j in range(len(dims))])
+        for i in range(len(dims))
+    )
+
+
+def _number_single(dim: int) -> Array:
+    """Bosonic number operator."""
     return jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
 
 
@@ -358,7 +404,7 @@ def quadrature(dim: int, phi: float) -> Array:
                [ 0.+0.j   , -0.+0.707j,  0.+0.j   ]], dtype=complex64)
     """
     a = destroy(dim)
-    return 0.5 * (jnp.exp(1.0j * phi) * dag(a) + jnp.exp(-1.0j * phi) * a)
+    return 0.5 * (jnp.exp(1j * phi) * dag(a) + jnp.exp(-1j * phi) * a)
 
 
 def position(dim: int) -> Array:
@@ -412,7 +458,7 @@ def sigmax() -> Array:
         Array([[0.+0.j, 1.+0.j],
                [1.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, 1.0], [1.0, 0.0]], dtype=cdtype())
+    return jnp.array([[0, 1], [1, 0]], dtype=cdtype())
 
 
 def sigmay() -> Array:
@@ -428,7 +474,7 @@ def sigmay() -> Array:
         Array([[ 0.+0.j, -0.-1.j],
                [ 0.+1.j,  0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=cdtype())
+    return jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
 
 
 def sigmaz() -> Array:
@@ -444,7 +490,7 @@ def sigmaz() -> Array:
         Array([[ 1.+0.j,  0.+0.j],
                [ 0.+0.j, -1.+0.j]], dtype=complex64)
     """
-    return jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=cdtype())
+    return jnp.array([[1, 0], [0, -1]], dtype=cdtype())
 
 
 def sigmap() -> Array:
@@ -460,7 +506,7 @@ def sigmap() -> Array:
         Array([[0.+0.j, 1.+0.j],
                [0.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=cdtype())
+    return jnp.array([[0, 1], [0, 0]], dtype=cdtype())
 
 
 def sigmam() -> Array:
@@ -476,7 +522,7 @@ def sigmam() -> Array:
         Array([[0.+0.j, 0.+0.j],
                [1.+0.j, 0.+0.j]], dtype=complex64)
     """
-    return jnp.array([[0.0, 0.0], [1.0, 0.0]], dtype=cdtype())
+    return jnp.array([[0, 0], [1, 0]], dtype=cdtype())
 
 
 def hadamard(n: int = 1) -> Array:
@@ -510,10 +556,9 @@ def hadamard(n: int = 1) -> Array:
                [ 0.5+0.j,  0.5+0.j, -0.5+0.j, -0.5+0.j],
                [ 0.5+0.j, -0.5+0.j, -0.5+0.j,  0.5-0.j]], dtype=complex64)
     """
-    H1 = jnp.array([[1.0, 1.0], [1.0, -1.0]], dtype=cdtype()) / jnp.sqrt(2)
+    H1 = jnp.array([[1, 1], [1, -1]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)
-
 
 def rx(theta: ArrayLike) -> Array:
     r"""Returns the vectorized $R_x(\theta)$ rotation gate.
@@ -527,10 +572,12 @@ def rx(theta: ArrayLike) -> Array:
     $$
 
     Args:
+
         theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(array of shape (..., 2, 2))_ $R_x(\theta)$ gate.
+
 
     Examples:
         >>> dq.rx(jnp.pi)
