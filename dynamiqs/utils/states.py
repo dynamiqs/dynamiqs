@@ -388,7 +388,7 @@ def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
     Z = jnp.sum(jnp.exp(-beta * energies))
 
     # Create the density matrix
-    rho = jnp.zeros((n, n), dtype=jnp.float32)
+    rho = jnp.zeros((n, n), dtype=cdtype())
 
     # Populate the density matrix using the Boltzmann distribution
     for i in range(n):
