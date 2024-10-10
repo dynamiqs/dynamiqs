@@ -1,0 +1,123 @@
+/*
+File: theme.css
+Description: Color theme of the Dynamiqs documentation
+*/
+
+
+/* Main color scheme */
+:root {
+  --md-primary-fg-color: #ed7764;
+  --md-primary-fg-color--light: #edc7c2;
+  --md-primary-fg-color--dark: #903527;
+  --md-accent-fg-color: #cc5d4c;
+  --md-accent-fg-color--light: #cd9a92;
+  --md-accent-fg-color--dark: #66190e;
+
+  /* Header font */
+  --md-header-font-family: -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+
+  /* Default admonition color shades */
+  --md-admonition-fg-color: var(--md-note-fg-color);
+  --md-admonition-bg-color: var(--md-note-bg-color);
+}
+
+/* --------------------------- */
+/* Light mode                  */
+/* --------------------------- */
+
+[data-md-color-scheme="default"] {
+  /* Background */
+  --md-default-bg-color-base: 255, 255, 255;
+  --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: #f5f5f5;
+
+  /* Header color */
+  --md-header-main-color: #000000a5;
+
+  /* Code highlight */
+  --md-code-fg-color: #39464b;
+  --md-code-hl-constant-color: #ed7764;
+  --md-code-hl-number-color: #cf5e89;
+  --md-code-hl-color: #0b4f6c;
+  --md-code-hl-string-color: #25adab;
+  --md-code-hl-special-color: #25adab;
+  --md-code-hl-keyword-color: #25adab;
+  --md-code-hl-operator-color: #3b7091;
+  --md-code-hl-function-color: #39464b;
+  --md-code-hl-punctuation-color: 0000008a;
+
+  /* Hover color */
+  --md-accent-fg-color--transparent: #f5eae9;
+
+  /* Search text color */
+  --md-primary-bg-color--light: #7e7c7c;
+
+  /* Warning color shades */
+  --md-warning-fg-color: #e190b0;
+  --md-warning-bg-color: #fbdde9;
+
+  /* Note color shades */
+  --md-note-fg-color: #25adab;
+  --md-note-bg-color: #cfe8e8;
+
+  /* Example color shades */
+  --md-example-fg-color: #3E517A;
+  --md-example-bg-color: #c9cfde;
+
+  /* Home page */
+  --homepage-gradient:  linear-gradient(to right bottom, #d15540, #d86854, #de7a68, #e38b7c, #e79d90);
+  --homepage-button-hover-color: #ed9487;
+  --homepage-button-font-color: #cf6656;
+}
+
+
+/* --------------------------- */
+/* Dark mode                  */
+/* --------------------------- */
+
+[data-md-color-scheme="slate"] {
+  /* Background */
+  --md-default-bg-color-base: 50, 52, 57;
+  --md-default-bg-color: rgb(var(--md-default-bg-color-base));  --md-default-bg-header-color: rgb(62, 66, 72);
+  --md-code-bg-color: var(--md-default-bg-header-color);
+
+  /* Header color */
+  --md-header-main-color: #ffffffc8;
+
+  /* Primary font color */
+  --md-default-fg-color: #ececec;
+
+  /* Code highlight */
+  --md-code-fg-color: #e2e3e9;
+  --md-code-hl-constant-color: #ed7764;
+  --md-code-hl-number-color: #e56395;
+  --md-code-hl-color: #0b4f6c;
+  --md-code-hl-string-color: #23bebb;
+  --md-code-hl-special-color: #23bebb;
+  --md-code-hl-keyword-color: #23bebb;
+  --md-code-hl-operator-color: #89aabe;
+  --md-code-hl-function-color: #d5d7e2;
+  --md-code-hl-punctuation-color: #d2d7f99e;
+
+  /* Hover color */
+  --md-accent-fg-color--transparent: #494241;
+
+  /* Warning color shades */
+  --md-warning-fg-color: #e293b1;
+  --md-warning-bg-color: #533b44;
+
+  /* Note color shades */
+  --md-note-fg-color: #249897;
+  --md-note-bg-color: #354949;
+
+  /* Example color shades */
+  --md-example-fg-color: #54658b;
+  --md-example-bg-color: #333e49;
+
+  /* Admonition shadow */
+  --md-shadow-z1: 0 0.2rem 0.5rem #0000002d, 0 0 0.05rem #0000001a;
+
+  /* Home page */
+  --homepage-gradient: linear-gradient(to right bottom, #ae4635, #bd5c4b, #cc7261, #da8778, #e79d90);
+  --homepage-button-hover-color: #8e4633;
+  --homepage-button-font-color: #a64833;
+}

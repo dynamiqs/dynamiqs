@@ -1,0 +1,370 @@
+/*
+File: extra.css
+Description: Extra CSS for the Dynamiqs documentation
+*/
+
+/* Site header coloring */
+.md-header {
+  background-color: var(--md-default-bg-header-color);
+  color: var(--md-typeset-color);
+}
+
+.md-tabs {
+  background-color: var(--md-default-bg-header-color);
+  color: var(--md-typeset-color);
+  box-shadow: 0 0 .2rem #0000001a, 0 .0rem .6rem #0001;
+}
+
+.md-search__form {
+  background-color: var(--md-default-bg-color);
+}
+
+.md-search__input+.md-search__icon {
+  color: var(--md-primary-bg-color--light);
+}
+
+.md-search__form:hover {
+  background-color: #0000001f;
+}
+
+/* Site title and logo styling */
+.md-header__button:hover {
+  opacity: 1.0;
+}
+
+.md-header__topic * {
+  font-weight: 400;
+}
+
+[dir="ltr"] .md-header__title {
+  margin-left: 0.0;
+  font-size: .95rem;
+}
+
+/* Slack and github links */
+@media screen and (min-width: 60em) {
+  [dir="ltr"] .md-header__source {
+    margin-left: 0;
+  }
+  [dir="ltr"] .md-header__slack {
+    margin-left: .8rem;
+  }
+}
+
+@media screen and (max-width: 60em) {
+  .md-header__slack {
+    display: none;
+  }
+}
+
+/* Note admonition color shades */
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .admonition.note,
+.md-typeset details.note,
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  border-color: var(--md-note-fg-color);
+}
+
+.md-typeset .admonition-title::before,
+.md-typeset summary::before,
+.md-typeset .note>.admonition-title::before,
+.md-typeset .note>summary::before,
+.md-typeset .info>.admonition-title::before,
+.md-typeset .info>summary::before {
+  background-color: var(--md-note-fg-color);
+}
+
+.md-typeset .admonition-title::after,
+.md-typeset summary::after,
+.md-typeset .note>.admonition-title::after,
+.md-typeset .note>summary::after,
+.md-typeset .info>.admonition-title::after,
+.md-typeset .info>summary::after {
+  color: var(--md-note-fg-color);
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary,
+.md-typeset .note>.admonition-title,
+.md-typeset .note>summary,
+.md-typeset .info>.admonition-title,
+.md-typeset .info>summary {
+  background-color: var(--md-note-bg-color);
+}
+
+/* Warning admonition color shades */
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: var(--md-warning-fg-color);
+}
+
+.md-typeset .warning>.admonition-title::before,
+.md-typeset .warning>summary::before {
+  background-color: var(--md-warning-fg-color);
+}
+
+.md-typeset .warning>.admonition-title::after,
+.md-typeset .warning>summary::after {
+  color: var(--md-warning-fg-color);
+}
+
+.md-typeset .warning>.admonition-title,
+.md-typeset .warning>summary {
+  background-color: var(--md-warning-bg-color);
+}
+
+/* Example admonition color shades */
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  border-color: var(--md-example-fg-color);
+}
+
+.md-typeset .example>.admonition-title::before,
+.md-typeset .example>summary::before {
+  background-color: var(--md-example-fg-color);
+}
+
+.md-typeset .example>.admonition-title::after,
+.md-typeset .example>summary::after {
+  color: var(--md-example-fg-color);
+}
+
+.md-typeset .example>.admonition-title,
+.md-typeset .example>summary {
+  background-color: var(--md-example-bg-color);
+}
+
+/* Admonition styling */
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .admonition.note,
+.md-typeset details.note,
+.md-typeset .admonition.info,
+.md-typeset details.info,
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  margin: 1.0em 0;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+    border-left: .2rem solid var(--md-note-fg-color);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+}
+
+.md-typeset .admonition-title:before,
+.md-typeset summary:before {
+  height:0.9rem;
+  width:0.9rem;
+}
+
+/* Page spacing */
+.md-typeset {
+  line-height: 1.35;
+  font-size: 0.72rem;
+}
+
+p {
+  margin: 0.5em 0;
+}
+
+.katex-display {
+    margin: 0.75em 0;
+}
+
+.md-typeset .doc-heading {
+  margin: 0.5em 0em 0.64em;
+}
+
+.md-content__inner.md-typeset {
+  padding-bottom: 2.5em;
+}
+
+.md-typeset .doc-function .doc-contents {
+  padding-left: 3em;
+}
+
+.md-typeset .doc-contents p {
+  margin-top: 1em;
+  margin-bottom: 0.2em;
+}
+
+.md-typeset .doc-contents ul,
+.md-typeset .doc-contents ul li,
+.md-typeset .doc-contents ol li {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+/* Navigation titles spacing */
+@media screen and (min-width: 60em) {
+    .md-nav--secondary .md-nav__title {
+        box-shadow: None;
+    }
+}
+
+@media screen and (min-width: 76.25em) {
+    .md-nav__link {
+        margin-top: 0.325em;
+    }
+
+    .md-nav__container > .md-nav__link {
+        margin-bottom: 0.0em;
+    }
+
+    .md-nav__item--section {
+        margin: 0 0 1.25em 0;
+    }
+
+    .md-nav--lifted > .md-nav__list > .md-nav__item--active > .md-nav__link {
+        margin-bottom: 1em;
+    }
+
+    [dir="ltr"] .md-nav__item--section > .md-nav {
+        margin-left: 0;
+    }
+}
+
+.md-nav {
+    font-size: 0.68rem;
+}
+
+/* Function name */
+.md-typeset .doc-object-name {
+  color: var(--md-primary-fg-color);
+  font-size: 0.85em;
+}
+
+/* API table */
+.md-typeset table:not([class]) {
+  border: none;
+}
+
+.md-typeset table:not([class]) td {
+  border-top: none;
+}
+
+.md-typeset table:not([class]) td.fixed_height {
+  height: 2.7em;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+  vertical-align: middle;
+}
+
+.md-typeset table:not([class]) td.fixed_height code {
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) tr:nth-child(odd) {
+  background-color: color-mix(in srgb, var(--md-default-bg-color), #8e8e8e 5%);
+}
+
+/* Fix for two-line parameters when deploying doc */
+.field-body p {
+  display: inline;
+}
+
+p {
+  text-align: justify;
+}
+
+.doc-md-description {
+  display: inline;
+}
+
+/* Italic code comments */
+.highlight .c,
+.highlight .c1,
+.highlight .ch,
+.highlight .cm,
+.highlight .cs,
+.highlight .sd {
+  font-style: italic;
+}
+
+/* Spacing before/after latex formula */
+.md-typeset .arithmatex {
+  margin: -0.5em 0 -1em 0;
+}
+
+/* Header sizes */
+article.md-typeset h1 {
+  font-size: 2em;
+  letter-spacing: -0.01em;
+  font-family: var(--md-header-font-family);
+  color: var(--md-header-main-color);
+}
+
+.md-typeset h2 {
+  font-size: 1.55em;
+  letter-spacing: 0.01em;
+  font-family: var(--md-header-font-family);
+}
+
+.md-typeset h3 {
+  font-size: 1.05em;
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+/* Ignore chevron in pycon code */
+.highlight .gp,
+.highlight .go {
+  /* Generic.Prompt, Generic.Output */
+  user-select: none;
+}
+
+/* Function names in API */
+.md-typeset .doc-function-name {
+  color: var(--md-primary-fg-color);
+  padding: 3px 0;
+  width: 100%;
+  font-size: 0.85em;
+}
+
+/* Code blocks */
+.doc-signature.highlight {
+  border-left: 3px solid var(--md-primary-fg-color);
+}
+
+/* bullet point lists */
+.md-typeset ul li {
+  margin-bottom: 0;
+  padding-left: 0.3em
+}
+
+.md-typeset ul li::marker {
+  content: "»";
+  font-weight: 600;
+}
+
+.fig {
+  display: block;
+  margin: 0 auto;
+  width: 85%;
+}
+
+.fig-half {
+  display: block;
+  margin: 0 auto;
+  width: 50%;
+}
+
+/* Magic plus annotation */
+.md-annotation__index {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.md-annotation__index::after, .md-annotation__index::before {
+  top: -.4ch;
+  width: 1.4ch;
+}
+
+.md-annotation__index {
+  width: 1.4ch;
+}
