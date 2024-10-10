@@ -23,7 +23,8 @@ dependencies = [
     "numpy",
     "matplotlib",
     "tqdm",
-    "jax!=0.4.34",
+    # todo: fix when https://github.com/patrick-kidger/equinox/pull/871 is released
+    "jax<0.4.34",
     "jaxlib",
     "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
