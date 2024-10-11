@@ -139,7 +139,7 @@ cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_files.py && pytest dyn
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm python docs/remove_files.py && pytest docs'
+cmd = 'echo "\n>>> pytest docs" && python docs/remove_files.py && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]
