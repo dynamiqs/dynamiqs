@@ -560,6 +560,7 @@ def hadamard(n: int = 1) -> Array:
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)
 
+
 def rx(theta: ArrayLike) -> Array:
     r"""Returns the vectorized $R_x(\theta)$ rotation gate.
 
@@ -572,7 +573,6 @@ def rx(theta: ArrayLike) -> Array:
     $$
 
     Args:
-
         theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
