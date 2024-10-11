@@ -21,13 +21,14 @@ _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
     if x.ndim > 2:
+        # TODO: generalize to any nested sequence with the appropriate shape
         return [_dense_to_qobj(sub_x, dims=x.dims) for sub_x in x]
     else:
         dims = _dims_to_qutip(x.dims, x.shape)
         return Qobj(x, dims=dims)
 
 
-def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list:
+def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list[list[int]]:
     dims = list(dims)
     if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
         dims = [dims, [1] * len(dims)]
