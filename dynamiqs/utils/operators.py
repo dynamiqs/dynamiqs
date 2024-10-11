@@ -580,8 +580,8 @@ def rx(theta: ArrayLike) -> Array:
 
     Examples:
         >>> dq.rx(jnp.pi)
-        Array([[-0.+0.j, -0.-1.j],
-               [-0.-1.j, -0.+0.j]], dtype=complex64)
+        Array([[-0.+0.j, 0.-1.j],
+               [0.-1.j, -0.+0.j]], dtype=complex64)
         >>> dq.rx(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
         (3, 2, 2)
     """
@@ -589,9 +589,7 @@ def rx(theta: ArrayLike) -> Array:
     cos = jnp.cos(theta / 2)
     sin = jnp.sin(theta / 2)
 
-    return jnp.stack(
-        [jnp.array([cos, -1j * sin]), jnp.array([-1j * sin, cos])], axis=-2
-    )
+    return jnp.stack([jnp.array([cos, -1j * sin]), jnp.array([-1j * sin, cos])], axis=0)
 
 
 def ry(theta: ArrayLike) -> Array:
@@ -622,7 +620,9 @@ def ry(theta: ArrayLike) -> Array:
     cos = jnp.cos(theta / 2)
     sin = jnp.sin(theta / 2)
 
-    return jnp.stack([jnp.array([cos, -sin]), jnp.array([sin, cos])], axis=-2)
+    return jnp.stack(
+        [jnp.array([cos + 0j, -sin + 0j]), jnp.array([sin + 0j, cos + 0j])], axis=0
+    )
 
 
 def rz(theta: ArrayLike) -> Array:
@@ -653,10 +653,10 @@ def rz(theta: ArrayLike) -> Array:
 
     return jnp.stack(
         [
-            jnp.array([jnp.exp(-1j * theta / 2), 0]),
-            jnp.array([0, jnp.exp(1j * theta / 2)]),
+            jnp.array([jnp.exp(-1j * theta / 2), 0 + 0j]),
+            jnp.array([0 + 0j, jnp.exp(1j * theta / 2)]),
         ],
-        axis=-2,
+        axis=0,
     )
 
 
