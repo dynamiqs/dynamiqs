@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+
 def remove_files(pattern: str):
     files = Path().glob(pattern)
     for file in files:
