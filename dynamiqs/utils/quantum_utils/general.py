@@ -993,7 +993,7 @@ def entropy_vn(x: QArrayLike) -> Array:
     return -(w * jnp.log(w)).sum(-1)
 
 
-def bloch_coordinates(x: ArrayLike) -> Array:
+def bloch_coordinates(x: QArrayLike) -> Array:
     r"""Returns the spherical coordinates $(r, \theta, \phi)$ of a ket or density matrix
     on the Bloch sphere.
 
@@ -1009,7 +1009,7 @@ def bloch_coordinates(x: ArrayLike) -> Array:
     By convention, we choose $\phi=0$ if $\theta=0$, and $\theta=\phi=0$ if $r=0$.
 
     Args:
-        x _(array_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
+        x _(qarray_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
 
     Returns:
         _(array of shape (3,))_ Spherical coordinates $(r, \theta, \phi)$.
