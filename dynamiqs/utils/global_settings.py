@@ -9,21 +9,22 @@ from ..qarrays.layout import Layout, dense, dia
 __all__ = ['set_device', 'set_precision', 'set_matmul_precision', 'set_layout']
 
 
-def set_device(device: Literal['cpu', 'gpu', 'tpu']):
+def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
     """Configure the default device.
 
     Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
-        jax.config.update('jax_default_device', jax.devices(device)[0])
+        jax.config.update('jax_default_device', jax.devices(device)[index])
         ```
 
     See [JAX documentation on devices](https://jax.readthedocs.io/en/latest/faq.html#faq-data-placement).
 
     Args:
         device _(string 'cpu', 'gpu', or 'tpu')_: Default device.
+        index: Index of the device to use, defaults to 0.
     """
-    jax.config.update('jax_default_device', jax.devices(device)[0])
+    jax.config.update('jax_default_device', jax.devices(device)[index])
 
 
 def set_precision(precision: Literal['simple', 'double']):

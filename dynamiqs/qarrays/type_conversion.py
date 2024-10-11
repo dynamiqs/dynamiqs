@@ -23,6 +23,10 @@ __all__ = ['asqarray', 'asdense', 'assparsedia', 'asjaxarray', 'asqobj', 'sparse
 
 
 def asqarray(x: QArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
+    # TODO: add layout argument to allow for sparse and dense conversion
+    if isinstance(x, QArray):
+        return x
+
     return asdense(x, dims)
 
 
