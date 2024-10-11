@@ -4,7 +4,7 @@ from pathlib import Path
 from jax.typing import ArrayLike
 
 
-def remove_files(pattern: ArrayLike):
+def remove_files(pattern: str):
     files = Path().glob(pattern)
     for file in files:
         Path.unlink(file)
