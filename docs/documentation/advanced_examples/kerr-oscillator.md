@@ -2,11 +2,11 @@
 
 In this example, we show how to simulate a **driven-dissipative Kerr oscillator** in Dynamiqs. It is a simple example of a non-linear quantum harmonic oscillator with dissipative coupling to its environment. In the appropriate rotating frame, it is described by the master equation
 $$
-\frac{d\rho}{dt} = -i [H(t), \rho] + \kappa \mathcal{D}[a] \rho,
+    \frac{d\rho}{dt} = -i [H(t), \rho] + \kappa \mathcal{D}[a] \rho,
 $$
 with Hamiltonian
 $$
-H(t) = -K a^{\dagger 2} a^2 + \epsilon(t) a^\dagger + \epsilon^*(t) a,
+    H(t) = -K a^{\dagger 2} a^2 + \epsilon(t) a^\dagger + \epsilon^*(t) a,
 $$
 with $\kappa$ the rate of single-photon dissipation, $K$ the Kerr non-linearity, and $\epsilon(t)$ the driving field.
 
@@ -44,13 +44,17 @@ psi0 = dq.coherent(N, alpha)
 # run simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave)
 ```
+
 From this simulation, we can extract any property of the evolved state at any saved time. We can for instance access the number of photons in the final state using
+
 ```pycon
 >>> dq.expect(adag @ a, result.states[-1])
 Array(1.435+0.j, dtype=complex64)
 ```
+
 Alternatively, we can also plot the Wigner function of the evolved state.
-```
+
+```python
 gif = dq.plot.wigner_gif(result.states, ymax=3.0)
 rendergif(gif, 'wigner-kerr-oscillator')
 ```
@@ -58,6 +62,7 @@ rendergif(gif, 'wigner-kerr-oscillator')
 ![plot_wigner_gif_kerr](/figs_docs/wigner-kerr-oscillator.gif){.fig}
 
 ## Periodic revival of a coherent state
+
 ### Time evolution of the cavity field
 
 One of the most striking features of the Kerr oscillator is the periodic revival of the initial coherent state. This phenomenon is a direct consequence of the non-linear interaction between the photons in the cavity. We can observe this effect by plotting the absolute value of the **cavity field as a function of time**, for a simulation time over several units of Kerr, and as long as photon loss is not too important.
