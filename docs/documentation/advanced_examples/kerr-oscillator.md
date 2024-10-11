@@ -2,7 +2,7 @@
 
 In this example, we show how to simulate a **driven-dissipative Kerr oscillator** in Dynamiqs. It is a simple example of a non-linear quantum harmonic oscillator with dissipative coupling to its environment. In the appropriate rotating frame, it is described by the master equation
 $$
-    \frac{d\rho}{dt} = -i [H(t), \rho] + \kappa \mathcal{D}[a] \rho,
+    \frac{\dd\rho}{\dt} = -i [H(t), \rho] + \kappa \mathcal{D}[a] (\rho),
 $$
 with Hamiltonian
 $$
