@@ -578,7 +578,6 @@ def rx(theta: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., 2, 2))_ $R_x(\theta)$ gate.
 
-
     Examples:
         >>> dq.rx(jnp.pi)
         Array([[-0.+0.j, -0.-1.j],
@@ -587,11 +586,10 @@ def rx(theta: ArrayLike) -> Array:
         (3, 2, 2)
     """
     theta = jnp.asarray(theta)
-    theta = theta[..., None, None]  # Vectorize over the last two dimensions
     cos = jnp.cos(theta / 2)
     sin = jnp.sin(theta / 2)
 
-    return jnp.array([[cos, -sin * 1j], [-sin * 1j, cos]], dtype=jnp.complex64)
+    return jnp.stack([[cos, -1j * sin], [-1j * sin, cos]], axis=-2)
 
 
 def ry(theta: ArrayLike) -> Array:
@@ -619,11 +617,10 @@ def ry(theta: ArrayLike) -> Array:
         (3, 2, 2)
     """
     theta = jnp.asarray(theta)
-    theta = theta[..., None, None]
     cos = jnp.cos(theta / 2)
     sin = jnp.sin(theta / 2)
 
-    return jnp.array([[cos, -sin], [sin, cos]], dtype=jnp.complex64)
+    return jnp.stack([[cos, -sin], [sin, cos]], axis=-2)
 
 
 def rz(theta: ArrayLike) -> Array:
@@ -651,11 +648,11 @@ def rz(theta: ArrayLike) -> Array:
         (3, 2, 2)
     """
     theta = jnp.asarray(theta)
-    theta = theta[..., None, None]
+    exp_pos = jnp.exp(1j * theta / 2)
+    exp_neg = jnp.exp(-1j * theta / 2)
 
-    return jnp.array(
-        [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]],
-        dtype=jnp.complex64,
+    return jnp.stack(
+        [[exp_neg, jnp.zeros_like(theta)], [jnp.zeros_like(theta), exp_pos]], axis=-2
     )
 
 
