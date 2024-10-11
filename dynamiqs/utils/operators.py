@@ -589,7 +589,9 @@ def rx(theta: ArrayLike) -> Array:
     cos = jnp.cos(theta / 2)
     sin = jnp.sin(theta / 2)
 
-    return jnp.stack([[cos, -1j * sin], [-1j * sin, cos]], axis=-2)
+    return jnp.stack(
+        [jnp.array([cos, -1j * sin]), jnp.array([-1j * sin, cos])], axis=-2
+    )
 
 
 def ry(theta: ArrayLike) -> Array:
@@ -620,7 +622,7 @@ def ry(theta: ArrayLike) -> Array:
     cos = jnp.cos(theta / 2)
     sin = jnp.sin(theta / 2)
 
-    return jnp.stack([[cos, -sin], [sin, cos]], axis=-2)
+    return jnp.stack([jnp.array([cos, -sin]), jnp.array([sin, cos])], axis=-2)
 
 
 def rz(theta: ArrayLike) -> Array:
@@ -648,11 +650,13 @@ def rz(theta: ArrayLike) -> Array:
         (3, 2, 2)
     """
     theta = jnp.asarray(theta)
-    exp_pos = jnp.exp(1j * theta / 2)
-    exp_neg = jnp.exp(-1j * theta / 2)
 
     return jnp.stack(
-        [[exp_neg, jnp.zeros_like(theta)], [jnp.zeros_like(theta), exp_pos]], axis=-2
+        [
+            jnp.array([jnp.exp(-1j * theta / 2), 0]),
+            jnp.array([0, jnp.exp(1j * theta / 2)]),
+        ],
+        axis=-2,
     )
 
 
