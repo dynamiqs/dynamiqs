@@ -322,7 +322,7 @@ def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
     def number_single(dim: int) -> QArray:
         diag = jnp.arange(0, dim, dtype=cdtype())
         if layout is dense:
-            return asqarray(jnp.diag(diag, k=0))
+            return asqarray(jnp.diag(diag))
         else:
             return sparsedia({0: diag})
 
@@ -691,14 +691,14 @@ def rx(theta: float) -> QArray:
         [[-0.+0.j -0.-1.j]
          [-0.-1.j -0.+0.j]]
     """
-    gate = jnp.array(
+    array = jnp.array(
         [
             [jnp.cos(theta / 2), -jnp.sin(theta / 2) * 1j],
             [-jnp.sin(theta / 2) * 1j, jnp.cos(theta / 2)],
         ],
         dtype=cdtype(),
     )
-    return asqarray(gate)
+    return asqarray(array)
 
 
 def ry(theta: float) -> QArray:
@@ -724,14 +724,14 @@ def ry(theta: float) -> QArray:
         [[-0.+0.j -1.+0.j]
          [ 1.+0.j -0.+0.j]]
     """
-    gate = jnp.array(
+    array = jnp.array(
         [
             [jnp.cos(theta / 2), -jnp.sin(theta / 2)],
             [jnp.sin(theta / 2), jnp.cos(theta / 2)],
         ],
         dtype=cdtype(),
     )
-    return asqarray(gate)
+    return asqarray(array)
 
 
 def rz(theta: float) -> QArray:
@@ -757,10 +757,10 @@ def rz(theta: float) -> QArray:
         [[-0.-1.j  0.+0.j]
          [ 0.+0.j -0.+1.j]]
     """
-    gate = jnp.array(
+    array = jnp.array(
         [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
     )
-    return asqarray(gate)
+    return asqarray(array)
 
 
 def sgate() -> QArray:
@@ -777,8 +777,8 @@ def sgate() -> QArray:
         [[1.+0.j 0.+0.j]
          [0.+0.j 0.+1.j]]
     """
-    gate = jnp.array([[1, 0], [0, 1j]], dtype=cdtype())
-    return asqarray(gate)
+    array = jnp.array([[1, 0], [0, 1j]], dtype=cdtype())
+    return asqarray(array)
 
 
 def tgate() -> QArray:
@@ -796,8 +796,8 @@ def tgate() -> QArray:
         [[1.   +0.j    0.   +0.j   ]
          [0.   +0.j    0.707+0.707j]]
     """
-    gate = jnp.array([[1, 0], [0, (1 + 1j) / jnp.sqrt(2)]], dtype=cdtype())
-    return asqarray(gate)
+    array = jnp.array([[1, 0], [0, (1 + 1j) / jnp.sqrt(2)]], dtype=cdtype())
+    return asqarray(array)
 
 
 def cnot() -> QArray:
@@ -818,17 +818,16 @@ def cnot() -> QArray:
 
     Examples:
         >>> dq.cnot()
-        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 1.+0.j]
          [0.+0.j 0.+0.j 1.+0.j 0.+0.j]]
     """
-    gate = jnp.array(
+    array = jnp.array(
         [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=cdtype()
     )
-    return asqarray(gate)
-
+    return asqarray(array, dims=(2, 2))
 
 
 def toffoli() -> QArray:
@@ -853,7 +852,7 @@ def toffoli() -> QArray:
 
     Examples:
         >>> dq.toffoli()
-        QArray: shape=(8, 8), dims=(8,), dtype=complex64, layout=dense
+        QArray: shape=(8, 8), dims=(2, 2, 2), dtype=complex64, layout=dense
         [[1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
@@ -862,8 +861,8 @@ def toffoli() -> QArray:
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]
          [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]]
-    """  # noqa: E501
-    gate = jnp.array(
+    """
+    array = jnp.array(
         [
             [1, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0],
@@ -876,4 +875,4 @@ def toffoli() -> QArray:
         ],
         dtype=cdtype(),
     )
-    return asqarray(gate)
+    return asqarray(array, dims=(2, 2, 2))
