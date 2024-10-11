@@ -5,7 +5,7 @@ from jax.typing import ArrayLike
 
 
 def remove_files(pattern: ArrayLike):
-    files = Path.glob.glob(pattern)
+    files = Path().glob(pattern)
     for file in files:
         Path.unlink(file)
 
@@ -13,7 +13,7 @@ def remove_files(pattern: ArrayLike):
 if __name__ == '__main__':
     if sys.platform.startswith('win'):
         # Windows
-        remove_files('docs/figs_code/*.*')
+        remove_files('figs_code/*.*')
     else:
         # Linux or macOS
-        remove_files('docs/figs_code/*.{png,gif}')
+        remove_files('figs_code/*.{png,gif}')
