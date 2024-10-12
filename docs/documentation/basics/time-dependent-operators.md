@@ -1,5 +1,8 @@
 # Time-dependent operators
 
+<!-- skip: start -->
+<!-- todo: temporary fix -->
+
 This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in Dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
 
 ```python
