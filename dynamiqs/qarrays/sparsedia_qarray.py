@@ -494,6 +494,7 @@ class SparseDIAQArray(QArray):
 
 
 def _dia_slice(offset: int) -> slice:
+    offset = int(offset)  # todo: temporary fix
     # Return the slice that selects the non-zero elements of a diagonal of given offset.
     # For example, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
     # _dia_slice(2) will return the slice(2, None) to select [a, b, ..., z].
@@ -518,5 +519,6 @@ def _compress_dia(offsets: tuple[int, ...], diags: ArrayLike) -> SparseDIAQArray
 
 
 def _numpy_to_tuple(x: np.ndarray) -> tuple:
+    x = np.asarray(x)  # todo: temporary fix
     assert x.ndim == 1
     return tuple([sub_x.item() for sub_x in x])

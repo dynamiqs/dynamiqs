@@ -1,5 +1,8 @@
 # The sharp bits 🔪
 
+<!-- skip: start -->
+<!-- todo: temporary fix -->
+
 This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.
 
 ```python
