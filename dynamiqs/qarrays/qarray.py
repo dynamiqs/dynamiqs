@@ -46,9 +46,9 @@ def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list[list[i
     return dims
 
 
-def _dims_from_qutip(dims: list) -> tuple[int, ...]:
+def _dims_from_qutip(dims: list[list[int]]) -> tuple[int, ...]:
     dims = np.max(dims, axis=0)
-    return tuple([d.item() for d in dims])
+    return tuple(dims.tolist())
 
 
 class QArray(eqx.Module):
