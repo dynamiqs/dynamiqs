@@ -121,6 +121,7 @@ def _plot_hinton(
 
     return squares
 
+
 @optional_ax
 def hinton(
     x: ArrayLike,

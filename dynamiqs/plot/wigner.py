@@ -235,6 +235,7 @@ def wigner_mosaic(
 
     return ims
 
+
 def wigner_gif(
     states: ArrayLike,
     *,
