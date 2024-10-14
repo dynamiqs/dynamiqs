@@ -3,6 +3,7 @@ from __future__ import annotations
 import jax.numpy as jnp
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
+from matplotlib.lines import Line2D
 
 from .._checks import check_times
 from .utils import colors, optional_ax
@@ -19,7 +20,7 @@ def pwc_pulse(
     ycenter: bool = True,
     real_color: str = colors['blue'],
     imag_color: str = colors['purple'],
-):
+) -> list[Line2D]:
     """Plot a piecewise constant pulse.
 
     Warning:
@@ -46,11 +47,11 @@ def pwc_pulse(
     values = values.repeat(2)  # (2n)
 
     # real part
-    ax.plot(times, values.real, label='real', color=real_color, alpha=0.7)
+    line_real = ax.plot(times, values.real, label='real', color=real_color, alpha=0.7)
     ax.fill_between(times, 0, values.real, color=real_color, alpha=0.2)
 
     # imaginary part
-    ax.plot(times, values.imag, label='imag', color=imag_color, alpha=0.7)
+    line_imag = ax.plot(times, values.imag, label='imag', color=imag_color, alpha=0.7)
     ax.fill_between(times, 0, values.imag, color=imag_color, alpha=0.2)
 
     ax.legend(loc='lower right')
@@ -61,3 +62,5 @@ def pwc_pulse(
         ax.set_ylim(ymin=-ymax_abs, ymax=ymax_abs)
 
     ax.set(xlim=(0, times[-1]))
+
+    return [line_real, line_imag]

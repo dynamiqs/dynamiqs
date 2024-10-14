@@ -33,7 +33,7 @@ def _plot_squares(
     offsets: ArrayLike,
     ecolor: str = 'white',
     ewidth: float = 0.5,
-):
+) -> PatchCollection:
     # areas: 1D array (n) with real values in [0, 1]
     # colors: 2D array (n, 4) with RGBA values
     # offsets: 2D array (n, 2) with real values in R
@@ -67,6 +67,8 @@ def _plot_squares(
 
     ax.add_collection(squares)
 
+    return squares
+
 
 @optional_ax
 def _plot_hinton(
@@ -81,7 +83,7 @@ def _plot_hinton(
     allticks: bool = True,
     ecolor: str = 'white',
     ewidth: float = 0.5,
-):
+) -> PatchCollection:
     # areas: 2D array (n, n) with real values in [0, 1]
     # colors: 2D array (n, n) with real values in [0, 1]
     areas = jnp.asarray(areas)
@@ -108,7 +110,7 @@ def _plot_hinton(
     # squares colors
     cmap = mpl.colormaps[cmap]
     colors = cmap(colors.T).reshape(-1, 4)
-    _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
+    squares = _plot_squares(ax, areas, colors, offsets, ecolor=ecolor, ewidth=ewidth)
 
     # === colorbar
     if colorbar:
@@ -117,6 +119,7 @@ def _plot_hinton(
         if colors_vmin == -jnp.pi and colors_vmax == jnp.pi:
             cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
+    return squares
 
 @optional_ax
 def hinton(
@@ -132,7 +135,7 @@ def hinton(
     ecolor: str = 'white',
     ewidth: float = 0.5,
     clear: bool = False,
-):
+) -> PatchCollection:
     """Plot a Hinton diagram.
 
     Warning:
@@ -234,7 +237,7 @@ def hinton(
     if tickslabel is not None:
         allticks = True
 
-    _plot_hinton(
+    squares = _plot_hinton(
         areas,
         colors,
         colors_vmin,
@@ -257,3 +260,5 @@ def hinton(
 
     if clear:
         ax.axis(False)
+
+    return squares

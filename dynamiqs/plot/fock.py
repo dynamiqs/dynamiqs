@@ -4,7 +4,9 @@ import jax.numpy as jnp
 from jax import Array
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
+from matplotlib.container import BarContainer
 
 from .._checks import check_shape, check_times
 from ..utils.quantum_utils import isdm, isket
@@ -42,7 +44,7 @@ def fock(
     color: str = colors['blue'],
     alpha: float = 1.0,
     label: str = '',
-):
+) -> BarContainer:
     """Plot the photon number population of a state.
 
     Warning:
@@ -76,7 +78,7 @@ def fock(
     y = _populations(state)
 
     # plot
-    ax.bar(x, y, color=color, alpha=alpha, label=label)
+    bar = ax.bar(x, y, color=color, alpha=alpha, label=label)
     if ymax is not None:
         ax.set_ylim(ymax=ymax)
     ax.set(xlim=(0 - 0.5, n - 0.5))
@@ -88,6 +90,8 @@ def fock(
     # turn legend on
     if label != '':
         ax.legend()
+
+    return bar
 
 
 @optional_ax
@@ -101,7 +105,7 @@ def fock_evolution(
     logvmin: float = 1e-4,
     colorbar: bool = True,
     allyticks: bool = False,
-):
+) -> QuadMesh:
     """Plot the photon number population of state as a function of time.
 
     Warning:
@@ -147,7 +151,7 @@ def fock_evolution(
         norm = Normalize(vmin=0.0, vmax=1.0)
 
     # plot
-    ax.pcolormesh(x, y, z, cmap=cmap, norm=norm)
+    mesh = ax.pcolormesh(x, y, z, cmap=cmap, norm=norm)
     ax.grid(False)
 
     # set y ticks
@@ -156,3 +160,5 @@ def fock_evolution(
 
     if colorbar:
         add_colorbar(ax, cmap, norm, size='2%', pad='2%')
+
+    return mesh

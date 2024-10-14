@@ -6,6 +6,7 @@ from IPython.display import Image
 from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
+from matplotlib.image import AxesImage
 
 from .._checks import check_shape
 from ..utils import wigner as compute_wigner
@@ -27,7 +28,7 @@ def plot_wigner_data(
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
-):
+) -> AxesImage:
     w = jnp.asarray(wigner)
     check_shape(w, 'wigner', '(n, n)')
 
@@ -39,7 +40,7 @@ def plot_wigner_data(
     w = w.clip(vmin, vmax)
 
     # plot
-    ax.imshow(
+    im = ax.imshow(
         w,
         cmap=cmap,
         norm=norm,
@@ -65,6 +66,8 @@ def plot_wigner_data(
         ax.grid(False)
         ax.axis(False)
 
+    return im
+
 
 @optional_ax
 def wigner(
@@ -80,7 +83,7 @@ def wigner(
     colorbar: bool = True,
     cross: bool = False,
     clear: bool = False,
-):
+) -> AxesImage:
     r"""Plot the Wigner function of a state.
 
     Warning:
@@ -125,7 +128,7 @@ def wigner(
     ymax = xmax if ymax is None else ymax
     _, _, w = compute_wigner(state, xmax, ymax, npixels)
 
-    plot_wigner_data(
+    return plot_wigner_data(
         w,
         xmax,
         ymax,
@@ -153,7 +156,7 @@ def wigner_mosaic(
     cmap: str = 'dq',
     interpolation: str = 'bilinear',
     cross: bool = False,
-):
+) -> list[AxesImage]:
     r"""Plot the Wigner function of multiple states in a mosaic arrangement.
 
     Warning:
@@ -213,8 +216,9 @@ def wigner_mosaic(
     _, _, wig = compute_wigner(states[selected_indexes], xmax, ymax, npixels)
 
     # plot individual wigner
+    ims = []
     for i, ax in enumerate(axs):
-        plot_wigner_data(
+        im = plot_wigner_data(
             wig[i],
             ax=ax,
             xmax=xmax,
@@ -226,8 +230,10 @@ def wigner_mosaic(
             cross=cross,
             clear=False,
         )
+        ims.append(im)
         ax.set(xlabel='', ylabel='', xticks=[], yticks=[])
 
+    return ims
 
 def wigner_gif(
     states: ArrayLike,
