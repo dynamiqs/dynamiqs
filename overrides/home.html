@@ -1,0 +1,90 @@
+<!-- Custom HTML site displayed as the Home chapter -->
+
+{% extends "main.html" %}
+{% block tabs %}
+{{ super() }}
+
+<!-- Link css stylesheet for homepage -->
+<link rel="stylesheet" type="text/css" href="../stylesheets/home.css" />
+
+<!-- Main site Entry button descriptions -->
+<section class="tx-container">
+    <div class="md-grid md-typeset">
+      <div class="tx-hero">
+        <div class="tx-hero__image">
+            <img src="media/logo-white.png" draggable="false">
+        </div>
+        <div class="tx-hero__content">
+          <h1> Dynamiqs </h1>
+          <p>High-performance quantum systems simulation with JAX.</p>
+          <a href="{{ page.next_page.url | url }}" title="{{ page.next_page.title | striptags }}" class="md-button md-button--primary">
+            Get started
+          </a>
+          <a href="{{ config.repo_url }}" title="{{ lang.t('source.link.title') }}" class="md-button">
+            Go to GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+</section>
+<div class="home-background">
+    <svg class="waves waves-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none" shape-rendering="auto">
+        <path d="M0,160L34.3,160C68.6,160,137,160,206,154.7C274.3,149,343,139,411,128C480,117,549,107,617,85.3C685.7,64,754,32,823,42.7C891.4,53,960,107,1029,154.7C1097.1,203,1166,245,1234,224C1302.9,203,1371,117,1406,74.7L1440,32L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"></path>
+    </svg>
+    <svg class="waves waves-front" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none" shape-rendering="auto">
+        <path d="M0,96L34.3,106.7C68.6,117,137,139,206,176C274.3,213,343,267,411,261.3C480,256,549,192,617,165.3C685.7,139,754,149,823,181.3C891.4,213,960,267,1029,282.7C1097.1,299,1166,277,1234,256C1302.9,235,1371,213,1406,202.7L1440,192L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"></path>
+    </svg>
+</div>
+
+<!-- Main site box descriptions -->
+<div class="top-hr">
+    <div class="feature-item">
+        <h3>
+            Differentiable
+        </h3>
+        <p>
+            Our quantum solvers are fully differentiable for use in optimal control, parameter estimation, experiment fitting, etc.
+        </p>
+        <p>
+            <a href="../documentation/basics/computing-gradients.html">
+                Computing gradients
+            </a>
+        </p>
+    </div>
+    <div class="feature-item">
+        <h3>
+            GPU Accelerated
+        </h3>
+        <p>
+            Transition seamlessly between CPU, GPU and TPU simulations, and run batches of simulations at once.
+        </p>
+        <p>
+            <a href="../documentation/getting_started/examples.html">
+                GPU support
+            </a>
+        </p>
+    </div>
+    <div class="feature-item">
+        <h3>
+            Built on JAX
+        </h3>
+        <p>
+            Benefit from the JAX ecosystem, built for both high-performance numerical computing and machine learning.
+        </p>
+        <p>
+            <a href="https://jax.readthedocs.io/en/latest/">
+                JAX documentation
+            </a>
+        </p>
+    </div>
+</div>
+
+<div class="top-hr">
+    <div class="hr">
+    </div>
+</div>
+
+
+{% endblock %}
+{% block content %}{% endblock %}
+{% block footer %}{% endblock %}
