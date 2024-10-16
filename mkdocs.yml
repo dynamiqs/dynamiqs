@@ -196,7 +196,13 @@ nav:
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
+              - rx: python_api/utils/operators/rx.md
+              - ry: python_api/utils/operators/ry.md
+              - rz: python_api/utils/operators/rz.md
+              - sgate: python_api/utils/operators/sgate.md
+              - tgate: python_api/utils/operators/tgate.md
               - cnot: python_api/utils/operators/cnot.md
+              - toffoli: python_api/utils/operators/toffoli.md
           - States:
               - fock: python_api/utils/states/fock.md
               - fock_dm: python_api/utils/states/fock_dm.md
@@ -234,6 +240,7 @@ nav:
               - overlap: python_api/utils/quantum_utils/overlap.md
               - fidelity: python_api/utils/quantum_utils/fidelity.md
               - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
+              - bloch_coordinates: python_api/utils/quantum_utils/bloch_coordinates.md
               - wigner: python_api/utils/quantum_utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
