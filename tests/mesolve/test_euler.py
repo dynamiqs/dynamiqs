@@ -4,16 +4,16 @@ from dynamiqs.gradient import Autograd, CheckpointAutograd
 from dynamiqs.solver import Euler
 
 from ..integrator_tester import IntegratorTester
-from .open_system import ocavity, otdqubit
+from .open_system import dense_ocavity, dia_ocavity, otdqubit
 
 
 class TestMESolveEuler(IntegratorTester):
-    @pytest.mark.parametrize('system', [ocavity, otdqubit])
+    @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     def test_correctness(self, system):
         solver = Euler(dt=1e-4)
         self._test_correctness(system, solver, esave_atol=1e-3)
 
-    @pytest.mark.parametrize('system', [ocavity, otdqubit])
+    @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     @pytest.mark.parametrize('gradient', [Autograd(), CheckpointAutograd()])
     def test_gradient(self, system, gradient):
         solver = Euler(dt=1e-4)

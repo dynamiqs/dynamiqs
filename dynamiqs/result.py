@@ -6,6 +6,8 @@ from jaxtyping import PyTree
 
 from .gradient import Gradient
 from .options import Options
+from .qarrays.qarray import QArray
+from .qarrays.type_conversion import asjaxarray
 from .solver import Solver
 
 __all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
@@ -25,8 +27,13 @@ def memory_str(x: Array) -> str:
         return f'{mem / 1024**3:.1f} Gb'
 
 
-def array_str(x: Array | None) -> str | None:
-    return None if x is None else f'Array {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
+def array_str(x: Array | QArray | None) -> str | None:
+    # TODO: implement memory_str for QArray rather than converting to JAX array
+    if x is None:
+        return None
+    type_name = 'Array' if isinstance(x, Array) else 'QArray'
+    x = asjaxarray(x)
+    return f'{type_name} {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
 # the Saved object holds quantities saved during the equation integration
@@ -55,10 +62,10 @@ class Result(eqx.Module):
     def extra(self) -> PyTree | None:
         return self._saved.extra
 
-    def to_qutip(self) -> Result:
+    def asqobj(self) -> Result:
         raise NotImplementedError
 
-    def to_numpy(self) -> Result:
+    def asnparray(self) -> Result:
         raise NotImplementedError
 
     def block_until_ready(self) -> Result:
@@ -89,11 +96,11 @@ class Result(eqx.Module):
 
 class SolveResult(Result):
     @property
-    def states(self) -> Array:
+    def states(self) -> QArray:
         return self._saved.ysave
 
     @property
-    def final_state(self) -> Array:
+    def final_state(self) -> QArray:
         return self.states[..., -1, :, :]
 
     @property
@@ -110,11 +117,11 @@ class SolveResult(Result):
 
 class PropagatorResult(Result):
     @property
-    def propagators(self) -> Array:
+    def propagators(self) -> QArray:
         return self._saved.ysave
 
     @property
-    def final_propagator(self) -> Array:
+    def final_propagator(self) -> QArray:
         return self.propagators[..., -1, :, :]
 
     def _str_parts(self) -> dict[str, str | None]:
@@ -127,9 +134,9 @@ class SESolveResult(SolveResult):
 
 
     Attributes:
-        states _(array of shape (..., nsave, n, 1))_: Saved states with
+        states _(qarray of shape (..., nsave, n, 1))_: Saved states with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(array of shape (..., n, 1))_: Saved final state.
+        final_state _(qarray of shape (..., n, 1))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -179,9 +186,9 @@ class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (..., nsave, n, n))_: Saved states with
+        states _(qarray of shape (..., nsave, n, n))_: Saved states with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(array of shape (..., n, n))_: Saved final state.
+        final_state _(qarray of shape (..., n, n))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -233,9 +240,9 @@ class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., nsave, n, n))_: Saved propagators with
+        propagators _(qarray of shape (..., nsave, n, n))_: Saved propagators with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_propagator _(array of shape (..., n, n))_: Saved final propagator.
+        final_propagator _(qarray of shape (..., n, n))_: Saved final propagator.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
@@ -259,9 +266,9 @@ class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., nsave, n^2, n^2))_: Saved propagators with
+        propagators _(qarray of shape (..., nsave, n^2, n^2))_: Saved propagators with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
+        final_propagator _(qarray of shape (..., n^2, n^2))_: Saved final propagator.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
