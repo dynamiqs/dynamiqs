@@ -8,7 +8,7 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/0.2/documentation/basics/batching-simulations.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/documentation/basics/batching-simulations.html">
 
 
     <link rel="prev" href="open-systems.html">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Batching simulations - dynamiqs</title>
+        <title>Batching simulations - Dynamiqs</title>
       
     
     
@@ -67,6 +67,8 @@
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
       <link rel="stylesheet" href="../../stylesheets/theme.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/home.css">
     
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
     
@@ -114,12 +116,28 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  You're not viewing the latest version.
+  <a href="../../..">
+    Click here to go to latest.
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
     
       
   
   <header class="md-header" data-md-component="header">
     <nav class="md-header__inner md-grid" aria-label="Header">
-      <a href="../../index.html" title="dynamiqs" class="md-header__button md-logo" aria-label="dynamiqs" data-md-component="logo">
+      <a href="../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
         
   <img src="../../media/logo.png" alt="logo">
 
@@ -131,8 +149,8 @@
         <div class="md-header__ellipsis">
           <div class="md-header__topic">
             <span class="md-ellipsis">
-              <a href="/../../index.html" title="dynamiqs" aria-label="dynamiqs">
-                dynamiqs
+              <a href="/../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
+                Dynamiqs
               </a>
             </span>
           </div>
@@ -145,34 +163,6 @@
           </div>
         </div>
       </div>
-      
-        
-          <form class="md-header__option" data-md-component="palette">
-            
-              
-              
-              
-              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
-              
-                <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-                </label>
-              
-            
-              
-              
-              
-              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
-              
-                <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-                </label>
-              
-            
-          </form>
-        
-      
-      
       
         <label class="md-header__button md-icon" for="__search">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
@@ -211,6 +201,34 @@
     </div>
   </div>
 </div>
+      
+      
+        
+          <form class="md-header__option" data-md-component="palette">
+            
+              
+              
+              
+              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+              
+                <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+                </label>
+              
+            
+              
+              
+              
+              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+              
+                <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+                </label>
+              
+            
+          </form>
+        
+      
       
         <div class="md-header__slack">
             <a
@@ -352,12 +370,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../index.html" title="dynamiqs" class="md-nav__button md-logo" aria-label="dynamiqs" data-md-component="logo">
+    <a href="../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
       
   <img src="../../media/logo.png" alt="logo">
 
     </a>
-    dynamiqs
+    Dynamiqs
   </label>
   
     <div class="md-nav__source">
@@ -523,7 +541,7 @@
         
   
   <span class="md-ellipsis">
-    What is dynamiqs?
+    What is Dynamiqs?
   </span>
   
 
@@ -674,7 +692,7 @@
         
   
   <span class="md-ellipsis">
-    Workflow in dynamiqs
+    Workflow in Dynamiqs
   </span>
   
 
@@ -2021,6 +2039,8 @@
       
         
       
+        
+      
     
     
       
@@ -2402,6 +2422,27 @@
   
   <span class="md-ellipsis">
     hadamard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/utils/operators/cnot.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    cnot
   </span>
   
 
@@ -4394,7 +4435,7 @@
         
   
   <span class="md-ellipsis">
-    Citing dynamiqs
+    Citing Dynamiqs
   </span>
   
 
@@ -4564,13 +4605,13 @@
 
 
 <h1 id="batching-simulations">Batching simulations</h1>
-<p>Batching allows <strong>running many independent simulations concurrently</strong>. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in dynamiqs.</p>
+<p>Batching allows <strong>running many independent simulations concurrently</strong>. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in Dynamiqs.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
 <span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
 <span class="kn">import</span> <span class="nn">timeit</span>
 </code></pre></div>
 <h2 id="batching-in-short">Batching in short</h2>
-<p>Batching in dynamiqs is achieved by <strong>passing a list of Hamiltonians, initial states, or jump operators</strong> to the simulation functions. The result of a batched simulation is a single array that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians <span class="arithmatex">\(\{\sigma_x, \sigma_y, \sigma_z\}\)</span> and the four initial states <span class="arithmatex">\(\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}\)</span>:</p>
+<p>Batching in Dynamiqs is achieved by <strong>passing a list of Hamiltonians, initial states, or jump operators</strong> to the simulation functions. The result of a batched simulation is a single array that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians <span class="arithmatex">\(\{\sigma_x, \sigma_y, \sigma_z\}\)</span> and the four initial states <span class="arithmatex">\(\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}\)</span>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># define three Hamiltonians</span>
 <span class="n">H</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">(),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmay</span><span class="p">(),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()]</span>  <span class="c1"># (3, 2, 2)</span>
 
@@ -4595,7 +4636,7 @@
 </div>
 <p>Importantly, <strong>batched simulations are not run sequentially in a <code>for</code> loop</strong>. What is meant by <em>batching</em> is that instead of evolving from initial to final time a single state with shape <em>(2, 1)</em> for each combination of argument, the whole batched state <em>(3, 4, 2, 1)</em> is evolved <strong>once</strong> from initial to final time, which is much more efficient.</p>
 <h2 id="batching-modes">Batching modes</h2>
-<p>There are two ways to batch simulations in dynamiqs: <strong>cartesian batching</strong> and <strong>flat batching</strong>.</p>
+<p>There are two ways to batch simulations in Dynamiqs: <strong>cartesian batching</strong> and <strong>flat batching</strong>.</p>
 <h3 id="cartesian-batching">Cartesian batching</h3>
 <p>The simulation runs for all possible combinations of Hamiltonians, jump operators and initial states. This is the default mode.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><code>dq.sesolve</code></label><label for="__tabbed_1_2"><code>dq.mesolve</code></label></div>
@@ -4678,7 +4719,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 <h2 id="creating-batched-arguments">Creating batched arguments</h2>
 <h3 id="single-dimensional-batching">Single-dimensional batching</h3>
 <p>There are multiple ways to create a batched argument.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="3:3"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Using lists</label><label for="__tabbed_3_2">Using JAX broadcasting</label><label for="__tabbed_3_3">Using dynamiqs functions</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:3"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Using lists</label><label for="__tabbed_3_2">Using JAX broadcasting</label><label for="__tabbed_3_3">Using Dynamiqs functions</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>The most straightforward way is to pass a list of values:
@@ -4695,7 +4736,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
-<p>Or you can use dynamiqs utility functions directly:
+<p>Or you can use Dynamiqs utility functions directly:
 <div class="highlight"><pre><span></span><code><span class="c1"># define several initial states</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]</span>
 <span class="n">psis</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>  <span class="c1"># (3, 16, 1)</span>
@@ -4705,7 +4746,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </div>
 <h3 id="multi-dimensional-batching">Multi-dimensional batching</h3>
 <p>The previous examples illustrate batching over one dimension, but you can batch over as many dimensions as you want:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Using lists</label><label for="__tabbed_4_2">Using JAX broadcasting</label><label for="__tabbed_4_3">Using dynamiqs functions</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Using lists</label><label for="__tabbed_4_2">Using JAX broadcasting</label><label for="__tabbed_4_3">Using Dynamiqs functions</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="c1"># define several Hamiltonians</span>
@@ -4841,7 +4882,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy Copyright 2023, dynamiqs developers.
+      &copy Copyright 2023-2024, Dynamiqs developers.
     </div>
   
   
@@ -4888,7 +4929,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>

@@ -8,28 +8,28 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/Rouchon1.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/operators/cnot.html">
 
 
-    <link rel="prev" href="Euler.html">
+    <link rel="prev" href="hadamard.html">
 
 
-    <link rel="next" href="Rouchon2.html">
+    <link rel="next" href="../states/fock.html">
 
-<link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
-<link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
+<link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
+<link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
 <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.1.21">
 
     
       
-        <title>Rouchon1 - Dynamiqs</title>
+        <title>cnot - Dynamiqs</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.06209087.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.06209087.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
   
@@ -62,24 +62,24 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-      <link rel="stylesheet" href="../../stylesheets/theme.css">
+      <link rel="stylesheet" href="../../../stylesheets/theme.css">
     
-      <link rel="stylesheet" href="../../stylesheets/home.css">
+      <link rel="stylesheet" href="../../../stylesheets/home.css">
     
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
     
-   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
     html.glightbox-open { overflow: initial; height: 100%; }
     .gslide-title { margin-top: 0px; user-select: text; }
     .gslide-desc { color: #666; user-select: text; }
@@ -88,7 +88,7 @@
     .gdesc-inner { font-size: 0.75rem; }
     body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
     body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
-    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
   
   
     
@@ -107,7 +107,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solver.Rouchon1" class="md-skip">
+        <a href="#dynamiqs.utils.operators.cnot" class="md-skip">
           Skip to content
         </a>
       
@@ -122,7 +122,7 @@
             <div class="md-banner__inner md-grid md-typeset">
               
   You're not viewing the latest version.
-  <a href="../../..">
+  <a href="../../../..">
     Click here to go to latest.
   </a>
 
@@ -137,9 +137,9 @@
   
   <header class="md-header" data-md-component="header">
     <nav class="md-header__inner md-grid" aria-label="Header">
-      <a href="../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
+      <a href="../../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
         
-  <img src="../../media/logo.png" alt="logo">
+  <img src="../../../media/logo.png" alt="logo">
 
       </a>
       <label class="md-header__button md-icon" for="__drawer">
@@ -149,7 +149,7 @@
         <div class="md-header__ellipsis">
           <div class="md-header__topic">
             <span class="md-ellipsis">
-              <a href="/../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
+              <a href="/../../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
                 Dynamiqs
               </a>
             </span>
@@ -157,7 +157,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Rouchon1
+                cnot
               
             </span>
           </div>
@@ -274,7 +274,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index.html" class="md-tabs__link">
+      <a href="../../../index.html" class="md-tabs__link">
         
   
     
@@ -293,7 +293,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../documentation/index.html" class="md-tabs__link">
+        <a href="../../../documentation/index.html" class="md-tabs__link">
           
   
     
@@ -315,7 +315,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../index.html" class="md-tabs__link">
+        <a href="../../index.html" class="md-tabs__link">
           
   
     
@@ -335,7 +335,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../community/index.html" class="md-tabs__link">
+        <a href="../../../community/index.html" class="md-tabs__link">
           
   
     
@@ -370,9 +370,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
+    <a href="../../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
       
-  <img src="../../media/logo.png" alt="logo">
+  <img src="../../../media/logo.png" alt="logo">
 
     </a>
     Dynamiqs
@@ -399,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.html" class="md-nav__link">
+      <a href="../../../index.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -446,7 +446,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../documentation/index.html" class="md-nav__link ">
+            <a href="../../../documentation/index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -529,7 +529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/getting_started/whatis.html" class="md-nav__link">
+      <a href="../../../documentation/getting_started/whatis.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -550,7 +550,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/getting_started/installation.html" class="md-nav__link">
+      <a href="../../../documentation/getting_started/installation.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -571,7 +571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/getting_started/examples.html" class="md-nav__link">
+      <a href="../../../documentation/getting_started/examples.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -592,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/getting_started/sharp-bits.html" class="md-nav__link">
+      <a href="../../../documentation/getting_started/sharp-bits.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -675,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/basics/workflow.html" class="md-nav__link">
+      <a href="../../../documentation/basics/workflow.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -696,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/basics/time-dependent-operators.html" class="md-nav__link">
+      <a href="../../../documentation/basics/time-dependent-operators.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -717,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/basics/closed-systems.html" class="md-nav__link">
+      <a href="../../../documentation/basics/closed-systems.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -738,7 +738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/basics/open-systems.html" class="md-nav__link">
+      <a href="../../../documentation/basics/open-systems.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -759,7 +759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/basics/batching-simulations.html" class="md-nav__link">
+      <a href="../../../documentation/basics/batching-simulations.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -780,7 +780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../documentation/basics/computing-gradients.html" class="md-nav__link">
+      <a href="../../../documentation/basics/computing-gradients.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -850,7 +850,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../index.html" class="md-nav__link ">
+            <a href="../../index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -938,7 +938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/sesolve.html" class="md-nav__link">
+      <a href="../../integrators/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -959,7 +959,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/mesolve.html" class="md-nav__link">
+      <a href="../../integrators/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -980,7 +980,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/smesolve.html" class="md-nav__link">
+      <a href="../../integrators/smesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1001,7 +1001,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/sepropagator.html" class="md-nav__link">
+      <a href="../../integrators/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1022,7 +1022,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/mepropagator.html" class="md-nav__link">
+      <a href="../../integrators/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1048,8 +1048,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1076,11 +1074,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
           
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
@@ -1094,7 +1092,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             Core
@@ -1160,7 +1158,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/TimeArray.html" class="md-nav__link">
+      <a href="../../time_array/TimeArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1181,7 +1179,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/constant.html" class="md-nav__link">
+      <a href="../../time_array/constant.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1202,7 +1200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/pwc.html" class="md-nav__link">
+      <a href="../../time_array/pwc.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1223,7 +1221,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/modulated.html" class="md-nav__link">
+      <a href="../../time_array/modulated.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1244,7 +1242,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/timecallable.html" class="md-nav__link">
+      <a href="../../time_array/timecallable.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1270,10 +1268,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -1303,11 +1299,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_2" >
         
           
           <label class="md-nav__link" for="__nav_3_3_2" id="__nav_3_3_2_label" tabindex="0">
@@ -1321,7 +1317,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3_2">
             <span class="md-nav__icon md-icon"></span>
             Solvers (dq.solver)
@@ -1335,7 +1331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Tsit5.html" class="md-nav__link">
+      <a href="../../solver/Tsit5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1356,7 +1352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Dopri5.html" class="md-nav__link">
+      <a href="../../solver/Dopri5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1377,7 +1373,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Dopri8.html" class="md-nav__link">
+      <a href="../../solver/Dopri8.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1398,7 +1394,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Kvaerno3.html" class="md-nav__link">
+      <a href="../../solver/Kvaerno3.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1419,7 +1415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Kvaerno5.html" class="md-nav__link">
+      <a href="../../solver/Kvaerno5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1440,7 +1436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Euler.html" class="md-nav__link">
+      <a href="../../solver/Euler.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1458,19 +1454,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="Rouchon1.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../solver/Rouchon1.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1479,7 +1466,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1492,7 +1478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Rouchon2.html" class="md-nav__link">
+      <a href="../../solver/Rouchon2.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1513,7 +1499,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Expm.html" class="md-nav__link">
+      <a href="../../solver/Expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1588,7 +1574,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../gradient/Autograd.html" class="md-nav__link">
+      <a href="../../gradient/Autograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1609,7 +1595,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../gradient/CheckpointAutograd.html" class="md-nav__link">
+      <a href="../../gradient/CheckpointAutograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1638,7 +1624,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../options/Options.html" class="md-nav__link">
+      <a href="../../options/Options.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1709,7 +1695,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/SESolveResult.html" class="md-nav__link">
+      <a href="../../result/SESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1730,7 +1716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/MESolveResult.html" class="md-nav__link">
+      <a href="../../result/MESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1751,7 +1737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/SEPropagatorResult.html" class="md-nav__link">
+      <a href="../../result/SEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1772,7 +1758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/MEPropagatorResult.html" class="md-nav__link">
+      <a href="../../result/MEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1806,6 +1792,8 @@
                 
   
   
+    
+  
   
   
     
@@ -1838,11 +1826,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
         
           
           <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
@@ -1856,7 +1844,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4">
             <span class="md-nav__icon md-icon"></span>
             Utilities
@@ -1867,8 +1855,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1916,11 +1906,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4_1" checked>
         
           
           <label class="md-nav__link" for="__nav_3_4_1" id="__nav_3_4_1_label" tabindex="0">
@@ -1934,7 +1924,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4_1">
             <span class="md-nav__icon md-icon"></span>
             Operators
@@ -1948,7 +1938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/eye.html" class="md-nav__link">
+      <a href="eye.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1969,7 +1959,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/zero.html" class="md-nav__link">
+      <a href="zero.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1990,7 +1980,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/destroy.html" class="md-nav__link">
+      <a href="destroy.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2011,7 +2001,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/create.html" class="md-nav__link">
+      <a href="create.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2032,7 +2022,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/number.html" class="md-nav__link">
+      <a href="number.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2053,7 +2043,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/parity.html" class="md-nav__link">
+      <a href="parity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2074,7 +2064,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/displace.html" class="md-nav__link">
+      <a href="displace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2095,7 +2085,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/squeeze.html" class="md-nav__link">
+      <a href="squeeze.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2116,7 +2106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/quadrature.html" class="md-nav__link">
+      <a href="quadrature.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2137,7 +2127,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/position.html" class="md-nav__link">
+      <a href="position.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2158,7 +2148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/momentum.html" class="md-nav__link">
+      <a href="momentum.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2179,7 +2169,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/sigmax.html" class="md-nav__link">
+      <a href="sigmax.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2200,7 +2190,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/sigmay.html" class="md-nav__link">
+      <a href="sigmay.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2221,7 +2211,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/sigmaz.html" class="md-nav__link">
+      <a href="sigmaz.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2242,7 +2232,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/sigmap.html" class="md-nav__link">
+      <a href="sigmap.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2263,7 +2253,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/sigmam.html" class="md-nav__link">
+      <a href="sigmam.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2284,7 +2274,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/hadamard.html" class="md-nav__link">
+      <a href="hadamard.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2302,10 +2292,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../utils/operators/cnot.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="cnot.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -2314,6 +2313,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -2392,7 +2392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/fock.html" class="md-nav__link">
+      <a href="../states/fock.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2413,7 +2413,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/fock_dm.html" class="md-nav__link">
+      <a href="../states/fock_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2434,7 +2434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/basis.html" class="md-nav__link">
+      <a href="../states/basis.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2455,7 +2455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/basis_dm.html" class="md-nav__link">
+      <a href="../states/basis_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2476,7 +2476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/coherent.html" class="md-nav__link">
+      <a href="../states/coherent.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2497,7 +2497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/coherent_dm.html" class="md-nav__link">
+      <a href="../states/coherent_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2518,7 +2518,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/ground.html" class="md-nav__link">
+      <a href="../states/ground.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2539,7 +2539,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/states/excited.html" class="md-nav__link">
+      <a href="../states/excited.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2666,7 +2666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/dag.html" class="md-nav__link">
+      <a href="../quantum_utils/dag.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2687,7 +2687,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/powm.html" class="md-nav__link">
+      <a href="../quantum_utils/powm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2708,7 +2708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/expm.html" class="md-nav__link">
+      <a href="../quantum_utils/expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2729,7 +2729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/cosm.html" class="md-nav__link">
+      <a href="../quantum_utils/cosm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2750,7 +2750,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/sinm.html" class="md-nav__link">
+      <a href="../quantum_utils/sinm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2771,7 +2771,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/trace.html" class="md-nav__link">
+      <a href="../quantum_utils/trace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2792,7 +2792,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/tracemm.html" class="md-nav__link">
+      <a href="../quantum_utils/tracemm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2813,7 +2813,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/ptrace.html" class="md-nav__link">
+      <a href="../quantum_utils/ptrace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2834,7 +2834,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/tensor.html" class="md-nav__link">
+      <a href="../quantum_utils/tensor.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2855,7 +2855,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/expect.html" class="md-nav__link">
+      <a href="../quantum_utils/expect.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2876,7 +2876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/norm.html" class="md-nav__link">
+      <a href="../quantum_utils/norm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2897,7 +2897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/unit.html" class="md-nav__link">
+      <a href="../quantum_utils/unit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2918,7 +2918,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/dissipator.html" class="md-nav__link">
+      <a href="../quantum_utils/dissipator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2939,7 +2939,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/lindbladian.html" class="md-nav__link">
+      <a href="../quantum_utils/lindbladian.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2960,7 +2960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/isket.html" class="md-nav__link">
+      <a href="../quantum_utils/isket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2981,7 +2981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/isbra.html" class="md-nav__link">
+      <a href="../quantum_utils/isbra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3002,7 +3002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/isdm.html" class="md-nav__link">
+      <a href="../quantum_utils/isdm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3023,7 +3023,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/isop.html" class="md-nav__link">
+      <a href="../quantum_utils/isop.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3044,7 +3044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/isherm.html" class="md-nav__link">
+      <a href="../quantum_utils/isherm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3065,7 +3065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/toket.html" class="md-nav__link">
+      <a href="../quantum_utils/toket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3086,7 +3086,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/tobra.html" class="md-nav__link">
+      <a href="../quantum_utils/tobra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3107,7 +3107,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/todm.html" class="md-nav__link">
+      <a href="../quantum_utils/todm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3128,7 +3128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/proj.html" class="md-nav__link">
+      <a href="../quantum_utils/proj.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3149,7 +3149,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/braket.html" class="md-nav__link">
+      <a href="../quantum_utils/braket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3170,7 +3170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/overlap.html" class="md-nav__link">
+      <a href="../quantum_utils/overlap.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3191,7 +3191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/fidelity.html" class="md-nav__link">
+      <a href="../quantum_utils/fidelity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3212,7 +3212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/entropy_vn.html" class="md-nav__link">
+      <a href="../quantum_utils/entropy_vn.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3233,7 +3233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/quantum_utils/wigner.html" class="md-nav__link">
+      <a href="../quantum_utils/wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3312,7 +3312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/jax_utils/to_qutip.html" class="md-nav__link">
+      <a href="../jax_utils/to_qutip.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3333,7 +3333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/jax_utils/set_device.html" class="md-nav__link">
+      <a href="../jax_utils/set_device.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3354,7 +3354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/jax_utils/set_precision.html" class="md-nav__link">
+      <a href="../jax_utils/set_precision.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3375,7 +3375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/jax_utils/set_matmul_precision.html" class="md-nav__link">
+      <a href="../jax_utils/set_matmul_precision.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3460,7 +3460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/operator_to_vector.html" class="md-nav__link">
+      <a href="../vectorization/operator_to_vector.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3481,7 +3481,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/vector_to_operator.html" class="md-nav__link">
+      <a href="../vectorization/vector_to_operator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3502,7 +3502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/spre.html" class="md-nav__link">
+      <a href="../vectorization/spre.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3523,7 +3523,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/spost.html" class="md-nav__link">
+      <a href="../vectorization/spost.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3544,7 +3544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/sprepost.html" class="md-nav__link">
+      <a href="../vectorization/sprepost.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3565,7 +3565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/sdissipator.html" class="md-nav__link">
+      <a href="../vectorization/sdissipator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3586,7 +3586,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/vectorization/slindbladian.html" class="md-nav__link">
+      <a href="../vectorization/slindbladian.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3661,7 +3661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/optimal_control/snap_gate.html" class="md-nav__link">
+      <a href="../optimal_control/snap_gate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3682,7 +3682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/optimal_control/cd_gate.html" class="md-nav__link">
+      <a href="../optimal_control/cd_gate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3765,7 +3765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../random/real.html" class="md-nav__link">
+      <a href="../../random/real.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3786,7 +3786,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../random/complex.html" class="md-nav__link">
+      <a href="../../random/complex.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3807,7 +3807,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../random/herm.html" class="md-nav__link">
+      <a href="../../random/herm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3828,7 +3828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../random/psd.html" class="md-nav__link">
+      <a href="../../random/psd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3849,7 +3849,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../random/dm.html" class="md-nav__link">
+      <a href="../../random/dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3870,7 +3870,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../random/ket.html" class="md-nav__link">
+      <a href="../../random/ket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3961,7 +3961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/wigner.html" class="md-nav__link">
+      <a href="../../plot/wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3982,7 +3982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/wigner_mosaic.html" class="md-nav__link">
+      <a href="../../plot/wigner_mosaic.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4003,7 +4003,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/wigner_gif.html" class="md-nav__link">
+      <a href="../../plot/wigner_gif.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4024,7 +4024,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/pwc_pulse.html" class="md-nav__link">
+      <a href="../../plot/pwc_pulse.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4045,7 +4045,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/fock.html" class="md-nav__link">
+      <a href="../../plot/fock.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4066,7 +4066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/fock_evolution.html" class="md-nav__link">
+      <a href="../../plot/fock_evolution.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4087,7 +4087,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/hinton.html" class="md-nav__link">
+      <a href="../../plot/hinton.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4108,7 +4108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/gifit.html" class="md-nav__link">
+      <a href="../../plot/gifit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4129,7 +4129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/grid.html" class="md-nav__link">
+      <a href="../../plot/grid.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4150,7 +4150,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../plot/mplstyle.html" class="md-nav__link">
+      <a href="../../plot/mplstyle.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4223,7 +4223,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../community/index.html" class="md-nav__link ">
+            <a href="../../../community/index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -4256,7 +4256,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/contributing.html" class="md-nav__link">
+      <a href="../../../community/contributing.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4277,7 +4277,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/lets-talk.html" class="md-nav__link">
+      <a href="../../../community/lets-talk.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4298,7 +4298,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/citing.html" class="md-nav__link">
+      <a href="../../../community/citing.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4355,59 +4355,52 @@
   
 
 
-<div class="doc doc-object doc-class">
+<div class="doc doc-object doc-function">
 
 
-
-<h1 id="dynamiqs.solver.Rouchon1" class="doc doc-heading">
-    <span class="doc doc-object-name doc-class-name">dq.solver.Rouchon1</span>
+<h1 id="dynamiqs.utils.operators.cnot" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.cnot</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Rouchon1</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">cnot</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
+        <p>Returns the CNOT gate.</p>
+<p>It is defined by
+$$
+    \text{CNOT} = \begin{pmatrix}
+    1 &amp; 0 &amp; 0 &amp; 0 \\
+    0 &amp; 1 &amp; 0 &amp; 0 \\
+    0 &amp; 0 &amp; 0 &amp; 1 \\
+    0 &amp; 0 &amp; 1 &amp; 0
+    \end{pmatrix}
+$$</p>
 
-        <p>First-order Rouchon method (fixed step size ODE solver).</p>
-
-    <!-- <p>Parameters:</p> -->
+    <!-- <p>Returns:</p> -->
     <p>
-      <strong>Parameters</strong>
+      <strong>Returns</strong>
     </p>
-    <ul>
-        <li class="field-body">
-          <b>dt</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Fixed time step.</p>
-        </li>
-    </ul>
+    <!-- <ul>
+      <li class="field-body">
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (4, 4))</em> CNOT gate.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p><em>(array of shape (4, 4))</em> CNOT gate.</p></span>
 
-<details class="note"
- >
-  <summary>Supported gradients</summary>
-  <p>This solver supports differentiation with
-<a class="autorefs autorefs-internal" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> and
-<a class="autorefs autorefs-internal" href="../gradient/CheckpointAutograd.html#dynamiqs.gradient.CheckpointAutograd"><code>dq.gradient.CheckpointAutograd</code></a>
-(default).</p>
-</details>
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-  </div>
+<!-- <p><strong>Examples:</strong></p> -->
+<p>
+  <strong>Examples</strong>
+</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">cnot</span><span class="p">()</span>
+<span class="go">Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],</span>
+<span class="go">       [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],</span>
+<span class="go">       [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],</span>
+<span class="go">       [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)</span>
+</code></pre></div>
 
     </div>
 
@@ -4487,12 +4480,12 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.56dfad97.min.js"></script>
       
-        <script src="../../javascripts/katex.js"></script>
+        <script src="../../../javascripts/katex.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js"></script>
       

@@ -8,7 +8,7 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/0.2/documentation/basics/time-dependent-operators.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/documentation/basics/time-dependent-operators.html">
 
 
     <link rel="prev" href="workflow.html">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Time-dependent operators - dynamiqs</title>
+        <title>Time-dependent operators - Dynamiqs</title>
       
     
     
@@ -67,6 +67,8 @@
       <link rel="stylesheet" href="../../stylesheets/extra.css">
     
       <link rel="stylesheet" href="../../stylesheets/theme.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/home.css">
     
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
     
@@ -114,12 +116,28 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  You're not viewing the latest version.
+  <a href="../../..">
+    Click here to go to latest.
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
     
       
   
   <header class="md-header" data-md-component="header">
     <nav class="md-header__inner md-grid" aria-label="Header">
-      <a href="../../index.html" title="dynamiqs" class="md-header__button md-logo" aria-label="dynamiqs" data-md-component="logo">
+      <a href="../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
         
   <img src="../../media/logo.png" alt="logo">
 
@@ -131,8 +149,8 @@
         <div class="md-header__ellipsis">
           <div class="md-header__topic">
             <span class="md-ellipsis">
-              <a href="/../../index.html" title="dynamiqs" aria-label="dynamiqs">
-                dynamiqs
+              <a href="/../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
+                Dynamiqs
               </a>
             </span>
           </div>
@@ -145,34 +163,6 @@
           </div>
         </div>
       </div>
-      
-        
-          <form class="md-header__option" data-md-component="palette">
-            
-              
-              
-              
-              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
-              
-                <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-                </label>
-              
-            
-              
-              
-              
-              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
-              
-                <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-                </label>
-              
-            
-          </form>
-        
-      
-      
       
         <label class="md-header__button md-icon" for="__search">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
@@ -211,6 +201,34 @@
     </div>
   </div>
 </div>
+      
+      
+        
+          <form class="md-header__option" data-md-component="palette">
+            
+              
+              
+              
+              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+              
+                <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+                </label>
+              
+            
+              
+              
+              
+              <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+              
+                <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+                </label>
+              
+            
+          </form>
+        
+      
       
         <div class="md-header__slack">
             <a
@@ -352,12 +370,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../index.html" title="dynamiqs" class="md-nav__button md-logo" aria-label="dynamiqs" data-md-component="logo">
+    <a href="../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
       
   <img src="../../media/logo.png" alt="logo">
 
     </a>
-    dynamiqs
+    Dynamiqs
   </label>
   
     <div class="md-nav__source">
@@ -523,7 +541,7 @@
         
   
   <span class="md-ellipsis">
-    What is dynamiqs?
+    What is Dynamiqs?
   </span>
   
 
@@ -674,7 +692,7 @@
         
   
   <span class="md-ellipsis">
-    Workflow in dynamiqs
+    Workflow in Dynamiqs
   </span>
   
 
@@ -1973,6 +1991,8 @@
       
         
       
+        
+      
     
     
       
@@ -2354,6 +2374,27 @@
   
   <span class="md-ellipsis">
     hadamard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/utils/operators/cnot.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    cnot
   </span>
   
 
@@ -4346,7 +4387,7 @@
         
   
   <span class="md-ellipsis">
-    Citing dynamiqs
+    Citing Dynamiqs
   </span>
   
 
@@ -4468,21 +4509,12 @@
 
 
 <h1 id="time-dependent-operators">Time-dependent operators</h1>
-<p>This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.</p>
-<div class="admonition warning">
-<p class="admonition-title">Differences with QuTiP</p>
-<p>dynamiqs uses JAX arrays, which are different from QuTiP quantum objects. See <a href="../getting_started/sharp-bits.html">The sharp bits 🔪</a> page for more details, briefly:</p>
-<ul>
-<li>use <code>x + 2 * dq.eye(n)</code> instead of <code>x + 2</code></li>
-<li>use <code>x @ y</code> instead of <code>x * y</code>, and <code>dq.powm(x, 4)</code> instead of <code>x**4</code></li>
-<li>use <code>dq.dag(x)</code> or <code>x.mT.conj()</code> instead of <code>x.dag()</code></li>
-</ul>
-</div>
+<p>This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in Dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
 <span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
 </code></pre></div>
 <h2 id="the-timearray-type">The <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> type</h2>
-<p>In dynamiqs, time-dependent operators are defined with <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
+<p>In Dynamiqs, time-dependent operators are defined with <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
 $$
     H_x(t)=\cos(2\pi t)\sigma_x
 $$
@@ -4512,14 +4544,8 @@ $$
 $$
     O(t) = O_0
 $$
-for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is a constant operator.</p>
-<p>In dynamiqs, constant operators can either be defined with <abbr title="e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs">array-like objects</abbr> or as <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> objects (using the <a class="autorefs autorefs-internal" href="../../python_api/time_array/constant.html#dynamiqs.time_array.constant"><code>dq.constant()</code></a> function).</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Common operators are available as utility functions, see the list of available operators in the <a href="../../python_api/index.html#operators">Python API</a>.</p>
-</div>
-<p>For instance, to define the Pauli <span class="arithmatex">\(Z\)</span> operator <span class="arithmatex">\(H = \sigma_z\)</span>, you can use any of the following syntaxes:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:5"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">dynamiqs</label><label for="__tabbed_1_2">NumPy array</label><label for="__tabbed_1_3">JAX array</label><label for="__tabbed_1_4">QuTiP Qobj</label><label for="__tabbed_1_5">Python list</label></div>
+for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is an arbitrary operator. The most practical way to define constant operators is using <abbr title="e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs">array-like objects</abbr>. They can also be instantiated as <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> instances using the <a class="autorefs autorefs-internal" href="../../python_api/time_array/constant.html#dynamiqs.time_array.constant"><code>dq.constant()</code></a> function. For instance, to define the Pauli operator <span class="arithmatex">\(H = \sigma_z\)</span>, you can use any of the following syntaxes:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:5"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Dynamiqs</label><label for="__tabbed_1_2">NumPy array</label><label for="__tabbed_1_3">JAX array</label><label for="__tabbed_1_4">QuTiP Qobj</label><label for="__tabbed_1_5">Python list</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
@@ -4547,24 +4573,23 @@ for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmate
 </div>
 </div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Common operators are available as utility functions, see the list of available operators in the <a href="../../python_api/index.html#operators">Python API</a>.</p>
+</div>
 <h3 id="piecewise-constant-operators">Piecewise constant operators</h3>
 <p>A piecewise constant (<abbr title="piecewise constant">PWC</abbr>) operator takes constant values over some time intervals. It is defined by
 $$
     O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
 $$
 where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="arithmatex">\(\Omega_{[t_k, t_{k+1}[}\)</span> is the rectangular window function defined by <span class="arithmatex">\(\Omega_{[t_a, t_b[}(t) = 1\)</span> if <span class="arithmatex">\(t \in [t_a, t_b[\)</span> and <span class="arithmatex">\(\Omega_{[t_a, t_b[}(t) = 0\)</span> otherwise, and <span class="arithmatex">\(O_0\)</span> is a constant operator.</p>
-<p>In dynamiqs, <abbr title="piecewise constant">PWC</abbr> operators are defined by three <abbr title="e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs">array-like objects</abbr>:</p>
+<p>In Dynamiqs, <abbr title="piecewise constant">PWC</abbr> operators are defined by three <abbr title="e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs">array-like objects</abbr>:</p>
 <ul>
 <li><code>times</code>: the time points <span class="arithmatex">\((t_0, \ldots, t_N)\)</span> defining the boundaries of the time intervals, of shape <em>(N+1,)</em>,</li>
 <li><code>values</code>: the constant values <span class="arithmatex">\((c_0, \ldots, c_{N-1})\)</span> for each time interval, of shape <em>(..., N)</em>,</li>
 <li><code>array</code>: the array defining the constant operator <span class="arithmatex">\(O_0\)</span>, of shape <em>(n, n)</em>.</li>
 </ul>
-<p>To construct a <abbr title="piecewise constant">PWC</abbr> operator, pass these three arguments to the <a class="autorefs autorefs-internal" href="../../python_api/time_array/pwc.html#dynamiqs.time_array.pwc"><code>dq.pwc()</code></a> function, which returns a <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> object. This object then returns an array with shape <em>(..., n, n)</em> when called at any time <span class="arithmatex">\(t\)</span>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The argument <code>times</code> must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time <span class="arithmatex">\(t\)</span>, the returned array is the operator <span class="arithmatex">\(c_k\ O_0\)</span> corresponding to the interval <span class="arithmatex">\([t_k, t_{k+1}[\)</span> in which the time <span class="arithmatex">\(t\)</span> falls. If <span class="arithmatex">\(t\)</span> does not belong to any time intervals, the returned array is null.</p>
-</div>
-<p>Let's define a <abbr title="piecewise constant">PWC</abbr> operator:
+<p>To construct a <abbr title="piecewise constant">PWC</abbr> operator, these three arguments must be passed to the <a class="autorefs autorefs-internal" href="../../python_api/time_array/pwc.html#dynamiqs.time_array.pwc"><code>dq.pwc()</code></a> function, which returns a <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> object. When called at some time <span class="arithmatex">\(t\)</span>, this object then returns an array with shape <em>(..., n, n)</em>. For example, let us define a <abbr title="piecewise constant">PWC</abbr> operator <span class="arithmatex">\(H(t)\)</span> with constant value <span class="arithmatex">\(3\sigma_z\)</span> for <span class="arithmatex">\(t\in[0, 1[\)</span> and <span class="arithmatex">\(-2\sigma_z\)</span> for <span class="arithmatex">\(t\in[1, 2[\)</span>:
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
@@ -4613,6 +4638,10 @@ where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="
 </div>
 </div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The argument <code>times</code> must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time <span class="arithmatex">\(t\)</span>, the returned array is the operator <span class="arithmatex">\(c_k\ O_0\)</span> corresponding to the interval <span class="arithmatex">\([t_k, t_{k+1}[\)</span> in which the time <span class="arithmatex">\(t\)</span> falls. If <span class="arithmatex">\(t\)</span> does not belong to any time intervals, the returned array is null.</p>
+</div>
 <details class="note">
 <summary>Batching <abbr title="piecewise constant">PWC</abbr> operators</summary>
 <p>The batching of the returned time-array is specified by <code>values</code>. For example, to define a <abbr title="piecewise constant">PWC</abbr> operator batched over a parameter <span class="arithmatex">\(\theta\)</span>:
@@ -4630,14 +4659,12 @@ where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="
 $$
     O(t) = f(t) O_0
 $$
-where <span class="arithmatex">\(f(t)\)</span> is an time-dependent scalar.</p>
-<p>In dynamiqs, modulated operators are defined by:</p>
+where <span class="arithmatex">\(f(t)\)</span> is an time-dependent scalar. In Dynamiqs, modulated operators are defined by:</p>
 <ul>
 <li><code>f</code>: a Python function with signature <code>f(t: float) -&gt; Scalar | Array</code> that returns the modulating factor <span class="arithmatex">\(f(t)\)</span> for any time <span class="arithmatex">\(t\)</span>, as a scalar or an array of shape <em>(...)</em>,</li>
 <li><code>array</code>: the array defining the constant operator <span class="arithmatex">\(O_0\)</span>, of shape <em>(n, n)</em>.</li>
 </ul>
-<p>To construct a modulated operator, pass these two arguments to the <a class="autorefs autorefs-internal" href="../../python_api/time_array/modulated.html#dynamiqs.time_array.modulated"><code>dq.modulated()</code></a> function, which returns a <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> object. This object then returns an array with shape <em>(..., n, n)</em> when called at any time <span class="arithmatex">\(t\)</span>.</p>
-<p>Let's define the modulated operator <span class="arithmatex">\(H(t)=\cos(2\pi t)\sigma_x\)</span>:
+<p>To construct a modulated operator, these two arguments must be passed to the <a class="autorefs autorefs-internal" href="../../python_api/time_array/modulated.html#dynamiqs.time_array.modulated"><code>dq.modulated()</code></a> function, which returns a <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> object. When called at some time <span class="arithmatex">\(t\)</span>, this object then returns an array with shape <em>(..., n, n)</em>. For example, let us define the modulated operator <span class="arithmatex">\(H(t)=\cos(2\pi t)\sigma_x\)</span>:
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span>
@@ -4692,13 +4719,12 @@ times (i.e., right before, and right after the jump).</p>
 $$
     O(t) = f(t)
 $$
-where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator.</p>
-<p>In dynamiqs, arbitrary time-dependent operators are defined by:</p>
+where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator. In Dynamiqs, arbitrary time-dependent operators are defined by:</p>
 <ul>
 <li><code>f</code>: a Python function with signature <code>f(t: float) -&gt; Array</code> that returns the operator <span class="arithmatex">\(f(t)\)</span> for any time <span class="arithmatex">\(t\)</span>, as an array of shape <em>(..., n, n)</em>.</li>
 </ul>
 <p>To construct an arbitrary time-dependent operator, pass this argument to the <a class="autorefs autorefs-internal" href="../../python_api/time_array/timecallable.html#dynamiqs.time_array.timecallable"><code>dq.timecallable()</code></a> function, which returns a <a class="autorefs autorefs-internal" href="../../python_api/time_array/TimeArray.html#dynamiqs.time_array.TimeArray"><code>TimeArray</code></a> object. This object then returns an array with shape <em>(..., n, n)</em> when called at any time <span class="arithmatex">\(t\)</span>.</p>
-<p>Let's define the arbitrary time-dependent operator <span class="arithmatex">\(H(t)=\begin{pmatrix}t &amp; 0\\0 &amp; 1 - t\end{pmatrix}\)</span>:
+<p>For example, let us define the arbitrary time-dependent operator <span class="arithmatex">\(H(t)=\begin{pmatrix}t &amp; 0\\0 &amp; 1 - t\end{pmatrix}\)</span>:
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">timecallable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span>
@@ -4780,7 +4806,7 @@ times (i.e., right before, and right after the jump).</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      &copy Copyright 2023, dynamiqs developers.
+      &copy Copyright 2023-2024, Dynamiqs developers.
     </div>
   
   
@@ -4827,7 +4853,7 @@ times (i.e., right before, and right after the jump).</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
