@@ -1,5 +1,3 @@
-<!-- Custom HTML site displayed as the Home chapter -->
-
 
 <!doctype html>
 <html lang="en" class="no-js">
@@ -10,26 +8,28 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/index.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/python_api/result/SESolveResult.html">
 
 
+    <link rel="prev" href="../options/Options.html">
 
-    <link rel="next" href="documentation/index.html">
 
-<link rel="mask-icon" href="media/favicon.svg" color="#ffffff">
-<link rel="icon" class="js-site-favicon" type="image/svg+xml" href="media/favicon.svg">
+    <link rel="next" href="MESolveResult.html">
+
+<link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
+<link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
 <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.1.21">
 
     
       
-        <title>Home - Dynamiqs</title>
+        <title>SESolveResult - Dynamiqs</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.06209087.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.06209087.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
   
@@ -62,24 +62,24 @@
       
     
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-      <link rel="stylesheet" href="stylesheets/theme.css">
+      <link rel="stylesheet" href="../../stylesheets/theme.css">
     
-      <link rel="stylesheet" href="stylesheets/home.css">
+      <link rel="stylesheet" href="../../stylesheets/home.css">
     
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
     
-   <link href="assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
     html.glightbox-open { overflow: initial; height: 100%; }
     .gslide-title { margin-top: 0px; user-select: text; }
     .gslide-desc { color: #666; user-select: text; }
@@ -88,7 +88,7 @@
     .gdesc-inner { font-size: 0.75rem; }
     body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
     body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
-    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="assets/javascripts/glightbox.min.js"></script></head>
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
   
   
     
@@ -106,6 +106,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#dynamiqs.result.SESolveResult" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -117,7 +122,7 @@
             <div class="md-banner__inner md-grid md-typeset">
               
   You're not viewing the latest version.
-  <a href="../.">
+  <a href="../../..">
     Click here to go to latest.
   </a>
 
@@ -132,9 +137,9 @@
   
   <header class="md-header" data-md-component="header">
     <nav class="md-header__inner md-grid" aria-label="Header">
-      <a href="index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
+      <a href="../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
         
-  <img src="media/logo.png" alt="logo">
+  <img src="../../media/logo.png" alt="logo">
 
       </a>
       <label class="md-header__button md-icon" for="__drawer">
@@ -144,7 +149,7 @@
         <div class="md-header__ellipsis">
           <div class="md-header__topic">
             <span class="md-ellipsis">
-              <a href="/index.html" title="Dynamiqs" aria-label="Dynamiqs">
+              <a href="/../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
                 Dynamiqs
               </a>
             </span>
@@ -152,7 +157,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Home
+                SESolveResult
               
             </span>
           </div>
@@ -257,7 +262,6 @@
     <div class="md-container" data-md-component="container">
       
       
-
         
           
             
@@ -268,11 +272,9 @@
         
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="index.html" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../../index.html" class="md-tabs__link">
         
   
     
@@ -291,7 +293,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="documentation/index.html" class="md-tabs__link">
+        <a href="../../documentation/index.html" class="md-tabs__link">
           
   
     
@@ -307,11 +309,13 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="python_api/index.html" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../index.html" class="md-tabs__link">
           
   
     
@@ -331,7 +335,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="community/index.html" class="md-tabs__link">
+        <a href="../../community/index.html" class="md-tabs__link">
           
   
     
@@ -350,117 +354,6 @@
           
         
       
-
-<!-- Additional styles for landing page -->
-<style>
-
-/* Application header should be static for the landing page */
-.md-header {
-    position: initial;
-}
-
-/* Remove spacing, as we cannot hide it completely */
-.md-main__inner {
-    margin: 0;
-}
-
-/* Hide main content for now */
-.md-content {
-    display: none;
-}
-
-/* Hide table of contents */
-@media screen and (min-width: 60em) {
-    .md-sidebar--secondary {
-    display: none;
-    }
-}
-
-/* Hide navigation */
-@media screen and (min-width: 76.25em) {
-    .md-sidebar--primary {
-    display: none;
-    }
-}
-</style>
-
-<!-- Main site Entry button descriptions -->
-<section class="tx-container">
-    <div class="md-grid md-typeset">
-      <div class="tx-hero">
-        <div class="tx-hero__image">
-            <img src="media/logo-white.png" draggable="false">
-        </div>
-        <div class="tx-hero__content">
-          <h1> Dynamiqs </h1>
-          <p>High-performance quantum systems simulation with JAX.</p>
-          <a href="documentation/index.html" title="Documentation" class="md-button md-button--primary">
-            Get started
-          </a>
-          <a href="https://github.com/dynamiqs/dynamiqs" title="source.link.title" class="md-button">
-            Go to GitHub
-          </a>
-        </div>
-      </div>
-    </div>
-</section>
-<div class="home-background">
-    <svg class="waves waves-back" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none" shape-rendering="auto">
-        <path d="M0,160L34.3,160C68.6,160,137,160,206,154.7C274.3,149,343,139,411,128C480,117,549,107,617,85.3C685.7,64,754,32,823,42.7C891.4,53,960,107,1029,154.7C1097.1,203,1166,245,1234,224C1302.9,203,1371,117,1406,74.7L1440,32L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"></path>
-    </svg>
-    <svg class="waves waves-front" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none" shape-rendering="auto">
-        <path d="M0,96L34.3,106.7C68.6,117,137,139,206,176C274.3,213,343,267,411,261.3C480,256,549,192,617,165.3C685.7,139,754,149,823,181.3C891.4,213,960,267,1029,282.7C1097.1,299,1166,277,1234,256C1302.9,235,1371,213,1406,202.7L1440,192L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"></path>
-    </svg>
-</div>
-
-<!-- Main site box descriptions -->
-<div class="top-hr">
-    <div class="feature-item">
-        <h3>
-            Differentiable
-        </h3>
-        <p>
-            Our quantum solvers are fully differentiable for use in optimal control, parameter estimation, experiment fitting, etc.
-        </p>
-        <p>
-            <a href="../documentation/basics/computing-gradients.html">
-                Computing gradients
-            </a>
-        </p>
-    </div>
-    <div class="feature-item">
-        <h3>
-            GPU Accelerated
-        </h3>
-        <p>
-            Transition seamlessly between CPU, GPU and TPU simulations, and run batches of simulations at once.
-        </p>
-        <p>
-            <a href="../documentation/getting_started/examples.html">
-                GPU support
-            </a>
-        </p>
-    </div>
-    <div class="feature-item">
-        <h3>
-            Built on JAX
-        </h3>
-        <p>
-            Benefit from the JAX ecosystem, built for both high-performance numerical computing and machine learning.
-        </p>
-        <p>
-            <a href="https://jax.readthedocs.io/en/latest/">
-                JAX documentation
-            </a>
-        </p>
-    </div>
-</div>
-
-<div class="top-hr">
-    <div class="hr">
-    </div>
-</div>
-
       <main class="md-main" data-md-component="main">
         <div class="md-main__inner md-grid">
           
@@ -477,9 +370,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
+    <a href="../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
       
-  <img src="media/logo.png" alt="logo">
+  <img src="../../media/logo.png" alt="logo">
 
     </a>
     Dynamiqs
@@ -503,17 +396,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="index.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -522,7 +408,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -561,7 +446,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="documentation/index.html" class="md-nav__link ">
+            <a href="../../documentation/index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -644,7 +529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/getting_started/whatis.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/whatis.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -665,7 +550,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/getting_started/installation.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/installation.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -686,7 +571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/getting_started/examples.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/examples.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -707,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/getting_started/sharp-bits.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/sharp-bits.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -790,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/basics/workflow.html" class="md-nav__link">
+      <a href="../../documentation/basics/workflow.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -811,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/basics/time-dependent-operators.html" class="md-nav__link">
+      <a href="../../documentation/basics/time-dependent-operators.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -832,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/basics/closed-systems.html" class="md-nav__link">
+      <a href="../../documentation/basics/closed-systems.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -853,7 +738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/basics/open-systems.html" class="md-nav__link">
+      <a href="../../documentation/basics/open-systems.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -874,7 +759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/basics/batching-simulations.html" class="md-nav__link">
+      <a href="../../documentation/basics/batching-simulations.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -895,7 +780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="documentation/basics/computing-gradients.html" class="md-nav__link">
+      <a href="../../documentation/basics/computing-gradients.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -928,6 +813,8 @@
       
   
   
+    
+  
   
   
     
@@ -946,21 +833,24 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="python_api/index.html" class="md-nav__link ">
+            <a href="../index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -971,13 +861,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Python API
@@ -1010,17 +900,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -1045,7 +938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/integrators/sesolve.html" class="md-nav__link">
+      <a href="../integrators/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1066,7 +959,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/integrators/mesolve.html" class="md-nav__link">
+      <a href="../integrators/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1087,7 +980,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/integrators/smesolve.html" class="md-nav__link">
+      <a href="../integrators/smesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1108,7 +1001,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/integrators/sepropagator.html" class="md-nav__link">
+      <a href="../integrators/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1129,7 +1022,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/integrators/mepropagator.html" class="md-nav__link">
+      <a href="../integrators/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1155,8 +1048,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1174,18 +1069,21 @@
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -1196,7 +1094,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             Core
@@ -1262,7 +1160,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/time_array/TimeArray.html" class="md-nav__link">
+      <a href="../time_array/TimeArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1283,7 +1181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/time_array/constant.html" class="md-nav__link">
+      <a href="../time_array/constant.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1304,7 +1202,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/time_array/pwc.html" class="md-nav__link">
+      <a href="../time_array/pwc.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1325,7 +1223,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/time_array/modulated.html" class="md-nav__link">
+      <a href="../time_array/modulated.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1346,7 +1244,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/time_array/timecallable.html" class="md-nav__link">
+      <a href="../time_array/timecallable.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1435,7 +1333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Tsit5.html" class="md-nav__link">
+      <a href="../solver/Tsit5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1456,7 +1354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Dopri5.html" class="md-nav__link">
+      <a href="../solver/Dopri5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1477,7 +1375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Dopri8.html" class="md-nav__link">
+      <a href="../solver/Dopri8.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1498,7 +1396,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Kvaerno3.html" class="md-nav__link">
+      <a href="../solver/Kvaerno3.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1519,7 +1417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Kvaerno5.html" class="md-nav__link">
+      <a href="../solver/Kvaerno5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1540,7 +1438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Euler.html" class="md-nav__link">
+      <a href="../solver/Euler.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1561,7 +1459,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Rouchon1.html" class="md-nav__link">
+      <a href="../solver/Rouchon1.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1582,7 +1480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Rouchon2.html" class="md-nav__link">
+      <a href="../solver/Rouchon2.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1603,7 +1501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/solver/Expm.html" class="md-nav__link">
+      <a href="../solver/Expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1678,7 +1576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/gradient/Autograd.html" class="md-nav__link">
+      <a href="../gradient/Autograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1699,7 +1597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/gradient/CheckpointAutograd.html" class="md-nav__link">
+      <a href="../gradient/CheckpointAutograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1728,7 +1626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/options/Options.html" class="md-nav__link">
+      <a href="../options/Options.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1746,8 +1644,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1767,11 +1667,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_5" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_5" id="__nav_3_3_5_label" tabindex="0">
@@ -1785,7 +1685,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_5">
             <span class="md-nav__icon md-icon"></span>
             Results
@@ -1796,10 +1696,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="python_api/result/SESolveResult.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="SESolveResult.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1808,6 +1717,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -1820,7 +1730,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/result/MESolveResult.html" class="md-nav__link">
+      <a href="MESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1841,7 +1751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/result/SEPropagatorResult.html" class="md-nav__link">
+      <a href="SEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1862,7 +1772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/result/MEPropagatorResult.html" class="md-nav__link">
+      <a href="MEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1922,17 +1832,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -2047,7 +1960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/eye.html" class="md-nav__link">
+      <a href="../utils/operators/eye.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2068,7 +1981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/zero.html" class="md-nav__link">
+      <a href="../utils/operators/zero.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2089,7 +2002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/destroy.html" class="md-nav__link">
+      <a href="../utils/operators/destroy.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2110,7 +2023,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/create.html" class="md-nav__link">
+      <a href="../utils/operators/create.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2131,7 +2044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/number.html" class="md-nav__link">
+      <a href="../utils/operators/number.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2152,7 +2065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/parity.html" class="md-nav__link">
+      <a href="../utils/operators/parity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2173,7 +2086,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/displace.html" class="md-nav__link">
+      <a href="../utils/operators/displace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2194,7 +2107,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/squeeze.html" class="md-nav__link">
+      <a href="../utils/operators/squeeze.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2215,7 +2128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/quadrature.html" class="md-nav__link">
+      <a href="../utils/operators/quadrature.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2236,7 +2149,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/position.html" class="md-nav__link">
+      <a href="../utils/operators/position.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2257,7 +2170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/momentum.html" class="md-nav__link">
+      <a href="../utils/operators/momentum.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2278,7 +2191,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/sigmax.html" class="md-nav__link">
+      <a href="../utils/operators/sigmax.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2299,7 +2212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/sigmay.html" class="md-nav__link">
+      <a href="../utils/operators/sigmay.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2320,7 +2233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/sigmaz.html" class="md-nav__link">
+      <a href="../utils/operators/sigmaz.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2341,7 +2254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/sigmap.html" class="md-nav__link">
+      <a href="../utils/operators/sigmap.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2362,7 +2275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/sigmam.html" class="md-nav__link">
+      <a href="../utils/operators/sigmam.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2383,7 +2296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/hadamard.html" class="md-nav__link">
+      <a href="../utils/operators/hadamard.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2404,7 +2317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/rx.html" class="md-nav__link">
+      <a href="../utils/operators/rx.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2425,7 +2338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/ry.html" class="md-nav__link">
+      <a href="../utils/operators/ry.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2446,7 +2359,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/rz.html" class="md-nav__link">
+      <a href="../utils/operators/rz.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2467,7 +2380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/sgate.html" class="md-nav__link">
+      <a href="../utils/operators/sgate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2488,7 +2401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/tgate.html" class="md-nav__link">
+      <a href="../utils/operators/tgate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2509,7 +2422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/cnot.html" class="md-nav__link">
+      <a href="../utils/operators/cnot.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2530,7 +2443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/operators/toffoli.html" class="md-nav__link">
+      <a href="../utils/operators/toffoli.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2617,7 +2530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/fock.html" class="md-nav__link">
+      <a href="../utils/states/fock.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2638,7 +2551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/fock_dm.html" class="md-nav__link">
+      <a href="../utils/states/fock_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2659,7 +2572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/basis.html" class="md-nav__link">
+      <a href="../utils/states/basis.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2680,7 +2593,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/basis_dm.html" class="md-nav__link">
+      <a href="../utils/states/basis_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2701,7 +2614,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/coherent.html" class="md-nav__link">
+      <a href="../utils/states/coherent.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2722,7 +2635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/coherent_dm.html" class="md-nav__link">
+      <a href="../utils/states/coherent_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2743,7 +2656,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/ground.html" class="md-nav__link">
+      <a href="../utils/states/ground.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2764,7 +2677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/states/excited.html" class="md-nav__link">
+      <a href="../utils/states/excited.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2893,7 +2806,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/dag.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/dag.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2914,7 +2827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/powm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/powm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2935,7 +2848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/expm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2956,7 +2869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/cosm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/cosm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2977,7 +2890,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/sinm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/sinm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2998,7 +2911,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/trace.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/trace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3019,7 +2932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/tracemm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/tracemm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3040,7 +2953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/ptrace.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/ptrace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3061,7 +2974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/tensor.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/tensor.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3082,7 +2995,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/expect.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/expect.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3103,7 +3016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/norm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/norm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3124,7 +3037,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/unit.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/unit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3145,7 +3058,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/dissipator.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/dissipator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3166,7 +3079,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/lindbladian.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/lindbladian.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3187,7 +3100,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/isket.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/isket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3208,7 +3121,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/isbra.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/isbra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3229,7 +3142,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/isdm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/isdm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3250,7 +3163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/isop.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/isop.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3271,7 +3184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/isherm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/isherm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3292,7 +3205,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/toket.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/toket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3313,7 +3226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/tobra.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/tobra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3334,7 +3247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/todm.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/todm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3355,7 +3268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/proj.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/proj.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3376,7 +3289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/braket.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/braket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3397,7 +3310,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/overlap.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/overlap.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3418,7 +3331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/fidelity.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/fidelity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3439,7 +3352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/entropy_vn.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/entropy_vn.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3460,7 +3373,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/bloch_coordinates.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/bloch_coordinates.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3481,7 +3394,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/quantum_utils/wigner.html" class="md-nav__link">
+      <a href="../utils/quantum_utils/wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3560,7 +3473,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/jax_utils/to_qutip.html" class="md-nav__link">
+      <a href="../utils/jax_utils/to_qutip.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3581,7 +3494,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/jax_utils/set_device.html" class="md-nav__link">
+      <a href="../utils/jax_utils/set_device.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3602,7 +3515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/jax_utils/set_precision.html" class="md-nav__link">
+      <a href="../utils/jax_utils/set_precision.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3623,7 +3536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/jax_utils/set_matmul_precision.html" class="md-nav__link">
+      <a href="../utils/jax_utils/set_matmul_precision.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3708,7 +3621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/operator_to_vector.html" class="md-nav__link">
+      <a href="../utils/vectorization/operator_to_vector.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3729,7 +3642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/vector_to_operator.html" class="md-nav__link">
+      <a href="../utils/vectorization/vector_to_operator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3750,7 +3663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/spre.html" class="md-nav__link">
+      <a href="../utils/vectorization/spre.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3771,7 +3684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/spost.html" class="md-nav__link">
+      <a href="../utils/vectorization/spost.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3792,7 +3705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/sprepost.html" class="md-nav__link">
+      <a href="../utils/vectorization/sprepost.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3813,7 +3726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/sdissipator.html" class="md-nav__link">
+      <a href="../utils/vectorization/sdissipator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3834,7 +3747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/vectorization/slindbladian.html" class="md-nav__link">
+      <a href="../utils/vectorization/slindbladian.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3909,7 +3822,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/optimal_control/snap_gate.html" class="md-nav__link">
+      <a href="../utils/optimal_control/snap_gate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3930,7 +3843,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/utils/optimal_control/cd_gate.html" class="md-nav__link">
+      <a href="../utils/optimal_control/cd_gate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4013,7 +3926,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/random/real.html" class="md-nav__link">
+      <a href="../random/real.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4034,7 +3947,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/random/complex.html" class="md-nav__link">
+      <a href="../random/complex.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4055,7 +3968,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/random/herm.html" class="md-nav__link">
+      <a href="../random/herm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4076,7 +3989,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/random/psd.html" class="md-nav__link">
+      <a href="../random/psd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4097,7 +4010,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/random/dm.html" class="md-nav__link">
+      <a href="../random/dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4118,7 +4031,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/random/ket.html" class="md-nav__link">
+      <a href="../random/ket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4209,7 +4122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/wigner.html" class="md-nav__link">
+      <a href="../plot/wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4230,7 +4143,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/wigner_mosaic.html" class="md-nav__link">
+      <a href="../plot/wigner_mosaic.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4251,7 +4164,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/wigner_gif.html" class="md-nav__link">
+      <a href="../plot/wigner_gif.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4272,7 +4185,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/pwc_pulse.html" class="md-nav__link">
+      <a href="../plot/pwc_pulse.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4293,7 +4206,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/fock.html" class="md-nav__link">
+      <a href="../plot/fock.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4314,7 +4227,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/fock_evolution.html" class="md-nav__link">
+      <a href="../plot/fock_evolution.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4335,7 +4248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/hinton.html" class="md-nav__link">
+      <a href="../plot/hinton.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4356,7 +4269,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/gifit.html" class="md-nav__link">
+      <a href="../plot/gifit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4377,7 +4290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/grid.html" class="md-nav__link">
+      <a href="../plot/grid.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4398,7 +4311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="python_api/plot/mplstyle.html" class="md-nav__link">
+      <a href="../plot/mplstyle.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4471,7 +4384,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="community/index.html" class="md-nav__link ">
+            <a href="../../community/index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -4504,7 +4417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="community/contributing.html" class="md-nav__link">
+      <a href="../../community/contributing.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4525,7 +4438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="community/lets-talk.html" class="md-nav__link">
+      <a href="../../community/lets-talk.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4546,7 +4459,7 @@
   
   
     <li class="md-nav__item">
-      <a href="community/citing.html" class="md-nav__link">
+      <a href="../../community/citing.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4584,6 +4497,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -4594,6 +4509,153 @@
           
             <div class="md-content" data-md-component="content">
               <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h1 id="dynamiqs.result.SESolveResult" class="doc doc-heading">
+    <span class="doc doc-object-name doc-class-name">dq.SESolveResult</span>
+
+
+</h1>
+
+
+    <div class="doc doc-contents first">
+
+
+        <p>Result of the Schrödinger equation integration.</p>
+
+    <p>
+      <strong>Attributes</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>states</b>
+              <i>
+(array of shape (..., nsave, n, 1))              </i>
+          – <p>Saved states with
+<code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>options.save_states</code> is set to <code>False</code>.</p>
+        </li>
+        <li class="field-body">
+          <b>final_state</b>
+              <i>
+(array of shape (..., n, 1))              </i>
+          – <p>Saved final state.</p>
+        </li>
+        <li class="field-body">
+          <b>expects</b>
+              <i>
+(array of shape (..., len(exp_ops), ntsave) or None)              </i>
+          – <p>Saved
+expectation values, if specified by <code>exp_ops</code>.</p>
+        </li>
+        <li class="field-body">
+          <b>extra</b>
+              <i>
+(PyTree or None)              </i>
+          – <p>Extra data saved with <code>save_extra()</code> if
+specified in <code>options</code> (see <a class="autorefs autorefs-internal" href="../options/Options.html#dynamiqs.options.Options"><code>dq.Options</code></a>).</p>
+        </li>
+        <li class="field-body">
+          <b>infos</b>
+              <i>
+(PyTree or None)              </i>
+          – <p>Solver-dependent information on the resolution.</p>
+        </li>
+        <li class="field-body">
+          <b>tsave</b>
+              <i>
+(array of shape (ntsave,))              </i>
+          – <p>Times for which results were saved.</p>
+        </li>
+        <li class="field-body">
+          <b>solver</b>
+              <i>
+(Solver)              </i>
+          – <p>Solver used.</p>
+        </li>
+        <li class="field-body">
+          <b>gradient</b>
+              <i>
+(Gradient)              </i>
+          – <p>Gradient used.</p>
+        </li>
+        <li class="field-body">
+          <b>options</b>
+              <i>
+(Options)              </i>
+          – <p>Options used.</p>
+        </li>
+    </ul>
+
+<details class="note"
+ >
+  <summary>Result of running multiple simulations concurrently</summary>
+  <p>The resulting states and expectation values are batched according to the
+leading dimensions of the Hamiltonian <code>H</code> and initial state <code>psi0</code>. The
+behaviour depends on the value of the <code>cartesian_batching</code> option</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.result.SESolveResult--__tabbed_1_1" name="dynamiqs.result.SESolveResult--__tabbed_1" type="radio" /><input id="dynamiqs.result.SESolveResult--__tabbed_1_2" name="dynamiqs.result.SESolveResult--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.result.SESolveResult--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.result.SESolveResult--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>The results leading dimensions are
+<div class="highlight"><pre><span></span><code>... = ...H, ...psi0
+</code></pre></div>
+For example if:</p>
+<ul>
+<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>psi0</code> has shape <em>(4, n, 1)</em>,</li>
+</ul>
+<p>then <code>states</code> has shape <em>(2, 3, 4, ntsave, n, 1)</em>.</p>
+</div>
+<div class="tabbed-block">
+<p>The results leading dimensions are
+<div class="highlight"><pre><span></span><code>... = ...H = ...psi0  # (once broadcasted)
+</code></pre></div>
+For example if:</p>
+<ul>
+<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>psi0</code> has shape <em>(3, n, 1)</em>,</li>
+</ul>
+<p>then <code>states</code> has shape <em>(2, 3, ntsave, n, 1)</em>.</p>
+</div>
+</div>
+</div>
+<p>See the
+<a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
+tutorial for more details.</p>
+</details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
                 
               </article>
             </div>
@@ -4610,18 +4672,66 @@
         
       </main>
       
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy Copyright 2023-2024, Dynamiqs developers.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/dynamiqs/dynamiqs" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA" target="_blank" rel="noopener" title="join.slack.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1s21.16-47.06 47.06-47.06h47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06S448 171 448 196.9s-21.16 47.06-47.06 47.06h-47.06zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06S309 480 283.1 480s-47.06-21.16-47.06-47.06v-47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06s21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.56dfad97.min.js"></script>
+      <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
       
-        <script src="javascripts/katex.js"></script>
+        <script src="../../javascripts/katex.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js"></script>
       
