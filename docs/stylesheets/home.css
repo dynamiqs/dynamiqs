@@ -3,14 +3,6 @@ File: home.css
 Description: CSS for the homepage
 */
 
-/* Remove sidebars */
-@media screen and (min-width:76.25em) {
-    .md-sidebar--primary,
-    .md-sidebar--secondary {
-        display: none
-    }
-}
-
 /* Background */
 .home-background {
     z-index: -1;
