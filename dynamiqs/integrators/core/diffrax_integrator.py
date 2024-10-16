@@ -14,7 +14,7 @@ from ...result import Result
 from ...utils.quantum_utils.general import dag
 from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
-from .interfaces import SEInterface, MEInterface
+from .interfaces import SEInterface, MEInterface, MCInterface
 
 
 class DiffraxIntegrator(BaseIntegrator, SaveMixin):
@@ -227,5 +227,22 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
             LdL = (Lsd @ Ls).sum(0)
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
             return tmp + dag(tmp)
+
+        return dx.ODETerm(vector_field)
+
+
+class MCDiffraxIntegrator(DiffraxIntegrator, MCInterface):
+    """Integrator solving the Schrödinger equation with Diffrax."""
+
+    # subclasses should implement: diffrax_solver, discontinuity_ts
+
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            Ls = jnp.stack([L(t) for L in self.Ls])
+            Lsd = dag(Ls)
+            LdL = (Lsd @ Ls).sum(0)
+            y = -1j * (self.H(t) - 1j * 0.5 * LdL) @ y
+            return y
 
         return dx.ODETerm(vector_field)
