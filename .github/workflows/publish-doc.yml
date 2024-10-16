@@ -40,4 +40,4 @@ jobs:
         run: task doctest
 
       - name: Publish website
-        run: mkdocs gh-deploy --force
+        run: mike deploy --push dev
