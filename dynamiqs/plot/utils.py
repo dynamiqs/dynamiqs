@@ -280,7 +280,7 @@ def minorticks_off(axis: Axis):
 def add_colorbar(
     ax: Axes, cmap: str, norm: Normalize, *, size: float = 0.05, pad: float = 0.05
 ) -> Axes:
-    # append a new axes on the right with the same height
+    # insert a new axes on the right with the same height
     cax = ax.inset_axes([1 + size, 0, pad, 1])
     mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
     plt.colorbar(mappable=mappable, cax=cax)
