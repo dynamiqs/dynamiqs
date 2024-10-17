@@ -26,21 +26,21 @@ Let us begin with a simple simulation of the **time evolution of this system**, 
 K = 1.0        # Kerr non-linearity
 epsilon = 3.0  # driving field
 kappa = 1.5    # dissipation rate
-alpha = 2.0    # coherent state amplitude
-sim_time = 5.0 # simulation time
-ntsave = 100   # number of saved states
-N = 32         # truncation of Fock space
+alpha0 = 2.0   # initial coherent state amplitude
+tend = 5.0     # simulation time
+ntsave = 101   # number of saved states
+n = 32         # truncation of Fock space
 
 # save times
-tsave = jnp.linspace(0.0, sim_time, ntsave)
+tsave = jnp.linspace(0.0, tend, ntsave)
 
 # operators
-a, adag = dq.destroy(N), dq.create(N)
+a, adag = dq.destroy(n), dq.create(n)
 H = -K * adag @ adag @ a @ a + epsilon * (a + adag)
 jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
-psi0 = dq.coherent(N, alpha)
+psi0 = dq.coherent(n, alpha0)
 
 # run simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -72,21 +72,21 @@ One of the most striking features of the Kerr oscillator is the periodic revival
 # simulation parameters
 K = 1.0
 kappa = 0.02
-alpha = 2.0
-ntsave = 200
-N = 32
+alpha0 = 2.0
+ntsave = 201
+n = 32
 
 # save times
-sim_time = 5 * jnp.pi / K
-tsave = jnp.linspace(0.0, sim_time, ntsave)
+tend = 5 * jnp.pi / K
+tsave = jnp.linspace(0.0, tend, ntsave)
 
 # operators
-a, adag = dq.destroy(N), dq.create(N)
+a, adag = dq.destroy(n), dq.create(n)
 H = -K * adag @ adag @ a @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
-psi0 = dq.coherent(N, alpha)
+psi0 = dq.coherent(n, alpha0)
 
 # expectation operator
 exp_ops = [a]
@@ -116,12 +116,12 @@ nbars = jnp.linspace(0.4, 4.0, 10)
 alphas = jnp.sqrt(nbars)
 
 # save times
-sim_time = jnp.pi / K # a single revival
-tsave = jnp.linspace(0.0, sim_time, 100)
+tend = jnp.pi / K # a single revival
+tsave = jnp.linspace(0.0, tend, 100)
 
 # redefine jump operators and initial states
 jump_ops = [jnp.sqrt(kappas[:, None, None]) * a] # using numpy broadcasting
-psi0 = dq.coherent(N, alphas) # dq.coherent accepts a batched input
+psi0 = dq.coherent(n, alphas) # dq.coherent accepts a batched input
 
 # run batched simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
@@ -152,23 +152,23 @@ Because this regime describes an **effective two-level system**, we can observe 
 K = 200.0
 epsilon = 40.0
 kappa = 1.0
-sim_time = 10 * jnp.pi / epsilon
-N = 8
+tend = 10 * jnp.pi / epsilon
+n = 8
 ntsave = 401
 
 # save times
-tsave = jnp.linspace(0.0, sim_time, ntsave)
+tsave = jnp.linspace(0.0, tend, ntsave)
 
 # operators
-a, adag = dq.destroy(N), dq.create(N)
+a, adag = dq.destroy(n), dq.create(n)
 H = -K * adag @ adag @ a @ a + epsilon * (a + adag)
 jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
-psi0 = dq.basis(N, 0)
+psi0 = dq.basis(n, 0)
 
 # expectation operator
-exp_ops = [dq.proj(dq.basis(N, 0)), dq.proj(dq.basis(N, 1))]
+exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 
 # run simulation and extract observables
 result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
@@ -182,7 +182,7 @@ plt.plot(tsave * epsilon / jnp.pi, 1 - (pop_0 + pop_1), color='black', label=r'$
 plt.xlabel(r'Time, $t\epsilon / \pi$')
 plt.ylabel('Population')
 plt.ylim(0, 1)
-plt.xlim(0, sim_time * epsilon / jnp.pi)
+plt.xlim(0, tend * epsilon / jnp.pi)
 plt.legend(frameon=True)
 renderfig('rabi-oscillations-kerr-oscillator')
 ```
@@ -226,7 +226,7 @@ from functools import partial
 # simulation parameters
 K = 200.0
 kappa = 1.0
-N = 8
+n = 8
 ntsave = 401
 
 # parameters to sweep
@@ -234,11 +234,11 @@ Ts = jnp.linspace(0.05, 0.5, 24)
 sigmas = jnp.linspace(0.05, 0.2, 14)
 
 # operators, initial state, and expectation operator
-a, adag = dq.destroy(N), dq.create(N)
+a, adag = dq.destroy(n), dq.create(n)
 H0 = -K * adag @ adag @ a @ a
 jump_ops = [jnp.sqrt(kappa) * a]
-psi0 = dq.basis(N, 0)
-exp_ops = [dq.proj(dq.basis(N, 0)), dq.proj(dq.basis(N, 1))]
+psi0 = dq.basis(n, 0)
+exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 
 @jax.vmap
 def compute_fidelity(T):
@@ -283,7 +283,7 @@ To do so, we use the [`optax`](https://optax.readthedocs.io/en/latest/) library 
 import optax
 
 # simulation parameters
-N = 8
+n = 8
 K = 200.0
 kappa = 1.0
 T = 0.2
@@ -295,11 +295,11 @@ nepochs = 300       # number of optimization epochs
 learning_rate = 0.2 # gradient descent learning rate
 
 # operators, initial state, and expectation operator
-a, adag = dq.destroy(N), dq.create(N)
+a, adag = dq.destroy(n), dq.create(n)
 H0 = -K * adag @ adag @ a @ a
 jump_ops = [jnp.sqrt(kappa) * a]
-psi0 = dq.basis(N, 0)
-exp_ops = [dq.proj(dq.basis(N, 0)), dq.proj(dq.basis(N, 1))]
+psi0 = dq.basis(n, 0)
+exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
 
 # save times and pulse times (not necessarely the same)
 tsave = jnp.linspace(0.0, T, ntsave)
