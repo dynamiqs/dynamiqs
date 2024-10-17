@@ -17,17 +17,17 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 ```
 
-## Simulating time evolution
+## Basic time evolution
 
 Let us begin with a simple simulation of the **time evolution of this system**, assuming that the driving field is constant and the system is initially in a coherent state.
 
 ```python
-# define parameters
+# simulation parameters
 K = 1.0        # Kerr non-linearity
 epsilon = 3.0  # driving field
 kappa = 1.5    # dissipation rate
 alpha = 2.0    # coherent state amplitude
-sim_time = 15.0 # simulation time
+sim_time = 5.0 # simulation time
 ntsave = 100   # number of saved states
 N = 32         # truncation of Fock space
 
@@ -50,13 +50,13 @@ From this simulation, we can extract any property of the evolved state at any sa
 
 ```pycon
 >>> dq.expect(adag @ a, result.states[-1])
-Array(1.435+0.j, dtype=complex64)
+Array(1.434+0.j, dtype=complex64)
 ```
 
 Alternatively, we can also plot the Wigner function of the evolved state.
 
 ```python
-gif = dq.plot.wigner_gif(result.states, ymax=3.0)
+gif = dq.plot.wigner_gif(result.states, ymax=3.0, gif_duration=10.0)
 rendergif(gif, 'wigner-kerr-oscillator')
 ```
 
@@ -69,7 +69,7 @@ rendergif(gif, 'wigner-kerr-oscillator')
 One of the most striking features of the Kerr oscillator is the periodic revival of the initial coherent state. This phenomenon is a direct consequence of the non-linear interaction between the photons in the cavity. We can observe this effect by plotting the absolute value of the **cavity field as a function of time**, for a simulation time over several units of Kerr, and as long as photon loss is not too important.
 
 ```python
-# redefine parameters
+# simulation parameters
 K = 1.0
 kappa = 0.02
 alpha = 2.0
@@ -105,7 +105,7 @@ renderfig('photon-number-kerr-oscillator')
 
 We indeed observe a periodic revival of the coherent state, with a period of $\pi / K$. These revivals have a reduced amplitude due to the presence of photon loss.
 
-### Study of the revival amplitudes
+### Study of revivals
 
 We can further investigate these periodic revivals by plotting the amplitude of the first revival as a function of the photon loss $\kappa$, and as a function of the initial coherent state amplitude. To do so, we make use of a powerful feature of Dynamiqs: the ability to **batch simulations concurrently**. Here, we can batch over both a jump operator and the initial state.
 
@@ -128,11 +128,10 @@ result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
 amp_revivals = jnp.abs(result.expects[:, :, 0, -1] / result.expects[:, :, 0, 0])
 
 # plot a 2D map of the normalized amplitude revivals
-fig, ax = plt.subplots()
-contour = ax.pcolormesh(nbars, kappas / K, amp_revivals)
+contour = plt.pcolormesh(nbars, kappas / K, amp_revivals)
 cbar = plt.colorbar(contour, label=r'$|\langle a(T) \rangle / \langle a(0) \rangle |$')
-ax.set_xlabel(r'Initial coherent state amplitude, $\bar{n} = |\alpha_0|^2$')
-ax.set_ylabel(r'Loss rate, $\kappa / K$')
+plt.xlabel(r'Initial coherent state amplitude, $\bar{n} = |\alpha_0|^2$')
+plt.ylabel(r'Loss rate, $\kappa / K$')
 renderfig('amplitude-revivals-kerr-oscillator')
 ```
 
