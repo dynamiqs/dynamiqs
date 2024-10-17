@@ -561,8 +561,8 @@ def hadamard(n: int = 1) -> Array:
     return tensor(*Hs)
 
 
-def rx(theta: float) -> Array:
-    r"""Returns the $R_x(\theta)$ rotation gate.
+def rx(theta: ArrayLike) -> Array:
+    r"""Returns the vectorized $R_x(\theta)$ rotation gate.
 
     It is defined by
     $$
@@ -573,27 +573,27 @@ def rx(theta: float) -> Array:
     $$
 
     Args:
-        theta: Rotation angle $\theta$ in radians.
+        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
-        _(array of shape (2, 2))_ $R_x(\theta)$ gate.
+        _(array of shape (..., 2, 2))_ $R_x(\theta)$ gate.
 
     Examples:
         >>> dq.rx(jnp.pi)
-        Array([[-0.+0.j, -0.-1.j],
-               [-0.-1.j, -0.+0.j]], dtype=complex64)
+        Array([[-0.+0.j, 0.-1.j],
+               [0.-1.j, -0.+0.j]], dtype=complex64)
+        >>> dq.rx(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
+        (3, 2, 2)
     """
-    return jnp.array(
-        [
-            [jnp.cos(theta / 2), -jnp.sin(theta / 2) * 1j],
-            [-jnp.sin(theta / 2) * 1j, jnp.cos(theta / 2)],
-        ],
-        dtype=cdtype(),
-    )
+    theta = jnp.asarray(theta)
+    cos = jnp.cos(theta / 2)
+    sin = jnp.sin(theta / 2)
+
+    return jnp.stack([jnp.array([cos, -1j * sin]), jnp.array([-1j * sin, cos])], axis=0)
 
 
-def ry(theta: float) -> Array:
-    r"""Returns the $R_y(\theta)$ rotation gate.
+def ry(theta: ArrayLike) -> Array:
+    r"""Returns the vectorized $R_y(\theta)$ rotation gate.
 
     It is defined by
     $$
@@ -604,27 +604,29 @@ def ry(theta: float) -> Array:
     $$
 
     Args:
-        theta: Rotation angle $\theta$ in radians.
+        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
-        _(array of shape (2, 2))_ $R_y(\theta)$ gate.
+        _(array of shape (..., 2, 2))_ $R_y(\theta)$ gate.
 
     Examples:
         >>> dq.ry(jnp.pi)
         Array([[-0.+0.j, -1.+0.j],
                [ 1.+0.j, -0.+0.j]], dtype=complex64)
+        >>> dq.ry(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
+        (3, 2, 2)
     """
-    return jnp.array(
-        [
-            [jnp.cos(theta / 2), -jnp.sin(theta / 2)],
-            [jnp.sin(theta / 2), jnp.cos(theta / 2)],
-        ],
-        dtype=cdtype(),
+    theta = jnp.asarray(theta)
+    cos = jnp.cos(theta / 2)
+    sin = jnp.sin(theta / 2)
+
+    return jnp.stack(
+        [jnp.array([cos + 0j, -sin + 0j]), jnp.array([sin + 0j, cos + 0j])], axis=0
     )
 
 
-def rz(theta: float) -> Array:
-    r"""Returns the $R_z(\theta)$ rotation gate.
+def rz(theta: ArrayLike) -> Array:
+    r"""Returns the vectorized $R_z(\theta)$ rotation gate.
 
     It is defined by
     $$
@@ -635,18 +637,26 @@ def rz(theta: float) -> Array:
     $$
 
     Args:
-        theta: Rotation angle $\theta$ in radians.
+        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
-        _(array of shape (2, 2))_ $R_z(\theta)$ gate.
+        _(array of shape (..., 2, 2))_ $R_z(\theta)$ gate.
 
     Examples:
         >>> dq.rz(jnp.pi)
         Array([[-0.-1.j,  0.+0.j],
                [ 0.+0.j, -0.+1.j]], dtype=complex64)
+        >>> dq.rz(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
+        (3, 2, 2)
     """
-    return jnp.array(
-        [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
+    theta = jnp.asarray(theta)
+
+    return jnp.stack(
+        [
+            jnp.array([jnp.exp(-1j * theta / 2), 0 + 0j]),
+            jnp.array([0 + 0j, jnp.exp(1j * theta / 2)]),
+        ],
+        axis=0,
     )
 
 
