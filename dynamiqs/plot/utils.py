@@ -123,7 +123,7 @@ def grid(
         [...]
         >>> renderfig('plot_grid')
 
-        ![plot_grid](/figs_code/plot_grid.png){.fig}
+        ![plot_grid](../../figs_code/plot_grid.png){.fig}
     """
     h = w if h is None else h
     ncols = ceil(n / nrows)
@@ -174,7 +174,7 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
         [...]
         >>> renderfig('mplstyle_before')
 
-        ![mplstyle_before](/figs_code/mplstyle_before.png){.fig}
+        ![mplstyle_before](../../figs_code/mplstyle_before.png){.fig}
 
         After (Dynamiqs Matplotlib style):
 
@@ -187,7 +187,7 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
         [...]
         >>> renderfig('mplstyle_after')
 
-        ![mplstyle_after](/figs_code/mplstyle_after.png){.fig}
+        ![mplstyle_after](../../figs_code/mplstyle_after.png){.fig}
     """
     plt.rcParams.update(
         {
@@ -347,14 +347,14 @@ def gifit(
         <IPython.core.display.Image object>
         >>> rendergif(gif, 'cos')
 
-        ![plot_cos](/figs_code/cos.gif){.fig}
+        ![plot_cos](../../figs_code/cos.gif){.fig}
 
         >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(24, alphas)
         >>> gif = dq.plot.gifit(dq.plot.fock)(states, fps=25)
         >>> rendergif(gif, 'coherent_evolution')
 
-        ![plot_coherent_evolution](/figs_code/coherent_evolution.gif){.fig}
+        ![plot_coherent_evolution](../../figs_code/coherent_evolution.gif){.fig}
     """
 
     @wraps(plot_function)
