@@ -233,5 +233,9 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     check_shape(H, 'H', '(..., n, n)')
-    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
-    return -1j * (spre(H) - spost(H)) + sdissipator(jump_ops).sum(0)
+    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)', '(0,)')
+
+    Lcal = -1j * (spre(H) - spost(H))
+    if jump_ops.shape != (0,):  # empty 1D array
+        Lcal += sdissipator(jump_ops).sum(0)
+    return Lcal

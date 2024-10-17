@@ -547,10 +547,13 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     jump_ops = jnp.asarray(jump_ops)
     rho = jnp.asarray(rho)
     check_shape(H, 'H', '(..., n, n)')
-    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)')
+    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)', '(0,)')
     check_shape(rho, 'rho', '(..., n, n)')
 
-    return -1j * (H @ rho - rho @ H) + dissipator(jump_ops, rho).sum(0)
+    new_rho = -1j * (H @ rho - rho @ H)
+    if jump_ops.shape != (0,):  # empty 1D array
+        new_rho += dissipator(jump_ops, rho).sum(0)
+    return new_rho
 
 
 def isket(x: ArrayLike) -> bool:
