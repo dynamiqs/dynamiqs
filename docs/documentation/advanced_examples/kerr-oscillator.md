@@ -31,9 +31,6 @@ alpha0 = 2.0   # initial coherent state amplitude
 T = 5.0        # simulation time
 ntsave = 201   # number of saved states
 
-# save times
-tsave = jnp.linspace(0.0, T, ntsave)
-
 # operators
 a, adag = dq.destroy(n), dq.create(n)
 H = -K * adag @ adag @ a @ a + epsilon * (a + adag)
@@ -41,6 +38,9 @@ jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
 psi0 = dq.coherent(n, alpha0)
+
+# save times
+tsave = jnp.linspace(0.0, T, ntsave)
 
 # run simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave)
@@ -76,10 +76,6 @@ kappa = 0.02
 alpha0 = 2.0
 ntsave = 201
 
-# save times
-T = 5 * jnp.pi / K
-tsave = jnp.linspace(0.0, T, ntsave)
-
 # operators
 a, adag = dq.destroy(n), dq.create(n)
 H = -K * adag @ adag @ a @ a
@@ -87,6 +83,10 @@ jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
 psi0 = dq.coherent(n, alpha0)
+
+# save times
+T = 5 * jnp.pi / K
+tsave = jnp.linspace(0.0, T, ntsave)
 
 # expectation operator
 exp_ops = [a]
@@ -115,13 +115,13 @@ kappas = jnp.linspace(0.0, 0.1, 11)
 nbar0s = jnp.linspace(0.4, 4.0, 10)
 alpha0s = jnp.sqrt(nbar0s)
 
-# save times
-T = jnp.pi / K  # a single revival
-tsave = jnp.linspace(0.0, T, 100)
-
 # redefine jump operators and initial states
 jump_ops = [jnp.sqrt(kappas[:, None, None]) * a] # using numpy broadcasting
 psi0 = dq.coherent(n, alpha0s) # dq.coherent accepts a batched input
+
+# save times
+T = jnp.pi / K  # a single revival
+tsave = jnp.linspace(0.0, T, 100)
 
 # run batched simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
@@ -156,9 +156,6 @@ kappa = 1.0
 T = 10 * jnp.pi / epsilon
 ntsave = 401
 
-# save times
-tsave = jnp.linspace(0.0, T, ntsave)
-
 # operators
 a, adag = dq.destroy(n), dq.create(n)
 H = -K * adag @ adag @ a @ a + epsilon * (a + adag)
@@ -166,6 +163,9 @@ jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
 psi0 = dq.basis(n, 0)
+
+# save times
+tsave = jnp.linspace(0.0, T, ntsave)
 
 # expectation operator
 exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
