@@ -23,16 +23,16 @@ Let us begin with a simple simulation of the **time evolution of this system**, 
 
 ```python
 # simulation parameters
+n = 32         # Hilbert space size
 K = 1.0        # Kerr non-linearity
 epsilon = 3.0  # driving field
 kappa = 1.5    # dissipation rate
 alpha0 = 2.0   # initial coherent state amplitude
-tend = 5.0     # simulation time
-ntsave = 101   # number of saved states
-n = 32         # truncation of Fock space
+T = 5.0        # simulation time
+ntsave = 201   # number of saved states
 
 # save times
-tsave = jnp.linspace(0.0, tend, ntsave)
+tsave = jnp.linspace(0.0, T, ntsave)
 
 # operators
 a, adag = dq.destroy(n), dq.create(n)
@@ -70,15 +70,15 @@ One of the most striking features of the Kerr oscillator is the periodic revival
 
 ```python
 # simulation parameters
+n = 32
 K = 1.0
 kappa = 0.02
 alpha0 = 2.0
 ntsave = 201
-n = 32
 
 # save times
-tend = 5 * jnp.pi / K
-tsave = jnp.linspace(0.0, tend, ntsave)
+T = 5 * jnp.pi / K
+tsave = jnp.linspace(0.0, T, ntsave)
 
 # operators
 a, adag = dq.destroy(n), dq.create(n)
@@ -112,25 +112,25 @@ We can further investigate these periodic revivals by plotting the amplitude of 
 ```python
 # parameters to sweep
 kappas = jnp.linspace(0.0, 0.1, 11)
-nbars = jnp.linspace(0.4, 4.0, 10)
-alphas = jnp.sqrt(nbars)
+nbar0s = jnp.linspace(0.4, 4.0, 10)
+alpha0s = jnp.sqrt(nbar0s)
 
 # save times
-tend = jnp.pi / K # a single revival
-tsave = jnp.linspace(0.0, tend, 100)
+T = jnp.pi / K  # a single revival
+tsave = jnp.linspace(0.0, T, 100)
 
 # redefine jump operators and initial states
 jump_ops = [jnp.sqrt(kappas[:, None, None]) * a] # using numpy broadcasting
-psi0 = dq.coherent(n, alphas) # dq.coherent accepts a batched input
+psi0 = dq.coherent(n, alpha0s) # dq.coherent accepts a batched input
 
 # run batched simulation
 result = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops)
 amp_revivals = jnp.abs(result.expects[:, :, 0, -1] / result.expects[:, :, 0, 0])
 
 # plot a 2D map of the normalized amplitude revivals
-contour = plt.pcolormesh(nbars, kappas / K, amp_revivals)
+contour = plt.pcolormesh(nbar0s, kappas / K, amp_revivals)
 cbar = plt.colorbar(contour, label=r'$|\langle a(T) \rangle / \langle a(0) \rangle |$')
-plt.xlabel(r'Initial coherent state amplitude, $\bar{n} = |\alpha_0|^2$')
+plt.xlabel(r'Initial coherent state amplitude, $\bar{n}_0 = |\alpha_0|^2$')
 plt.ylabel(r'Loss rate, $\kappa / K$')
 renderfig('amplitude-revivals-kerr-oscillator')
 ```
@@ -149,15 +149,15 @@ Because this regime describes an **effective two-level system**, we can observe 
 
 ```python
 # simulation parameters
+n = 8
 K = 200.0
 epsilon = 40.0
 kappa = 1.0
-tend = 10 * jnp.pi / epsilon
-n = 8
+T = 10 * jnp.pi / epsilon
 ntsave = 401
 
 # save times
-tsave = jnp.linspace(0.0, tend, ntsave)
+tsave = jnp.linspace(0.0, T, ntsave)
 
 # operators
 a, adag = dq.destroy(n), dq.create(n)
@@ -182,7 +182,7 @@ plt.plot(tsave * epsilon / jnp.pi, 1 - (pop_0 + pop_1), color='black', label=r'$
 plt.xlabel(r'Time, $t\epsilon / \pi$')
 plt.ylabel('Population')
 plt.ylim(0, 1)
-plt.xlim(0, tend * epsilon / jnp.pi)
+plt.xlim(0, T * epsilon / jnp.pi)
 plt.legend(frameon=True)
 renderfig('rabi-oscillations-kerr-oscillator')
 ```
@@ -198,10 +198,10 @@ We now study the optimization of a single-qubit gate for this effective two-leve
 We define a pulse ansatz and optimize the $\pi$-pulse fidelity by sweeping the parameters of this ansatz. The ansatz we study is that of a **truncated gaussian**, of the form
 
 $$
-    \epsilon_{\sigma, T}(t) = \frac{\pi}{2}\frac{1}{\sqrt{2\pi}\sigma T \mathrm{erf}\left(\frac{1}{2\sqrt{2} \sigma}\right)} \exp\left(-\frac{1}{2}\frac{(t - T/2)^2}{\sigma^2 T^2}\right),
+    \epsilon_{T, \sigma}(t) = \frac{\pi}{2}\frac{1}{\sqrt{2\pi}\sigma T \mathrm{erf}\left(\frac{1}{2\sqrt{2} \sigma}\right)} \exp\left(-\frac{1}{2}\frac{(t - T/2)^2}{\sigma^2 T^2}\right),
 $$
 
-where $\sigma$ the normalized pulse width, and $T$ the gate duration. One can easily check that the pulse area condition is satisfied, i.e.,
+where $T$ the gate duration, and $\sigma$ the normalized pulse width. One can easily check that the pulse area condition is satisfied, i.e.,
 
 $$
     2\int_0^T \epsilon(t) \dd t = \pi.
@@ -224,9 +224,9 @@ Then, we can define our sweeping parameters, and run the simulation by combining
 from functools import partial
 
 # simulation parameters
+n = 8
 K = 200.0
 kappa = 1.0
-n = 8
 ntsave = 401
 
 # parameters to sweep
