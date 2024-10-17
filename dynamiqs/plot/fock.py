@@ -155,4 +155,4 @@ def fock_evolution(
     ket_ticks(ax.yaxis)
 
     if colorbar:
-        add_colorbar(ax, cmap, norm, size='2%', pad='2%')
+        add_colorbar(ax, cmap, norm, size=0.02, pad=0.02)
