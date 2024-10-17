@@ -113,7 +113,7 @@ def _plot_hinton(
     # === colorbar
     if colorbar:
         norm = Normalize(colors_vmin, colors_vmax)
-        cax = add_colorbar(ax, cmap, norm, size='4%', pad='4%')
+        cax = add_colorbar(ax, cmap, norm, size=0.04, pad=0.04)
         if colors_vmin == -jnp.pi and colors_vmax == jnp.pi:
             cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
