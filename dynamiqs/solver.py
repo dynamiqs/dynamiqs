@@ -412,7 +412,8 @@ class Milstein(_DEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
