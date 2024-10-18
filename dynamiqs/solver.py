@@ -83,7 +83,7 @@ class Expm(Solver):
 
     Note-: Supported gradients
         This solver supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd].
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
@@ -93,16 +93,16 @@ class Expm(Solver):
         pass
 
 
-# === generic ODE solvers options
-class _ODESolver(Solver):
+# === generic ODE/SDE solvers options
+class _DESolver(Solver):
     pass
 
 
-class _ODEFixedStep(_ODESolver):
+class _DEFixedStep(_DESolver):
     dt: float
 
 
-class _ODEAdaptiveStep(_ODESolver):
+class _DEAdaptiveStep(_DESolver):
     rtol: float = 1e-6
     atol: float = 1e-6
     safety_factor: float = 0.9
@@ -112,7 +112,7 @@ class _ODEAdaptiveStep(_ODESolver):
 
 
 # === public solvers options
-class Euler(_ODEFixedStep):
+class Euler(_DEFixedStep):
     """Euler method (fixed step size ODE/SDE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -127,7 +127,8 @@ class Euler(_ODEFixedStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -137,7 +138,7 @@ class Euler(_ODEFixedStep):
         super().__init__(dt)
 
 
-class Rouchon1(_ODEFixedStep):
+class Rouchon1(_DEFixedStep):
     """First-order Rouchon method (fixed step size ODE solver).
 
     Args:
@@ -146,7 +147,8 @@ class Rouchon1(_ODEFixedStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -168,7 +170,7 @@ class Rouchon1(_ODEFixedStep):
     # normalize: Literal['sqrt', 'cholesky'] | None = None
 
 
-class Rouchon2(_ODEFixedStep):
+class Rouchon2(_DEFixedStep):
     """Second-order Rouchon method (fixed step size ODE solver).
 
     Warning:
@@ -180,7 +182,8 @@ class Rouchon2(_ODEFixedStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -190,7 +193,7 @@ class Rouchon2(_ODEFixedStep):
         super().__init__(dt)
 
 
-class Dopri5(_ODEAdaptiveStep):
+class Dopri5(_DEAdaptiveStep):
     """Dormand-Prince method of order 5 (adaptive step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -207,7 +210,8 @@ class Dopri5(_ODEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -225,7 +229,7 @@ class Dopri5(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Dopri8(_ODEAdaptiveStep):
+class Dopri8(_DEAdaptiveStep):
     """Dormand-Prince method of order 8 (adaptive step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -242,7 +246,8 @@ class Dopri8(_ODEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -260,7 +265,7 @@ class Dopri8(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Tsit5(_ODEAdaptiveStep):
+class Tsit5(_DEAdaptiveStep):
     """Tsitouras method of order 5 (adaptive step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
@@ -277,7 +282,8 @@ class Tsit5(_ODEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -295,7 +301,7 @@ class Tsit5(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Kvaerno3(_ODEAdaptiveStep):
+class Kvaerno3(_DEAdaptiveStep):
     """Kvaerno's method of order 3 (adaptive step size and implicit ODE solver).
 
     This method is suitable for stiff problems, typically those with Hamiltonians or
@@ -323,7 +329,8 @@ class Kvaerno3(_ODEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -341,7 +348,7 @@ class Kvaerno3(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Kvaerno5(_ODEAdaptiveStep):
+class Kvaerno5(_DEAdaptiveStep):
     """Kvaerno's method of order 5 (adaptive step size and implicit ODE solver).
 
     This method is suitable for stiff problems, typically those with Hamiltonians or
@@ -369,7 +376,8 @@ class Kvaerno5(_ODEAdaptiveStep):
     Note-: Supported gradients
         This solver supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd].
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
@@ -387,7 +395,7 @@ class Kvaerno5(_ODEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-class Milstein(_ODEAdaptiveStep):
+class Milstein(_DEAdaptiveStep):
     """Milstein method (adaptive step size SDE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)

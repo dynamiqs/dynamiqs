@@ -35,7 +35,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
                [1.+0.j],
                [0.+0.j]], dtype=complex64)
         >>> dq.to_qutip(psi)
-        Quantum object: dims = [[3], [1]], shape = (3, 1), type = ket
+        Quantum object: dims=[[3], [1]], shape=(3, 1), type='ket', dtype=Dense
         Qobj data =
         [[0.]
          [1.]
@@ -52,7 +52,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
         specified with the `dims` argument:
         >>> I = dq.eye(3, 2)
         >>> dq.to_qutip(I)
-        Quantum object: dims = [[6], [6]], shape = (6, 6), type = oper, isherm = True
+        Quantum object: dims=[[6], [6]], shape=(6, 6), type='oper', dtype=Dense, isherm=True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
          [0. 1. 0. 0. 0. 0.]
@@ -61,7 +61,7 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
         >>> dq.to_qutip(I, (3, 2))
-        Quantum object: dims = [[3, 2], [3, 2]], shape = (6, 6), type = oper, isherm = True
+        Quantum object: dims=[[3, 2], [3, 2]], shape=(6, 6), type='oper', dtype=Dense, isherm=True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
          [0. 1. 0. 0. 0. 0.]
@@ -86,21 +86,22 @@ def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Q
         return Qobj(x, dims=dims)
 
 
-def set_device(device: Literal['cpu', 'gpu', 'tpu']):
+def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
     """Configure the default device.
 
     Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
-        jax.config.update('jax_default_device', jax.devices(device)[0])
+        jax.config.update('jax_default_device', jax.devices(device)[index])
         ```
 
     See [JAX documentation on devices](https://jax.readthedocs.io/en/latest/faq.html#faq-data-placement).
 
     Args:
         device _(string 'cpu', 'gpu', or 'tpu')_: Default device.
+        index: Index of the device to use, defaults to 0.
     """
-    jax.config.update('jax_default_device', jax.devices(device)[0])
+    jax.config.update('jax_default_device', jax.devices(device)[index])
 
 
 def set_precision(precision: Literal['simple', 'double']):

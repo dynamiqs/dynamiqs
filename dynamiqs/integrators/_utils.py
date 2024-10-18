@@ -9,7 +9,7 @@ from jax._src.lib import xla_client
 from jaxtyping import ArrayLike, PyTree
 
 from .._utils import cdtype, obj_type_str
-from ..solver import Solver, _ODEAdaptiveStep
+from ..solver import Solver, _DEAdaptiveStep
 from ..time_array import (
     ConstantTimeArray,
     PWCTimeArray,
@@ -60,7 +60,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
                 'EqxRuntimeError: The maximum number of solver steps was reached. '
             )
             if eqx_max_steps_error_msg in str(e):
-                default_max_steps = _ODEAdaptiveStep.max_steps
+                default_max_steps = _DEAdaptiveStep.max_steps
                 raise RuntimeError(
                     'The maximum number of solver steps has been reached (the default'
                     f' value is `max_steps={default_max_steps:_}`). Try increasing'
@@ -70,8 +70,8 @@ def catch_xla_runtime_error(func: callable) -> callable:
             # === other errors
             raise RuntimeError(
                 'An internal JAX error interrupted the execution, please report this to'
-                ' the dynamiqs developers by opening an issue on GitHub or sending a'
-                ' message on dynamiqs Slack (links available at'
+                ' the Dynamiqs developers by opening an issue on GitHub or sending a'
+                ' message on Dynamiqs Slack (links available at'
                 ' https://www.dynamiqs.org/getting_started/lets-talk.html).'
             ) from e
 

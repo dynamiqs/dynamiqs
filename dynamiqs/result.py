@@ -24,11 +24,11 @@ def memory_bytes(x: Array) -> int:
 def memory_str(x: Array) -> str:
     mem = memory_bytes(x)
     if mem < 1024**2:
-        return f'{mem / 1024:.2f} Kb'
+        return f'{mem / 1024:.1f} Kb'
     elif mem < 1024**3:
-        return f'{mem / 1024**2:.2f} Mb'
+        return f'{mem / 1024**2:.1f} Mb'
     else:
-        return f'{mem / 1024**3:.2f} Gb'
+        return f'{mem / 1024**3:.1f} Gb'
 
 
 def array_str(x: Array | None) -> str | None:
@@ -38,11 +38,11 @@ def array_str(x: Array | None) -> str | None:
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
     ysave: Array
+    extra: PyTree | None
 
 
 class SolveSaved(Saved):
     Esave: Array | None
-    extra: PyTree | None
 
 
 class SMESolveSaved(SolveSaved):
@@ -61,19 +61,28 @@ class Result(eqx.Module):
     _saved: Saved
     infos: PyTree | None
 
+    @property
+    def extra(self) -> PyTree | None:
+        return self._saved.extra
+
     def to_qutip(self) -> Result:
         raise NotImplementedError
 
     def to_numpy(self) -> Result:
         raise NotImplementedError
 
+    def block_until_ready(self) -> Result:
+        _ = self._saved.ysave.block_until_ready()
+        return self
+
     def _str_parts(self) -> dict[str, str | None]:
         return {
-            'Solver     ': type(self.solver).__name__,
-            'Gradient   ': (
+            'Solver': type(self.solver).__name__,
+            'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
-            'Infos      ': self.infos if self.infos is not None else None,
+            'Infos': self.infos if self.infos is not None else None,
+            'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
 
     def __str__(self) -> str:
@@ -95,27 +104,17 @@ class SolveResult(Result):
 
     @property
     def final_state(self) -> Array:
-        if self.options.save_states:
-            return self.states[..., -1, :, :]
-        else:
-            return self.states
+        return self.states[..., -1, :, :]
 
     @property
     def expects(self) -> Array | None:
         return self._saved.Esave
 
-    @property
-    def extra(self) -> PyTree | None:
-        return self._saved.extra
-
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'States  ': array_str(self.states),
-            'Expects ': array_str(self.expects),
-            'Extra   ': (
-                eqx.tree_pformat(self.extra) if self.extra is not None else None
-            ),
+            'States': array_str(self.states),
+            'Expects': array_str(self.expects),
         }
 
 
@@ -126,10 +125,7 @@ class PropagatorResult(Result):
 
     @property
     def final_propagator(self) -> Array:
-        if self.options.save_states:
-            return self.propagators[..., -1, :, :]
-        else:
-            return self.propagators
+        return self.propagators[..., -1, :, :]
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
@@ -139,8 +135,10 @@ class PropagatorResult(Result):
 class SESolveResult(SolveResult):
     r"""Result of the Schrödinger equation integration.
 
+
     Attributes:
-        states _(array of shape (..., ntsave, n, 1))_: Saved states.
+        states _(array of shape (..., nsave, n, 1))_: Saved states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_state _(array of shape (..., n, 1))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
@@ -191,8 +189,9 @@ class MESolveResult(SolveResult):
     """Result of the Lindblad master equation integration.
 
     Attributes:
-        states _(array of shape (..., ntsave, n, n))_: Saved states.
-        final_state _(array of shape (..., n, 1))_: Saved final state.
+        states _(array of shape (..., nsave, n, n))_: Saved states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+        final_state _(array of shape (..., n, n))_: Saved final state.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -316,8 +315,11 @@ class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n, n))_: Saved propagators.
+        propagators _(array of shape (..., nsave, n, n))_: Saved propagators with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_propagator _(array of shape (..., n, n))_: Saved final propagator.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -339,8 +341,11 @@ class MEPropagatorResult(PropagatorResult):
     r"""Result of the Lindblad master equation integration to obtain the propagator.
 
     Attributes:
-        propagators _(array of shape (..., ntsave, n^2, n^2))_: Saved propagators.
+        propagators _(array of shape (..., nsave, n^2, n^2))_: Saved propagators with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
