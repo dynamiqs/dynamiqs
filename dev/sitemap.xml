@@ -2,534 +2,534 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://www.dynamiqs.org/stable/index.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/community/index.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/community/citing.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/community/contributing.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/community/lets-talk.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/index.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/basics/batching-simulations.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/basics/closed-systems.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/basics/computing-gradients.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/basics/open-systems.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/basics/time-dependent-operators.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/basics/workflow.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/getting_started/examples.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/getting_started/installation.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/getting_started/sharp-bits.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/documentation/getting_started/whatis.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/index.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/gradient/Autograd.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/gradient/CheckpointAutograd.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/mepropagator.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/mesolve.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/sepropagator.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/sesolve.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/smesolve.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/options/Options.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/fock.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/fock_evolution.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/gifit.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/grid.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/hinton.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/mplstyle.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/pwc_pulse.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/wigner.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/wigner_gif.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/plot/wigner_mosaic.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/random/complex.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/random/dm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/random/herm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/random/ket.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/random/psd.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/random/real.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/result/MEPropagatorResult.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/result/MESolveResult.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/result/SEPropagatorResult.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/result/SESolveResult.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Dopri5.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Dopri8.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Euler.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Expm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Kvaerno3.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Kvaerno5.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Rouchon1.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Rouchon2.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/solver/Tsit5.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/time_array/TimeArray.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/time_array/constant.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/time_array/modulated.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/time_array/pwc.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/time_array/timecallable.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/jax_utils/set_device.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/jax_utils/set_matmul_precision.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/jax_utils/set_precision.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/jax_utils/to_qutip.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/cnot.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/create.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/destroy.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/displace.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/eye.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/hadamard.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/momentum.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/number.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/parity.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/position.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/quadrature.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/rx.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/ry.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/rz.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/sgate.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/sigmam.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/sigmap.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/sigmax.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/sigmay.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/sigmaz.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/squeeze.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/tgate.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/toffoli.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/operators/zero.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/optimal_control/cd_gate.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/optimal_control/snap_gate.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/bloch_coordinates.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/braket.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/cosm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/dag.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/dissipator.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/entropy_vn.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/expect.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/expm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/fidelity.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isbra.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isdm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isherm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isket.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isop.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/lindbladian.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/norm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/overlap.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/powm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/proj.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/ptrace.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/sinm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tensor.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tobra.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/todm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/toket.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/trace.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tracemm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/unit.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/wigner.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/basis.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/basis_dm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/coherent.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/coherent_dm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/excited.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/fock.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/fock_dm.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/states/ground.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/operator_to_vector.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/sdissipator.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/slindbladian.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/spost.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/spre.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/sprepost.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/utils/vectorization/vector_to_operator.html</loc>
-         <lastmod>2024-10-17</lastmod>
+         <lastmod>2024-10-18</lastmod>
     </url>
 </urlset>
