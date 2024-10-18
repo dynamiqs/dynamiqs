@@ -238,7 +238,7 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
 
 
 # state for the diffrax solver for SMEs
-class Y(eqx.Module):
+class YSME(eqx.Module):
     rho: Array
     dYt: Array
 
@@ -247,7 +247,7 @@ class MeasurementTerm(dx.ControlTerm):
     def prod(self, vf: dx.VF, control: dx.Control) -> dx.Y:
         dW = control
         rho = (vf.rho * dW[:, None, None]).sum(0)  # (n, n)
-        return Y(rho, dW)
+        return YSME(rho, dW)
 
 
 class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
@@ -293,7 +293,7 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
             tr_Lms_rho = tracemm(Lms, y.rho)
             dYt = jnp.sqrt(self.etas) * (tr_Lms_rho + tr_Lms_rho.conj()).real  # (nLm,)
 
-            return Y(rho, dYt)
+            return YSME(rho, dYt)
 
         lindblad_term = dx.ODETerm(vector_field_deterministic)
 
@@ -319,7 +319,7 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
             # in the stochastic part, it's just dYt = deterministic + dWt
             dYt = jnp.empty(len(self.etas))
 
-            return Y(rho, dYt)
+            return YSME(rho, dYt)
 
         control = self.wiener
         measurement_term = MeasurementTerm(vector_field_stochastic, control)

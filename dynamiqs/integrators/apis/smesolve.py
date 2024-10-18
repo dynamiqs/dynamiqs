@@ -25,7 +25,7 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
-from ..core.diffrax_integrator import Y
+from ..core.diffrax_integrator import YSME
 from ..smesolve.diffrax_integrator import (
     SMESolveEulerIntegrator,
     SMESolveMilsteinIntegrator,
@@ -298,7 +298,7 @@ def _smesolve_single_trajectory(
     # === init solver
     integrator = integrator_class(
         ts=tsave,
-        y0=Y(rho0, jnp.empty(len(etas))),
+        y0=YSME(rho0, jnp.empty(len(etas))),
         solver=solver,
         gradient=gradient,
         options=options,
