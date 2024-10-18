@@ -10,7 +10,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...result import Result
+from ...result import Result, SMESolveSaved, Saved
 from ...utils.quantum_utils.general import dag, trace, tracemm
 from .abstract_integrator import BaseIntegrator, SMEBaseIntegrator
 from .save_mixin import SaveMixin
@@ -87,12 +87,15 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             )
 
         # === collect and return results
-        saved = self.postprocess_saved(*solution.ys)
+        saved = self.postprocess_saved(self.solution_to_saved(solution), solution.ys[1])
         return self.result(saved, infos=self.infos(solution.stats))
 
     @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
         pass
+
+    def solution_to_saved(self, solution: dx.Solution) -> Saved:
+        return solution.ys[0]
 
 
 class FixedStepDiffraxIntegrator(DiffraxIntegrator):
@@ -252,23 +255,21 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
 
     # subclasses should implement: diffrax_solver, discontinuity_ts
 
-    wiener: dx.VirtualBrownianTree
-
     @property
     def saveat(self) -> dx.SaveAt:
+        saveat = super().saveat
+
         # === define save function to save measurement results
         fn = lambda t, y, args: y.dYt  # noqa: ARG005
         save_c = dx.SubSaveAt(ts=self.tmeas, fn=fn)  # save measurement results
-        return super().saveat.subs.append(save_c)
+        saveat.subs.append(save_c)
 
-    def __init__(self, *args):
-        super().__init__(*args)
+        return saveat
 
-        # === define initial augmented state
-        self.y0 = Y(self.y0, jnp.empty(len(self.etas)))
-
+    @property
+    def wiener(self) -> dx.VirtualBrownianTree:
         # === define wiener process
-        self.wiener = dx.VirtualBrownianTree(
+        return dx.VirtualBrownianTree(
             self.t0, self.t1, tol=1e-3, shape=(len(self.etas),), key=self.key
         )  # todo: fix hard-coded tol
 
@@ -325,3 +326,8 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
 
         # === combine and return both terms
         return dx.MultiTerm(lindblad_term, measurement_term)
+
+    def solution_to_saved(self, solution: dx.Solution) -> Saved:
+        saved = solution.ys[0]
+        Jsave = solution.ys[2]
+        return SMESolveSaved(saved.ysave, saved.extra, saved.Esave, Jsave)
