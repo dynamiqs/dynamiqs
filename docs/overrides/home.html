@@ -4,8 +4,38 @@
 {% block tabs %}
 {{ super() }}
 
-<!-- Link css stylesheet for homepage -->
-<link rel="stylesheet" type="text/css" href="../stylesheets/home.css" />
+<!-- Additional styles for landing page -->
+<style>
+
+/* Application header should be static for the landing page */
+.md-header {
+    position: initial;
+}
+
+/* Remove spacing, as we cannot hide it completely */
+.md-main__inner {
+    margin: 0;
+}
+
+/* Hide main content for now */
+.md-content {
+    display: none;
+}
+
+/* Hide table of contents */
+@media screen and (min-width: 60em) {
+    .md-sidebar--secondary {
+    display: none;
+    }
+}
+
+/* Hide navigation */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+    display: none;
+    }
+}
+</style>
 
 <!-- Main site Entry button descriptions -->
 <section class="tx-container">
@@ -15,7 +45,7 @@
             <img src="media/logo-white.png" draggable="false">
         </div>
         <div class="tx-hero__content">
-          <h1> dynamiqs </h1>
+          <h1> Dynamiqs </h1>
           <p>High-performance quantum systems simulation with JAX.</p>
           <a href="{{ page.next_page.url | url }}" title="{{ page.next_page.title | striptags }}" class="md-button md-button--primary">
             Get started
@@ -46,7 +76,7 @@
             Our quantum solvers are fully differentiable for use in optimal control, parameter estimation, experiment fitting, etc.
         </p>
         <p>
-            <a href="../documentation/basics/computing-gradients.html">
+            <a href="./documentation/basics/computing-gradients.html">
                 Computing gradients
             </a>
         </p>
@@ -59,7 +89,7 @@
             Transition seamlessly between CPU, GPU and TPU simulations, and run batches of simulations at once.
         </p>
         <p>
-            <a href="../documentation/getting_started/examples.html">
+            <a href="./documentation/getting_started/examples.html">
                 GPU support
             </a>
         </p>
@@ -83,8 +113,10 @@
     <div class="hr">
     </div>
 </div>
-
-
 {% endblock %}
+
+<!-- Content -->
 {% block content %}{% endblock %}
+
+<!-- Application footer -->
 {% block footer %}{% endblock %}

@@ -148,7 +148,9 @@ def smesolve(
         solver: Solver for the integration. Defaults to
             [`dq.solver.Milstein`][dynamiqs.solver.Milstein] (supported:
             [`Milstein`][dynamiqs.solver.Milstein], [`Euler`][dynamiqs.solver.Euler]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
