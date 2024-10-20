@@ -586,10 +586,10 @@ def rx(theta: ArrayLike) -> Array:
         (5, 2, 2)
     """
     theta = jnp.asarray(theta)
-    cos = jnp.cos(theta / 2)
-    sin = jnp.sin(theta / 2)
-
-    return jnp.stack([jnp.array([cos, -1j * sin]), jnp.array([-1j * sin, cos])], axis=0)
+    c = jnp.cos(theta / 2)
+    s = jnp.sin(theta / 2)
+    rx = jnp.array([[c, -1j * s], [-1j * s, c]], dtype=cdtype())
+    return jnp.moveaxis(rx, (0, 1), (-2, -1))
 
 
 def ry(theta: ArrayLike) -> Array:
@@ -617,12 +617,10 @@ def ry(theta: ArrayLike) -> Array:
         (5, 2, 2)
     """
     theta = jnp.asarray(theta)
-    cos = jnp.cos(theta / 2)
-    sin = jnp.sin(theta / 2)
-
-    return jnp.stack(
-        [jnp.array([cos + 0j, -sin + 0j]), jnp.array([sin + 0j, cos + 0j])], axis=0
-    )
+    c = jnp.cos(theta / 2)
+    s = jnp.sin(theta / 2)
+    ry = jnp.array([[c, -s], [s, c]], dtype=cdtype())
+    return jnp.moveaxis(ry, (0, 1), (-2, -1))
 
 
 def rz(theta: ArrayLike) -> Array:
@@ -650,14 +648,10 @@ def rz(theta: ArrayLike) -> Array:
         (5, 2, 2)
     """
     theta = jnp.asarray(theta)
-
-    return jnp.stack(
-        [
-            jnp.array([jnp.exp(-1j * theta / 2), 0 + 0j]),
-            jnp.array([0 + 0j, jnp.exp(1j * theta / 2)]),
-        ],
-        axis=0,
+    rz = jnp.array(
+        [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
     )
+    return jnp.moveaxis(rz, (0, 1), (-2, -1))
 
 
 def sgate() -> Array:
