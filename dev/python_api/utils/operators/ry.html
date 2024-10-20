@@ -4524,7 +4524,7 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ry</span><span class="p">(</span><span class="n">theta</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ry</span><span class="p">(</span><span class="n">theta</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4546,6 +4546,8 @@ $$</p>
         <li class="field-body">
           <b>theta</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(array_like of shape (...))              </i>
           – <p>Rotation angle <span class="arithmatex">\(\theta\)</span> in radians.</p>
         </li>
     </ul>
@@ -4556,11 +4558,11 @@ $$</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>Array</code>
-        – <p><em>(array of shape (2, 2))</em> <span class="arithmatex">\(R_y(\theta)\)</span> gate.</p>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (..., 2, 2))</em> <span class="arithmatex">\(R_y(\theta)\)</span> gate.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (2, 2))</em> <span class="arithmatex">\(R_y(\theta)\)</span> gate.</p></span>
+      <span class="field-body"><p><em>(array of shape (..., 2, 2))</em> <span class="arithmatex">\(R_y(\theta)\)</span> gate.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
@@ -4569,6 +4571,8 @@ $$</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
 <span class="go">Array([[-0.+0.j, -1.+0.j],</span>
 <span class="go">       [ 1.+0.j, -0.+0.j]], dtype=complex64)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">ry</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(5, 2, 2)</span>
 </code></pre></div>
 
     </div>
