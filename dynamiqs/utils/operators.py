@@ -562,7 +562,7 @@ def hadamard(n: int = 1) -> Array:
 
 
 def rx(theta: ArrayLike) -> Array:
-    r"""Returns the vectorized $R_x(\theta)$ rotation gate.
+    r"""Returns the $R_x(\theta)$ rotation gate.
 
     It is defined by
     $$
@@ -593,7 +593,7 @@ def rx(theta: ArrayLike) -> Array:
 
 
 def ry(theta: ArrayLike) -> Array:
-    r"""Returns the vectorized $R_y(\theta)$ rotation gate.
+    r"""Returns the $R_y(\theta)$ rotation gate.
 
     It is defined by
     $$
@@ -626,7 +626,7 @@ def ry(theta: ArrayLike) -> Array:
 
 
 def rz(theta: ArrayLike) -> Array:
-    r"""Returns the vectorized $R_z(\theta)$ rotation gate.
+    r"""Returns the $R_z(\theta)$ rotation gate.
 
     It is defined by
     $$
