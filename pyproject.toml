@@ -53,7 +53,7 @@ dev = [
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
-    "mkdocstrings[python]",
+    "mkdocstrings[python]!=1.12.0", # bug with parsing strings in signatures, see https://github.com/mkdocstrings/python/issues/191
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
     "mkdocs-section-index",
@@ -63,6 +63,7 @@ dev = [
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
+    "mike",
 ]
 
 [tool.ruff]
@@ -135,11 +136,11 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs_code/*.{png,gif} && pytest dynamiqs'
+cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs_docs/*.{png,gif} && pytest docs'
+cmd = 'echo "\n>>> pytest docs" && python docs/remove_figs.py docs/figs_docs && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]

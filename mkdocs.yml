@@ -46,9 +46,14 @@ extra:
       link: https://github.com/dynamiqs/dynamiqs
     - icon: fontawesome/brands/slack
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
+  version:
+    provider: mike
+    alias: true
+    default: stable
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
+  - stylesheets/home.css
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
@@ -85,6 +90,8 @@ plugins:
             line_length: 88
             show_bases: false
             merge_init_into_class: true
+  - mike:
+      canonical_version: stable
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
