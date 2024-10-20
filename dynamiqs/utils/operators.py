@@ -580,8 +580,8 @@ def rx(theta: ArrayLike) -> Array:
 
     Examples:
         >>> dq.rx(jnp.pi)
-        Array([[-0.+0.j, 0.-1.j],
-               [0.-1.j, -0.+0.j]], dtype=complex64)
+        Array([[-0.+0.j,  0.-1.j],
+               [ 0.-1.j, -0.+0.j]], dtype=complex64)
         >>> dq.rx([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
         (5, 2, 2)
     """
@@ -648,8 +648,10 @@ def rz(theta: ArrayLike) -> Array:
         (5, 2, 2)
     """
     theta = jnp.asarray(theta)
+    zero = jnp.zeros_like(theta)
     rz = jnp.array(
-        [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
+        [[jnp.exp(-1j * theta / 2), zero], [zero, jnp.exp(1j * theta / 2)]],
+        dtype=cdtype(),
     )
     return jnp.moveaxis(rz, (0, 1), (-2, -1))
 
