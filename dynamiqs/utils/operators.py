@@ -582,8 +582,8 @@ def rx(theta: ArrayLike) -> Array:
         >>> dq.rx(jnp.pi)
         Array([[-0.+0.j, 0.-1.j],
                [0.-1.j, -0.+0.j]], dtype=complex64)
-        >>> dq.rx(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
-        (3, 2, 2)
+        >>> dq.rx([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
+        (5, 2, 2)
     """
     theta = jnp.asarray(theta)
     cos = jnp.cos(theta / 2)
@@ -613,8 +613,8 @@ def ry(theta: ArrayLike) -> Array:
         >>> dq.ry(jnp.pi)
         Array([[-0.+0.j, -1.+0.j],
                [ 1.+0.j, -0.+0.j]], dtype=complex64)
-        >>> dq.ry(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
-        (3, 2, 2)
+        >>> dq.ry([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
+        (5, 2, 2)
     """
     theta = jnp.asarray(theta)
     cos = jnp.cos(theta / 2)
@@ -646,8 +646,8 @@ def rz(theta: ArrayLike) -> Array:
         >>> dq.rz(jnp.pi)
         Array([[-0.-1.j,  0.+0.j],
                [ 0.+0.j, -0.+1.j]], dtype=complex64)
-        >>> dq.rz(jnp.array([jnp.pi, 0, jnp.pi/2])).shape
-        (3, 2, 2)
+        >>> dq.rz([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
+        (5, 2, 2)
     """
     theta = jnp.asarray(theta)
 
