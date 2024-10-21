@@ -341,11 +341,17 @@ class MCSolveResult(eqx.Module):
 
     @property
     def expects(self) -> Array | None:
-        return self._average_and_sum(self._no_jump_res.expects, self._jump_res.expects)
+        if self._no_jump_res.expects is not None:
+            return self._average_and_sum(
+                self._no_jump_res.expects, self._jump_res.expects
+            )
+        return None
 
     @property
     def extra(self) -> PyTree | None:
-        return self._average_and_sum(self._no_jump_res.extra, self._jump_res.extra)
+        if self._no_jump_res.extra is not None:
+            return self._average_and_sum(self._no_jump_res.extra, self._jump_res.extra)
+        return None
 
     @property
     def infos(self) -> PyTree | None:
