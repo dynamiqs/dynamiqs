@@ -10,11 +10,11 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...result import Result, SMESolveSaved, Saved
+from ...result import Result, DSMESolveSaved, Saved
 from ...utils.quantum_utils.general import dag, trace
-from .abstract_integrator import BaseIntegrator, SMEBaseIntegrator
+from .abstract_integrator import BaseIntegrator, DSMEBaseIntegrator
 from .save_mixin import SaveMixin
-from .interfaces import SEInterface, MEInterface, SMEInterface
+from .interfaces import SEInterface, MEInterface, DSMEInterface
 
 
 class DiffraxIntegrator(BaseIntegrator, SaveMixin):
@@ -237,15 +237,15 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         return dx.ODETerm(vector_field)
 
 
-# state for the diffrax solver for SMEs
-class YSME(eqx.Module):
+# state for the diffrax solver for diffusive SMEs
+class YDSME(eqx.Module):
     # The SME state at each time is (rho, Y) with rho the state (integrated from initial
     # to current time) and Y the signal (integrated from initial to current time).
     rho: Array
     Y: Array
 
 
-class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
+class DSMEDiffraxIntegrator(DiffraxIntegrator, DSMEBaseIntegrator, DSMEInterface):
     """Integrator solving the diffusive SME with Diffrax."""
 
     # subclasses should implement: diffrax_solver, discontinuity_ts
@@ -306,7 +306,7 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
             # signal: Tr[Ccal(rho)]
             dYt = trace(Ccal(t, y.rho)).real  # (nLm,)
 
-            return YSME(drho, dYt)
+            return YDSME(drho, dYt)
 
         deterministic_term = dx.ODETerm(vector_field_deterministic)
 
@@ -319,7 +319,7 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
             # signal: 1
             dYt = 1
 
-            return YSME(drho, dYt)
+            return YDSME(drho, dYt)
 
         control = self.wiener
 
@@ -328,7 +328,7 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
             def prod(self, vf: dx.VF, control: dx.Control) -> dx.Y:
                 dW = control
                 drho = (vf.rho * dW[:, None, None]).sum(0)  # (n, n)
-                return YSME(drho, dW)
+                return YDSME(drho, dW)
 
         measurement_term = MeasurementTerm(vector_field_stochastic, control)
 
@@ -338,4 +338,4 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
     def solution_to_saved(self, solution: dx.Solution) -> Saved:
         saved = solution.ys[0]
         Ysave = solution.ys[2]
-        return SMESolveSaved(saved.ysave, saved.extra, saved.Esave, Ysave)
+        return DSMESolveSaved(saved.ysave, saved.extra, saved.Esave, Ysave)

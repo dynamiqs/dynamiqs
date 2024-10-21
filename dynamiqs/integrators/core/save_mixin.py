@@ -50,8 +50,10 @@ class SolveSaveMixin(SaveMixin, SolveInterface):
         return saved
 
 
-class SMESolveSaveMixin(SolveSaveMixin):
-    """Mixin to assist SME integrators computing time evolution with data saving."""
+class DSMESolveSaveMixin(SolveSaveMixin):
+    """Mixin to assist diffusive SME integrators computing time evolution with data
+    saving.
+    """
 
     def save(self, y: PyTree) -> Saved:
         return super().save(y.rho)

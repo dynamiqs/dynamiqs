@@ -11,7 +11,7 @@ from .solver import Solver
 __all__ = [
     'SESolveResult',
     'MESolveResult',
-    'SMESolveResult',
+    'DSMESolveResult',
     'SEPropagatorResult',
     'MEPropagatorResult',
 ]
@@ -45,7 +45,7 @@ class SolveSaved(Saved):
     Esave: Array | None
 
 
-class SMESolveSaved(SolveSaved):
+class DSMESolveSaved(SolveSaved):
     Jsave: Array
 
 
@@ -118,7 +118,7 @@ class SolveResult(Result):
         }
 
 
-class _SMESolveResult(SolveResult):
+class _DSMESolveResult(SolveResult):
     tmeas: Array
     keys: PRNGKeyArray
 
@@ -252,7 +252,7 @@ class MESolveResult(SolveResult):
     """
 
 
-class SMESolveResult(_SMESolveResult):
+class DSMESolveResult(_DSMESolveResult):
     r"""Result of the diffusive SME integration.
 
     For the shape indications we name `ntrajs` the number of trajectories
