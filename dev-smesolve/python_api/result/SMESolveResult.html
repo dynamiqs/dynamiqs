@@ -4588,8 +4588,9 @@ measurement efficiency is not null.</p>
         <li class="field-body">
           <b>states</b>
               <i>
-(array of shape (..., ntrajs, ntsave, n, n))              </i>
-          – <p>Saved states.</p>
+(array of shape (..., ntrajs, nsave, n, n))              </i>
+          – <p>Saved states with
+<code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>options.save_states</code> is set to <code>False</code>.</p>
         </li>
         <li class="field-body">
           <b>final_state</b>

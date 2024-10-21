@@ -4642,11 +4642,12 @@ $$</p>
   <summary>Signal normalisation</summary>
   <p>Sometimes the signals are defined with a different but equivalent normalisation
 <span class="arithmatex">\(\dd Y_k' = \dd Y_k/(2\sqrt{\eta_k})\)</span>.</p>
-</details>        <p>The signals <span class="arithmatex">\(I_k\)</span> are singular quantities, the solver returns the averaged signals
-<span class="arithmatex">\(J_k\)</span> defined for a time interval <span class="arithmatex">\([t_0, t_1)\)</span> by:
+</details>        <p>The signals <span class="arithmatex">\(I_k\)</span> are singular quantities, the solver returns the time-averaged
+signals <span class="arithmatex">\(J_k^{(t_0, t_1)}\)</span> defined for a time interval <span class="arithmatex">\([t_0, t_1)\)</span> by:
 $$
-    J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\, \dt
-    = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t).
+    J_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+    = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
+    = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
 $$
 The time intervals for integration are defined by the argument <code>tmeas</code>, which
 defines <code>len(tmeas) - 1</code> intervals. By default, <code>tmeas = tsave</code>, so the signals
@@ -4666,8 +4667,8 @@ tutorial for more details.</p>
  >
   <summary>Running multiple simulations concurrently</summary>
   <p>The Hamiltonian <code>H</code> and the initial density matrix <code>rho0</code> can be batched to
-solve multiple master equations concurrently. All other arguments are common to
-every batch. See the
+solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. All other arguments are common to every batch.
+See the
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
 </details>
@@ -4776,7 +4777,7 @@ details.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>SMESolveResult</code>
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.result.SMESolveResult" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult">SMESolveResult</a></code>
         – <p><a class="autorefs autorefs-internal" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult"><code>dq.SMESolveResult</code></a> object holding the result of the
 <abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code> and <code>expects</code>
 to access saved quantities, more details in
