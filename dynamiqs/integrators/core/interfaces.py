@@ -22,7 +22,7 @@ class MEInterface(eqx.Module):
     Ls: list[TimeArray]
 
 
-class SMEInterface(eqx.Module):
+class DSMEInterface(eqx.Module):
     """Interface for the diffusive SME."""
 
     H: TimeArray

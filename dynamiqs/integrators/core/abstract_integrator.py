@@ -10,20 +10,20 @@ from jaxtyping import PRNGKeyArray, PyTree, Scalar
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...result import (
+    DSMESolveResult,
     MEPropagatorResult,
     MESolveResult,
     Result,
     Saved,
     SEPropagatorResult,
     SESolveResult,
-    SMESolveResult,
 )
 from ...solver import Solver
 from .interfaces import (
+    DSMEInterface,
     MEInterface,
     OptionsInterface,
     SEInterface,
-    SMEInterface,
     SolveInterface,
 )
 
@@ -79,7 +79,7 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
         )
 
 
-class SMEBaseIntegrator(BaseIntegrator):
+class DSMEBaseIntegrator(BaseIntegrator):
     """Integrator stochastically evolving an initial state over a set of times, and
     saving measurement results at another set of times.
 
@@ -127,7 +127,7 @@ class MEIntegrator(BaseIntegrator, MEInterface):
         return _concatenate_sort(*ts)
 
 
-class SMEIntegrator(SMEBaseIntegrator, SMEInterface):
+class DSMEIntegrator(DSMEBaseIntegrator, DSMEInterface):
     """Integrator for the diffusive SME."""
 
     # subclasses should implement: run()
@@ -170,9 +170,9 @@ class MESolveIntegrator(MEIntegrator, SolveInterface):
     RESULT_CLASS = MESolveResult
 
 
-class SMESolveIntegrator(SMEIntegrator, SolveInterface):
+class DSMESolveIntegrator(DSMEIntegrator, SolveInterface):
     """Integrator computing the time evolution of the diffusive SME."""
 
     # subclasses should implement: run()
 
-    RESULT_CLASS = SMESolveResult
+    RESULT_CLASS = DSMESolveResult

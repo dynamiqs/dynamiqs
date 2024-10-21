@@ -14,7 +14,7 @@ from ..._checks import check_shape, check_times
 from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
-from ...result import SMESolveResult
+from ...result import DSMESolveResult
 from ...solver import Euler, Milstein, Solver
 from ...time_array import Shape, TimeArray
 from ...utils.quantum_utils.general import todm
@@ -25,14 +25,14 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
-from ..core.diffrax_integrator import YSME
-from ..smesolve.diffrax_integrator import (
-    SMESolveEulerIntegrator,
-    SMESolveMilsteinIntegrator,
+from ..core.diffrax_integrator import YDSME
+from ..dsmesolve.diffrax_integrator import (
+    DSMESolveEulerIntegrator,
+    DSMESolveMilsteinIntegrator,
 )
 
 
-def smesolve(
+def dsmesolve(
     H: ArrayLike | TimeArray,
     jump_ops: list[ArrayLike | TimeArray],
     etas: ArrayLike,
@@ -45,7 +45,7 @@ def smesolve(
     solver: Solver = Milstein(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> SMESolveResult:
+) -> DSMESolveResult:
     r"""Solve the diffusive stochastic master equation (SME).
 
     Warning:
@@ -156,10 +156,10 @@ def smesolve(
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.SMESolveResult`][dynamiqs.SMESolveResult] object holding the result of the
+        [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult] object holding the result of the
             SME integration. Use the attributes `states`, `measurements` and `expects`
             to access saved quantities, more details in
-            [`dq.SMESolveResult`][dynamiqs.SMESolveResult].
+            [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult].
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
@@ -173,7 +173,7 @@ def smesolve(
         exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_smesolve_args(H, jump_ops, etas, rho0, exp_ops)
+    _check_dsmesolve_args(H, jump_ops, etas, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
     tmeas = check_times(tmeas, 'tmeas')
 
@@ -188,7 +188,7 @@ def smesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _vectorized_smesolve(
+    return _vectorized_dsmesolve(
         H,
         dissipative_ops,
         measured_ops,
@@ -206,7 +206,7 @@ def smesolve(
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
-def _vectorized_smesolve(
+def _vectorized_dsmesolve(
     H: TimeArray,
     dissipative_ops: list[TimeArray],
     measured_ops: list[TimeArray],
@@ -219,14 +219,14 @@ def _vectorized_smesolve(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> SMESolveResult:
+) -> DSMESolveResult:
     # === vectorize function
     # we vectorize over H and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = SMESolveResult(False, False, False, False, 0, 0, False, 0)
+    out_axes = DSMESolveResult(False, False, False, False, 0, 0, False, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -254,9 +254,9 @@ def _vectorized_smesolve(
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_smesolve_single_trajectory, n_batch, out_axes)
+        f = _cartesian_vectorize(_dsmesolve_single_trajectory, n_batch, out_axes)
     else:
-        f = _flat_vectorize(_smesolve_single_trajectory, n_batch, out_axes)
+        f = _flat_vectorize(_dsmesolve_single_trajectory, n_batch, out_axes)
 
     # === apply vectorized function
     return f(
@@ -275,7 +275,7 @@ def _vectorized_smesolve(
     )
 
 
-def _smesolve_single_trajectory(
+def _dsmesolve_single_trajectory(
     H: TimeArray,
     dissipative_ops: list[TimeArray],
     measured_ops: list[TimeArray],
@@ -288,9 +288,12 @@ def _smesolve_single_trajectory(
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
-) -> SMESolveResult:
+) -> DSMESolveResult:
     # === select integrator class
-    integrators = {Euler: SMESolveEulerIntegrator, Milstein: SMESolveMilsteinIntegrator}
+    integrators = {
+        Euler: DSMESolveEulerIntegrator,
+        Milstein: DSMESolveMilsteinIntegrator,
+    }
     integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
@@ -299,7 +302,7 @@ def _smesolve_single_trajectory(
     # === init solver
     integrator = integrator_class(
         ts=tsave,
-        y0=YSME(rho0, jnp.empty(len(etas))),
+        y0=YDSME(rho0, jnp.empty(len(etas))),
         solver=solver,
         gradient=gradient,
         options=options,
@@ -319,7 +322,7 @@ def _smesolve_single_trajectory(
     return result  # noqa: RET504
 
 
-def _check_smesolve_args(
+def _check_dsmesolve_args(
     H: TimeArray,
     jump_ops: list[TimeArray],
     etas: Array,
