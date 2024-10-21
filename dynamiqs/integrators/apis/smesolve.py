@@ -97,11 +97,12 @@ def smesolve(
         Sometimes the signals are defined with a different but equivalent normalisation
         $\dd Y_k' = \dd Y_k/(2\sqrt{\eta_k})$.
 
-    The signals $I_k$ are singular quantities, the solver returns the averaged signals
-    $J_k$ defined for a time interval $[t_0, t_1)$ by:
+    The signals $I_k$ are singular quantities, the solver returns the time-averaged
+    signals $J_k^{(t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
     $$
-        J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\, \dt
-        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t).
+        J_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
+        = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
     $$
     The time intervals for integration are defined by the argument `tmeas`, which
     defines `len(tmeas) - 1` intervals. By default, `tmeas = tsave`, so the signals
