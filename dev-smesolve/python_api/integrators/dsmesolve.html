@@ -8,7 +8,7 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/smesolve.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/dsmesolve.html">
 
 
     <link rel="prev" href="mesolve.html">
@@ -22,7 +22,7 @@
 
     
       
-        <title>smesolve - Dynamiqs</title>
+        <title>dsmesolve - Dynamiqs</title>
       
     
     
@@ -107,7 +107,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.integrators.smesolve" class="md-skip">
+        <a href="#dynamiqs.integrators.dsmesolve" class="md-skip">
           Skip to content
         </a>
       
@@ -157,7 +157,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                smesolve
+                dsmesolve
               
             </span>
           </div>
@@ -991,11 +991,11 @@
         
       
       
-      <a href="smesolve.html" class="md-nav__link md-nav__link--active">
+      <a href="dsmesolve.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    smesolve
+    dsmesolve
   </span>
   
 
@@ -1774,11 +1774,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/SMESolveResult.html" class="md-nav__link">
+      <a href="../result/DSMESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    SMESolveResult
+    DSMESolveResult
   </span>
   
 
@@ -4563,12 +4563,12 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.integrators.smesolve" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.smesolve</span>
+<h1 id="dynamiqs.integrators.dsmesolve" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.dsmesolve</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">smesolve</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">dsmesolve</span><span class="p">(</span>
     <span class="n">H</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="n">TimeArray</span><span class="p">,</span>
     <span class="n">jump_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="n">TimeArray</span><span class="p">],</span>
     <span class="n">etas</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
@@ -4581,7 +4581,7 @@
     <span class="n">solver</span><span class="p">:</span> <span class="n">Solver</span> <span class="o">=</span> <span class="n">Milstein</span><span class="p">(),</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SMESolveResult</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DSMESolveResult</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4777,17 +4777,17 @@ details.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.result.SMESolveResult" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult">SMESolveResult</a></code>
-        – <p><a class="autorefs autorefs-internal" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult"><code>dq.SMESolveResult</code></a> object holding the result of the
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.result.DSMESolveResult" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult">DSMESolveResult</a></code>
+        – <p><a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a> object holding the result of the
 <abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code> and <code>expects</code>
 to access saved quantities, more details in
-<a class="autorefs autorefs-internal" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult"><code>dq.SMESolveResult</code></a>.</p>
+<a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><a class="autorefs autorefs-internal" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult"><code>dq.SMESolveResult</code></a> object holding the result of the
+      <span class="field-body"><p><a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a> object holding the result of the
 <abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code> and <code>expects</code>
 to access saved quantities, more details in
-<a class="autorefs autorefs-internal" href="../result/SMESolveResult.html#dynamiqs.result.SMESolveResult"><code>dq.SMESolveResult</code></a>.</p></span>
+<a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a>.</p></span>
 
     </div>
 

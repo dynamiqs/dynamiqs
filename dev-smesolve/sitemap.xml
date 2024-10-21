@@ -77,6 +77,10 @@
          <lastmod>2024-10-21</lastmod>
     </url>
     <url>
+         <loc>https://www.dynamiqs.org/stable/python_api/integrators/dsmesolve.html</loc>
+         <lastmod>2024-10-21</lastmod>
+    </url>
+    <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/mepropagator.html</loc>
          <lastmod>2024-10-21</lastmod>
     </url>
@@ -90,10 +94,6 @@
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/integrators/sesolve.html</loc>
-         <lastmod>2024-10-21</lastmod>
-    </url>
-    <url>
-         <loc>https://www.dynamiqs.org/stable/python_api/integrators/smesolve.html</loc>
          <lastmod>2024-10-21</lastmod>
     </url>
     <url>
@@ -165,6 +165,10 @@
          <lastmod>2024-10-21</lastmod>
     </url>
     <url>
+         <loc>https://www.dynamiqs.org/stable/python_api/result/DSMESolveResult.html</loc>
+         <lastmod>2024-10-21</lastmod>
+    </url>
+    <url>
          <loc>https://www.dynamiqs.org/stable/python_api/result/MEPropagatorResult.html</loc>
          <lastmod>2024-10-21</lastmod>
     </url>
@@ -178,10 +182,6 @@
     </url>
     <url>
          <loc>https://www.dynamiqs.org/stable/python_api/result/SESolveResult.html</loc>
-         <lastmod>2024-10-21</lastmod>
-    </url>
-    <url>
-         <loc>https://www.dynamiqs.org/stable/python_api/result/SMESolveResult.html</loc>
          <lastmod>2024-10-21</lastmod>
     </url>
     <url>
