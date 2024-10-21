@@ -63,7 +63,7 @@ class DSMESolveSaveMixin(SolveSaveMixin):
         # Diffrax integrates the state YSME from t0 to t1. In this case, the state is
         # (rho, Y). So we recover the signal J^{(t0, t1)} by simply diffing the
         # resulting Y array.
-        Jsave = jnp.diff(saved.Ysave, axis=0)
+        Jsave = jnp.diff(saved.Jsave, axis=0)
         # reorder Jsave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
         Jsave = Jsave.swapaxes(-1, -2)
         return eqx.tree_at(lambda x: x.Jsave, saved, Jsave)
