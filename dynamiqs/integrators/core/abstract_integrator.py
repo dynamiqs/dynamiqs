@@ -80,11 +80,15 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
 
 
 class SMEBaseIntegrator(BaseIntegrator):
-    """Integrator evolving an initial state over a set of times, and solving
-    measurement results over another set of times.
+    """Integrator stochastically evolving an initial state over a set of times, and
+    saving measurement results at another set of times.
 
-    Bla
+    In addition to `BaseIntegrator`, it includes a PRNG key `key` for the stochastic
+    evolution, as well as the set of times `tmeas` at which measurement results are
+    saved.
     """
+
+    # subclasses should implement: discontinuity_ts, run()
 
     tmeas: Array
     key: PRNGKeyArray

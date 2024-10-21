@@ -25,6 +25,7 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
+from ..core.diffrax_integrator import YSME
 from ..smesolve.diffrax_integrator import (
     SMESolveEulerIntegrator,
     SMESolveMilsteinIntegrator,
@@ -96,11 +97,12 @@ def smesolve(
         Sometimes the signals are defined with a different but equivalent normalisation
         $\dd Y_k' = \dd Y_k/(2\sqrt{\eta_k})$.
 
-    The signals $I_k$ are singular quantities, the solver returns the averaged signals
-    $J_k$ defined for a time interval $[t_0, t_1)$ by:
+    The signals $I_k$ are singular quantities, the solver returns the time-averaged
+    signals $J_k^{(t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
     $$
-        J_k([t_0, t_1)) = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\, \dt
-        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t).
+        J_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
+        = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
     $$
     The time intervals for integration are defined by the argument `tmeas`, which
     defines `len(tmeas) - 1` intervals. By default, `tmeas = tsave`, so the signals
@@ -116,8 +118,8 @@ def smesolve(
 
     Note-: Running multiple simulations concurrently
         The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
-        solve multiple master equations concurrently. All other arguments are common to
-        every batch. See the
+        solve multiple SMEs concurrently. All other arguments are common to every batch.
+        See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
 
@@ -167,7 +169,8 @@ def smesolve(
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     tmeas = jnp.asarray(tmeas) if tmeas is not None else tsave
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    if exp_ops is not None:
+        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_smesolve_args(H, jump_ops, etas, rho0, exp_ops)
@@ -295,18 +298,18 @@ def _smesolve_single_trajectory(
 
     # === init solver
     integrator = integrator_class(
-        tsave,
-        rho0,
-        H,
-        solver,
-        gradient,
-        options,
-        tmeas,
-        key,
-        dissipative_ops,
-        measured_ops,
-        etas,
-        exp_ops,
+        ts=tsave,
+        y0=YSME(rho0, jnp.empty(len(etas))),
+        solver=solver,
+        gradient=gradient,
+        options=options,
+        tmeas=tmeas,
+        key=key,
+        H=H,
+        Lcs=dissipative_ops,
+        Lms=measured_ops,
+        etas=etas,
+        Es=exp_ops,
     )
 
     # === run solver
@@ -326,12 +329,12 @@ def _check_smesolve_args(
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check jump_ops
+    # === check jump_ops shape
     for i, L in enumerate(jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
 
     if len(jump_ops) == 0:
-        logging.warn(
+        logging.warning(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )

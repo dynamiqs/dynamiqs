@@ -10,8 +10,8 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...result import Result
-from ...utils.quantum_utils.general import dag, trace, tracemm
+from ...result import Result, SMESolveSaved, Saved
+from ...utils.quantum_utils.general import dag, trace
 from .abstract_integrator import BaseIntegrator, SMEBaseIntegrator
 from .save_mixin import SaveMixin
 from .interfaces import SEInterface, MEInterface, SMEInterface
@@ -55,6 +55,9 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
         return dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
+    def solution_to_saved(self, solution: dx.Solution) -> Saved:
+        return solution.ys[0]
+
     def run(self) -> Result:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
@@ -87,7 +90,7 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             )
 
         # === collect and return results
-        saved = self.postprocess_saved(*solution.ys)
+        saved = self.postprocess_saved(self.solution_to_saved(solution), solution.ys[1])
         return self.result(saved, infos=self.infos(solution.stats))
 
     @abstractmethod
@@ -235,16 +238,11 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
 
 
 # state for the diffrax solver for SMEs
-class Y(eqx.Module):
+class YSME(eqx.Module):
+    # The SME state at each time is (rho, Y) with rho the state (integrated from initial
+    # to current time) and Y the signal (integrated from initial to current time).
     rho: Array
-    dYt: Array
-
-
-class MeasurementTerm(dx.ControlTerm):
-    def prod(self, vf: dx.VF, control: dx.Control) -> dx.Y:
-        dW = control
-        rho = (vf.rho * dW[:, None, None]).sum(0)  # (n, n)
-        return Y(rho, dW)
+    Y: Array
 
 
 class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
@@ -252,76 +250,92 @@ class SMEDiffraxIntegrator(DiffraxIntegrator, SMEBaseIntegrator, SMEInterface):
 
     # subclasses should implement: diffrax_solver, discontinuity_ts
 
-    wiener: dx.VirtualBrownianTree
-
     @property
     def saveat(self) -> dx.SaveAt:
-        # === define save function to save measurement results
-        fn = lambda t, y, args: y.dYt  # noqa: ARG005
+        saveat = super().saveat
+
+        # === define save function to save measurement results at each time in tmeas
+        fn = lambda t, y, args: y.Y  # noqa: ARG005
         save_c = dx.SubSaveAt(ts=self.tmeas, fn=fn)  # save measurement results
-        return super().saveat.subs.append(save_c)
+        saveat.subs.append(save_c)
 
-    def __init__(self, *args):
-        super().__init__(*args)
+        return saveat
 
-        # === define initial augmented state
-        self.y0 = Y(self.y0, jnp.empty(len(self.etas)))
-
+    @property
+    def wiener(self) -> dx.VirtualBrownianTree:
         # === define wiener process
-        self.wiener = dx.VirtualBrownianTree(
+        return dx.VirtualBrownianTree(
             self.t0, self.t1, tol=1e-3, shape=(len(self.etas),), key=self.key
         )  # todo: fix hard-coded tol
 
     @property
     def terms(self) -> dx.AbstractTerm:
+        # The diffusive SME is a coupled system of SDEs with state (rho, Y), which for
+        # a single detector writes:
+        #   drho = Lcal(rho)     dt + (Ccal(rho) - Tr[Ccal(rho)] rho) dWt
+        #   dY   = Tr[Ccal(rho)] dt + dWt
+        # with
+        # - Lcal the Liouvillian
+        # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
+
+        # To follow Diffrax-way, we write
+        # (1) The deterministic part (everything before dt) in
+        #     `vector_field_deterministic`: (rho, Y) -> (Lcal(rho), Tr[Ccal(rho)])
+        # (2) The stochastic part (everything before dWt) in
+        #     `vector_field_stochastic`: (rho, Y) -> (Ccal(rho) - Tr[Ccal(rho)] rho, 1)
+        # (3) The measurement part (how to mix the stochastic part and the dWt) in
+        #     `measurement_term`, which is just a simple multiplication of the
+        #     stochastic part (2) with dWt.
+
+        def Ccal(t, rho):
+            Lms = jnp.stack([L(t) for L in self.Lms])  # (nLm, n, n)
+            Lms_rho = Lms @ rho
+            etas = self.etas[:, None, None]  # (nLm, 1, 1)
+            return jnp.sqrt(etas) * (Lms_rho + dag(Lms_rho))  # (nLm, n, n)
+
         # === define deterministic term
-        # This contains everything before the "dt" in the SME:
-        # - lindblad term for drho
-        # - sqrt(eta) Tr[(L+Ld) @ rho] for dYt
         def vector_field_deterministic(t, y, _):  # noqa: ANN001, ANN202
-            # state
+            # state: Lcal(rho) (see MEDiffraxIntegrator)
             Ls = jnp.stack([L(t) for L in self.Ls])
             Lsd = dag(Ls)
             LdL = (Lsd @ Ls).sum(0)
             H = self.H(t)
             tmp = (-1j * H - 0.5 * LdL) @ y.rho + 0.5 * (Ls @ y.rho @ Lsd).sum(0)
-            rho = tmp + dag(tmp)
+            drho = tmp + dag(tmp)
 
-            # signal
-            Lms = jnp.stack([L(t) for L in self.Lms])
-            tr_Lms_rho = tracemm(Lms, y.rho)
-            dYt = jnp.sqrt(self.etas) * (tr_Lms_rho + tr_Lms_rho.conj()).real  # (nLm,)
+            # signal: Tr[Ccal(rho)]
+            dYt = trace(Ccal(t, y.rho)).real  # (nLm,)
 
-            return Y(rho, dYt)
+            return YSME(drho, dYt)
 
-        lindblad_term = dx.ODETerm(vector_field_deterministic)
+        deterministic_term = dx.ODETerm(vector_field_deterministic)
 
         # === define stochastic term
-        # This contains everything before the "dWt" in the SME:
-        # - measurement backaction term for drho
-        # - simply dWt for dYt
         def vector_field_stochastic(t, y, _):  # noqa: ANN001, ANN202
-            # \sqrt\eta (L @ rho + rho @ Ld - Tr[L @ rho + rho @ Ld] rho) dWt
-            Lms = jnp.stack([L(t) for L in self.Lms])
-            Lms_rho = Lms @ y.rho
-            tmp = Lms_rho + dag(Lms_rho)
-            tr = trace(tmp).real
+            # state: Ccal(rho) - Tr[Ccal(rho)] rho
+            Ccal_rho = Ccal(t, y.rho)
+            drho = Ccal_rho - trace(Ccal_rho).real[:, None, None] * y.rho  # (nLm, n, n)
 
-            # state
-            etas = self.etas[:, None, None]  # (nLm, n, n)
-            tr = tr[:, None, None]  # (nLm, n, n)
-            rho = jnp.sqrt(etas) * (tmp - tr * y.rho)  # (nLm, n, n)
+            # signal: 1
+            dYt = 1
 
-            # signal
-            # we use jnp.empty because this quantity is ignored later, in prod() we
-            # throw the stochastic part away because there is no signal-dependent term
-            # in the stochastic part, it's just dYt = deterministic + dWt
-            dYt = jnp.empty(len(self.etas))
-
-            return Y(rho, dYt)
+            return YSME(drho, dYt)
 
         control = self.wiener
+
+        # === define measurement term
+        class MeasurementTerm(dx.ControlTerm):
+            def prod(self, vf: dx.VF, control: dx.Control) -> dx.Y:
+                dW = control
+                drho = (vf.rho * dW[:, None, None]).sum(0)  # (n, n)
+                return YSME(drho, dW)
+
         measurement_term = MeasurementTerm(vector_field_stochastic, control)
 
         # === combine and return both terms
-        return dx.MultiTerm(lindblad_term, measurement_term)
+        return dx.MultiTerm(deterministic_term, measurement_term)
+
+    def solution_to_saved(self, solution: dx.Solution) -> Saved:
+        saved = solution.ys[0]
+        Ysave = solution.ys[2]
+        return SMESolveSaved(saved.ysave, saved.extra, saved.Esave, Ysave)

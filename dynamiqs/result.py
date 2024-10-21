@@ -118,6 +118,19 @@ class SolveResult(Result):
         }
 
 
+class _SMESolveResult(SolveResult):
+    tmeas: Array
+    keys: PRNGKeyArray
+
+    @property
+    def measurements(self) -> Array:
+        return self._saved.Jsave
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Measurements': array_str(self.measurements)}
+
+
 class PropagatorResult(Result):
     @property
     def propagators(self) -> Array:
@@ -239,7 +252,7 @@ class MESolveResult(SolveResult):
     """
 
 
-class SMESolveResult(SolveResult):
+class SMESolveResult(_SMESolveResult):
     r"""Result of the diffusive SME integration.
 
     For the shape indications we name `ntrajs` the number of trajectories
@@ -247,7 +260,8 @@ class SMESolveResult(SolveResult):
     measurement efficiency is not null.
 
     Attributes:
-        states _(array of shape (..., ntrajs, ntsave, n, n))_: Saved states.
+        states _(array of shape (..., ntrajs, nsave, n, n))_: Saved states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_state _(array of shape (..., ntrajs, n, n))_: Saved final state.
         measurements _(array of shape (..., ntrajs, nLm, ntmeas-1))_: Saved
             measurements.
@@ -298,17 +312,6 @@ class SMESolveResult(SolveResult):
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
-
-    tmeas: Array
-    keys: PRNGKeyArray
-
-    @property
-    def measurements(self) -> Array:
-        return self._saved.Jsave
-
-    def _str_parts(self) -> dict[str, str]:
-        d = super()._str_parts()
-        return d | {'Measurements': array_str(self.measurements)}
 
 
 class SEPropagatorResult(PropagatorResult):

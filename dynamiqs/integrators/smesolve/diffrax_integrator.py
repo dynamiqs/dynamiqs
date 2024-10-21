@@ -6,15 +6,18 @@ from ..core.diffrax_integrator import (
     MilsteinIntegrator,
     SMEDiffraxIntegrator,
 )
+from ..core.save_mixin import SMESolveSaveMixin
 
 
-class SMESolveDiffraxIntegrator(SMEDiffraxIntegrator, SMESolveIntegrator):
-    pass
+class SMESolveDiffraxIntegrator(
+    SMEDiffraxIntegrator, SMESolveIntegrator, SMESolveSaveMixin
+):
+    """Integrator computing the time evolution of the diffusive SME using the
+    Diffrax library."""
 
 
-class SMESolveEulerIntegrator(SMESolveDiffraxIntegrator, EulerIntegrator):
-    pass
-
-
-class SMESolveMilsteinIntegrator(SMESolveDiffraxIntegrator, MilsteinIntegrator):
-    pass
+# fmt: off
+# ruff: noqa
+class SMESolveEulerIntegrator(SMESolveDiffraxIntegrator, EulerIntegrator): pass
+class SMESolveMilsteinIntegrator(SMESolveDiffraxIntegrator, MilsteinIntegrator): pass
+# fmt: on
