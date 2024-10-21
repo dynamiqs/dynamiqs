@@ -22,6 +22,8 @@ Familiarize yourself with Dynamiqs. Learn how to simulate quantum systems, defin
 - [Batching simulations](basics/batching-simulations.md)
 - [Computing gradients](basics/computing-gradients.md)
 
-## Advanced topics
+## Advanced examples
 
-!!! Warning "Under construction."
+Explore advanced examples and tutorials to deepen your understanding of Dynamiqs.
+
+- [Driven-dissipative Kerr oscillator](advanced_examples/kerr-oscillator.md)

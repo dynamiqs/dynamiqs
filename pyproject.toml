@@ -64,6 +64,7 @@ dev = [
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
     "mike",
+    "optax",  # for gradient descent tutorials
 ]
 
 [tool.ruff]
