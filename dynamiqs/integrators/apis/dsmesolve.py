@@ -15,7 +15,7 @@ from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
 from ...result import DSMESolveResult
-from ...solver import Euler, Solver
+from ...solver import EulerMaruyama, Solver
 from ...time_array import Shape, TimeArray
 from ...utils.quantum_utils.general import todm
 from .._utils import (
@@ -275,7 +275,7 @@ def _dsmesolve_single_trajectory(
     options: Options,
 ) -> DSMESolveResult:
     # === select integrator class
-    integrators = {Euler: DSMESolveEulerIntegrator}
+    integrators = {EulerMaruyama: DSMESolveEulerIntegrator}
     integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
