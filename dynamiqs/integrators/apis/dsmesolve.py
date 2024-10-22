@@ -15,7 +15,7 @@ from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
 from ...result import DSMESolveResult
-from ...solver import Euler, Solver
+from ...solver import EulerMaruyama, Solver
 from ...time_array import Shape, TimeArray
 from ...utils.quantum_utils.general import todm
 from .._utils import (
@@ -25,7 +25,8 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
-from ..dsmesolve.fixed_step_integrator import DSMESolveEulerIntegrator
+from ..core.abstract_integrator import DSMESolveIntegrator
+from ..dsmesolve.fixed_step_integrator import DSMESolveEulerMayuramaIntegrator
 
 
 def dsmesolve(
@@ -83,25 +84,21 @@ def dsmesolve(
         don't hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
-    The measured signals $I_k=\dd Y_k/\dt$ are defined by (again time is implicit):
+    The continuous-time measurements $\tilde I_k=\dd Y_k/\dt$ are defined with the Itô
+    process $\dd Y_k$ (again time is implicit):
     $$
         \dd Y_k = \sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
     $$
 
-    Note-: Signal normalisation
-        Sometimes the signals are defined with a different but equivalent normalisation
-        $\dd Y_k' = \dd Y_k/(2\sqrt{\eta_k})$.
-
-    The signals $I_k$ are singular quantities, the solver returns the time-averaged
-    signals $J_k^{(t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
+    The quantities $\tilde I_k$ are singular, the solver returns the time-averaged
+    measurements $I_k^{(t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
     $$
-        J_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+        I_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
         = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
         = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
     $$
-    The time intervals for integration are defined by the argument `tsave`, which
-    defines `len(tsave) - 1` intervals, so the signals are averaged between the times
-    at which the states are saved.
+    The time intervals $[t_0, t_1)$ are defined by `tsave`, so the number of returned
+    measurement values is `len(tsave)-1`.
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
@@ -113,14 +110,13 @@ def dsmesolve(
 
     Note-: Running multiple simulations concurrently
         The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
-        solve multiple SMEs concurrently. All other arguments are common to every batch.
-        See the
+        solve multiple SMEs concurrently. All other arguments (including the PRNG key)
+        are common to every batch. See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
 
-    Warning:
-        Batching on `jump_ops` and `etas` is not yet supported, if this is needed
-        don't hesitate to
+        Batching on `jump_ops` and `etas` is not yet supported, if this is needed don't
+        hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Args:
@@ -129,12 +125,13 @@ def dsmesolve(
             jump operators.
         etas _(array-like of shape (len(jump_ops),))_: Measurement efficiency for each
             loss channel with values between 0 (purely dissipative) and 1 (perfectly
-            monitored). No measurement signal is returned for purely dissipative
-            loss channels.
+            measured). No measurement is returned for purely dissipative loss channels.
         rho0 _(array-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
+            Measurements are time-averaged and saved over each interval defined by
+            `tsave`.
         keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
@@ -171,20 +168,21 @@ def dsmesolve(
     rho0 = todm(rho0)
 
     # === split jump operators
-    # split between purely dissipative (eta = 0) and monitored (eta != 0)
+    # split between purely dissipative (eta = 0) and measured (eta != 0)
     dissipative_ops = [L for L, eta in zip(jump_ops, etas) if eta == 0]
     measured_ops = [L for L, eta in zip(jump_ops, etas) if eta != 0]
     etas = etas[etas != 0]
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
+    tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dsmesolve(
         H,
         dissipative_ops,
         measured_ops,
         etas,
         rho0,
-        tuple(tsave.tolist()),  # todo: fix static tsave
+        tsave,
         keys,
         exp_ops,
         solver,
@@ -208,13 +206,22 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
+    f = _dsmesolve_single_trajectory
+
+    # === vectorize function over stochastic trajectories
+    # the input is vectorized over `key`
+    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
+    # the result is vectorized over `_saved`, `infos` and `keys`
+    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(f, in_axes, out_axes)
+
     # === vectorize function
     # we vectorize over H and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = DSMESolveResult(False, False, False, False, 0, 0, 0)
+    out_axes = DSMESolveResult(False, False, False, False, 0, 0, False)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -232,7 +239,7 @@ def _vectorized_dsmesolve(
         Shape(),
         Shape(rho0.shape[:-2]),
         Shape(),
-        Shape([len(keys)]),
+        Shape(),
         Shape(),
         Shape(),
         Shape(),
@@ -241,9 +248,9 @@ def _vectorized_dsmesolve(
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_dsmesolve_single_trajectory, n_batch, out_axes)
+        f = _cartesian_vectorize(f, n_batch, out_axes)
     else:
-        f = _flat_vectorize(_dsmesolve_single_trajectory, n_batch, out_axes)
+        f = _flat_vectorize(f, n_batch, out_axes)
 
     # === apply vectorized function
     return f(
@@ -275,8 +282,8 @@ def _dsmesolve_single_trajectory(
     options: Options,
 ) -> DSMESolveResult:
     # === select integrator class
-    integrators = {Euler: DSMESolveEulerIntegrator}
-    integrator_class = get_integrator_class(integrators, solver)
+    integrators = {EulerMaruyama: DSMESolveEulerMayuramaIntegrator}
+    integrator_class: DSMESolveIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
