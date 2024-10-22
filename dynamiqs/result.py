@@ -119,7 +119,7 @@ class SolveResult(Result):
 
 
 class _DSMESolveResult(SolveResult):
-    key: PRNGKeyArray
+    keys: PRNGKeyArray
 
     @property
     def measurements(self) -> Array:
@@ -253,9 +253,9 @@ class MESolveResult(SolveResult):
 class DSMESolveResult(_DSMESolveResult):
     r"""Result of the diffusive SME integration.
 
-    For the shape indications we name `ntrajs` the number of trajectories
-    (`ntrajs = len(key)`) and `nLm` the number of measured loss channels (those for
-    which the measurement efficiency is not null).
+    For the shape indications we define `ntrajs` as the number of trajectories
+    (`ntrajs = len(keys)`) and `nLm` as the number of measured loss channels (those for
+    which the measurement efficiency is not zero).
 
     Attributes:
         states _(array of shape (..., ntrajs, nsave, n, n))_: Saved states with
@@ -268,7 +268,7 @@ class DSMESolveResult(_DSMESolveResult):
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        key _(PRNG key array of shape (ntrajs,))_: PRNG key used to sample the Wiener
+        keys _(PRNG key array of shape (ntrajs,))_: PRNG keys used to sample the Wiener
             processes.
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
