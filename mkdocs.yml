@@ -46,9 +46,14 @@ extra:
       link: https://github.com/dynamiqs/dynamiqs
     - icon: fontawesome/brands/slack
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
+  version:
+    provider: mike
+    alias: true
+    default: stable
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
+  - stylesheets/home.css
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
@@ -85,6 +90,8 @@ plugins:
             line_length: 88
             show_bases: false
             merge_init_into_class: true
+  - mike:
+      canonical_version: stable
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
@@ -189,6 +196,13 @@ nav:
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
+              - rx: python_api/utils/operators/rx.md
+              - ry: python_api/utils/operators/ry.md
+              - rz: python_api/utils/operators/rz.md
+              - sgate: python_api/utils/operators/sgate.md
+              - tgate: python_api/utils/operators/tgate.md
+              - cnot: python_api/utils/operators/cnot.md
+              - toffoli: python_api/utils/operators/toffoli.md
           - States:
               - fock: python_api/utils/states/fock.md
               - fock_dm: python_api/utils/states/fock_dm.md
@@ -227,6 +241,7 @@ nav:
               - overlap: python_api/utils/quantum_utils/overlap.md
               - fidelity: python_api/utils/quantum_utils/fidelity.md
               - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
+              - bloch_coordinates: python_api/utils/quantum_utils/bloch_coordinates.md
               - wigner: python_api/utils/quantum_utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md

@@ -17,7 +17,6 @@ from matplotlib.axis import Axis
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import FixedLocator, MaxNLocator, MultipleLocator, NullLocator
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from PIL import Image as PILImage
 from tqdm import tqdm
 
@@ -123,7 +122,7 @@ def grid(
         [...]
         >>> renderfig('plot_grid')
 
-        ![plot_grid](/figs_code/plot_grid.png){.fig}
+        ![plot_grid](../../figs_code/plot_grid.png){.fig}
     """
     h = w if h is None else h
     ncols = ceil(n / nrows)
@@ -174,7 +173,7 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
         [...]
         >>> renderfig('mplstyle_before')
 
-        ![mplstyle_before](/figs_code/mplstyle_before.png){.fig}
+        ![mplstyle_before](../../figs_code/mplstyle_before.png){.fig}
 
         After (Dynamiqs Matplotlib style):
 
@@ -187,7 +186,7 @@ def mplstyle(*, usetex: bool = False, dpi: int = 72):
         [...]
         >>> renderfig('mplstyle_after')
 
-        ![mplstyle_after](/figs_code/mplstyle_after.png){.fig}
+        ![mplstyle_after](../../figs_code/mplstyle_after.png){.fig}
     """
     plt.rcParams.update(
         {
@@ -279,11 +278,10 @@ def minorticks_off(axis: Axis):
 
 
 def add_colorbar(
-    ax: Axes, cmap: str, norm: Normalize, *, size: str = '5%', pad: str = '5%'
+    ax: Axes, cmap: str, norm: Normalize, *, size: float = 0.05, pad: float = 0.05
 ) -> Axes:
-    # append a new axes on the right with the same height
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes('right', size=size, pad=pad)
+    # insert a new axes on the right with the same height
+    cax = ax.inset_axes([1 + size, 0, pad, 1])
     mappable = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
     plt.colorbar(mappable=mappable, cax=cax)
     cax.grid(False)
@@ -347,14 +345,14 @@ def gifit(
         <IPython.core.display.Image object>
         >>> rendergif(gif, 'cos')
 
-        ![plot_cos](/figs_code/cos.gif){.fig}
+        ![plot_cos](../../figs_code/cos.gif){.fig}
 
         >>> alphas = jnp.linspace(0.0, 3.0, 51)
         >>> states = dq.coherent(24, alphas)
         >>> gif = dq.plot.gifit(dq.plot.fock)(states, fps=25)
         >>> rendergif(gif, 'coherent_evolution')
 
-        ![plot_coherent_evolution](/figs_code/coherent_evolution.gif){.fig}
+        ![plot_coherent_evolution](../../figs_code/coherent_evolution.gif){.fig}
     """
 
     @wraps(plot_function)

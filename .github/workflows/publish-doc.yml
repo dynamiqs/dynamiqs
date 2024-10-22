@@ -40,4 +40,8 @@ jobs:
         run: task doctest
 
       - name: Publish website
-        run: mkdocs gh-deploy --force
+        run: |
+          git fetch origin gh-pages --depth=1
+          git config user.name ci-bot
+          git config user.email ci-bot@example.com
+          mike deploy --push dev

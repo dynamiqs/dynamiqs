@@ -84,8 +84,8 @@ print(result)
 ==== SESolveResult ====
 Solver  : Dopri5
 Infos   : 56 steps (48 accepted, 8 rejected)
-States  : Array complex64 (101, 2, 1) | 1.58 Kb
-Expects : Array complex64 (1, 101) | 0.79 Kb
+States  : Array complex64 (101, 2, 1) | 1.6 Kb
+Expects : Array complex64 (1, 101) | 0.8 Kb
 ```
 
 ## IV. Analyze the results
@@ -111,6 +111,6 @@ plt.legend(('Analytical', 'Dynamiqs'))
 renderfig('workflow')
 ```
 
-![workflow](/figs_docs/workflow.png){.fig}
+![workflow](../../figs_docs/workflow.png){.fig}
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.
