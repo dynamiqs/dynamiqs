@@ -91,9 +91,9 @@ def dsmesolve(
     $$
 
     The quantities $\tilde I_k$ are singular, the solver returns the time-averaged
-    measurements $I_k^{(t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
+    measurements $I_k^{[t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
     $$
-        I_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+        I_k^{[t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
         = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
         = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
     $$
