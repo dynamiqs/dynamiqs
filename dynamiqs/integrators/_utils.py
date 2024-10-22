@@ -94,9 +94,7 @@ def is_shape(x: object) -> bool:
 
 
 def _flat_vectorize(  # noqa: C901
-    f: callable,
-    n_batch: PyTree[Shape],
-    out_axes: PyTree[int | None],
+    f: callable, n_batch: PyTree[Shape], out_axes: PyTree[int | None]
 ) -> callable:
     broadcast_shape = jax.tree.leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
@@ -155,9 +153,7 @@ def _flat_vectorize(  # noqa: C901
 
 
 def _cartesian_vectorize(
-    f: callable,
-    n_batch: PyTree[Shape],
-    out_axes: PyTree[int | None],
+    f: callable, n_batch: PyTree[Shape], out_axes: PyTree[int | None]
 ) -> callable:
     # todo :write doc
 
