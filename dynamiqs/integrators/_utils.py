@@ -95,17 +95,10 @@ def is_shape(x: object) -> bool:
 
 
 def _flat_vectorize(  # noqa: C901
-    f: TimeArray,
+    f: callable,
     n_batch: PyTree[Shape],
     out_axes: PyTree[int | None],
-) -> TimeArray:
-    """Vectorize a Hamiltonian function.
-
-    Args:
-        f: the Hamiltonian function.
-        n_batch: the batch shape of the Hamiltonian.
-        out_axes_false: the out axes of the Hamiltonian.
-    """
+) -> callable:
     broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
 
@@ -163,10 +156,10 @@ def _flat_vectorize(  # noqa: C901
 
 
 def _cartesian_vectorize(
-    f: TimeArray,
+    f: callable,
     n_batch: PyTree[Shape],
     out_axes: PyTree[int | None],
-) -> TimeArray:
+) -> callable:
     # todo :write doc
 
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
