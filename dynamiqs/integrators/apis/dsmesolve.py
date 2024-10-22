@@ -206,13 +206,22 @@ def _vectorized_dsmesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
+    f = _dsmesolve_single_trajectory
+
+    # === vectorize function over stochastic trajectories
+    # the input is vectorized over `key`
+    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
+    # the result is vectorized over `_saved`, `infos` and `keys`
+    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(f, in_axes, out_axes)
+
     # === vectorize function
     # we vectorize over H and rho0, all other arguments are not vectorized
     # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
     # this leaf should be vmapped on.
 
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSMESolveResult(False, False, False, False, 0, 0, 0)
+    # the result is vectorized over `_saved` and `infos`
+    out_axes = DSMESolveResult(False, False, False, False, 0, 0, False)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -230,7 +239,7 @@ def _vectorized_dsmesolve(
         Shape(),
         Shape(rho0.shape[:-2]),
         Shape(),
-        Shape([len(keys)]),
+        Shape(),
         Shape(),
         Shape(),
         Shape(),
@@ -239,9 +248,9 @@ def _vectorized_dsmesolve(
 
     # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_dsmesolve_single_trajectory, n_batch, out_axes)
+        f = _cartesian_vectorize(f, n_batch, out_axes)
     else:
-        f = _flat_vectorize(_dsmesolve_single_trajectory, n_batch, out_axes)
+        f = _flat_vectorize(f, n_batch, out_axes)
 
     # === apply vectorized function
     return f(
