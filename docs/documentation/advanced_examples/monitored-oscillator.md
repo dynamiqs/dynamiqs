@@ -87,7 +87,7 @@ for Ik_p in Iks_p[:3]:
 renderfig('monitored-oscillator-IxIp')
 ```
 
-![plot_monitored_oscillator_IxIp](/figs_docs/monitored-oscillator-IxIp.png){.fig}
+![plot_monitored_oscillator_IxIp](../../figs_docs/monitored-oscillator-IxIp.png){.fig}
 
 
 ## Averaged trajectories
@@ -110,4 +110,4 @@ plt.legend()
 renderfig('monitored-oscillator-mean')
 ```
 
-![plot_monitored_oscillator_mean](/figs_docs/monitored-oscillator-mean.png){.fig}
+![plot_monitored_oscillator_mean](../../figs_docs/monitored-oscillator-mean.png){.fig}

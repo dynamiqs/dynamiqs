@@ -73,7 +73,7 @@ for Ik in Iks:
 renderfig('monitored-qubit-trajs')
 ```
 
-![plot_monitored_qubit_trajs](/figs_docs/monitored-qubit-trajs.png){.fig}
+![plot_monitored_qubit_trajs](../../figs_docs/monitored-qubit-trajs.png){.fig}
 
 ## Cumulative measurements
 
@@ -91,7 +91,7 @@ for Ik in Iks:
 renderfig('monitored-qubit-cumsum-trajs')
 ```
 
-![plot_monitored_qubit_cumsum_trajs](/figs_docs/monitored-qubit-cumsum-trajs.png){.fig}
+![plot_monitored_qubit_cumsum_trajs](../../figs_docs/monitored-qubit-cumsum-trajs.png){.fig}
 
 ## Projection onto $\sigma_z$ eigenstate
 
@@ -112,4 +112,4 @@ for expects in expects_all:
 renderfig('monitored-qubit-sigmaz')
 ```
 
-![plot_monitored_qubit_sigmaz](/figs_docs/monitored-qubit-sigmaz.png){.fig}
+![plot_monitored_qubit_sigmaz](../../figs_docs/monitored-qubit-sigmaz.png){.fig}
