@@ -429,6 +429,8 @@
       
         
       
+        
+      
     
     
       
@@ -785,6 +787,102 @@
   
   <span class="md-ellipsis">
     Computing gradients
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Advanced examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation/advanced_examples/monitored-qubit.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Continuous measurement of a qubit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation/advanced_examples/monitored-oscillator.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Continuous measurement of an oscillator
   </span>
   
 
@@ -4637,9 +4735,9 @@ $$
     \dd Y_k = \sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
 $$</p>
 <p>The quantities <span class="arithmatex">\(\tilde I_k\)</span> are singular, the solver returns the time-averaged
-measurements <span class="arithmatex">\(I_k^{(t_0, t_1)}\)</span> defined for a time interval <span class="arithmatex">\([t_0, t_1)\)</span> by:
+measurements <span class="arithmatex">\(I_k^{[t_0, t_1)}\)</span> defined for a time interval <span class="arithmatex">\([t_0, t_1)\)</span> by:
 $$
-    I_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+    I_k^{[t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
     = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
     = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
 $$
