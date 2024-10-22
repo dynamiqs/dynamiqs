@@ -4631,26 +4631,20 @@ detection schemes, as opposed to the <em>jump</em> <abbr title="stochastic maste
 counting schemes. No solver for the jump <abbr title="stochastic master equation">SME</abbr> is provided yet, if this is needed
 don't hesitate to
 <a href="https://github.com/dynamiqs/dynamiqs/issues/new">open an issue on GitHub</a>.</p>
-</details>        <p>The measured signals <span class="arithmatex">\(I_k=\dd Y_k/\dt\)</span> are defined by (again time is implicit):
+</details>        <p>The continuous-time measurements <span class="arithmatex">\(\tilde I_k=\dd Y_k/\dt\)</span> are defined with the Itô
+process <span class="arithmatex">\(\dd Y_k\)</span> (again time is implicit):
 $$
     \dd Y_k = \sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
 $$</p>
-
-<details class="note"
- >
-  <summary>Signal normalisation</summary>
-  <p>Sometimes the signals are defined with a different but equivalent normalisation
-<span class="arithmatex">\(\dd Y_k' = \dd Y_k/(2\sqrt{\eta_k})\)</span>.</p>
-</details>        <p>The signals <span class="arithmatex">\(I_k\)</span> are singular quantities, the solver returns the time-averaged
-signals <span class="arithmatex">\(J_k^{(t_0, t_1)}\)</span> defined for a time interval <span class="arithmatex">\([t_0, t_1)\)</span> by:
+<p>The quantities <span class="arithmatex">\(\tilde I_k\)</span> are singular, the solver returns the time-averaged
+measurements <span class="arithmatex">\(I_k^{(t_0, t_1)}\)</span> defined for a time interval <span class="arithmatex">\([t_0, t_1)\)</span> by:
 $$
-    J_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
+    I_k^{(t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
     = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
     = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
 $$
-The time intervals for integration are defined by the argument <code>tsave</code>, which
-defines <code>len(tsave) - 1</code> intervals, so the signals are averaged between the times
-at which the states are saved.</p>
+The time intervals <span class="arithmatex">\([t_0, t_1)\)</span> are defined by <code>tsave</code>, so the number of returned
+measurement values is <code>len(tsave)-1</code>.</p>
 
 <details class="note"
  >
@@ -4666,16 +4660,12 @@ tutorial for more details.</p>
  >
   <summary>Running multiple simulations concurrently</summary>
   <p>The Hamiltonian <code>H</code> and the initial density matrix <code>rho0</code> can be batched to
-solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. All other arguments are common to every batch.
-See the
+solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. All other arguments (including the <abbr title="pseudorandom number generator">PRNG</abbr> key)
+are common to every batch. See the
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
-</details>
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>Batching on <code>jump_ops</code> and <code>etas</code> is not yet supported, if this is needed
-don't hesitate to
+<p>Batching on <code>jump_ops</code> and <code>etas</code> is not yet supported, if this is needed don't
+hesitate to
 <a href="https://github.com/dynamiqs/dynamiqs/issues/new">open an issue on GitHub</a>.</p>
 </details>
     <!-- <p>Parameters:</p> -->
@@ -4705,8 +4695,7 @@ jump operators.</p>
 (array-like of shape (len(jump_ops),))              </i>
           – <p>Measurement efficiency for each
 loss channel with values between 0 (purely dissipative) and 1 (perfectly
-monitored). No measurement signal is returned for purely dissipative
-loss channels.</p>
+measured). No measurement is returned for purely dissipative loss channels.</p>
         </li>
         <li class="field-body">
           <b>rho0</b>
@@ -4722,7 +4711,9 @@ loss channels.</p>
 (array-like of shape (ntsave,))              </i>
           – <p>Times at which the states and
 expectation values are saved. The equation is solved from <code>tsave[0]</code> to
-<code>tsave[-1]</code>, or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
+<code>tsave[-1]</code>, or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.
+Measurements are time-averaged and saved over each interval defined by
+<code>tsave</code>.</p>
         </li>
         <li class="field-body">
           <b>keys</b>
