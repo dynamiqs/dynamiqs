@@ -144,8 +144,8 @@ nav:
           - Batching simulations: documentation/basics/batching-simulations.md
           - Computing gradients: documentation/basics/computing-gradients.md
       - Advanced examples:
-          - Monitored qubit: documentation/advanced_examples/monitored-qubit.md
-          - Monitored oscillator: documentation/advanced_examples/monitored-oscillator.md
+          - Continuous measurement of a qubit: documentation/advanced_examples/monitored-qubit.md
+          - Continuous measurement of an oscillator: documentation/advanced_examples/monitored-oscillator.md
   - Python API:
       - python_api/index.md
       - Quantum solvers:
