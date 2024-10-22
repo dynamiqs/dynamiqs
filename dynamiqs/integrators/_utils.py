@@ -94,13 +94,6 @@ def is_shape(x: object) -> bool:
     return isinstance(x, Shape)
 
 
-def tree_false_to_none(
-    tree: PyTree, is_leaf: callable[PyTree, bool] | None = None
-) -> PyTree:
-    """Replace all `False` values in a tree by `None`."""
-    return jtu.tree_map(lambda x: x if x is not False else None, tree, is_leaf=is_leaf)
-
-
 def _flat_vectorize(  # noqa: C901
     f: TimeArray,
     n_batch: PyTree[Shape],
