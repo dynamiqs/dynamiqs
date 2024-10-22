@@ -55,6 +55,8 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         nsteps = int((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
         nsteps_per_save = nsteps // (nsave - 1)
+        # save time
+        delta_t = self.ts[1] - self.ts[0]
 
         # === initial state
         # define initial state (rho, Y) = (rho0, 0)
@@ -97,7 +99,7 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         saved = jax.tree.map(lambda x, y: jnp.insert(x, 0, y, axis=0), saved, saved0)
         # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
         # Y which is integrated between ts[0] and ts[-1].
-        Isave = jnp.diff(saved.Isave, axis=0) / self.dt
+        Isave = jnp.diff(saved.Isave, axis=0) / delta_t
         saved = eqx.tree_at(lambda x: x.Isave, saved, Isave)
         saved = self.postprocess_saved(saved, ylast)
 
