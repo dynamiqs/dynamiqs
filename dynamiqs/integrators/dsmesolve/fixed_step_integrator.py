@@ -14,23 +14,21 @@ from ..core.abstract_integrator import DSMESolveIntegrator
 from ..core.save_mixin import DSMESolveSaveMixin
 
 
-# state for the fixed step integrator for diffusive SMEs
 class YDSME(eqx.Module):
-    # The SME state at each time is (rho, Y) with rho the state (integrated from initial
-    # to current time) and the signal Y (integrated from initial to current time).
+    """State for the diffusive SME fixed step integrators."""
 
-    rho: Array
-    Y: Array
+    rho: Array  # state (integrated from initial to current time)
+    Y: Array  # measurement (integrated from initial to current time)
 
     def __add__(self, other: Any) -> YDSME:
         return YDSME(self.rho + other.rho, self.Y + other.Y)
 
 
 class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
-    """Integrator solving the diffusive SME with a homemade fixed step size solver."""
+    """Integrator solving the diffusive SME with a fixed step size integrator."""
 
     def __check_init__(self):
-        # todo: check dt align with discontinuity_ts and tsave
+        # todo: check tsave elements align correctly with dt
         pass
 
     class Infos(eqx.Module):
@@ -49,29 +47,36 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         return self.solver.dt
 
     def run(self) -> Result:
+        # === define variables
         nLm = len(self.etas)
-
-        y0 = YDSME(self.y0, jnp.zeros(nLm))
-
-        # save initial state at time 0
-        # 0    1    2
-        # +----+----+
-        # nsave = 3
-        # nintervals = 2
-        saved0 = self.save(y0)
+        # number of save interval
         nsave = len(self.ts)
-        ndt = int((self.t1 - self.t0) / self.dt)
+        # number of steps (of length dt)
+        nsteps = int((self.t1 - self.t0) / self.dt)
+        # number of steps per save interval
+        nsteps_per_save = nsteps // (nsave - 1)
 
-        # number of dt per save interval
-        ndt_per_save = ndt // (nsave - 1)
+        # === initial state
+        # define initial state (rho, Y) = (rho0, 0)
+        y0 = YDSME(self.y0, jnp.zeros(nLm))
+        # save initial state at time 0
+        saved0 = self.save(y0)
 
+        # === run the simulation
+        # The run section encapsulates two loop. The outer loop iterates over each time
+        # in `self.ts` to regularly save the integrated state rho and measurement Y. The
+        # inner loop iterates over the fixed step size dt.
+
+        # iterate over each save interval
         def outer_step(carry, key):  # noqa: ANN001, ANN202
-            # avoid sampling crazy amount of wiener
             t, y = carry
 
-            # sample wiener ~ N(0, dt)
-            dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (ndt_per_save, nLm))
+            # sample wiener
+            # note: we could do this once outside the outer loop, but doing it here
+            # prevents memory overload
+            dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps_per_save, nLm))
 
+            # iterate over the fixed step size dt
             def step(carry, dW):  # noqa: ANN001, ANN202
                 t, y = carry
                 y = y + self.forward(t, y, dW)
@@ -82,35 +87,40 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
 
             return (t, y), self.save(y)
 
+        # split the key to generate wiener on each save interval
         keys = jax.random.split(self.key, nsave - 1)
         ylast, saved = jax.lax.scan(outer_step, (self.t0, y0), keys)
         ylast = ylast[1]
 
+        # === collect and format results
+        # insert the initial saved result
         saved = jax.tree.map(lambda x, y: jnp.insert(x, 0, y, axis=0), saved, saved0)
-        # We integrate the state YSME from t0 to t1. In this case, the state is
-        # (rho, Y). So we recover the signal J^{(t0, t1)} by simply diffing the
-        # resulting Y array.
+        # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
+        # Y which is integrated between ts[0] and ts[-1].
         Isave = jnp.diff(saved.Isave, axis=0) / self.dt
         saved = eqx.tree_at(lambda x: x.Isave, saved, Isave)
         saved = self.postprocess_saved(saved, ylast)
 
-        return self.result(saved, infos=self.Infos(ndt))
+        return self.result(saved, infos=self.Infos(nsteps))
 
     def forward(self, t: Scalar, y: YDSME, dW: Array) -> YDSME:
+        # return (drho, dY)
         pass
 
 
-class DSMESolveEulerIntegrator(DSMEFixedStepIntegrator):
+class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
+    """Integrator solving the diffusive SME with the Euler-Mayurama method."""
+
     def forward(self, t: Scalar, y: YDSME, dW: Array) -> YDSME:
-        # The diffusive SME is a coupled system of SDEs with state (rho, Y), which for
-        # a single detector writes:
+        # The diffusive SME for a single detector is:
         #   drho = Lcal(rho)     dt + (Ccal(rho) - Tr[Ccal(rho)] rho) dW
         #   dY   = Tr[Ccal(rho)] dt + dW
         # with
         # - Lcal the Liouvillian
         # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
 
-        # Lcal(rho) (see MEDiffraxIntegrator)
+        # === Lcal(rho)
+        # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
         Ls = jnp.stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
         LdL = (Lsd @ Ls).sum(0)
@@ -118,19 +128,19 @@ class DSMESolveEulerIntegrator(DSMEFixedStepIntegrator):
         tmp = (-1j * H - 0.5 * LdL) @ y.rho + 0.5 * (Ls @ y.rho @ Lsd).sum(0)
         Lcal_rho = tmp + dag(tmp)
 
-        # Ccal(rho)
+        # === Ccal(rho)
         Lms = jnp.stack([L(t) for L in self.Lms])  # (nLm, n, n)
         Lms_rho = Lms @ y.rho
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
         Ccal_rho = jnp.sqrt(etas) * (Lms_rho + dag(Lms_rho))  # (nLm, n, n)
         tr_Ccal_rho = trace(Ccal_rho).real  # (nLm,)
 
-        # state rho
+        # === state rho
         drho_det = Lcal_rho
         drho_sto = Ccal_rho - tr_Ccal_rho[:, None, None] * y.rho  # (nLm, n, n)
         drho = drho_det * self.dt + (drho_sto * dW[:, None, None]).sum(0)  # (n, n)
 
-        # signal Y
+        # === measurement Y
         dY = tr_Ccal_rho * self.dt + dW  # (nLm,)
 
         return YDSME(drho, dY)
