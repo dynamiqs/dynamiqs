@@ -404,6 +404,13 @@ def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
         dim = dim[None]
         beta = beta[..., None]
 
+    # check if beta has shape (..., len(dim))
+    if beta.shape[-1] != dim.shape[-1]:
+        raise ValueError(
+            'Argument `beta` must have shape `(...)` or `(..., len(dim))`, but'
+            f' has shape beta.shape={beta.shape}.'
+        )
+
     # compute the thermal density matrix for each mode
     single_modes = [_single_thermal_dm(d, b) for d, b in zip(dim, beta)]
 
