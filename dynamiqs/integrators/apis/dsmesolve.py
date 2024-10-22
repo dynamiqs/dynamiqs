@@ -40,7 +40,6 @@ def dsmesolve(
     tsave: ArrayLike,
     keys: list[PRNGKeyArray],
     *,
-    tmeas: ArrayLike | None = None,
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Milstein(),  # noqa: B008
     gradient: Gradient | None = None,
@@ -104,9 +103,9 @@ def dsmesolve(
         = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
         = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
     $$
-    The time intervals for integration are defined by the argument `tmeas`, which
-    defines `len(tmeas) - 1` intervals. By default, `tmeas = tsave`, so the signals
-    are averaged between the times at which the states are saved.
+    The time intervals for integration are defined by the argument `tsave`, which
+    defines `len(tsave) - 1` intervals, so the signals are averaged between the times
+    at which the states are saved.
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
@@ -143,8 +142,6 @@ def dsmesolve(
         keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        tmeas _(array-like of shape (ntmeas,), optional)_: Times between which
-            measurement signals are averaged and saved. Defaults to `tsave`.
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
@@ -168,14 +165,12 @@ def dsmesolve(
     rho0 = jnp.asarray(rho0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
-    tmeas = jnp.asarray(tmeas) if tmeas is not None else tsave
     if exp_ops is not None:
         exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_dsmesolve_args(H, jump_ops, etas, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
-    tmeas = check_times(tmeas, 'tmeas')
 
     # === convert rho0 to density matrix
     rho0 = todm(rho0)
@@ -196,7 +191,6 @@ def dsmesolve(
         rho0,
         tsave,
         keys,
-        tmeas,
         exp_ops,
         solver,
         gradient,
@@ -214,7 +208,6 @@ def _vectorized_dsmesolve(
     rho0: Array,
     tsave: Array,
     keys: PRNGKeyArray,
-    tmeas: Array,
     exp_ops: Array | None,
     solver: Solver,
     gradient: Gradient | None,
@@ -226,7 +219,7 @@ def _vectorized_dsmesolve(
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = DSMESolveResult(False, False, False, False, 0, 0, False, 0)
+    out_axes = DSMESolveResult(False, False, False, False, 0, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
@@ -249,7 +242,6 @@ def _vectorized_dsmesolve(
         Shape(),
         Shape(),
         Shape(),
-        Shape(),
     )
 
     # compute vectorized function with given batching strategy
@@ -267,7 +259,6 @@ def _vectorized_dsmesolve(
         rho0,
         tsave,
         keys,
-        tmeas,
         exp_ops,
         solver,
         gradient,
@@ -283,7 +274,6 @@ def _dsmesolve_single_trajectory(
     rho0: Array,
     tsave: Array,
     key: PRNGKeyArray,
-    tmeas: Array,
     exp_ops: Array | None,
     solver: Solver,
     gradient: Gradient | None,
@@ -306,7 +296,6 @@ def _dsmesolve_single_trajectory(
         solver=solver,
         gradient=gradient,
         options=options,
-        tmeas=tmeas,
         key=key,
         H=H,
         Lcs=dissipative_ops,

@@ -79,30 +79,21 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
         )
 
 
-class DSMEBaseIntegrator(BaseIntegrator):
+class SMEBaseIntegrator(BaseIntegrator):
     """Integrator stochastically evolving an initial state over a set of times, and
     saving measurement results at another set of times.
 
     In addition to `BaseIntegrator`, it includes a PRNG key `key` for the stochastic
-    evolution, as well as the set of times `tmeas` at which measurement results are
-    saved.
+    evolution.
     """
 
     # subclasses should implement: discontinuity_ts, run()
 
-    tmeas: Array
     key: PRNGKeyArray
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return self.RESULT_CLASS(
-            self.ts,
-            self.solver,
-            self.gradient,
-            self.options,
-            saved,
-            infos,
-            self.tmeas,
-            self.key,
+            self.ts, self.solver, self.gradient, self.options, saved, infos, self.key
         )
 
 
@@ -127,7 +118,7 @@ class MEIntegrator(BaseIntegrator, MEInterface):
         return _concatenate_sort(*ts)
 
 
-class DSMEIntegrator(DSMEBaseIntegrator, DSMEInterface):
+class DSMEIntegrator(SMEBaseIntegrator, DSMEInterface):
     """Integrator for the diffusive SME."""
 
     # subclasses should implement: run()

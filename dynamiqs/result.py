@@ -119,7 +119,6 @@ class SolveResult(Result):
 
 
 class _DSMESolveResult(SolveResult):
-    tmeas: Array
     keys: PRNGKeyArray
 
     @property
@@ -263,16 +262,13 @@ class DSMESolveResult(_DSMESolveResult):
         states _(array of shape (..., ntrajs, nsave, n, n))_: Saved states with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_state _(array of shape (..., ntrajs, n, n))_: Saved final state.
-        measurements _(array of shape (..., ntrajs, nLm, ntmeas-1))_: Saved
-            measurements.
+        measurements _(array of shape (..., ntrajs, nLm, nsave-1))_: Saved measurements.
         expects _(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        tmeas _(array of shape (ntmeas,))_: Times for which measurement signals are
-            averaged and saved.
         keys _(PRNG key array of shape (ntrajs,))_: PRNG keys used to sample the Wiener
             processes.
         solver _(Solver)_: Solver used.
