@@ -340,10 +340,10 @@ def _single_thermal_dm(dim: int, beta: Array) -> Array:
     """Returns the density matrix of a thermal state for a single mode."""
     energies = jnp.arange(dim)
 
-    # Compute the unnormalized diagonal elements of the density matrix
+    # compute the unnormalized diagonal elements of the density matrix
     rho_diag = jnp.exp(-beta * energies)
 
-    # Normalize using unit()
+    # normalize the density matrix
     rho = jnp.diag(rho_diag)
     return unit(rho)
 
@@ -354,9 +354,9 @@ def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        beta: Inverse temperature \( \beta \), either a single value or an array
-              of values. If `dim` is a tuple, the last dimension of `beta` should
-              match the length of `dim`.
+        beta: Inverse temperature \( \beta \), either a single value or an
+        array of values. If `dim` is a tuple, `beta` must be broadcastable to
+        match the number of modes.
 
     Returns:
         _(array of shape (..., n, n))_ Density matrix of the thermal state or
@@ -387,23 +387,29 @@ def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
     beta = jnp.asarray(beta)
     check_type_int(dim, 'dim')
 
-    # if dim is an integer, ensure beta has the correct shape
+    # handle single mode (dim is an int or single value)
     if dim.ndim == 0:
-        dim = dim[None]  # Shape becomes (1,)
+        dim = dim[None]
 
-    # If dim is a tuple and beta is scalar, broadcast beta to match the number of modes
-    if isinstance(dim, tuple) and beta.ndim == 0:
-        beta = jnp.array([beta] * len(dim))
+    # handle scalar beta for multi-mode systems (dim is a tuple)
+    if beta.ndim == 0:
+        if isinstance(dim, tuple):
+            beta = jnp.array([beta] * len(dim))  # broadcast beta for each mode
+        else:
+            beta = jnp.broadcast_to(beta, dim.shape)
 
-    # Check if beta has shape (..., len(dim)) in case of multiple modes
-    if beta.shape[-1] != len(dim):
-        raise ValueError(
-            'Argument `beta` must have shape `(...)` or `(..., len(dim))`, but'
-            f' has shape beta.shape={beta.shape}.'
-        )
+    # handle batched beta (if beta is an array of temperatures)
+    if beta.ndim == 1 and beta.shape[0] > 1:
+        # batched case: Compute separate density matrix for each temperature
+        batched_rhos = []
+        for b in beta:
+            single_rhos = [_single_thermal_dm(d, b) for d in dim]
+            result = tensor(*single_rhos) if len(single_rhos) > 1 else single_rhos[0]
+            batched_rhos.append(result)
+        return jnp.array(batched_rhos)
 
-    # Compute the thermal density matrix for each mode
+    # compute thermal density matrix for each mode (single or multi-mode)
     single_rhos = [_single_thermal_dm(d, b) for d, b in zip(dim, beta)]
 
-    # Return the tensor product of the computed single-mode density matrices
-    return tensor(*single_rhos)
+    # use the tensor() method to compute the tensor product of the density matrices
+    return tensor(*single_rhos) if len(single_rhos) > 1 else single_rhos[0]
