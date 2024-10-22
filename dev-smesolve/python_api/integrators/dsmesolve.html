@@ -1471,6 +1471,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../solver/EulerMaruyama.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EulerMaruyama
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../solver/Rouchon1.html" class="md-nav__link">
         
   
@@ -1518,27 +1539,6 @@
   
   <span class="md-ellipsis">
     Expm
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../solver/Milstein.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Milstein
   </span>
   
 
@@ -4575,10 +4575,9 @@
     <span class="n">rho0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PRNGKeyArray</span><span class="p">],</span>
+    <span class="n">solver</span><span class="p">:</span> <span class="n">Solver</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">tmeas</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exp_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">solver</span><span class="p">:</span> <span class="n">Solver</span> <span class="o">=</span> <span class="n">Milstein</span><span class="p">(),</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DSMESolveResult</span>
@@ -4649,9 +4648,9 @@ $$
     = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
     = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
 $$
-The time intervals for integration are defined by the argument <code>tmeas</code>, which
-defines <code>len(tmeas) - 1</code> intervals. By default, <code>tmeas = tsave</code>, so the signals
-are averaged between the times at which the states are saved.</p>
+The time intervals for integration are defined by the argument <code>tsave</code>, which
+defines <code>len(tsave) - 1</code> intervals, so the signals are averaged between the times
+at which the states are saved.</p>
 
 <details class="note"
  >
@@ -4735,12 +4734,10 @@ The number of elements defines the number of sampled stochastic
 trajectories.</p>
         </li>
         <li class="field-body">
-          <b>tmeas</b>
+          <b>solver</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array-like of shape (ntmeas,), optional)              </i>
-          – <p>Times between which
-measurement signals are averaged and saved. Defaults to <code>tsave</code>.</p>
+          – <p>Solver for the integration (supported:
+<a class="autorefs autorefs-internal" href="../solver/EulerMaruyama.html#dynamiqs.solver.EulerMaruyama"><code>EulerMaruyama</code></a>).</p>
         </li>
         <li class="field-body">
           <b>exp_ops</b>
@@ -4749,13 +4746,6 @@ measurement signals are averaged and saved. Defaults to <code>tsave</code>.</p>
 (list of array-like, each of shape (n, n), optional)              </i>
           – <p>List of
 operators for which the expectation value is computed.</p>
-        </li>
-        <li class="field-body">
-          <b>solver</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Solver for the integration. Defaults to
-<a class="autorefs autorefs-internal" href="../solver/Milstein.html#dynamiqs.solver.Milstein"><code>dq.solver.Milstein</code></a> (supported:
-<a class="autorefs autorefs-internal" href="../solver/Milstein.html#dynamiqs.solver.Milstein"><code>Milstein</code></a>, <a class="autorefs autorefs-internal" href="../solver/Euler.html#dynamiqs.solver.Euler"><code>Euler</code></a>).</p>
         </li>
         <li class="field-body">
           <b>gradient</b>
@@ -4778,15 +4768,15 @@ details.</p>
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.result.DSMESolveResult" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult">DSMESolveResult</a></code>
-        – <p><a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a> object holding the result of the
-<abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code> and <code>expects</code>
-to access saved quantities, more details in
+        – <p><a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a> object holding the result of
+the diffusive <abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code>
+and <code>expects</code> to access saved quantities, more details in
 <a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a> object holding the result of the
-<abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code> and <code>expects</code>
-to access saved quantities, more details in
+      <span class="field-body"><p><a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a> object holding the result of
+the diffusive <abbr title="stochastic master equation">SME</abbr> integration. Use the attributes <code>states</code>, <code>measurements</code>
+and <code>expects</code> to access saved quantities, more details in
 <a class="autorefs autorefs-internal" href="../result/DSMESolveResult.html#dynamiqs.result.DSMESolveResult"><code>dq.DSMESolveResult</code></a>.</p></span>
 
     </div>

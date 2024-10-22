@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/Milstein.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/EulerMaruyama.html">
 
 
-    <link rel="prev" href="Expm.html">
+    <link rel="prev" href="Euler.html">
 
 
-    <link rel="next" href="../gradient/Autograd.html">
+    <link rel="next" href="Rouchon1.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Milstein - Dynamiqs</title>
+        <title>EulerMaruyama - Dynamiqs</title>
       
     
     
@@ -107,7 +107,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solver.Milstein" class="md-skip">
+        <a href="#dynamiqs.solver.EulerMaruyama" class="md-skip">
           Skip to content
         </a>
       
@@ -157,7 +157,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Milstein
+                EulerMaruyama
               
             </span>
           </div>
@@ -1460,6 +1460,37 @@
                 
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="EulerMaruyama.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    EulerMaruyama
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
@@ -1514,37 +1545,6 @@
   
 
       </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="Milstein.html" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Milstein
-  </span>
-  
-
-      </a>
-      
     </li>
   
 
@@ -4566,27 +4566,20 @@
 
 
 
-<h1 id="dynamiqs.solver.Milstein" class="doc doc-heading">
-    <span class="doc doc-object-name doc-class-name">dq.solver.Milstein</span>
+<h1 id="dynamiqs.solver.EulerMaruyama" class="doc doc-heading">
+    <span class="doc doc-object-name doc-class-name">dq.solver.EulerMaruyama</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Milstein</span><span class="p">(</span>
-    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
-    <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
-    <span class="n">safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
-    <span class="n">min_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">max_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
-    <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">EulerMaruyama</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
 
-        <p>Milstein method (adaptive step size SDE solver).</p>
-<p>This solver is implemented by the <a href="https://docs.kidger.site/diffrax/">Diffrax</a>
-library, see <a href="https://docs.kidger.site/diffrax/api/solvers/sde_solvers/#diffrax.ItoMilstein"><code>diffrax.ItoMilstein</code></a>.</p>
+        <p>Euler-Maruyama method (fixed step size SDE solver).</p>
+<p>For a fixed step size <span class="arithmatex">\(\dt\)</span>, it has weak order of convergence <span class="arithmatex">\(\dt\)</span> and strong order
+of convergence <span class="arithmatex">\(\sqrt{\dt}\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4594,34 +4587,9 @@ library, see <a href="https://docs.kidger.site/diffrax/api/solvers/sde_solvers/#
     </p>
     <ul>
         <li class="field-body">
-          <b>rtol</b>
+          <b>dt</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Relative tolerance.</p>
-        </li>
-        <li class="field-body">
-          <b>atol</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Absolute tolerance.</p>
-        </li>
-        <li class="field-body">
-          <b>safety_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Safety factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>min_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Minimum factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>max_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>max_steps</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum number of steps.</p>
+          – <p>Fixed time step.</p>
         </li>
     </ul>
 
@@ -4629,9 +4597,7 @@ library, see <a href="https://docs.kidger.site/diffrax/api/solvers/sde_solvers/#
  >
   <summary>Supported gradients</summary>
   <p>This solver supports differentiation with
-<a class="autorefs autorefs-internal" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> and
-<a class="autorefs autorefs-internal" href="../gradient/CheckpointAutograd.html#dynamiqs.gradient.CheckpointAutograd"><code>dq.gradient.CheckpointAutograd</code></a>
-(default).</p>
+<a class="autorefs autorefs-internal" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> (default).</p>
 </details>
 
 

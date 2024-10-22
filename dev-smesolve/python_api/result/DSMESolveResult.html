@@ -1461,6 +1461,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../solver/EulerMaruyama.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    EulerMaruyama
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../solver/Rouchon1.html" class="md-nav__link">
         
   
@@ -1508,27 +1529,6 @@
   
   <span class="md-ellipsis">
     Expm
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../solver/Milstein.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Milstein
   </span>
   
 
@@ -4578,8 +4578,8 @@
 
         <p>Result of the diffusive <abbr title="stochastic master equation">SME</abbr> integration.</p>
 <p>For the shape indications we name <code>ntrajs</code> the number of trajectories
-(<code>ntrajs = len(keys)</code>) and <code>nLm</code> the number of loss channels for which the
-measurement efficiency is not null.</p>
+(<code>ntrajs = len(key)</code>) and <code>nLm</code> the number of measured loss channels (those for
+which the measurement efficiency is not null).</p>
 
     <p>
       <strong>Attributes</strong>
@@ -4601,9 +4601,8 @@ measurement efficiency is not null.</p>
         <li class="field-body">
           <b>measurements</b>
               <i>
-(array of shape (..., ntrajs, nLm, ntmeas-1))              </i>
-          – <p>Saved
-measurements.</p>
+(array of shape (..., ntrajs, nLm, nsave-1))              </i>
+          – <p>Saved measurements.</p>
         </li>
         <li class="field-body">
           <b>expects</b>
@@ -4632,17 +4631,10 @@ specified in <code>options</code> (see <a class="autorefs autorefs-internal" hre
           – <p>Times for which results were saved.</p>
         </li>
         <li class="field-body">
-          <b>tmeas</b>
-              <i>
-(array of shape (ntmeas,))              </i>
-          – <p>Times for which measurement signals are
-averaged and saved.</p>
-        </li>
-        <li class="field-body">
-          <b>keys</b>
+          <b>key</b>
               <i>
 (PRNG key array of shape (ntrajs,))              </i>
-          – <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the Wiener
+          – <p><abbr title="pseudorandom number generator">PRNG</abbr> key used to sample the Wiener
 processes.</p>
         </li>
         <li class="field-body">
