@@ -46,7 +46,7 @@ class SolveSaved(Saved):
 
 
 class DSMESolveSaved(SolveSaved):
-    Jsave: Array
+    Isave: Array
 
 
 class PropagatorSaved(Saved):
@@ -123,7 +123,7 @@ class _DSMESolveResult(SolveResult):
 
     @property
     def measurements(self) -> Array:
-        return self._saved.Jsave
+        return self._saved.Isave
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()

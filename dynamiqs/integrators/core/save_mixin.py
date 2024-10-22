@@ -60,6 +60,6 @@ class DSMESolveSaveMixin(SolveSaveMixin):
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
         saved = super().postprocess_saved(saved, ylast.rho)
-        # reorder Jsave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
-        Jsave = saved.Jsave.swapaxes(-1, -2)
-        return eqx.tree_at(lambda x: x.Jsave, saved, Jsave)
+        # reorder Isave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
+        Isave = saved.Isave.swapaxes(-1, -2)
+        return eqx.tree_at(lambda x: x.Isave, saved, Isave)

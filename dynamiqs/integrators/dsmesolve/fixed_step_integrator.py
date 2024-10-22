@@ -90,9 +90,8 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         # We integrate the state YSME from t0 to t1. In this case, the state is
         # (rho, Y). So we recover the signal J^{(t0, t1)} by simply diffing the
         # resulting Y array.
-        # Jsave = jnp.diff(saved.Jsave, axis=0, append=ylast.signal[None, :])
-        Jsave = jnp.diff(saved.Jsave, axis=0) / self.dt
-        saved = eqx.tree_at(lambda x: x.Jsave, saved, Jsave)
+        Isave = jnp.diff(saved.Isave, axis=0) / self.dt
+        saved = eqx.tree_at(lambda x: x.Isave, saved, Isave)
         saved = self.postprocess_saved(saved, ylast)
 
         return self.result(saved, infos=self.Infos(ndt))
