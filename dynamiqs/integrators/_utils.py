@@ -4,7 +4,6 @@ from functools import partial, wraps
 
 import jax
 import jax.numpy as jnp
-import jax.tree_util as jtu
 from jax._src.lib import xla_client
 from jaxtyping import ArrayLike, PyTree
 
@@ -99,7 +98,7 @@ def _flat_vectorize(  # noqa: C901
     n_batch: PyTree[Shape],
     out_axes: PyTree[int | None],
 ) -> callable:
-    broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
+    broadcast_shape = jax.tree.leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
 
     def tree_map_fn(i: int, x: tuple[int, ...]) -> int | None:
@@ -119,8 +118,8 @@ def _flat_vectorize(  # noqa: C901
     expand_dims = []  # dimensions '1' that will be lost during the vmap but that
     # we want to keep in the results.
     for i in range(len(broadcast_shape)):
-        in_axes = jtu.tree_map(partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
-        if jtu.tree_all(jtu.tree_map(lambda x: x is None, in_axes)):
+        in_axes = jax.tree.map(partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
+        if jax.tree.all(jax.tree.map(lambda x: x is None, in_axes)):
             expand_dims.append(n - i - 1)
         else:
             f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
@@ -140,17 +139,17 @@ def _flat_vectorize(  # noqa: C901
         """Unsqueeze the result."""
         if out_ax is not None:
             for dim in expand_dims:
-                result = jtu.tree_map(
+                result = jax.tree.map(
                     partial(lambda t, dim: jnp.expand_dims(t, dim), dim=dim), result
                 )
 
         return result
 
     def wrap(*args: PyTree) -> PyTree:
-        squeezed_args = jtu.tree_map(squeeze_args, n_batch, args)
+        squeezed_args = jax.tree.map(squeeze_args, n_batch, args)
         result = f(*squeezed_args)
         is_none = lambda x: x is None
-        return jtu.tree_map(unsqueeze_args, out_axes, result, is_leaf=is_none)
+        return jax.tree.map(unsqueeze_args, out_axes, result, is_leaf=is_none)
 
     return wrap
 
@@ -165,7 +164,7 @@ def _cartesian_vectorize(
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
     # Only the second to last batch terms are taken into account in order to
     # have proper batching of SummedTimeArrays (see below).
-    leaves, treedef = jtu.tree_flatten((None,) + n_batch[1:], is_leaf=is_shape)
+    leaves, treedef = jax.tree.flatten((None,) + n_batch[1:], is_leaf=is_shape)
 
     # note: we apply the successive vmaps in reverse order, so the output
     # dimensions are in the correct order
@@ -174,9 +173,9 @@ def _cartesian_vectorize(
         if leaf_len > 0:
             # build the `in_axes` argument with the same structure as `n_batch`,
             # but with 0 at the `leaf` position
-            in_axes = jtu.tree_map(lambda _: None, leaves)
+            in_axes = jax.tree.map(lambda _: None, leaves)
             in_axes[i] = 0
-            in_axes = jtu.tree_unflatten(treedef, in_axes)
+            in_axes = jax.tree.unflatten(treedef, in_axes)
             for _ in range(leaf_len):
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
