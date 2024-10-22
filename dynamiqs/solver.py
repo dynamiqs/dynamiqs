@@ -10,6 +10,7 @@ from .gradient import Autograd, CheckpointAutograd, Gradient
 __all__ = [
     'Expm',
     'Euler',
+    'EulerMaruyama',
     'Rouchon1',
     'Rouchon2',
     'Dopri5',
@@ -17,7 +18,6 @@ __all__ = [
     'Tsit5',
     'Kvaerno3',
     'Kvaerno5',
-    'Milstein',
 ]
 
 
@@ -113,7 +113,7 @@ class _DEAdaptiveStep(_DESolver):
 
 # === public solvers options
 class Euler(_DEFixedStep):
-    """Euler method (fixed step size ODE/SDE solver).
+    r"""Euler method (fixed step size ODE solver).
 
     This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
@@ -132,6 +132,27 @@ class Euler(_DEFixedStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float):
+        super().__init__(dt)
+
+
+class EulerMaruyama(_DEFixedStep):
+    r"""Euler-Maruyama method (fixed step size SDE solver).
+
+    For a fixed step size $\dt$, it has weak order of convergence $\dt$ and strong order
+    of convergence $\sqrt{\dt}$.
+
+    Args:
+        dt: Fixed time step.
+
+    Note-: Supported gradients
+        This solver supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -364,42 +385,6 @@ class Kvaerno5(_DEAdaptiveStep):
         consider switching to double-precision with
         [`dq.set_precision('double')`][dynamiqs.set_precision]. See more details in
         [The sharp bits 🔪](../../documentation/getting_started/sharp-bits.md) tutorial.
-
-    Args:
-        rtol: Relative tolerance.
-        atol: Absolute tolerance.
-        safety_factor: Safety factor for adaptive step sizing.
-        min_factor: Minimum factor for adaptive step sizing.
-        max_factor: Maximum factor for adaptive step sizing.
-        max_steps: Maximum number of steps.
-
-    Note-: Supported gradients
-        This solver supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default).
-    """
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
-
-    # dummy init to have the signature in the documentation
-    def __init__(
-        self,
-        rtol: float = 1e-6,
-        atol: float = 1e-6,
-        safety_factor: float = 0.9,
-        min_factor: float = 0.2,
-        max_factor: float = 5.0,
-        max_steps: int = 100_000,
-    ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
-
-
-class Milstein(_DEAdaptiveStep):
-    """Milstein method (adaptive step size SDE solver).
-
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
-    library, see [`diffrax.ItoMilstein`](https://docs.kidger.site/diffrax/api/solvers/sde_solvers/#diffrax.ItoMilstein).
 
     Args:
         rtol: Relative tolerance.
