@@ -232,7 +232,5 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
             tmp = -1j * self.H(t) @ y
             return tmp + dag(tmp)
 
-        if len(self.Ls) > 0:
-            return dx.ODETerm(vector_field_dissipative)
-        else:
-            return dx.ODETerm(vector_field_unitary)
+        vf = vector_field_dissipative if len(self.Ls) > 0 else vector_field_unitary
+        return dx.ODETerm(vf)
