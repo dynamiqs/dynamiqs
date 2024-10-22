@@ -4,6 +4,7 @@ from abc import abstractmethod
 from typing import ClassVar
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
@@ -92,8 +93,9 @@ class SMEBaseIntegrator(BaseIntegrator):
     key: PRNGKeyArray
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        ts = jnp.asarray(self.ts)  # todo: fix static tsave
         return self.RESULT_CLASS(
-            self.ts, self.solver, self.gradient, self.options, saved, infos, self.key
+            ts, self.solver, self.gradient, self.options, saved, infos, self.key
         )
 
 

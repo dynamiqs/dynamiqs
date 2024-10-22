@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import equinox as eqx
-import jax.numpy as jnp
 from jaxtyping import PyTree
 
-from ...result import PropagatorSaved, Saved, SolveSaved
+from ...result import DSMESolveSaved, PropagatorSaved, Saved, SolveSaved
 from ...utils.quantum_utils import expect
 from .interfaces import OptionsInterface, SolveInterface
 
@@ -56,14 +55,11 @@ class DSMESolveSaveMixin(SolveSaveMixin):
     """
 
     def save(self, y: PyTree) -> Saved:
-        return super().save(y.rho)
+        saved = super().save(y.rho)
+        return DSMESolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
-        saved = super().postprocess_saved(saved, ylast)
-        # Diffrax integrates the state YSME from t0 to t1. In this case, the state is
-        # (rho, Y). So we recover the signal J^{(t0, t1)} by simply diffing the
-        # resulting Y array.
-        Jsave = jnp.diff(saved.Jsave, axis=0)
+        saved = super().postprocess_saved(saved, ylast.rho)
         # reorder Jsave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
-        Jsave = Jsave.swapaxes(-1, -2)
+        Jsave = saved.Jsave.swapaxes(-1, -2)
         return eqx.tree_at(lambda x: x.Jsave, saved, Jsave)

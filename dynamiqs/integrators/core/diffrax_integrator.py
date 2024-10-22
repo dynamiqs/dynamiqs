@@ -10,11 +10,11 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...result import Result, DSMESolveSaved, Saved
-from ...utils.quantum_utils.general import dag, trace
-from .abstract_integrator import BaseIntegrator, DSMEBaseIntegrator
+from ...result import Result
+from ...utils.quantum_utils.general import dag
+from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
-from .interfaces import SEInterface, MEInterface, DSMEInterface
+from .interfaces import SEInterface, MEInterface
 
 
 class DiffraxIntegrator(BaseIntegrator, SaveMixin):
@@ -48,16 +48,6 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
     def terms(self) -> dx.AbstractTerm:
         pass
 
-    @property
-    def saveat(self) -> dx.SaveAt:
-        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        return dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
-    def solution_to_saved(self, solution: dx.Solution) -> Saved:
-        return solution.ys[0]
-
     def run(self) -> Result:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
@@ -66,7 +56,12 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             # closed
             warnings.simplefilter('ignore', FutureWarning)
 
-            # === prepare adjoint argument
+            # === prepare diffrax arguments
+            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
             if self.gradient is None:
                 adjoint = dx.RecursiveCheckpointAdjoint()
             elif isinstance(self.gradient, CheckpointAutograd):
@@ -82,7 +77,7 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
                 t1=self.t1,
                 dt0=self.dt0,
                 y0=self.y0,
-                saveat=self.saveat,
+                saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=adjoint,
                 max_steps=self.max_steps,
@@ -90,7 +85,7 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             )
 
         # === collect and return results
-        saved = self.postprocess_saved(self.solution_to_saved(solution), solution.ys[1])
+        saved = self.postprocess_saved(*solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
     @abstractmethod
@@ -185,7 +180,6 @@ class Dopri8Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri
 class Tsit5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Tsit5()
 class Kvaerno3Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno3()
 class Kvaerno5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno5()
-class MilsteinIntegrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.HalfSolver(dx.ItoMilstein())
 # fmt: on
 
 
@@ -235,107 +229,3 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
             return tmp + dag(tmp)
 
         return dx.ODETerm(vector_field)
-
-
-# state for the diffrax solver for diffusive SMEs
-class YDSME(eqx.Module):
-    # The SME state at each time is (rho, Y) with rho the state (integrated from initial
-    # to current time) and Y the signal (integrated from initial to current time).
-    rho: Array
-    Y: Array
-
-
-class DSMEDiffraxIntegrator(DiffraxIntegrator, DSMEBaseIntegrator, DSMEInterface):
-    """Integrator solving the diffusive SME with Diffrax."""
-
-    # subclasses should implement: diffrax_solver, discontinuity_ts
-
-    @property
-    def saveat(self) -> dx.SaveAt:
-        saveat = super().saveat
-
-        # === define save function to save measurement results at each time in tmeas
-        fn = lambda t, y, args: y.Y  # noqa: ARG005
-        save_c = dx.SubSaveAt(ts=self.tmeas, fn=fn)  # save measurement results
-        saveat.subs.append(save_c)
-
-        return saveat
-
-    @property
-    def wiener(self) -> dx.VirtualBrownianTree:
-        # === define wiener process
-        return dx.VirtualBrownianTree(
-            self.t0, self.t1, tol=1e-3, shape=(len(self.etas),), key=self.key
-        )  # todo: fix hard-coded tol
-
-    @property
-    def terms(self) -> dx.AbstractTerm:
-        # The diffusive SME is a coupled system of SDEs with state (rho, Y), which for
-        # a single detector writes:
-        #   drho = Lcal(rho)     dt + (Ccal(rho) - Tr[Ccal(rho)] rho) dWt
-        #   dY   = Tr[Ccal(rho)] dt + dWt
-        # with
-        # - Lcal the Liouvillian
-        # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
-
-        # To follow Diffrax-way, we write
-        # (1) The deterministic part (everything before dt) in
-        #     `vector_field_deterministic`: (rho, Y) -> (Lcal(rho), Tr[Ccal(rho)])
-        # (2) The stochastic part (everything before dWt) in
-        #     `vector_field_stochastic`: (rho, Y) -> (Ccal(rho) - Tr[Ccal(rho)] rho, 1)
-        # (3) The measurement part (how to mix the stochastic part and the dWt) in
-        #     `measurement_term`, which is just a simple multiplication of the
-        #     stochastic part (2) with dWt.
-
-        def Ccal(t, rho):
-            Lms = jnp.stack([L(t) for L in self.Lms])  # (nLm, n, n)
-            Lms_rho = Lms @ rho
-            etas = self.etas[:, None, None]  # (nLm, 1, 1)
-            return jnp.sqrt(etas) * (Lms_rho + dag(Lms_rho))  # (nLm, n, n)
-
-        # === define deterministic term
-        def vector_field_deterministic(t, y, _):  # noqa: ANN001, ANN202
-            # state: Lcal(rho) (see MEDiffraxIntegrator)
-            Ls = jnp.stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-            H = self.H(t)
-            tmp = (-1j * H - 0.5 * LdL) @ y.rho + 0.5 * (Ls @ y.rho @ Lsd).sum(0)
-            drho = tmp + dag(tmp)
-
-            # signal: Tr[Ccal(rho)]
-            dYt = trace(Ccal(t, y.rho)).real  # (nLm,)
-
-            return YDSME(drho, dYt)
-
-        deterministic_term = dx.ODETerm(vector_field_deterministic)
-
-        # === define stochastic term
-        def vector_field_stochastic(t, y, _):  # noqa: ANN001, ANN202
-            # state: Ccal(rho) - Tr[Ccal(rho)] rho
-            Ccal_rho = Ccal(t, y.rho)
-            drho = Ccal_rho - trace(Ccal_rho).real[:, None, None] * y.rho  # (nLm, n, n)
-
-            # signal: 1
-            dYt = 1
-
-            return YDSME(drho, dYt)
-
-        control = self.wiener
-
-        # === define measurement term
-        class MeasurementTerm(dx.ControlTerm):
-            def prod(self, vf: dx.VF, control: dx.Control) -> dx.Y:
-                dW = control
-                drho = (vf.rho * dW[:, None, None]).sum(0)  # (n, n)
-                return YDSME(drho, dW)
-
-        measurement_term = MeasurementTerm(vector_field_stochastic, control)
-
-        # === combine and return both terms
-        return dx.MultiTerm(deterministic_term, measurement_term)
-
-    def solution_to_saved(self, solution: dx.Solution) -> Saved:
-        saved = solution.ys[0]
-        Ysave = solution.ys[2]
-        return DSMESolveSaved(saved.ysave, saved.extra, saved.Esave, Ysave)

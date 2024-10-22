@@ -15,7 +15,7 @@ from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
 from ...result import DSMESolveResult
-from ...solver import Euler, Milstein, Solver
+from ...solver import Euler, Solver
 from ...time_array import Shape, TimeArray
 from ...utils.quantum_utils.general import todm
 from .._utils import (
@@ -25,11 +25,7 @@ from .._utils import (
     catch_xla_runtime_error,
     get_integrator_class,
 )
-from ..core.diffrax_integrator import YDSME
-from ..dsmesolve.diffrax_integrator import (
-    DSMESolveEulerIntegrator,
-    DSMESolveMilsteinIntegrator,
-)
+from ..dsmesolve.fixed_step_integrator import DSMESolveEulerIntegrator
 
 
 def dsmesolve(
@@ -39,9 +35,9 @@ def dsmesolve(
     rho0: ArrayLike,
     tsave: ArrayLike,
     keys: list[PRNGKeyArray],
+    solver: Solver,
     *,
     exp_ops: list[ArrayLike] | None = None,
-    solver: Solver = Milstein(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> DSMESolveResult:
@@ -123,9 +119,9 @@ def dsmesolve(
         tutorial for more details.
 
     Warning:
-            Batching on `jump_ops` and `etas` is not yet supported, if this is needed
-            don't hesitate to
-            [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
+        Batching on `jump_ops` and `etas` is not yet supported, if this is needed
+        don't hesitate to
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Args:
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
@@ -142,20 +138,19 @@ def dsmesolve(
         keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
+        solver: Solver for the integration (supported:
+            [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama]).
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Milstein`][dynamiqs.solver.Milstein] (supported:
-            [`Milstein`][dynamiqs.solver.Milstein], [`Euler`][dynamiqs.solver.Euler]).
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
-        [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult] object holding the result of the
-            SME integration. Use the attributes `states`, `measurements` and `expects`
-            to access saved quantities, more details in
+        [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult] object holding the result of
+            the diffusive SME integration. Use the attributes `states`, `measurements`
+            and `expects` to access saved quantities, more details in
             [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult].
     """  # noqa: E501
     # === convert arguments
@@ -189,7 +184,7 @@ def dsmesolve(
         measured_ops,
         etas,
         rho0,
-        tsave,
+        tuple(tsave.tolist()),  # todo: fix static tsave
         keys,
         exp_ops,
         solver,
@@ -199,7 +194,7 @@ def dsmesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeArray,
     dissipative_ops: list[TimeArray],
@@ -280,10 +275,7 @@ def _dsmesolve_single_trajectory(
     options: Options,
 ) -> DSMESolveResult:
     # === select integrator class
-    integrators = {
-        Euler: DSMESolveEulerIntegrator,
-        Milstein: DSMESolveMilsteinIntegrator,
-    }
+    integrators = {Euler: DSMESolveEulerIntegrator}
     integrator_class = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
@@ -292,7 +284,7 @@ def _dsmesolve_single_trajectory(
     # === init solver
     integrator = integrator_class(
         ts=tsave,
-        y0=YDSME(rho0, jnp.empty(len(etas))),
+        y0=rho0,
         solver=solver,
         gradient=gradient,
         options=options,
