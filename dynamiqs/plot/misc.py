@@ -33,7 +33,7 @@ def pwc_pulse(
         >>> dq.plot.pwc_pulse(times, values)
         >>> renderfig('plot_pwc_pulse')
 
-        ![plot_pwc_pulse](/figs_code/plot_pwc_pulse.png){.fig}
+        ![plot_pwc_pulse](../../figs_code/plot_pwc_pulse.png){.fig}
     """
     times = jnp.asarray(times)  # (n + 1)
     values = jnp.asarray(values)  # (n)
