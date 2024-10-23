@@ -61,9 +61,6 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
-            # TODO: remove once https://github.com/patrick-kidger/diffrax/issues/445 is
-            # closed
-            warnings.simplefilter('ignore', FutureWarning)
 
             # === prepare diffrax arguments
             fn = lambda t, y, args: self.save(unit(y))  # noqa: ARG005
