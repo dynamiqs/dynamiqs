@@ -122,7 +122,7 @@ def _vectorized_sepropagator(
     n_batch = (H.in_axes, Shape(), Shape(), Shape(), Shape())
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = SEPropagatorResult(False, False, False, False, 0, 0)
+    out_axes = SEPropagatorResult(None, None, None, None, 0, 0)
 
     # compute vectorized function
     f = _cartesian_vectorize(_sepropagator, n_batch, out_axes)

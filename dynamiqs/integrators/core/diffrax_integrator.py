@@ -219,10 +219,10 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # induced on the dynamics.
 
         def vector_field_dissipative(t, y, _):  # noqa: ANN001, ANN202
-            Ls = jnp.stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
+            L = self.L(t)
+            Ld = dag(L)
+            LdL = (Ld @ L).sum(0)
+            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (L @ y @ Ld).sum(0)
             return tmp + dag(tmp)
 
         def vector_field_unitary(t, y, _):  # noqa: ANN001, ANN202
