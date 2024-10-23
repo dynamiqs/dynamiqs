@@ -26,6 +26,7 @@ from ...solver import (
 )
 from ...time_array import Shape, TimeArray
 from ...utils.quantum_utils import todm
+from ...utils.quantum_utils.general import isket
 from .._utils import (
     _astimearray,
     _cartesian_vectorize,
@@ -255,10 +256,10 @@ def _check_mesolve_args(
     for i, L in enumerate(jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
-    if len(jump_ops) == 0:
+    if len(jump_ops) == 0 and isket(rho0):
         logging.warning(
-            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
-            ' solve the Schrödinger equation.'
+            'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
         )
 
     # === check rho0 shape

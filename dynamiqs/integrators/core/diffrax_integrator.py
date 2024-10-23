@@ -218,11 +218,16 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
 
-        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+        def vector_field_dissipative(t, y, _):  # noqa: ANN001, ANN202
             L = self.L(t)
             Ld = dag(L)
             LdL = (Ld @ L).sum(0)
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (L @ y @ Ld).sum(0)
             return tmp + dag(tmp)
 
-        return dx.ODETerm(vector_field)
+        def vector_field_unitary(t, y, _):  # noqa: ANN001, ANN202
+            tmp = -1j * self.H(t) @ y
+            return tmp + dag(tmp)
+
+        vf = vector_field_dissipative if len(self.Ls) > 0 else vector_field_unitary
+        return dx.ODETerm(vf)
