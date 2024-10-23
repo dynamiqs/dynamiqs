@@ -115,7 +115,7 @@ def _vectorized_mepropagator(
     # this leaf should be vmapped on.
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = MEPropagatorResult(False, False, False, False, 0, 0)
+    out_axes = MEPropagatorResult(None, None, None, None, 0, 0)
 
     if not options.cartesian_batching:
         broadcast_shape = jnp.broadcast_shapes(

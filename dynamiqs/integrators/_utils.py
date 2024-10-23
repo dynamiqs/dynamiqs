@@ -4,7 +4,6 @@ from functools import partial, wraps
 
 import jax
 import jax.numpy as jnp
-import jax.tree_util as jtu
 from jax._src.lib import xla_client
 from jaxtyping import ArrayLike, PyTree
 
@@ -94,32 +93,10 @@ def is_shape(x: object) -> bool:
     return isinstance(x, Shape)
 
 
-def tree_false_to_none(
-    tree: PyTree, is_leaf: callable[PyTree, bool] | None = None
-) -> PyTree:
-    """Replace all `False` values in a tree by `None`."""
-    return jtu.tree_map(lambda x: x if x is not False else None, tree, is_leaf=is_leaf)
-
-
 def _flat_vectorize(  # noqa: C901
-    f: TimeArray,
-    n_batch_false: PyTree[int | False],
-    out_axes_false: PyTree[int | False],
-) -> TimeArray:
-    """Vectorize a Hamiltonian function.
-
-    Args:
-        f: the Hamiltonian function.
-        n_batch_false: the batch shape of the Hamiltonian.
-        out_axes_false: the out axes of the Hamiltonian.
-    """
-    # JAX completely dismisses leaves with a `None` when applying the `tree_map`, so we
-    # need to keep one version of the batch shape with `False` instead of `None`
-    # to keep the structure.
-    n_batch = tree_false_to_none(n_batch_false, is_leaf=is_shape)
-    out_axes = tree_false_to_none(out_axes_false)
-
-    broadcast_shape = jtu.tree_leaves(n_batch, is_shape)
+    f: callable, n_batch: PyTree[Shape], out_axes: PyTree[int | None]
+) -> callable:
+    broadcast_shape = jax.tree.leaves(n_batch, is_shape)
     broadcast_shape = jnp.broadcast_shapes(*broadcast_shape)
 
     def tree_map_fn(i: int, x: tuple[int, ...]) -> int | None:
@@ -139,8 +116,8 @@ def _flat_vectorize(  # noqa: C901
     expand_dims = []  # dimensions '1' that will be lost during the vmap but that
     # we want to keep in the results.
     for i in range(len(broadcast_shape)):
-        in_axes = jtu.tree_map(partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
-        if jtu.tree_all(jtu.tree_map(lambda x: x is None, in_axes)):
+        in_axes = jax.tree.map(partial(tree_map_fn, i), n_batch, is_leaf=is_shape)
+        if jax.tree.all(jax.tree.map(lambda x: x is None, in_axes)):
             expand_dims.append(n - i - 1)
         else:
             f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
@@ -158,35 +135,32 @@ def _flat_vectorize(  # noqa: C901
 
     def unsqueeze_args(out_ax: PyTree, result: PyTree) -> PyTree:
         """Unsqueeze the result."""
-        if out_ax is not False:
+        if out_ax is not None:
             for dim in expand_dims:
-                result = jtu.tree_map(
+                result = jax.tree.map(
                     partial(lambda t, dim: jnp.expand_dims(t, dim), dim=dim), result
                 )
 
         return result
 
     def wrap(*args: PyTree) -> PyTree:
-        squeezed_args = jtu.tree_map(squeeze_args, n_batch_false, args)
+        squeezed_args = jax.tree.map(squeeze_args, n_batch, args)
         result = f(*squeezed_args)
-        return jtu.tree_map(unsqueeze_args, out_axes_false, result)
+        is_none = lambda x: x is None
+        return jax.tree.map(unsqueeze_args, out_axes, result, is_leaf=is_none)
 
     return wrap
 
 
 def _cartesian_vectorize(
-    f: TimeArray,
-    n_batch_false: PyTree[int | False],
-    out_axes_false: PyTree[int | False],
-) -> TimeArray:
+    f: callable, n_batch: PyTree[Shape], out_axes: PyTree[int | None]
+) -> callable:
     # todo :write doc
-    n_batch_false = tree_false_to_none(n_batch_false, is_leaf=is_shape)
-    out_axes = tree_false_to_none(out_axes_false)
 
     # We use `jax.tree_util` to handle nested batching (such as `jump_ops`).
     # Only the second to last batch terms are taken into account in order to
     # have proper batching of SummedTimeArrays (see below).
-    leaves, treedef = jtu.tree_flatten((None,) + n_batch_false[1:], is_leaf=is_shape)
+    leaves, treedef = jax.tree.flatten((None,) + n_batch[1:], is_leaf=is_shape)
 
     # note: we apply the successive vmaps in reverse order, so the output
     # dimensions are in the correct order
@@ -195,15 +169,13 @@ def _cartesian_vectorize(
         if leaf_len > 0:
             # build the `in_axes` argument with the same structure as `n_batch`,
             # but with 0 at the `leaf` position
-            in_axes = jtu.tree_map(lambda _: None, leaves)
+            in_axes = jax.tree.map(lambda _: None, leaves)
             in_axes[i] = 0
-            in_axes = jtu.tree_unflatten(treedef, in_axes)
+            in_axes = jax.tree.unflatten(treedef, in_axes)
             for _ in range(leaf_len):
                 f = jax.vmap(f, in_axes=in_axes, out_axes=out_axes)
 
     # We flat vectorize on the first n_batch term, which is the
     # Hamiltonian. This prevents performing the Cartesian product
     # on all terms for the sum Hamiltonian.
-    return _flat_vectorize(
-        f, n_batch_false[:1] + (False,) * len(n_batch_false[1:]), out_axes_false
-    )
+    return _flat_vectorize(f, n_batch[:1] + (Shape(),) * len(n_batch[1:]), out_axes)
