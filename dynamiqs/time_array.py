@@ -630,8 +630,8 @@ class SummedTimeArray(TimeArray):
 
     @property
     def in_axes(self) -> PyTree[int | None]:
-        timearrays = [tarray.in_axes for tarray in self.timearrays]
-        return SummedTimeArray(timearrays, check=False)
+        in_axes_list = [tarray.in_axes for tarray in self.timearrays]
+        return SummedTimeArray(in_axes_list, check=False)
 
     @property
     def discontinuity_ts(self) -> Array | None:
