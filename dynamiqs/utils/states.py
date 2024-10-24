@@ -9,7 +9,7 @@ from jax.typing import ArrayLike
 from .._checks import check_type_int
 from .._utils import cdtype
 from .operators import displace
-from .quantum_utils import tensor, todm
+from .quantum_utils import tensor, todm, unit
 
 __all__ = [
     'fock',
@@ -20,6 +20,7 @@ __all__ = [
     'coherent_dm',
     'ground',
     'excited',
+    'thermal_dm',
 ]
 
 
@@ -333,3 +334,78 @@ def excited() -> Array:
                [0.+0.j]], dtype=complex64)
     """
     return jnp.array([[1], [0]], dtype=cdtype())
+
+
+def thermal_dm(dim: int | tuple[int, ...], beta: Array) -> Array:
+    r"""Returns the density matrix of a thermal state or a tensor product of thermal
+    states.
+
+    Args:
+        dim: Hilbert space dimension of each mode.
+        beta: Inverse temperature \( \beta \), either a single value or an
+        array of values. If `dim` is a tuple, `beta` must be broadcastable to
+        match the number of modes.
+
+    Returns:
+        _(array of shape (..., n, n))_ Density matrix of the thermal state or
+        tensor product of thermal states, with _n = prod(dims)_.
+
+    Examples:
+        Single-mode thermal state at inverse temperature
+        \(\beta=1.0\):
+        >>> dm = dq.thermal_dm(3, 1.0)
+        >>> dm
+        Array([[0.665, 0.   , 0.   ],
+               [0.   , 0.245, 0.   ],
+               [0.   , 0.   , 0.09 ]], dtype=float32)
+
+        Multi-mode thermal state for two modes,
+        each with dimension 3, at inverse temperature \(\beta=1.0\):
+        >>> dm = dq.thermal_dm((3, 3), (1.0, 1.0))
+        >>> dm.shape
+        (9, 9)
+
+        Batched thermal states for a range of temperatures:
+        >>> betas = [0.5, 1.0, 1.5]
+        >>> dm = dq.thermal_dm(3, betas)
+        >>> dm.shape
+        (3, 3, 3)
+    """
+    dim = jnp.asarray(dim)
+    beta = jnp.asarray(beta)
+    check_type_int(dim, 'dim')
+
+    # check if dim is a single value or a tuple
+    if dim.ndim > 1:
+        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
+
+    # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
+    if dim.ndim == 0:
+        dim = dim[None]
+        beta = beta[..., None]
+
+    # check if beta has shape (..., len(ndim))
+    if beta.shape[-1] != dim.shape[-1]:
+        raise ValueError(
+            'Argument `beta` must have shape `(...)` or `(..., len(dim))`, but'
+            f' has shape beta.shape={beta.shape}.'
+        )
+
+    beta = beta.swapaxes(0, -1)  # (len(dim), ...)
+    dms = [_single_thermal_dm(d, b) for d, b in zip(dim, beta)]
+    return tensor(*dms)
+
+
+def _single_thermal_dm(dim: int, beta: Array) -> Array:
+    """Returns the density matrix of a thermal state for a single mode."""
+    energies = jnp.arange(dim)
+
+    # compute the unnormalized diagonal elements of the density matrix
+    rho_diag = jnp.exp(-beta[..., None] * energies)
+
+    # normalize the density matrix
+    rho = bdiag(rho_diag)
+    return unit(rho)
+
+
+bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
