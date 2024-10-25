@@ -390,6 +390,11 @@ def thermal_dm(dim: int | tuple[int, ...], nth: Array) -> Array:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
     # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
+    # check if dim is a single value or a tuple
+    if dim.ndim > 1:
+        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
+
+    # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
     if dim.ndim == 0:
         dim = dim[None]
         nth = nth[..., None]
