@@ -60,7 +60,7 @@ gif = dq.plot.wigner_gif(result.states, ymax=3.0, gif_duration=10.0)
 rendergif(gif, 'wigner-kerr-oscillator')
 ```
 
-![plot_wigner_gif_kerr](/figs_docs/wigner-kerr-oscillator.gif){.fig}
+![plot_wigner_gif_kerr](../../figs_docs/wigner-kerr-oscillator.gif){.fig}
 
 ## Periodic revival of a coherent state
 
@@ -101,7 +101,7 @@ plt.ylabel(r'$|\langle a(t) \rangle|$')
 renderfig('photon-number-kerr-oscillator')
 ```
 
-![plot_photon_number_kerr](/figs_docs/photon-number-kerr-oscillator.png){.fig}
+![plot_photon_number_kerr](../../figs_docs/photon-number-kerr-oscillator.png){.fig}
 
 We indeed observe a periodic revival of the coherent state, with a period of $\pi / K$. These revivals have a reduced amplitude due to the presence of photon loss.
 
@@ -135,7 +135,7 @@ plt.ylabel(r'Loss rate, $\kappa / K$')
 renderfig('amplitude-revivals-kerr-oscillator')
 ```
 
-![plot_amplitude_revivals_kerr](/figs_docs/amplitude-revivals-kerr-oscillator.png){.fig}
+![plot_amplitude_revivals_kerr](../../figs_docs/amplitude-revivals-kerr-oscillator.png){.fig}
 
 We observe that the amplitude of the first revival decreases monotically with the photon loss rate $\kappa$, and with the initial coherent state amplitude $\bar{n}$. This behavior is consistent with the expected behavior of the Kerr oscillator. Remarkably, thanks to batching, such a set of hundreds of simulations can be run in a few seconds.
 
@@ -187,7 +187,7 @@ plt.legend(frameon=True)
 renderfig('rabi-oscillations-kerr-oscillator')
 ```
 
-![plot_rabi_oscillations_kerr](/figs_docs/rabi-oscillations-kerr-oscillator.png){.fig}
+![plot_rabi_oscillations_kerr](../../figs_docs/rabi-oscillations-kerr-oscillator.png){.fig}
 
 We indeed find Rabi oscillations between Fock states $|0\rangle$ and $|1\rangle$, with a period of $\pi / \epsilon$. However, these oscillations are **damped** due to the presence of photon loss. In addition, we observe that a small fraction of the total population is periodically **leaked** to higher Fock states. This is because the Kerr oscillator is not a perfect two-level system, and the driving field is too large compared to the Kerr non-linearity.
 
@@ -269,7 +269,7 @@ plt.colorbar(label='log10(1 - Fidelity)')
 renderfig('pipulse-kerr-oscillator')
 ```
 
-![plot_pipulse_kerr_oscillator](/figs_docs/pipulse-kerr-oscillator.png){.fig}
+![plot_pipulse_kerr_oscillator](../../figs_docs/pipulse-kerr-oscillator.png){.fig}
 
 We observe that the fidelity of the $\pi$-pulse is maximized over a band of pulse widths and gate durations. In practice, one wants to reduce the gate duration as much as possible, but this corresponds to large pulse widths. However, such large-width truncated gaussians are not physical because they do not verify $\epsilon(0) = \epsilon(T) = 0$, and similarly for higher derivatives. This is a limitation of our gaussian ansatz, and one would need to consider more complex pulse shapes to optimize this $\pi$-pulse in a realistic setting.
 
@@ -355,7 +355,7 @@ dq.plot.pwc_pulse(tpulse, amps)
 renderfig('optimized-pulse-kerr-oscillator')
 ```
 
-![plot_optimized_pulse_kerr](/figs_docs/optimized-pulse-kerr-oscillator.png){.fig}
+![plot_optimized_pulse_kerr](../../figs_docs/optimized-pulse-kerr-oscillator.png){.fig}
 
 We indeed find a smooth pulse, with a small contribution on the imaginary part corresponding to a drive on the conjugate quadrature. This is typical of an optimal transmon pulse, in which leakage is minimized through this additional drive in a process known as Derivative Removal by Adiabatic Gate (DRAG).
 
@@ -374,7 +374,7 @@ plt.legend()
 renderfig('losses-kerr-oscillator')
 ```
 
-![plot_losses_kerr](/figs_docs/losses-kerr-oscillator.png){.fig}
+![plot_losses_kerr](../../figs_docs/losses-kerr-oscillator.png){.fig}
 
 We find that the overall loss decreases monotonically, with a smoothness loss kept relatively low compared to the fidelity loss. We also find convergence of the loss function, indicating that the optimization process is successful. Of course, the hyper parameters such as the relative weight of each loss, the number of pulse time steps, the learning rate, or the number of epochs, could be further tuned.
 
