@@ -349,8 +349,8 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> Array:
     Args:
         dim: Hilbert space dimension of each mode.
         nth _(array_like of shape (...) or (..., len(dim)))_: Thermal photon number for
-        each mode. If `dim` is a tuple, the last dimension of `nth` should match the
-        length of `dim`.
+            each mode. If `dim` is a tuple, the last dimension of `nth` should match the
+            length of `dim`.
 
     Returns:
         _(array of shape (..., n, n))_ Density matrix of the thermal state or tensor
