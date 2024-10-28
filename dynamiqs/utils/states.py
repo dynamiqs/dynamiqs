@@ -336,50 +336,45 @@ def excited() -> Array:
     return jnp.array([[1], [0]], dtype=cdtype())
 
 
-def thermal_dm(dim: int | tuple[int, ...], nth: Array) -> Array:
-    r"""Returns the density matrix of a thermal state or a tensor product
-    of thermal states.
+def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> Array:
+    r"""Returns the density matrix of a thermal state or a tensor product of thermal
+    states.
 
-    The density matrix for a thermal state is given by:
+    It is defined for a thermal photon number $n_{th}$ by:
 
     $$
-    \rho_{th} = \sum_k \frac{(n_{th})^k}{(1 + n_{th})^{1+k}} \left\vert k
-    \right\rangle\\left\langle k\right\vert
+        \rho = \sum_k \frac{(n_{th})^k}{(1+n_{th})^{1+k}} \ket{k}\bra{k},
     $$
-    where \(n_{th}\) is the thermal photon number.
-    This function computes either a single-mode thermal state or the tensor
-    product of thermal states for multiple modes, depending on the input.
 
     Args:
         dim: Hilbert space dimension of each mode.
-        nth: _(array_like of shape (...) or (..., len(dim)))_: thermal photon
-                number \(n_{th}\) for each mode. If `dim` is a tuple, the last
-                dimension of `nth` should match the length of `dim`.
+        nth _(array_like of shape (...) or (..., len(dim)))_: Thermal photon number for
+        each mode. If `dim` is a tuple, the last dimension of `nth` should match the
+        length of `dim`.
 
     Returns:
-        _(array of shape (..., n, n))_ Density matrix of the thermal state or
-            tensor product of thermal states, where _n = prod(dims)_.
+        _(array of shape (..., n, n))_ Density matrix of the thermal state or tensor
+            product of thermal states, with _n = prod(dims)_.
 
     Examples:
-        Single-mode thermal state at inverse temperature
-        \(n_{th}=0.581\):
-        >>> dm = dq.thermal_dm(3, 0.581)
-        >>> dm
-        Array([[0.666, 0.   , 0.   ],
-               [0.   , 0.245, 0.   ],
-               [0.   , 0.   , 0.09 ]], dtype=float32)
+        Single-mode thermal state at thermal photon number $n_{th}=0.1$:
+        >>> dq.thermal_dm(4, 0.1)
+        Array([[0.675, 0.   , 0.   , 0.   ],
+               [0.   , 0.225, 0.   , 0.   ],
+               [0.   , 0.   , 0.075, 0.   ],
+               [0.   , 0.   , 0.   , 0.025]], dtype=float32)
+
+        Batched single-mode thermal states for three thermal photon numbers
+        $n_{th}=0.1, 0.2, 0.3$:
+        >>> rhos = dq.thermal_dm(4, [0.1, 0.2, 0.3]).shape
+        >>> rhos.shape
+        (3, 4, 4)
 
         Multi-mode thermal state for two modes,
         each with dimension 3, at thermal photon number \(n_{th}=0.581\):
         >>> dm = dq.thermal_dm((3, 3), (0.581, 0.581))
         >>> dm.shape
         (9, 9)
-
-        Batched thermal states for a range of thermal photon numbers:
-        >>> nths = [1.541, 0.581, 0.287]
-        >>> dm = dq.thermal_dm((3, 3, 3), nths)
-        >>> dm.shape
-        (27, 27)
     """
     dim = jnp.asarray(dim)
     nth = jnp.asarray(nth)
@@ -389,23 +384,19 @@ def thermal_dm(dim: int | tuple[int, ...], nth: Array) -> Array:
     if dim.ndim > 1:
         raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
 
-    # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
-    # check if dim is a single value or a tuple
-    if dim.ndim > 1:
-        raise ValueError('Argument `dim` must be an integer or a tuple of integers.')
-
-    # if dim is an integer, convert shapes dim: () -> (1,) and number: (...) -> (..., 1)
+    # if dim is an integer, convert shapes dim: () -> (1,) and nth: (...) -> (..., 1)
     if dim.ndim == 0:
         dim = dim[None]
         nth = nth[..., None]
 
-    # check if beta has shape (..., len(ndim))
+    # check if nth has shape (..., len(ndim))
     if nth.shape[-1] != dim.shape[-1]:
         raise ValueError(
             'Argument `nth` must have shape `(...)` or `(..., len(dim))`, but'
             f' has shape nth.shape={nth.shape}.'
         )
 
+    # compute all density matrices
     nth = nth.swapaxes(0, -1)  # (len(dim), ...)
     dms = [_single_thermal_dm(d, n) for d, n in zip(dim, nth)]
     return tensor(*dms)
@@ -418,9 +409,9 @@ def _single_thermal_dm(dim: int, nth: Array) -> Array:
     # compute the unnormalized diagonal elements of the density matrix
     rho_diag = (nth**ks) / ((1 + nth) ** (1 + ks))
 
-    # normalize the density matrix
+    # construct the density matrix
+    bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
     rho = bdiag(rho_diag)
+
+    # normalize the density matrix
     return unit(rho)
-
-
-bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
