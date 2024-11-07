@@ -993,8 +993,8 @@ def eig_callback_cpu(x: Array) -> tuple[Array, Array]:
         vectorized=True,
     )
 
-  
-  def bloch_coordinates(x: ArrayLike) -> Array:
+
+def bloch_coordinates(x: ArrayLike) -> Array:
     r"""Returns the spherical coordinates $(r, \theta, \phi)$ of a ket or density matrix
     on the Bloch sphere.
 
