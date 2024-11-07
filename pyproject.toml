@@ -9,7 +9,7 @@ authors = [
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
-readme = "README.md"
+readme = "README_PYPI.md"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
@@ -18,17 +18,18 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "qutip>=4.7.5,<5.0",
+    "qutip>=4.7.5",
     "scipy",
     "numpy",
     "matplotlib",
     "tqdm",
-    "jax",
+    # todo: fix when https://github.com/patrick-kidger/equinox/pull/871 is released
+    "jax<0.4.34",
     "jaxlib",
     "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
-    "imageio",
+    "pillow",
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
     "tqdm",
@@ -52,7 +53,7 @@ dev = [
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
-    "mkdocstrings[python]",
+    "mkdocstrings[python]!=1.12.0", # bug with parsing strings in signatures, see https://github.com/mkdocstrings/python/issues/191
     "mkdocs-gen-files",
     "mkdocs-literate-nav",
     "mkdocs-section-index",
@@ -62,6 +63,8 @@ dev = [
     "sybil>=6",
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
+    "mike",
+    "optax",  # for gradient descent tutorials
 ]
 
 [tool.ruff]
@@ -134,11 +137,11 @@ cmd = 'echo "\n>>> pytest -n=auto tests" && pytest -n=auto tests'
 help = "run the unit tests suite (pytest)"
 
 [tool.taskipy.tasks.doctest-code]
-cmd = 'echo "\n>>> pytest dynamiqs" && rm -f docs/figs_code/*.png && pytest dynamiqs'
+cmd = 'echo "\n>>> pytest dynamiqs" && python docs/remove_figs.py docs/figs_code && pytest dynamiqs'
 help = "check code docstrings examples (doctest)"
 
 [tool.taskipy.tasks.doctest-docs]
-cmd = 'echo "\n>>> pytest docs" && rm -f docs/figs_docs/*.png && pytest docs'
+cmd = 'echo "\n>>> pytest docs" && python docs/remove_figs.py docs/figs_docs && pytest docs'
 help = "check documentation examples (doctest)"
 
 [tool.taskipy.tasks.doctest]

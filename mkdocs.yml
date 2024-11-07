@@ -1,4 +1,4 @@
-site_name: dynamiqs
+site_name: Dynamiqs
 site_url: "https://www.dynamiqs.org"
 use_directory_urls: false
 repo_url: https://github.com/dynamiqs/dynamiqs
@@ -39,16 +39,21 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-copyright: "&copy Copyright 2023, dynamiqs developers."
+copyright: "&copy Copyright 2023-2024, Dynamiqs developers."
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/dynamiqs/dynamiqs
     - icon: fontawesome/brands/slack
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
+  version:
+    provider: mike
+    alias: true
+    default: stable
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
+  - stylesheets/home.css
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
@@ -85,6 +90,8 @@ plugins:
             line_length: 88
             show_bases: false
             merge_init_into_class: true
+  - mike:
+      canonical_version: stable
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
@@ -125,17 +132,19 @@ nav:
   - Documentation:
       - documentation/index.md
       - Getting started:
-          - What is dynamiqs?: documentation/getting_started/whatis.md
+          - What is Dynamiqs?: documentation/getting_started/whatis.md
           - Installation: documentation/getting_started/installation.md
           - Basic examples: documentation/getting_started/examples.md
           - The sharp bits 🔪: documentation/getting_started/sharp-bits.md
       - Learn the basics:
-          - Workflow in dynamiqs: documentation/basics/workflow.md
+          - Workflow in Dynamiqs: documentation/basics/workflow.md
           - Time-dependent operators: documentation/basics/time-dependent-operators.md
           - Closed systems: documentation/basics/closed-systems.md
           - Open systems: documentation/basics/open-systems.md
           - Batching simulations: documentation/basics/batching-simulations.md
           - Computing gradients: documentation/basics/computing-gradients.md
+      - Advanced examples:
+          - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
   - Python API:
       - python_api/index.md
       - Quantum solvers:
@@ -192,6 +201,13 @@ nav:
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md
+              - rx: python_api/utils/operators/rx.md
+              - ry: python_api/utils/operators/ry.md
+              - rz: python_api/utils/operators/rz.md
+              - sgate: python_api/utils/operators/sgate.md
+              - tgate: python_api/utils/operators/tgate.md
+              - cnot: python_api/utils/operators/cnot.md
+              - toffoli: python_api/utils/operators/toffoli.md
           - States:
               - fock: python_api/utils/states/fock.md
               - fock_dm: python_api/utils/states/fock_dm.md
@@ -229,6 +245,7 @@ nav:
               - overlap: python_api/utils/quantum_utils/overlap.md
               - fidelity: python_api/utils/quantum_utils/fidelity.md
               - entropy_vn: python_api/utils/quantum_utils/entropy_vn.md
+              - bloch_coordinates: python_api/utils/quantum_utils/bloch_coordinates.md
               - wigner: python_api/utils/quantum_utils/wigner.md
           - JAX-related utilities:
               - to_qutip: python_api/utils/jax_utils/to_qutip.md
@@ -268,4 +285,4 @@ nav:
       - community/index.md
       - Contributing: community/contributing.md
       - Let's talk!: community/lets-talk.md
-      - Citing dynamiqs: community/citing.md
+      - Citing Dynamiqs: community/citing.md

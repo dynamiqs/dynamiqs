@@ -1,6 +1,6 @@
-# Workflow in dynamiqs
+# Workflow in Dynamiqs
 
-The core of dynamiqs is to solve quantum differential equations. This tutorial goes over the basic workflow of such simulations, in mainly four steps:
+The core of Dynamiqs is to solve quantum differential equations. This tutorial goes over the basic workflow of such simulations, in mainly four steps:
 
 - **Define the system**: Initialize the state and operators you are interested in.
 - **Set the scope**: Specify the duration, observables to measure, or solver to use.
@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ## I. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in dynamiqs, see the [Python API](../../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like object.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in Dynamiqs, see the [Python API](../../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like object.
 
 Here, we will use [`dq.fock()`][dynamiqs.fock] to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz()`][dynamiqs.sigmaz] and [`dq.sigmax()`][dynamiqs.sigmax] to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
@@ -39,11 +39,11 @@ State of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 1).
 Hamiltonian of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 2).
 ```
 
-In dynamiqs, all quantum objects are defined directly with [JAX arrays](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.array.html), and without subclassing. This allows for easy interfacing with JAX utility functions, and avoids runtime overheads. Also, all quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have a shape `(..., n, 1)` and density matrices have shape `(..., n, n)`.
+In Dynamiqs, all quantum objects are defined directly with [JAX arrays](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.array.html), and without subclassing. This allows for easy interfacing with JAX utility functions, and avoids runtime overheads. Also, all quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have a shape `(..., n, 1)` and density matrices have shape `(..., n, n)`.
 
 ## II. Set the scope
 
-Next, we define the scope of the simulation. This includes the total duration of time evolution, the observables we want to measure and how often we measure them. Observables are defined similarly to the Hamiltonian, using arrays and dynamiqs utility functions. The total duration and how often measurements are performed is defined in a single object named `tsave`. It is an arbitrary array of time points, of which `tsave[-1]` specifies the total duration of time evolution.
+Next, we define the scope of the simulation. This includes the total duration of time evolution, the observables we want to measure and how often we measure them. Observables are defined similarly to the Hamiltonian, using arrays and Dynamiqs utility functions. The total duration and how often measurements are performed is defined in a single object named `tsave`. It is an arbitrary array of time points, of which `tsave[-1]` specifies the total duration of time evolution.
 
 We also need to specify the solver and options related to it, namely the method of integration and the eventual related parameters. The list of available solvers and their parameters is available in the [Python API](../../python_api/index.md).
 
@@ -84,8 +84,8 @@ print(result)
 ==== SESolveResult ====
 Solver  : Dopri5
 Infos   : 56 steps (48 accepted, 8 rejected)
-States  : Array complex64 (101, 2, 1) | 1.58 Kb
-Expects : Array complex64 (1, 101) | 0.79 Kb
+States  : Array complex64 (101, 2, 1) | 1.6 Kb
+Expects : Array complex64 (1, 101) | 0.8 Kb
 ```
 
 ## IV. Analyze the results
@@ -107,10 +107,10 @@ plt.xlabel('Time')
 plt.ylabel(r'$\langle \sigma_z \rangle$')
 plt.xlim(0, 10)
 plt.ylim(-1, 1)
-plt.legend(('Analytical', 'dynamiqs'))
+plt.legend(('Analytical', 'Dynamiqs'))
 renderfig('workflow')
 ```
 
-![workflow](/figs_docs/workflow.png){.fig}
+![workflow](../../figs_docs/workflow.png){.fig}
 
 As expected, we find off-resonant Rabi oscillations at the generalized Rabi frequency $\Omega^* = \sqrt{\delta^2 + \Omega^2}$, and with a reduced amplitude $|\Omega / \Omega^*|^2$.

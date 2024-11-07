@@ -24,11 +24,11 @@ def memory_bytes(x: Array) -> int:
 def memory_str(x: Array) -> str:
     mem = memory_bytes(x)
     if mem < 1024**2:
-        return f'{mem / 1024:.2f} Kb'
+        return f'{mem / 1024:.1f} Kb'
     elif mem < 1024**3:
-        return f'{mem / 1024**2:.2f} Mb'
+        return f'{mem / 1024**2:.1f} Mb'
     else:
-        return f'{mem / 1024**3:.2f} Gb'
+        return f'{mem / 1024**3:.1f} Gb'
 
 
 def array_str(x: Array | None) -> str | None:
@@ -38,11 +38,11 @@ def array_str(x: Array | None) -> str | None:
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
     ysave: Array
+    extra: PyTree | None
 
 
 class SolveSaved(Saved):
     Esave: Array | None
-    extra: PyTree | None
 
 
 class PropagatorSaved(Saved):
@@ -61,6 +61,10 @@ class Result(eqx.Module):
     _saved: Saved
     infos: PyTree | None
 
+    @property
+    def extra(self) -> PyTree | None:
+        return self._saved.extra
+
     def to_qutip(self) -> Result:
         raise NotImplementedError
 
@@ -78,6 +82,7 @@ class Result(eqx.Module):
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
             'Infos': self.infos if self.infos is not None else None,
+            'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
 
     def __str__(self) -> str:
@@ -105,16 +110,11 @@ class SolveResult(Result):
     def expects(self) -> Array | None:
         return self._saved.Esave
 
-    @property
-    def extra(self) -> PyTree | None:
-        return self._saved.extra
-
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
             'States': array_str(self.states),
             'Expects': array_str(self.expects),
-            'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
         }
 
 
@@ -285,6 +285,8 @@ class SEPropagatorResult(PropagatorResult):
         propagators _(array of shape (..., nsave, n, n))_: Saved propagators with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_propagator _(array of shape (..., n, n))_: Saved final propagator.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -309,6 +311,8 @@ class MEPropagatorResult(PropagatorResult):
         propagators _(array of shape (..., nsave, n^2, n^2))_: Saved propagators with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         final_propagator _(array of shape (..., n^2, n^2))_: Saved final propagator.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.

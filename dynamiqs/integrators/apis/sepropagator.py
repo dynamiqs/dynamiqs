@@ -11,15 +11,16 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import Shape, TimeArray
+from ...time_array import TimeArray
 from ...utils.operators import eye
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
     ispwc,
 )
+from ..core.abstract_integrator import SEPropagatorIntegrator
 from ..sepropagator.diffrax_integrator import (
     SEPropagatorDopri5Integrator,
     SEPropagatorDopri8Integrator,
@@ -83,7 +84,9 @@ def sepropagator(
             [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
@@ -114,17 +117,15 @@ def _vectorized_sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === vectorize function
-    # we vectorize over H, all other arguments are not vectorized
-    n_batch = (H.in_axes, Shape(), Shape(), Shape(), Shape())
+    # vectorize input over H
+    in_axes = (H.in_axes, None, None, None, None)
+    # vectorize output over `_saved` and `infos`
+    out_axes = SEPropagatorResult(None, None, None, None, 0, 0)
 
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = SEPropagatorResult(False, False, False, False, 0, 0)
+    # cartesian batching only
+    nvmap = (H.ndim - 2, 0, 0, 0, 0, 0)
+    f = cartesian_vmap(_sepropagator, in_axes, out_axes, nvmap)
 
-    # compute vectorized function
-    f = _cartesian_vectorize(_sepropagator, n_batch, out_axes)
-
-    # === apply vectorized function
     return f(H, tsave, solver, gradient, options)
 
 
@@ -148,14 +149,16 @@ def _sepropagator(
         Kvaerno3: SEPropagatorKvaerno3Integrator,
         Kvaerno5: SEPropagatorKvaerno5Integrator,
     }
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: SEPropagatorIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     y0 = eye(H.shape[-1])
-    integrator = integrator_class(tsave, y0, H, solver, gradient, options)
+    integrator = integrator_class(
+        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H
+    )
 
     # === run integrator
     result = integrator.run()

@@ -67,14 +67,14 @@ def complex(  # noqa: A001
         x = np.random.rand(n) * jnp.exp(1j * 2 * jnp.pi * np.random.rand(n))
         ax1.scatter(x.real, x.imag, s=1.0)
 
-        # option 3: uniformly distributed in a disk (in dynamiqs)
+        # option 3: uniformly distributed in a disk (in Dynamiqs)
         key = jax.random.PRNGKey(42)
         x = dq.random.complex(key, n)
         ax2.scatter(x.real, x.imag, s=1.0)
         renderfig('random_complex')
         ```
 
-        ![rand_complex](/figs_code/random_complex.png){.fig}
+        ![rand_complex](../../figs_code/random_complex.png){.fig}
 
     Args:
         key: A PRNG key used as the random key.

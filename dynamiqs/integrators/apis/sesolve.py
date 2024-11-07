@@ -13,14 +13,15 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import Shape, TimeArray
+from ...time_array import TimeArray
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
+    multi_vmap,
 )
+from ..core.abstract_integrator import SESolveIntegrator
 from ..sesolve.diffrax_integrator import (
     SESolveDopri5Integrator,
     SESolveDopri8Integrator,
@@ -87,7 +88,9 @@ def sesolve(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Expm`][dynamiqs.solver.Expm]).
-        gradient: Algorithm used to compute the gradient.
+        gradient: Algorithm used to compute the gradient. The default is
+            solver-dependent, refer to the documentation of the chosen solver for more
+            details.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
     Returns:
@@ -100,7 +103,8 @@ def sesolve(
     H = _astimearray(H)
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    if exp_ops is not None:
+        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
@@ -122,36 +126,24 @@ def _vectorized_sesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> SESolveResult:
-    # === vectorize function
-    # we vectorize over H and psi0, all other arguments are not vectorized
+    # vectorize input over H and psi0
+    in_axes = (H.in_axes, 0, None, None, None, None, None)
+    # vectorize output over `_saved` and `infos`
+    out_axes = SESolveResult(None, None, None, None, 0, 0)
 
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
-        H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
-        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
-
-    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
-    # this leaf should be vmapped on.
-    n_batch = (
-        H.in_axes,
-        Shape(psi0.shape[:-2]),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-    )
-
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = SESolveResult(False, False, False, False, 0, 0)
-
-    # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
+        nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(_sesolve, in_axes, out_axes, nvmap)
     else:
-        f = _flat_vectorize(_sesolve, n_batch, out_axes)
+        n = H.shape[-1]
+        bshape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        H = H.broadcast_to(*bshape, n, n)
+        psi0 = jnp.broadcast_to(psi0, (*bshape, n, 1))
+        # vectorize the function
+        f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 
@@ -174,13 +166,21 @@ def _sesolve(
         Kvaerno5: SESolveKvaerno5Integrator,
         Expm: SESolveExpmIntegrator,
     }
-    integrator_class = get_integrator_class(integrators, solver)
+    integrator_class: SESolveIntegrator = get_integrator_class(integrators, solver)
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(tsave, psi0, H, solver, gradient, options, exp_ops)
+    integrator = integrator_class(
+        ts=tsave,
+        y0=psi0,
+        solver=solver,
+        gradient=gradient,
+        options=options,
+        H=H,
+        Es=exp_ops,
+    )
 
     # === run integrator
     result = integrator.run()
