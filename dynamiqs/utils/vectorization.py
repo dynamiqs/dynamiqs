@@ -223,6 +223,10 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
     Note:
         This superoperator is also sometimes called *Liouvillian*.
 
+    Note:
+        See also [`dq.lindbladian`][dynamiqs.utils.quantum_utils.general.lindbladian] to
+        access the Lindbladian only through matrix-vector product.
+
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
         jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
