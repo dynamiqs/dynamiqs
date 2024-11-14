@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import partial
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jaxtyping import Array, ArrayLike, ScalarLike
@@ -26,7 +27,6 @@ def floquet(
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-    safe: bool = False,
 ) -> FloquetResult:
     r"""Compute Floquet modes $\Phi_{m}(t)$ and quasienergies $\epsilon_m$.
 
@@ -63,8 +63,6 @@ def floquet(
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
-        safe: Whether or not to check if the Hamiltonian is actually periodic with the
-            supplied period T
 
     Returns:
         [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
@@ -86,7 +84,7 @@ def floquet(
 
     # === check arguments
     tsave = check_times(tsave, 'tsave')
-    _check_floquet_args(H, T, safe=safe)
+    H, T, tsave = _check_floquet_args(H, T, tsave)
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
@@ -138,19 +136,23 @@ def _floquet(
     return result  # noqa: RET504
 
 
-def _check_floquet_args(H: TimeArray, T: Array, safe: bool = False):
+def _check_floquet_args(
+    H: TimeArray, T: Array, tsave: Array
+) -> (TimeArray, Array, Array):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
+    # === check that tsave[-1] - tsave[0] <= T
+    T, tsave = eqx.error_if(
+        (T, tsave),
+        tsave[-1] - tsave[0] > T,
+        'The time interval spanned by tsave should be less than a single period T, '
+        'i.e. `tsave[-1] - tsave[0] <= T`.',
+    )
+
     # === check that the Hamiltonian is periodic with the supplied period
-    if safe:
-        in_axes = (H.in_axes, 0)
-        out_axes = Saved(0, None)
-        nvmap = len(T.shape)
-        H_0 = multi_vmap(lambda _H, _T: Saved(_H(0), None), in_axes, out_axes, nvmap)
-        H_T = multi_vmap(lambda _H, _T: Saved(_H(_T), None), in_axes, out_axes, nvmap)
-        periodic = jnp.allclose(H_0(H, T).ysave, H_T(H, T).ysave)
-        if not periodic:
-            raise ValueError(
-                'The Hamiltonian H is not periodic with the supplied period T'
-            )
+    H = eqx.error_if(
+        H, H(0) != H(T), 'The Hamiltonian H is not periodic with the supplied period T.'
+    )
+
+    return H, T, tsave
