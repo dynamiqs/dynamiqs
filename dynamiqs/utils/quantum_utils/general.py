@@ -989,8 +989,8 @@ def eig_callback_cpu(x: Array) -> tuple[Array, Array]:
     return jax.pure_callback(
         _eig_cpu,
         (jnp.ones(x.shape[:-1], dtype=cdtype()), jnp.ones(x.shape, dtype=cdtype())),
-        x.astype(cdtype()),
-        vectorized=True,
+        x,
+        vmap_method='sequential',
     )
 
 
