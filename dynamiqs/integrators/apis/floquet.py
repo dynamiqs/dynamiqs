@@ -46,6 +46,32 @@ def floquet(
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
 
+    Note-: Batching over multiple drive periods
+        The current API does not yet natively support batching over multiple drive
+        periods, for instance if you wanted to batch over Hamiltonians with different
+        drive frequencies. This however can be achieved straightforwardly with an
+        external call to `jax.vmap`
+
+        ```python
+        import dynamiqs as dq
+        import jax.numpy as jnp
+        import jax
+
+        omega = 2.0 * jnp.pi * 1.0
+        omega_ds = omega * jnp.array([0.9, 1.0, 1.1])
+
+
+        def floquet_for_omega_d(omega_d):
+            T = 2.0 * jnp.pi / omega_d
+            tsave = jnp.linspace(0.0, T, 4)
+            H = 0.5 * omega * dq.sigmaz()
+            H += dq.modulated(lambda t: jnp.cos(omega_d * t), dq.sigmax())
+            return dq.floquet(H, T, tsave)
+
+
+        result = jax.vmap(floquet_for_omega_d)(omega_ds)
+        ```
+
     Args:
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
