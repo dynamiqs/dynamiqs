@@ -6,26 +6,25 @@ import dynamiqs as dq
 
 
 @pytest.mark.parametrize(
-    ('nH', 'nT', 'ntsave'),
+    ('nH', 'nT'),
     [
-        ((), (), ()),
-        ((3,), (), ()),
-        ((3,), (1,), ()),
-        ((3,), (1,), (3,)),
-        ((3,), (3,), (3,)),
-        ((3,), (3,), ()),
-        ((3, 4), (), ()),
-        ((3, 4), (1,), ()),
-        ((3, 4), (3, 1), ()),
-        ((3, 4), (4,), (3, 4)),
-        ((3, 4), (3, 4), ()),
+        ((), ()),
+        ((3,), ()),
+        ((3,), (1,)),
+        ((3,), (1,)),
+        ((3,), (3,)),
+        ((3,), (3,)),
+        ((3, 4), ()),
+        ((3, 4), (1,)),
+        ((3, 4), (3, 1)),
+        ((3, 4), (4,)),
+        ((3, 4), (3, 4)),
     ],
 )
 @pytest.mark.parametrize('H_type', ['constant', 'modulated', 'timecallable'])
-def test_batching(nH, nT, ntsave, H_type):
+def test_batching(nH, nT, H_type):
     n = 2
     tsave = jnp.linspace(0.0, 1.0, 5)
-    tsave = jnp.broadcast_to(tsave, (*ntsave, len(tsave)))
     key = jax.random.PRNGKey(84)
     key_1, key_2, key_3 = jax.random.split(key, 3)
     Ts = dq.random.real(key_3, (*nT,), min=0.5)
@@ -34,7 +33,7 @@ def test_batching(nH, nT, ntsave, H_type):
     elif H_type == 'modulated':
         _H = dq.random.herm(key_1, (n, n))
         f_pref = dq.random.real(key_2, (*nH,))
-        broadcast_shape = jnp.broadcast_shapes(nH, nT, ntsave)
+        broadcast_shape = jnp.broadcast_shapes(nH, nT)
         f_pref = jnp.broadcast_to(f_pref, broadcast_shape)
         _Ts = jnp.broadcast_to(Ts, broadcast_shape)
         omega_ds = 2.0 * jnp.pi / _Ts

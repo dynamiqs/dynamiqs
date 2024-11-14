@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array, ArrayLike
 
-from ..._checks import check_shape
+from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...integrators.floquet.floquet_integrator import (
     FloquetIntegrator_t,
@@ -62,11 +62,7 @@ def floquet(
         T _(array-like of shape (...H))_: Period of the drive. T should have the same
             shape as ...H or should be broadcastable to that shape. This is to allow
             batching over Hamiltonians with differing drive frequencies.
-        tsave _(array-like of shape (ntsave,) or (...H, ntsave))_: Times at which to
-            compute floquet modes. `tsave` is allowed to have batch dimensions to allow
-            for cases where `H` is batched over different drive frequencies. In this
-            case, it could make sense to ask for the Floquet modes at different times
-            for different batch dimensions.
+        tsave _(array-like of shape (ntsave,)_: Times at which to compute floquet modes.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
@@ -83,7 +79,6 @@ def floquet(
     H = _astimearray(H)
     T = jnp.asarray(T)
     tsave = jnp.asarray(tsave)
-    # TODO check_times for tsave but for now we are allowing it to be multidimensional
 
     # === broadcast arguments
     # Different batch Hamiltonians may be periodic with varying periods, so T must be
@@ -91,9 +86,9 @@ def floquet(
     broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], T.shape)
     H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
     T = jnp.broadcast_to(T, broadcast_shape)
-    tsave = jnp.broadcast_to(tsave, broadcast_shape + tsave.shape[-1:])
 
     # === check arguments
+    tsave = check_times(tsave, 'tsave')
     _check_floquet_args(H, T, safe=safe)
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
@@ -113,10 +108,10 @@ def _vectorized_floquet(
 ) -> FloquetResult:
     # We first compute the `t=t_0` Floquet modes
     floquet_result_t0 = _vectorized_floquet_t0(
-        H, T, tsave[..., 0], solver, gradient, options
+        H, T, tsave[0], solver, gradient, options
     )
     # We then use these modes to compute the Floquet modes at other times if asked for
-    if tsave.shape[-1] > 1:
+    if len(tsave) > 1:
         return _vectorized_floquet_t(
             H=H,
             T=T,
@@ -138,10 +133,10 @@ def _vectorized_floquet_t0(
     gradient: Gradient | None,
     options: Options,
 ) -> FloquetResult:
-    # We flat vectorize over H, T and t0.
-    in_axes = (H.in_axes, 0, 0, None, None, None)
-    # the result is vectorized over `t0`, `_saved`, `infos` and T
-    out_axes = FloquetResult(0, None, None, None, 0, 0, 0)
+    # We flat vectorize over H and T.
+    in_axes = (H.in_axes, 0, None, None, None, None)
+    # the result is vectorized over `_saved`, `infos` and T
+    out_axes = FloquetResult(None, None, None, None, 0, 0, 0)
     nvmap = len(T.shape)
     # vectorize the function
     f = multi_vmap(_floquet_t0, in_axes, out_axes, nvmap)
@@ -182,10 +177,10 @@ def _vectorized_floquet_t(
     gradient: Gradient | None,
     options: Options,
 ) -> FloquetResult:
-    # We flat vectorize over H, T, tsave, floquet_modes_t0 and quasienergies
-    in_axes = (H.in_axes, 0, 0, 0, 0, None, None, None)
-    # the result is vectorized over `tsave`, `_saved`, `infos` and T
-    out_axes = FloquetResult(0, None, None, None, 0, 0, 0)
+    # We flat vectorize over H, T, floquet_modes_t0 and quasienergies
+    in_axes = (H.in_axes, 0, None, 0, 0, None, None, None)
+    # the result is vectorized over `_saved`, `infos` and T
+    out_axes = FloquetResult(None, None, None, None, 0, 0, 0)
     nvmap = len(T.shape)
     # vectorize the function
     f = multi_vmap(_floquet_t, in_axes, out_axes, nvmap)
