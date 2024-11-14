@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
-from jax import Array
 from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
@@ -10,60 +9,43 @@ from ...utils.quantum_utils.general import eig_callback_cpu
 from ..apis.sepropagator import _sepropagator
 from ..core.abstract_integrator import SEIntegrator
 
-__all__ = ['FloquetIntegrator_t0', 'FloquetIntegrator_t']
+__all__ = ['FloquetIntegrator']
 
 
-class FloquetIntegrator_t0(SEIntegrator):
+class FloquetIntegrator(SEIntegrator):
     T: float
 
+    RESULT_CLASS = FloquetResult
+
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return FloquetResult(
+        return self.RESULT_CLASS(
             self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
         )
 
-    def run(self) -> PyTree:
-        U_result = _sepropagator(
-            self.H,
-            jnp.array([self.ts, self.ts + self.T]),
-            solver=self.solver,
-            gradient=self.gradient,
-            options=self.options,
+    def run(self) -> FloquetResult:
+        # compute propagators for all times at once, with the last being one period
+        ts = jnp.append(self.ts, self.t0 + self.T)
+        seprop_result = _sepropagator(
+            self.H, ts, solver=self.solver, gradient=self.gradient, options=self.options
         )
-        evals, evecs = eig_callback_cpu(U_result.final_propagator)
+
+        # diagonalize the final propagator to get the Floquet modes at t=t0
+        evals, evecs = eig_callback_cpu(seprop_result.final_propagator)
+
+        # extract quasienergies
+        # minus sign and divide by T to account for e^{-i\epsilon T}
+        quasienergies = jnp.angle(-evals) / self.T
         # quasienergies are only defined modulo 2pi / T. Usual convention is to
         # normalize quasienergies to the region -pi/T, pi/T
-        omega_d = 2.0 * jnp.pi / self.T
-        # minus sign and divide by T to account for e^{-i\epsilon T}
-        quasiens = jnp.angle(-evals) / self.T
-        quasiens = jnp.where(quasiens > 0.5 * omega_d, quasiens - omega_d, quasiens)
-        # want to save floquet modes with shape ijk where i indexes the modes, j has
-        # dimension of the Hilbert dim and k has dimension one (encoding they are kets)
-        saved = FloquetSaved(ysave=evecs.T[..., None], extra=None, quasiens=quasiens)
-        return self.result(saved, infos=U_result.infos)
+        omega = 2.0 * jnp.pi / self.T
+        quasienergies = jnp.mod(quasienergies + 0.5 * omega, omega) - 0.5 * omega
 
+        # propagate the Floquet modes to all times in tsave
+        propagators = seprop_result.propagators[:-1, :, :]
+        modes = propagators @ evecs # (ntsave, n, n) @ (n, m) = (ntsave, n, m)
+        modes = modes * jnp.exp(1j * quasienergies * self.ts[:, None, None])
+        modes = jnp.swapaxes(modes, -1, -2)[..., None] # (ntsave, m, n, 1)
 
-class FloquetIntegrator_t(FloquetIntegrator_t0):
-    floquet_modes_t0: Array | None
-    quasienergies: Array | None
-
-    def run(self) -> PyTree:
-        U_result = _sepropagator(
-            self.H,
-            self.ts,
-            solver=self.solver,
-            gradient=self.gradient,
-            options=self.options,
-        )
-        # f_modes_t0 have indices fjd where f labels each mode, and jd are the
-        # components of the mode. Turn it into jf for ease of matmuls
-        f_modes_t0 = jnp.squeeze(self.floquet_modes_t0, axis=-1).T
-        # floquet_modes_t has indices tjf where t is time
-        floquet_modes_t = U_result.propagators @ f_modes_t0
-        quasiens_t = self.quasienergies[None, None] * self.ts[:, None, None]
-        floquet_modes_t = floquet_modes_t * jnp.exp(1j * quasiens_t)
-        # want indices to be in order of tfj
-        floquet_modes_t = jnp.transpose(floquet_modes_t, axes=(0, 2, 1))
-        saved = FloquetSaved(
-            ysave=floquet_modes_t[..., None], extra=None, quasiens=self.quasienergies
-        )
-        return self.result(saved, infos=U_result.infos)
+        # save the Floquet modes and quasienergies
+        saved = FloquetSaved(ysave=modes, extra=None, quasienergies=quasienergies)
+        return self.result(saved, infos=seprop_result.infos)

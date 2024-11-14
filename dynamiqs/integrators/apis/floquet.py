@@ -4,26 +4,23 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike
+from jaxtyping import Array, ArrayLike, ScalarLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...integrators.floquet.floquet_integrator import (
-    FloquetIntegrator_t,
-    FloquetIntegrator_t0,
-)
+from ...integrators.floquet.floquet_integrator import FloquetIntegrator
 from ...options import Options
-from ...result import FloquetResult, Saved
+from ...result import FloquetResult
 from ...solver import Solver, Tsit5
 from ...time_array import TimeArray
-from .._utils import _astimearray, catch_xla_runtime_error, multi_vmap
+from .._utils import _astimearray, cartesian_vmap, catch_xla_runtime_error
 
 __all__ = ['floquet']
 
 
 def floquet(
     H: ArrayLike | TimeArray,
-    T: float | ArrayLike,
+    T: ScalarLike,
     tsave: ArrayLike,
     *,
     solver: Solver = Tsit5(),  # noqa: B008
@@ -106,94 +103,22 @@ def _vectorized_floquet(
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
-    # We first compute the `t=t_0` Floquet modes
-    floquet_result_t0 = _vectorized_floquet_t0(
-        H, T, tsave[0], solver, gradient, options
-    )
-    # We then use these modes to compute the Floquet modes at other times if asked for
-    if len(tsave) > 1:
-        return _vectorized_floquet_t(
-            H=H,
-            T=T,
-            tsave=tsave,
-            floquet_modes_t0=floquet_result_t0.floquet_modes,
-            quasienergies=floquet_result_t0.quasienergies,
-            solver=solver,
-            gradient=gradient,
-            options=options,
-        )
-    return floquet_result_t0
-
-
-def _vectorized_floquet_t0(
-    H: TimeArray,
-    T: Array,
-    t0: Array,
-    solver: Solver,
-    gradient: Gradient | None,
-    options: Options,
-) -> FloquetResult:
-    # We flat vectorize over H and T.
-    in_axes = (H.in_axes, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and T
+    # vectorize input over H
+    in_axes = (H.in_axes, None, None, None, None, None)
+    # vectorize output over `_saved` and `infos`
     out_axes = FloquetResult(None, None, None, None, 0, 0, 0)
-    nvmap = len(T.shape)
-    # vectorize the function
-    f = multi_vmap(_floquet_t0, in_axes, out_axes, nvmap)
 
-    return f(H, T, t0, solver, gradient, options)
+    # cartesian batching only
+    nvmap = (H.ndim - 2, 0, 0, 0, 0, 0, 0)
+    f = cartesian_vmap(_floquet, in_axes, out_axes, nvmap)
 
-
-def _floquet_t0(
-    H: TimeArray,
-    T: Array,
-    t0: Array,
-    solver: Solver,
-    gradient: Gradient | None,
-    options: Options,
-) -> FloquetResult:
-    # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
-
-    # === integrator class is always FloquetIntegrator_t0
-    integrator = FloquetIntegrator_t0(
-        ts=t0, y0=None, H=H, solver=solver, gradient=gradient, options=options, T=T
-    )
-
-    # === run integrator
-    result = integrator.run()
-
-    # === return result
-    return result  # noqa: RET504
+    return f(H, T, tsave, solver, gradient, options)
 
 
-def _vectorized_floquet_t(
+def _floquet(
     H: TimeArray,
     T: Array,
     tsave: Array,
-    floquet_modes_t0: Array,
-    quasienergies: Array,
-    solver: Solver,
-    gradient: Gradient | None,
-    options: Options,
-) -> FloquetResult:
-    # We flat vectorize over H, T, floquet_modes_t0 and quasienergies
-    in_axes = (H.in_axes, 0, None, 0, 0, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and T
-    out_axes = FloquetResult(None, None, None, None, 0, 0, 0)
-    nvmap = len(T.shape)
-    # vectorize the function
-    f = multi_vmap(_floquet_t, in_axes, out_axes, nvmap)
-
-    return f(H, T, tsave, floquet_modes_t0, quasienergies, solver, gradient, options)
-
-
-def _floquet_t(
-    H: TimeArray,
-    T: Array,
-    tsave: Array,
-    floquet_modes_t0: Array,
-    quasienergies: Array,
     solver: Solver,
     gradient: Gradient,
     options: Options,
@@ -201,17 +126,9 @@ def _floquet_t(
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === integrator class is always FloquetIntegrator_t
-    integrator = FloquetIntegrator_t(
-        ts=tsave,
-        y0=None,
-        H=H,
-        solver=solver,
-        gradient=gradient,
-        options=options,
-        T=T,
-        floquet_modes_t0=floquet_modes_t0,
-        quasienergies=quasienergies,
+    # === integrator class is always FloquetIntegrator_t0
+    integrator = FloquetIntegrator(
+        ts=tsave, y0=None, H=H, solver=solver, gradient=gradient, options=options, T=T
     )
 
     # === run integrator
