@@ -88,7 +88,9 @@ def floquet(
     # === broadcast arguments
     # Different batch Hamiltonians may be periodic with varying periods, so T must be
     # broadcastable to the same shape as H.
-    H, T, broadcast_shape = _broadcast_floquet_args(H, T)
+    broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], T.shape)
+    H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
+    T = jnp.broadcast_to(T, broadcast_shape)
     tsave = jnp.broadcast_to(tsave, broadcast_shape + tsave.shape[-1:])
 
     # === check arguments
@@ -222,13 +224,6 @@ def _floquet_t(
 
     # === return result
     return result  # noqa: RET504
-
-
-def _broadcast_floquet_args(H: TimeArray, T: Array) -> [Array, Array, Array]:
-    broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], T.shape)
-    H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
-    T = jnp.broadcast_to(T, broadcast_shape)
-    return H, T, broadcast_shape
 
 
 def _check_floquet_args(H: TimeArray, T: Array, safe: bool = False):

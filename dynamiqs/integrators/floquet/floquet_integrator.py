@@ -57,7 +57,7 @@ class FloquetIntegrator_t(FloquetIntegrator_t0):
         # f_modes_t0 have indices fjd where f labels each mode, and jd are the
         # components of the mode. Turn it into jf for ease of matmuls
         f_modes_t0 = jnp.squeeze(self.floquet_modes_t0, axis=-1).T
-        # has indices tjf where t is time
+        # floquet_modes_t has indices tjf where t is time
         floquet_modes_t = U_result.propagators @ f_modes_t0
         quasiens_t = self.quasienergies[None, None] * self.ts[:, None, None]
         floquet_modes_t = floquet_modes_t * jnp.exp(1j * quasiens_t)
