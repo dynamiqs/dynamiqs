@@ -50,7 +50,7 @@ def floquet(
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
-            wrap the call to `floquet` in a `jax.vmap`.
+            wrap the call to `floquet` in a `jax.vmap`, see above.
         tsave _(array-like of shape (ntsave,)_: Times at which to compute floquet modes.
             The specified times should be ordered, strictly ascending, and such that
             `tsave[-1] - tsave[0] <= T`.
@@ -140,7 +140,7 @@ def _check_floquet_args(
     # === check that the Hamiltonian is periodic with the supplied period
     H = eqx.error_if(
         H,
-        not jnp.allclose(H(0), H(T)),
+        jnp.all(jnp.linalg.norm(H(0) - H(T), axis=(-2, -1)) > 1e-6),
         'The Hamiltonian H is not periodic with the supplied period T.',
     )
 
