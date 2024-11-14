@@ -139,7 +139,9 @@ def _check_floquet_args(
 
     # === check that the Hamiltonian is periodic with the supplied period
     H = eqx.error_if(
-        H, H(0) != H(T), 'The Hamiltonian H is not periodic with the supplied period T.'
+        H,
+        not jnp.allclose(H(0), H(T)),
+        'The Hamiltonian H is not periodic with the supplied period T.',
     )
 
     return H, T, tsave
