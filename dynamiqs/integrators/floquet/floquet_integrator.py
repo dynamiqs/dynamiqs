@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
+from jax.numpy.linalg import eig
 from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
 
-from ...utils.quantum_utils.general import eig_callback_cpu
 from ..apis.sepropagator import _sepropagator
 from ..core.abstract_integrator import SEIntegrator
 
@@ -30,7 +30,7 @@ class FloquetIntegrator(SEIntegrator):
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0
-        evals, evecs = eig_callback_cpu(seprop_result.final_propagator)
+        evals, evecs = eig(seprop_result.final_propagator)
 
         # extract quasienergies
         # minus sign and divide by T to account for e^{-i\epsilon T}
