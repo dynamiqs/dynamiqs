@@ -71,7 +71,7 @@ def floquet(
 
     Returns:
         [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
-            Floquet computation. Use the attribute `floquet_modes` to access the saved
+            Floquet computation. Use the attribute `modes` to access the saved
             Floquet modes, and the attribute `quasienergies` the associated quasi
             energies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
     """

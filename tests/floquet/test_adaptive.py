@@ -24,23 +24,23 @@ class TestFloquet:
         floquet_result = floquet_qubit.run(
             Tsit5(), options=Options(save_states=save_states)
         )
-        floquet_modes = floquet_result.floquet_modes
-        state_phases = jnp.angle(floquet_modes[..., :, 0, 0])
-        floquet_modes = jnp.einsum(
-            '...ijk,...i->...ijk', floquet_modes, jnp.exp(-1j * state_phases)
+        modes = floquet_result.modes
+        state_phases = jnp.angle(modes[..., :, 0, 0])
+        modes = jnp.einsum(
+            '...ijk,...i->...ijk', modes, jnp.exp(-1j * state_phases)
         )
         quasienergies = floquet_result.quasienergies
         if save_states:
-            true_floquet_modes = jax.vmap(floquet_qubit.state)(tsave)
+            true_modes = jax.vmap(floquet_qubit.state)(tsave)
         else:
-            true_floquet_modes = floquet_qubit.state(t)
+            true_modes = floquet_qubit.state(t)
         true_quasienergies = floquet_qubit.true_quasienergies()
         # sort them appropriately for comparison
         idxs = jnp.argmin(
             jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
         state_errs = jnp.linalg.norm(
-            floquet_modes[:, idxs] - true_floquet_modes, axis=(-1, -2)
+            modes[:, idxs] - true_modes, axis=(-1, -2)
         )
         assert jnp.all(state_errs <= ysave_atol)
         quasi_errs = jnp.linalg.norm(quasienergies[idxs] - true_quasienergies, axis=-1)

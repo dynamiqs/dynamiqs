@@ -50,7 +50,7 @@ class PropagatorSaved(Saved):
 
 
 class FloquetSaved(Saved):
-    quasiens: Array
+    quasienergies: Array
 
 
 class Result(eqx.Module):
@@ -136,7 +136,7 @@ class FloquetResult(Result):
     """Result of the Floquet integration.
 
     Attributes:
-        floquet_modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes
+        modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes
         quasienergies _(array of shape (..., n))_: Saved quasienergies
         T _(array of shape (...))_: Drive period
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
@@ -160,12 +160,12 @@ class FloquetResult(Result):
     T: Array
 
     @property
-    def floquet_modes(self) -> Array:
+    def modes(self) -> Array:
         return self._saved.ysave
 
     @property
     def quasienergies(self) -> Array:
-        return self._saved.quasiens
+        return self._saved.quasienergies
 
 
 class SESolveResult(SolveResult):

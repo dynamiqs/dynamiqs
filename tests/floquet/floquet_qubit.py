@@ -23,7 +23,7 @@ class FloquetQubit(System):
         omega_d: float
         amp: float
         tsave: Array
-        floquet_modes_0: Array | None
+        modes_0: Array | None
         quasienergies: Array | None
 
     def run(
@@ -54,18 +54,18 @@ class FloquetQubit(System):
         amp: float,
         tsave: Array,
         *,
-        floquet_modes_0: Array | None = None,
+        modes_0: Array | None = None,
         quasienergies: Array | None = None,
     ):
         self.omega = omega
         self.omega_d = omega_d
         self.amp = amp
         self.tsave = tsave
-        self.floquet_modes_0 = floquet_modes_0
+        self.modes_0 = modes_0
         self.quasienergies = quasienergies
 
         self.params_default = self.Params(
-            omega, omega_d, amp, tsave, floquet_modes_0, quasienergies
+            omega, omega_d, amp, tsave, modes_0, quasienergies
         )
 
     def H(self, params: PyTree) -> CallableTimeArray:
