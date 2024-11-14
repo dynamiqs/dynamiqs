@@ -52,7 +52,7 @@ def floquet(
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`.
         tsave _(array-like of shape (ntsave,)_: Times at which to compute floquet modes.
-            The specified times should be ordered, stricly ascending, and such that
+            The specified times should be ordered, strictly ascending, and such that
             `tsave[-1] - tsave[0] <= T`.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
