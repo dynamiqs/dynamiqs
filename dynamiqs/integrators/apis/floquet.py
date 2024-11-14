@@ -30,15 +30,15 @@ def floquet(
 ) -> FloquetResult:
     r"""Compute Floquet modes $\Phi_{m}(t)$ and quasienergies $\epsilon_m$.
 
-    For a periodically driven system, the Floquet modes $\Phi_{m}(t_0)$ and
-    quasienergies $\epsilon_m$ are defined by the eigenvalue equation
+    For a periodic system, the Floquet modes $\Phi_{m}(t_0)$ and quasienergies
+    $\epsilon_m$ are defined by the eigenvalue equation
     $$
         U(t_0, t_0+T)\Phi_{m}(t_0) = \exp(-i \epsilon_{m} T)\Phi_{m}(t_0),
     $$
     where $U(t_0, t_0+T)$ is the propagator from time $t_0$ to time $t_0+T$, and $T$ is
-    the period of the drive. Typically $t_0$ is taken to be $0$, however that does not
-    not always have to be the case. We thus obtain the modes $\Phi_{m}(t_0)$ and
-    quasienergies $\epsilon_m$ by diagonalizing the propagator $U(t_0, t_0+T)$.
+    the period of the drive (typically $t_0 = 0$). We thus obtain the modes
+    $\Phi_{m}(t_0)$ and quasienergies $\epsilon_m$ by diagonalizing the propagator
+    $U(t_0, t_0+T)$.
 
     The Floquet modes $\Phi_{m}(t)$ at times $t\neq t_0$ are obtained from the Floquet
     modes $\Phi_{m}(t_0)$ via
@@ -46,20 +46,14 @@ def floquet(
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
 
-    Warning:
-        The Floquet modes are only defined up to integer multiples of the drive period.
-        One could envision then taking `tsave = jnp.mod(tsave, T)` in case times are
-        provided that are greater than a single drive period, cutting down on
-        integration time. We cannot do this here because `tsave` is passed to
-        `sepropagator`, which expects the times in `tsave` to be ordered in strictly
-        ascending order.
-
     Args:
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        T _(array-like of shape (...H))_: Period of the drive. T should have the same
-            shape as ...H or should be broadcastable to that shape. This is to allow
-            batching over Hamiltonians with differing drive frequencies.
+        T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
+            be common over all elements in the batch. To batch over different periods,
+            wrap the call to `floquet` in a `jax.vmap`.
         tsave _(array-like of shape (ntsave,)_: Times at which to compute floquet modes.
+            The specified times should be ordered, stricly ascending, and such that
+            `tsave[-1] - tsave[0] <= T`.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
@@ -74,13 +68,6 @@ def floquet(
     H = _astimearray(H)
     T = jnp.asarray(T)
     tsave = jnp.asarray(tsave)
-
-    # === broadcast arguments
-    # Different batch Hamiltonians may be periodic with varying periods, so T must be
-    # broadcastable to the same shape as H.
-    broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], T.shape)
-    H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
-    T = jnp.broadcast_to(T, broadcast_shape)
 
     # === check arguments
     tsave = check_times(tsave, 'tsave')
