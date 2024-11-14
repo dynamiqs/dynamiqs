@@ -19,6 +19,7 @@ theme:
     repo: fontawesome/brands/github
     admonition:
       example: material/human-male-board
+      see-also: material/book-open-variant
     annotation: material/plus-circle
   logo: media/logo.png
   favicon: media/favicon.svg
