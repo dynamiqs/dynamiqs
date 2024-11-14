@@ -38,13 +38,7 @@ class FloquetQubit(System):
         H = self.H(params)
         T = 2.0 * jnp.pi / params.omega_d
         return floquet(
-            H,
-            T,
-            params.tsave,
-            solver=solver,
-            gradient=gradient,
-            options=options,
-            safe=True,
+            H, T, params.tsave, solver=solver, gradient=gradient, options=options
         )
 
     def __init__(
