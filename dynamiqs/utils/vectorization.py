@@ -223,9 +223,9 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
     Note:
         This superoperator is also sometimes called *Liouvillian*.
 
-    Note:
-        See also [`dq.lindbladian`][dynamiqs.utils.quantum_utils.general.lindbladian] to
-        access the Lindbladian only through matrix-vector product.
+    See also:
+        - [`dq.lindbladian`][dynamiqs.utils.quantum_utils.general.lindbladian]:
+        apply the Lindbladian only through matrix-matrix products.
 
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
@@ -233,7 +233,7 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
-    """
+    """  # noqa: D405
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     check_shape(H, 'H', '(..., n, n)')

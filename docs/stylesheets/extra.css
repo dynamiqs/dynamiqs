@@ -191,6 +191,22 @@ Description: Extra CSS for the Dynamiqs documentation
   background-color: var(--md-example-bg-color);
 }
 
+/* Add a "See also" admonition */
+.md-typeset .admonition.see-also,
+.md-typeset details.see-also {
+border-color: var(--md-seealso-fg-color);
+}
+.md-typeset .see-also > .admonition-title,
+.md-typeset .see-also > summary {
+background-color: var(--md-seealso-bg-color);
+}
+.md-typeset .see-also > .admonition-title::before,
+.md-typeset .see-also > summary::before {
+background-color: var(--md-seealso-fg-color);
+-webkit-mask-image: var(--md-admonition-icon--see-also);
+        mask-image: var(--md-admonition-icon--see-also);
+}
+
 /* Admonition styling */
 .md-typeset .admonition,
 .md-typeset details,
