@@ -40,14 +40,22 @@ def floquet(
     $$
     where $U(t_0, t_0+T)$ is the propagator from time t_0 to time $t_0+T$, and $T$ is
     the period of the drive. Typically $t_0$ is taken to be $0$, however that does not
-    not always have to be the case. We thus obtain the $\Phi_{m}(t_0)$ and $\epsilon_m$
-    by diagonalizing the propagator $U(t_0, t_0+T)$.
+    not always have to be the case. We thus obtain the modes $\Phi_{m}(t_0)$ and
+    quasienergies $\epsilon_m$ by diagonalizing the propagator $U(t_0, t_0+T)$.
 
     The Floquet modes $\Phi_{m}(t)$ at times $t\neq t_0$ are obtained from the Floquet
     modes $\Phi_{m}(t_0)$ via
     $$
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
+
+    Warning:
+        The Floquet modes are only defined up to integer multiples of the drive period.
+        One could envision then taking `tsave = jnp.mod(tsave, T)` in case times are
+        provided that are greater than a single drive period, cutting down on
+        integration time. We cannot do this here because `tsave` is passed to
+        `sepropagator`, which expects the times in `tsave` to be ordered in strictly
+        ascending order.
 
     Args:
         H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
@@ -57,8 +65,8 @@ def floquet(
         tsave _(array-like of shape (ntsave,) or (...H, ntsave))_: Times at which to
             compute floquet modes. `tsave` is allowed to have batch dimensions to allow
             for cases where `H` is batched over different drive frequencies. In this
-            case, it makes sense to ask for the Floquet modes at different times for
-            different batch dimensions.
+            case, it could make sense to ask for the Floquet modes at different times
+            for different batch dimensions.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
