@@ -8,7 +8,7 @@ from jaxtyping import PyTree
 
 from dynamiqs import basis, dag, sigmaz
 from dynamiqs.gradient import Gradient
-from dynamiqs.integrators.apis.floquet import floquet, floquet_t
+from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
 from dynamiqs.solver import Solver
@@ -22,6 +22,9 @@ class FloquetQubit(System):
         omega: float
         omega_d: float
         amp: float
+        tsave: Array
+        floquet_modes_0: Array | None
+        quasienergies: Array | None
 
     def run(
         self,
@@ -34,14 +37,36 @@ class FloquetQubit(System):
         params = self.params_default if params is None else params
         H = self.H(params)
         T = 2.0 * jnp.pi / params.omega_d
-        return floquet(H, T, solver=solver, gradient=gradient, options=options)
+        return floquet(
+            H,
+            T,
+            params.tsave,
+            solver=solver,
+            gradient=gradient,
+            options=options,
+            safe=True,
+        )
 
-    def __init__(self, omega: float, omega_d: float, amp: float):
+    def __init__(
+        self,
+        omega: float,
+        omega_d: float,
+        amp: float,
+        tsave: Array,
+        *,
+        floquet_modes_0: Array | None = None,
+        quasienergies: Array | None = None,
+    ):
         self.omega = omega
         self.omega_d = omega_d
         self.amp = amp
+        self.tsave = tsave
+        self.floquet_modes_0 = floquet_modes_0
+        self.quasienergies = quasienergies
 
-        self.params_default = self.Params(omega, omega_d, amp)
+        self.params_default = self.Params(
+            omega, omega_d, amp, tsave, floquet_modes_0, quasienergies
+        )
 
     def H(self, params: PyTree) -> CallableTimeArray:
         sigmap = basis(2, 1) @ dag(basis(2, 0))
@@ -78,56 +103,3 @@ class FloquetQubit(System):
 
     def Es(self, params: PyTree) -> Array:
         raise NotImplementedError
-
-
-class FloquetQubit_t(FloquetQubit):
-    class Params(NamedTuple):
-        omega: float
-        omega_d: float
-        amp: float
-        tsave: Array
-        floquet_modes_0: Array | None
-        quasienergies: Array | None
-
-    def run(
-        self,
-        solver: Solver,
-        *,
-        gradient: Gradient | None = None,
-        options: Options = Options(),  # noqa: B008
-        params: PyTree | None = None,
-    ) -> FloquetResult:
-        params = self.params_default if params is None else params
-        H = self.H(params)
-        T = 2.0 * jnp.pi / params.omega_d
-        return floquet_t(
-            H,
-            T,
-            tsave=params.tsave,
-            floquet_modes_0=params.floquet_modes_0,
-            quasienergies=params.quasienergies,
-            solver=solver,
-            gradient=gradient,
-            options=options,
-        )
-
-    def __init__(
-        self,
-        omega: float,
-        omega_d: float,
-        amp: float,
-        tsave: Array,
-        *,
-        floquet_modes_0: Array | None = None,
-        quasienergies: Array | None = None,
-    ):
-        self.omega = omega
-        self.omega_d = omega_d
-        self.amp = amp
-        self.tsave = tsave
-        self.floquet_modes_0 = floquet_modes_0
-        self.quasienergies = quasienergies
-
-        self.params_default = self.Params(
-            omega, omega_d, amp, tsave, floquet_modes_0, quasienergies
-        )
