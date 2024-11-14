@@ -136,24 +136,21 @@ class FloquetResult(Result):
     """Result of the Floquet integration.
 
     Attributes:
-        floquet_modes _(array of shape (..., n, n, 1) or (..., ntsave, n, n, 1))_: Saved
-            Floquet modes. Output from [`dq.floquet`][dynamiqs.floquet] has the former
-            shape, while output from [`dq.floquet_t`][dynamiqs.floquet_t] has the latter
-            shape.
+        floquet_modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes
         quasienergies _(array of shape (..., n))_: Saved quasienergies
         T _(array of shape (...))_: Drive period
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        tsave _(array of shape (...,ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
 
     Note-: Result of running multiple simulations concurrently
         The resulting Floquet modes and quasienergies are batched according to the
-        leading dimensions of the Hamiltonian `H`. The supplied drive period T must be
-        supplied to [`dq.floquet`][dynamiqs.floquet] with shape that is broadcastable to
-        the shape of `H`. The `cartesian_batching` flag is not relevant and does not
-        affect the results.
+        leading dimensions of the Hamiltonian `H`. The shape of the drive period T as
+        well as the leading dimensions of `tsave` supplied to
+        [`dq.floquet`][dynamiqs.floquet] must be broadcastable to the shape of `H`. The
+        `cartesian_batching` flag is not relevant and does not affect the results.
 
         See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)

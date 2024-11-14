@@ -38,7 +38,7 @@ def floquet(
     $$
         U(t_0, t_0+T)\Phi_{m}(t_0) = \exp(-i \epsilon_{m} T)\Phi_{m}(t_0),
     $$
-    where $U(t_0, t_0+T)$ is the propagator from time t_0 to time $t_0+T$, and $T$ is
+    where $U(t_0, t_0+T)$ is the propagator from time $t_0$ to time $t_0+T$, and $T$ is
     the period of the drive. Typically $t_0$ is taken to be $0$, however that does not
     not always have to be the case. We thus obtain the modes $\Phi_{m}(t_0)$ and
     quasienergies $\epsilon_m$ by diagonalizing the propagator $U(t_0, t_0+T)$.

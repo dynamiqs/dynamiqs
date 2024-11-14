@@ -154,7 +154,6 @@ nav:
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
           - floquet: python_api/integrators/floquet.md
-          - floquet_t: python_api/integrators/floquet_t.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
