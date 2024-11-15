@@ -191,7 +191,11 @@ def sdissipator(L: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
-    """
+
+    See also:
+        - [`dq.dissipator`][dynamiqs.utils.quantum_utils.general.dissipator]:
+        apply the dissipator only through matrix-matrix products.
+    """  # noqa: D405
     L = jnp.asarray(L)
     check_shape(L, 'L', '(..., n, n)')
     Ldag = dag(L)

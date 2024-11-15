@@ -490,6 +490,10 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
 
+    See also:
+        - [`dq.sdissipator`][dynamiqs.utils.vectorization.sdissipator]:
+        materialize the full dissipator as a superoperator.
+
     Examples:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
@@ -498,7 +502,7 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j,  2.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j, -2.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
-    """
+    """  # noqa: D405
     L = jnp.asarray(L)
     rho = jnp.asarray(rho)
     check_shape(L, 'L', '(..., n, n)')
@@ -524,6 +528,10 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     Note:
         This superoperator is also sometimes called *Liouvillian*.
 
+    See also:
+        - [`dq.slindbladian`][dynamiqs.utils.vectorization.slindbladian]:
+        materialize the full Lindbladian.
+
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
         jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
@@ -542,7 +550,7 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
-    """
+    """  # noqa: D405
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     rho = jnp.asarray(rho)
