@@ -54,11 +54,13 @@ def floquet(
         ```python
         import jax
 
+
         def single_floquet(omega):
             H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
             T = 2.0 * jnp.pi / omega
             tsave = jnp.linspace(0.0, T, 11)
             return dq.floquet(H, T, tsave)
+
 
         omegas = jnp.array([0.9, 1.0, 1.1])
         batched_floquet = jax.vmap(single_floquet)
