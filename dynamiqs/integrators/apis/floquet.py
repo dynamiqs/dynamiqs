@@ -28,48 +28,41 @@ def floquet(
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> FloquetResult:
-    r"""Compute Floquet modes $\Phi_{m}(t)$ and quasienergies $\epsilon_m$.
+    r"""Compute Floquet modes and quasienergies of a periodic closed system.
 
-    For a periodic system, the Floquet modes $\Phi_{m}(t_0)$ and quasienergies
-    $\epsilon_m$ are defined by the eigenvalue equation
+    The Floquet modes $\Phi_{m}(t_0)$ and corresponding quasienergies $\epsilon_m$ are
+    defined by the eigenvalue equation
     $$
         U(t_0, t_0+T)\Phi_{m}(t_0) = \exp(-i \epsilon_{m} T)\Phi_{m}(t_0),
     $$
-    where $U(t_0, t_0+T)$ is the propagator from time $t_0$ to time $t_0+T$, and $T$ is
-    the period of the drive (typically $t_0 = 0$). We thus obtain the modes
-    $\Phi_{m}(t_0)$ and quasienergies $\epsilon_m$ by diagonalizing the propagator
-    $U(t_0, t_0+T)$.
-
-    The Floquet modes $\Phi_{m}(t)$ at times $t\neq t_0$ are obtained from the Floquet
-    modes $\Phi_{m}(t_0)$ via
+    where $U(t_0, t_0+T)$ is the propagator over a single period $T$, with $t_0$ some
+    arbitrary initial time (typically $t_0 = 0$). According to the Floquet theorem,
+    these Floquet modes are periodic with period $T$ and form a complete basis for
+    the time evolution of the system. The $t=t_0$ Floquet modes are obtained from
+    diagonalization of the above propagator, while the $t \geq t_0$ Floquet modes are
+    obtained by propagating the $t=t_0$ Floquet modes forward in time, via
     $$
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
 
-    Note-: Batching over multiple drive periods
+    Note-: Batching over drive periods
         The current API does not yet natively support batching over multiple drive
         periods, for instance if you wanted to batch over Hamiltonians with different
         drive frequencies. This however can be achieved straightforwardly with an
-        external call to `jax.vmap`
+        external call to `jax.vmap`, as follows:
 
         ```python
-        import dynamiqs as dq
-        import jax.numpy as jnp
         import jax
 
-        omega = 2.0 * jnp.pi * 1.0
-        omega_ds = omega * jnp.array([0.9, 1.0, 1.1])
-
-
-        def floquet_for_omega_d(omega_d):
-            T = 2.0 * jnp.pi / omega_d
-            tsave = jnp.linspace(0.0, T, 4)
-            H = 0.5 * omega * dq.sigmaz()
-            H += dq.modulated(lambda t: jnp.cos(omega_d * t), dq.sigmax())
+        def single_floquet(omega):
+            H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
+            T = 2.0 * jnp.pi / omega
+            tsave = jnp.linspace(0.0, T, 11)
             return dq.floquet(H, T, tsave)
 
-
-        result = jax.vmap(floquet_for_omega_d)(omega_ds)
+        omegas = jnp.array([0.9, 1.0, 1.1])
+        batched_floquet = jax.vmap(single_floquet)
+        result = batched_floquet(omegas)
         ```
 
     Args:
@@ -77,9 +70,9 @@ def floquet(
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`, see above.
-        tsave _(array-like of shape (ntsave,)_: Times at which to compute floquet modes.
-            The specified times should be ordered, strictly ascending, and such that
-            `tsave[-1] - tsave[0] <= T`.
+        tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet
+            modes. The specified times should be ordered, strictly ascending, and such
+            that `tsave[-1] - tsave[0] <= T`.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
@@ -87,8 +80,8 @@ def floquet(
     Returns:
         [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
             Floquet computation. Use the attribute `modes` to access the saved
-            Floquet modes, and the attribute `quasienergies` the associated quasi
-            energies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
+            Floquet modes, and the attribute `quasienergies` for the associated
+            quasienergies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
     """
     # === convert arguments
     H = _astimearray(H)
@@ -166,7 +159,7 @@ def _check_floquet_args(
     # === check that the Hamiltonian is periodic with the supplied period
     H = eqx.error_if(
         H,
-        jnp.all(jnp.linalg.norm(H(0) - H(T), axis=(-2, -1)) > 1e-6),
+        jnp.logical_not(jnp.isclose(H(0), H(T))),
         'The Hamiltonian H is not periodic with the supplied period T.',
     )
 
