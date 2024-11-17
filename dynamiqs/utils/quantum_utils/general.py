@@ -502,7 +502,7 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j,  2.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j, -2.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
-    """  # noqa: D405
+    """
     L = jnp.asarray(L)
     rho = jnp.asarray(rho)
     check_shape(L, 'L', '(..., n, n)')
@@ -550,7 +550,7 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
                [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
                [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)
-    """  # noqa: D405
+    """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     rho = jnp.asarray(rho)

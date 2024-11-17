@@ -195,7 +195,7 @@ def sdissipator(L: ArrayLike) -> Array:
     See also:
         - [`dq.dissipator`][dynamiqs.utils.quantum_utils.general.dissipator]:
         apply the dissipator only through matrix-matrix products.
-    """  # noqa: D405
+    """
     L = jnp.asarray(L)
     check_shape(L, 'L', '(..., n, n)')
     Ldag = dag(L)
@@ -237,7 +237,7 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
-    """  # noqa: D405
+    """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
     check_shape(H, 'H', '(..., n, n)')
