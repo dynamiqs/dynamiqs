@@ -528,10 +528,6 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
     Note:
         This superoperator is also sometimes called *Liouvillian*.
 
-    See also:
-        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
-            superoperator in matrix form (vectorized).
-
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
         jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
@@ -539,6 +535,10 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
+
+    See also:
+        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
+            superoperator in matrix form (vectorized).
 
     Examples:
         >>> a = dq.destroy(4)
