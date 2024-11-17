@@ -491,8 +491,8 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
 
     See also:
-        - [`dq.sdissipator()`][dynamiqs.sdissipator]: materialize the full dissipator
-            as a superoperator.
+        - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
+            superoperator in matrix form (vectorized).
 
     Examples:
         >>> L = dq.destroy(4)
@@ -529,8 +529,8 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
         This superoperator is also sometimes called *Liouvillian*.
 
     See also:
-        - [`dq.slindbladian()`][dynamiqs.slindbladian]: materialize the full
-            Lindbladian.
+        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
+            superoperator in matrix form (vectorized).
 
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
