@@ -193,8 +193,8 @@ def sdissipator(L: ArrayLike) -> Array:
         _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
 
     See also:
-        - [`dq.dissipator`][dynamiqs.utils.quantum_utils.general.dissipator]:
-        apply the dissipator only through matrix-matrix products.
+        - [`dq.dissipator()`][dynamiqs.dissipator]: apply the dissipator only through
+            matrix-matrix products.
     """
     L = jnp.asarray(L)
     check_shape(L, 'L', '(..., n, n)')
@@ -228,8 +228,8 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
         This superoperator is also sometimes called *Liouvillian*.
 
     See also:
-        - [`dq.lindbladian`][dynamiqs.utils.quantum_utils.general.lindbladian]:
-        apply the Lindbladian only through matrix-matrix products.
+        - [`dq.lindbladian()`][dynamiqs.lindbladian]: apply the Lindbladian only through
+            matrix-matrix products.
 
     Args:
         H _(array_like of shape (..., n, n))_: Hamiltonian.
