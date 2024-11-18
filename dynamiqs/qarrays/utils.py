@@ -314,6 +314,37 @@ def sparsedia_from_dict(
     dims: tuple[int, ...] | None = None,
     dtype: DTypeLike | None = None,
 ) -> SparseDIAQArray:
+    """Initialize a SparseDIAQArray from a dictionary of offsets and diagonals.
+
+    Args:
+        offsets_diags: Dictionary where keys are offsets and values are diagonals of
+            shapes (..., n-|offset|) with a common batch shape between all diagonals.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (a single system
+            with the same dimension as the diagonals).
+        dtype: Data type of the array. If `None`, the data type is inferred from the
+            diagonals.
+
+    Returns:
+        A SparseDIAQArray with non-zero diagonals at the specified offsets.
+
+    Examples:
+        >>> dq.sparsedia_from_dict({0: [1, 2, 3], 1: [4, 5], -1: [6, 7]})
+        QArray: shape=(3, 3), dims=(3,), dtype=int32, layout=dia, ndiags=3
+        [[1.+0.j 4.+0.j   ⋅   ]
+         [6.+0.j 2.+0.j 5.+0.j]
+         [  ⋅    7.+0.j 3.+0.j]]
+        >>> dq.sparsedia_from_dict({0: jnp.ones(3, 2)})
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=float32, layout=dia, ndiags=1
+        [[[1.+0.j   ⋅   ]
+          [  ⋅    1.+0.j]]
+        <BLANKLINE>
+         [[1.+0.j   ⋅   ]
+          [  ⋅    1.+0.j]]
+        <BLANKLINE>
+         [[1.+0.j   ⋅   ]
+          [  ⋅    1.+0.j]]]
+    """
     # === offsets
     offsets = tuple(offsets_diags.keys())
 
