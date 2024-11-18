@@ -19,6 +19,7 @@ theme:
     repo: fontawesome/brands/github
     admonition:
       example: material/human-male-board
+      see-also: material/book-open-variant
     annotation: material/plus-circle
   logo: media/logo.png
   favicon: media/favicon.svg
@@ -144,6 +145,7 @@ nav:
           - Batching simulations: documentation/basics/batching-simulations.md
           - Computing gradients: documentation/basics/computing-gradients.md
       - Advanced examples:
+          - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
           - Continuous measurement of a qubit: documentation/advanced_examples/monitored-qubit.md
           - Continuous measurement of an oscillator: documentation/advanced_examples/monitored-oscillator.md
   - Python API:
@@ -154,6 +156,7 @@ nav:
           - dsmesolve: python_api/integrators/dsmesolve.md
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
+          - floquet: python_api/integrators/floquet.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -182,6 +185,7 @@ nav:
               - DSMESolveResult: python_api/result/DSMESolveResult.md
               - SEPropagatorResult: python_api/result/SEPropagatorResult.md
               - MEPropagatorResult: python_api/result/MEPropagatorResult.md
+              - FloquetResult: python_api/result/FloquetResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md

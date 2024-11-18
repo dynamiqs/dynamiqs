@@ -490,6 +490,10 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
 
+    See also:
+        - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
+            superoperator in matrix form (vectorized).
+
     Examples:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
@@ -531,6 +535,10 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
+
+    See also:
+        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
+            superoperator in matrix form (vectorized).
 
     Examples:
         >>> a = dq.destroy(4)

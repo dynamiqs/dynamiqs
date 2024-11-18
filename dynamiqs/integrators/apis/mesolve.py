@@ -24,14 +24,15 @@ from ...solver import (
     Solver,
     Tsit5,
 )
-from ...time_array import Shape, TimeArray
+from ...time_array import TimeArray
 from ...utils.quantum_utils import todm
+from ...utils.quantum_utils.general import isket
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
+    multi_vmap,
 )
 from ..core.abstract_integrator import MESolveIntegrator
 from ..mesolve.diffrax_integrator import (
@@ -127,14 +128,14 @@ def mesolve(
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
-    jump_ops = [_astimearray(L) for L in jump_ops]
+    Ls = [_astimearray(L) for L in jump_ops]
     rho0 = jnp.asarray(rho0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_mesolve_args(H, jump_ops, rho0, exp_ops)
+    _check_mesolve_args(H, Ls, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
 
     # === convert rho0 to density matrix
@@ -142,16 +143,14 @@ def mesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _vectorized_mesolve(
-        H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options
-    )
+    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, solver, gradient, options)
 
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_mesolve(
     H: TimeArray,
-    jump_ops: list[TimeArray],
+    Ls: list[TimeArray],
     rho0: Array,
     tsave: Array,
     exp_ops: Array | None,
@@ -159,50 +158,31 @@ def _vectorized_mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
-    # === vectorize function
-    # we vectorize over H, jump_ops and rho0, all other arguments are not vectorized
-    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
-    # this leaf should be vmapped on.
+    # vectorize input over H, Ls and rho0
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
+    # vectorize output over `_saved` and `infos`
+    out_axes = MESolveResult(None, None, None, None, 0, 0)
 
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = MESolveResult(False, False, False, False, 0, 0)
-
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(
-            H.shape[:-2], rho0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
-        )
-
-        def broadcast(x: TimeArray) -> TimeArray:
-            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
-
-        H = broadcast(H)
-        jump_ops = list(map(broadcast, jump_ops))
-        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
-
-    n_batch = (
-        H.in_axes,
-        [jump_op.in_axes for jump_op in jump_ops],
-        Shape(rho0.shape[:-2]),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-    )
-
-    # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_mesolve, n_batch, out_axes)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(_mesolve, in_axes, out_axes, nvmap)
     else:
-        f = _flat_vectorize(_mesolve, n_batch, out_axes)
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        n = H.shape[-1]
+        H = H.broadcast_to(*bshape, n, n)
+        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        rho0 = jnp.broadcast_to(rho0, (*bshape, n, n))
+        # vectorize the function
+        f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
-    return f(H, jump_ops, rho0, tsave, exp_ops, solver, gradient, options)
+    return f(H, Ls, rho0, tsave, exp_ops, solver, gradient, options)
 
 
 def _mesolve(
     H: TimeArray,
-    jump_ops: list[TimeArray],
+    Ls: list[TimeArray],
     rho0: Array,
     tsave: Array,
     exp_ops: Array | None,
@@ -234,7 +214,7 @@ def _mesolve(
         gradient=gradient,
         options=options,
         H=H,
-        Ls=jump_ops,
+        Ls=Ls,
         Es=exp_ops,
     )
 
@@ -246,19 +226,19 @@ def _mesolve(
 
 
 def _check_mesolve_args(
-    H: TimeArray, jump_ops: list[TimeArray], rho0: Array, exp_ops: Array | None
+    H: TimeArray, Ls: list[TimeArray], rho0: Array, exp_ops: Array | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
+    # === check Ls shape
+    for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
-    if len(jump_ops) == 0:
+    if len(Ls) == 0 and isket(rho0):
         logging.warning(
-            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
-            ' solve the Schrödinger equation.'
+            'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
         )
 
     # === check rho0 shape

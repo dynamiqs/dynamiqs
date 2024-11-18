@@ -2,7 +2,7 @@
     <img alt="Dynamiqs logo" width="360" src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/logo-typeface-darktype.png?raw=true">
 </h1>
 
-[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
+[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois), [D. Weiss](https://github.com/dkweiss31)
 
 [![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.9%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -10,7 +10,7 @@ High-performance quantum systems simulation with JAX.
 
 **Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
-Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/python_api/index.html) for a list of all implemented functions.
+Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/stable/python_api/index.html) for a list of all implemented functions.
 
 The main features of **Dynamiqs** are:
 
@@ -115,7 +115,7 @@ Gradient w.r.t. kappa : -3.3520
 Gradient w.r.t. alpha0: 1.0670
 ```
 
-ℹ️ On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
+ℹ️ On this specific example, we can verify the result analytically. The state remains a coherent state at all time with complex amplitude $\alpha(t) = \alpha_0 e^{-\kappa t/2} e^{-i\omega t}$, and the final photon number is thus $\bar{n} = |\alpha(T)|^2 = \alpha_0^2 e^{-\kappa T}$. We can then compute the gradient with respect to the three parameters $\theta = (\omega, \kappa, \alpha_0)$:
 
 $$
 \nabla_\theta\ \bar{n} = \begin{pmatrix}
@@ -202,10 +202,10 @@ If you have found this library useful in your academic research, you can cite:
 ```bibtex
 @unpublished{guilmin2024dynamiqs,
   title  = {Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
-  author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois},
+  author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois and Daniel Weiss},
   year   = {2024},
   url    = {https://github.com/dynamiqs/dynamiqs}
 }
 ```
 
-> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.
+> P. Guilmin, R. Gautier, A. Bocquet, E. Genois, D. Weiss. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.

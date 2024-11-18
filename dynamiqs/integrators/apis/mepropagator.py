@@ -12,14 +12,14 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
-from ...time_array import Shape, TimeArray
+from ...time_array import TimeArray
 from ...utils.operators import eye
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
+    multi_vmap,
 )
 from ..core.abstract_integrator import MEPropagatorIntegrator
 from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
@@ -87,69 +87,52 @@ def mepropagator(
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
-    jump_ops = [_astimearray(L) for L in jump_ops]
+    Ls = [_astimearray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
 
     # === check arguments
-    _check_mepropagator_args(H, jump_ops)
+    _check_mepropagator_args(H, Ls)
     tsave = check_times(tsave, 'tsave')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _vectorized_mepropagator(H, jump_ops, tsave, solver, gradient, options)
+    return _vectorized_mepropagator(H, Ls, tsave, solver, gradient, options)
 
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_mepropagator(
     H: TimeArray,
-    jump_ops: list[TimeArray],
+    Ls: list[TimeArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === vectorize function
-    # we vectorize over H and jump_ops, all other arguments are not vectorized
-    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
-    # this leaf should be vmapped on.
+    # vectorize input over H and Ls
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], None, None, None, None)
+    # vectorize output over `_saved` and `infos`
+    out_axes = MEPropagatorResult(None, None, None, None, 0, 0)
 
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = MEPropagatorResult(False, False, False, False, 0, 0)
-
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(
-            H.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
-        )
-
-        def broadcast(x: TimeArray) -> TimeArray:
-            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
-
-        H = broadcast(H)
-        jump_ops = list(map(broadcast, jump_ops))
-
-    n_batch = (
-        H.in_axes,
-        [jump_op.in_axes for jump_op in jump_ops],
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-    )
-
-    # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_mepropagator, n_batch, out_axes)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], 0, 0, 0, 0)
+        f = cartesian_vmap(_mepropagator, in_axes, out_axes, nvmap)
     else:
-        f = _flat_vectorize(_mepropagator, n_batch, out_axes)
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls]])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        n = H.shape[-1]
+        H = H.broadcast_to(*bshape, n, n)
+        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        # vectorize the function
+        f = multi_vmap(_mepropagator, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
-    return f(H, jump_ops, tsave, solver, gradient, options)
+    return f(H, Ls, tsave, solver, gradient, options)
 
 
 def _mepropagator(
     H: TimeArray,
-    jump_ops: list[TimeArray],
+    Ls: list[TimeArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -165,13 +148,7 @@ def _mepropagator(
     # === init integrator
     y0 = eye(H.shape[-1] ** 2)
     integrator = integrator_class(
-        ts=tsave,
-        y0=y0,
-        solver=solver,
-        gradient=gradient,
-        options=options,
-        H=H,
-        Ls=jump_ops,
+        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
     )
 
     # === run integrator
@@ -181,15 +158,15 @@ def _mepropagator(
     return result  # noqa: RET504
 
 
-def _check_mepropagator_args(H: TimeArray, jump_ops: list[TimeArray]):
+def _check_mepropagator_args(H: TimeArray, Ls: list[TimeArray]):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
+    # === check Ls shape
+    for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
-    if len(jump_ops) == 0:
+    if len(Ls) == 0:
         logging.warning(
             'Argument `jump_ops` is an empty list, consider using `dq.sepropagator()`'
             ' to compute propagators for the Schrödinger equation.'
