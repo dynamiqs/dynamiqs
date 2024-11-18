@@ -150,6 +150,8 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 
 Examples:
 
+<!-- skip: next -->
+
 ```python
 raise ValueError(f'Argument `H` must have shape (n, n), but has shape H.shape={H.shape}.')
 raise ValueError(
