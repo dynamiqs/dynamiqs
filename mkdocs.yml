@@ -248,8 +248,12 @@ nav:
               - bloch_coordinates: python_api/utils/quantum_utils/bloch_coordinates.md
               - wigner: python_api/utils/quantum_utils/wigner.md
           - QArray utilities:
+              - asqarray: python_api/qarrays/utils/asqarray.md
               - stack: python_api/qarrays/utils/stack.md
+              - to_jax: python_api/qarrays/utils/to_jax.md
+              - to_numpy: python_api/qarrays/utils/to_numpy.md
               - to_qutip: python_api/qarrays/utils/to_qutip.md
+              - sparsedia_from_dict: python_api/qarrays/utils/sparsedia_from_dict.md
           - Global settings:
               - set_device: python_api/utils/global_settings/set_device.md
               - set_precision: python_api/utils/global_settings/set_precision.md
