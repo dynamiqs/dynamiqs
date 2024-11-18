@@ -32,7 +32,7 @@ To install the library with all its dependencies, as well as the developer depen
 
 ### Github flow
 
-We use the GitHub flow branch-based workflow to collaborate on the library. If you're unfamiliar with open-source development, you can follow the [GitHub flow tutorial](https://docs.github.com/en/get-started/using-github/github-flow) Briefly, to add a change you should: fork the repository, create a branch, make and commit your changes, create a pull request (PR), address review comments, and merge the PR.
+We use the GitHub flow branch-based workflow to collaborate on the library. If you're unfamiliar with open-source development, you can follow the [GitHub flow tutorial](https://docs.github.com/en/get-started/using-github/github-flow). Briefly, to add a change you should: fork the repository, create a branch, make and commit your changes, create a pull request (PR), address review comments, and merge the PR.
 
 ### Planning your change
 
