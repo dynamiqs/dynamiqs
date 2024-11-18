@@ -323,6 +323,7 @@ def sparsedia_from_dict(
     diags = [jnp.asarray(diag) for diag in offsets_diags.values()]
     diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
     diags = jnp.stack(diags, dtype=dtype)
+    diags = jnp.moveaxis(diags, 0, -2)
 
     # === dims
     n = diags.shape[-1]
