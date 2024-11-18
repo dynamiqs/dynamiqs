@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/gradient/CheckpointAutograd.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/result/FloquetResult.html">
 
 
-    <link rel="prev" href="Autograd.html">
+    <link rel="prev" href="MEPropagatorResult.html">
 
 
-    <link rel="next" href="../options/Options.html">
+    <link rel="next" href="../utils/operators/eye.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>CheckpointAutograd - Dynamiqs</title>
+        <title>FloquetResult - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.gradient.CheckpointAutograd" class="md-skip">
+        <a href="#dynamiqs.result.FloquetResult" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                CheckpointAutograd
+                FloquetResult
               
             </span>
           </div>
@@ -1628,10 +1628,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -1647,11 +1645,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_3" >
         
           
           <label class="md-nav__link" for="__nav_3_3_3" id="__nav_3_3_3_label" tabindex="0">
@@ -1665,7 +1663,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3_3">
             <span class="md-nav__icon md-icon"></span>
             Gradients (dq.gradient)
@@ -1679,7 +1677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Autograd.html" class="md-nav__link">
+      <a href="../gradient/Autograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1697,19 +1695,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="CheckpointAutograd.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../gradient/CheckpointAutograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1718,7 +1707,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1757,8 +1745,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1780,11 +1770,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_5" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_5" id="__nav_3_3_5_label" tabindex="0">
@@ -1798,7 +1788,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_5">
             <span class="md-nav__icon md-icon"></span>
             Results
@@ -1812,7 +1802,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/SESolveResult.html" class="md-nav__link">
+      <a href="SESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1833,7 +1823,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/MESolveResult.html" class="md-nav__link">
+      <a href="MESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1854,7 +1844,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/SEPropagatorResult.html" class="md-nav__link">
+      <a href="SEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1875,7 +1865,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../result/MEPropagatorResult.html" class="md-nav__link">
+      <a href="MEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1893,10 +1883,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../result/FloquetResult.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="FloquetResult.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1905,6 +1904,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4644,65 +4644,82 @@
 
 
 
-<h1 id="dynamiqs.gradient.CheckpointAutograd" class="doc doc-heading">
-    <span class="doc doc-object-name doc-class-name">dq.gradient.CheckpointAutograd</span>
+<h1 id="dynamiqs.result.FloquetResult" class="doc doc-heading">
+    <span class="doc doc-object-name doc-class-name">dq.FloquetResult</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">CheckpointAutograd</span><span class="p">(</span><span class="n">ncheckpoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
+
 
     <div class="doc doc-contents first">
 
 
-        <p>Checkpointed automatic differentiation.</p>
-<p>With this option, the gradient is computed by automatically differentiating
-through the internals of the solver. The difference with the standard automatic
-differentiation (see <a class="autorefs autorefs-internal" href="Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a>) is
-that a checkpointing scheme is used to reduce the memory usage of the
-backpropagation.</p>
+        <p>Result of the Floquet integration.</p>
 
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>For most problems this is the preferred technique for backpropagating
-through the quantum solvers.</p>
-</details>
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This cannot be forward-mode autodifferentiated (e.g. using
-<a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.jvp.html"><code>jax.jvp</code></a>
-). Try using <a class="autorefs autorefs-internal" href="Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> if that
-is something you need.</p>
-</details>
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>For Diffrax-based solvers, this falls back to the
-<a href="https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint"><code>diffrax.RecursiveCheckpointAdjoint</code></a>
-option.</p>
-</details>
-    <!-- <p>Parameters:</p> -->
     <p>
-      <strong>Parameters</strong>
+      <strong>Attributes</strong>
     </p>
     <ul>
         <li class="field-body">
-          <b>ncheckpoints</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Number of checkpoints to use. The amount of memory used by
-the differential equation solve will be roughly equal to the number of
-checkpoints multiplied by the size of the state. You can speed up
-backpropagation by allocating more checkpoints, so it makes sense to
-set as many checkpoints as you have memory for. This value is set to
-<code>None</code> by default, in which case it will be set to <code>log(max_steps)</code>,
-for which a theoretical result is available guaranteeing that
-backpropagation will take <code>O(n_steps log(n_steps))</code> time in the number
-of steps <code>n_steps &lt;= max_steps</code>.</p>
+          <b>modes</b>
+              <i>
+(array of shape (..., ntsave, n, n, 1))              </i>
+          – <p>Saved Floquet modes.</p>
+        </li>
+        <li class="field-body">
+          <b>quasienergies</b>
+              <i>
+(array of shape (..., n))              </i>
+          – <p>Saved quasienergies</p>
+        </li>
+        <li class="field-body">
+          <b>T</b>
+              <i>
+(float)              </i>
+          – <p>Drive period</p>
+        </li>
+        <li class="field-body">
+          <b>infos</b>
+              <i>
+(PyTree or None)              </i>
+          – <p>Solver-dependent information on the resolution.</p>
+        </li>
+        <li class="field-body">
+          <b>tsave</b>
+              <i>
+(array of shape (ntsave,))              </i>
+          – <p>Times for which results were saved.</p>
+        </li>
+        <li class="field-body">
+          <b>solver</b>
+              <i>
+(Solver)              </i>
+          – <p>Solver used.</p>
+        </li>
+        <li class="field-body">
+          <b>gradient</b>
+              <i>
+(Gradient)              </i>
+          – <p>Gradient used.</p>
+        </li>
+        <li class="field-body">
+          <b>options</b>
+              <i>
+(Options)              </i>
+          – <p>Options used.</p>
         </li>
     </ul>
 
+<details class="note"
+ >
+  <summary>Result of running multiple simulations concurrently</summary>
+  <p>The resulting Floquet modes and quasienergies are batched according to the
+leading dimensions of the Hamiltonian <code>H</code>. For example if <code>H</code> has shape
+<em>(2, 3, n, n)</em>, then <code>modes</code> has shape <em>(2, 3, ntsave, n, n, 1)</em>.</p>
+<p>See the
+<a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
+tutorial for more details.</p>
+</details>
 
 
 
