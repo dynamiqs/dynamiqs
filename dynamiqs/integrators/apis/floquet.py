@@ -53,6 +53,8 @@ def floquet(
 
         ```python
         import jax
+        import jax.numpy as jnp
+        import dynamiqs as dq
 
 
         def single_floquet(omega):
