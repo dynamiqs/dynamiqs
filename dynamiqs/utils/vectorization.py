@@ -250,7 +250,3 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     return -1j * (spre(H) - spost(H)) + sum(sdissipator(L) for L in jump_ops)
-    # Lcal = -1j * (spre(H) - spost(H))
-    # if jump_ops.shape != (0,):  # empty 1D array
-    #     Lcal += sdissipator(jump_ops).sum(0)
-    # return Lcal

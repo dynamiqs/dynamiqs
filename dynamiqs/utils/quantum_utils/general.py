@@ -561,7 +561,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
     """  # noqa: D405
     H = asqarray(H)
-    jump_ops = asqarray(jump_ops)
+    jump_ops = [asqarray(L) for L in jump_ops]
     rho = asqarray(rho)
 
     # === check H shape
@@ -574,10 +574,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
-    new_rho = -1j * (H @ rho - rho @ H)
-    if jump_ops.shape != (0,):  # empty 1D array
-        new_rho += dissipator(jump_ops, rho).sum(0)
-    return new_rho
+    return -1j * (H @ rho - rho @ H) + sum(dissipator(L, rho) for L in jump_ops)
 
 
 def isket(x: QArrayLike) -> bool:

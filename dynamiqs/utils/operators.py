@@ -688,8 +688,8 @@ def rx(theta: ArrayLike) -> QArray:
     Examples:
         >>> dq.rx(jnp.pi)
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[-0.+0.j -0.-1.j]
-         [-0.-1.j -0.+0.j]]
+        [[-0.+0.j  0.-1.j]
+         [ 0.-1.j -0.+0.j]]
         >>> dq.rx([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
         (5, 2, 2)
     """

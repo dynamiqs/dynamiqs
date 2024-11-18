@@ -143,7 +143,7 @@ class FloquetResult(Result):
     """Result of the Floquet integration.
 
     Attributes:
-        modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes.
+        modes _(qarray of shape (..., ntsave, n, n, 1))_: Saved Floquet modes.
         quasienergies _(array of shape (..., n))_: Saved quasienergies
         T _(float)_: Drive period
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
@@ -165,7 +165,7 @@ class FloquetResult(Result):
     T: float
 
     @property
-    def modes(self) -> Array:
+    def modes(self) -> QArray:
         return self._saved.ysave
 
     @property

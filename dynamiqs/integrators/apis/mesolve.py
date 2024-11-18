@@ -26,7 +26,6 @@ from ...solver import (
     Tsit5,
 )
 from ...time_array import TimeArray
-from ...utils.quantum_utils.general import isket
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -173,7 +172,7 @@ def _vectorized_mesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        rho0 = rho0.broadcast_to(rho0, (*bshape, n, n))
+        rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
@@ -235,7 +234,7 @@ def _check_mesolve_args(
     for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
-    if len(Ls) == 0 and isket(rho0):
+    if len(Ls) == 0 and rho0.isket():
         logging.warning(
             'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
             ' consider using `dq.sesolve()` to solve the Schrödinger equation.'

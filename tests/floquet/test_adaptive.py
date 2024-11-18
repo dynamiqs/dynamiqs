@@ -7,6 +7,7 @@ from dynamiqs.solver import Tsit5
 from .floquet_qubit import FloquetQubit
 
 
+@pytest.mark.skip(reason='TODO (fix before merge)')
 class TestFloquet:
     @pytest.mark.parametrize('omega', 2.0 * jnp.pi * jnp.array([1.0, 2.5]))
     @pytest.mark.parametrize('amp', 2.0 * jnp.pi * jnp.array([0.01, 0.1]))

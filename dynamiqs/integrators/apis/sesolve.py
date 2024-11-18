@@ -141,7 +141,7 @@ def _vectorized_sesolve(
         nvmap = len(bshape)
         # broadcast all vectorized input to same shape
         H = H.broadcast_to(*bshape, n, n)
-        psi0 = psi0.broadcast_to(psi0, (*bshape, n, 1))
+        psi0 = psi0.broadcast_to(*bshape, n, 1)
         # vectorize the function
         f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
 

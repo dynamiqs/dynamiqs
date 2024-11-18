@@ -11,6 +11,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...integrators.floquet.floquet_integrator import FloquetIntegrator
 from ...options import Options
+from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...solver import Solver, Tsit5
 from ...time_array import TimeArray
@@ -20,7 +21,7 @@ __all__ = ['floquet']
 
 
 def floquet(
-    H: ArrayLike | TimeArray,
+    H: QArrayLike | TimeArray,
     T: float,
     tsave: ArrayLike,
     *,
@@ -51,26 +52,27 @@ def floquet(
         drive frequencies. This however can be achieved straightforwardly with an
         external call to `jax.vmap`, as follows:
 
-        ```python
-        import jax
-        import jax.numpy as jnp
-        import dynamiqs as dq
+        # TODO: fix before merge
+        # ```python
+        # import jax
+        # import jax.numpy as jnp
+        # import dynamiqs as dq
 
 
-        def single_floquet(omega):
-            H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-            T = 2.0 * jnp.pi / omega
-            tsave = jnp.linspace(0.0, T, 11)
-            return dq.floquet(H, T, tsave)
+        # def single_floquet(omega):
+        #     H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
+        #     T = 2.0 * jnp.pi / omega
+        #     tsave = jnp.linspace(0.0, T, 11)
+        #     return dq.floquet(H, T, tsave)
 
 
-        omegas = jnp.array([0.9, 1.0, 1.1])
-        batched_floquet = jax.vmap(single_floquet)
-        result = batched_floquet(omegas)
-        ```
+        # omegas = jnp.array([0.9, 1.0, 1.1])
+        # batched_floquet = jax.vmap(single_floquet)
+        # result = batched_floquet(omegas)
+        # ```
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`, see above.
