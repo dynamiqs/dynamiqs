@@ -33,6 +33,33 @@ __all__ = ['asqarray', 'stack', 'to_jax', 'to_numpy', 'to_qutip', 'sparsedia_fro
 def asqarray(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
+    """Convert an object to a QArray.
+
+    Args:
+        x: Object to convert to a QArray.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (a single system
+            with the same dimension as `x`).
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`). If `None` and `x` is not
+            already a QArray, the layout defaults to `dq.dense`.
+
+    Returns:
+        QArray representation of the input.
+
+    Exemples:
+        >>> dq.asqarray([[1, 0], [0, -1]])
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[ 1.+0.j  0.+0.j]
+         [ 0.+0.j -1.+0.j]]
+        >>> dq.asqarray([[1, 0], [0, -1]], layout=dq.dia)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 1.+0.j    ⋅   ]
+         [   ⋅    -1.+0.j]]
+        >>> dq.asqarray(dq.sigmaz())
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 1.+0.j    ⋅   ]
+         [   ⋅    -1.+0.j]]
+    """
     if layout is None and isinstance(x, QArray):
         return x
 
