@@ -45,6 +45,11 @@ def floquet(
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
 
+    Warning:
+        `floquet` is not yet GPU compatible because `jax.numpy.linalg.eig` is only
+        implemented on the CPU backend, [see here](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.linalg.eig.html).
+        However, a GPU implementation of eig is currently in the works, [see here](https://github.com/jax-ml/jax/pull/24663).
+
     Note-: Batching over drive periods
         The current API does not yet natively support batching over multiple drive
         periods, for instance if you wanted to batch over Hamiltonians with different
