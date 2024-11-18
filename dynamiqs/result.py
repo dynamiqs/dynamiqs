@@ -10,7 +10,13 @@ from .qarrays.qarray import QArray
 from .qarrays.type_conversion import asjaxarray
 from .solver import Solver
 
-__all__ = ['SESolveResult', 'MESolveResult', 'SEPropagatorResult', 'MEPropagatorResult']
+__all__ = [
+    'SESolveResult',
+    'MESolveResult',
+    'SEPropagatorResult',
+    'MEPropagatorResult',
+    'FloquetResult',
+]
 
 
 def memory_bytes(x: Array) -> int:
@@ -48,6 +54,10 @@ class SolveSaved(Saved):
 
 class PropagatorSaved(Saved):
     pass
+
+
+class FloquetSaved(Saved):
+    quasienergies: Array
 
 
 class Result(eqx.Module):
@@ -127,6 +137,47 @@ class PropagatorResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {'Propagators': array_str(self.propagators)}
+
+
+class FloquetResult(Result):
+    """Result of the Floquet integration.
+
+    Attributes:
+        modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes.
+        quasienergies _(array of shape (..., n))_: Saved quasienergies
+        T _(float)_: Drive period
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+
+    Note-: Result of running multiple simulations concurrently
+        The resulting Floquet modes and quasienergies are batched according to the
+        leading dimensions of the Hamiltonian `H`. For example if `H` has shape
+        _(2, 3, n, n)_, then `modes` has shape _(2, 3, ntsave, n, n, 1)_.
+
+        See the
+        [Batching simulations](../../documentation/basics/batching-simulations.md)
+        tutorial for more details.
+    """
+
+    T: float
+
+    @property
+    def modes(self) -> Array:
+        return self._saved.ysave
+
+    @property
+    def quasienergies(self) -> Array:
+        return self._saved.quasienergies
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {
+            'Modes': array_str(self.modes),
+            'Quasienergies': array_str(self.quasienergies),
+        }
 
 
 class SESolveResult(SolveResult):

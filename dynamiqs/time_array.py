@@ -285,7 +285,7 @@ class TimeArray(eqx.Module):
 
     @property
     @abstractmethod
-    def in_axes(self) -> PyTree[int]:
+    def in_axes(self) -> PyTree[int | None]:
         # returns the `in_axes` arguments that should be passed to vmap in order
         # to vmap the TimeArray correctly
         pass
@@ -407,8 +407,8 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.array.mT)
 
     @property
-    def in_axes(self) -> PyTree[int]:
-        return ConstantTimeArray(Shape(self.array.shape[:-2]))
+    def in_axes(self) -> PyTree[int | None]:
+        return ConstantTimeArray(0)
 
     @property
     def discontinuity_ts(self) -> Array | None:
@@ -458,8 +458,8 @@ class PWCTimeArray(TimeArray):
         return PWCTimeArray(self.times, self.values, self.array.mT)
 
     @property
-    def in_axes(self) -> PyTree[int]:
-        return PWCTimeArray(Shape(), Shape(self.values.shape[:-1]), Shape())
+    def in_axes(self) -> PyTree[int | None]:
+        return PWCTimeArray(None, 0, None)
 
     @property
     def discontinuity_ts(self) -> Array | None:
@@ -524,8 +524,8 @@ class ModulatedTimeArray(TimeArray):
         return ModulatedTimeArray(self.f, self.array.mT, self._disc_ts)
 
     @property
-    def in_axes(self) -> PyTree[int]:
-        return ModulatedTimeArray(Shape(self.f.shape), Shape(), Shape())
+    def in_axes(self) -> PyTree[int | None]:
+        return ModulatedTimeArray(0, None, None)
 
     @property
     def discontinuity_ts(self) -> Array | None:
@@ -580,8 +580,8 @@ class CallableTimeArray(TimeArray):
         return CallableTimeArray(f, self._disc_ts)
 
     @property
-    def in_axes(self) -> PyTree[int]:
-        return CallableTimeArray(Shape(self.f.shape[:-2]), Shape())
+    def in_axes(self) -> PyTree[int | None]:
+        return CallableTimeArray(0, None)
 
     @property
     def discontinuity_ts(self) -> Array | None:
@@ -621,6 +621,15 @@ class CallableTimeArray(TimeArray):
 class SummedTimeArray(TimeArray):
     timearrays: list[TimeArray]
 
+    def __init__(self, timearrays: list[TimeArray], check: bool = True):
+        if check:
+            # verify all time-arrays of the sum are broadcast compatible
+            shape = jnp.broadcast_shapes(*[tarray.shape for tarray in timearrays])
+            # ensure all time-arrays can be jointly vmapped over (as specified by the
+            # `in_axes` property)
+            timearrays = [tarray.broadcast_to(*shape) for tarray in timearrays]
+        self.timearrays = timearrays
+
     @property
     def dtype(self) -> jnp.dtype:
         return self.timearrays[0].dtype
@@ -635,9 +644,9 @@ class SummedTimeArray(TimeArray):
         return SummedTimeArray(timearrays)
 
     @property
-    def in_axes(self) -> PyTree[int]:
-        timearrays = [tarray.in_axes for tarray in self.timearrays]
-        return SummedTimeArray(timearrays)
+    def in_axes(self) -> PyTree[int | None]:
+        in_axes_list = [tarray.in_axes for tarray in self.timearrays]
+        return SummedTimeArray(in_axes_list, check=False)
 
     @property
     def discontinuity_ts(self) -> Array | None:

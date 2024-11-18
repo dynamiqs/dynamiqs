@@ -668,7 +668,7 @@ def hadamard(n: int = 1) -> QArray:
     return tensor(*Hs)
 
 
-def rx(theta: float) -> QArray:
+def rx(theta: ArrayLike) -> QArray:
     r"""Returns the $R_x(\theta)$ rotation gate.
 
     It is defined by
@@ -680,7 +680,7 @@ def rx(theta: float) -> QArray:
     $$
 
     Args:
-        theta: Rotation angle $\theta$ in radians.
+        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(qarray of shape (2, 2))_ $R_x(\theta)$ gate.
@@ -690,18 +690,18 @@ def rx(theta: float) -> QArray:
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[-0.+0.j -0.-1.j]
          [-0.-1.j -0.+0.j]]
+        >>> dq.rx([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
+        (5, 2, 2)
     """
-    array = jnp.array(
-        [
-            [jnp.cos(theta / 2), -jnp.sin(theta / 2) * 1j],
-            [-jnp.sin(theta / 2) * 1j, jnp.cos(theta / 2)],
-        ],
-        dtype=cdtype(),
-    )
-    return asqarray(array)
+    theta = jnp.asarray(theta)
+    c = jnp.cos(theta / 2)
+    s = jnp.sin(theta / 2)
+    rx = jnp.array([[c, -1j * s], [-1j * s, c]], dtype=cdtype())
+    rx = jnp.moveaxis(rx, (0, 1), (-2, -1))
+    return asqarray(rx)
 
 
-def ry(theta: float) -> QArray:
+def ry(theta: ArrayLike) -> QArray:
     r"""Returns the $R_y(\theta)$ rotation gate.
 
     It is defined by
@@ -713,7 +713,7 @@ def ry(theta: float) -> QArray:
     $$
 
     Args:
-        theta: Rotation angle $\theta$ in radians.
+        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(qarray of shape (2, 2))_ $R_y(\theta)$ gate.
@@ -723,18 +723,18 @@ def ry(theta: float) -> QArray:
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[-0.+0.j -1.+0.j]
          [ 1.+0.j -0.+0.j]]
+        >>> dq.ry([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
+        (5, 2, 2)
     """
-    array = jnp.array(
-        [
-            [jnp.cos(theta / 2), -jnp.sin(theta / 2)],
-            [jnp.sin(theta / 2), jnp.cos(theta / 2)],
-        ],
-        dtype=cdtype(),
-    )
-    return asqarray(array)
+    theta = jnp.asarray(theta)
+    c = jnp.cos(theta / 2)
+    s = jnp.sin(theta / 2)
+    ry = jnp.array([[c, -s], [s, c]], dtype=cdtype())
+    ry = jnp.moveaxis(ry, (0, 1), (-2, -1))
+    return asqarray(ry)
 
 
-def rz(theta: float) -> QArray:
+def rz(theta: ArrayLike) -> QArray:
     r"""Returns the $R_z(\theta)$ rotation gate.
 
     It is defined by
@@ -746,7 +746,7 @@ def rz(theta: float) -> QArray:
     $$
 
     Args:
-        theta: Rotation angle $\theta$ in radians.
+        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(qarray of shape (2, 2))_ $R_z(\theta)$ gate.
@@ -756,11 +756,17 @@ def rz(theta: float) -> QArray:
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[-0.-1.j  0.+0.j]
          [ 0.+0.j -0.+1.j]]
+        >>> dq.rz([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
+        (5, 2, 2)
     """
-    array = jnp.array(
-        [[jnp.exp(-1j * theta / 2), 0], [0, jnp.exp(1j * theta / 2)]], dtype=cdtype()
+    theta = jnp.asarray(theta)
+    zero = jnp.zeros_like(theta)
+    rz = jnp.array(
+        [[jnp.exp(-1j * theta / 2), zero], [zero, jnp.exp(1j * theta / 2)]],
+        dtype=cdtype(),
     )
-    return asqarray(array)
+    rz = jnp.moveaxis(rz, (0, 1), (-2, -1))
+    return asqarray(rz)
 
 
 def sgate() -> QArray:

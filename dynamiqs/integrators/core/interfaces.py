@@ -1,4 +1,6 @@
 import equinox as eqx
+from jax import Array
+from jaxtyping import Scalar
 
 from ...options import Options
 from ...qarrays.qarray import QArray
@@ -20,6 +22,9 @@ class MEInterface(eqx.Module):
 
     H: TimeArray
     Ls: list[TimeArray]
+
+    def L(self, t: Scalar) -> list[Array]:
+        return [L(t) for L in self.Ls]  # (nLs, n, n)
 
 
 class SolveInterface(eqx.Module):

@@ -76,16 +76,13 @@ class MESolveRouchon1Integrator(
             #   M1 = L sqrt(dt)
 
             delta_t = t1 - t0
-            Ls = [L(t0) for L in self.Ls]
+            Ls = self.L(t0)
             Lsdag = [L.dag() for L in Ls]
-
-            # === compute M0
             LdagL = [Ldag @ L for L, Ldag in zip(Ls, Lsdag)]
+
             M0 = self.Id - (1j * self.H(t0) + 0.5 * sum(LdagL)) * delta_t
+            Mks = [L * jnp.sqrt(delta_t) for L in Ls]
 
-            # === compute Mk
-            Mks = [delta_t * L @ y0 @ Ldag for L, Ldag in zip(Ls, Lsdag)]
-
-            return M0 @ y0 @ M0.dag() + sum(Mks)
+            return M0 @ y0 @ M0.dag() + sum([Mk @ y0 @ Mk.dag() for Mk in Mks])
 
         return AbstractRouchonTerm(kraus_map)

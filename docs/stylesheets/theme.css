@@ -63,6 +63,10 @@ Description: Color theme of the Dynamiqs documentation
   --md-example-fg-color: #3E517A;
   --md-example-bg-color: #c9cfde;
 
+  /* See also color shades */
+  --md-seealso-fg-color: #3E517A;
+  --md-seealso-bg-color: #c9cfde;
+
   /* Home page */
   --homepage-gradient:  linear-gradient(to right bottom, #d15540, #d86854, #de7a68, #e38b7c, #e79d90);
   --homepage-button-hover-color: #ed9487;
@@ -116,6 +120,10 @@ Description: Color theme of the Dynamiqs documentation
   /* Example color shades */
   --md-example-fg-color: #54658b;
   --md-example-bg-color: #333e49;
+
+  /* See also color shades */
+  --md-seealso-fg-color: #54658b;
+  --md-seealso-bg-color: #333e49;
 
   /* Admonition shadow */
   --md-shadow-z1: 0 0.2rem 0.5rem #0000002d, 0 0 0.05rem #0000001a;
