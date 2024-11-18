@@ -182,10 +182,44 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
 
 def to_jax(x: QArrayLike) -> Array:
+    """Convert a qarray-like object into a JAX array.
+
+    Args:
+        x: Qarray-like object.
+
+    Returns:
+        JAX array.
+
+    Examples:
+        >>> dq.to_jax(dq.fock(3, 1))
+        Array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_jax(dq.sigmaz())
+        Array([[ 1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+    """
     return _to_jax(x)
 
 
 def to_numpy(x: QArrayLike) -> np.ndarray:
+    """Convert a qarray-like object into a NumPy array.
+
+    Args:
+        x: Qarray-like object.
+
+    Returns:
+        NumPy array.
+
+    Examples:
+        >>> dq.to_numpy(dq.fock(3, 1))
+        array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_numpy(dq.sigmaz())
+        array([[ 1.+0.j,  0.+0.j],
+               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+    """
     return _to_numpy(x)
 
 
