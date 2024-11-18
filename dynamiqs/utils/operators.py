@@ -10,7 +10,7 @@ from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray
 from ..qarrays.sparsedia_qarray import SparseDIAQArray
-from ..qarrays.type_conversion import asqarray, sparsedia_from_dict
+from ..qarrays.utils import asqarray, sparsedia_from_dict
 from .quantum_utils import tensor
 
 __all__ = [

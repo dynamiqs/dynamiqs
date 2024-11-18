@@ -12,7 +12,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays.qarray import QArray, QArrayLike
-from ...qarrays.type_conversion import asqarray
+from ...qarrays.utils import asqarray
 from ...result import MESolveResult
 from ...solver import (
     Dopri5,

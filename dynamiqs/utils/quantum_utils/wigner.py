@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
 from ...qarrays.qarray import QArrayLike
-from ...qarrays.type_conversion import to_jax
+from ...qarrays.utils import to_jax
 from .general import todm
 
 __all__ = ['wigner']

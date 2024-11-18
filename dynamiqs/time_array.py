@@ -14,7 +14,7 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
-from .qarrays.type_conversion import asqarray
+from .qarrays.utils import asqarray
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 

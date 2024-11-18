@@ -10,7 +10,7 @@ from jaxtyping import PyTree
 
 from .._utils import obj_type_str
 from ..qarrays.qarray import QArrayLike
-from ..qarrays.type_conversion import asqarray
+from ..qarrays.utils import asqarray
 from ..solver import Solver, _DEAdaptiveStep
 from ..time_array import (
     ConstantTimeArray,

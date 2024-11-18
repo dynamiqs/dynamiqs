@@ -9,7 +9,7 @@ from jax.typing import ArrayLike
 from .._checks import check_type_int
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
-from ..qarrays.type_conversion import asqarray, to_jax
+from ..qarrays.utils import asqarray, to_jax
 from .operators import displace
 from .quantum_utils import tensor
 

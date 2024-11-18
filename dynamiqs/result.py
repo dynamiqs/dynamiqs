@@ -7,7 +7,7 @@ from jaxtyping import PyTree
 from .gradient import Gradient
 from .options import Options
 from .qarrays.qarray import QArray
-from .qarrays.type_conversion import to_jax
+from .qarrays.utils import to_jax
 from .solver import Solver
 
 __all__ = [
