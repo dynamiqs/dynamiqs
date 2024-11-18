@@ -191,6 +191,10 @@ def sdissipator(L: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
+
+    See also:
+        - [`dq.dissipator()`][dynamiqs.dissipator]: applies the dissipation
+            superoperator to a state using only $n\times n$ matrix multiplications.
     """
     L = jnp.asarray(L)
     check_shape(L, 'L', '(..., n, n)')
@@ -229,6 +233,10 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
+
+    See also:
+        - [`dq.lindbladian()`][dynamiqs.lindbladian]: applies the Lindbladian
+            superoperator to a state using only $n\times n$ matrix multiplications.
     """
     H = jnp.asarray(H)
     jump_ops = jnp.asarray(jump_ops)
