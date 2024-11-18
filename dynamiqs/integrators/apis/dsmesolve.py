@@ -16,14 +16,14 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import DSMESolveResult
 from ...solver import EulerMaruyama, Solver
-from ...time_array import Shape, TimeArray
-from ...utils.quantum_utils.general import todm
+from ...time_array import TimeArray
+from ...utils.quantum_utils.general import isket, todm
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
+    multi_vmap,
 )
 from ..core.abstract_integrator import DSMESolveIntegrator
 from ..dsmesolve.fixed_step_integrator import DSMESolveEulerMayuramaIntegrator
@@ -151,7 +151,7 @@ def dsmesolve(
     """  # noqa: E501
     # === convert arguments
     H = _astimearray(H)
-    jump_ops = [_astimearray(L) for L in jump_ops]
+    Ls = [_astimearray(L) for L in jump_ops]
     etas = jnp.asarray(etas)
     rho0 = jnp.asarray(rho0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
@@ -160,7 +160,7 @@ def dsmesolve(
         exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_dsmesolve_args(H, jump_ops, etas, rho0, exp_ops)
+    _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
 
     # === convert rho0 to density matrix
@@ -168,25 +168,15 @@ def dsmesolve(
 
     # === split jump operators
     # split between purely dissipative (eta = 0) and measured (eta != 0)
-    dissipative_ops = [L for L, eta in zip(jump_ops, etas) if eta == 0]
-    measured_ops = [L for L, eta in zip(jump_ops, etas) if eta != 0]
+    Lcs = [L for L, eta in zip(Ls, etas) if eta == 0]
+    Lms = [L for L, eta in zip(Ls, etas) if eta != 0]
     etas = etas[etas != 0]
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dsmesolve(
-        H,
-        dissipative_ops,
-        measured_ops,
-        etas,
-        rho0,
-        tsave,
-        keys,
-        exp_ops,
-        solver,
-        gradient,
-        options,
+        H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, solver, gradient, options
     )
 
 
@@ -194,8 +184,8 @@ def dsmesolve(
 @partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeArray,
-    dissipative_ops: list[TimeArray],
-    measured_ops: list[TimeArray],
+    Lcs: list[TimeArray],
+    Lms: list[TimeArray],
     etas: Array,
     rho0: Array,
     tsave: Array,
@@ -215,62 +205,33 @@ def _vectorized_dsmesolve(
     f = jax.vmap(f, in_axes, out_axes)
 
     # === vectorize function
-    # we vectorize over H and rho0, all other arguments are not vectorized
-    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
-    # this leaf should be vmapped on.
+    # vectorize input over H and rho0
+    in_axes = (H.in_axes, None, None, None, 0, None, None, None, None, None, None)
 
     # the result is vectorized over `_saved` and `infos`
-    out_axes = DSMESolveResult(False, False, False, False, 0, 0, False)
+    out_axes = DSMESolveResult(None, None, None, None, 0, 0, None)
 
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
-
-        def broadcast(x: TimeArray) -> TimeArray:
-            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
-
-        H = broadcast(H)
-        rho0 = jnp.broadcast_to(rho0, broadcast_shape + rho0.shape[-2:])
-
-    n_batch = (
-        H.in_axes,
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(rho0.shape[:-2]),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-    )
-
-    # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(f, n_batch, out_axes)
+        nvmap = (H.ndim - 2, 0, rho0.ndim - 2, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
     else:
-        f = _flat_vectorize(f, n_batch, out_axes)
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, rho0]])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        n = H.shape[-1]
+        H = H.broadcast_to(*bshape, n, n)
+        rho0 = jnp.broadcast_to(rho0, (*bshape, n, n))
+        # vectorize the function
+        f = multi_vmap(f, in_axes, out_axes, nvmap)
 
     # === apply vectorized function
-    return f(
-        H,
-        dissipative_ops,
-        measured_ops,
-        etas,
-        rho0,
-        tsave,
-        keys,
-        exp_ops,
-        solver,
-        gradient,
-        options,
-    )
+    return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, solver, gradient, options)
 
 
 def _dsmesolve_single_trajectory(
     H: TimeArray,
-    dissipative_ops: list[TimeArray],
-    measured_ops: list[TimeArray],
+    Lcs: list[TimeArray],
+    Lms: list[TimeArray],
     etas: Array,
     rho0: Array,
     tsave: Array,
@@ -296,8 +257,8 @@ def _dsmesolve_single_trajectory(
         options=options,
         key=key,
         H=H,
-        Lcs=dissipative_ops,
-        Lms=measured_ops,
+        Lcs=Lcs,
+        Lms=Lms,
         etas=etas,
         Es=exp_ops,
     )
@@ -310,32 +271,28 @@ def _dsmesolve_single_trajectory(
 
 
 def _check_dsmesolve_args(
-    H: TimeArray,
-    jump_ops: list[TimeArray],
-    etas: Array,
-    rho0: Array,
-    exp_ops: Array | None,
+    H: TimeArray, Ls: list[TimeArray], etas: Array, rho0: Array, exp_ops: Array | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
+    # === check Ls shape
+    for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
 
-    if len(jump_ops) == 0:
+    if len(Ls) == 0 and isket(rho0):
         logging.warning(
-            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
-            ' solve the Schrödinger equation.'
+            'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
         )
 
     # === check etas
     check_shape(etas, 'etas', '(n,)', subs={'n': 'len(jump_ops)'})
 
-    if not len(etas) == len(jump_ops):
+    if not len(etas) == len(Ls):
         raise ValueError(
             'Argument `etas` should be of the same length as argument `jump_ops`, but'
-            f' len(etas)={len(etas)} and len(jump_ops)={len(jump_ops)}.'
+            f' len(etas)={len(etas)} and len(jump_ops)={len(Ls)}.'
         )
 
     if jnp.all(etas == 0):
