@@ -224,8 +224,7 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
-    r"""Convert a qarray-like object into a QuTiP Qobj (or a list of QuTiP Qobj if it
-    has more than two dimensions).
+    r"""Convert a qarray-like object into a QuTiP Qobj or list of Qobjs.
 
     Args:
         x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
