@@ -38,7 +38,7 @@ We use the GitHub flow branch-based workflow to collaborate on the library. If y
 
 If you are planning a large change (more than one hundred lines of code), it is usually more efficient to discuss it with us beforehand. This way, we can agree on the API and the main logic. For structural or significant changes, we typically write and iterate on small RFCs (Requests for Comments). For large change, please separate the logical building blocks of your change into distinct pull requests as much as possible. Long PRs are harder to review, and breaking them down will make everyone's life easier.
 
-If the proposed change is necessary for your work and has not been reviewed within three days, don’t hesitate to ping the main developers directly on the PR.
+If the proposed change is necessary for your work and has not been reviewed within reasonable time (a few working days), don’t hesitate to ping the main developers directly on the PR.
 
 ### Developer tools
 
