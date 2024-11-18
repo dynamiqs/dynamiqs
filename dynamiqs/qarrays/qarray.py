@@ -30,6 +30,8 @@ def isqarraylike(x: Any) -> bool:
 def _asjaxarray(x: QArrayLike) -> Array:
     if isinstance(x, QArray):
         return x.asjaxarray()
+    elif isinstance(x, Qobj):
+        return jnp.asarray(x.full())
     elif isinstance(x, Sequence):
         return jnp.asarray([_asjaxarray(sub_x) for sub_x in x])
     else:
