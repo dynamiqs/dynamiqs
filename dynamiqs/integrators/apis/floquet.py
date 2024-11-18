@@ -5,7 +5,7 @@ from functools import partial
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from jaxtyping import Array, ArrayLike, ScalarLike
+from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -21,7 +21,7 @@ __all__ = ['floquet']
 
 def floquet(
     H: ArrayLike | TimeArray,
-    T: ScalarLike,
+    T: float,
     tsave: ArrayLike,
     *,
     solver: Solver = Tsit5(),  # noqa: B008
@@ -94,7 +94,6 @@ def floquet(
     """
     # === convert arguments
     H = _astimearray(H)
-    T = jnp.asarray(T)
     tsave = jnp.asarray(tsave)
 
     # === check arguments
@@ -110,7 +109,7 @@ def floquet(
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_floquet(
     H: TimeArray,
-    T: Array,
+    T: float,
     tsave: Array,
     solver: Solver,
     gradient: Gradient,
@@ -130,7 +129,7 @@ def _vectorized_floquet(
 
 def _floquet(
     H: TimeArray,
-    T: Array,
+    T: float,
     tsave: Array,
     solver: Solver,
     gradient: Gradient,
@@ -152,8 +151,8 @@ def _floquet(
 
 
 def _check_floquet_args(
-    H: TimeArray, T: Array, tsave: Array
-) -> tuple[TimeArray, Array, Array]:
+    H: TimeArray, T: float, tsave: Array
+) -> tuple[TimeArray, float, Array]:
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 

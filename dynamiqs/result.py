@@ -138,7 +138,7 @@ class FloquetResult(Result):
     Attributes:
         modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes.
         quasienergies _(array of shape (..., n))_: Saved quasienergies
-        T _(scalar)_: Drive period
+        T _(float)_: Drive period
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
         tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
@@ -155,7 +155,7 @@ class FloquetResult(Result):
         tutorial for more details.
     """
 
-    T: Array
+    T: float
 
     @property
     def modes(self) -> Array:
