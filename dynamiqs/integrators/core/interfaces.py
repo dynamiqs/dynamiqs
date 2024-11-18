@@ -39,6 +39,12 @@ class DSMEInterface(eqx.Module):
     def Ls(self) -> list[TimeArray]:
         return self.Lcs + self.Lms  # (nLc + nLm, n, n)
 
+    def L(self, t: Scalar) -> Array:
+        return jnp.stack([L(t) for L in self.Ls])  # (nLs, n, n)
+
+    def Lm(self, t: Scalar) -> Array:
+        return jnp.stack([L(t) for L in self.Lms])  # (nLm, n, n)
+
 
 class SolveInterface(eqx.Module):
     Es: Array

@@ -35,7 +35,7 @@ def dsmesolve(
     etas: ArrayLike,
     rho0: ArrayLike,
     tsave: ArrayLike,
-    keys: list[PRNGKeyArray],
+    keys: PRNGKeyArray,
     solver: Solver,
     *,
     exp_ops: list[ArrayLike] | None = None,
