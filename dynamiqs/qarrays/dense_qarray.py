@@ -125,6 +125,9 @@ class DenseQArray(QArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
+    def asdense(self) -> DenseQArray:
+        return self
+
     def assparsedia(self) -> SparseDIAQArray:
         from .sparse_dia_qarray import _array_to_sparsedia
 

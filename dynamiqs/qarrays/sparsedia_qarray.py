@@ -224,6 +224,9 @@ class SparseDIAQArray(QArray):
     def asdense(self) -> DenseQArray:
         return _sparsedia_to_dense(self)
 
+    def assparsedia(self) -> SparseDIAQArray:
+        return self
+
     def isherm(self) -> bool:
         raise NotImplementedError
 
