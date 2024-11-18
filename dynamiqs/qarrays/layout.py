@@ -19,9 +19,11 @@ dia = Layout.DIA
 
 _DEFAULT_LAYOUT = dia
 
+
 def set_global_layout(layout: Layout):
     global _DEFAULT_LAYOUT  # noqa: PLW0603
     _DEFAULT_LAYOUT = layout
+
 
 def get_layout(layout: Layout | None = None) -> Layout:
     if layout is None:
