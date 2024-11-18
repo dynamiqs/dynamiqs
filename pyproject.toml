@@ -26,7 +26,7 @@ dependencies = [
     # todo: fix when https://github.com/patrick-kidger/equinox/pull/871 is released
     "jax<0.4.34",
     "jaxlib",
-    "jaxtyping",
+    "jaxtyping<=0.2.34",  # see https://github.com/patrick-kidger/jaxtyping/issues/269
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
     "pillow",
@@ -64,6 +64,7 @@ dev = [
     "black",  # needed by mkdocstrings to format function signatures
     "flit",
     "mike",
+    "optax",  # for gradient descent tutorials
 ]
 
 [tool.ruff]

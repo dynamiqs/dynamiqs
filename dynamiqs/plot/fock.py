@@ -55,20 +55,20 @@ def fock(
         >>> dq.plot.fock(psi)
         >>> renderfig('plot_fock')
 
-        ![plot_fock](/figs_code/plot_fock.png){.fig}
+        ![plot_fock](../../figs_code/plot_fock.png){.fig}
 
         >>> # the even cat state has only even photon number components
         >>> psi = (dq.coherent(32, 3.0) + dq.coherent(32, -3.0)).unit()
         >>> dq.plot.fock(psi, allxticks=False, ymax=None)
         >>> renderfig('plot_fock_even_cat')
 
-        ![plot_fock_even_cat](/figs_code/plot_fock_even_cat.png){.fig}
+        ![plot_fock_even_cat](../../figs_code/plot_fock_even_cat.png){.fig}
 
         >>> dq.plot.fock(dq.coherent(16, 1.0), alpha=0.5)
         >>> dq.plot.fock(dq.coherent(16, 2.0), ax=plt.gca(), alpha=0.5, color='red')
         >>> renderfig('plot_fock_coherent')
 
-        ![plot_fock_coherent](/figs_code/plot_fock_coherent.png){.fig}
+        ![plot_fock_coherent](../../figs_code/plot_fock_coherent.png){.fig}
     """
     state = asjaxarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
@@ -119,13 +119,13 @@ def fock_evolution(
         >>> dq.plot.fock_evolution(result.states, times=tsave)
         >>> renderfig('plot_fock_evolution')
 
-        ![plot_fock_evolution](/figs_code/plot_fock_evolution.png){.fig}
+        ![plot_fock_evolution](../../figs_code/plot_fock_evolution.png){.fig}
 
         Use the log scale option to visualise low populations:
         >>> dq.plot.fock_evolution(result.states, times=tsave, logscale=True)
         >>> renderfig('plot_fock_evolution_log')
 
-        ![plot_fock_evolution_log](/figs_code/plot_fock_evolution_log.png){.fig}
+        ![plot_fock_evolution_log](../../figs_code/plot_fock_evolution_log.png){.fig}
     """
     states = asjaxarray(states)
     times = jnp.asarray(times) if times is not None else None
@@ -157,4 +157,4 @@ def fock_evolution(
     ket_ticks(ax.yaxis)
 
     if colorbar:
-        add_colorbar(ax, cmap, norm, size='2%', pad='2%')
+        add_colorbar(ax, cmap, norm, size=0.02, pad=0.02)

@@ -100,25 +100,25 @@ def wigner(
         >>> dq.plot.wigner(psi)
         >>> renderfig('plot_wigner_coh')
 
-        ![plot_wigner_coh](/figs_code/plot_wigner_coh.png){.fig-half}
+        ![plot_wigner_coh](../../figs_code/plot_wigner_coh.png){.fig-half}
 
         >>> psi = (dq.coherent(16, 2) + dq.coherent(16, -2)).unit()
         >>> dq.plot.wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
         >>> renderfig('plot_wigner_cat')
 
-        ![plot_wigner_cat](/figs_code/plot_wigner_cat.png){.fig-half}
+        ![plot_wigner_cat](../../figs_code/plot_wigner_cat.png){.fig-half}
 
         >>> psi = (dq.fock(2, 0) + dq.fock(2, 1)).unit()
         >>> dq.plot.wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
-        ![plot_wigner_01](/figs_code/plot_wigner_01.png){.fig-half}
+        ![plot_wigner_01](../../figs_code/plot_wigner_01.png){.fig-half}
 
         >>> psi = sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]).unit()
         >>> dq.plot.wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 
-        ![plot_wigner_4legged](/figs_code/plot_wigner_4legged.png){.fig-half}
+        ![plot_wigner_4legged](../../figs_code/plot_wigner_4legged.png){.fig-half}
     """
     state = asqarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
@@ -167,7 +167,7 @@ def wigner_mosaic(
         >>> dq.plot.wigner_mosaic(psis)
         >>> renderfig('plot_wigner_mosaic_fock')
 
-        ![plot_wigner_mosaic_fock](/figs_code/plot_wigner_mosaic_fock.png){.fig}
+        ![plot_wigner_mosaic_fock](../../figs_code/plot_wigner_mosaic_fock.png){.fig}
 
         >>> n = 16
         >>> a = dq.destroy(n)
@@ -179,7 +179,7 @@ def wigner_mosaic(
         >>> dq.plot.wigner_mosaic(result.states, n=6, xmax=4.0, ymax=2.0)
         >>> renderfig('plot_wigner_mosaic_cat')
 
-        ![plot_wigner_mosaic_cat](/figs_code/plot_wigner_mosaic_cat.png){.fig}
+        ![plot_wigner_mosaic_cat](../../figs_code/plot_wigner_mosaic_cat.png){.fig}
 
         >>> n = 16
         >>> a = dq.destroy(n)
@@ -190,7 +190,7 @@ def wigner_mosaic(
         >>> dq.plot.wigner_mosaic(result.states, n=25, nrows=5, xmax=4.0)
         >>> renderfig('plot_wigner_mosaic_kerr')
 
-        ![plot_wigner_mosaic_kerr](/figs_code/plot_wigner_mosaic_kerr.png){.fig}
+        ![plot_wigner_mosaic_kerr](../../figs_code/plot_wigner_mosaic_kerr.png){.fig}
     """
     states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
@@ -264,7 +264,7 @@ def wigner_gif(
         >>> gif = dq.plot.wigner_gif(result.states, fps=25, xmax=4.0, ymax=2.0)
         >>> rendergif(gif, 'wigner-cat')
 
-        ![plot_wigner_gif_cat](/figs_code/wigner-cat.gif){.fig}
+        ![plot_wigner_gif_cat](../../figs_code/wigner-cat.gif){.fig}
 
         >>> n = 16
         >>> a = dq.destroy(n)
@@ -277,7 +277,7 @@ def wigner_gif(
         ... )
         >>> rendergif(gif, 'wigner-kerr')
 
-        ![plot_wigner_gif_kerr](/figs_code/wigner-kerr.gif){.fig-half}
+        ![plot_wigner_gif_kerr](../../figs_code/wigner-kerr.gif){.fig-half}
     """
     states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')

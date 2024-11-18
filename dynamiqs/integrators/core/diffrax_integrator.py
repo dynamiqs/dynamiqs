@@ -52,9 +52,6 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
-            # TODO: remove once https://github.com/patrick-kidger/diffrax/issues/445 is
-            # closed
-            warnings.simplefilter('ignore', FutureWarning)
 
             # === prepare diffrax arguments
             fn = lambda t, y, args: self.save(y)  # noqa: ARG005
@@ -221,11 +218,16 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
 
-        def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            Ls = stack([L(t) for L in self.Ls])
-            Lsd = Ls.dag()
-            LdL = (Lsd @ Ls).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (Ls @ y @ Lsd).sum(0)
+        def vector_field_dissipative(t, y, _):  # noqa: ANN001, ANN202
+            L = stack(self.L(t))
+            Ld = L.dag()
+            LdL = (Ld @ L).sum(0)
+            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (L @ y @ Ld).sum(0)
             return tmp + tmp.dag()
 
-        return dx.ODETerm(vector_field)
+        def vector_field_unitary(t, y, _):  # noqa: ANN001, ANN202
+            tmp = -1j * self.H(t) @ y
+            return tmp + tmp.dag()
+
+        vf = vector_field_dissipative if len(self.Ls) > 0 else vector_field_unitary
+        return dx.ODETerm(vf)
