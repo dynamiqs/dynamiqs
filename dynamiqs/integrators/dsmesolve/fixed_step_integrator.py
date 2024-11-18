@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 import equinox as eqx
@@ -50,11 +51,11 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         # === define variables
         nLm = len(self.etas)
         # number of save interval
-        nsave = len(self.ts)
+        nsave = len(self.ts) - 1
         # number of steps (of length dt)
         nsteps = int((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
-        nsteps_per_save = nsteps // (nsave - 1)
+        nsteps_per_save = int(nsteps // nsave)
         # save time
         delta_t = self.ts[1] - self.ts[0]
 
@@ -90,7 +91,7 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
             return (t, y), self.save(y)
 
         # split the key to generate wiener on each save interval
-        keys = jax.random.split(self.key, nsave - 1)
+        keys = jax.random.split(self.key, nsave)
         ylast, saved = jax.lax.scan(outer_step, (self.t0, y0), keys)
         ylast = ylast[1]
 
@@ -105,6 +106,7 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
 
         return self.result(saved, infos=self.Infos(nsteps))
 
+    @abstractmethod
     def forward(self, t: Scalar, y: YDSME, dW: Array) -> YDSME:
         # return (drho, dY)
         pass
@@ -123,18 +125,17 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
 
         # === Lcal(rho)
         # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
-        Ls = jnp.stack([L(t) for L in self.Ls])
-        Lsd = dag(Ls)
-        LdL = (Lsd @ Ls).sum(0)
-        H = self.H(t)
-        tmp = (-1j * H - 0.5 * LdL) @ y.rho + 0.5 * (Ls @ y.rho @ Lsd).sum(0)
+        L = self.L(t)
+        Ld = dag(L)
+        LdL = (Ld @ L).sum(0)
+        tmp = (-1j * self.H(t) - 0.5 * LdL) @ y.rho + 0.5 * (L @ y.rho @ Ld).sum(0)
         Lcal_rho = tmp + dag(tmp)
 
         # === Ccal(rho)
-        Lms = jnp.stack([L(t) for L in self.Lms])  # (nLm, n, n)
-        Lms_rho = Lms @ y.rho
+        Lm = self.Lm(t)  # (nLm, n, n)
+        Lm_rho = Lm @ y.rho
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
-        Ccal_rho = jnp.sqrt(etas) * (Lms_rho + dag(Lms_rho))  # (nLm, n, n)
+        Ccal_rho = jnp.sqrt(etas) * (Lm_rho + dag(Lm_rho))  # (nLm, n, n)
         tr_Ccal_rho = trace(Ccal_rho).real  # (nLm,)
 
         # === state rho
