@@ -37,6 +37,7 @@ def _asjaxarray(x: QArrayLike) -> Array:
     else:
         return jnp.asarray(x)
 
+
 def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list[list[int]]:
     dims = list(dims)
     if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
