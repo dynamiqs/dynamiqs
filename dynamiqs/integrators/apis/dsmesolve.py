@@ -84,21 +84,20 @@ def dsmesolve(
         don't hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
-    The continuous-time measurements $\tilde I_k=\dd Y_k/\dt$ are defined with the Itô
-    process $\dd Y_k$ (again time is implicit):
+    The continuous-time measurements are defined with the Itô process $\dd Y_k$ (again
+    time is implicit):
     $$
         \dd Y_k = \sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
     $$
 
-    The quantities $\tilde I_k$ are singular, the solver returns the time-averaged
-    measurements $I_k^{[t_0, t_1)}$ defined for a time interval $[t_0, t_1)$ by:
+    The solver returns the time-averaged measurements $I_k(t_n, t_{n+1})$ defined for
+    each time interval $[t_n, t_{n+1})$ by:
     $$
-        I_k^{[t_0, t_1)} = \frac{Y_k(t_1) - Y_k(t_0)}{t_1 - t_0}
-        = \frac{1}{t_1-t_0}\int_{t_0}^{t_1} \dd Y_k(t)
-        = "\,\frac{1}{t_1-t_0}\int_{t_0}^{t_1} I_k(t)\,\dt\,".
+        I_k(t_n, t_{n+1}) = \frac{Y_k(t_{n+1}) - Y_k(t_n)}{t_{n+1} - t_n}
+        = \frac{1}{t_{n+1}-t_n}\int_{t_n}^{t_{n+1}} \dd Y_k(t)
     $$
-    The time intervals $[t_0, t_1)$ are defined by `tsave`, so the number of returned
-    measurement values is `len(tsave)-1`.
+    The time intervals $[t_n, t_{n+1})$ are defined by `tsave`, so the number of
+    returned measurement values for each detector is `len(tsave)-1`.
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
