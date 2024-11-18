@@ -73,7 +73,7 @@ def catch_xla_runtime_error(func: callable) -> callable:
                 'An internal JAX error interrupted the execution, please report this to'
                 ' the Dynamiqs developers by opening an issue on GitHub or sending a'
                 ' message on Dynamiqs Slack (links available at'
-                ' https://www.dynamiqs.org/getting_started/lets-talk.html).'
+                ' https://www.dynamiqs.org/stable/community/lets-talk.html).'
             ) from e
 
     return wrapper
