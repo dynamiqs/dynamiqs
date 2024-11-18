@@ -11,7 +11,14 @@ from qutip import Qobj
 from .._checks import check_shape
 from .dense_qarray import DenseQArray, _dense_to_qobj
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _dims_from_qutip, _dims_to_qutip, _to_jax
+from .qarray import (
+    QArray,
+    QArrayLike,
+    _dims_from_qutip,
+    _dims_to_qutip,
+    _to_jax,
+    _to_numpy,
+)
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
@@ -20,7 +27,7 @@ from .sparsedia_qarray import (
 )
 from .utils import stack
 
-__all__ = ['asqarray', 'to_jax', 'to_qutip', 'sparsedia_from_dict']
+__all__ = ['asqarray', 'to_jax', 'to_numpy', 'to_qutip', 'sparsedia_from_dict']
 
 
 def asqarray(
@@ -79,6 +86,10 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
 
 def to_jax(x: QArrayLike) -> Array:
     return _to_jax(x)
+
+
+def to_numpy(x: QArrayLike) -> np.ndarray:
+    return _to_numpy(x)
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:

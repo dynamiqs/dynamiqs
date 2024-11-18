@@ -38,6 +38,17 @@ def _to_jax(x: QArrayLike) -> Array:
         return jnp.asarray(x)
 
 
+def _to_numpy(x: QArrayLike) -> np.ndarray:
+    if isinstance(x, QArray):
+        return x.to_numpy()
+    elif isinstance(x, Qobj):
+        return np.asarray(x.full())
+    elif isinstance(x, Sequence):
+        return np.asarray([_to_numpy(sub_x) for sub_x in x])
+    else:
+        return np.asarray(x)
+
+
 def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list[list[int]]:
     dims = list(dims)
     if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
