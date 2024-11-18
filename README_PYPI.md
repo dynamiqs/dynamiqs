@@ -2,7 +2,7 @@
     <img alt="Dynamiqs logo" width="360" src="https://github.com/dynamiqs/dynamiqs/blob/main/docs/media/logo-typeface-darktype.png?raw=true">
 </h1>
 
-[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois)
+[P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois), [D. Weiss](https://github.com/dkweiss31)
 
 [![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.9%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -203,10 +203,10 @@ If you have found this library useful in your academic research, you can cite:
 ```bibtex
 @unpublished{guilmin2024dynamiqs,
   title  = {Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems},
-  author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois},
+  author = {Pierre Guilmin and Ronan Gautier and Adrien Bocquet and {\'{E}}lie Genois and Daniel Weiss},
   year   = {2024},
   url    = {https://github.com/dynamiqs/dynamiqs}
 }
 ```
 
-> P. Guilmin, R. Gautier, A. Bocquet, E. Genois. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.
+> P. Guilmin, R. Gautier, A. Bocquet, E. Genois, D. Weiss. Dynamiqs: an open-source Python library for GPU-accelerated and differentiable simulation of quantum systems (2024), in preparation.

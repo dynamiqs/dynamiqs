@@ -6,6 +6,7 @@ authors = [
   { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
   { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
   { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
+  { name = "Daniel Weiss", email = "daniel.kamrath.weiss@gmail.com" },
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
