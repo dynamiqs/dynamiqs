@@ -9,7 +9,7 @@ from jax.typing import ArrayLike
 from .._checks import check_type_int
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
-from ..qarrays.type_conversion import asjaxarray, asqarray
+from ..qarrays.type_conversion import asqarray, to_jax
 from .operators import displace
 from .quantum_utils import tensor
 
@@ -244,7 +244,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         >>> dq.coherent((8, 8), (alpha1[None, :], alpha2[:, None])).shape
         (7, 5, 64, 1)
     """
-    dim = asjaxarray(dim)
+    dim = to_jax(dim)
     check_type_int(dim, 'dim')
 
     # check if dim is a single value or a tuple

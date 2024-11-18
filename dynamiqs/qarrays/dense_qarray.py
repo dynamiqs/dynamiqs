@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import get_args
+from typing import TYPE_CHECKING, get_args
 
 import jax
 import jax.numpy as jnp
@@ -14,11 +14,14 @@ from .layout import Layout, dense
 from .qarray import (
     QArray,
     QArrayLike,
-    _asjaxarray,
     _dims_to_qutip,
     _in_last_two_dims,
+    _to_jax,
     isqarraylike,
 )
+
+if TYPE_CHECKING:
+    from .sparse_dia_qarray import SparseDIAQArray
 
 __all__ = ['DenseQArray']
 
@@ -122,13 +125,21 @@ class DenseQArray(QArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
+    def asdense(self) -> DenseQArray:
+        return self
+
+    def assparsedia(self) -> SparseDIAQArray:
+        from .sparsedia_qarray import _array_to_sparsedia
+
+        return _array_to_sparsedia(self.data, dims=self.dims)
+
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
-    def asqobj(self) -> Qobj | list[Qobj]:
+    def to_qutip(self) -> Qobj | list[Qobj]:
         return _dense_to_qobj(self)
 
-    def asjaxarray(self) -> Array:
+    def to_jax(self) -> Array:
         return self.data
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
@@ -145,7 +156,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data * y.data
         elif isqarraylike(y):
-            data = self.data * _asjaxarray(y)
+            data = self.data * _to_jax(y)
         else:
             return NotImplemented
 
@@ -159,7 +170,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data / y.data
         elif isqarraylike(y):
-            data = self.data / _asjaxarray(y)
+            data = self.data / _to_jax(y)
         else:
             return NotImplemented
 
@@ -173,7 +184,7 @@ class DenseQArray(QArray):
         elif isinstance(y, DenseQArray):
             data = self.data + y.data
         elif isinstance(y, get_args(ArrayLike)):
-            data = self.data + _asjaxarray(y)
+            data = self.data + _to_jax(y)
         else:
             return NotImplemented
 
@@ -187,7 +198,7 @@ class DenseQArray(QArray):
             data = self.data @ y.data
         elif isqarraylike(y):
             dims = self.dims
-            data = self.data @ _asjaxarray(y)
+            data = self.data @ _to_jax(y)
         else:
             return NotImplemented
 
@@ -204,7 +215,7 @@ class DenseQArray(QArray):
             data = y.data @ self.data
         elif isqarraylike(y):
             dims = self.dims
-            data = _asjaxarray(y) @ self.data
+            data = _to_jax(y) @ self.data
         else:
             return NotImplemented
 

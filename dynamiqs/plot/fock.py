@@ -8,7 +8,7 @@ from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from .._checks import check_shape, check_times
 from ..qarrays.qarray import QArrayLike
-from ..qarrays.type_conversion import asjaxarray
+from ..qarrays.type_conversion import to_jax
 from ..utils.quantum_utils import isdm, isket
 from .utils import (
     add_colorbar,
@@ -70,7 +70,7 @@ def fock(
 
         ![plot_fock_coherent](../../figs_code/plot_fock_coherent.png){.fig}
     """
-    state = asjaxarray(state)
+    state = to_jax(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     n = state.shape[0]
@@ -127,7 +127,7 @@ def fock_evolution(
 
         ![plot_fock_evolution_log](../../figs_code/plot_fock_evolution_log.png){.fig}
     """
-    states = asjaxarray(states)
+    states = to_jax(states)
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
     if times is not None:

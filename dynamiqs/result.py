@@ -7,7 +7,7 @@ from jaxtyping import PyTree
 from .gradient import Gradient
 from .options import Options
 from .qarrays.qarray import QArray
-from .qarrays.type_conversion import asjaxarray
+from .qarrays.type_conversion import to_jax
 from .solver import Solver
 
 __all__ = [
@@ -38,7 +38,7 @@ def array_str(x: Array | QArray | None) -> str | None:
     if x is None:
         return None
     type_name = 'Array' if isinstance(x, Array) else 'QArray'
-    x = asjaxarray(x)
+    x = to_jax(x)
     return f'{type_name} {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
 
 
@@ -72,10 +72,10 @@ class Result(eqx.Module):
     def extra(self) -> PyTree | None:
         return self._saved.extra
 
-    def asqobj(self) -> Result:
+    def to_qutip(self) -> Result:
         raise NotImplementedError
 
-    def asnparray(self) -> Result:
+    def to_numpy(self) -> Result:
         raise NotImplementedError
 
     def block_until_ready(self) -> Result:

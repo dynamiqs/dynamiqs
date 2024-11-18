@@ -8,7 +8,7 @@ from matplotlib.colors import Normalize
 
 from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
-from ..qarrays.type_conversion import asjaxarray, asqarray
+from ..qarrays.type_conversion import asqarray, to_jax
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
 
@@ -29,7 +29,7 @@ def plot_wigner_data(
     cross: bool = False,
     clear: bool = False,
 ):
-    w = asjaxarray(wigner)
+    w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
 
     # set plot norm

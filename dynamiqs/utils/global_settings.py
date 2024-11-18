@@ -4,7 +4,7 @@ from typing import Literal
 
 import jax
 
-from ..qarrays.layout import Layout, dense, dia
+from ..qarrays.layout import dense, dia, set_global_layout
 
 __all__ = ['set_device', 'set_precision', 'set_matmul_precision', 'set_layout']
 
@@ -93,9 +93,6 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
         )
 
 
-_DEFAULT_LAYOUT = dia
-
-
 def set_layout(layout: Literal['dense', 'dia']):
     """Configure the default matrix layout for operators supporting this option.
 
@@ -133,17 +130,4 @@ def set_layout(layout: Literal['dense', 'dia']):
             f"Argument `layout` should be a string 'dense' or 'dia', but is {layout}."
         )
 
-    global _DEFAULT_LAYOUT  # noqa: PLW0603
-    _DEFAULT_LAYOUT = layouts[layout]
-
-
-def get_layout(layout: Layout | None = None) -> Layout:
-    if layout is None:
-        return _DEFAULT_LAYOUT
-    elif isinstance(layout, Layout):
-        return layout
-    else:
-        raise TypeError(
-            'Argument `layout` must be `dq.dense`, `dq.dia` or `None`, but is'
-            f' `{layout}`.'
-        )
+    set_global_layout(layouts[layout])

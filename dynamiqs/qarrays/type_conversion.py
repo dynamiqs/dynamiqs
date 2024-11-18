@@ -10,7 +10,8 @@ from qutip import Qobj
 
 from .._checks import check_shape
 from .dense_qarray import DenseQArray, _dense_to_qobj
-from .qarray import QArray, QArrayLike, _asjaxarray, _dims_from_qutip, _dims_to_qutip
+from .layout import Layout, dense
+from .qarray import QArray, QArrayLike, _dims_from_qutip, _dims_to_qutip, _to_jax
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
@@ -19,18 +20,23 @@ from .sparsedia_qarray import (
 )
 from .utils import stack
 
-__all__ = ['asqarray', 'asdense', 'assparsedia', 'asjaxarray', 'asqobj', 'sparsedia']
+__all__ = ['asqarray', 'to_jax', 'to_qutip', 'sparsedia_from_dict']
 
 
-def asqarray(x: QArrayLike, dims: tuple[int, ...] | None = None) -> QArray:
-    # TODO: add layout argument to allow for sparse and dense conversion
-    if isinstance(x, QArray):
+def asqarray(
+    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
+) -> QArray:
+    if layout is None and isinstance(x, QArray):
         return x
 
-    return asdense(x, dims)
+    layout = dense if layout is None else layout
+    if layout is dense:
+        return _asdense(x, dims=dims)
+    else:
+        return _assparsedia(x, dims=dims)
 
 
-def asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
+def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
     _warn_qarray_dims(x, dims)
 
     if isinstance(x, DenseQArray):
@@ -42,21 +48,21 @@ def asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         x = x.full()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
         # TODO: generalize to any nested sequence with the appropriate shape
-        return stack([asdense(sub_x, dims=dims) for sub_x in x])
+        return stack([_asdense(sub_x, dims=dims) for sub_x in x])
 
     x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return DenseQArray(dims, x)
 
 
-def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIAQArray:
+def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIAQArray:
     _warn_qarray_dims(x, dims)
 
     if isinstance(x, SparseDIAQArray):
         return x
     elif isinstance(x, DenseQArray):
         dims = x.dims
-        x = x.asjaxarray()
+        x = x.to_jax()
     elif isinstance(x, Qobj):
         # TODO: improve this by directly extracting the diags and offsets in case
         # the Qobj is already in sparse DIA format (only for QuTiP 5)
@@ -64,18 +70,18 @@ def assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIA
         x = x.full()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
         # TODO: generalize to any nested sequence with the appropriate shape
-        return stack([assparsedia(sub_x, dims=dims) for sub_x in x])
+        return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
 
     x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
 
 
-def asjaxarray(x: QArrayLike) -> Array:
-    return _asjaxarray(x)
+def to_jax(x: QArrayLike) -> Array:
+    return _to_jax(x)
 
 
-def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
+def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert a qarray-like object into a QuTiP Qobj (or a list of QuTiP Qobj if it
     has more than two dimensions).
 
@@ -96,7 +102,7 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
         [[0.+0.j]
          [1.+0.j]
          [0.+0.j]]
-        >>> dq.asqobj(psi)
+        >>> dq.to_qutip(psi)
         Quantum object: dims=[[3], [1]], shape=(3, 1), type='ket', dtype=Dense
         Qobj data =
         [[0.]
@@ -109,13 +115,13 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
         (5, 16, 16)
 
         # todo: temporary fix
-        # >>> len(dq.asqobj(rhos))
+        # >>> len(dq.to_qutip(rhos))
         # 5
 
         Note that the tensor product structure is inferred automatically for qarrays. It
         can be specified with the `dims` argument for other types.
         >>> I = dq.eye(3, 2)
-        >>> dq.asqobj(I)
+        >>> dq.to_qutip(I)
         Quantum object: dims=[[3, 2], [3, 2]], shape=(6, 6), type='oper', dtype=Dense, isherm=True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
@@ -135,7 +141,7 @@ def asqobj(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qo
         return _sparsedia_to_qobj(x)
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
         # TODO: generalize to any nested sequence with the appropriate shape
-        return [asqobj(sub_x, dims=dims) for sub_x in x]
+        return [to_qutip(sub_x, dims=dims) for sub_x in x]
 
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
@@ -162,7 +168,7 @@ def _warn_qarray_dims(x: QArrayLike, dims: tuple[int, ...] | None = None):
             )
 
 
-def sparsedia(
+def sparsedia_from_dict(
     offsets_diags: dict[int, ArrayLike],
     dims: tuple[int, ...] | None = None,
     dtype: DTypeLike | None = None,

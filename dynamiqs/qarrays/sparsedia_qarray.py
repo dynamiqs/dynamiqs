@@ -19,9 +19,9 @@ from .layout import Layout, dia
 from .qarray import (
     QArray,
     QArrayLike,
-    _asjaxarray,
     _in_last_two_dims,
     _include_last_two_dims,
+    _to_jax,
     isqarraylike,
 )
 
@@ -65,7 +65,7 @@ def _construct_diags(offsets: tuple[int, ...], x: Array) -> Array:
 
 
 def _sparsedia_to_qobj(x: SparseDIAQArray) -> Qobj | list[Qobj]:
-    return x.to_dense().asqobj()
+    return x.asdense().to_qutip()
 
 
 class SparseDIAQArray(QArray):
@@ -195,7 +195,7 @@ class SparseDIAQArray(QArray):
             if _include_last_two_dims(axis, self.ndim):
                 return self.diags.sum(axis)
             else:
-                return self.asjaxarray().sum(axis)
+                return self.to_jax().sum(axis)
         else:
             return SparseDIAQArray(self.dims, self.offsets, self.diags.sum(axis))
 
@@ -205,7 +205,7 @@ class SparseDIAQArray(QArray):
             if _include_last_two_dims(axis, self.ndim):
                 return self.diags.squeeze(axis)
             else:
-                return self.asjaxarray().squeeze(axis)
+                return self.to_jax().squeeze(axis)
         else:
             return SparseDIAQArray(self.dims, self.offsets, self.diags.squeeze(axis))
 
@@ -221,20 +221,23 @@ class SparseDIAQArray(QArray):
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
 
-    def to_dense(self) -> DenseQArray:
+    def asdense(self) -> DenseQArray:
         return _sparsedia_to_dense(self)
+
+    def assparsedia(self) -> SparseDIAQArray:
+        return self
 
     def isherm(self) -> bool:
         raise NotImplementedError
 
-    def asqobj(self) -> Qobj | list[Qobj]:
+    def to_qutip(self) -> Qobj | list[Qobj]:
         return _sparsedia_to_qobj(self)
 
-    def asjaxarray(self) -> Array:
-        return self.to_dense().asjaxarray()
+    def to_jax(self) -> Array:
+        return self.asdense().to_jax()
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
-        return self.to_dense().__array__(dtype=dtype, copy=copy)
+        return self.asdense().__array__(dtype=dtype, copy=copy)
 
     def __repr__(self) -> str:
         # === array representation with dots instead of zeros
@@ -242,7 +245,7 @@ class SparseDIAQArray(QArray):
         pattern = r'0\.\s*\+0\.j'
         # replace with a centered dot of the same length as the matched string
         replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
-        data_str = re.sub(pattern, replace_with_dot, str(self.asjaxarray()))
+        data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
     def __mul__(self, other: QArrayLike) -> QArray:
@@ -253,7 +256,7 @@ class SparseDIAQArray(QArray):
         elif isinstance(other, SparseDIAQArray):
             return self._mul_sparse(other)
         elif isqarraylike(other):
-            other = _asjaxarray(other)
+            other = _to_jax(other)
             return self._mul_dense(other)
 
         return NotImplemented
@@ -319,13 +322,13 @@ class SparseDIAQArray(QArray):
             return self._add_sparse(other)
         elif isqarraylike(other):
             warnings.warn(warning_dense_addition, stacklevel=2)
-            other = _asjaxarray(other)
+            other = _to_jax(other)
             return self._add_dense(other)
 
         return NotImplemented
 
     def _add_scalar(self, other: QArrayLike) -> QArray:
-        return self.to_dense() + other
+        return self.asdense() + other
 
     def _add_sparse(self, other: SparseDIAQArray) -> QArray:
         # compute the output offsets
@@ -348,7 +351,7 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, _numpy_to_tuple(out_offsets), out_diags)
 
     def _add_dense(self, other: Array) -> QArray:
-        return self.to_dense() + other
+        return self.asdense() + other
 
     def __matmul__(self, other: QArrayLike) -> QArray:
         if _is_batched_scalar(other):
@@ -357,7 +360,7 @@ class SparseDIAQArray(QArray):
         if isinstance(other, SparseDIAQArray):
             return self._matmul_dia(other)
         elif isqarraylike(other):
-            other = _asjaxarray(other)
+            other = _to_jax(other)
             return self._matmul_dense(other, left_matmul=True)
 
         return NotImplemented
@@ -367,7 +370,7 @@ class SparseDIAQArray(QArray):
             raise TypeError('Attempted matrix product between a scalar and a QArray.')
 
         if isqarraylike(other):
-            other = _asjaxarray(other)
+            other = _to_jax(other)
             return self._matmul_dense(other, left_matmul=False)
 
         return NotImplemented
@@ -427,13 +430,13 @@ class SparseDIAQArray(QArray):
         if isinstance(other, SparseDIAQArray):
             return self._and_dia(other)
         elif isinstance(other, DenseQArray):
-            return self.to_dense() & other
+            return self.asdense() & other
         else:
             return NotImplemented
 
     def __rand__(self, other: QArray) -> QArray:
         if isinstance(other, DenseQArray):
-            return other & self.to_dense()
+            return other & self.asdense()
         else:
             return NotImplemented
 

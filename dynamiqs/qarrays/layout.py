@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -14,3 +16,22 @@ class Layout(Enum):
 
 dense = Layout.DENSE
 dia = Layout.DIA
+
+_DEFAULT_LAYOUT = dia
+
+
+def set_global_layout(layout: Layout):
+    global _DEFAULT_LAYOUT  # noqa: PLW0603
+    _DEFAULT_LAYOUT = layout
+
+
+def get_layout(layout: Layout | None = None) -> Layout:
+    if layout is None:
+        return _DEFAULT_LAYOUT
+    elif isinstance(layout, Layout):
+        return layout
+    else:
+        raise TypeError(
+            'Argument `layout` must be `dq.dense`, `dq.dia` or `None`, but is'
+            f' `{layout}`.'
+        )

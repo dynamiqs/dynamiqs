@@ -12,7 +12,7 @@ from ..._checks import check_shape
 from ..._utils import on_cpu
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArray, QArrayLike
-from ...qarrays.type_conversion import asjaxarray, asqarray
+from ...qarrays.type_conversion import asqarray, to_jax
 
 __all__ = [
     'dag',
@@ -231,7 +231,7 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
     # todo: fix perf
-    return (x.asjaxarray() * y.asjaxarray().mT).sum((-2, -1))
+    return (x.to_jax() * y.to_jax().mT).sum((-2, -1))
 
 
 def _hdim(x: QArrayLike) -> int:
@@ -449,7 +449,7 @@ def norm(x: QArrayLike) -> Array:
 
     if isket(x) or isbra(x):
         assert isinstance(x, DenseQArray)
-        return jnp.sqrt((jnp.abs(x.asjaxarray()) ** 2).sum((-2, -1)))
+        return jnp.sqrt((jnp.abs(x.to_jax()) ** 2).sum((-2, -1)))
     else:
         return trace(x).real
 
@@ -1062,7 +1062,7 @@ def bloch_coordinates(x: QArrayLike) -> Array:
         >>> dq.bloch_coordinates(x)
         Array([0.5, 0. , 0. ], dtype=float32)
     """
-    x = asjaxarray(x)  # todo: temporary fix
+    x = to_jax(x)  # todo: temporary fix
     check_shape(x, 'x', '(2, 1)', '(2, 2)')
 
     if isket(x):
