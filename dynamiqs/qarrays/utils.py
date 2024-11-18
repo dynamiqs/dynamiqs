@@ -57,7 +57,7 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         # TODO: generalize to any nested sequence with the appropriate shape
         return stack([_asdense(sub_x, dims=dims) for sub_x in x])
 
-    x = jnp.asarray(x)
+    x = jnp.asarray(x).astype(cdtype())
     dims = _init_dims(x, dims)
     return DenseQArray(dims, x)
 
@@ -79,7 +79,7 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
         # TODO: generalize to any nested sequence with the appropriate shape
         return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
 
-    x = jnp.asarray(x)
+    x = jnp.asarray(x).astype(cdtype())
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
 
