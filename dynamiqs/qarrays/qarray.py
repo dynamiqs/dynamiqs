@@ -27,13 +27,13 @@ def isqarraylike(x: Any) -> bool:
     return False
 
 
-def _asjaxarray(x: QArrayLike) -> Array:
+def _to_jax(x: QArrayLike) -> Array:
     if isinstance(x, QArray):
-        return x.asjaxarray()
+        return x.to_jax()
     elif isinstance(x, Qobj):
         return jnp.asarray(x.full())
     elif isinstance(x, Sequence):
-        return jnp.asarray([_asjaxarray(sub_x) for sub_x in x])
+        return jnp.asarray([_to_jax(sub_x) for sub_x in x])
     else:
         return jnp.asarray(x)
 
@@ -68,7 +68,7 @@ class QArray(eqx.Module):
     #                     _abs
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
-    #   - conversion methods: asqobj, asjaxarray, __array__
+    #   - conversion methods: to_qutip, to_jax, __array__
     #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, _pow, __getitem__
 
@@ -334,7 +334,7 @@ class QArray(eqx.Module):
         return proj(self)
 
     @abstractmethod
-    def asqobj(self) -> Qobj | list[Qobj]:
+    def to_qutip(self) -> Qobj | list[Qobj]:
         """Convert the quantum state to a QuTiP object.
 
         Returns:
@@ -342,7 +342,7 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def asjaxarray(self) -> Array:
+    def to_jax(self) -> Array:
         """Convert the quantum state to a JAX array.
 
         Returns:
@@ -359,7 +359,7 @@ class QArray(eqx.Module):
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         pass
 
-    def asnparray(self) -> np.ndarray:
+    def to_numpy(self) -> np.ndarray:
         """Convert the quantum state to a NumPy array.
 
         Returns:

@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
 from ...qarrays.qarray import QArrayLike
-from ...qarrays.type_conversion import asjaxarray
+from ...qarrays.type_conversion import to_jax
 from .general import todm
 
 __all__ = ['wigner']
@@ -49,11 +49,11 @@ def wigner(
                 `yvec` if specified.
             - **w** _(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))_ -- Wigner distribution.
     """  # noqa: E501
-    state = asjaxarray(state)
+    state = to_jax(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
 
     # === convert state to density matrix
-    state = asjaxarray(todm(state))
+    state = to_jax(todm(state))
 
     # === prepare xvec and yvec
     xvec = jnp.linspace(-xmax, xmax, npixels) if xvec is None else jnp.asarray(xvec)

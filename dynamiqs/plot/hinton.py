@@ -14,7 +14,7 @@ from matplotlib.colors import Normalize
 
 from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
-from ..qarrays.type_conversion import asjaxarray
+from ..qarrays.type_conversion import to_jax
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['hinton']
@@ -142,14 +142,14 @@ def hinton(
 
     Examples:
         >>> rho = dq.coherent_dm(16, 2.0)
-        >>> dq.plot.hinton(jnp.abs(rho.asjaxarray()))
+        >>> dq.plot.hinton(jnp.abs(rho.to_jax()))
         >>> renderfig('plot_hinton_coherent')
 
         ![plot_hinton_coherent](../../figs_code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
         >>> H = a.dag() @ a + 2.0 * (a + a.dag())
-        >>> dq.plot.hinton(jnp.abs(H.asjaxarray()))
+        >>> dq.plot.hinton(jnp.abs(H.to_jax()))
         >>> renderfig('plot_hinton_hamiltonian')
 
         ![plot_hinton_hamiltonian](../../figs_code/plot_hinton_hamiltonian.png){.fig-half}
@@ -190,7 +190,7 @@ def hinton(
 
         ![plot_hinton_large](../../figs_code/plot_hinton_large.png){.fig}
     """  # noqa: E501
-    x = asjaxarray(x)
+    x = to_jax(x)
     check_shape(x, 'x', '(n, n)')
 
     # set different defaults, areas and colors for real matrix, positive real matrix

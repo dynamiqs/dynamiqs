@@ -10,8 +10,7 @@ from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray
 from ..qarrays.sparsedia_qarray import SparseDIAQArray
-from ..qarrays.type_conversion import asqarray, sparsedia
-from .global_settings import get_layout
+from ..qarrays.type_conversion import asqarray, sparsedia_from_dict
 from .quantum_utils import tensor
 
 __all__ = [
@@ -84,7 +83,7 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diag = jnp.ones(dim, dtype=cdtype())
-        return sparsedia({0: diag}, dims=dims)
+        return sparsedia_from_dict({0: diag}, dims=dims)
 
 
 def zero(*dims: int, layout: Layout | None = None) -> QArray:
@@ -187,7 +186,7 @@ def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, 
         if layout is dense:
             return asqarray(jnp.diag(diag, k=1))
         else:
-            return sparsedia({1: diag})
+            return sparsedia_from_dict({1: diag})
 
     if len(dims) == 1:
         return destroy_single(dims[0])
@@ -255,7 +254,7 @@ def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         if layout is dense:
             return asqarray(jnp.diag(diag, k=-1))
         else:
-            return sparsedia({-1: diag})
+            return sparsedia_from_dict({-1: diag})
 
     if len(dims) == 1:
         return create_single(dims[0])
@@ -324,7 +323,7 @@ def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, .
         if layout is dense:
             return asqarray(jnp.diag(diag))
         else:
-            return sparsedia({0: diag})
+            return sparsedia_from_dict({0: diag})
 
     if len(dims) == 1:
         return number_single(dims[0])
@@ -363,7 +362,7 @@ def parity(dim: int, *, layout: Layout | None = None) -> QArray:
     if layout is dense:
         return asqarray(jnp.diag(diag))
     else:
-        return sparsedia({0: diag})
+        return sparsedia_from_dict({0: diag})
 
 
 def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
@@ -525,7 +524,7 @@ def sigmax(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 1], [1, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia({-1: [1], 1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({-1: [1], 1: [1]}, dtype=cdtype())
 
 
 def sigmay(*, layout: Layout | None = None) -> QArray:
@@ -550,7 +549,7 @@ def sigmay(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia({-1: [1j], 1: [-1j]}, dtype=cdtype())
+        return sparsedia_from_dict({-1: [1j], 1: [-1j]}, dtype=cdtype())
 
 
 def sigmaz(*, layout: Layout | None = None) -> QArray:
@@ -575,7 +574,7 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[1, 0], [0, -1]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia({0: [1, -1]}, dtype=cdtype())
+        return sparsedia_from_dict({0: [1, -1]}, dtype=cdtype())
 
 
 def sigmap(*, layout: Layout | None = None) -> QArray:
@@ -601,7 +600,7 @@ def sigmap(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 1], [0, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia({1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({1: [1]}, dtype=cdtype())
 
 
 def sigmam(*, layout: Layout | None = None) -> QArray:
@@ -627,7 +626,7 @@ def sigmam(*, layout: Layout | None = None) -> QArray:
         array = jnp.array([[0, 0], [1, 0]], dtype=cdtype())
         return asqarray(array)
     else:
-        return sparsedia({-1: [1]}, dtype=cdtype())
+        return sparsedia_from_dict({-1: [1]}, dtype=cdtype())
 
 
 def hadamard(n: int = 1) -> QArray:
