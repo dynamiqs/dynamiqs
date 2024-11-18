@@ -46,7 +46,7 @@ def asqarray(
     Returns:
         QArray representation of the input.
 
-    Exemples:
+    Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[ 1.+0.j  0.+0.j]

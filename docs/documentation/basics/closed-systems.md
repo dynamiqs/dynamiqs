@@ -64,7 +64,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 !!! Example "Example for a two-level system"
-    For $H=\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
+    For $H=\frac{\omega}{2}\sigma_z$, the propagator is straightforward to compute:
     $$
         U(t) = e^{-iHt} = \begin{pmatrix}e^{-i\omega t/2} & 0 \\\\ 0 & e^{i\omega t/2}\end{pmatrix}.
     $$
