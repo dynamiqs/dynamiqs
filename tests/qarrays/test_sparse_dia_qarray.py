@@ -48,7 +48,7 @@ class TestSparseDIAQArray:
         )
 
         sparseA = dq.SparseDIAQArray(diags=diagsA, offsets=offsetsA, dims=(N,))
-        denseA = dq.asdense(sparseA)
+        denseA = sparseA.asdense()
 
         self.denseA = make_dictA(denseA)
         self.sparseA = make_dictA(sparseA)
@@ -61,7 +61,7 @@ class TestSparseDIAQArray:
         )
 
         sparseB = dq.SparseDIAQArray(diags=diagsB, offsets=offsetsB, dims=(N,))
-        denseB = dq.asdense(sparseB)
+        denseB = sparseB.asdense()
 
         self.denseB = make_dictB(denseB)
         self.sparseB = make_dictB(sparseB)
@@ -69,8 +69,8 @@ class TestSparseDIAQArray:
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_convert(self, kA, rtol=1e-05, atol=1e-08):
         assert jnp.allclose(
-            self.denseA[kA].asjaxarray(),
-            dq.assparsedia(self.denseA[kA]).asjaxarray(),
+            self.denseA[kA].to_jax(),
+            self.denseA[kA].assparsedia().to_jax(),
             rtol=rtol,
             atol=atol,
         )
@@ -80,19 +80,19 @@ class TestSparseDIAQArray:
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
 
-        out_dense_dense = (dA + dB).asjaxarray()
+        out_dense_dense = (dA + dB).to_jax()
 
-        out_dia_dia = dq.asdense(sA + sB).asjaxarray()
+        out_dia_dia = (sA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
-            out_dia_dense = (sA + dB).asjaxarray()
+            out_dia_dense = (sA + dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
-            out_dense_dia = (dA + sB).asjaxarray()
+            out_dense_dia = (dA + sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
@@ -100,18 +100,18 @@ class TestSparseDIAQArray:
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
 
-        out_dense_dense = (dA - dB).asjaxarray()
-        out_dia_dia = dq.asdense(sA - sB).asjaxarray()
+        out_dense_dense = (dA - dB).to_jax()
+        out_dia_dia = (sA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
-            out_dia_dense = (sA - dB).asjaxarray()
+            out_dia_dense = (sA - dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UserWarning)
-            out_dense_dia = (dA - sB).asjaxarray()
+            out_dense_dia = (dA - sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
@@ -119,15 +119,15 @@ class TestSparseDIAQArray:
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
 
-        out_dense_dense = (dA * dB).asjaxarray()
+        out_dense_dense = (dA * dB).to_jax()
 
-        out_dia_dia = dq.asdense(sA * sB).asjaxarray()
+        out_dia_dia = (sA * sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (sA * dB).asjaxarray()
+        out_dia_dense = (sA * dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
-        out_dense_dia = (dA * sB).asjaxarray()
+        out_dense_dia = (dA * sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
@@ -135,27 +135,27 @@ class TestSparseDIAQArray:
         dA, sA = self.denseA[kA], self.sparseA[kA]
         dB, sB = self.denseB[kB], self.sparseB[kB]
 
-        out_dense_dense = (dA @ dB).asjaxarray()
+        out_dense_dense = (dA @ dB).to_jax()
 
-        out_dia_dia = dq.asdense(sA @ sB).asjaxarray()
+        out_dia_dia = (sA @ sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (sA @ dB).asjaxarray()
+        out_dia_dense = (sA @ dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
-        out_dense_dia = (dA @ sB).asjaxarray()
+        out_dense_dia = (dA @ sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dense_dia, rtol=rtol, atol=atol)
 
     def test_kronecker(self, rtol=1e-05, atol=1e-08):
         dA, sA = self.denseA['simple'], self.sparseA['simple']
         dB, sB = self.denseB['simple'], self.sparseB['simple']
 
-        out_dense_dense = (dA & dB).asjaxarray()
+        out_dense_dense = (dA & dB).to_jax()
 
-        out_dia_dia = (sA & sB).asjaxarray()
+        out_dia_dia = (sA & sB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dia, rtol=rtol, atol=atol)
 
-        out_dia_dense = (sA & dB).asjaxarray()
+        out_dia_dense = (sA & dB).to_jax()
         assert jnp.allclose(out_dense_dense, out_dia_dense, rtol=rtol, atol=atol)
 
     def test_outofbounds(self):
@@ -173,8 +173,8 @@ class TestSparseDIAQArray:
     def test_pow(self, k, rtol=1e-05, atol=1e-08):
         d, s = self.denseA[k], self.sparseA[k]
 
-        out_dense = (d**3).asjaxarray()
-        out_dia = dq.asdense(s**3).asjaxarray()
+        out_dense = (d**3).to_jax()
+        out_dia = (s**3).to_jax()
 
         assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
 
@@ -182,7 +182,7 @@ class TestSparseDIAQArray:
     def test_powm(self, k, rtol=1e-05, atol=1e-08):
         d, s = self.denseA[k], self.sparseA[k]
 
-        out_dense = d.powm(3).asjaxarray()
-        out_dia = s.powm(3).asjaxarray()
+        out_dense = d.powm(3).to_jax()
+        out_dia = s.powm(3).to_jax()
 
         assert jnp.allclose(out_dia, out_dense, rtol=rtol, atol=atol)
