@@ -136,18 +136,19 @@ class FloquetResult(Result):
     """Result of the Floquet integration.
 
     Attributes:
-        modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes
+        modes _(array of shape (..., ntsave, n, n, 1))_: Saved Floquet modes.
         quasienergies _(array of shape (..., n))_: Saved quasienergies
         T _(scalar)_: Drive period
         infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (...,ntsave,))_: Times for which results were saved.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
         solver _(Solver)_: Solver used.
         gradient _(Gradient)_: Gradient used.
         options _(Options)_: Options used.
 
     Note-: Result of running multiple simulations concurrently
         The resulting Floquet modes and quasienergies are batched according to the
-        leading dimensions of the Hamiltonian `H`.
+        leading dimensions of the Hamiltonian `H`. For example if `H` has shape
+        _(2, 3, n, n)_, then `modes` has shape _(2, 3, ntsave, n, n, 1)_.
 
         See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
@@ -163,6 +164,13 @@ class FloquetResult(Result):
     @property
     def quasienergies(self) -> Array:
         return self._saved.quasienergies
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {
+            'Modes': array_str(self.modes),
+            'Quasienergies': array_str(self.quasienergies),
+        }
 
 
 class SESolveResult(SolveResult):
