@@ -129,4 +129,4 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
             )
 
     def generator(self, t: float) -> QArray:
-        return slindbladian(self.H(t), [L(t) for L in self.Ls])  # (n^2, n^2)
+        return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)

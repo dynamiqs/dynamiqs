@@ -14,13 +14,13 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.type_conversion import asqarray
 from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import Shape, TimeArray
+from ...time_array import TimeArray
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
+    multi_vmap,
 )
 from ..core.abstract_integrator import SESolveIntegrator
 from ..sesolve.diffrax_integrator import (
@@ -127,36 +127,24 @@ def _vectorized_sesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> SESolveResult:
-    # === vectorize function
-    # we vectorize over H and psi0, all other arguments are not vectorized
+    # vectorize input over H and psi0
+    in_axes = (H.in_axes, 0, None, None, None, None, None)
+    # vectorize output over `_saved` and `infos`
+    out_axes = SESolveResult(None, None, None, None, 0, 0)
 
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
-        H = H.broadcast_to(*(broadcast_shape + H.shape[-2:]))
-        psi0 = psi0.broadcast_to(*(broadcast_shape + psi0.shape[-2:]))
-
-    # `n_batch` is a pytree. Each leaf of this pytree gives the number of times
-    # this leaf should be vmapped on.
-    n_batch = (
-        H.in_axes,
-        Shape(psi0.shape[:-2]),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-    )
-
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = SESolveResult(False, False, False, False, 0, 0)
-
-    # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_sesolve, n_batch, out_axes)
+        nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(_sesolve, in_axes, out_axes, nvmap)
     else:
-        f = _flat_vectorize(_sesolve, n_batch, out_axes)
+        n = H.shape[-1]
+        bshape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        H = H.broadcast_to(*bshape, n, n)
+        psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # vectorize the function
+        f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
     return f(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 

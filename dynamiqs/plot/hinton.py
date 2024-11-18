@@ -115,7 +115,7 @@ def _plot_hinton(
     # === colorbar
     if colorbar:
         norm = Normalize(colors_vmin, colors_vmax)
-        cax = add_colorbar(ax, cmap, norm, size='4%', pad='4%')
+        cax = add_colorbar(ax, cmap, norm, size=0.04, pad=0.04)
         if colors_vmin == -jnp.pi and colors_vmax == jnp.pi:
             cax.set_yticks([-jnp.pi, 0.0, jnp.pi], labels=[r'$-\pi$', r'$0$', r'$\pi$'])
 
@@ -145,27 +145,27 @@ def hinton(
         >>> dq.plot.hinton(jnp.abs(rho.asjaxarray()))
         >>> renderfig('plot_hinton_coherent')
 
-        ![plot_hinton_coherent](/figs_code/plot_hinton_coherent.png){.fig-half}
+        ![plot_hinton_coherent](../../figs_code/plot_hinton_coherent.png){.fig-half}
 
         >>> a = dq.destroy(16)
         >>> H = a.dag() @ a + 2.0 * (a + a.dag())
         >>> dq.plot.hinton(jnp.abs(H.asjaxarray()))
         >>> renderfig('plot_hinton_hamiltonian')
 
-        ![plot_hinton_hamiltonian](/figs_code/plot_hinton_hamiltonian.png){.fig-half}
+        ![plot_hinton_hamiltonian](../../figs_code/plot_hinton_hamiltonian.png){.fig-half}
 
         >>> cnot = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
         >>> dq.plot.hinton(cnot, tickslabel=['00', '01', '10', '11'])
         >>> renderfig('plot_hinton_cnot')
 
-        ![plot_hinton_cnot](/figs_code/plot_hinton_cnot.png){.fig-half}
+        ![plot_hinton_cnot](../../figs_code/plot_hinton_cnot.png){.fig-half}
 
         >>> key = jax.random.PRNGKey(42)
         >>> x = dq.random.complex(key, (16, 16))
         >>> dq.plot.hinton(x)
         >>> renderfig('plot_hinton_random_complex')
 
-        ![plot_hinton_random_complex](/figs_code/plot_hinton_random_complex.png){.fig-half}
+        ![plot_hinton_random_complex](../../figs_code/plot_hinton_random_complex.png){.fig-half}
 
         >>> _, axs = dq.plot.grid(2)
         >>> psi = (dq.fock(4, 0) - dq.fock(4, 2)).unit()
@@ -174,7 +174,7 @@ def hinton(
         >>> dq.plot.hinton(rho, ax=next(axs))
         >>> renderfig('plot_hinton_fock02')
 
-        ![plot_hinton_fock02](/figs_code/plot_hinton_fock02.png){.fig-half}
+        ![plot_hinton_fock02](../../figs_code/plot_hinton_fock02.png){.fig-half}
 
         >>> _, axs = dq.plot.grid(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
@@ -182,13 +182,13 @@ def hinton(
         >>> dq.plot.hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
         >>> renderfig('plot_hinton_real')
 
-        ![plot_hinton_real](/figs_code/plot_hinton_real.png){.fig-half}
+        ![plot_hinton_real](../../figs_code/plot_hinton_real.png){.fig-half}
 
         >>> x = np.random.uniform(-1.0, 1.0, (100, 100))
         >>> dq.plot.hinton(x, vmin=-1.0, vmax=1.0, ewidth=0, clear=True, w=20)
         >>> renderfig('plot_hinton_large')
 
-        ![plot_hinton_large](/figs_code/plot_hinton_large.png){.fig}
+        ![plot_hinton_large](../../figs_code/plot_hinton_large.png){.fig}
     """  # noqa: E501
     x = asjaxarray(x)
     check_shape(x, 'x', '(n, n)')

@@ -1,9 +1,9 @@
-name: publish-doc
+name: publish-doc-dev-qarray
 
 on:
   push:
     branches:
-      - main
+      - dev-qarray
   workflow_dispatch:
 
 permissions:
@@ -44,4 +44,4 @@ jobs:
           git fetch origin gh-pages --depth=1
           git config user.name ci-bot
           git config user.email ci-bot@example.com
-          mike deploy --push dev
+          mike deploy --push dev-qarray

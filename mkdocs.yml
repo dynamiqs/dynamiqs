@@ -19,6 +19,7 @@ theme:
     repo: fontawesome/brands/github
     admonition:
       example: material/human-male-board
+      see-also: material/book-open-variant
     annotation: material/plus-circle
   logo: media/logo.png
   favicon: media/favicon.svg
@@ -46,9 +47,14 @@ extra:
       link: https://github.com/dynamiqs/dynamiqs
     - icon: fontawesome/brands/slack
       link: https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA
+  version:
+    provider: mike
+    alias: true
+    default: stable
 extra_css:
   - stylesheets/extra.css
   - stylesheets/theme.css
+  - stylesheets/home.css
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 plugins:
   - search
@@ -85,6 +91,8 @@ plugins:
             line_length: 88
             show_bases: false
             merge_init_into_class: true
+  - mike:
+      canonical_version: stable
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
@@ -136,6 +144,8 @@ nav:
           - Open systems: documentation/basics/open-systems.md
           - Batching simulations: documentation/basics/batching-simulations.md
           - Computing gradients: documentation/basics/computing-gradients.md
+      - Advanced examples:
+          - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
   - Python API:
       - python_api/index.md
       - Quantum solvers:
@@ -144,6 +154,7 @@ nav:
           - smesolve: python_api/integrators/smesolve.md
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
+          - floquet: python_api/integrators/floquet.md
       - Core:
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
@@ -170,6 +181,7 @@ nav:
               - MESolveResult: python_api/result/MESolveResult.md
               - SEPropagatorResult: python_api/result/SEPropagatorResult.md
               - MEPropagatorResult: python_api/result/MEPropagatorResult.md
+              - FloquetResult: python_api/result/FloquetResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md

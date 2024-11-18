@@ -13,11 +13,11 @@ from ...qarrays.layout import dense
 from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import Shape, TimeArray
+from ...time_array import TimeArray
 from ...utils.operators import eye
 from .._utils import (
     _astimearray,
-    _cartesian_vectorize,
+    cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
     ispwc,
@@ -119,17 +119,15 @@ def _vectorized_sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === vectorize function
-    # we vectorize over H, all other arguments are not vectorized
-    n_batch = (H.in_axes, Shape(), Shape(), Shape(), Shape())
+    # vectorize input over H
+    in_axes = (H.in_axes, None, None, None, None)
+    # vectorize output over `_saved` and `infos`
+    out_axes = SEPropagatorResult(None, None, None, None, 0, 0)
 
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = SEPropagatorResult(False, False, False, False, 0, 0)
+    # cartesian batching only
+    nvmap = (H.ndim - 2, 0, 0, 0, 0, 0)
+    f = cartesian_vmap(_sepropagator, in_axes, out_axes, nvmap)
 
-    # compute vectorized function
-    f = _cartesian_vectorize(_sepropagator, n_batch, out_axes)
-
-    # === apply vectorized function
     return f(H, tsave, solver, gradient, options)
 
 

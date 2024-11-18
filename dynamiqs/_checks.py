@@ -16,6 +16,7 @@ _cases = {
     '(N, ..., n, n)': lambda x: x.ndim >= 3 and x.shape[-2] == x.shape[-1],
     '(..., m, n)': lambda x: x.ndim >= 2,
     '(..., n)': lambda x: x.ndim >= 1,
+    '(0,)': lambda x: x.shape == (0,),
     '(2, 1)': lambda x: x.shape == (2, 1),
     '(2, 2)': lambda x: x.shape == (2, 2),
     '(n, 1)': lambda x: x.ndim == 2 and x.shape[-1] == 1,
