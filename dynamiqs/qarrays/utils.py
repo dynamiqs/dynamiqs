@@ -237,32 +237,29 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
         QuTiP Qobj or list of QuTiP Qobj.
 
     Examples:
-        >>> psi = dq.fock(3, 1)
-        >>> psi
+        >>> dq.fock(3, 1)
         QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense
         [[0.+0.j]
          [1.+0.j]
          [0.+0.j]]
-        >>> dq.to_qutip(psi)
+        >>> dq.to_qutip(dq.fock(3, 1))
         Quantum object: dims=[[3], [1]], shape=(3, 1), type='ket', dtype=Dense
         Qobj data =
         [[0.]
          [1.]
          [0.]]
 
-        For a batched array:
-        >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
-        >>> rhos.shape
-        (5, 16, 16)
-
+        # For a batched array:
+        # >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
+        # >>> rhos.shape
+        # (5, 16, 16)
         # todo: temporary fix
         # >>> len(dq.to_qutip(rhos))
         # 5
 
         Note that the tensor product structure is inferred automatically for qarrays. It
         can be specified with the `dims` argument for other types.
-        >>> I = dq.eye(3, 2)
-        >>> dq.to_qutip(I)
+        >>> dq.to_qutip(dq.eye(3, 2))
         Quantum object: dims=[[3, 2], [3, 2]], shape=(6, 6), type='oper', dtype=Dense, isherm=True
         Qobj data =
         [[1. 0. 0. 0. 0. 0.]
@@ -334,7 +331,7 @@ def sparsedia_from_dict(
         [[1.+0.j 4.+0.j   ⋅   ]
          [6.+0.j 2.+0.j 5.+0.j]
          [  ⋅    7.+0.j 3.+0.j]]
-        >>> dq.sparsedia_from_dict({0: jnp.ones(3, 2)})
+        >>> dq.sparsedia_from_dict({0: jnp.ones((3, 2))})
         QArray: shape=(3, 2, 2), dims=(2,), dtype=float32, layout=dia, ndiags=1
         [[[1.+0.j   ⋅   ]
           [  ⋅    1.+0.j]]
