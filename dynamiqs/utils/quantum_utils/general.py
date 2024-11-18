@@ -11,6 +11,7 @@ from jaxtyping import ArrayLike
 from ..._checks import check_shape
 from ..._utils import on_cpu
 from ...qarrays.dense_qarray import DenseQArray
+from ...qarrays.layout import dense
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.type_conversion import asqarray, to_jax
 
@@ -905,8 +906,8 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
         >>> dq.fidelity(fock0, fock01_dm)
         Array(0.5, dtype=float32)
     """
-    x = asqarray(x)
-    y = asqarray(y)
+    x = asqarray(x, layout=dense)
+    y = asqarray(y, layout=dense)
     check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
     check_shape(y, 'y', '(..., n, 1)', '(..., n, n)')
 

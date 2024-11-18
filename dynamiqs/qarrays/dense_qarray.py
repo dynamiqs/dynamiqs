@@ -129,7 +129,7 @@ class DenseQArray(QArray):
         return self
 
     def assparsedia(self) -> SparseDIAQArray:
-        from .sparse_dia_qarray import _array_to_sparsedia
+        from .sparsedia_qarray import _array_to_sparsedia
 
         return _array_to_sparsedia(self.data, dims=self.dims)
 

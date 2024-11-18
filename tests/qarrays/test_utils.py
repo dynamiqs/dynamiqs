@@ -40,7 +40,7 @@ def test_stack_double(rtol=1e-05, atol=1e-08):
     jax_m1 = jnp.stack([jax_m1, 2 * jax_m1, 3 * jax_m1])
 
     jax_m2 = jr.uniform(k2, (n, n))
-    dense_m2, sparse_m2 = dq.asqarray(jax_m2, layout=dq.dense)
+    dense_m2 = dq.asqarray(jax_m2, layout=dq.dense)
     sparse_m2 = dq.asqarray(jax_m2, layout=dq.dia)
     dense_m2 = dq.stack([dense_m2, 2 * dense_m2, 3 * dense_m2])
     sparse_m2 = dq.stack([sparse_m2, 2 * sparse_m2, 3 * sparse_m2])

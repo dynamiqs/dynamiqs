@@ -10,7 +10,7 @@ from qutip import Qobj
 
 from .._checks import check_shape
 from .dense_qarray import DenseQArray, _dense_to_qobj
-from .layout import Layout, dense, get_layout
+from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, _dims_from_qutip, _dims_to_qutip, _to_jax
 from .sparsedia_qarray import (
     SparseDIAQArray,
@@ -24,9 +24,12 @@ __all__ = ['asqarray', 'to_jax', 'to_qutip', 'sparsedia_from_dict']
 
 
 def asqarray(
-    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout = None
+    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
-    layout = get_layout(layout)
+    if layout is None and isinstance(x, QArray):
+        return x
+
+    layout = dense if layout is None else layout
     if layout is dense:
         return _asdense(x, dims=dims)
     else:
