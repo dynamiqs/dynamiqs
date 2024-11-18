@@ -75,7 +75,14 @@ def floquet(
         tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet
             modes. The specified times should be ordered, strictly ascending, and such
             that `tsave[-1] - tsave[0] <= T`.
-        solver: Solver for the integration.
+        solver: Solver for the integration. Defaults to
+            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.solver.Tsit5],
+            [`Dopri5`][dynamiqs.solver.Dopri5],
+            [`Dopri8`][dynamiqs.solver.Dopri8],
+            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
+            [`Euler`][dynamiqs.solver.Euler]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`][dynamiqs.Options].
 
@@ -112,7 +119,7 @@ def _vectorized_floquet(
     # vectorize input over H
     in_axes = (H.in_axes, None, None, None, None, None)
     # vectorize output over `_saved` and `infos`
-    out_axes = FloquetResult(None, None, None, None, 0, 0, 0)
+    out_axes = FloquetResult(None, None, None, None, 0, 0, None)
 
     # cartesian batching only
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0, 0)
@@ -132,7 +139,7 @@ def _floquet(
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === integrator class is always FloquetIntegrator_t0
+    # === integrator class is always FloquetIntegrator
     integrator = FloquetIntegrator(
         ts=tsave, y0=None, H=H, solver=solver, gradient=gradient, options=options, T=T
     )
@@ -146,7 +153,7 @@ def _floquet(
 
 def _check_floquet_args(
     H: TimeArray, T: Array, tsave: Array
-) -> (TimeArray, Array, Array):
+) -> tuple[TimeArray, Array, Array]:
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
