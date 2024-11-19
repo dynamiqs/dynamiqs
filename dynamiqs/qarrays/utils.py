@@ -33,18 +33,18 @@ __all__ = ['asqarray', 'stack', 'to_jax', 'to_numpy', 'to_qutip', 'sparsedia_fro
 def asqarray(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
-    """Convert an object to a QArray.
+    """Convert a qarray-like object into a qarray.
 
     Args:
-        x: Object to convert to a QArray.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (a single system
-            with the same dimension as `x`).
-        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`). If `None` and `x` is not
-            already a QArray, the layout defaults to `dq.dense`.
+        x: Object to convert.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the Hilbert
+            space tensor product. Defaults to `None` (a single system with the same
+            dimension as `x`).
+        layout _(dq.dense, dq.dia or None)_: Matrix layout. If `None`, the default
+            layout is `dq.dense`, except for qarrays that are directly returned.
 
     Returns:
-        QArray representation of the input.
+        Qarray representation of the input.
 
     Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
@@ -55,7 +55,7 @@ def asqarray(
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
-        >>> dq.asqarray(dq.sigmaz())
+        >>> dq.asqarray([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
@@ -185,7 +185,7 @@ def to_jax(x: QArrayLike) -> Array:
     """Convert a qarray-like object into a JAX array.
 
     Args:
-        x: Qarray-like object.
+        x: Object to convert.
 
     Returns:
         JAX array.
@@ -195,9 +195,15 @@ def to_jax(x: QArrayLike) -> Array:
         Array([[0.+0.j],
                [1.+0.j],
                [0.+0.j]], dtype=complex64)
-        >>> dq.to_jax(dq.sigmaz())
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        >>> dq.to_jax([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
+        Array([[[ 0.+0.j,  1.+0.j],
+                [ 1.+0.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 0.+0.j,  0.-1.j],
+                [ 0.+1.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 1.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j]]], dtype=complex64)
     """
     return _to_jax(x)
 
@@ -206,7 +212,7 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
     """Convert a qarray-like object into a NumPy array.
 
     Args:
-        x: Qarray-like object.
+        x: Object to convert.
 
     Returns:
         NumPy array.
@@ -216,9 +222,15 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
         array([[0.+0.j],
                [1.+0.j],
                [0.+0.j]], dtype=complex64)
-        >>> dq.to_numpy(dq.sigmaz())
-        array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        >>> dq.to_numpy([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
+        array([[[ 0.+0.j,  1.+0.j],
+                [ 1.+0.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 0.+0.j,  0.-1.j],
+                [ 0.+1.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 1.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j]]])
     """
     return _to_numpy(x)
 
@@ -229,9 +241,9 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     Args:
         x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
             density matrix or operator.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the large
-            Hilbert space of the composite system, defaults to `None` (a single system
-            with the same dimension as `x`).
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the Hilbert
+            space tensor product. Defaults to `None` (a single system with the same
+            dimension as `x`).
 
     Returns:
         QuTiP Qobj or list of QuTiP Qobj.
@@ -311,19 +323,19 @@ def sparsedia_from_dict(
     dims: tuple[int, ...] | None = None,
     dtype: DTypeLike | None = None,
 ) -> SparseDIAQArray:
-    """Initialize a SparseDIAQArray from a dictionary of offsets and diagonals.
+    """Initialize a `SparseDIAQArray` from a dictionary of offsets and diagonals.
 
     Args:
         offsets_diags: Dictionary where keys are offsets and values are diagonals of
-            shapes (..., n-|offset|) with a common batch shape between all diagonals.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
-            system Hilbert space tensor product. Defaults to `None` (a single system
-            with the same dimension as the diagonals).
+            shapes _(..., n-|offset|)_ with a common batch shape between all diagonals.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the Hilbert
+            space tensor product. Defaults to `None` (a single system with the same
+            dimension as `x`).
         dtype: Data type of the array. If `None`, the data type is inferred from the
             diagonals.
 
     Returns:
-        A SparseDIAQArray with non-zero diagonals at the specified offsets.
+        A `SparseDIAQArray` with non-zero diagonals at the specified offsets.
 
     Examples:
         >>> dq.sparsedia_from_dict({0: [1, 2, 3], 1: [4, 5], -1: [6, 7]})
