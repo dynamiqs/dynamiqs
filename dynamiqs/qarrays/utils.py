@@ -56,9 +56,15 @@ def asqarray(
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
         >>> dq.asqarray([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
-        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
-        [[ 1.+0.j    ⋅   ]
-         [   ⋅    -1.+0.j]]
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[[ 0.+0.j  1.+0.j]
+          [ 1.+0.j  0.+0.j]]
+        <BLANKLINE>
+         [[ 0.+0.j  0.-1.j]
+          [ 0.+1.j  0.+0.j]]
+        <BLANKLINE>
+         [[ 1.+0.j  0.+0.j]
+          [ 0.+0.j -1.+0.j]]]
     """
     if layout is None and isinstance(x, QArray):
         return x
