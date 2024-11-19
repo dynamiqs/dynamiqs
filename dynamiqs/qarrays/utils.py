@@ -55,7 +55,7 @@ def asqarray(
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
-        >>> dq.asqarray([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
+        >>> dq.asqarray([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
         [[ 1.+0.j    ⋅   ]
          [   ⋅    -1.+0.j]]
@@ -81,7 +81,8 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         dims = _dims_from_qutip(dims)
         x = x.full()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence with the appropriate shape
+        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
+        # the appropriate shape
         return stack([_asdense(sub_x, dims=dims) for sub_x in x])
 
     x = jnp.asarray(x).astype(cdtype())
@@ -103,7 +104,8 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
         dims = _dims_from_qutip(dims)
         x = x.full()
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence with the appropriate shape
+        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
+        # the appropriate shape
         return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
 
     x = jnp.asarray(x).astype(cdtype())
@@ -290,7 +292,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
     elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence with the appropriate shape
+        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
+        # the appropriate shape
         return [to_qutip(sub_x, dims=dims) for sub_x in x]
 
     x = jnp.asarray(x)
