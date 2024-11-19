@@ -12,7 +12,7 @@ from ..._checks import check_shape
 from ..._utils import on_cpu
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArray, QArrayLike
-from ...qarrays.type_conversion import asqarray, to_jax
+from ...qarrays.utils import asqarray, to_jax
 
 __all__ = [
     'dag',
@@ -189,7 +189,7 @@ def trace(x: QArrayLike) -> Array:
     Examples:
         >>> x = jnp.ones((3, 3))
         >>> dq.trace(x)
-        Array(3., dtype=float32)
+        Array(3.+0.j, dtype=complex64)
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
@@ -224,7 +224,7 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
         >>> x = jnp.ones((3, 3))
         >>> y = jnp.ones((3, 3))
         >>> dq.tracemm(x, y)
-        Array(9., dtype=float32)
+        Array(9.+0.j, dtype=complex64)
     """
     x = asqarray(x)
     y = asqarray(y)

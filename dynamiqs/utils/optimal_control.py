@@ -6,7 +6,7 @@ from jaxtyping import ArrayLike
 from .._checks import check_shape
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
-from ..qarrays.type_conversion import asqarray
+from ..qarrays.utils import asqarray
 from ..utils.operators import displace
 from ..utils.states import fock
 

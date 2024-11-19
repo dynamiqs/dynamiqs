@@ -14,7 +14,7 @@ from matplotlib.colors import Normalize
 
 from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
-from ..qarrays.type_conversion import to_jax
+from ..qarrays.utils import to_jax
 from .utils import add_colorbar, bra_ticks, integer_ticks, ket_ticks, optional_ax
 
 __all__ = ['hinton']

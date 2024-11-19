@@ -11,7 +11,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays.qarray import QArray, QArrayLike
-from ...qarrays.type_conversion import asqarray
+from ...qarrays.utils import asqarray
 from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray

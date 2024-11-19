@@ -14,7 +14,7 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
-from .qarrays.type_conversion import asqarray
+from .qarrays.utils import asqarray
 
 __all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
 
@@ -206,13 +206,13 @@ def timecallable(
         >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
         >>> H = dq.timecallable(f)
         >>> H(0.5)
-        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
-        [[0.5 0. ]
-         [0.  0.5]]
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[0.5+0.j 0. +0.j]
+         [0. +0.j 0.5+0.j]]
         >>> H(1.0)
-        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
-        [[1. 0.]
-         [0. 0.]]
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j]]
     """
     # check f is callable
     if not callable(f):

@@ -8,7 +8,7 @@ from matplotlib.colors import Normalize
 
 from .._checks import check_shape
 from ..qarrays.qarray import QArrayLike
-from ..qarrays.type_conversion import asqarray, to_jax
+from ..qarrays.utils import asqarray, to_jax
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
 

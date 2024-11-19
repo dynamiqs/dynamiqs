@@ -173,7 +173,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
 
 ### Batching over a TimeArray
 
-We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentialy the same, you have to pass a batched [`TimeArray`][dynamiqs.TimeArray], in short:
+We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched [`TimeArray`][dynamiqs.TimeArray], in short:
 
 === "For a `PWCTimeArray`"
     The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:

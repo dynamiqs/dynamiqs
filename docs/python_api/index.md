@@ -167,8 +167,12 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
+        - asqarray
         - stack
+        - to_jax
+        - to_numpy
         - to_qutip
+        - sparsedia_from_dict
 
 ### Global settings
 
