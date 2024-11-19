@@ -3643,6 +3643,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
       
@@ -3683,6 +3691,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../python_api/qarrays/utils/asqarray.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    asqarray
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../python_api/qarrays/utils/stack.html" class="md-nav__link">
         
   
@@ -3704,11 +3733,74 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/qarrays/utils/to_qutip.md" class="md-nav__link">
+      <a href="../../python_api/qarrays/utils/to_jax.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    to_jax
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/qarrays/utils/to_numpy.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    to_numpy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/qarrays/utils/to_qutip.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     to_qutip
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/qarrays/utils/sparsedia_from_dict.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sparsedia_from_dict
   </span>
   
 
@@ -4950,7 +5042,7 @@ where <span class="arithmatex">\(\mathscr{T}\)</span> is the time-ordering symbo
 </ol>
 <div class="admonition example">
 <p class="admonition-title">Example for a two-level system</p>
-<p>For <span class="arithmatex">\(H=\frac{\omega}{2}\sigma_z\)</span>, the propagator is straighforward to compute:
+<p>For <span class="arithmatex">\(H=\frac{\omega}{2}\sigma_z\)</span>, the propagator is straightforward to compute:
 $$
     U(t) = e^{-iHt} = \begin{pmatrix}e^{-i\omega t/2} &amp; 0 \\ 0 &amp; e^{i\omega t/2}\end{pmatrix}.
 $$</p>
@@ -4972,7 +5064,7 @@ where we used the Schrödinger equation to replace the time derivative of the st
 <p><ins>Space complexity</ins>: <span class="arithmatex">\(O(n^2)\)</span> (storing the Hamiltonian).</p>
 <p><ins>Time complexity</ins>: <span class="arithmatex">\(O(n^2\times\text{number of time steps})\)</span> (complexity of the matrix-vector product at each time step).</p>
 <h2 id="using-dynamiqs">Using Dynamiqs</h2>
-<p>You can create the state and Hamiltonian using any qarray-like object. Let's take the example of a two-level system with a simple Hamiltonian:</p>
+<p>You can create the state and Hamiltonian using any <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like object</abbr>. Let's take the example of a two-level system with a simple Hamiltonian:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
 <span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
 

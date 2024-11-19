@@ -3555,6 +3555,14 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
     
     
       
@@ -3595,6 +3603,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../qarrays/utils/asqarray.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    asqarray
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../qarrays/utils/stack.html" class="md-nav__link">
         
   
@@ -3616,11 +3645,74 @@
   
   
     <li class="md-nav__item">
-      <a href="../qarrays/utils/to_qutip.md" class="md-nav__link">
+      <a href="../qarrays/utils/to_jax.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    to_jax
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qarrays/utils/to_numpy.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    to_numpy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qarrays/utils/to_qutip.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     to_qutip
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qarrays/utils/sparsedia_from_dict.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sparsedia_from_dict
   </span>
   
 
@@ -4761,9 +4853,9 @@ for any time <span class="arithmatex">\(t\)</span>.</p>
 
 <details class="warning"
  open >
-  <summary>The function <code>f</code> must return a <code>QArray</code> (not a qarray-like object!)</summary>
+  <summary>The function <code>f</code> must return a <code>QArray</code> (not a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like object</abbr>!)</summary>
   <p>An error is raised if the function <code>f</code> does not return a <code>QArray</code>. This error
-concerns any other qarray-like objects. This is enforced to avoid costly
+concerns any other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr>. This is enforced to avoid costly
 conversions at every time step of the numerical integration.</p>
 </details>
     <!-- <p>Parameters:</p> -->
@@ -4810,13 +4902,13 @@ discontinuous jump in the function values.</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">timecallable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense</span>
-<span class="go">[[0.5 0. ]</span>
-<span class="go"> [0.  0.5]]</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
+<span class="go">[[0.5+0.j 0. +0.j]</span>
+<span class="go"> [0. +0.j 0.5+0.j]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense</span>
-<span class="go">[[1. 0.]</span>
-<span class="go"> [0. 0.]]</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
+<span class="go">[[1.+0.j 0.+0.j]</span>
+<span class="go"> [0.+0.j 0.+0.j]]</span>
 </code></pre></div>
 
     </div>
