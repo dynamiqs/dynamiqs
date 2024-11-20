@@ -66,10 +66,61 @@ def _dims_from_qutip(dims: list[list[int]]) -> tuple[int, ...]:
 
 
 class QArray(eqx.Module):
-    r"""Quantum array object. DenseQArray is a wrapper around JAX arrays. It offers
-    convenience methods to handle more easily quantum states
-    (bras, kets and density matrices) and quantum operators.
-    If you come from QuTiP, this is the equivalent of the Qobj class.
+    r"""Dynamiqs custom array to represent quantum objects.
+
+    A qarray is a wrapper around the data structure representing a quantum object (a
+    ket, a density matrix, an operator, a superoperator, etc.) that offers convenience
+    methods.
+
+    There are two types of qarrays:
+
+    - `DenseQArray`: wrapper around JAX arrays, dense representation of the array.
+    - `SparseDIAQArray`: Dynamiqs sparse diagonal format, storing only the non-zero
+        diagonals.
+
+    Use the constructor [`dq.asqarray()`][dynamiqs.asqarray] to build a qarray.
+
+    Attributes:
+        dtype _(numpy dtype)_: Data type.
+        shape _(tuple of ints)_: Array shape.
+        ndim _(int)_: Number of dimensions of the array.
+        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
+        dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
+        mT _(QArray)_: Returns the qarray transposed over its last two dimensions.
+
+    Note: Arithmetic operation support
+        Qarrays support elementary operations, such as element-wise
+        addition/subtraction, element-wise multiplication and matrix multiplications
+        with other qarray-like objects.
+
+    Note-: Shortcuts methods to use quantum utilities
+        Many functions of the library can be called directly on a qarray rather than
+        through the functional API. For example, you can use `x.dag()` instead of
+        `dq.isdag(x)`. Here is the complete list of these shortcuts:
+
+        | QArray method    | Corresponding function call                          |
+        |------------------|------------------------------------------------------|
+        | `x.dag()`        | [`dq.dag(x)`][dynamiqs.dag]                          |
+        | `x.powm()`       | [`dq.powm(x)`][dynamiqs.powm]                        |
+        | `x.expm()`       | [`dq.expm(x)`][dynamiqs.expm]                        |
+        | `x.cosm()`       | [`dq.cosm(x)`][dynamiqs.cosm]                        |
+        | `x.sinm()`       | [`dq.sinm(x)`][dynamiqs.sinm]                        |
+        | `x.trace()`      | [`dq.trace(x)`][dynamiqs.trace]                      |
+        | `x.ptrace(keep)` | [`dq.ptrace(x, keep, dims=x.dims)`][dynamiqs.ptrace] |
+        | `x.norm()`       | [`dq.norm(x)`][dynamiqs.norm]                        |
+        | `x.unit()`       | [`dq.unit(x)`][dynamiqs.unit]                        |
+        | `x.isket()`      | [`dq.isket(x)`][dynamiqs.isket]                      |
+        | `x.isbra()`      | [`dq.isbra(x)`][dynamiqs.isbra]                      |
+        | `x.isdm()`       | [`dq.isdm(x)`][dynamiqs.isdm]                        |
+        | `x.isop()`       | [`dq.isop(x)`][dynamiqs.isop]                        |
+        | `x.isherm()`     | [`dq.isherm(x)`][dynamiqs.isherm]                    |
+        | `x.toket()`      | [`dq.toket(x)`][dynamiqs.toket]                      |
+        | `x.tobra()`      | [`dq.tobra(x)`][dynamiqs.tobra]                      |
+        | `x.todm()`       | [`dq.todm(x)`][dynamiqs.todm]                        |
+        | `x.proj()`       | [`dq.proj(x)`][dynamiqs.proj]                        |
+        | `x.to_qutip()`   | [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip]   |
+        | `x.to_jax()`     | [`dq.to_jax(x)`][dynamiqs.to_jax]                    |
+        | `x.to_numpy()`   | [`dq.to_numpy(x)`][dynamiqs.to_numpy]                |
     """
 
     # Subclasses should implement:
@@ -109,11 +160,7 @@ class QArray(eqx.Module):
     @property
     @abstractmethod
     def dtype(self) -> jnp.dtype:
-        """Return the data type of the quantum state.
-
-        Returns:
-             The data type of the quantum state.
-        """
+        pass
 
     @property
     @abstractmethod
@@ -123,11 +170,7 @@ class QArray(eqx.Module):
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """Returns the shape of the quantum state.
-
-        Returns:
-            The shape of the quantum state.
-        """
+        pass
 
     @property
     @abstractmethod
@@ -136,58 +179,44 @@ class QArray(eqx.Module):
 
     @property
     def ndim(self) -> int:
-        """Returns the number of dimensions of the quantum state.
-
-        Returns:
-            The number of dimensions of the quantum state.
-        """
         return len(self.shape)
 
     @abstractmethod
     def conj(self) -> QArray:
-        """Returns the conjugate of the quantum state.
+        """Returns the element-wise complex conjugate of the qarray.
 
         Returns:
-            The conjugate of the quantum state.
+            New qarray object with element-wise complex conjuguated values.
         """
 
     def dag(self) -> QArray:
-        """Returns the dagger of the quantum state.
-
-        Returns:
-            The dagger of the quantum state.
-        """
         return self.mT.conj()
 
     @abstractmethod
     def reshape(self, *shape: int) -> QArray:
-        """Returns the reshaped quantum state.
+        """Returns a reshaped copy of a qarray.
 
         Args:
-            shape: New shape of the quantum state.
+            *shape: New shape, which must match the original size.
 
         Returns:
-            The reshaped quantum state.
+            New qarray object with the given shape.
         """
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> QArray:
-        """Returns the broadcast the quantum state.
+        """Broadcasts a qarray to a new shape.
+
+        Args:
+            *shape: New shape, which must be compatible with the original shape.
 
         Returns:
-            The broadcast quantum state.
+            New qarray object with the given shape.
         """
 
     @abstractmethod
     def ptrace(self, *keep: int) -> QArray:
-        """Returns the partial trace of the quantum state.
-
-        Args:
-            keep: Dimensions to keep.
-
-        Returns:
-            The partial trace of the quantum state.
-        """
+        pass
 
     @abstractmethod
     def powm(self, n: int) -> QArray:
@@ -208,20 +237,11 @@ class QArray(eqx.Module):
         return sinm(self)
 
     def unit(self) -> QArray:
-        """Returns the normalized the quantum state.
-
-        Returns:
-            The normalized quantum state.
-        """
         return self / self.norm()[..., None, None]
 
     @abstractmethod
     def norm(self) -> Array:
-        """Returns the norm of the quantum state.
-
-        Returns:
-            The norm of the quantum state.
-        """
+        pass
 
     @abstractmethod
     def trace(self) -> Array:
@@ -234,10 +254,12 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # todo
         pass
 
     @abstractmethod
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        # todo
         pass
 
     @abstractmethod
@@ -254,111 +276,60 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def devices(self) -> set[Device]:
+        # todo
         pass
 
     def isket(self) -> bool:
-        """Returns the check if the quantum state is a ket.
-
-        Returns:
-            True if the quantum state is a ket, False otherwise.
-        """
         from ..utils import isket
 
         return isket(self)
 
     def isbra(self) -> bool:
-        """Returns the check if the quantum state is a bra.
-
-        Returns:
-            True if the quantum state is a bra, False otherwise.
-        """
         from ..utils import isbra
 
         return isbra(self)
 
     def isdm(self) -> bool:
-        """Returns the check if the quantum state is a density matrix.
-
-        Returns:
-            True if the quantum state is a density matrix, False otherwise.
-        """
         from ..utils import isdm
 
         return isdm(self)
 
     def isop(self) -> bool:
-        """Returns the check if the quantum state is an operator.
-
-        Returns:
-            True if the quantum state is an operator, False otherwise.
-        """
         from ..utils import isop
 
         return isop(self)
 
     @abstractmethod
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
-        """Returns the check if the quantum state is Hermitian.
-
-        Returns:
-            True if the quantum state is Hermitian, False otherwise.
-        """
+        pass
 
     def toket(self) -> QArray:
-        """Convert the quantum state to a ket.
-
-        Returns:
-            The ket representation of the quantum state.
-        """
         from ..utils import toket
 
         return toket(self)
 
     def tobra(self) -> QArray:
-        """Convert the quantum state to a bra.
-
-        Returns:
-            The bra representation of the quantum state.
-        """
         from ..utils import tobra
 
         return tobra(self)
 
     def todm(self) -> QArray:
-        """Convert the quantum state to a density matrix.
-
-        Returns:
-            The density matrix representation of the quantum state.
-        """
         from ..utils import todm
 
         return todm(self)
 
     def proj(self) -> QArray:
-        """Projector of the quantum state.
-
-        Returns:
-            The projector of the quantum state.
-        """
         from ..utils import proj
 
         return proj(self)
 
     @abstractmethod
     def to_qutip(self) -> Qobj | list[Qobj]:
-        """Convert the quantum state to a QuTiP object.
-
-        Returns:
-            A QuTiP object representation of the quantum state.
-        """
+        pass
 
     @abstractmethod
     def to_jax(self) -> Array:
-        """Convert the quantum state to a JAX array.
-
-        Returns:
-            The JAX array representation of the quantum state.
-        """
+        pass
 
     def __len__(self) -> int:
         try:
@@ -371,11 +342,6 @@ class QArray(eqx.Module):
         pass
 
     def to_numpy(self) -> np.ndarray:
-        """Convert the quantum state to a NumPy array.
-
-        Returns:
-            The NumPy array representation of the quantum state.
-        """
         return np.asarray(self)
 
     def __repr__(self) -> str:
@@ -385,12 +351,10 @@ class QArray(eqx.Module):
         )
 
     def __neg__(self) -> QArray:
-        """Negate the quantum state."""
         return self * (-1)
 
     @abstractmethod
     def __mul__(self, y: QArrayLike) -> QArray:
-        """Element-wise multiplication with a scalar or an array."""
         from .._utils import _is_batched_scalar
 
         if not _is_batched_scalar(y):
@@ -404,7 +368,6 @@ class QArray(eqx.Module):
             _check_compatible_dims(self.dims, y.dims)
 
     def __rmul__(self, y: QArrayLike) -> QArray:
-        """Element-wise multiplication with a scalar or an array on the right."""
         return self * y
 
     @abstractmethod
@@ -420,7 +383,6 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
-        """Element-wise addition with a scalar or an array."""
         from .._utils import _is_batched_scalar
 
         if _is_batched_scalar(y):
@@ -434,30 +396,25 @@ class QArray(eqx.Module):
             _check_compatible_dims(self.dims, y.dims)
 
     def __radd__(self, y: QArrayLike) -> QArray:
-        """Element-wise addition with a scalar or an array on the right."""
         return self.__add__(y)
 
     def __sub__(self, y: QArrayLike) -> QArray:
-        """Element-wise subtraction with a scalar or an array."""
         return self + (-y)
 
     def __rsub__(self, y: QArrayLike) -> QArray:
-        """Element-wise subtraction with a scalar or an array on the right."""
         return -self + y
 
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        """Matrix multiplication with another quantum state or JAX array."""
+        pass
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
-        """Matrix multiplication with another quantum state or JAX array
-        on the right.
-        """
+        pass
 
     @abstractmethod
     def __and__(self, y: QArray) -> QArray:
-        """Tensor product between two quantum states."""
+        pass
 
     def __pow__(self, power: int | _Metaω) -> QArray:
         # to deal with the x**ω notation from equinox (used in diffrax internals)
