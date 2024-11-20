@@ -241,8 +241,21 @@ class SparseDIAQArray(QArray):
 
     def __repr__(self) -> str:
         # === array representation with dots instead of zeros
-        # match '0. +0.j' with any number of spaces
-        pattern = r'0\.\s*\+0\.j'
+        if jnp.issubdtype(self.dtype, jnp.complexfloating):
+            # match '0. +0.j' with any number of spaces
+            pattern = r'(?<!\d)0\.\s*(\+|\-)0\.j'
+        elif jnp.issubdtype(self.dtype, jnp.floating):
+            # match '0.' with any number of spaces
+            pattern = r'(?<!\d)0\.\s*'
+        elif jnp.issubdtype(self.dtype, jnp.integer):
+            # match '0' with any number of spaces
+            pattern = r'(?<!\d)0\s*'
+        else:
+            raise ValueError(
+                'Unsupported dtype for SparseDIAQArray representation, got '
+                f'{self.dtype}.'
+            )
+
         # replace with a centered dot of the same length as the matched string
         replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
