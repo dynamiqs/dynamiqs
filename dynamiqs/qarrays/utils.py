@@ -9,7 +9,6 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .._utils import cdtype
 from .dense_qarray import DenseQArray, _dense_to_qobj
 from .layout import Layout, dense
 from .qarray import (
@@ -91,7 +90,7 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         # the appropriate shape
         return stack([_asdense(sub_x, dims=dims) for sub_x in x])
 
-    x = jnp.asarray(x).astype(cdtype())
+    x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return DenseQArray(dims, x)
 
@@ -114,7 +113,7 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
         # the appropriate shape
         return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
 
-    x = jnp.asarray(x).astype(cdtype())
+    x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
 
@@ -175,7 +174,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
                 len(unique_offsets),
                 qarray.diags.shape[-1],
             )
-            updated_diags = jnp.zeros(add_diags_shape, dtype=cdtype())
+            updated_diags = jnp.zeros(add_diags_shape)
             for i, offset in enumerate(qarray.offsets):
                 idx = offset_to_index[offset]
                 updated_diags = updated_diags.at[..., idx, :].set(
