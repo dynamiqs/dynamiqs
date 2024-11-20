@@ -17,6 +17,14 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Core
 
+### Quantum arrays
+
+::: dynamiqs.qarrays.qarray
+    options:
+        table: true
+        members:
+        - QArray
+
 ### Time-dependent arrays
 
 ::: dynamiqs.time_array

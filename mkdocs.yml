@@ -156,6 +156,7 @@ nav:
           - mepropagator: python_api/integrators/mepropagator.md
           - floquet: python_api/integrators/floquet.md
       - Core:
+          - Quantum arrays: python_api/qarrays/qarray/QArray.md
           - Time-dependent arrays:
               - TimeArray: python_api/time_array/TimeArray.md
               - constant: python_api/time_array/constant.md
