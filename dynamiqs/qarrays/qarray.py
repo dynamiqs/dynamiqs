@@ -247,11 +247,6 @@ class QArray(eqx.Module):
     def trace(self) -> Array:
         pass
 
-    def entropy_vn(self) -> Array:
-        from ..utils import entropy_vn
-
-        return entropy_vn(self)
-
     @abstractmethod
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # todo
