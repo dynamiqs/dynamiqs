@@ -174,7 +174,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
                 len(unique_offsets),
                 qarray.diags.shape[-1],
             )
-            updated_diags = jnp.zeros(add_diags_shape)
+            updated_diags = jnp.zeros(add_diags_shape, dtype=qarray.diags.dtype)
             for i, offset in enumerate(qarray.offsets):
                 idx = offset_to_index[offset]
                 updated_diags = updated_diags.at[..., idx, :].set(
