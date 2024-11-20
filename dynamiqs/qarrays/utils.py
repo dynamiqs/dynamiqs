@@ -47,13 +47,13 @@ def asqarray(
 
     Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
-        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[ 1.+0.j  0.+0.j]
-         [ 0.+0.j -1.+0.j]]
+        QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dense
+        [[ 1  0]
+         [ 0 -1]]
         >>> dq.asqarray([[1, 0], [0, -1]], layout=dq.dia)
-        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
-        [[ 1.+0.j    ⋅   ]
-         [   ⋅    -1.+0.j]]
+        QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dia, ndiags=1
+        [[ 1  ⋅]
+         [ ⋅ -1]]
         >>> dq.asqarray([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
         QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
         [[[ 0.+0.j  1.+0.j]
@@ -348,19 +348,19 @@ def sparsedia_from_dict(
     Examples:
         >>> dq.sparsedia_from_dict({0: [1, 2, 3], 1: [4, 5], -1: [6, 7]})
         QArray: shape=(3, 3), dims=(3,), dtype=int32, layout=dia, ndiags=3
-        [[1.+0.j 4.+0.j   ⋅   ]
-         [6.+0.j 2.+0.j 5.+0.j]
-         [  ⋅    7.+0.j 3.+0.j]]
+        [[1 4 ⋅]
+         [6 2 5]
+         [⋅ 7 3]]
         >>> dq.sparsedia_from_dict({0: jnp.ones((3, 2))})
         QArray: shape=(3, 2, 2), dims=(2,), dtype=float32, layout=dia, ndiags=1
-        [[[1.+0.j   ⋅   ]
-          [  ⋅    1.+0.j]]
+        [[[1. ⋅ ]
+          [ ⋅ 1.]]
         <BLANKLINE>
-         [[1.+0.j   ⋅   ]
-          [  ⋅    1.+0.j]]
+         [[1. ⋅ ]
+          [ ⋅ 1.]]
         <BLANKLINE>
-         [[1.+0.j   ⋅   ]
-          [  ⋅    1.+0.j]]]
+         [[1. ⋅ ]
+          [ ⋅ 1.]]]
     """
     # === offsets
     offsets = tuple(offsets_diags.keys())
