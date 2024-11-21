@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
+from typing import Any
 
 import jax
 import jax.numpy as jnp
@@ -124,14 +125,18 @@ def _asjnparray(x: QArrayLike) -> Array:
         return jnp.asarray(x)
 
 
-def _is_leaf(x: QArrayLike) -> bool:
-    if isinstance(x, (QArray, Qobj, ArrayLike)):
+def _is_leaf(x: Any) -> bool:
+    if isinstance(x, (QArray, Qobj)) or is_arraylike(x):
         return True
 
     try:
         return jnp.asarray(x).ndim >= 2
     except (TypeError, ValueError):
         return False
+
+def is_arraylike(x: Any) -> bool:
+    # see https://github.com/jax-ml/jax/issues/8701#issuecomment-979223360
+    return hasattr(x, '__array__') or hasattr(x, '__array_interface__')
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
