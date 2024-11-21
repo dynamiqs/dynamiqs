@@ -4895,19 +4895,19 @@ diagonals.</p>
 </p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">sparsedia_from_dict</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]})</span>
 <span class="go">QArray: shape=(3, 3), dims=(3,), dtype=int32, layout=dia, ndiags=3</span>
-<span class="go">[[1.+0.j 4.+0.j   ⋅   ]</span>
-<span class="go"> [6.+0.j 2.+0.j 5.+0.j]</span>
-<span class="go"> [  ⋅    7.+0.j 3.+0.j]]</span>
+<span class="go">[[1 4 ⋅]</span>
+<span class="go"> [6 2 5]</span>
+<span class="go"> [⋅ 7 3]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">sparsedia_from_dict</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))})</span>
 <span class="go">QArray: shape=(3, 2, 2), dims=(2,), dtype=float32, layout=dia, ndiags=1</span>
-<span class="go">[[[1.+0.j   ⋅   ]</span>
-<span class="go">  [  ⋅    1.+0.j]]</span>
+<span class="go">[[[1. ⋅ ]</span>
+<span class="go">  [ ⋅ 1.]]</span>
 
-<span class="go"> [[1.+0.j   ⋅   ]</span>
-<span class="go">  [  ⋅    1.+0.j]]</span>
+<span class="go"> [[1. ⋅ ]</span>
+<span class="go">  [ ⋅ 1.]]</span>
 
-<span class="go"> [[1.+0.j   ⋅   ]</span>
-<span class="go">  [  ⋅    1.+0.j]]]</span>
+<span class="go"> [[1. ⋅ ]</span>
+<span class="go">  [ ⋅ 1.]]]</span>
 </code></pre></div>
 
     </div>
