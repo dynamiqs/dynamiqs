@@ -395,9 +395,7 @@ class SparseDIAQArray(QArray):
         N = other.diags.shape[-1]
         broadcast_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
         dtype = jnp.promote_types(self.diags.dtype, other.diags.dtype)
-        diag_dict = defaultdict(
-            lambda: jnp.zeros((*broadcast_shape, N), dtype=dtype)
-        )
+        diag_dict = defaultdict(lambda: jnp.zeros((*broadcast_shape, N), dtype=dtype))
 
         for i, self_offset in enumerate(self.offsets):
             self_diag = self.diags[..., i, :]
