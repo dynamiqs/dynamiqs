@@ -30,12 +30,16 @@ _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 
 def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
-    if x.ndim > 2:
-        # TODO: generalize to any nested sequence with the appropriate shape
-        return [_dense_to_qobj(sub_x, dims=x.dims) for sub_x in x]
-    else:
-        dims = _dims_to_qutip(x.dims, x.shape)
-        return Qobj(x, dims=dims)
+    dims = _dims_to_qutip(x.dims, x.shape)
+    return _array_to_qobj_list(x.to_jax(), dims)
+
+
+def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> list[Qobj]:
+    return jax.tree.map(
+        lambda x: Qobj(x, dims=dims),
+        x.tolist(),
+        is_leaf=lambda x: jnp.asarray(x).ndim == 2,
+    )
 
 
 class DenseQArray(QArray):

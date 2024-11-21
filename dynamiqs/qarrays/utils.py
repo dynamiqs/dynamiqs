@@ -3,13 +3,14 @@ from __future__ import annotations
 import warnings
 from collections.abc import Sequence
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .dense_qarray import DenseQArray, _dense_to_qobj
+from .dense_qarray import DenseQArray, _array_to_qobj_list, _dense_to_qobj
 from .layout import Layout, dense
 from .qarray import (
     QArray,
@@ -83,12 +84,10 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
     elif isinstance(x, Qobj):
-        dims = _dims_from_qutip(dims)
+        dims = _dims_from_qutip(x.dims)
         x = x.full()
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
-        # the appropriate shape
-        return stack([_asdense(sub_x, dims=dims) for sub_x in x])
+    elif isinstance(x, Sequence):
+        x = jax.tree.map(_asjnparray, x, is_leaf=_is_leaf)
 
     x = jnp.asarray(x)
     dims = _init_dims(x, dims)
@@ -106,16 +105,33 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
     elif isinstance(x, Qobj):
         # TODO: improve this by directly extracting the diags and offsets in case
         # the Qobj is already in sparse DIA format (only for QuTiP 5)
-        dims = _dims_from_qutip(dims)
+        dims = _dims_from_qutip(x.dims)
         x = x.full()
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
-        # the appropriate shape
-        return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
+    elif isinstance(x, Sequence):
+        x = jax.tree.map(_asjnparray, x, is_leaf=_is_leaf)
 
     x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
+
+
+def _asjnparray(x: QArrayLike) -> Array:
+    if isinstance(x, QArray):
+        return x.to_jax()
+    elif isinstance(x, Qobj):
+        return jnp.asarray(x.full())
+    else:
+        return jnp.asarray(x)
+
+
+def _is_leaf(x: QArrayLike) -> bool:
+    if isinstance(x, (QArray, Qobj, ArrayLike)):
+        return True
+
+    try:
+        return jnp.asarray(x).ndim >= 2
+    except (TypeError, ValueError):
+        return False
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
@@ -296,16 +312,14 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
         return _dense_to_qobj(x)
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
-        # the appropriate shape
-        return [to_qutip(sub_x, dims=dims) for sub_x in x]
+    elif isinstance(x, Sequence):
+        x = jax.tree.map(_asjnparray, x, is_leaf=_is_leaf)
 
     x = jnp.asarray(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     dims = _init_dims(x, dims)
     dims = _dims_to_qutip(dims, x.shape)
-    return Qobj(x, dims=dims)
+    return _array_to_qobj_list(x, dims)
 
 
 def _warn_qarray_dims(x: QArrayLike, dims: tuple[int, ...] | None = None):
