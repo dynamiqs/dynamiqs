@@ -9,7 +9,6 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .._utils import cdtype
 from .dense_qarray import DenseQArray, _dense_to_qobj
 from .layout import Layout, dense
 from .qarray import (
@@ -48,13 +47,13 @@ def asqarray(
 
     Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
-        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[ 1.+0.j  0.+0.j]
-         [ 0.+0.j -1.+0.j]]
+        QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dense
+        [[ 1  0]
+         [ 0 -1]]
         >>> dq.asqarray([[1, 0], [0, -1]], layout=dq.dia)
-        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
-        [[ 1.+0.j    ⋅   ]
-         [   ⋅    -1.+0.j]]
+        QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dia, ndiags=1
+        [[ 1  ⋅]
+         [ ⋅ -1]]
         >>> dq.asqarray([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
         QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
         [[[ 0.+0.j  1.+0.j]
@@ -91,7 +90,7 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
         # the appropriate shape
         return stack([_asdense(sub_x, dims=dims) for sub_x in x])
 
-    x = jnp.asarray(x).astype(cdtype())
+    x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return DenseQArray(dims, x)
 
@@ -114,7 +113,7 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
         # the appropriate shape
         return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
 
-    x = jnp.asarray(x).astype(cdtype())
+    x = jnp.asarray(x)
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
 
@@ -175,7 +174,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
                 len(unique_offsets),
                 qarray.diags.shape[-1],
             )
-            updated_diags = jnp.zeros(add_diags_shape, dtype=cdtype())
+            updated_diags = jnp.zeros(add_diags_shape, dtype=qarray.diags.dtype)
             for i, offset in enumerate(qarray.offsets):
                 idx = offset_to_index[offset]
                 updated_diags = updated_diags.at[..., idx, :].set(
@@ -349,19 +348,19 @@ def sparsedia_from_dict(
     Examples:
         >>> dq.sparsedia_from_dict({0: [1, 2, 3], 1: [4, 5], -1: [6, 7]})
         QArray: shape=(3, 3), dims=(3,), dtype=int32, layout=dia, ndiags=3
-        [[1.+0.j 4.+0.j   ⋅   ]
-         [6.+0.j 2.+0.j 5.+0.j]
-         [  ⋅    7.+0.j 3.+0.j]]
+        [[1 4 ⋅]
+         [6 2 5]
+         [⋅ 7 3]]
         >>> dq.sparsedia_from_dict({0: jnp.ones((3, 2))})
         QArray: shape=(3, 2, 2), dims=(2,), dtype=float32, layout=dia, ndiags=1
-        [[[1.+0.j   ⋅   ]
-          [  ⋅    1.+0.j]]
+        [[[1. ⋅ ]
+          [ ⋅ 1.]]
         <BLANKLINE>
-         [[1.+0.j   ⋅   ]
-          [  ⋅    1.+0.j]]
+         [[1. ⋅ ]
+          [ ⋅ 1.]]
         <BLANKLINE>
-         [[1.+0.j   ⋅   ]
-          [  ⋅    1.+0.j]]]
+         [[1. ⋅ ]
+          [ ⋅ 1.]]]
     """
     # === offsets
     offsets = tuple(offsets_diags.keys())
