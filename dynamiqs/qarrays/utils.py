@@ -134,6 +134,7 @@ def _is_leaf(x: Any) -> bool:
     except (TypeError, ValueError):
         return False
 
+
 def is_arraylike(x: Any) -> bool:
     # see https://github.com/jax-ml/jax/issues/8701#issuecomment-979223360
     return hasattr(x, '__array__') or hasattr(x, '__array_interface__')
