@@ -270,7 +270,7 @@ nav:
           - Quantum optimal control:
               - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
-          - Random arrays (dq.random):
+          - Random (dq.random):
               - real: python_api/random/real.md
               - complex: python_api/random/complex.md
               - herm: python_api/random/herm.md

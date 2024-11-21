@@ -211,7 +211,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - cd_gate
 
 
-### Random arrays (dq.random)
+### Random (dq.random)
 
 ::: dynamiqs.random
     options:
