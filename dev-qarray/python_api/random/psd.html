@@ -4209,7 +4209,7 @@
             
   
   <span class="md-ellipsis">
-    Random arrays (dq.random)
+    Random (dq.random)
   </span>
   
 
@@ -4219,7 +4219,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_8_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4_8">
             <span class="md-nav__icon md-icon"></span>
-            Random arrays (dq.random)
+            Random (dq.random)
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -4838,7 +4838,7 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">psd</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">psd</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4860,7 +4860,7 @@
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (shape of the form (..., n, n))              </i>
-          – <p>Shape of the returned array.</p>
+          – <p>Shape of the returned qarray.</p>
         </li>
     </ul>
 
@@ -4870,11 +4870,11 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (*shape))</em> Random complex positive semi-definite matrix.</p>
+            <code><span title="dynamiqs.qarrays.qarray.QArray">QArray</span></code>
+        – <p><em>(qarray of shape (*shape))</em> Random complex positive semi-definite matrix.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (*shape))</em> Random complex positive semi-definite matrix.</p></span>
+      <span class="field-body"><p><em>(qarray of shape (*shape))</em> Random complex positive semi-definite matrix.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
@@ -4882,8 +4882,9 @@
 </p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">psd</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="go">Array([[1.145+0.j  , 0.582+0.33j],</span>
-<span class="go">       [0.582-0.33j, 0.844+0.j  ]], dtype=complex64)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
+<span class="go">[[1.145+0.j   0.582+0.33j]</span>
+<span class="go"> [0.582-0.33j 0.844+0.j  ]]</span>
 </code></pre></div>
 
     </div>
