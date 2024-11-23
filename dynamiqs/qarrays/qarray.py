@@ -96,7 +96,7 @@ class QArray(eqx.Module):
     Note-: Shortcuts methods to use quantum utilities
         Many functions of the library can be called directly on a qarray rather than
         through the functional API. For example, you can use `x.dag()` instead of
-        `dq.isdag(x)`. Here is the complete list of these shortcuts:
+        `dq.dag(x)`. Here is the complete list of these shortcuts:
 
         | QArray method    | Corresponding function call                          |
         |------------------|------------------------------------------------------|
