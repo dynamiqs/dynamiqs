@@ -10,12 +10,12 @@ from .quantum_utils import dag
 
 __all__ = [
     'operator_to_vector',
-    'vector_to_operator',
-    'spre',
-    'spost',
-    'sprepost',
     'sdissipator',
     'slindbladian',
+    'spost',
+    'spre',
+    'sprepost',
+    'vector_to_operator',
 ]
 
 
