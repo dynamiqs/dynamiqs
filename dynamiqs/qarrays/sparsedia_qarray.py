@@ -347,7 +347,7 @@ class SparseDIAQArray(QArray):
 
     def _add_sparse(self, other: SparseDIAQArray) -> QArray:
         # compute the output offsets
-        out_offsets = np.union1d(self.offsets, other.offsets)
+        out_offsets = np.union1d(self.offsets, other.offsets).astype(int)
 
         # initialize the output diagonals
         batch_shape = jnp.broadcast_shapes(self.shape[:-2], other.shape[:-2])
