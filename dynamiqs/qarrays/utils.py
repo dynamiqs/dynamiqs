@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from typing import Any
 
-import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
@@ -85,12 +83,10 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
     elif isinstance(x, Qobj):
+        # todo: we should also capture dimension for nested list of Qobj
         dims = _dims_from_qutip(x.dims)
-        x = x.full()
-    elif isinstance(x, Sequence):
-        x = jax.tree.map(_asjnparray, x, is_leaf=_is_leaf)
 
-    x = jnp.asarray(x)
+    x = _to_jax(x)
     dims = _init_dims(x, dims)
     return DenseQArray(dims, x)
 
@@ -102,42 +98,15 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
         return x
     elif isinstance(x, DenseQArray):
         dims = x.dims
-        x = x.to_jax()
     elif isinstance(x, Qobj):
         # TODO: improve this by directly extracting the diags and offsets in case
         # the Qobj is already in sparse DIA format (only for QuTiP 5)
+        # todo: we should also capture dimension for nested list of Qobj
         dims = _dims_from_qutip(x.dims)
-        x = x.full()
-    elif isinstance(x, Sequence):
-        x = jax.tree.map(_asjnparray, x, is_leaf=_is_leaf)
 
-    x = jnp.asarray(x)
+    x = _to_jax(x)
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
-
-
-def _asjnparray(x: QArrayLike) -> Array:
-    if isinstance(x, QArray):
-        return x.to_jax()
-    elif isinstance(x, Qobj):
-        return jnp.asarray(x.full())
-    else:
-        return jnp.asarray(x)
-
-
-def _is_leaf(x: Any) -> bool:
-    if isinstance(x, (QArray, Qobj)) or is_arraylike(x):
-        return True
-
-    try:
-        return jnp.asarray(x).ndim >= 2
-    except (TypeError, ValueError):
-        return False
-
-
-def is_arraylike(x: Any) -> bool:
-    # see https://github.com/jax-ml/jax/issues/8701#issuecomment-979223360
-    return hasattr(x, '__array__') or hasattr(x, '__array_interface__')
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
@@ -318,10 +287,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
         return _dense_to_qobj(x)
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
-    elif isinstance(x, Sequence):
-        x = jax.tree.map(_asjnparray, x, is_leaf=_is_leaf)
 
-    x = jnp.asarray(x)
+    x = _to_jax(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     dims = _init_dims(x, dims)
     dims = _dims_to_qutip(dims, x.shape)
