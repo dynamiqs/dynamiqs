@@ -56,7 +56,7 @@ def asqarray(
         QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dia, ndiags=1
         [[ 1  ⋅]
          [ ⋅ -1]]
-        >>> dq.asqarray([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
+        >>> dq.asqarray([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
         QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
         [[[ 0.+0.j  1.+0.j]
           [ 1.+0.j  0.+0.j]]
