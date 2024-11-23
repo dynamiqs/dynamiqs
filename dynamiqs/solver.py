@@ -29,11 +29,11 @@ class Solver(eqx.Module):
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient]
 
     @classmethod
-    def supports_gradient(cls, gradient: Gradient | None) -> bool:  # noqa: ANN102
+    def supports_gradient(cls, gradient: Gradient | None) -> bool:
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
 
     @classmethod
-    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:  # noqa: ANN102
+    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:
         if gradient is not None and not cls.supports_gradient(gradient):
             support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
             raise ValueError(
