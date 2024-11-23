@@ -259,13 +259,12 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [1.]
          [0.]]
 
-        # For a batched array:
-        # >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
-        # >>> rhos.shape
-        # (5, 16, 16)
-        # todo: temporary fix
-        # >>> len(dq.to_qutip(rhos))
-        # 5
+        For a batched array:
+        >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
+        >>> rhos.shape
+        (5, 16, 16)
+        >>> len(dq.to_qutip(rhos))
+        5
 
         Note that the tensor product structure is inferred automatically for qarrays. It
         can be specified with the `dims` argument for other types.
