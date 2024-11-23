@@ -34,7 +34,7 @@ def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
     return _array_to_qobj_list(x.to_jax(), dims)
 
 
-def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> list[Qobj]:
+def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
     return jax.tree.map(
         lambda x: Qobj(x, dims=dims),
         x.tolist(),
