@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from math import prod
 
+import equinox as eqx
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jax.typing import ArrayLike
 
@@ -94,11 +96,12 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
         )
 
     # check if 0 <= number[..., i] < dim[i] for all i
-    if jnp.any(dim - number <= 0):
-        raise ValueError(
-            'Argument `number` must be in the range [0, dim[i]) for each mode i:'
-            ' 0 <= number[..., i] < dim[i].'
-        )
+    number = eqx.error_if(
+        number,
+        dim - number <= 0,
+        'Argument `number` must be in the range [0, dim[i]) for each mode i:'
+        ' 0 <= number[..., i] < dim[i].',
+    )
 
     # compute all kets
     _vectorized_fock = jnp.vectorize(_fock, signature='(ndim),(ndim)->(prod_ndim,1)')
