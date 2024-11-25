@@ -229,7 +229,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         >>> dq.coherent((4, 6), alpha).shape
         (2, 24, 1)
     """
-    dim = jnp.asarray(dim)
+    dim = np.asarray(dim)
     alpha = jnp.asarray(alpha)
     check_type_int(dim, 'dim')
 
