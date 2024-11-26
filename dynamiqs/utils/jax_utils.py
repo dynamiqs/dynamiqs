@@ -11,7 +11,7 @@ from .._checks import check_shape
 from .quantum_utils import isbra, isket, isop
 from .quantum_utils.general import _hdim
 
-__all__ = ['to_qutip', 'set_device', 'set_precision', 'set_matmul_precision']
+__all__ = ['set_device', 'set_matmul_precision', 'set_precision', 'to_qutip']
 
 
 def to_qutip(x: ArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
