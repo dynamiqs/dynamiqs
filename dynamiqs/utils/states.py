@@ -247,7 +247,6 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
         (7, 5, 64, 1)
     """
     dim = np.asarray(dim)
-    alpha = jnp.asarray(alpha)
     check_type_int(dim, 'dim')
 
     # check if dim is a single value or a tuple
