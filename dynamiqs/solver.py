@@ -8,15 +8,15 @@ from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = [
-    'Expm',
-    'Euler',
-    'Rouchon1',
-    'Rouchon2',
     'Dopri5',
     'Dopri8',
-    'Tsit5',
+    'Euler',
+    'Expm',
     'Kvaerno3',
     'Kvaerno5',
+    'Rouchon1',
+    'Rouchon2',
+    'Tsit5',
 ]
 
 

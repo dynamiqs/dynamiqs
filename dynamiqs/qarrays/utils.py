@@ -26,7 +26,7 @@ from .sparsedia_qarray import (
     _sparsedia_to_qobj,
 )
 
-__all__ = ['asqarray', 'stack', 'to_jax', 'to_numpy', 'to_qutip', 'sparsedia_from_dict']
+__all__ = ['asqarray', 'sparsedia_from_dict', 'stack', 'to_jax', 'to_numpy', 'to_qutip']
 
 
 def asqarray(

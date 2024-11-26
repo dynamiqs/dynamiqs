@@ -6,6 +6,7 @@ authors = [
   { name = "Ronan Gautier", email = "ron.gautier@gmail.com" },
   { name = "Adrien Bocquet", email = "adrienbocquet38@gmail.com" },
   { name = "Elie Genois", email = "elie.genois@usherbrooke.ca" },
+  { name = "Daniel Weiss", email = "daniel.kamrath.weiss@gmail.com" },
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
@@ -47,7 +48,7 @@ build-backend = "flit_core.buildapi"
 [project.optional-dependencies]
 dev = [
     "taskipy",
-    "ruff",
+    "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
     "pytest-sugar",
@@ -85,8 +86,8 @@ extend-select = ["D204", "D400", "D404", "D406", "D410"]
 ignore = [
     "F403", "F405",
     "E203", "E731", "E741",
-    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D417",
-    "ANN101", "ANN002", "ANN003", "ANN401",
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D405", "D417",
+    "ANN002", "ANN003", "ANN401",
     "ARG001",
     "RET505", "RUF022",
     "TRY003",
