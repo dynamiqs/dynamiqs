@@ -12,7 +12,7 @@
 
 High-performance quantum systems simulation with JAX.
 
-**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, and the stochastic master equation. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
+**Dynamiqs** is a Python library for **GPU-accelerated** and **differentiable** quantum simulations. Solvers are available for the Schrödinger equation, the Lindblad master equation, the stochastic master equation, and others. The library is built with [JAX](https://jax.readthedocs.io/en/latest/index.html) and the main solvers are based on [Diffrax](https://github.com/patrick-kidger/diffrax).
 
 Documentation is available on our website, <https://www.dynamiqs.org>; see the [Python API](https://www.dynamiqs.org/stable/python_api/index.html) for a list of all implemented functions.
 
