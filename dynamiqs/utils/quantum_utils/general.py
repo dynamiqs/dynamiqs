@@ -15,34 +15,34 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray, to_jax
 
 __all__ = [
-    'dag',
-    'powm',
-    'expm',
+    'bloch_coordinates',
+    'braket',
     'cosm',
-    'sinm',
-    'trace',
-    'tracemm',
-    'ptrace',
-    'tensor',
-    'expect',
-    'norm',
-    'unit',
+    'dag',
     'dissipator',
-    'lindbladian',
-    'isket',
+    'entropy_vn',
+    'expect',
+    'expm',
+    'fidelity',
     'isbra',
     'isdm',
-    'isop',
     'isherm',
-    'toket',
+    'isket',
+    'isop',
+    'lindbladian',
+    'norm',
+    'overlap',
+    'powm',
+    'proj',
+    'ptrace',
+    'sinm',
+    'tensor',
     'tobra',
     'todm',
-    'proj',
-    'braket',
-    'overlap',
-    'fidelity',
-    'entropy_vn',
-    'bloch_coordinates',
+    'toket',
+    'trace',
+    'tracemm',
+    'unit',
 ]
 
 
@@ -497,8 +497,8 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
         _(qarray of shape (..., n, n))_ Resulting operator (it is not a density matrix).
 
     See also:
-        - [`dq.sdissipator`][dynamiqs.utils.vectorization.sdissipator]:
-        materialize the full dissipator as a superoperator.
+        - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
+            superoperator in matrix form (vectorized).
 
     Examples:
         >>> L = dq.destroy(4)
@@ -509,7 +509,7 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
          [ 0.+0.j  2.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j -2.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
-    """  # noqa: D405
+    """
     L = asqarray(L)
     rho = asqarray(rho)
     check_shape(L, 'L', '(..., n, n)')
@@ -535,10 +535,6 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     Note:
         This superoperator is also sometimes called *Liouvillian*.
 
-    See also:
-        - [`dq.slindbladian`][dynamiqs.utils.vectorization.slindbladian]:
-        materialize the full Lindbladian.
-
     Args:
         H _(qarray_like of shape (..., n, n))_: Hamiltonian.
         jump_ops _(list of qarray_like, each of shape (, ..., n, n))_: List of jump
@@ -547,6 +543,10 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
 
     Returns:
         _(qarray of shape (..., n, n))_ Resulting operator (it is not a density matrix).
+
+    See also:
+        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
+            superoperator in matrix form (vectorized).
 
     Examples:
         >>> a = dq.destroy(4)
@@ -559,7 +559,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
          [ 0.+0.j -1.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]
          [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]
-    """  # noqa: D405
+    """
     H = asqarray(H)
     jump_ops = [asqarray(L) for L in jump_ops]
     rho = asqarray(rho)

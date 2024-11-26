@@ -5,4 +5,4 @@ from .apis.sepropagator import *
 from .apis.sesolve import *
 from .apis.smesolve import *
 
-__all__ = ['mepropagator', 'mesolve', 'sesolve', 'smesolve', 'sepropagator', 'floquet']
+__all__ = ['floquet', 'mepropagator', 'mesolve', 'sepropagator', 'sesolve', 'smesolve']
