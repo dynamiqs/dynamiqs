@@ -10,7 +10,7 @@ from ..utils.operators import displace
 from ..utils.quantum_utils import tensor, tobra
 from ..utils.states import fock
 
-__all__ = ['snap_gate', 'cd_gate']
+__all__ = ['cd_gate', 'snap_gate']
 
 
 def snap_gate(phase: ArrayLike) -> Array:

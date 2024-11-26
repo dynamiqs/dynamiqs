@@ -9,11 +9,11 @@ from .options import Options
 from .solver import Solver
 
 __all__ = [
-    'SESolveResult',
+    'FloquetResult',
+    'MEPropagatorResult',
     'MESolveResult',
     'SEPropagatorResult',
-    'MEPropagatorResult',
-    'FloquetResult',
+    'SESolveResult',
 ]
 
 
