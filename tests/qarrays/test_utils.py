@@ -1,5 +1,6 @@
 import jax.numpy as jnp
 import jax.random as jr
+import pytest
 
 import dynamiqs as dq
 
@@ -58,4 +59,31 @@ def test_stack_double(rtol=1e-05, atol=1e-08):
         jnp.stack([jax_m1, jax_m2]),
         rtol=rtol,
         atol=atol,
+    )
+
+
+@pytest.mark.parametrize('layout', [dq.dense, dq.dia])
+def test_conversions(layout):
+    sx, sy = dq.sigmax(), dq.sigmay()
+    assert jnp.allclose(sx.to_jax(), dq.asqarray(sx, layout=layout).to_jax())
+    assert jnp.allclose(
+        dq.stack([sx, sy]).to_jax(), dq.asqarray([sx, sy], layout=layout).to_jax()
+    )
+    assert jnp.allclose(
+        jnp.asarray([sx.to_jax(), sy.to_jax()]),
+        dq.asqarray([sx, sy], layout=layout).to_jax(),
+    )
+    assert jnp.allclose(
+        sx.to_jax(), dq.asqarray(sx.to_jax().tolist(), layout=layout).to_jax()
+    )
+    assert jnp.allclose(
+        jnp.asarray([[sx.to_jax(), sy.to_jax()]]),
+        dq.asqarray([(sx.to_jax().tolist(), sy)], layout=layout).to_jax(),
+    )
+    assert jnp.allclose(dq.asqarray(sx.to_qutip(), layout=layout).to_jax(), sx.to_jax())
+    assert jnp.allclose(
+        jnp.asarray(
+            [x.full() for x in dq.asqarray([sx, sy], layout=layout).to_qutip()]
+        ),
+        jnp.asarray([sx.to_qutip().full(), sy.to_qutip().full()]),
     )

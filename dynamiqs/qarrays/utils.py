@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .dense_qarray import DenseQArray, _dense_to_qobj
+from .dense_qarray import DenseQArray, _array_to_qobj_list, _dense_to_qobj
 from .layout import Layout, dense
 from .qarray import (
     QArray,
@@ -54,7 +54,7 @@ def asqarray(
         QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dia, ndiags=1
         [[ 1  ⋅]
          [ ⋅ -1]]
-        >>> dq.asqarray([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
+        >>> dq.asqarray([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
         QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
         [[[ 0.+0.j  1.+0.j]
           [ 1.+0.j  0.+0.j]]
@@ -83,14 +83,10 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
     elif isinstance(x, Qobj):
-        dims = _dims_from_qutip(dims)
-        x = x.full()
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
-        # the appropriate shape
-        return stack([_asdense(sub_x, dims=dims) for sub_x in x])
+        # todo: we should also capture dimension for nested list of Qobj
+        dims = _dims_from_qutip(x.dims)
 
-    x = jnp.asarray(x)
+    x = _to_jax(x)
     dims = _init_dims(x, dims)
     return DenseQArray(dims, x)
 
@@ -102,18 +98,13 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDI
         return x
     elif isinstance(x, DenseQArray):
         dims = x.dims
-        x = x.to_jax()
     elif isinstance(x, Qobj):
         # TODO: improve this by directly extracting the diags and offsets in case
         # the Qobj is already in sparse DIA format (only for QuTiP 5)
-        dims = _dims_from_qutip(dims)
-        x = x.full()
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
-        # the appropriate shape
-        return stack([_assparsedia(sub_x, dims=dims) for sub_x in x])
+        # todo: we should also capture dimension for nested list of Qobj
+        dims = _dims_from_qutip(x.dims)
 
-    x = jnp.asarray(x)
+    x = _to_jax(x)
     dims = _init_dims(x, dims)
     return _array_to_sparsedia(x, dims=dims)
 
@@ -268,13 +259,12 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [1.]
          [0.]]
 
-        # For a batched array:
-        # >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
-        # >>> rhos.shape
-        # (5, 16, 16)
-        # todo: temporary fix
-        # >>> len(dq.to_qutip(rhos))
-        # 5
+        For a batched array:
+        >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
+        >>> rhos.shape
+        (5, 16, 16)
+        >>> len(dq.to_qutip(rhos))
+        5
 
         Note that the tensor product structure is inferred automatically for qarrays. It
         can be specified with the `dims` argument for other types.
@@ -296,16 +286,12 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
         return _dense_to_qobj(x)
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
-    elif isinstance(x, Sequence) and all(isinstance(sub_x, QArray) for sub_x in x):
-        # TODO: generalize to any nested sequence of arbitrary qarray-like inputs with
-        # the appropriate shape
-        return [to_qutip(sub_x, dims=dims) for sub_x in x]
 
-    x = jnp.asarray(x)
+    x = _to_jax(x)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     dims = _init_dims(x, dims)
     dims = _dims_to_qutip(dims, x.shape)
-    return Qobj(x, dims=dims)
+    return _array_to_qobj_list(x, dims)
 
 
 def _warn_qarray_dims(x: QArrayLike, dims: tuple[int, ...] | None = None):
