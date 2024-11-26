@@ -13,7 +13,7 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
 
-__all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
+__all__ = ['TimeArray', 'constant', 'modulated', 'pwc', 'timecallable']
 
 
 def constant(array: ArrayLike) -> ConstantTimeArray:
