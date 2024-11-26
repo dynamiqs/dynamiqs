@@ -11,7 +11,7 @@ from .._checks import check_shape
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
 
-__all__ = ['wigner', 'wigner_mosaic', 'wigner_gif']
+__all__ = ['wigner', 'wigner_gif', 'wigner_mosaic']
 
 
 @optional_ax
