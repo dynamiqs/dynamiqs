@@ -11,11 +11,11 @@ from .qarrays.utils import to_jax
 from .solver import Solver
 
 __all__ = [
-    'SESolveResult',
+    'FloquetResult',
+    'MEPropagatorResult',
     'MESolveResult',
     'SEPropagatorResult',
-    'MEPropagatorResult',
-    'FloquetResult',
+    'SESolveResult',
 ]
 
 
