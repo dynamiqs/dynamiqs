@@ -199,3 +199,6 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+This project also includes code derived from QuTiP, licensed under the BSD 3-Clause
+License. The BSD 3-Clause License can be found in the `NOTICE` file.

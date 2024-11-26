@@ -16,7 +16,7 @@ from ._utils import _concatenate_sort, cdtype, obj_type_str
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
 from .qarrays.utils import asqarray
 
-__all__ = ['constant', 'pwc', 'modulated', 'timecallable', 'TimeArray']
+__all__ = ['TimeArray', 'constant', 'modulated', 'pwc', 'timecallable']
 
 
 def constant(qarray: QArrayLike) -> ConstantTimeArray:

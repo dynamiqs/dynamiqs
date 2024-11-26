@@ -57,7 +57,7 @@ def _is_batched_scalar(y: ArrayLike) -> bool:
     # check if a qarray-like object is a scalar or a set of scalars of shape (..., 1, 1)
     return isinstance(y, get_args(ScalarLike)) or (
         isinstance(y, get_args(ArrayLike))
-        and (y.ndim == 0 or y.ndim > 1 and y.shape[-2:] == (1, 1))
+        and (y.ndim == 0 or (y.ndim > 1 and y.shape[-2:] == (1, 1)))
     )
 
 

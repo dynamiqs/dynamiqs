@@ -6,7 +6,7 @@ import jax
 
 from ..qarrays.layout import dense, dia, set_global_layout
 
-__all__ = ['set_device', 'set_precision', 'set_matmul_precision', 'set_layout']
+__all__ = ['set_device', 'set_layout', 'set_matmul_precision', 'set_precision']
 
 
 def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
