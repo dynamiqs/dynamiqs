@@ -20,6 +20,7 @@ PATHS_TO_PARSE = [
     ('dynamiqs/gradient.py', 'dq.gradient'),
     ('dynamiqs/result.py', 'dq'),
     ('dynamiqs/options.py', 'dq'),
+    ('dynamiqs/qarrays/qarray.py', 'dq'),
     ('dynamiqs/qarrays/utils.py', 'dq'),
     # directories
     ('dynamiqs/plot', 'dq.plot'),
