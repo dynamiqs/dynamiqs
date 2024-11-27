@@ -93,35 +93,40 @@ class QArray(eqx.Module):
         addition/subtraction, element-wise multiplication and matrix multiplications
         with other qarray-like objects.
 
-    Note-: Shortcuts methods to use quantum utilities
+    Note: Shortcuts methods to use quantum utilities
         Many functions of the library can be called directly on a qarray rather than
         through the functional API. For example, you can use `x.dag()` instead of
-        `dq.dag(x)`. Here is the complete list of these shortcuts:
+        `dq.dag(x)`.
 
-        | QArray method    | Corresponding function call                          |
-        |------------------|------------------------------------------------------|
-        | `x.dag()`        | [`dq.dag(x)`][dynamiqs.dag]                          |
-        | `x.powm()`       | [`dq.powm(x)`][dynamiqs.powm]                        |
-        | `x.expm()`       | [`dq.expm(x)`][dynamiqs.expm]                        |
-        | `x.cosm()`       | [`dq.cosm(x)`][dynamiqs.cosm]                        |
-        | `x.sinm()`       | [`dq.sinm(x)`][dynamiqs.sinm]                        |
-        | `x.trace()`      | [`dq.trace(x)`][dynamiqs.trace]                      |
-        | `x.ptrace(keep)` | [`dq.ptrace(x, keep, dims=x.dims)`][dynamiqs.ptrace] |
-        | `x.norm()`       | [`dq.norm(x)`][dynamiqs.norm]                        |
-        | `x.unit()`       | [`dq.unit(x)`][dynamiqs.unit]                        |
-        | `x.isket()`      | [`dq.isket(x)`][dynamiqs.isket]                      |
-        | `x.isbra()`      | [`dq.isbra(x)`][dynamiqs.isbra]                      |
-        | `x.isdm()`       | [`dq.isdm(x)`][dynamiqs.isdm]                        |
-        | `x.isop()`       | [`dq.isop(x)`][dynamiqs.isop]                        |
-        | `x.isherm()`     | [`dq.isherm(x)`][dynamiqs.isherm]                    |
-        | `x.toket()`      | [`dq.toket(x)`][dynamiqs.toket]                      |
-        | `x.tobra()`      | [`dq.tobra(x)`][dynamiqs.tobra]                      |
-        | `x.todm()`       | [`dq.todm(x)`][dynamiqs.todm]                        |
-        | `x.proj()`       | [`dq.proj(x)`][dynamiqs.proj]                        |
-        | `x.to_qutip()`   | [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip]   |
-        | `x.to_jax()`     | [`dq.to_jax(x)`][dynamiqs.to_jax]                    |
-        | `x.to_numpy()`   | [`dq.to_numpy(x)`][dynamiqs.to_numpy]                |
-    """
+    Here is the list of qarray methods:
+
+    | Method                                                   | Description                                                    |
+    |----------------------------------------------------------|----------------------------------------------------------------|
+    | [`x.conj()`][dynamiqs.QArray.conj]                       | Returns the element-wise complex conjugate of the qarray.      |
+    | `x.dag()`                                                | Alias of [`dq.dag(x)`][dynamiqs.dag].                          |
+    | `x.powm()`                                               | Alias of [`dq.powm(x)`][dynamiqs.powm].                        |
+    | `x.expm()`                                               | Alias of [`dq.expm(x)`][dynamiqs.expm].                        |
+    | `x.cosm()`                                               | Alias of [`dq.cosm(x)`][dynamiqs.cosm].                        |
+    | `x.sinm()`                                               | Alias of [`dq.sinm(x)`][dynamiqs.sinm].                        |
+    | `x.trace()`                                              | Alias of [`dq.trace(x)`][dynamiqs.trace].                      |
+    | `x.ptrace(keep)`                                         | Alias of [`dq.ptrace(x, keep, dims=x.dims)`][dynamiqs.ptrace]. |
+    | `x.norm()`                                               | Alias of [`dq.norm(x)`][dynamiqs.norm].                        |
+    | `x.unit()`                                               | Alias of [`dq.unit(x)`][dynamiqs.unit].                        |
+    | `x.isket()`                                              | Alias of [`dq.isket(x)`][dynamiqs.isket].                      |
+    | `x.isbra()`                                              | Alias of [`dq.isbra(x)`][dynamiqs.isbra].                      |
+    | `x.isdm()`                                               | Alias of [`dq.isdm(x)`][dynamiqs.isdm].                        |
+    | `x.isop()`                                               | Alias of [`dq.isop(x)`][dynamiqs.isop].                        |
+    | `x.isherm()`                                             | Alias of [`dq.isherm(x)`][dynamiqs.isherm].                    |
+    | `x.toket()`                                              | Alias of [`dq.toket(x)`][dynamiqs.toket].                      |
+    | `x.tobra()`                                              | Alias of [`dq.tobra(x)`][dynamiqs.tobra].                      |
+    | `x.todm()`                                               | Alias of [`dq.todm(x)`][dynamiqs.todm].                        |
+    | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
+    | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
+    | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
+    | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
+    | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
+    | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    """  # noqa: E501
 
     # Subclasses should implement:
     # - the properties: dtype, layout, shape, mT
