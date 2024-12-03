@@ -119,18 +119,18 @@ Gradient w.r.t. alpha0: 1.0670
 
 $$
 \nabla_\theta\ \bar{n} = \begin{pmatrix}
-  \partial\bar{n} / \partial\omega \\
-  \partial\bar{n} / \partial\kappa \\
+  \partial\bar{n} / \partial\omega \\\\
+  \partial\bar{n} / \partial\kappa \\\\
   \partial\bar{n} / \partial\alpha_0
 \end{pmatrix}
 = \begin{pmatrix}
-  0\\
-  -\alpha_0^2 T e^{-\kappa T} \\
+  0 \\\\
+  -\alpha_0^2 T e^{-\kappa T} \\\\
   2 \alpha_0 e^{-\kappa T}
 \end{pmatrix}
 \approx \begin{pmatrix}
-  0.0 \\
-  -3.3520 \\
+  0.0 \\\\
+  -3.3520 \\\\
   1.0670
 \end{pmatrix}
 $$
