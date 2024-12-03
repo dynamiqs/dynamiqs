@@ -239,6 +239,10 @@ class SparseDIAQArray(QArray):
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return self.asdense().__array__(dtype=dtype, copy=copy)
 
+    def block_until_ready(self) -> QArray:
+        _ = self.diags.block_until_ready()
+        return self
+
     def __repr__(self) -> str:
         # === array representation with dots instead of zeros
         if jnp.issubdtype(self.dtype, jnp.complexfloating):

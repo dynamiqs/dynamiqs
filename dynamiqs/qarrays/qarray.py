@@ -132,10 +132,10 @@ class QArray(eqx.Module):
     # - the properties: dtype, layout, shape, mT
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
-    #                     _abs
+    #                     _abs, block_until_ready
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
-    #   - conversion methods: to_qutip, to_jax, __array__
+    #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
     #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, _pow, __getitem__
 
@@ -343,6 +343,10 @@ class QArray(eqx.Module):
 
     def to_numpy(self) -> np.ndarray:
         return np.asarray(self)
+
+    @abstractmethod
+    def block_until_ready(self) -> QArray:
+        pass
 
     def __repr__(self) -> str:
         return (

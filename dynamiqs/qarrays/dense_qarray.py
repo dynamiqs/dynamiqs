@@ -149,6 +149,10 @@ class DenseQArray(QArray):
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return np.asarray(self.data, dtype=dtype)
 
+    def block_until_ready(self) -> QArray:
+        _ = self.data.block_until_ready()
+        return self
+
     def __repr__(self) -> str:
         return super().__repr__() + f'\n{self.data}'
 
