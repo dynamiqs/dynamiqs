@@ -20,6 +20,28 @@ __all__ = ['QArray']
 
 
 def isqarraylike(x: Any) -> bool:
+    r"""Returns True if the input is a qarray-like object.
+
+    Args:
+        x: Any object.
+
+    Returns:
+        True if `x` is a numeric types (`bool`, `int`, `float`, `complex`), a JAX or
+            NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested sequence of these
+            types.
+
+    See also:
+        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like object into a
+            qarray.
+
+    Examples:
+        >>> dq.isqarraylike(1)
+        True
+        >>> dq.isqarraylike(qt.fock(5, 0))
+        True
+        >>> dq.isqarraylike([qt.fock(5, 0), qt.fock(5, 1)])
+        True
+    """
     if isinstance(x, get_args(_QArrayLike)):
         return True
     elif isinstance(x, Sequence):
