@@ -16,7 +16,7 @@ from qutip import Qobj
 
 from .layout import Layout
 
-__all__ = ['QArray', 'QArrayLike', 'isqarraylike']
+__all__ = ['QArray']
 
 
 def isqarraylike(x: Any) -> bool:
