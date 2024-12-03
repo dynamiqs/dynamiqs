@@ -9,7 +9,6 @@ from jax import Array
 
 from .._checks import check_shape
 from .._utils import on_cpu
-from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
 from ..qarrays.utils import _init_dims, asqarray, to_jax, tree_sum
 
@@ -470,7 +469,6 @@ def norm(x: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if isket(x) or isbra(x):
-        assert isinstance(x, DenseQArray)
         return jnp.sqrt((jnp.abs(x.to_jax()) ** 2).sum((-2, -1)))
     else:
         return trace(x).real
