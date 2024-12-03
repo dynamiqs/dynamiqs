@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from functools import reduce
+from functools import partial, reduce
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike
 
 from ..._checks import check_shape
 from ..._utils import on_cpu
 from ...qarrays.dense_qarray import DenseQArray
-from ...qarrays.qarray import QArray, QArrayLike
-from ...qarrays.utils import asqarray, to_jax
+from ...qarrays.qarray import QArray, QArrayLike, _to_jax_and_dims
+from ...qarrays.utils import _init_dims, asqarray, to_jax
 
 __all__ = [
     'bloch_coordinates',
@@ -239,19 +238,22 @@ def _hdim(x: QArrayLike) -> int:
     return x.shape[-2] if isket(x) else x.shape[-1]
 
 
-# @partial(jax.jit, static_argnums=(1, 2))
-def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> Array:
+@partial(jax.jit, static_argnums=(1, 2))
+def ptrace(
+    x: QArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...] | None = None
+) -> QArray:
     r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
-        x _(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra or
-            density matrix of a composite system.
+        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+            or density matrix of a composite system.
         keep _(int or tuple of ints)_: Dimensions to keep after partial trace.
-        dims _(tuple of ints)_: Dimensions of each subsystem in the composite system
-            Hilbert space tensor product.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
+            available, single Hilbert space `dims=(n,)` otherwise).
 
     Returns:
-        _(array of shape (..., m, m))_ Density matrix (with `m <= n`).
+        _(qarray of shape (..., m, m))_ Density matrix (with `m <= n`).
 
     Raises:
         ValueError: If `x` is not a ket, bra or density matrix.
@@ -264,18 +266,23 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
 
     Examples:
         >>> psi_abc = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
+        >>> psi_abc.dims
+        (3, 4, 5)
         >>> psi_abc.shape
         (60, 1)
-
-        # todo: temporary fix
-        # >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
-        # >>> rho_a.shape
-        # (3, 3)
-        # >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
-        # >>> rho_bc.shape
-        # (20, 20)
+        >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
+        >>> rho_a.dims
+        (3,)
+        >>> rho_a.shape
+        (3, 3)
+        >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
+        >>> rho_bc.dims
+        (4, 5)
+        >>> rho_bc.shape
+        (20, 20)
     """
-    x = jnp.asarray(x)
+    x, xdims = _to_jax_and_dims(x)
+    dims = _init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     # convert keep and dims to numpy arrays
@@ -323,8 +330,11 @@ def ptrace(x: ArrayLike, keep: int | tuple[int, ...], dims: tuple[int, ...]) -> 
         eq = f'...{eq1}{eq2}'  # e.g. '...abcade'
         x = jnp.einsum(eq, x)  # e.g. (..., 2, 5, 2, 5)
 
-    nkeep = np.prod(dims[keep])  # e.g. 10
-    return x.reshape(*bshape, nkeep, nkeep)  # e.g. (..., 10, 10)
+    new_dims = tuple(dims[keep].tolist())
+    prod_new_dims = np.prod(new_dims)  # e.g. 10
+    x = x.reshape(*bshape, prod_new_dims, prod_new_dims)  # e.g. (..., 10, 10)
+
+    return asqarray(x, dims=new_dims)
 
 
 def tensor(*args: QArrayLike) -> QArray:
