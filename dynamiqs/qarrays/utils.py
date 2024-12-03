@@ -11,14 +11,7 @@ from qutip import Qobj
 from .._checks import check_shape
 from .dense_qarray import DenseQArray, _array_to_qobj_list, _dense_to_qobj
 from .layout import Layout, dense
-from .qarray import (
-    QArray,
-    QArrayLike,
-    _dims_from_qutip,
-    _dims_to_qutip,
-    _to_jax,
-    _to_numpy,
-)
+from .qarray import QArray, QArrayLike, _to_jax, _to_jax_and_dims, _to_numpy
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
@@ -36,9 +29,9 @@ def asqarray(
 
     Args:
         x: Object to convert.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the Hilbert
-            space tensor product. Defaults to `None` (a single system with the same
-            dimension as `x`).
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
+            available, single Hilbert space `dims=(n,)` otherwise).
         layout _(dq.dense, dq.dia or None)_: Matrix layout. If `None`, the default
             layout is `dq.dense`, except for qarrays that are directly returned.
 
@@ -70,42 +63,30 @@ def asqarray(
 
     layout = dense if layout is None else layout
     if layout is dense:
-        return _asdense(x, dims=dims)
+        return _asdense(x, dims)
     else:
-        return _assparsedia(x, dims=dims)
+        return _assparsedia(x, dims)
 
 
-def _asdense(x: QArrayLike, dims: tuple[int, ...] | None = None) -> DenseQArray:
-    _warn_qarray_dims(x, dims)
-
+def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
     if isinstance(x, DenseQArray):
         return x
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
-    elif isinstance(x, Qobj):
-        # todo: we should also capture dimension for nested list of Qobj
-        dims = _dims_from_qutip(x.dims)
 
-    x = _to_jax(x)
-    dims = _init_dims(x, dims)
+    x, xdims = _to_jax_and_dims(x)
+    dims = _init_dims(xdims, dims, x.shape)
     return DenseQArray(dims, x)
 
 
-def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None = None) -> SparseDIAQArray:
-    _warn_qarray_dims(x, dims)
-
+def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray:
+    # TODO: improve this by directly extracting the diags and offsets in case
+    # the Qobj is already in sparse DIA format (only for QuTiP 5)
     if isinstance(x, SparseDIAQArray):
         return x
-    elif isinstance(x, DenseQArray):
-        dims = x.dims
-    elif isinstance(x, Qobj):
-        # TODO: improve this by directly extracting the diags and offsets in case
-        # the Qobj is already in sparse DIA format (only for QuTiP 5)
-        # todo: we should also capture dimension for nested list of Qobj
-        dims = _dims_from_qutip(x.dims)
 
-    x = _to_jax(x)
-    dims = _init_dims(x, dims)
+    x, xdims = _to_jax_and_dims(x)
+    dims = _init_dims(xdims, dims, x.shape)
     return _array_to_sparsedia(x, dims=dims)
 
 
@@ -239,9 +220,9 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     Args:
         x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,
             density matrix or operator.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the Hilbert
-            space tensor product. Defaults to `None` (a single system with the same
-            dimension as `x`).
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
+            available, single Hilbert space `dims=(n,)` otherwise).
 
     Returns:
         QuTiP Qobj or list of QuTiP Qobj.
@@ -278,8 +259,6 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
-    _warn_qarray_dims(x, dims)
-
     if isinstance(x, Qobj):
         return x
     elif isinstance(x, DenseQArray):
@@ -287,29 +266,10 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
 
-    x = _to_jax(x)
+    x, xdims = _to_jax_and_dims(x)
+    dims = _init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
-    dims = _init_dims(x, dims)
-    dims = _dims_to_qutip(dims, x.shape)
     return _array_to_qobj_list(x, dims)
-
-
-def _warn_qarray_dims(x: QArrayLike, dims: tuple[int, ...] | None = None):
-    if dims is not None:
-        if isinstance(x, QArray) and x.dims != dims:
-            warnings.warn(
-                f'Argument `x` is already a QArray with dims={x.dims}, but dims '
-                f'were also provided as input with dims={dims}. Ignoring the '
-                'provided `dims` and proceeding with `x.dims`.',
-                stacklevel=2,
-            )
-        elif isinstance(x, Qobj) and _dims_from_qutip(x.dims) != dims:
-            warnings.warn(
-                f'Argument `x` is already a Qobj with dims={x.dims}, but dims '
-                f'were also provided as input with dims={dims}. Ignoring the '
-                'provided `dims` and proceeding with `x.dims`.',
-                stacklevel=2,
-            )
 
 
 def sparsedia_from_dict(
@@ -322,9 +282,9 @@ def sparsedia_from_dict(
     Args:
         offsets_diags: Dictionary where keys are offsets and values are diagonals of
             shapes _(..., n-|offset|)_ with a common batch shape between all diagonals.
-        dims _(tuple of ints or None)_: Dimensions of each subsystem in the Hilbert
-            space tensor product. Defaults to `None` (a single system with the same
-            dimension as `x`).
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (single Hilbert
+            space `dims=(n,)`).
         dtype: Data type of the array. If `None`, the data type is inferred from the
             diagonals.
 
@@ -363,30 +323,37 @@ def sparsedia_from_dict(
     n = diags.shape[-1]
     shape = (*diags.shape[:-2], n, n)
     dims = (n,) if dims is None else dims
-    _check_dims_match_shape(shape, dims)
+    _assert_dims_match_shape(dims, shape)
 
     return SparseDIAQArray(diags=diags, offsets=offsets, dims=dims)
 
 
-def _init_dims(x: Array, dims: tuple[int, ...] | None = None) -> tuple[int, ...]:
+def _init_dims(
+    xdims: tuple[int, ...] | None, dims: tuple[int, ...] | None, shape: tuple[int, ...]
+) -> tuple[int, ...]:
+    # xdims: native dims from the original object
+    # dims: dims specified by the user
+    # shape: object shape
     if dims is None:
-        dims = (x.shape[-2],) if x.shape[-2] != 1 else (x.shape[-1],)
+        dims = (shape[-2] if shape[-2] != 1 else shape[-1],) if xdims is None else xdims
+    elif xdims is not None and xdims != dims:
+        # warn if `dims` argument is specified but unused
+        warnings.warn(
+            f'Argument `x` is already an object with `x.dims={xdims}`, but'
+            f' different `dims={dims}` were specified as input. Ignoring the '
+            f'provided `dims` and proceeding with the object `x.dims`.',
+            stacklevel=2,
+        )
 
-    _check_dims_match_shape(x.shape, dims)
-
-    # TODO: check if is bra, ket, dm or op
-    # if not (isbra(data) or isket(data) or isdm(data) or isop(data)):
-    # raise ValueError(
-    #     f'DenseQArray data must be a bra, a ket, a density matrix '
-    #     f'or and operator. Got array with size {data.shape}'
-    # )
+    _assert_dims_match_shape(dims, shape)
 
     return dims
 
 
-def _check_dims_match_shape(shape: tuple[int, ...], dims: tuple[int, ...]):
+def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
+    # check that `dims` and `shape` are compatible
     if np.prod(dims) != np.max(shape[-2:]):
         raise ValueError(
-            'The provided `dims` are incompatible with the input array. '
-            f'Got dims={dims} and shape={shape}.'
+            f'Argument `dims={dims}` is incompatible with the input shape'
+            f' `shape={shape}`.'
         )
