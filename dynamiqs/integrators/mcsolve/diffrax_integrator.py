@@ -63,8 +63,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             warnings.simplefilter('ignore', UserWarning)
 
             # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(unit(y))  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=tsave, fn=fn)  # save solution regularly
+            subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
             subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
             saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
@@ -99,6 +98,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
     def run(self):
         # === run no jump, extract no-jump probability
         no_jump_solution = self._run(self.y0, self.ts, 0.0)
+        no_jump_saved = jax.vmap(self.save)(unit(no_jump_solution.ys[0]))
         final_no_jump_state = no_jump_solution.ys[1][0]
         no_jump_prob = norm(final_no_jump_state) ** 2
 
@@ -109,7 +109,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         num_jumps = jump_state.num_jumps
 
         # === save and postprocess results
-        no_jump_saved = self.postprocess_saved(*no_jump_solution.ys)
+        no_jump_saved = self.postprocess_saved(no_jump_saved, no_jump_solution.ys[1])
         no_jump_result = self.traj_result(
             no_jump_saved, infos=self.infos(no_jump_solution.stats)
         )
@@ -136,7 +136,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         # allocate memory for the state that is updated during the loop
         save_state = SaveState(
             ts=first_result.ts[0],
-            ys=first_result.ys[0],
+            ys=jax.vmap(self.save)(unit(first_result.ys[0])),
             save_index=save_index,
             jump_times=jnp.full(self.options.max_jumps, jnp.nan),
         )
@@ -180,7 +180,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             _rand = jax.random.uniform(_rand_key)
             result_after_jump = self._run(psi_after_jump, new_times, _rand)
             # extract saved y values to interpolate, replace infs with nans
-            psis_after_jump = result_after_jump.ys[0].ysave
+            psis_after_jump = result_after_jump.ys[0]
             psi_inf_to_nan = jnp.where(
                 jnp.isinf(psis_after_jump), jnp.nan, psis_after_jump
             )
@@ -207,7 +207,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
                     _ts = __save_state.ts.at[__save_state.save_index].set(_t)
                     _ys = jtu.tree_map(
                         lambda __y, __ys: __ys.at[__save_state.save_index].set(__y),
-                        self.save(_y),
+                        self.save(unit(_y)),
                         __save_state.ys,
                     )
                     return SaveState(
