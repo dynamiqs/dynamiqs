@@ -115,7 +115,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         )
 
         jump_saved = self.postprocess_saved(
-            jump_state.save_state.ys, jump_state.final_state
+            jump_state.save_state.ys, [jump_state.final_state]
         )
         # TODO save stats for jumps
         jump_result = self.traj_result(jump_saved)
