@@ -8,8 +8,7 @@ from jax.typing import ArrayLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .quantum_utils import isbra, isket, isop
-from .quantum_utils.general import _hdim
+from .general import _hdim, isbra, isket, isop
 
 __all__ = ['set_device', 'set_matmul_precision', 'set_precision', 'to_qutip']
 

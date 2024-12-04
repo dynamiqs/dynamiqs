@@ -11,7 +11,7 @@ from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
 from ...result import Result
-from ...utils.quantum_utils.general import dag
+from ...utils.general import dag
 from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
 from .interfaces import SEInterface, MEInterface

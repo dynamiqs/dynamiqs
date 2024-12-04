@@ -4,7 +4,7 @@ import jax
 from jax import Array
 from jaxtyping import PRNGKeyArray
 
-from .utils.quantum_utils import dag, unit
+from .utils.general import dag, unit
 
 __all__ = ['complex', 'dm', 'herm', 'ket', 'psd', 'real']
 

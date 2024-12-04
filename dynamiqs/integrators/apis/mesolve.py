@@ -25,8 +25,7 @@ from ...solver import (
     Tsit5,
 )
 from ...time_array import TimeArray
-from ...utils.quantum_utils import todm
-from ...utils.quantum_utils.general import isket
+from ...utils.general import isket, todm
 from .._utils import (
     _astimearray,
     cartesian_vmap,

@@ -4,7 +4,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from dynamiqs import coherent, plot, todm
-from dynamiqs.utils.quantum_utils.wigner import _diag_element, wigner
+from dynamiqs.utils.wigner_utils import _diag_element, wigner
 
 # TODO : add comparison with analytical wigner for coherent states and cat states
 

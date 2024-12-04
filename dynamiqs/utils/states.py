@@ -10,8 +10,8 @@ from jax.typing import ArrayLike
 
 from .._checks import check_type_int
 from .._utils import cdtype
+from .general import tensor, todm
 from .operators import displace
-from .quantum_utils import tensor, todm
 
 __all__ = [
     'basis',
