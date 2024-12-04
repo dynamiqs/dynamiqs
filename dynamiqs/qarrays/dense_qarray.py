@@ -80,9 +80,7 @@ class DenseQArray(QArray):
     def ptrace(self, *keep: int) -> QArray:
         from ..utils.quantum_utils.general import ptrace
 
-        dims = tuple(self.dims[dim] for dim in keep)
-        data = ptrace(self.data, keep, self.dims)
-        return DenseQArray(dims, data)
+        return ptrace(self.data, keep, self.dims)
 
     def powm(self, n: int) -> QArray:
         data = jnp.linalg.matrix_power(self.data, n)
