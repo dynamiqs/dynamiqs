@@ -51,11 +51,6 @@ def _get_dims(x: QArrayLike) -> tuple[int, ...] | None:
         return None
 
 
-def _to_jax_and_dims(x: QArrayLike) -> tuple[Array, tuple[int, ...]]:
-    dims = _get_dims(x)
-    return _to_jax(x), dims
-
-
 def _to_numpy(x: QArrayLike) -> np.ndarray:
     if isinstance(x, QArray):
         return x.to_numpy()

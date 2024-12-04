@@ -11,7 +11,7 @@ from qutip import Qobj
 from .._checks import check_shape
 from .dense_qarray import DenseQArray, _array_to_qobj_list, _dense_to_qobj
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _to_jax, _to_jax_and_dims, _to_numpy
+from .qarray import QArray, QArrayLike, _get_dims, _to_jax, _to_numpy
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
@@ -74,7 +74,8 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_dense(x)
 
-    x, xdims = _to_jax_and_dims(x)
+    xdims = _get_dims(x)
+    x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
     return DenseQArray(dims, x)
 
@@ -85,7 +86,8 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray
     if isinstance(x, SparseDIAQArray):
         return x
 
-    x, xdims = _to_jax_and_dims(x)
+    xdims = _get_dims(x)
+    x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
     return _array_to_sparsedia(x, dims=dims)
 
@@ -266,7 +268,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     elif isinstance(x, SparseDIAQArray):
         return _sparsedia_to_qobj(x)
 
-    x, xdims = _to_jax_and_dims(x)
+    xdims = _get_dims(x)
+    x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     return _array_to_qobj_list(x, dims)
