@@ -250,6 +250,7 @@ nav:
               - wigner: python_api/utils/quantum_utils/wigner.md
           - QArray utilities:
               - asqarray: python_api/qarrays/utils/asqarray.md
+              - isqarraylike: python_api/qarrays/utils/isqarraylike.md
               - stack: python_api/qarrays/utils/stack.md
               - to_jax: python_api/qarrays/utils/to_jax.md
               - to_numpy: python_api/qarrays/utils/to_numpy.md

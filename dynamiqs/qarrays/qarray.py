@@ -16,10 +16,32 @@ from qutip import Qobj
 
 from .layout import Layout
 
-__all__ = ['QArray', 'QArrayLike', 'isqarraylike']
+__all__ = ['QArray']
 
 
 def isqarraylike(x: Any) -> bool:
+    r"""Returns True if the input is a qarray-like object.
+
+    Args:
+        x: Any object.
+
+    Returns:
+        True if `x` is a numeric types (`bool`, `int`, `float`, `complex`), a JAX or
+            NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested sequence of these
+            types.
+
+    See also:
+        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like object into a
+            qarray.
+
+    Examples:
+        >>> dq.isqarraylike(1)
+        True
+        >>> dq.isqarraylike(qt.fock(5, 0))
+        True
+        >>> dq.isqarraylike([qt.fock(5, 0), qt.fock(5, 1)])
+        True
+    """
     if isinstance(x, get_args(_QArrayLike)):
         return True
     elif isinstance(x, Sequence):
@@ -78,7 +100,12 @@ class QArray(eqx.Module):
     - `SparseDIAQArray`: Dynamiqs sparse diagonal format, storing only the non-zero
         diagonals.
 
-    Use the constructor [`dq.asqarray()`][dynamiqs.asqarray] to build a qarray.
+    Note: Constructing a new qarray from an other array type
+        Use the function [`dq.asqarray()`][dynamiqs.asqarray] to create a qarray from a
+        qarray-like object. Objects that can be converted to a `QArray` are of type
+        `dq.QArrayLike`. This includes all numeric types (`bool`, `int`, `float`,
+        `complex`), a JAX or NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested
+        sequence of these types. See also [`dq.isqarraylike()`][dynamiqs.isqarraylike].
 
     Attributes:
         dtype _(numpy dtype)_: Data type.
