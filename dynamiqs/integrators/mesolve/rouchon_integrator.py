@@ -7,9 +7,9 @@ import diffrax as dx
 import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
-from jax import Array
 
-from ...utils.quantum_utils.general import dag
+from ...qarrays.qarray import QArray
+from ...qarrays.utils import stack
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import FixedStepDiffraxIntegrator
 from ..core.save_mixin import SolveSaveMixin
@@ -64,26 +64,33 @@ class MESolveRouchon1Integrator(
     diffrax_solver = Rouchon1DXSolver()
 
     @property
-    def Id(self) -> Array:
+    def Id(self) -> QArray:
         return jnp.eye(self.H.shape[-1], dtype=self.H.dtype)
 
     @property
     def terms(self) -> dx.AbstractTerm:
-        def kraus_map(t0, t1, y0):  # noqa: ANN202
+        def kraus_map_dissipative(t0, t1, y0):  # noqa: ANN202
             # The Rouchon update for a single loss channel is:
-            #   rho_{k+1} = M0 @ rho @ M0d + \sum M1 @ rho @ M1d
+            #   rho_{k+1} = M0 @ rho @ M0d + M1 @ rho @ M1d
             # with
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
 
-            L = self.L(t0)
-            Ld = dag(L)
+            delta_t = t1 - t0
+            L = stack(self.L(t0))
+            Ld = L.dag()
             LdL = (Ld @ L).sum(0)
 
-            delta_t = t1 - t0
             M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL) * delta_t
-            Mks = L * jnp.sqrt(delta_t)
+            Mk = jnp.sqrt(delta_t) * L
 
-            return M0 @ y0 @ dag(M0) + jnp.sum(Mks @ y0 @ dag(Mks), axis=0)
+            return M0 @ y0 @ M0.dag() + (Mk @ y0 @ Mk.dag()).sum(0)
+
+        def kraus_map_unitary(t0, t1, y0):  # noqa: ANN202
+            delta_t = t1 - t0
+            M0 = self.Id - 1j * self.H(t0) * delta_t
+            return M0 @ y0 @ M0.dag()
+
+        kraus_map = kraus_map_dissipative if len(self.Ls) > 0 else kraus_map_unitary
 
         return AbstractRouchonTerm(kraus_map)

@@ -5,13 +5,13 @@ from abc import abstractmethod
 
 import diffrax as dx
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
+from ...qarrays.utils import stack
+from .abstract_integrator import BaseIntegrator
 from ...result import Result
-from ...utils.quantum_utils.general import dag
 from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
 from .interfaces import SEInterface, MEInterface
@@ -219,15 +219,15 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # induced on the dynamics.
 
         def vector_field_dissipative(t, y, _):  # noqa: ANN001, ANN202
-            L = self.L(t)
-            Ld = dag(L)
+            L = stack(self.L(t))
+            Ld = L.dag()
             LdL = (Ld @ L).sum(0)
             tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (L @ y @ Ld).sum(0)
-            return tmp + dag(tmp)
+            return tmp + tmp.dag()
 
         def vector_field_unitary(t, y, _):  # noqa: ANN001, ANN202
             tmp = -1j * self.H(t) @ y
-            return tmp + dag(tmp)
+            return tmp + tmp.dag()
 
         vf = vector_field_dissipative if len(self.Ls) > 0 else vector_field_unitary
         return dx.ODETerm(vf)
