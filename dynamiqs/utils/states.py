@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from math import prod
 
+import equinox as eqx
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jax.typing import ArrayLike
 
@@ -12,14 +14,14 @@ from .operators import displace
 from .quantum_utils import tensor, todm
 
 __all__ = [
-    'fock',
-    'fock_dm',
     'basis',
     'basis_dm',
     'coherent',
     'coherent_dm',
-    'ground',
     'excited',
+    'fock',
+    'fock_dm',
+    'ground',
 ]
 
 
@@ -72,7 +74,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
         >>> dq.fock((3, 2), number).shape
         (4, 6, 1)
     """
-    dim = jnp.asarray(dim)
+    dim = np.asarray(dim)
     number = jnp.asarray(number)
     check_type_int(dim, 'dim')
     check_type_int(number, 'number')
@@ -94,26 +96,26 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
         )
 
     # check if 0 <= number[..., i] < dim[i] for all i
-    if jnp.any(dim - number <= 0):
-        raise ValueError(
-            'Argument `number` must be in the range [0, dim[i]) for each mode i:'
-            ' 0 <= number[..., i] < dim[i].'
-        )
+    number = eqx.error_if(
+        number,
+        dim - number <= 0,
+        'Argument `number` must be in the range [0, dim[i]) for each mode i:'
+        ' 0 <= number[..., i] < dim[i].',
+    )
 
     # compute all kets
-    _vectorized_fock = jnp.vectorize(_fock, signature='(ndim),(ndim)->(prod_ndim,1)')
-    return _vectorized_fock(dim, number)
+    def _fock(number: Array) -> Array:
+        # return the tensor product of Fock states |n0> x |n1> x ... x |nf> where dim
+        # has shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
+        # this is the unbatched version of fock()
+        idx = 0
+        for d, n in zip(dim, number):
+            idx = d * idx + n
+        ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
+        return ket.at[idx].set(1.0)
 
-
-def _fock(dim: Array, number: Array) -> Array:
-    # return the tensor product of Fock states |n0> x |n1> x ... x |nf> where dim has
-    # shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
-    # this is the unbatched version of fock()
-    idx = 0
-    for d, n in zip(dim, number):
-        idx = d * idx + n
-    ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
-    return ket.at[idx].set(1.0)
+    _vectorized_fock = jnp.vectorize(_fock, signature='(ndim)->(prod_ndim,1)')
+    return _vectorized_fock(number)
 
 
 def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> Array:
@@ -227,7 +229,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike) -> Array:
         >>> dq.coherent((4, 6), alpha).shape
         (2, 24, 1)
     """
-    dim = jnp.asarray(dim)
+    dim = np.asarray(dim)
     alpha = jnp.asarray(alpha)
     check_type_int(dim, 'dim')
 

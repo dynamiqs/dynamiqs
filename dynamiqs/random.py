@@ -6,7 +6,7 @@ from jaxtyping import PRNGKeyArray
 
 from .utils.quantum_utils import dag, unit
 
-__all__ = ['real', 'complex', 'herm', 'psd', 'dm', 'ket']
+__all__ = ['complex', 'dm', 'herm', 'ket', 'psd', 'real']
 
 
 def real(

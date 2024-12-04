@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
+from jaxtyping import Scalar
 from jax.random import PRNGKey
 from optimistix import AbstractRootFinder
 
@@ -25,6 +27,9 @@ class MEInterface(eqx.Module):
     H: TimeArray
     Ls: list[TimeArray]
 
+    def L(self, t: Scalar) -> Array:
+        return jnp.stack([L(t) for L in self.Ls])  # (nLs, n, n)
+
 
 class MCInterface(eqx.Module):
     """Interface for the Monte-Carlo jump unraveling of the master equation."""
@@ -33,7 +38,6 @@ class MCInterface(eqx.Module):
     Ls: list[TimeArray]
     keys: PRNGKey
     root_finder: AbstractRootFinder | None
-
 
 class SolveInterface(eqx.Module):
     Es: Array

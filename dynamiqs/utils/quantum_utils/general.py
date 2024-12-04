@@ -12,34 +12,34 @@ from ..._checks import check_shape
 from ..._utils import on_cpu
 
 __all__ = [
-    'dag',
-    'powm',
-    'expm',
+    'bloch_coordinates',
+    'braket',
     'cosm',
-    'sinm',
-    'trace',
-    'tracemm',
-    'ptrace',
-    'tensor',
-    'expect',
-    'norm',
-    'unit',
+    'dag',
     'dissipator',
-    'lindbladian',
-    'isket',
+    'entropy_vn',
+    'expect',
+    'expm',
+    'fidelity',
     'isbra',
     'isdm',
-    'isop',
     'isherm',
-    'toket',
+    'isket',
+    'isop',
+    'lindbladian',
+    'norm',
+    'overlap',
+    'powm',
+    'proj',
+    'ptrace',
+    'sinm',
+    'tensor',
     'tobra',
     'todm',
-    'proj',
-    'braket',
-    'overlap',
-    'fidelity',
-    'entropy_vn',
-    'bloch_coordinates',
+    'toket',
+    'trace',
+    'tracemm',
+    'unit',
 ]
 
 
@@ -490,6 +490,10 @@ def dissipator(L: ArrayLike, rho: ArrayLike) -> Array:
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
 
+    See also:
+        - [`dq.sdissipator()`][dynamiqs.sdissipator]: returns the dissipation
+            superoperator in matrix form (vectorized).
+
     Examples:
         >>> L = dq.destroy(4)
         >>> rho = dq.fock_dm(4, 2)
@@ -531,6 +535,10 @@ def lindbladian(H: ArrayLike, jump_ops: ArrayLike, rho: ArrayLike) -> Array:
 
     Returns:
         _(array of shape (..., n, n))_ Resulting operator (it is not a density matrix).
+
+    See also:
+        - [`dq.slindbladian()`][dynamiqs.slindbladian]: returns the Lindbladian
+            superoperator in matrix form (vectorized).
 
     Examples:
         >>> a = dq.destroy(4)
