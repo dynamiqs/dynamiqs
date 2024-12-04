@@ -11,7 +11,7 @@ from qutip import Qobj
 from .._checks import check_shape
 from .dense_qarray import DenseQArray, _array_to_qobj_list, _dense_to_qobj
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _get_dims, _to_jax, _to_numpy
+from .qarray import QArray, QArrayLike, _get_dims, _to_jax, _to_numpy, isqarraylike
 from .sparsedia_qarray import (
     SparseDIAQArray,
     _array_to_sparsedia,
@@ -19,13 +19,21 @@ from .sparsedia_qarray import (
     _sparsedia_to_qobj,
 )
 
-__all__ = ['asqarray', 'sparsedia_from_dict', 'stack', 'to_jax', 'to_numpy', 'to_qutip']
+__all__ = [
+    'asqarray',
+    'sparsedia_from_dict',
+    'stack',
+    'to_jax',
+    'to_numpy',
+    'to_qutip',
+    'isqarraylike',
+]
 
 
 def asqarray(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
-    """Convert a qarray-like object into a qarray.
+    """Converts a qarray-like object into a qarray.
 
     Args:
         x: Object to convert.
@@ -37,6 +45,10 @@ def asqarray(
 
     Returns:
         Qarray representation of the input.
+
+    See also:
+        - [`dq.isqarraylike()`][dynamiqs.isqarraylike]: returns True if the input is
+            a qarray-like object.
 
     Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
