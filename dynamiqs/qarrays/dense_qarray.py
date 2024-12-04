@@ -11,14 +11,7 @@ from qutip import Qobj
 
 from .._utils import _is_batched_scalar
 from .layout import Layout, dense
-from .qarray import (
-    QArray,
-    QArrayLike,
-    _dims_to_qutip,
-    _in_last_two_dims,
-    _to_jax,
-    isqarraylike,
-)
+from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
 
 if TYPE_CHECKING:
     from .sparse_dia_qarray import SparseDIAQArray
@@ -30,11 +23,19 @@ _bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
 
 
 def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
-    dims = _dims_to_qutip(x.dims, x.shape)
-    return _array_to_qobj_list(x.to_jax(), dims)
+    return _array_to_qobj_list(x.to_jax(), x.dims)
 
 
 def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
+    # convert dims to qutip
+    dims = list(dims)
+    if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
+        dims = [dims, [1] * len(dims)]
+    elif x.shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
+        dims = [[1] * len(dims), dims]
+    elif x.shape[-1] == x.shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
+        dims = [dims, dims]
+
     return jax.tree.map(
         lambda x: Qobj(x, dims=dims),
         x.tolist(),

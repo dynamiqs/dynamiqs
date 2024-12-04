@@ -60,6 +60,19 @@ def _to_jax(x: QArrayLike) -> Array:
         return jnp.asarray(x)
 
 
+def _get_dims(x: QArrayLike) -> tuple[int, ...] | None:
+    if isinstance(x, Sequence):
+        sub_dims = [_get_dims(sub_x) for sub_x in x]
+        return sub_dims[0] if all(sd == sub_dims[0] for sd in sub_dims) else None
+    if isinstance(x, QArray):
+        return x.dims
+    elif isinstance(x, Qobj):
+        dims = np.max(x.dims, axis=0)
+        return tuple(dims.tolist())
+    else:
+        return None
+
+
 def _to_numpy(x: QArrayLike) -> np.ndarray:
     if isinstance(x, QArray):
         return x.to_numpy()
@@ -69,22 +82,6 @@ def _to_numpy(x: QArrayLike) -> np.ndarray:
         return np.asarray([_to_numpy(sub_x) for sub_x in x])
     else:
         return np.asarray(x)
-
-
-def _dims_to_qutip(dims: tuple[int, ...], shape: tuple[int, ...]) -> list[list[int]]:
-    dims = list(dims)
-    if shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
-        dims = [dims, [1] * len(dims)]
-    elif shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
-        dims = [[1] * len(dims), dims]
-    elif shape[-1] == shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
-        dims = [dims, dims]
-    return dims
-
-
-def _dims_from_qutip(dims: list[list[int]]) -> tuple[int, ...]:
-    dims = np.max(dims, axis=0)
-    return tuple(dims.tolist())
 
 
 class QArray(eqx.Module):
