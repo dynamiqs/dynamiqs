@@ -38,7 +38,7 @@ def mcsolve(
     keys: ArrayLike = jax.random.split(jax.random.key(31), num=10),  # noqa: B008
     exp_ops: list[ArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
-    root_finder: AbstractRootFinder = optx.Newton(1e-5, 1e-5, optx.rms_norm),  # noqa: B008
+    root_finder: AbstractRootFinder | None = optx.Newton(1e-5, 1e-5, optx.rms_norm),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MCSolveResult:
@@ -185,7 +185,7 @@ def _vectorized_mcsolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        psi0 = jnp.broadcast_to(psi0, (*bshape, n, n))
+        psi0 = jnp.broadcast_to(psi0, (*bshape, n, 1))
         # vectorize the function
         f = multi_vmap(_mcsolve, in_axes, out_axes, nvmap)
 
