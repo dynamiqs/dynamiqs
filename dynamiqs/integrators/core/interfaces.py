@@ -3,8 +3,8 @@ from __future__ import annotations
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import Scalar
 from jax.random import PRNGKey
+from jaxtyping import Scalar
 from optimistix import AbstractRootFinder
 
 from ...options import Options
@@ -38,6 +38,7 @@ class MCInterface(eqx.Module):
     Ls: list[TimeArray]
     keys: PRNGKey
     root_finder: AbstractRootFinder | None
+
 
 class SolveInterface(eqx.Module):
     Es: Array

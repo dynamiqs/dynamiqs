@@ -16,13 +16,8 @@ from ...gradient import Gradient
 from ...options import Options
 from ...result import MCSolveResult
 from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import Shape, TimeArray
-from .._utils import (
-    _astimearray,
-    _cartesian_vectorize,
-    _flat_vectorize,
-    get_integrator_class,
-)
+from ...time_array import TimeArray
+from .._utils import _astimearray, cartesian_vmap, get_integrator_class, multi_vmap
 from ..mcsolve.diffrax_integrator import (
     MCSolveDopri5Integrator,
     MCSolveDopri8Integrator,
@@ -36,7 +31,7 @@ from ..mcsolve.diffrax_integrator import (
 
 def mcsolve(
     H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    Ls: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
     tsave: ArrayLike,
     *,
@@ -70,13 +65,13 @@ def mcsolve(
         [`dq.timecallable()`](/python_api/time_array/timecallable.html).
 
     Quote: Running multiple simulations concurrently
-        The Hamiltonian `H`, the jump operators `jump_ops` and the
+        The Hamiltonian `H`, the jump operators `Ls` and the
         initial state `psi0` can be batched to solve multiple monte-carlo equations
         concurrently. All other arguments are common to every batch.
 
     Args:
         H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
+        Ls _(list of array-like or time-array, of shape (nL, n, n))_: List of
             jump operators.
         psi0 _(array-like of shape (bpsi?, n, 1))_: Initial state.
         tsave _(array-like of shape (nt,))_: Times at which the states and expectation
@@ -125,23 +120,23 @@ def mcsolve(
     """  # noqa E501
     # === convert arguments
     H = _astimearray(H)
-    jump_ops = [_astimearray(L) for L in jump_ops]
+    Ls = [_astimearray(L) for L in Ls]
     psi0 = jnp.asarray(psi0, dtype=cdtype())
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
 
     # === check arguments
-    _check_mcsolve_args(H, jump_ops, psi0, tsave, exp_ops)
+    _check_mcsolve_args(H, Ls, psi0, tsave, exp_ops)
 
     return _vectorized_mcsolve(
-        H, jump_ops, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options
+        H, Ls, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options
     )
 
 
 def _vectorized_mcsolve(
     H: TimeArray,
-    jump_ops: list[TimeArray],
+    Ls: list[TimeArray],
     psi0: Array,
     tsave: Array,
     keys: Array,
@@ -152,51 +147,55 @@ def _vectorized_mcsolve(
     options: Options,
 ) -> MCSolveResult:
     # === vectorize function
-    # we vectorize over H, jump_ops, and psi0. keys are vectorized over inside of run().
-
-    out_axes = MCSolveResult(False, False, False, False, 0, 0, 0, 0, 0)
-
-    if not options.cartesian_batching:
-        broadcast_shape = jnp.broadcast_shapes(
-            H.shape[:-2], psi0.shape[:-2], *[jump_op.shape[:-2] for jump_op in jump_ops]
-        )
-
-        def broadcast(x: TimeArray) -> TimeArray:
-            return x.broadcast_to(*(broadcast_shape + x.shape[-2:]))
-
-        H = broadcast(H)
-        jump_ops = list(map(broadcast, jump_ops))
-        psi0 = jnp.broadcast_to(psi0, broadcast_shape + psi0.shape[-2:])
-
-    n_batch = (
+    # vectorize input over H, Ls, and psi0. keys are vectorized over inside of run().
+    in_axes = (
         H.in_axes,
-        [jump_op.in_axes for jump_op in jump_ops],
-        Shape(psi0.shape[:-2]),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
-        Shape(),
+        [L.in_axes for L in Ls],
+        0,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     )
+    # vectorize output over `_no_jump_res`, `_jump_res`, `no_jump_prob`, `jump_times`,
+    # `num_jumps`
+    out_axes = MCSolveResult(None, None, None, None, 0, 0, 0, 0, 0)
 
-    # compute vectorized function with given batching strategy
     if options.cartesian_batching:
-        f = _cartesian_vectorize(_mcsolve, n_batch, out_axes)
+        nvmap = (
+            H.ndim - 2,
+            [L.ndim - 2 for L in Ls],
+            psi0.ndim - 2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        )
+        f = cartesian_vmap(_mcsolve, in_axes, out_axes, nvmap)
     else:
-        f = _flat_vectorize(_mcsolve, n_batch, out_axes)
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        n = H.shape[-1]
+        H = H.broadcast_to(*bshape, n, n)
+        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        psi0 = jnp.broadcast_to(psi0, (*bshape, n, n))
+        # vectorize the function
+        f = multi_vmap(_mcsolve, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
-    return f(
-        H, jump_ops, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options
-    )
+    return f(H, Ls, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options)
 
 
 @partial(jax.jit, static_argnames=['solver', 'root_finder', 'gradient', 'options'])
 def _mcsolve(
     H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    Ls: list[ArrayLike | TimeArray],
     psi0: ArrayLike,
     tsave: ArrayLike,
     keys: Array,
@@ -227,7 +226,7 @@ def _mcsolve(
         gradient=gradient,
         options=options,
         H=H,
-        Ls=jump_ops,
+        Ls=Ls,
         keys=keys,
         root_finder=root_finder,
         Es=exp_ops,
@@ -241,22 +240,18 @@ def _mcsolve(
 
 
 def _check_mcsolve_args(
-    H: TimeArray,
-    jump_ops: list[TimeArray],
-    psi0: Array,
-    tsave: Array,
-    exp_ops: Array | None,
+    H: TimeArray, Ls: list[TimeArray], psi0: Array, tsave: Array, exp_ops: Array | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check jump_ops shape
-    for i, L in enumerate(jump_ops):
-        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
+    # === check Ls shape
+    for i, L in enumerate(Ls):
+        check_shape(L, f'Ls[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
-    if len(jump_ops) == 0:
+    if len(Ls) == 0:
         logging.warning(
-            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            'Argument `Ls` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
