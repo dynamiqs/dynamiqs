@@ -10,7 +10,7 @@ from jax import Array
 from ..._checks import check_shape
 from ..._utils import on_cpu
 from ...qarrays.dense_qarray import DenseQArray
-from ...qarrays.qarray import QArray, QArrayLike, _to_jax_and_dims
+from ...qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
 from ...qarrays.utils import _init_dims, asqarray, to_jax
 
 __all__ = [
@@ -281,7 +281,8 @@ def ptrace(
         >>> rho_bc.shape
         (20, 20)
     """
-    x, xdims = _to_jax_and_dims(x)
+    xdims = _get_dims(x)
+    x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
