@@ -270,16 +270,27 @@ def ptrace(
         (3, 4, 5)
         >>> psi_abc.shape
         (60, 1)
-        >>> rho_a = dq.ptrace(psi_abc, 0, (3, 4, 5))
+        >>> rho_a = dq.ptrace(psi_abc, 0)
         >>> rho_a.dims
         (3,)
         >>> rho_a.shape
         (3, 3)
-        >>> rho_bc = dq.ptrace(psi_abc, (1, 2), (3, 4, 5))
+        >>> rho_bc = dq.ptrace(psi_abc, (1, 2))
         >>> rho_bc.dims
         (4, 5)
         >>> rho_bc.shape
         (20, 20)
+
+        If the input qarray-like object `x` does not hold Hilbert space dimensions, you
+        can specify them with the argument `dims`. For example, to trace out the second
+        subsystem of the Bell state $(\ket{00}+\ket{11})/\sqrt2$:
+        >>> bell_state = np.array([1, 0, 0, 1])[:, None] / np.sqrt(2)
+        >>> bell_state.shape
+        (4, 1)
+        >>> dq.ptrace(bell_state, 0, dims=(2, 2))
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        [[0.5 0. ]
+         [0.  0.5]]
     """
     xdims = _get_dims(x)
     x = _to_jax(x)
