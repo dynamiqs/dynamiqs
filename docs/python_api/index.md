@@ -126,7 +126,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Quantum utilities
 
-::: dynamiqs.utils.general
+::: dynamiqs.utils
     options:
         table: true
         members:
@@ -158,11 +158,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - fidelity
         - entropy_vn
         - bloch_coordinates
-
-::: dynamiqs.utils.wigner_utils
-    options:
-        table: true
-        members:
         - wigner
 
 
