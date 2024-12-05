@@ -65,6 +65,10 @@ class DenseQArray(QArray):
         data = self.data.mT
         return DenseQArray(self.dims, data)
 
+    def copy(self) -> QArray:
+        data = self.data.copy()
+        return DenseQArray(self.dims, data)
+
     def conj(self) -> QArray:
         data = self.data.conj()
         return DenseQArray(self.dims, data)
@@ -142,11 +146,15 @@ class DenseQArray(QArray):
     def to_qutip(self) -> Qobj | list[Qobj]:
         return _dense_to_qobj(self)
 
-    def to_jax(self) -> Array:
-        return self.data
+    def to_jax(self, copy: bool | None = None) -> Array:
+        return jnp.array(self.data, copy=copy)
 
-    def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
-        return np.asarray(self.data, dtype=dtype)
+    def __array__(
+        self,
+        dtype=None,  # noqa: ANN001
+        copy: bool | None = None,
+    ) -> np.ndarray:
+        return np.array(self.data, dtype=dtype, copy=copy)
 
     def block_until_ready(self) -> QArray:
         _ = self.data.block_until_ready()

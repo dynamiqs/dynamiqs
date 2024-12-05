@@ -20,6 +20,7 @@ from .sparsedia_qarray import (
 )
 
 __all__ = [
+    'qarray',
     'asqarray',
     'sparsedia_from_dict',
     'stack',
@@ -30,8 +31,72 @@ __all__ = [
 ]
 
 
+def qarray(
+    x: QArrayLike,
+    dims: tuple[int, ...] | None = None,
+    *,
+    layout: Layout | None = None,
+    copy: bool | None = True,
+) -> QArray:
+    """Create a qarray.
+
+    Args:
+        x: Object to convert.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
+            available, single Hilbert space `dims=(n,)` otherwise).
+        layout _(dq.dense, dq.dia or None)_: Matrix layout. If `None`, the default
+            layout is `dq.dense`, except for qarrays that are directly returned.
+        copy: If `True`, the object is copied. If `None`, the object is copied only if
+            necessary, i.e. if `x` is a nested sequence or if a copy is needed to
+            satisfy any requirement (`dtype`, `order`, etc.). If `False`, the object is
+            not copied, and will return a `ValueError` if a copy is needed. Defaults to
+            `True`.
+
+    Returns:
+        A qarray object with the same data as the input.
+
+    See also:
+        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like object into a
+            qarray.
+        - [`dq.isqarraylike()`][dynamiqs.isqarraylike]: returns True if the input is
+            a qarray-like object.
+
+    Examples:
+        >>> dq.qarray([[1, 0], [0, -1]])
+        QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dense
+        [[ 1  0]
+         [ 0 -1]]
+        >>> dq.qarray([[1, 0], [0, -1]], layout=dq.dia)
+        QArray: shape=(2, 2), dims=(2,), dtype=int32, layout=dia, ndiags=1
+        [[ 1  ⋅]
+         [ ⋅ -1]]
+        >>> dq.qarray([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
+        QArray: shape=(3, 2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[[ 0.+0.j  1.+0.j]
+          [ 1.+0.j  0.+0.j]]
+        <BLANKLINE>
+         [[ 0.+0.j  0.-1.j]
+          [ 0.+1.j  0.+0.j]]
+        <BLANKLINE>
+         [[ 1.+0.j  0.+0.j]
+          [ 0.+0.j -1.+0.j]]]
+    """
+    if layout is None and isinstance(x, QArray):
+        return x
+
+    layout = dense if layout is None else layout
+    create = _create_dense if layout is dense else _create_sparsedia
+    if copy is None:
+        try:
+            return create(x, dims, copy=False)
+        except ValueError:
+            return create(x, dims, copy=True)
+    return create(x, dims, copy=copy)
+
+
 def asqarray(
-    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
+    x: QArrayLike, dims: tuple[int, ...] | None = None, *, layout: Layout | None = None
 ) -> QArray:
     """Converts a qarray-like object into a qarray.
 
@@ -47,6 +112,7 @@ def asqarray(
         Qarray representation of the input.
 
     See also:
+        - [`dq.qarray()`][dynamiqs.qarray]: creates a qarray object.
         - [`dq.isqarraylike()`][dynamiqs.isqarraylike]: returns True if the input is
             a qarray-like object.
 
@@ -70,36 +136,37 @@ def asqarray(
          [[ 1.+0.j  0.+0.j]
           [ 0.+0.j -1.+0.j]]]
     """
-    if layout is None and isinstance(x, QArray):
-        return x
-
-    layout = dense if layout is None else layout
-    if layout is dense:
-        return _asdense(x, dims)
-    else:
-        return _assparsedia(x, dims)
+    return qarray(x, dims=dims, layout=layout, copy=None)
 
 
-def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
+def _create_dense(
+    x: QArrayLike, dims: tuple[int, ...] | None, copy: bool
+) -> DenseQArray:
     if isinstance(x, DenseQArray):
-        return x
+        return x.copy() if copy else x
     elif isinstance(x, SparseDIAQArray):
+        if not copy:
+            raise ValueError(
+                'Cannot convert a SparseDIAQArray to a DenseQArray with `copy=False`.'
+            )
         return _sparsedia_to_dense(x)
 
     xdims = _get_dims(x)
-    x = _to_jax(x)
+    x = _to_jax(x, copy=copy)
     dims = _init_dims(xdims, dims, x.shape)
     return DenseQArray(dims, x)
 
 
-def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray:
+def _create_sparsedia(
+    x: QArrayLike, dims: tuple[int, ...] | None, copy: bool
+) -> SparseDIAQArray:
     # TODO: improve this by directly extracting the diags and offsets in case
     # the Qobj is already in sparse DIA format (only for QuTiP 5)
     if isinstance(x, SparseDIAQArray):
-        return x
+        return x.copy() if copy else x
 
     xdims = _get_dims(x)
-    x = _to_jax(x)
+    x = _to_jax(x, copy=copy)
     dims = _init_dims(xdims, dims, x.shape)
     return _array_to_sparsedia(x, dims=dims)
 

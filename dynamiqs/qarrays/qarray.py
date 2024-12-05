@@ -49,15 +49,15 @@ def isqarraylike(x: Any) -> bool:
     return False
 
 
-def _to_jax(x: QArrayLike) -> Array:
+def _to_jax(x: QArrayLike, copy: bool | None = None) -> Array:
     if isinstance(x, QArray):
-        return x.to_jax()
+        return x.to_jax(copy=copy)
     elif isinstance(x, Qobj):
-        return jnp.asarray(x.full())
+        return jnp.array(x.full(), copy=copy)
     elif isinstance(x, Sequence):
-        return jnp.asarray([_to_jax(sub_x) for sub_x in x])
+        return jnp.array([_to_jax(sub_x, copy=copy) for sub_x in x], copy=copy)
     else:
-        return jnp.asarray(x)
+        return jnp.array(x, copy=copy)
 
 
 def _get_dims(x: QArrayLike) -> tuple[int, ...] | None:
@@ -73,15 +73,15 @@ def _get_dims(x: QArrayLike) -> tuple[int, ...] | None:
         return None
 
 
-def _to_numpy(x: QArrayLike) -> np.ndarray:
+def _to_numpy(x: QArrayLike, copy: bool | None = None) -> np.ndarray:
     if isinstance(x, QArray):
-        return x.to_numpy()
+        return x.to_numpy(copy=copy)
     elif isinstance(x, Qobj):
-        return np.asarray(x.full())
+        return np.array(x.full(), copy=copy)
     elif isinstance(x, Sequence):
-        return np.asarray([_to_numpy(sub_x) for sub_x in x])
+        return np.array([_to_numpy(sub_x) for sub_x in x], copy=copy)
     else:
-        return np.asarray(x)
+        return np.array(x, copy=copy)
 
 
 class QArray(eqx.Module):
@@ -150,13 +150,14 @@ class QArray(eqx.Module):
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
     | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    | [`x.copy()`][dynamiqs.QArray.copy]                       | Returns a copy of the qarray.                                  |
     """  # noqa: E501
 
     # Subclasses should implement:
     # - the properties: dtype, layout, shape, mT
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
-    #                     _abs, block_until_ready
+    #                     _abs, block_until_ready, copy
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
@@ -209,6 +210,14 @@ class QArray(eqx.Module):
     @property
     def ndim(self) -> int:
         return len(self.shape)
+
+    @abstractmethod
+    def copy(self) -> QArray:
+        """Returns a copy of the qarray.
+
+        Returns:
+            New qarray object with the same data.
+        """
 
     @abstractmethod
     def conj(self) -> QArray:
@@ -352,7 +361,7 @@ class QArray(eqx.Module):
         pass
 
     @abstractmethod
-    def to_jax(self) -> Array:
+    def to_jax(self, copy: bool | None = None) -> Array:
         pass
 
     def __len__(self) -> int:

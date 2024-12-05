@@ -131,6 +131,10 @@ class SparseDIAQArray(QArray):
 
         return SparseDIAQArray(self.dims, out_offsets, out_diags)
 
+    def copy(self) -> QArray:
+        diags = self.diags.copy()
+        return SparseDIAQArray(self.dims, self.offsets, diags)
+
     @property
     def ndiags(self) -> int:
         return len(self.offsets)
