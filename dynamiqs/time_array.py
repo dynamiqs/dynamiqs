@@ -13,6 +13,7 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
+from .qarrays.layout import Layout, promote_layouts
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
 from .qarrays.utils import asqarray
 
@@ -244,6 +245,7 @@ class TimeArray(eqx.Module):
     Attributes:
         dtype _(numpy.dtype)_: Data type.
         shape _(tuple of int)_: Shape.
+        layout _(Layout)_: Underlying qarray layout.
         mT _(TimeArray)_: Returns the time-array transposed over its last two
             dimensions.
         ndim _(int)_: Number of dimensions.
@@ -262,7 +264,7 @@ class TimeArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT, in_axes, discontinuity_ts
+    # - the properties: dtype, shape, layout, mT, in_axes, discontinuity_ts
     # - the methods: reshape, broadcast_to, conj, __call__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
@@ -276,6 +278,11 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
+        pass
+
+    @property
+    @abstractmethod
+    def layout(self) -> Layout:
         pass
 
     @property
@@ -387,8 +394,11 @@ class TimeArray(eqx.Module):
     def __rsub__(self, y: QArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
-    # def __repr__(self) -> str:
-    #     return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+    def __repr__(self) -> str:
+        return (
+            f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype}, '
+            f'layout={self.layout})'
+        )
 
 
 class ConstantTimeArray(TimeArray):
@@ -401,6 +411,10 @@ class ConstantTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return self.array.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.array.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -452,6 +466,10 @@ class PWCTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return *self.values.shape[:-1], *self.array.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.array.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -520,6 +538,10 @@ class ModulatedTimeArray(TimeArray):
         return *self.f.shape, *self.array.shape
 
     @property
+    def layout(self) -> Layout:
+        return self.array.layout
+
+    @property
     def mT(self) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array.mT, self._disc_ts)
 
@@ -573,6 +595,10 @@ class CallableTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return self.f.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.f.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -632,11 +658,17 @@ class SummedTimeArray(TimeArray):
 
     @property
     def dtype(self) -> jnp.dtype:
-        return self.timearrays[0].dtype
+        dtypes = [tarray.dtype for tarray in self.timearrays]
+        return ft.reduce(jnp.promote_types, dtypes)
 
     @property
     def shape(self) -> tuple[int, ...]:
         return jnp.broadcast_shapes(*[tarray.shape for tarray in self.timearrays])
+
+    @property
+    def layout(self) -> Layout:
+        layouts = [tarray.layout for tarray in self.timearrays]
+        return ft.reduce(promote_layouts, layouts)
 
     @property
     def mT(self) -> TimeArray:
@@ -711,6 +743,10 @@ class BatchedCallable(eqx.Module):
     @property
     def shape(self) -> tuple[int, ...]:
         return jax.eval_shape(self.f, 0.0).shape
+
+    @property
+    def layout(self) -> Layout:
+        return jax.eval_shape(self.f, 0.0).layout
 
     def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
         f = lambda t: self.f(t).reshape(shape)
