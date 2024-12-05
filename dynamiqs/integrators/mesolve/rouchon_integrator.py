@@ -9,7 +9,7 @@ from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 from jax import Array
 
-from ...utils.quantum_utils.general import dag
+from ...utils.general import dag
 from ..core.abstract_integrator import MESolveIntegrator
 from ..core.diffrax_integrator import FixedStepDiffraxIntegrator
 from ..core.save_mixin import SolveSaveMixin

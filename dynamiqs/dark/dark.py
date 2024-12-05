@@ -3,8 +3,8 @@ from __future__ import annotations
 import jax.numpy as jnp
 from jax import Array
 
+from ..utils.general import dag
 from ..utils.operators import quadrature
-from ..utils.quantum_utils import dag
 
 __all__ = ['quadrature_sign']
 

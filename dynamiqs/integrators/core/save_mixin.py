@@ -4,7 +4,7 @@ import equinox as eqx
 from jaxtyping import PyTree
 
 from ...result import PropagatorSaved, Saved, SolveSaved
-from ...utils.quantum_utils import expect
+from ...utils.general import expect
 from .interfaces import OptionsInterface, SolveInterface
 
 

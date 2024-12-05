@@ -8,7 +8,7 @@ from jax import Array
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from .quantum_utils import dag, tensor
+from .general import dag, tensor
 
 __all__ = [
     'cnot',

@@ -8,8 +8,8 @@ import numpy as np
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_shape
-from ..._utils import on_cpu
+from .._checks import check_shape
+from .._utils import on_cpu
 
 __all__ = [
     'bloch_coordinates',

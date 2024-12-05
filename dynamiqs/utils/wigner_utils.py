@@ -7,9 +7,9 @@ import jax.numpy as jnp
 from jax import Array, lax
 from jaxtyping import ArrayLike
 
-from ..._checks import check_shape
-from ..operators import eye
+from .._checks import check_shape
 from .general import todm
+from .operators import eye
 
 __all__ = ['wigner']
 
