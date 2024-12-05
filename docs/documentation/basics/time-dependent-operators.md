@@ -20,8 +20,9 @@ $$
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-array
 >>> Hx(1.0)
-Array([[0.+0.j, 1.+0.j],
-       [1.+0.j, 0.+0.j]], dtype=complex64)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+[[  ⋅    1.+0.j]
+ [1.+0.j   ⋅   ]]
 >>> Hx.shape
 (2, 2)
 ```
@@ -35,8 +36,9 @@ $$
 >>> Hy = dq.modulated(g, dq.sigmay())
 >>> H = dq.sigmaz() + 2 * Hx - Hy
 >>> H(1.0)
-Array([[ 1.+0.j,  2.-0.j],
-       [ 2.+0.j, -1.+0.j]], dtype=complex64)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
+[[ 1.+0.000000e+00j  2.-8.742278e-08j]
+ [ 2.+8.742278e-08j -1.+0.000000e+00j]]
 ```
 
 Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeArray`][dynamiqs.TimeArray] API page.
@@ -51,10 +53,15 @@ $$
 $$
 for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using array-like objects. They can also be instantiated as [`TimeArray`][dynamiqs.TimeArray] instances using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
 
-=== "Dynamiqs"
+=== "Dynamiqs utilities"
     ```python
     import dynamiqs as dq
     H = dq.sigmaz()
+    ```
+=== "Dynamiqs qarray"
+    ```python
+    import dynamiqs as dq
+    H = dq.asqarray([[1, 0], [0, -1]])
     ```
 === "NumPy array"
     ```python
@@ -100,45 +107,51 @@ To construct a PWC operator, these three arguments must be passed to the [`dq.pw
 >>> array = dq.sigmaz()
 >>> H = dq.pwc(times, values, array)
 >>> H
-PWCTimeArray(shape=(2, 2), dtype=complex64)
+PWCTimeArray(shape=(2, 2), dtype=complex64, layout=dia)
 ```
 
 The returned object can be called at different times:
 === "$t = -1.0$"
     ```pycon
     >>> H(-1.0)
-    Array([[ 0.+0.j,  0.+0.j],
-           [ 0.+0.j, -0.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[  ⋅      ⋅   ]
+     [  ⋅      ⋅   ]]
     ```
 === "$t=0.0$"
     ```pycon
     >>> H(0.0)
-    Array([[ 3.+0.j,  0.+0.j],
-           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[ 3.+0.j    ⋅   ]
+     [   ⋅    -3.+0.j]]
     ```
 === "$t=0.5$"
     ```pycon
     >>> H(0.5)
-    Array([[ 3.+0.j,  0.+0.j],
-           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[ 3.+0.j    ⋅   ]
+     [   ⋅    -3.+0.j]]
     ```
 === "$t=1.0$"
     ```pycon
     >>> H(1.0)
-    Array([[-2.+0.j, -0.+0.j],
-           [-0.+0.j,  2.-0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[-2.+0.j    ⋅   ]
+     [   ⋅     2.+0.j]]
     ```
 === "$t=1.5$"
     ```pycon
     >>> H(1.5)
-    Array([[-2.+0.j, -0.+0.j],
-           [-0.+0.j,  2.-0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[-2.+0.j    ⋅   ]
+     [   ⋅     2.+0.j]]
     ```
 === "$t=2.0$"
     ```pycon
     >>> H(2.0)
-    Array([[ 0.+0.j,  0.+0.j],
-           [ 0.+0.j, -0.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[  ⋅      ⋅   ]
+     [  ⋅      ⋅   ]]
     ```
 
 !!! Note
@@ -172,21 +185,23 @@ To construct a modulated operator, these two arguments must be passed to the [`d
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> H
-ModulatedTimeArray(shape=(2, 2), dtype=complex64)
+ModulatedTimeArray(shape=(2, 2), dtype=complex64, layout=dia)
 ```
 
 The returned object can be called at different times:
 === "$t = 0.5$"
     ```pycon
     >>> H(0.5)
-    Array([[-0.+0.j, -1.+0.j],
-           [-1.+0.j, -0.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+    [[   ⋅    -1.+0.j]
+     [-1.+0.j    ⋅   ]]
     ```
 === "$t=1.0$"
     ```pycon
     >>> H(1.0)
-    Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+    [[  ⋅    1.+0.j]
+     [1.+0.j   ⋅   ]]
     ```
 
 ??? Note "Batching modulated operators"
@@ -229,24 +244,26 @@ To construct an arbitrary time-dependent operator, pass this argument to the [`d
 
 For example, let us define the arbitrary time-dependent operator $H(t)=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
 ```pycon
->>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
+>>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
 >>> H = dq.timecallable(f)
 >>> H
-CallableTimeArray(shape=(2, 2), dtype=float32)
+CallableTimeArray(shape=(2, 2), dtype=float32, layout=dense)
 ```
 
 The returned object can be called at different times:
 === "$t = 0.5$"
     ```pycon
     >>> H(0.5)
-    Array([[0.5, 0. ],
-           [0. , 0.5]], dtype=float32)
+    QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+    [[0.5 0. ]
+     [0.  0.5]]
     ```
 === "$t=1.0$"
     ```pycon
     >>> H(1.0)
-    Array([[1., 0.],
-           [0., 0.]], dtype=float32)
+    QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+    [[1. 0.]
+     [0. 0.]]
     ```
 
 !!! Warning "The function `f` must return a JAX array (not an array-like object!)"
@@ -256,7 +273,7 @@ The returned object can be called at different times:
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
-    >>> f = lambda t: thetas[:, None, None] * jnp.array([[t, 0], [0, 1 - t]])
+    >>> f = lambda t: thetas[:, None, None] * dq.asqarray([[t, 0], [0, 1 - t]])
     >>> H = dq.timecallable(f)
     >>> H.shape
     (11, 2, 2)
@@ -267,7 +284,7 @@ The returned object can be called at different times:
     ```pycon
     >>> import functools
     >>> def func(t, a, amplitude=1.0):
-    ...     return amplitude * jnp.array([[t, a], [a, 1 - t]])
+    ...     return amplitude * dq.asqarray([[t, a], [a, 1 - t]])
     >>> # create function with correct signature (t: float) -> Array
     >>> f = functools.partial(func, a=1.0, amplitude=5.0)
     >>> H = dq.timecallable(f)
