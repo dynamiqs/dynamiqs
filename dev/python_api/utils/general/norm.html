@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isop.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/norm.html">
 
 
-    <link rel="prev" href="isdm.html">
+    <link rel="prev" href="expect.html">
 
 
-    <link rel="next" href="isherm.html">
+    <link rel="next" href="unit.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>isop - Dynamiqs</title>
+        <title>norm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.isop" class="md-skip">
+        <a href="#dynamiqs.utils.general.norm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                isop
+                norm
               
             </span>
           </div>
@@ -3127,10 +3127,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="norm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="norm.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3139,6 +3148,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3274,19 +3284,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="isop.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="isop.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3295,7 +3296,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4643,17 +4643,19 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.isop" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.isop</span>
+<h1 id="dynamiqs.utils.general.norm" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.norm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isop</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">norm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns True if the array is in the format of an operator.</p>
+        <p>Returns the norm of a ket, bra or density matrix.</p>
+<p>For a ket or a bra, the returned norm is <span class="arithmatex">\(\sqrt{\braket{\psi|\psi}}\)</span>. For a density
+matrix, it is <span class="arithmatex">\(\tr{\rho}\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4664,8 +4666,9 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (...))              </i>
-          – <p>Array.</p>
+(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))              </i>
+          – <p>Ket, bra or
+density matrix.</p>
         </li>
     </ul>
 
@@ -4675,22 +4678,38 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>bool</code>
-        – <p>True if the last two dimensions of <code>x</code> are equal, False otherwise.</p>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> Real-valued norm of <code>x</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>True if the last two dimensions of <code>x</code> are equal, False otherwise.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued norm of <code>x</code>.</p></span>
+
+    <!-- <p>Raises:</p> -->
+    <p>
+      <strong>Raises</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+              <code>
+ValueError              </code>
+            –
+          <div class="doc-md-description"><p>If <code>x</code> is not a ket, bra or density matrix.</p></div>
+        </li>
+    </ul>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isop</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isop</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isop</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="go">False</span>
+    <p>For a ket:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+<span class="go">Array(1.414, dtype=float32)</span>
+</code></pre></div>
+    <p>For a density matrix:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+<span class="go">Array(3., dtype=float32)</span>
 </code></pre></div>
 
     </div>

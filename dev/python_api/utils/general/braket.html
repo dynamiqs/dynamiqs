@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isdm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/braket.html">
 
 
-    <link rel="prev" href="isbra.html">
+    <link rel="prev" href="proj.html">
 
 
-    <link rel="next" href="isop.html">
+    <link rel="next" href="overlap.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>isdm - Dynamiqs</title>
+        <title>braket - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.isdm" class="md-skip">
+        <a href="#dynamiqs.utils.general.braket" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                isdm
+                braket
               
             </span>
           </div>
@@ -3253,19 +3253,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="isdm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="isdm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3274,7 +3265,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3410,10 +3400,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="braket.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="braket.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3422,6 +3421,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4643,17 +4643,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.isdm" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.isdm</span>
+<h1 id="dynamiqs.utils.general.braket" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.braket</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isdm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">braket</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns True if the array is in the format of a density matrix.</p>
+        <p>Returns the inner product <span class="arithmatex">\(\braket{\psi|\varphi}\)</span> between two kets.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4663,9 +4663,12 @@
         <li class="field-body">
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (...))              </i>
-          – <p>Array.</p>
+          – <p>Left-side ket.</p>
+        </li>
+        <li class="field-body">
+          <b>y</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Right-side ket.</p>
         </li>
     </ul>
 
@@ -4675,22 +4678,20 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>bool</code>
-        – <p>True if the last two dimensions of <code>x</code> are equal, False otherwise.</p>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> Complex-valued inner product.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>True if the last two dimensions of <code>x</code> are equal, False otherwise.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Complex-valued inner product.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isdm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isdm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isdm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="go">False</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">fock0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fock01</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">braket</span><span class="p">(</span><span class="n">fock0</span><span class="p">,</span> <span class="n">fock01</span><span class="p">)</span>
+<span class="go">Array(0.707+0.j, dtype=complex64)</span>
 </code></pre></div>
 
     </div>

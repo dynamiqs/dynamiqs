@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/lindbladian.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/isket.html">
 
 
-    <link rel="prev" href="dissipator.html">
+    <link rel="prev" href="lindbladian.html">
 
 
-    <link rel="next" href="isket.html">
+    <link rel="next" href="isbra.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>lindbladian - Dynamiqs</title>
+        <title>isket - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.lindbladian" class="md-skip">
+        <a href="#dynamiqs.utils.general.isket" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                lindbladian
+                isket
               
             </span>
           </div>
@@ -3190,6 +3190,27 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="lindbladian.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    lindbladian
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -3202,29 +3223,7 @@
         
       
       
-      <a href="lindbladian.html" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    lindbladian
-  </span>
-  
-
-      </a>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="isket.html" class="md-nav__link">
+      <a href="isket.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3233,6 +3232,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4643,55 +4643,29 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.lindbladian" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.lindbladian</span>
+<h1 id="dynamiqs.utils.general.isket" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.isket</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">lindbladian</span><span class="p">(</span><span class="n">H</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">rho</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isket</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Applies the Lindbladian superoperator to a density matrix.</p>
-<p>The Lindbladian superoperator <span class="arithmatex">\(\mathcal{L}\)</span> is defined by:
-$$
-    \mathcal{L} (\rho) = -i[H,\rho] + \sum_{k=1}^N \mathcal{D}[L_k] (\rho),
-$$</p>
-<p>where <span class="arithmatex">\(H\)</span> is the system Hamiltonian, <span class="arithmatex">\(\{L_k\}\)</span> is a set of <span class="arithmatex">\(N\)</span> jump operators
-(arbitrary operators) and <span class="arithmatex">\(\mathcal{D}[L]\)</span> is the Lindblad dissipation superoperator
-(see <a class="autorefs autorefs-internal" href="dissipator.html#dynamiqs.utils.quantum_utils.dissipator"><code>dq.dissipator()</code></a>).</p>
+        <p>Returns True if the array is in the format of a ket.</p>
 
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>This superoperator is also sometimes called <em>Liouvillian</em>.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
-          <b>H</b>
+          <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (..., n, n))              </i>
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>jump_ops</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (N, ..., n, n))              </i>
-          – <p>Sequence of jump operators.</p>
-        </li>
-        <li class="field-body">
-          <b>rho</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (..., n, n))              </i>
-          – <p>Density matrix.</p>
+(array_like of shape (...))              </i>
+          – <p>Array.</p>
         </li>
     </ul>
 
@@ -4701,33 +4675,22 @@ $$</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (..., n, n))</em> Resulting operator (it is not a density matrix).</p>
+            <code>bool</code>
+        – <p>True if the last dimension of <code>x</code> is 1, False otherwise.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (..., n, n))</em> Resulting operator (it is not a density matrix).</p></span>
+      <span class="field-body"><p>True if the last dimension of <code>x</code> is 1, False otherwise.</p></span>
 
-<details class="see-also"
- open >
-  <summary>See also</summary>
-  <ul>
-<li><a class="autorefs autorefs-internal" href="../vectorization/slindbladian.html#dynamiqs.utils.vectorization.slindbladian"><code>dq.slindbladian()</code></a>: returns the Lindbladian
-    superoperator in matrix form (vectorized).</li>
-</ul>
-</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">dag</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">@</span> <span class="n">a</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">dag</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">@</span> <span class="n">a</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">lindbladian</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>
-<span class="go">Array([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],</span>
-<span class="go">       [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],</span>
-<span class="go">       [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],</span>
-<span class="go">       [ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j]], dtype=complex64)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isket</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isket</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isket</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="go">False</span>
 </code></pre></div>
 
     </div>

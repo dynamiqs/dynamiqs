@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/trace.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/sinm.html">
 
 
-    <link rel="prev" href="sinm.html">
+    <link rel="prev" href="cosm.html">
 
 
-    <link rel="next" href="tracemm.html">
+    <link rel="next" href="trace.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>trace - Dynamiqs</title>
+        <title>sinm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.trace" class="md-skip">
+        <a href="#dynamiqs.utils.general.sinm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                trace
+                sinm
               
             </span>
           </div>
@@ -3001,27 +3001,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="sinm.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    sinm
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -3034,7 +3013,29 @@
         
       
       
-      <a href="trace.html" class="md-nav__link md-nav__link--active">
+      <a href="sinm.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    sinm
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="trace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3043,7 +3044,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4643,17 +4643,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.trace" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.trace</span>
+<h1 id="dynamiqs.utils.general.sinm" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.sinm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">trace</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">sinm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the trace of an array along its last two dimensions.</p>
+        <p>Returns the sine of an array.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4665,7 +4665,7 @@
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (array_like of shape (..., n, n))              </i>
-          – <p>Array.</p>
+          – <p>Square matrix.</p>
         </li>
     </ul>
 
@@ -4676,18 +4676,27 @@
     <!-- <ul>
       <li class="field-body">
             <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Trace of <code>x</code>.</p>
+        – <p><em>(array of shape (..., n, n))</em> Sine of <code>x</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Trace of <code>x</code>.</p></span>
+      <span class="field-body"><p><em>(array of shape (..., n, n))</em> Sine of <code>x</code>.</p></span>
 
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>This function uses <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html"><code>jax.scipy.linalg.expm()</code></a>
+to compute the sine of a matrix <span class="arithmatex">\(A\)</span>:
+$$
+    \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
+$$</p>
+</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">Array(3., dtype=float32)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">sinm</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+<span class="go">Array([[0.-0.j, 1.-0.j],</span>
+<span class="go">       [1.-0.j, 0.-0.j]], dtype=complex64)</span>
 </code></pre></div>
 
     </div>

@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/expm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/expect.html">
 
 
-    <link rel="prev" href="powm.html">
+    <link rel="prev" href="tensor.html">
 
 
-    <link rel="next" href="cosm.html">
+    <link rel="next" href="norm.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>expm - Dynamiqs</title>
+        <title>expect - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.expm" class="md-skip">
+        <a href="#dynamiqs.utils.general.expect" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                expm
+                expect
               
             </span>
           </div>
@@ -2959,19 +2959,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="expm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2980,7 +2971,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3116,10 +3106,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="expect.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="expect.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3128,6 +3127,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4643,35 +4643,52 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.expm" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.expm</span>
+<h1 id="dynamiqs.utils.general.expect" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.expect</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">expm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_squarings</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">expect</span><span class="p">(</span><span class="n">O</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the matrix exponential of an array.</p>
-<p>The exponential is computed using the scaling-and-squaring approximation method.</p>
+        <p>Returns the expectation value of an operator or list of operators on a ket, bra
+or density matrix.</p>
+<p>The expectation value <span class="arithmatex">\(\braket{O}\)</span> of an operator <span class="arithmatex">\(O\)</span> is computed</p>
+<ul>
+<li>as <span class="arithmatex">\(\braket{O}=\braket{\psi|O|\psi}\)</span> if <code>x</code> is a ket <span class="arithmatex">\(\ket\psi\)</span> or bra <span class="arithmatex">\(\bra\psi\)</span>,</li>
+<li>as <span class="arithmatex">\(\braket{O}=\tr{O\rho}\)</span> if <code>x</code> is a density matrix <span class="arithmatex">\(\rho\)</span>.</li>
+</ul>
 
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>The returned array is complex-valued. If the operator <span class="arithmatex">\(O\)</span> corresponds to a
+physical observable, it is Hermitian: <span class="arithmatex">\(O^\dag=O\)</span>, and the expectation value
+is real. One can then keep only the real values of the returned array using
+<code>dq.expect(O, x).real</code>.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
+          <b>O</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(array_like of shape (nO?, n, n))              </i>
+          – <p>Arbitrary operator or list of <em>nO</em>
+operators.</p>
+        </li>
+        <li class="field-body">
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (..., n, n))              </i>
-          – <p>Square matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>max_squarings</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Number of squarings.</p>
+(array_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))              </i>
+          – <p>Ket,
+bra or density matrix.</p>
         </li>
     </ul>
 
@@ -4682,24 +4699,38 @@
     <!-- <ul>
       <li class="field-body">
             <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (..., n, n))</em> Matrix exponential of <code>x</code>.</p>
+        – <p><em>(array of shape (nO?, ...))</em> Complex-valued expectation value.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (..., n, n))</em> Matrix exponential of <code>x</code>.</p></span>
+      <span class="field-body"><p><em>(array of shape (nO?, ...))</em> Complex-valued expectation value.</p></span>
 
-<details class="note"
- >
-  <summary>Equivalent JAX syntax</summary>
-  <p>This function is equivalent to
-<code>jnp.scipy.linalg.expm(x, max_squarings=max_squarings)</code>.</p>
-</details>
+    <!-- <p>Raises:</p> -->
+    <p>
+      <strong>Raises</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+              <code>
+ValueError              </code>
+            –
+          <div class="doc-md-description"><p>If <code>x</code> is not a ket, bra or density matrix.</p></div>
+        </li>
+    </ul>
+
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">())</span>
-<span class="go">Array([[2.718+0.j, 0.   +0.j],</span>
-<span class="go">       [0.   +0.j, 0.368+0.j]], dtype=complex64)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">number</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span>
+<span class="go">Array(4.+0.j, dtype=complex64)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psis</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">psis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(5,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Os</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">position</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">momentum</span><span class="p">(</span><span class="mi">16</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">expect</span><span class="p">(</span><span class="n">Os</span><span class="p">,</span> <span class="n">psis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 5)</span>
 </code></pre></div>
 
     </div>

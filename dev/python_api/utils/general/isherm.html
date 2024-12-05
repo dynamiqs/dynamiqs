@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/entropy_vn.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/isherm.html">
 
 
-    <link rel="prev" href="fidelity.html">
+    <link rel="prev" href="isop.html">
 
 
-    <link rel="next" href="bloch_coordinates.html">
+    <link rel="next" href="toket.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>entropy_vn - Dynamiqs</title>
+        <title>isherm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.entropy_vn" class="md-skip">
+        <a href="#dynamiqs.utils.general.isherm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                entropy_vn
+                isherm
               
             </span>
           </div>
@@ -3295,10 +3295,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="isherm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="isherm.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3307,6 +3316,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3463,19 +3473,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="entropy_vn.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="entropy_vn.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3484,7 +3485,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4643,18 +4643,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.entropy_vn" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.entropy_vn</span>
+<h1 id="dynamiqs.utils.general.isherm" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.isherm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">entropy_vn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isherm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-05</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the Von Neumann entropy of a ket or density matrix.</p>
-<p>It is defined by <span class="arithmatex">\(S(\rho) = -\tr{\rho \ln \rho}\)</span>.</p>
+        <p>Returns True if the array is Hermitian.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4665,8 +4664,18 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (..., n, 1) or (..., n, n))              </i>
-          – <p>Ket or density matrix.</p>
+(array_like of shape (..., n, n))              </i>
+          – <p>Array.</p>
+        </li>
+        <li class="field-body">
+          <b>rtol</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Relative tolerance of the check.</p>
+        </li>
+        <li class="field-body">
+          <b>atol</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Absolute tolerance of the check.</p>
         </li>
     </ul>
 
@@ -4676,22 +4685,20 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p>
+            <code>bool</code>
+        – <p>True if <code>x</code> is Hermitian, False otherwise.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p></span>
+      <span class="field-body"><p>True if <code>x</code> is Hermitian, False otherwise.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
-<span class="go">Array(0.693, dtype=float32)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psis</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">psis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(5,)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isherm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">Array(True, dtype=bool)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isherm</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="go">Array(False, dtype=bool)</span>
 </code></pre></div>
 
     </div>

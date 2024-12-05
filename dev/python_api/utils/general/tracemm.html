@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/bloch_coordinates.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/tracemm.html">
 
 
-    <link rel="prev" href="entropy_vn.html">
+    <link rel="prev" href="trace.html">
 
 
-    <link rel="next" href="wigner.html">
+    <link rel="next" href="ptrace.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>bloch_coordinates - Dynamiqs</title>
+        <title>tracemm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.bloch_coordinates" class="md-skip">
+        <a href="#dynamiqs.utils.general.tracemm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                bloch_coordinates
+                tracemm
               
             </span>
           </div>
@@ -3043,10 +3043,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="tracemm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="tracemm.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3055,6 +3064,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3484,19 +3494,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="bloch_coordinates.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="bloch_coordinates.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3505,7 +3506,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4643,28 +4643,32 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.bloch_coordinates" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.bloch_coordinates</span>
+<h1 id="dynamiqs.utils.general.tracemm" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.tracemm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">tracemm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span> of a ket or density matrix
-on the Bloch sphere.</p>
-<p>The coordinates are such that
-$$
-    \begin{cases}
-        0\leq r \leq 1, \\
-        0\leq\theta\leq\pi, \\
-        0\leq\phi&lt;2\pi.
-    \end{cases}
-$$</p>
-<p>By convention, we choose <span class="arithmatex">\(\phi=0\)</span> if <span class="arithmatex">\(\theta=0\)</span>, and <span class="arithmatex">\(\theta=\phi=0\)</span> if <span class="arithmatex">\(r=0\)</span>.</p>
+        <p>Return the trace of a matrix multiplication using a fast implementation.</p>
+<p>The trace is computed as <code>sum(x * y.T)</code> where <code>*</code> is the element-wise product,
+instead of <code>trace(x @ y)</code> where <code>@</code> is the matrix product. Indeed, we have:</p>
+<div class="arithmatex">\[
+    \tr{xy} = \sum_i (xy)_{ii}
+            = \sum_{i,j} x_{ij} y_{ji}
+            = \sum_{i,j} x_{ij} (y^\intercal)_{ij}
+            = \sum_{i,j} (x * y^\intercal)_{ij}
+\]</div>
 
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>The resulting time complexity for <span class="arithmatex">\(n\times n\)</span> matrices is <span class="arithmatex">\(\mathcal{O}(n^2)\)</span>
+instead of <span class="arithmatex">\(\mathcal{O}(n^3)\)</span> with the naive formula.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
@@ -4674,8 +4678,15 @@ $$</p>
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (2, 1) or (2, 2))              </i>
-          – <p>Ket or density matrix.</p>
+(array_like of shape (..., n, n))              </i>
+          – <p>Array.</p>
+        </li>
+        <li class="field-body">
+          <b>y</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(array_like of shape (..., n, n))              </i>
+          – <p>Array.</p>
         </li>
     </ul>
 
@@ -4686,51 +4697,19 @@ $$</p>
     <!-- <ul>
       <li class="field-body">
             <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (3,))</em> Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p>
+        – <p><em>(array of shape (...))</em> Trace of <code>x @ y</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (3,))</em> Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Trace of <code>x @ y</code>.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <p>The state <span class="arithmatex">\(\ket0\)</span> is on the north pole at coordinates
-<span class="arithmatex">\((r,\theta,\phi) = (1,0,0)\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">Array([1., 0., 0.], dtype=float32)</span>
-</code></pre></div>
-    <p>The state <span class="arithmatex">\(\ket1\)</span> is on the south pole at coordinates
-<span class="arithmatex">\((r,\theta,\phi) = (1,\pi,0)\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">Array([1.   , 3.142, 0.   ], dtype=float32)</span>
-</code></pre></div>
-    <p>The state <span class="arithmatex">\(\ket+=(\ket0+\ket1)/\sqrt2\)</span> is aligned with the <span class="arithmatex">\(x\)</span>-axis at
-coordinates <span class="arithmatex">\((r,\theta,\phi) = (1,\pi/2,0)\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">plus</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">plus</span><span class="p">)</span>
-<span class="go">Array([1.   , 1.571, 0.   ], dtype=float32)</span>
-</code></pre></div>
-    <p>The state <span class="arithmatex">\(\ket-=(\ket0-\ket1)/\sqrt2\)</span> is aligned with the <span class="arithmatex">\(-x\)</span>-axis at
-coordinates <span class="arithmatex">\((r,\theta,\phi) = (1,\pi/2,\pi)\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">minus</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">minus</span><span class="p">)</span>
-<span class="go">Array([1.   , 1.571, 3.142], dtype=float32)</span>
-</code></pre></div>
-    <p>A fully mixed state <span class="arithmatex">\(\rho=0.5\ket0\bra0+0.5\ket1\bra1\)</span> is at the center of the
-sphere at coordinates <span class="arithmatex">\((r,\theta,\phi) = (0,0,0)\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">Array([0., 0., 0.], dtype=float32)</span>
-</code></pre></div>
-    <p>A partially mixed state <span class="arithmatex">\(\rho=0.75\ket0\bra0 + 0.25\ket1\bra1\)</span> is halfway
-between the sphere center and the north pole at coordinates
-<span class="arithmatex">\((r,\theta,\phi) = (0.5,0,0)\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.75</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">Array([0.5, 0. , 0. ], dtype=float32)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">tracemm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">Array(9., dtype=float32)</span>
 </code></pre></div>
 
     </div>

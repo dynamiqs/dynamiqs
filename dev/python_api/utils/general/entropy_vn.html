@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tobra.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/entropy_vn.html">
 
 
-    <link rel="prev" href="toket.html">
+    <link rel="prev" href="fidelity.html">
 
 
-    <link rel="next" href="todm.html">
+    <link rel="next" href="bloch_coordinates.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>tobra - Dynamiqs</title>
+        <title>entropy_vn - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.tobra" class="md-skip">
+        <a href="#dynamiqs.utils.general.entropy_vn" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                tobra
+                entropy_vn
               
             </span>
           </div>
@@ -3337,19 +3337,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="tobra.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="tobra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3358,7 +3349,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3473,10 +3463,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="entropy_vn.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="entropy_vn.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3485,6 +3484,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4643,17 +4643,18 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.tobra" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.tobra</span>
+<h1 id="dynamiqs.utils.general.entropy_vn" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.entropy_vn</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">tobra</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">entropy_vn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the bra representation of a pure quantum state.</p>
+        <p>Returns the Von Neumann entropy of a ket or density matrix.</p>
+<p>It is defined by <span class="arithmatex">\(S(\rho) = -\tr{\rho \ln \rho}\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4664,8 +4665,8 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (..., n, 1) or (..., 1, n))              </i>
-          – <p>Ket or bra.</p>
+(array_like of shape (..., n, 1) or (..., n, n))              </i>
+          – <p>Ket or density matrix.</p>
         </li>
     </ul>
 
@@ -4676,22 +4677,21 @@
     <!-- <ul>
       <li class="field-body">
             <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (..., 1, n))</em> Bra.</p>
+        – <p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (..., 1, n))</em> Bra.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># shape: (3, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span>
-<span class="go">Array([[1.+0.j],</span>
-<span class="go">       [0.+0.j],</span>
-<span class="go">       [0.+0.j]], dtype=complex64)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">tobra</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>  <span class="c1"># shape: (1, 3)</span>
-<span class="go">Array([[1.-0.j, 0.-0.j, 0.-0.j]], dtype=complex64)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+<span class="go">Array(0.693, dtype=float32)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psis</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">psis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(5,)</span>
 </code></pre></div>
 
     </div>

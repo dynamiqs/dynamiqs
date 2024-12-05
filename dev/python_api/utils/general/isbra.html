@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/powm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/isbra.html">
 
 
-    <link rel="prev" href="dag.html">
+    <link rel="prev" href="isket.html">
 
 
-    <link rel="next" href="expm.html">
+    <link rel="next" href="isdm.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>powm - Dynamiqs</title>
+        <title>isbra - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.powm" class="md-skip">
+        <a href="#dynamiqs.utils.general.isbra" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                powm
+                isbra
               
             </span>
           </div>
@@ -2938,19 +2938,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="powm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="powm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2959,7 +2950,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3242,10 +3232,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="isbra.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="isbra.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3254,6 +3253,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4643,17 +4643,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.powm" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.powm</span>
+<h1 id="dynamiqs.utils.general.isbra" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.isbra</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">powm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isbra</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the <span class="arithmatex">\(n\)</span>-th matrix power of an array.</p>
+        <p>Returns True if the array is in the format of a bra.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4664,13 +4664,8 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (..., n, n))              </i>
-          – <p>Square matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>n</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Integer exponent.</p>
+(array_like of shape (...))              </i>
+          – <p>Array.</p>
         </li>
     </ul>
 
@@ -4680,24 +4675,22 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (..., n, n))</em> Matrix power of <code>x</code>.</p>
+            <code>bool</code>
+        – <p>True if the second to last dimension of <code>x</code> is 1, False otherwise.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (..., n, n))</em> Matrix power of <code>x</code>.</p></span>
+      <span class="field-body"><p>True if the second to last dimension of <code>x</code> is 1, False otherwise.</p></span>
 
-<details class="note"
- >
-  <summary>Equivalent JAX syntax</summary>
-  <p>This function is equivalent to <code>jnp.linalg.matrix_power(x, n)</code>.</p>
-</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">powm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">(),</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">Array([[1.+0.j, 0.+0.j],</span>
-<span class="go">       [0.+0.j, 1.+0.j]], dtype=complex64)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isbra</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isbra</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isbra</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="go">False</span>
 </code></pre></div>
 
     </div>
