@@ -245,7 +245,7 @@ class TimeArray(eqx.Module):
     Attributes:
         dtype _(numpy.dtype)_: Data type.
         shape _(tuple of int)_: Shape.
-        layout _(Layout)_: Underlying qarray layout.
+        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         mT _(TimeArray)_: Returns the time-array transposed over its last two
             dimensions.
         ndim _(int)_: Number of dimensions.
