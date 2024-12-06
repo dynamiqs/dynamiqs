@@ -1,8 +1,5 @@
 # Time-dependent operators
 
-<!-- skip: start -->
-<!-- todo: temporary fix -->
-
 This tutorial explains how to define time-dependent Hamiltonians – and more generally time-dependent operators – in Dynamiqs. There are currently four supported formats: constant operator, piecewise constant operator, constant operator modulated by a time-dependent factor, or arbitrary time-dependent operator defined by a function.
 
 ```python
@@ -37,8 +34,8 @@ $$
 >>> H = dq.sigmaz() + 2 * Hx - Hy
 >>> H(1.0)
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
-[[ 1.+0.000000e+00j  2.-8.742278e-08j]
- [ 2.+8.742278e-08j -1.+0.000000e+00j]]
+[[ 1.+0.j  2.-0.j]
+ [ 2.+0.j -1.+0.j]]
 ```
 
 Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeArray`][dynamiqs.TimeArray] API page.
