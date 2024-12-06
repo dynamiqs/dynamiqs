@@ -98,7 +98,7 @@ Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conju
 
 If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. This functionality is explained in detail in the [Batching simulations](../basics/batching-simulations.md) tutorial, together with the associated gain in performance.
 
-## Computing the gradient for complex parameters
+## Computing the gradient with respect to complex parameters
 
 To optimize a real-valued function of complex parameters $f:\mathbb{C}^p\to\mathbb{R}$, you should take a step in the direction of the **conjugate** of the gradient given by JAX. For example, if you use the SciPy optimizers with `scipy.minimize()`, you need to conjuguate the gradient before providing it to the optimiser:
 
