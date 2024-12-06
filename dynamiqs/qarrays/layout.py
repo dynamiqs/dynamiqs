@@ -35,3 +35,10 @@ def get_layout(layout: Layout | None = None) -> Layout:
             'Argument `layout` must be `dq.dense`, `dq.dia` or `None`, but is'
             f' `{layout}`.'
         )
+
+
+def promote_layouts(layout1: Layout, layout2: Layout) -> Layout:
+    if layout1 is dia and layout2 is dia:
+        return dia
+    else:
+        return dense
