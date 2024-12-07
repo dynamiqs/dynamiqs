@@ -712,6 +712,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#computing-the-gradient-with-respect-to-complex-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Computing the gradient with respect to complex parameters
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4778,6 +4787,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#computing-the-gradient-with-respect-to-complex-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Computing the gradient with respect to complex parameters
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4887,6 +4905,26 @@
 </details>
 <h2 id="using-a-for-loop">Using a for loop</h2>
 <p>If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a <code>for</code> loop. This functionality is explained in detail in the <a href="../basics/batching-simulations.html">Batching simulations</a> tutorial, together with the associated gain in performance.</p>
+<h2 id="computing-the-gradient-with-respect-to-complex-parameters">Computing the gradient with respect to complex parameters</h2>
+<p>To optimize a real-valued function of complex parameters <span class="arithmatex">\(f:\mathbb{C}^p\to\mathbb{R}\)</span>, you should take a step in the direction of the <strong>conjugate</strong> of the gradient given by JAX. For example, if you use the SciPy optimizers with <code>scipy.minimize()</code>, you need to conjuguate the gradient before providing it to the optimiser:</p>
+<!-- skip: start -->
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span> Correct</label><label for="__tabbed_4_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span> Incorrect</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">grad</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">f</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+<span class="n">scipy</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">grad</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">grad</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">f</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">scipy</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">grad</span><span class="p">)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<!-- skip: end -->
+
+<p>See the <a href="https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html#complex-numbers-and-differentiation">JAX documentation</a> and the <a href="https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers">PyTorch documentation</a> for detailed discussions on complex numbers and differentiation.</p>
 
 
 
