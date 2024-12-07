@@ -7,9 +7,8 @@ import diffrax as dx
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
-
 from ...gradient import Autograd, CheckpointAutograd
-from ...qarrays.utils import stack
+from ...qarrays.utils import sum_qarray_pytree
 from .abstract_integrator import BaseIntegrator
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
@@ -218,16 +217,10 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         # and is thus more efficient numerically with only a negligible numerical error
         # induced on the dynamics.
 
-        def vector_field_dissipative(t, y, _):  # noqa: ANN001, ANN202
-            L = stack(self.L(t))
-            Ld = L.dag()
-            LdL = (Ld @ L).sum(0)
-            tmp = (-1j * self.H(t) - 0.5 * LdL) @ y + 0.5 * (L @ y @ Ld).sum(0)
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            Hnh = sum_qarray_pytree([-1j * H] + [-0.5 * _L.dag() @ _L for _L in L])
+            tmp = sum_qarray_pytree([Hnh @ y] + [0.5 * _L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
-        def vector_field_unitary(t, y, _):  # noqa: ANN001, ANN202
-            tmp = -1j * self.H(t) @ y
-            return tmp + tmp.dag()
-
-        vf = vector_field_dissipative if len(self.Ls) > 0 else vector_field_unitary
-        return dx.ODETerm(vf)
+        return dx.ODETerm(vector_field)
