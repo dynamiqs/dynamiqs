@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import jax
 import numpy as np
 
 from .._checks import check_shape
 from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray
-from .operators import eye, zero
+from .operators import eye
 from .quantum_utils import dag
 
 __all__ = [
@@ -248,7 +249,14 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
     # === check jump_ops shape
     for i, L in enumerate(jump_ops):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
-    start = zero(*H.shape)
-    return -1j * (spre(H) - spost(H)) + sum(
-        [sdissipator(L) for L in jump_ops], start=start
+
+    terms = [-1j * spre(H), 1j * spost(H)] + [sdissipator(L) for L in jump_ops]
+    return sum_qarrays(terms)
+
+
+def sum_qarrays(qarrays: list[QArray]) -> QArray:
+    # jax.tree.reduce doesn't call its initializer if the list is not empty
+    # this avoids unwanted conversion from sparse to dense qarrays when summing with 0
+    return jax.tree.reduce(
+        lambda x, y: x + y, qarrays, is_leaf=lambda x: isinstance(x, QArray)
     )
