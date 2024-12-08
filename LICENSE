@@ -200,5 +200,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-This project also includes code derived from QuTiP, licensed under the BSD 3-Clause
+This project includes code derived from QuTiP, licensed under the BSD 3-Clause
 License. The BSD 3-Clause License can be found in the `NOTICE` file.
+
+This project includes code derived from JAX, licensed under the Apache License 2.0.
+The Apache License 2.0 can be found in the `NOTICE` file.

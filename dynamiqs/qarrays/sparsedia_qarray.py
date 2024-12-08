@@ -8,6 +8,7 @@ from collections import defaultdict
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import lineax
 import numpy as np
 from jax._src.core import concrete_or_error
 from jaxtyping import Array, ArrayLike
@@ -176,8 +177,7 @@ class SparseDIAQArray(QArray):
             return self @ self.powm(n - 1)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        # todo: implement dia specific method or raise warning for dense conversion
-        return _sparsedia_to_dense(self).expm(max_squarings=max_squarings)
+        return _sparsedia_expm(self, max_squarings=max_squarings)
 
     def norm(self) -> Array:
         return self.trace()
@@ -545,3 +545,195 @@ def _numpy_to_tuple(x: np.ndarray) -> tuple:
     x = np.asarray(x)  # todo: temporary fix
     assert x.ndim == 1
     return tuple([sub_x.item() for sub_x in x])
+
+
+@functools.partial(jax.jit, static_argnames=('max_squarings',))
+def _sparsedia_expm(A: SparseDIAQArray, *, max_squarings: int) -> SparseDIAQArray:
+    """Compute the matrix exponential of a sparse diagonal matrix.
+
+    This code is adapted from the JAX implementation of expm, see the original code at
+    https://github.com/jax-ml/jax/blob/ad00ee1e06eb8063b8ed081ef410dbf75fd246a3/jax/_src/scipy/linalg.py#L1118
+    """
+    if A.ndim > 2:
+        # todo: debug this (vectorize will not work on a QArray directly)
+        return jnp.vectorize(
+            functools.partial(_sparsedia_expm, max_squarings=max_squarings),
+            signature='(n,n)->(n,n)',
+        )(A)
+
+    P, Q, n_squarings = _calc_P_Q(A)
+    R = _solve_P_Q(P, Q)
+
+    def _nan(R: SparseDIAQArray) -> SparseDIAQArray:
+        return _sparse_nan_like(R)
+
+    def _compute(R: SparseDIAQArray) -> SparseDIAQArray:
+        return _squaring(R, n_squarings, max_squarings)
+
+    return jax.lax.cond(n_squarings > max_squarings, _nan, _compute, R)
+
+
+def _calc_P_Q(A: SparseDIAQArray) -> tuple[SparseDIAQArray, SparseDIAQArray, Array]:
+    A_norm = _sparse_l1norm(A)
+
+    if A.dtype in (jnp.float64, jnp.complex128):
+        maxnorm = 5.371920351148152
+        n_squarings = jnp.maximum(0, jnp.floor(jnp.log2(A_norm / maxnorm)))
+        A = A * (0.5 ** n_squarings.astype(A.dtype))
+        conds = jnp.array(
+            [
+                1.495585217958292e-002,
+                2.539398330063230e-001,
+                9.504178996162932e-001,
+                2.097847961257068e000,
+            ],
+            dtype=A_norm.dtype,
+        )
+        idx = jnp.digitize(A_norm, conds)
+        U, V = jax.lax.switch(idx, [_pade3, _pade5, _pade7, _pade9, _pade13], A)
+    elif A.dtype in (jnp.float32, jnp.complex64):
+        maxnorm = 3.925724783138660
+        n_squarings = jnp.maximum(0, jnp.floor(jnp.log2(A_norm / maxnorm)))
+        A = A * (0.5 ** n_squarings.astype(A.dtype))
+        conds = jnp.array(
+            [4.258730016922831e-01, 1.880152677804762e00], dtype=A_norm.dtype
+        )
+        idx = jnp.digitize(A_norm, conds)
+        U, V = jax.lax.switch(idx, [_pade3, _pade5, _pade7], A)
+
+    P = U + V  # p_m(A) : numerator
+    Q = -U + V  # q_m(A) : denominator
+    return P, Q, n_squarings
+
+
+def _solve_P_Q(P: SparseDIAQArray, Q: SparseDIAQArray) -> SparseDIAQArray:
+    input_structure = jax.eval_shape(lambda: P)
+    operator = lineax.FunctionLinearOperator(
+        lambda x: Q @ x, input_structure=input_structure
+    )
+    return lineax.linear_solve(operator, P).value
+
+
+def _squaring(
+    R: SparseDIAQArray, n_squarings: int, max_squarings: int
+) -> SparseDIAQArray:
+    def _square(x: SparseDIAQArray) -> SparseDIAQArray:
+        return x @ x
+
+    def _identity(x: SparseDIAQArray) -> SparseDIAQArray:
+        return x
+
+    def _scan_f(c: SparseDIAQArray, i: int) -> tuple[SparseDIAQArray, None]:
+        return jax.lax.cond(i < n_squarings, _square, _identity, c), None
+
+    res, _ = jax.lax.scan(
+        _scan_f, R, jnp.arange(max_squarings, dtype=n_squarings.dtype)
+    )
+
+    return res
+
+
+def _pade3(A: SparseDIAQArray) -> tuple[SparseDIAQArray, SparseDIAQArray]:
+    b = (120.0, 60.0, 12.0, 1.0)
+    ident = _sparse_eye_like(A)
+    A2 = A @ A
+    U = A @ (b[3] * A2 + b[1] * ident)
+    V = b[2] * A2 + b[0] * ident
+    return U, V
+
+
+def _pade5(A: SparseDIAQArray) -> tuple[SparseDIAQArray, SparseDIAQArray]:
+    b = (30240.0, 15120.0, 3360.0, 420.0, 30.0, 1.0)
+    ident = _sparse_eye_like(A)
+    A2 = A @ A
+    A4 = A2 @ A2
+    U = A @ (b[5] * A4 + b[3] * A2 + b[1] * ident)
+    V = b[4] * A4 + b[2] * A2 + b[0] * ident
+    return U, V
+
+
+def _pade7(A: SparseDIAQArray) -> tuple[SparseDIAQArray, SparseDIAQArray]:
+    b = (17297280.0, 8648640.0, 1995840.0, 277200.0, 25200.0, 1512.0, 56.0, 1.0)
+    ident = _sparse_eye_like(A)
+    A2 = A @ A
+    A4 = A2 @ A2
+    A6 = A4 @ A2
+    U = A @ (b[7] * A6 + b[5] * A4 + b[3] * A2 + b[1] * ident)
+    V = b[6] * A6 + b[4] * A4 + b[2] * A2 + b[0] * ident
+    return U, V
+
+
+def _pade9(A: SparseDIAQArray) -> tuple[SparseDIAQArray, SparseDIAQArray]:
+    b = (
+        17643225600.0,
+        8821612800.0,
+        2075673600.0,
+        302702400.0,
+        30270240.0,
+        2162160.0,
+        110880.0,
+        3960.0,
+        90.0,
+        1.0,
+    )
+    ident = _sparse_eye_like(A)
+    A2 = A @ A
+    A4 = A2 @ A2
+    A6 = A4 @ A2
+    A8 = A6 @ A2
+    U = A @ (b[9] * A8 + b[7] * A6 + b[5] * A4 + b[3] * A2 + b[1] * ident)
+    V = b[8] * A8 + b[6] * A6 + b[4] * A4 + b[2] * A2 + b[0] * ident
+    return U, V
+
+
+def _pade13(A: SparseDIAQArray) -> tuple[SparseDIAQArray, SparseDIAQArray]:
+    b = (
+        64764752532480000.0,
+        32382376266240000.0,
+        7771770303897600.0,
+        1187353796428800.0,
+        129060195264000.0,
+        10559470521600.0,
+        670442572800.0,
+        33522128640.0,
+        1323241920.0,
+        40840800.0,
+        960960.0,
+        16380.0,
+        182.0,
+        1.0,
+    )
+    ident = _sparse_eye_like(A)
+    A2 = A @ A
+    A4 = A2 @ A2
+    A6 = A4 @ A2
+    U = A @ (
+        A6 @ (b[13] * A6 + b[11] * A4 + b[9] * A2)
+        + b[7] * A6
+        + b[5] * A4
+        + b[3] * A2
+        + b[1] * ident
+    )
+    V = (
+        A6 @ (b[12] * A6 + b[10] * A4 + b[8] * A2)
+        + b[6] * A6
+        + b[4] * A4
+        + b[2] * A2
+        + b[0] * ident
+    )
+    return U, V
+
+
+def _sparse_eye_like(x: SparseDIAQArray) -> SparseDIAQArray:
+    offsets = (0,)
+    diags = jnp.ones((*x.shape[:-2], 1, x.shape[-1]))
+    return SparseDIAQArray(x.dims, offsets, diags)
+
+
+def _sparse_nan_like(x: SparseDIAQArray) -> SparseDIAQArray:
+    diags = jnp.full_like(x.diags, jnp.nan)
+    return SparseDIAQArray(x.dims, x.offsets, diags)
+
+
+def _sparse_l1norm(x: SparseDIAQArray) -> Array:
+    return jnp.linalg.norm(x.diags, 1)
