@@ -23,7 +23,7 @@ class MEInterface(eqx.Module):
     Ls: list[TimeArray]
 
     def L(self, t: Scalar) -> list[QArray]:
-        return [L(t) for L in self.Ls]  # (nLs, n, n)
+        return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
 
 class SolveInterface(eqx.Module):
