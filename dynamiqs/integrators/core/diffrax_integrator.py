@@ -8,7 +8,7 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
 from ...gradient import Autograd, CheckpointAutograd
-from ...qarrays.utils import sum_qarray_pytree
+from ...qarrays.utils import tree_sum
 from .abstract_integrator import BaseIntegrator
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
@@ -219,8 +219,8 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = sum_qarray_pytree([-1j * H] + [-0.5 * _L.dag() @ _L for _L in L])
-            tmp = sum_qarray_pytree([Hnh @ y] + [0.5 * _L @ y @ _L.dag() for _L in L])
+            Hnh = tree_sum([-1j * H] + [-0.5 * _L.dag() @ _L for _L in L])
+            tmp = tree_sum([Hnh @ y] + [0.5 * _L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)

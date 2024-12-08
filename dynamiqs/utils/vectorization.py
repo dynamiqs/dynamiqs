@@ -4,7 +4,7 @@ import numpy as np
 
 from .._checks import check_shape
 from ..qarrays.qarray import QArray, QArrayLike
-from ..qarrays.utils import asqarray, sum_qarray_pytree
+from ..qarrays.utils import asqarray, tree_sum
 from .operators import eye
 from .quantum_utils import dag
 
@@ -250,4 +250,4 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
 
     terms = [-1j * spre(H), 1j * spost(H)] + [sdissipator(L) for L in jump_ops]
-    return sum_qarray_pytree(terms)
+    return tree_sum(terms)

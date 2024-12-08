@@ -375,7 +375,7 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
         )
 
 
-def sum_qarray_pytree(qarrays: list[QArray]) -> QArray:
+def tree_sum(qarrays: list[QArray]) -> QArray:
     # jax.tree.reduce doesn't call its initializer if the list is not empty
     # this avoids unwanted conversion from sparse to dense qarrays when summing with 0
     return jax.tree.reduce(
