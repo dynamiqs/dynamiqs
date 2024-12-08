@@ -34,6 +34,7 @@ dependencies = [
     "cmasher>=1.8.0",  # avoid matplotlib colormaps deprecation warning
     "ipython",
     "tqdm",
+    "lineax",
 ]
 
 [project.urls]
