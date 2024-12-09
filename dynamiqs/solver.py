@@ -73,6 +73,10 @@ class Expm(Solver):
     $$
 
     Warning:
+        If the Hamiltonian or jump operators are sparse arrays, they will be silently
+        converted to dense arrays before computing their matrix exponentials.
+
+    Warning:
         This solver is not recommended for open systems of large dimension, due to
         the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian exponential.
 
