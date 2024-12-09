@@ -176,7 +176,11 @@ class SparseDIAQArray(QArray):
             return self @ self.powm(n - 1)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        # todo: implement dia specific method or raise warning for dense conversion
+        warnings.warn(
+            'A SparseDIAQArray has been converted to a DenseQArray while computing its '
+            'matrix exponential.',
+            stacklevel=2,
+        )
         return _sparsedia_to_dense(self).expm(max_squarings=max_squarings)
 
     def norm(self) -> Array:
