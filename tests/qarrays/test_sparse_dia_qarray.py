@@ -3,6 +3,7 @@ import warnings
 import jax.numpy as jnp
 import jax.random as jr
 import pytest
+from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
 
@@ -166,7 +167,7 @@ class TestSparseDIAQArray:
 
         # assert an error is raised
         error_str = 'must contain zeros outside the matrix bounds'
-        with pytest.raises(ValueError, match=error_str):
+        with pytest.raises(EquinoxRuntimeError, match=error_str):
             dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
 
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
