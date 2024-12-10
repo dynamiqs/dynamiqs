@@ -9,15 +9,17 @@ from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .._checks import check_shape
-from .dense_qarray import DenseQArray, _array_to_qobj_list, _dense_to_qobj
+from .dense_qarray import DenseQArray, _array_to_qobj_list
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, _get_dims, _to_jax, _to_numpy, isqarraylike
-from .sparsedia_qarray import (
-    SparseDIAQArray,
-    _array_to_sparsedia,
-    _sparsedia_to_dense,
-    _sparsedia_to_qobj,
+from .sparsedia_primitives import (
+    array_to_sparsedia,
+    autopad_sparsedia_diags,
+    shape_sparsedia,
+    sparsedia_to_array,
+    stack_sparsedia,
 )
+from .sparsedia_qarray import SparseDIAQArray
 
 __all__ = [
     'asqarray',
@@ -84,7 +86,8 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
     if isinstance(x, DenseQArray):
         return x
     elif isinstance(x, SparseDIAQArray):
-        return _sparsedia_to_dense(x)
+        data = sparsedia_to_array(x.offsets, x.diags)
+        return DenseQArray(x.dims, data)
 
     xdims = _get_dims(x)
     x = _to_jax(x)
@@ -101,7 +104,30 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray
     xdims = _get_dims(x)
     x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
-    return _array_to_sparsedia(x, dims=dims)
+    offsets, diags = array_to_sparsedia(x)
+    return SparseDIAQArray(dims, offsets, diags)
+
+
+def _init_dims(
+    xdims: tuple[int, ...] | None, dims: tuple[int, ...] | None, shape: tuple[int, ...]
+) -> tuple[int, ...]:
+    # xdims: native dims from the original object
+    # dims: dims specified by the user
+    # shape: object shape
+    if dims is None:
+        dims = (shape[-2] if shape[-2] != 1 else shape[-1],) if xdims is None else xdims
+    elif xdims is not None and xdims != dims:
+        # warn if `dims` argument is specified but unused
+        warnings.warn(
+            f'Argument `x` is already an object with `x.dims={xdims}`, but'
+            f' different `dims={dims}` were specified as input. Ignoring the '
+            f'provided `dims` and proceeding with the object `x.dims`.',
+            stacklevel=2,
+        )
+
+    _assert_dims_match_shape(dims, shape)
+
+    return dims
 
 
 def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
@@ -142,32 +168,20 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         raise ValueError(
             'Argument `qarrays` must contain elements with identical `dims` attribute.'
         )
+    if not all(qarray.shape == qarrays[0].shape for qarray in qarrays):
+        raise ValueError('All input arrays must have the same shape.')
 
     # stack inputs depending on type
     if all(isinstance(q, DenseQArray) for q in qarrays):
         data = jnp.stack([q.data for q in qarrays], axis=axis)
         return DenseQArray(dims, data)
     elif all(isinstance(q, SparseDIAQArray) for q in qarrays):
-        unique_offsets = set()
-        for qarray in qarrays:
-            unique_offsets.update(qarray.offsets)
-        unique_offsets = tuple(sorted(unique_offsets))
-
-        offset_to_index = {offset: idx for idx, offset in enumerate(unique_offsets)}
-        diag_list = []
-        for qarray in qarrays:
-            add_diags_shape = qarray.diags.shape[:-2] + (
-                len(unique_offsets),
-                qarray.diags.shape[-1],
-            )
-            updated_diags = jnp.zeros(add_diags_shape, dtype=qarray.diags.dtype)
-            for i, offset in enumerate(qarray.offsets):
-                idx = offset_to_index[offset]
-                updated_diags = updated_diags.at[..., idx, :].set(
-                    qarray.diags[..., i, :]
-                )
-            diag_list.append(updated_diags)
-        return SparseDIAQArray(dims, unique_offsets, jnp.stack(diag_list))
+        offsets, diags = stack_sparsedia(
+            [qarrays.offsets for qarrays in qarrays],
+            [qarrays.diags for qarrays in qarrays],
+            axis=axis,
+        )
+        return SparseDIAQArray(dims, offsets, diags)
     else:
         raise NotImplementedError(
             'Stacking qarrays with different types is not implemented.'
@@ -276,9 +290,9 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
     if isinstance(x, Qobj):
         return x
     elif isinstance(x, DenseQArray):
-        return _dense_to_qobj(x)
+        return x.to_qutip()
     elif isinstance(x, SparseDIAQArray):
-        return _sparsedia_to_qobj(x)
+        return x.asdense().to_qutip()
 
     xdims = _get_dims(x)
     x = _to_jax(x)
@@ -323,46 +337,14 @@ def sparsedia_from_dict(
          [[1. ⋅ ]
           [ ⋅ 1.]]]
     """
-    # === offsets
     offsets = tuple(offsets_diags.keys())
-
-    # === diags
-    # stack arrays in a square matrix by padding each according to its offset
-    pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
-    diags = [jnp.asarray(diag) for diag in offsets_diags.values()]
-    diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
-    diags = jnp.stack(diags, dtype=dtype)
-    diags = jnp.moveaxis(diags, 0, -2)
-
-    # === dims
-    n = diags.shape[-1]
-    shape = (*diags.shape[:-2], n, n)
-    dims = (n,) if dims is None else dims
+    diags = [jnp.asarray(diag, dtype=dtype) for diag in offsets_diags.values()]
+    diags = autopad_sparsedia_diags(offsets, diags)
+    shape = shape_sparsedia(diags)
+    dims = (shape[-1],) if dims is None else dims
     _assert_dims_match_shape(dims, shape)
 
-    return SparseDIAQArray(diags=diags, offsets=offsets, dims=dims)
-
-
-def _init_dims(
-    xdims: tuple[int, ...] | None, dims: tuple[int, ...] | None, shape: tuple[int, ...]
-) -> tuple[int, ...]:
-    # xdims: native dims from the original object
-    # dims: dims specified by the user
-    # shape: object shape
-    if dims is None:
-        dims = (shape[-2] if shape[-2] != 1 else shape[-1],) if xdims is None else xdims
-    elif xdims is not None and xdims != dims:
-        # warn if `dims` argument is specified but unused
-        warnings.warn(
-            f'Argument `x` is already an object with `x.dims={xdims}`, but'
-            f' different `dims={dims}` were specified as input. Ignoring the '
-            f'provided `dims` and proceeding with the object `x.dims`.',
-            stacklevel=2,
-        )
-
-    _assert_dims_match_shape(dims, shape)
-
-    return dims
+    return SparseDIAQArray(dims, offsets, diags)
 
 
 def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):

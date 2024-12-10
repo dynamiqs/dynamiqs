@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING, get_args
 
 import jax
@@ -12,35 +13,12 @@ from qutip import Qobj
 from .._utils import _is_batched_scalar
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
+from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
     from .sparse_dia_qarray import SparseDIAQArray
 
 __all__ = ['DenseQArray']
-
-# batched Kronecker product of two arrays
-_bkron = jnp.vectorize(jnp.kron, signature='(a,b),(c,d)->(ac,bd)')
-
-
-def _dense_to_qobj(x: DenseQArray) -> Qobj | list[Qobj]:
-    return _array_to_qobj_list(x.to_jax(), x.dims)
-
-
-def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
-    # convert dims to qutip
-    dims = list(dims)
-    if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
-        dims = [dims, [1] * len(dims)]
-    elif x.shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
-        dims = [[1] * len(dims), dims]
-    elif x.shape[-1] == x.shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
-        dims = [dims, dims]
-
-    return jax.tree.map(
-        lambda x: Qobj(x, dims=dims),
-        x.tolist(),
-        is_leaf=lambda x: jnp.asarray(x).ndim == 2,
-    )
 
 
 class DenseQArray(QArray):
@@ -132,15 +110,16 @@ class DenseQArray(QArray):
         return self
 
     def assparsedia(self) -> SparseDIAQArray:
-        from .sparsedia_qarray import _array_to_sparsedia
+        from .sparsedia_qarray import SparseDIAQArray
 
-        return _array_to_sparsedia(self.data, dims=self.dims)
+        offsets, diags = array_to_sparsedia(self.data)
+        return SparseDIAQArray(self.dims, offsets, diags)
 
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj | list[Qobj]:
-        return _dense_to_qobj(self)
+        return _array_to_qobj_list(self.to_jax(), self.dims)
 
     def to_jax(self) -> Array:
         return self.data
@@ -246,3 +225,26 @@ class DenseQArray(QArray):
     def __getitem__(self, key: int | slice) -> QArray:
         data = self.data[key]
         return DenseQArray(self.dims, data)
+
+
+def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
+    # convert dims to qutip
+    dims = list(dims)
+    if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
+        dims = [dims, [1] * len(dims)]
+    elif x.shape[-2] == 1:  # [[1], [3]] or [[1, 1], [3, 4]]
+        dims = [[1] * len(dims), dims]
+    elif x.shape[-1] == x.shape[-2]:  # [[3], [3]] or [[3, 4], [3, 4]]
+        dims = [dims, dims]
+
+    return jax.tree.map(
+        lambda x: Qobj(x, dims=dims),
+        x.tolist(),
+        is_leaf=lambda x: jnp.asarray(x).ndim == 2,
+    )
+
+
+@partial(jnp.vectorize, signature='(a,b),(c,d)->(ac,bd)')
+def _bkron(a: Array, b: Array) -> Array:
+    # batched kronecker product
+    return jnp.kron(a, b)
