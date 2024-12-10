@@ -4916,6 +4916,12 @@ $$</p>
 <details class="warning"
  open >
   <summary>Warning</summary>
+  <p>If the Hamiltonian or jump operators are sparse arrays, they will be silently
+converted to dense arrays before computing their matrix exponentials.</p>
+</details>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
   <p>This solver is not recommended for open systems of large dimension, due to
 the <span class="arithmatex">\(\mathcal{O}(n^6)\)</span> scaling of computing the Liouvillian exponential.</p>
 </details>
