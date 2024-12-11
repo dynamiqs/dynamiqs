@@ -48,14 +48,10 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def reshape(self, *shape: int) -> QArray:
-        super().reshape(*shape)
-
         data = jnp.reshape(self.data, shape)
         return DenseQArray(self.dims, data)
 
     def broadcast_to(self, *shape: int) -> QArray:
-        super().broadcast_to(*shape)
-
         data = jnp.broadcast_to(self.data, shape)
         return DenseQArray(self.dims, data)
 

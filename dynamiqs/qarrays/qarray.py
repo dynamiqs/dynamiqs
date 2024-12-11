@@ -234,11 +234,6 @@ class QArray(eqx.Module):
         Returns:
             New qarray object with the given shape.
         """
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot reshape to shape {shape} because the last two dimensions do '
-                f'not match current shape dimensions, {self.shape}.'
-            )
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> QArray:
@@ -250,11 +245,6 @@ class QArray(eqx.Module):
         Returns:
             New qarray object with the given shape.
         """
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot broadcast to shape {shape} because the last two dimensions do '
-                f'not match current shape dimensions, {self.shape}.'
-            )
 
     @abstractmethod
     def ptrace(self, *keep: int) -> QArray:

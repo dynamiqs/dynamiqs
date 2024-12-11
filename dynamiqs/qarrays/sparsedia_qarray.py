@@ -94,13 +94,21 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
 
     def reshape(self, *shape: int) -> QArray:
-        super().reshape(*shape)
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f'Cannot reshape to shape {shape} because the last two dimensions do '
+                f'not match current shape dimensions, {self.shape}.'
+            )
 
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
         return SparseDIAQArray(self.dims, offsets, diags)
 
     def broadcast_to(self, *shape: int) -> QArray:
-        super().broadcast_to(*shape)
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f'Cannot broadcast to shape {shape} because the last two dimensions do '
+                f'not match current shape dimensions, {self.shape}.'
+            )
 
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
         return SparseDIAQArray(self.dims, offsets, diags)
