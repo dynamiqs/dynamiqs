@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/wigner.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/trace.html">
 
 
-    <link rel="prev" href="bloch_coordinates.html">
+    <link rel="prev" href="sinm.html">
 
 
-    <link rel="next" href="../../qarrays/utils/asqarray.html">
+    <link rel="next" href="tracemm.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>wigner - Dynamiqs</title>
+        <title>trace - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.wigner" class="md-skip">
+        <a href="#dynamiqs.utils.general.trace" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                wigner
+                trace
               
             </span>
           </div>
@@ -3047,10 +3047,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="trace.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="trace.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3059,6 +3068,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3530,19 +3540,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="wigner.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3551,7 +3552,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4879,26 +4879,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.wigner" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.wigner</span>
+<h1 id="dynamiqs.utils.general.trace" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.trace</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">wigner</span><span class="p">(</span>
-    <span class="n">state</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
-    <span class="n">xmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">6.0</span><span class="p">,</span>
-    <span class="n">ymax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">6.0</span><span class="p">,</span>
-    <span class="n">npixels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">201</span><span class="p">,</span>
-    <span class="n">xvec</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">yvec</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">g</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Array</span><span class="p">,</span> <span class="n">Array</span><span class="p">,</span> <span class="n">Array</span><span class="p">]</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">trace</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Compute the Wigner distribution of a ket or density matrix.</p>
-<p>The Wigner distribution is computed on a grid of coordinates <span class="arithmatex">\((x, y)\)</span>.</p>
+        <p>Returns the trace of an array along its last two dimensions.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4906,48 +4897,11 @@
     </p>
     <ul>
         <li class="field-body">
-          <b>state</b>
+          <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (..., n, 1) or (..., n, n))              </i>
-          – <p>Ket or density
-matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>xmax</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum absolute value of the <span class="arithmatex">\(x\)</span> coordinate.</p>
-        </li>
-        <li class="field-body">
-          <b>ymax</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum absolute value of the <span class="arithmatex">\(y\)</span> coordinate.</p>
-        </li>
-        <li class="field-body">
-          <b>npixels</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Number of pixels in each direction.</p>
-        </li>
-        <li class="field-body">
-          <b>xvec</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (nxvec,), optional)              </i>
-          – <p><span class="arithmatex">\(x\)</span> coordinates. If <code>None</code>,
-defaults to <code>xvec = jnp.linspace(-xmax, xmax, npixels)</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>yvec</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (nyvec,), optional)              </i>
-          – <p><span class="arithmatex">\(y\)</span> coordinates. If <code>None</code>,
-defaults to <code>yvec = jnp.linspace(-ymax, ymax, npixels)</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>g</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Scaling factor of Wigner quadratures, such that <span class="arithmatex">\(a = g(x + iy)/2\)</span>.</p>
+(qarray_like of shape (..., n, n))              </i>
+          – <p>Array.</p>
         </li>
     </ul>
 
@@ -4957,25 +4911,20 @@ defaults to <code>yvec = jnp.linspace(-ymax, ymax, npixels)</code>.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>tuple[<span title="jax.Array">Array</span>, <span title="jax.Array">Array</span>, <span title="jax.Array">Array</span>]</code>
-        – <p>A tuple <code>(xvec, yvec, w)</code> where</p>
-<ul>
-<li><strong>xvec</strong> <em>(array of shape (npixels,) or (nxvec,))</em> -- <span class="arithmatex">\(x\)</span> coordinates, or
-    <code>xvec</code> if specified.</li>
-<li><strong>yvec</strong> <em>(array of shape (npixels,) or (nyvec,))</em> -- <span class="arithmatex">\(y\)</span> coordinates, or
-    <code>yvec</code> if specified.</li>
-<li><strong>w</strong> <em>(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))</em> -- Wigner distribution.</li>
-</ul>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> Trace of <code>x</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>A tuple <code>(xvec, yvec, w)</code> where</p>
-<ul>
-<li><strong>xvec</strong> <em>(array of shape (npixels,) or (nxvec,))</em> -- <span class="arithmatex">\(x\)</span> coordinates, or
-    <code>xvec</code> if specified.</li>
-<li><strong>yvec</strong> <em>(array of shape (npixels,) or (nyvec,))</em> -- <span class="arithmatex">\(y\)</span> coordinates, or
-    <code>yvec</code> if specified.</li>
-<li><strong>w</strong> <em>(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))</em> -- Wigner distribution.</li>
-</ul></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Trace of <code>x</code>.</p></span>
+
+<!-- <p><strong>Examples:</strong></p> -->
+<p>
+  <strong>Examples</strong>
+</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Array(3., dtype=float32)</span>
+</code></pre></div>
 
     </div>
 

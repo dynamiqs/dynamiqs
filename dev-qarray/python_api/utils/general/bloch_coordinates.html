@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/fidelity.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/bloch_coordinates.html">
 
 
-    <link rel="prev" href="overlap.html">
+    <link rel="prev" href="entropy_vn.html">
 
 
-    <link rel="next" href="entropy_vn.html">
+    <link rel="next" href="wigner.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>fidelity - Dynamiqs</title>
+        <title>bloch_coordinates - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.fidelity" class="md-skip">
+        <a href="#dynamiqs.utils.general.bloch_coordinates" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                fidelity
+                bloch_coordinates
               
             </span>
           </div>
@@ -3467,19 +3467,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="fidelity.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="fidelity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3488,7 +3479,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3519,10 +3509,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="bloch_coordinates.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="bloch_coordinates.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3531,6 +3530,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4879,33 +4879,28 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.fidelity" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.fidelity</span>
+<h1 id="dynamiqs.utils.general.bloch_coordinates" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.bloch_coordinates</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">fidelity</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the fidelity of two states, kets or density matrices.</p>
-<p>The fidelity is computed</p>
-<ul>
-<li>as <span class="arithmatex">\(F(\ket\psi,\ket\varphi)=\left|\braket{\psi|\varphi}\right|^2\)</span> if both
-  arguments are kets,</li>
-<li>as <span class="arithmatex">\(F(\ket\psi,\rho)=\lvert\braket{\psi|\rho|\psi}\rvert\)</span> if one arguments is a
-  ket and the other is a density matrix,</li>
-<li>as <span class="arithmatex">\(F(\rho,\sigma)=\tr{\sqrt{\sqrt\rho\sigma\sqrt\rho}}^2\)</span> if both arguments are
-  density matrices.</li>
-</ul>
+        <p>Returns the spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span> of a ket or density matrix
+on the Bloch sphere.</p>
+<p>The coordinates are such that
+$$
+    \begin{cases}
+        0\leq r \leq 1, \\
+        0\leq\theta\leq\pi, \\
+        0\leq\phi&lt;2\pi.
+    \end{cases}
+$$</p>
+<p>By convention, we choose <span class="arithmatex">\(\phi=0\)</span> if <span class="arithmatex">\(\theta=0\)</span>, and <span class="arithmatex">\(\theta=\phi=0\)</span> if <span class="arithmatex">\(r=0\)</span>.</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This definition is different from <code>qutip.fidelity()</code> which uses the square root
-fidelity <span class="arithmatex">\(F_\text{qutip} = \sqrt{F}\)</span>.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
@@ -4915,14 +4910,7 @@ fidelity <span class="arithmatex">\(F_\text{qutip} = \sqrt{F}\)</span>.</p>
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (..., n, 1) or (..., n, n))              </i>
-          – <p>Ket or density matrix.</p>
-        </li>
-        <li class="field-body">
-          <b>y</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(qarray_like of shape (..., n, 1) or (..., n, n))              </i>
+(qarray_like of shape (2, 1) or (2, 2))              </i>
           – <p>Ket or density matrix.</p>
         </li>
     </ul>
@@ -4934,23 +4922,51 @@ fidelity <span class="arithmatex">\(F_\text{qutip} = \sqrt{F}\)</span>.</p>
     <!-- <ul>
       <li class="field-body">
             <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Real-valued fidelity.</p>
+        – <p><em>(array of shape (3,))</em> Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued fidelity.</p></span>
+      <span class="field-body"><p><em>(array of shape (3,))</em> Spherical coordinates <span class="arithmatex">\((r, \theta, \phi)\)</span>.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">fock0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">fidelity</span><span class="p">(</span><span class="n">fock0</span><span class="p">,</span> <span class="n">fock0</span><span class="p">)</span>
-<span class="go">Array(1., dtype=float32)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fock01_dm</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">fidelity</span><span class="p">(</span><span class="n">fock01_dm</span><span class="p">,</span> <span class="n">fock01_dm</span><span class="p">)</span>
-<span class="go">Array(1., dtype=float32)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">fidelity</span><span class="p">(</span><span class="n">fock0</span><span class="p">,</span> <span class="n">fock01_dm</span><span class="p">)</span>
-<span class="go">Array(0.5, dtype=float32)</span>
+    <p>The state <span class="arithmatex">\(\ket0\)</span> is on the north pole at coordinates
+<span class="arithmatex">\((r,\theta,\phi) = (1,0,0)\)</span>:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Array([1., 0., 0.], dtype=float32)</span>
+</code></pre></div>
+    <p>The state <span class="arithmatex">\(\ket1\)</span> is on the south pole at coordinates
+<span class="arithmatex">\((r,\theta,\phi) = (1,\pi,0)\)</span>:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Array([1.   , 3.142, 0.   ], dtype=float32)</span>
+</code></pre></div>
+    <p>The state <span class="arithmatex">\(\ket+=(\ket0+\ket1)/\sqrt2\)</span> is aligned with the <span class="arithmatex">\(x\)</span>-axis at
+coordinates <span class="arithmatex">\((r,\theta,\phi) = (1,\pi/2,0)\)</span>:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">plus</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">plus</span><span class="p">)</span>
+<span class="go">Array([1.   , 1.571, 0.   ], dtype=float32)</span>
+</code></pre></div>
+    <p>The state <span class="arithmatex">\(\ket-=(\ket0-\ket1)/\sqrt2\)</span> is aligned with the <span class="arithmatex">\(-x\)</span>-axis at
+coordinates <span class="arithmatex">\((r,\theta,\phi) = (1,\pi/2,\pi)\)</span>:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">minus</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">minus</span><span class="p">)</span>
+<span class="go">Array([1.   , 1.571, 3.142], dtype=float32)</span>
+</code></pre></div>
+    <p>A fully mixed state <span class="arithmatex">\(\rho=0.5\ket0\bra0+0.5\ket1\bra1\)</span> is at the center of the
+sphere at coordinates <span class="arithmatex">\((r,\theta,\phi) = (0,0,0)\)</span>:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Array([0., 0., 0.], dtype=float32)</span>
+</code></pre></div>
+    <p>A partially mixed state <span class="arithmatex">\(\rho=0.75\ket0\bra0 + 0.25\ket1\bra1\)</span> is halfway
+between the sphere center and the north pole at coordinates
+<span class="arithmatex">\((r,\theta,\phi) = (0.5,0,0)\)</span>:</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.75</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">bloch_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Array([0.5, 0. , 0. ], dtype=float32)</span>
 </code></pre></div>
 
     </div>

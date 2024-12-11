@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/sinm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/entropy_vn.html">
 
 
-    <link rel="prev" href="cosm.html">
+    <link rel="prev" href="fidelity.html">
 
 
-    <link rel="next" href="trace.html">
+    <link rel="next" href="bloch_coordinates.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>sinm - Dynamiqs</title>
+        <title>entropy_vn - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.sinm" class="md-skip">
+        <a href="#dynamiqs.utils.general.entropy_vn" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                sinm
+                entropy_vn
               
             </span>
           </div>
@@ -3026,19 +3026,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="sinm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="sinm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3047,7 +3038,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3498,10 +3488,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="entropy_vn.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="entropy_vn.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3510,6 +3509,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4879,17 +4879,18 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.sinm" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.sinm</span>
+<h1 id="dynamiqs.utils.general.entropy_vn" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.entropy_vn</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">sinm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">entropy_vn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the sine of an array.</p>
+        <p>Returns the Von Neumann entropy of a ket or density matrix.</p>
+<p>It is defined by <span class="arithmatex">\(S(\rho) = -\tr{\rho \ln \rho}\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4900,8 +4901,8 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (..., n, n))              </i>
-          – <p>Square matrix.</p>
+(qarray_like of shape (..., n, 1) or (..., n, n))              </i>
+          – <p>Ket or density matrix.</p>
         </li>
     </ul>
 
@@ -4911,29 +4912,22 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, n))</em> Sine of <code>x</code>.</p>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Sine of <code>x</code>.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p></span>
 
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>This function uses <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html"><code>jax.scipy.linalg.expm()</code></a>
-to compute the sine of a matrix <span class="arithmatex">\(A\)</span>:
-$$
-    \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
-$$</p>
-</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">sinm</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
-<span class="go">[[0.-0.j 1.-0.j]</span>
-<span class="go"> [1.-0.j 0.-0.j]]</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+<span class="go">Array(0.693, dtype=float32)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psis</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">psis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(5,)</span>
 </code></pre></div>
 
     </div>

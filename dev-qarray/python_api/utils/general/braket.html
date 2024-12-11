@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tensor.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/braket.html">
 
 
-    <link rel="prev" href="ptrace.html">
+    <link rel="prev" href="proj.html">
 
 
-    <link rel="next" href="expect.html">
+    <link rel="next" href="overlap.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>tensor - Dynamiqs</title>
+        <title>braket - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.tensor" class="md-skip">
+        <a href="#dynamiqs.utils.general.braket" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                tensor
+                braket
               
             </span>
           </div>
@@ -3110,19 +3110,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="tensor.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="tensor.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3131,7 +3122,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3435,10 +3425,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="braket.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="braket.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3447,6 +3446,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4879,27 +4879,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.tensor" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.tensor</span>
+<h1 id="dynamiqs.utils.general.braket" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.braket</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">tensor</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">braket</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the tensor product of multiple kets, bras, density matrices or
-operators.</p>
-<p>The returned array shape is:</p>
-<ul>
-<li><span class="arithmatex">\((..., n, 1)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input arrays are kets with shape
-  <span class="arithmatex">\((..., n_k, 1)\)</span>,</li>
-<li><span class="arithmatex">\((..., 1, n)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input arrays are bras with shape
-  <span class="arithmatex">\((..., 1, n_k)\)</span>,</li>
-<li><span class="arithmatex">\((..., n, n)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input arrays are density matrices or
-  operators with shape <span class="arithmatex">\((..., n_k, n_k)\)</span>.</li>
-</ul>
+        <p>Returns the inner product <span class="arithmatex">\(\braket{\psi|\varphi}\)</span> between two kets.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4907,11 +4897,14 @@ operators.</p>
     </p>
     <ul>
         <li class="field-body">
-          <b>*args</b>
+          <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(qarray_like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k))              </i>
-          – <p>Variable length argument list of kets, bras, density matrices or operators.</p>
+          – <p>Left-side ket.</p>
+        </li>
+        <li class="field-body">
+          <b>y</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Right-side ket.</p>
         </li>
     </ul>
 
@@ -4921,21 +4914,20 @@ operators.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Tensor product of
-the input arrays.</p>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> Complex-valued inner product.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Tensor product of
-the input arrays.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Complex-valued inner product.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(60, 1)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">fock0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fock01</span> <span class="o">=</span> <span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">braket</span><span class="p">(</span><span class="n">fock0</span><span class="p">,</span> <span class="n">fock01</span><span class="p">)</span>
+<span class="go">Array(0.707+0.j, dtype=complex64)</span>
 </code></pre></div>
 
     </div>

@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tobra.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/cosm.html">
 
 
-    <link rel="prev" href="toket.html">
+    <link rel="prev" href="expm.html">
 
 
-    <link rel="next" href="todm.html">
+    <link rel="next" href="sinm.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>tobra - Dynamiqs</title>
+        <title>cosm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.tobra" class="md-skip">
+        <a href="#dynamiqs.utils.general.cosm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                tobra
+                cosm
               
             </span>
           </div>
@@ -3005,10 +3005,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="cosm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="cosm.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3017,6 +3026,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3362,19 +3372,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="tobra.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="tobra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3383,7 +3384,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4879,17 +4879,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.tobra" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.tobra</span>
+<h1 id="dynamiqs.utils.general.cosm" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.cosm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">tobra</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">cosm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the bra representation of a pure quantum state.</p>
+        <p>Returns the cosine of an array.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4900,8 +4900,8 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (..., n, 1) or (..., 1, n))              </i>
-          – <p>Ket or bra.</p>
+(qarray_like of shape (..., n, n))              </i>
+          – <p>Square matrix.</p>
         </li>
     </ul>
 
@@ -4912,24 +4912,28 @@
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., 1, n))</em> QArray.</p>
+        – <p><em>(qarray of shape (..., n, n))</em> Cosine of <code>x</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., 1, n))</em> QArray.</p></span>
+      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Cosine of <code>x</code>.</p></span>
 
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>This function uses <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html"><code>jax.scipy.linalg.expm()</code></a>
+to compute the cosine of a matrix <span class="arithmatex">\(A\)</span>:
+$$
+    \cos(A) = \frac{e^{iA} + e^{-iA}}{2}
+$$</p>
+</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># shape: (3, 1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span>
-<span class="go">QArray: shape=(3, 1), dims=(3,), dtype=complex64, layout=dense</span>
-<span class="go">[[1.+0.j]</span>
-<span class="go"> [0.+0.j]</span>
-<span class="go"> [0.+0.j]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">tobra</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>  <span class="c1"># shape: (1, 3)</span>
-<span class="go">QArray: shape=(1, 3), dims=(3,), dtype=complex64, layout=dense</span>
-<span class="go">[[1.-0.j 0.-0.j 0.-0.j]]</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">cosm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
+<span class="go">[[-1.+0.j  0.+0.j]</span>
+<span class="go"> [ 0.+0.j -1.+0.j]]</span>
 </code></pre></div>
 
     </div>

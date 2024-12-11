@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isop.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/proj.html">
 
 
-    <link rel="prev" href="isdm.html">
+    <link rel="prev" href="todm.html">
 
 
-    <link rel="next" href="isherm.html">
+    <link rel="next" href="braket.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>isop - Dynamiqs</title>
+        <title>proj - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.isop" class="md-skip">
+        <a href="#dynamiqs.utils.general.proj" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                isop
+                proj
               
             </span>
           </div>
@@ -3299,19 +3299,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="isop.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="isop.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3320,7 +3311,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3414,10 +3404,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="proj.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="proj.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3426,6 +3425,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4879,17 +4879,19 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.isop" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.isop</span>
+<h1 id="dynamiqs.utils.general.proj" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.proj</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isop</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">proj</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns True if the array is in the format of an operator.</p>
+        <p>Returns the projection operator onto a pure quantum state.</p>
+<p>The projection operator onto the state <span class="arithmatex">\(\ket\psi\)</span> is defined as
+<span class="arithmatex">\(P_{\ket\psi} = \ket\psi\bra\psi\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4900,8 +4902,8 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (...))              </i>
-          – <p>Array.</p>
+(qarray_like of shape (..., n, 1) or (..., 1, n))              </i>
+          – <p>Ket or bra.</p>
         </li>
     </ul>
 
@@ -4911,22 +4913,22 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>bool</code>
-        – <p>True if the last two dimensions of <code>x</code> are equal, False otherwise.</p>
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
+        – <p><em>(qarray of shape (..., n, n))</em> Projection operator.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>True if the last two dimensions of <code>x</code> are equal, False otherwise.</p></span>
+      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Projection operator.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isop</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isop</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isop</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="go">False</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+<span class="go">QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense</span>
+<span class="go">[[1.+0.j 0.+0.j 0.+0.j]</span>
+<span class="go"> [0.+0.j 0.+0.j 0.+0.j]</span>
+<span class="go"> [0.+0.j 0.+0.j 0.+0.j]]</span>
 </code></pre></div>
 
     </div>

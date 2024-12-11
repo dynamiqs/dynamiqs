@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/tracemm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/dissipator.html">
 
 
-    <link rel="prev" href="trace.html">
+    <link rel="prev" href="unit.html">
 
 
-    <link rel="next" href="ptrace.html">
+    <link rel="next" href="lindbladian.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>tracemm - Dynamiqs</title>
+        <title>dissipator - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.tracemm" class="md-skip">
+        <a href="#dynamiqs.utils.general.dissipator" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                tracemm
+                dissipator
               
             </span>
           </div>
@@ -3068,19 +3068,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="tracemm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="tracemm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3089,7 +3080,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3204,10 +3194,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="dissipator.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="dissipator.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3216,6 +3215,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4879,50 +4879,41 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.tracemm" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.tracemm</span>
+<h1 id="dynamiqs.utils.general.dissipator" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.dissipator</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">tracemm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">dissipator</span><span class="p">(</span><span class="n">L</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">rho</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Return the trace of a matrix multiplication using a fast implementation.</p>
-<p>The trace is computed as <code>sum(x * y.T)</code> where <code>*</code> is the element-wise product,
-instead of <code>trace(x @ y)</code> where <code>@</code> is the matrix product. Indeed, we have:</p>
-<div class="arithmatex">\[
-    \tr{xy} = \sum_i (xy)_{ii}
-            = \sum_{i,j} x_{ij} y_{ji}
-            = \sum_{i,j} x_{ij} (y^\intercal)_{ij}
-            = \sum_{i,j} (x * y^\intercal)_{ij}
-\]</div>
+        <p>Applies the Lindblad dissipation superoperator to a density matrix.</p>
+<p>The dissipation superoperator <span class="arithmatex">\(\mathcal{D}[L]\)</span> is defined by:
+$$
+    \mathcal{D}[L] (\rho) = L\rho L^\dag - \frac{1}{2}L^\dag L \rho
+    - \frac{1}{2}\rho L^\dag L.
+$$</p>
 
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>The resulting time complexity for <span class="arithmatex">\(n\times n\)</span> matrices is <span class="arithmatex">\(\mathcal{O}(n^2)\)</span>
-instead of <span class="arithmatex">\(\mathcal{O}(n^3)\)</span> with the naive formula.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
-          <b>x</b>
+          <b>L</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (qarray_like of shape (..., n, n))              </i>
-          – <p>Array.</p>
+          – <p>Jump operator.</p>
         </li>
         <li class="field-body">
-          <b>y</b>
+          <b>rho</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (qarray_like of shape (..., n, n))              </i>
-          – <p>Array.</p>
+          – <p>Density matrix.</p>
         </li>
     </ul>
 
@@ -4932,20 +4923,32 @@ instead of <span class="arithmatex">\(\mathcal{O}(n^3)\)</span> with the naive f
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Trace of <code>x @ y</code>.</p>
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
+        – <p><em>(qarray of shape (..., n, n))</em> Resulting operator (it is not a density matrix).</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Trace of <code>x @ y</code>.</p></span>
+      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Resulting operator (it is not a density matrix).</p></span>
 
+<details class="see-also"
+ open >
+  <summary>See also</summary>
+  <ul>
+<li><a class="autorefs autorefs-internal" href="../vectorization/sdissipator.html#dynamiqs.utils.vectorization.sdissipator"><code>dq.sdissipator()</code></a>: returns the dissipation
+    superoperator in matrix form (vectorized).</li>
+</ul>
+</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">tracemm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="go">Array(9., dtype=float32)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">dissipator</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>
+<span class="go">QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense</span>
+<span class="go">[[ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]</span>
+<span class="go"> [ 0.+0.j  2.+0.j  0.+0.j  0.+0.j]</span>
+<span class="go"> [ 0.+0.j  0.+0.j -2.+0.j  0.+0.j]</span>
+<span class="go"> [ 0.+0.j  0.+0.j  0.+0.j  0.+0.j]]</span>
 </code></pre></div>
 
     </div>

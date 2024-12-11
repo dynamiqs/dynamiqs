@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/entropy_vn.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/overlap.html">
 
 
-    <link rel="prev" href="fidelity.html">
+    <link rel="prev" href="braket.html">
 
 
-    <link rel="next" href="bloch_coordinates.html">
+    <link rel="next" href="fidelity.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>entropy_vn - Dynamiqs</title>
+        <title>overlap - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.entropy_vn" class="md-skip">
+        <a href="#dynamiqs.utils.general.overlap" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                entropy_vn
+                overlap
               
             </span>
           </div>
@@ -3446,10 +3446,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="overlap.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="overlap.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3458,6 +3467,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3488,19 +3498,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="entropy_vn.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="entropy_vn.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3509,7 +3510,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4879,18 +4879,26 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.entropy_vn" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.entropy_vn</span>
+<h1 id="dynamiqs.utils.general.overlap" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.overlap</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">entropy_vn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">overlap</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns the Von Neumann entropy of a ket or density matrix.</p>
-<p>It is defined by <span class="arithmatex">\(S(\rho) = -\tr{\rho \ln \rho}\)</span>.</p>
+        <p>Returns the overlap between two quantum states.</p>
+<p>The overlap is computed</p>
+<ul>
+<li>as <span class="arithmatex">\(\lvert\braket{\psi|\varphi}\rvert^2\)</span> if both arguments are kets <span class="arithmatex">\(\ket\psi\)</span>
+  and <span class="arithmatex">\(\ket\varphi\)</span>,</li>
+<li>as <span class="arithmatex">\(\lvert\bra\psi \rho \ket\psi\rvert\)</span> if one argument is a ket <span class="arithmatex">\(\ket\psi\)</span> and
+  the other is a density matrix <span class="arithmatex">\(\rho\)</span>,</li>
+<li>as <span class="arithmatex">\(\tr{\rho^\dag\sigma}\)</span> if both arguments are density matrices <span class="arithmatex">\(\rho\)</span> and
+  <span class="arithmatex">\(\sigma\)</span>.</li>
+</ul>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4899,6 +4907,13 @@
     <ul>
         <li class="field-body">
           <b>x</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(qarray_like of shape (..., n, 1) or (..., n, n))              </i>
+          – <p>Ket or density matrix.</p>
+        </li>
+        <li class="field-body">
+          <b>y</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (qarray_like of shape (..., n, 1) or (..., n, n))              </i>
@@ -4913,21 +4928,21 @@
     <!-- <ul>
       <li class="field-body">
             <code><span title="jax.Array">Array</span></code>
-        – <p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p>
+        – <p><em>(array of shape (...))</em> Real-valued overlap.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued Von Neumann entropy.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued overlap.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
-<span class="go">Array(0.693, dtype=float32)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psis</span> <span class="o">=</span> <span class="p">[</span><span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">entropy_vn</span><span class="p">(</span><span class="n">psis</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(5,)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">fock0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">overlap</span><span class="p">(</span><span class="n">fock0</span><span class="p">,</span> <span class="n">fock0</span><span class="p">)</span>
+<span class="go">Array(1., dtype=float32)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fock01_dm</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">overlap</span><span class="p">(</span><span class="n">fock0</span><span class="p">,</span> <span class="n">fock01_dm</span><span class="p">)</span>
+<span class="go">Array(0.5, dtype=float32)</span>
 </code></pre></div>
 
     </div>

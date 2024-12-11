@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/quantum_utils/isherm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/sinm.html">
 
 
-    <link rel="prev" href="isop.html">
+    <link rel="prev" href="cosm.html">
 
 
-    <link rel="next" href="toket.html">
+    <link rel="next" href="trace.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>isherm - Dynamiqs</title>
+        <title>sinm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.quantum_utils.isherm" class="md-skip">
+        <a href="#dynamiqs.utils.general.sinm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                isherm
+                sinm
               
             </span>
           </div>
@@ -3026,10 +3026,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="sinm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="sinm.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3038,6 +3047,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -3320,19 +3330,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="isherm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="isherm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3341,7 +3342,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4879,17 +4879,17 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.quantum_utils.isherm" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.isherm</span>
+<h1 id="dynamiqs.utils.general.sinm" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.sinm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isherm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-05</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">sinm</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns True if the array is Hermitian.</p>
+        <p>Returns the sine of an array.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4901,17 +4901,7 @@
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (qarray_like of shape (..., n, n))              </i>
-          – <p>Array.</p>
-        </li>
-        <li class="field-body">
-          <b>rtol</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Relative tolerance of the check.</p>
-        </li>
-        <li class="field-body">
-          <b>atol</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Absolute tolerance of the check.</p>
+          – <p>Square matrix.</p>
         </li>
     </ul>
 
@@ -4921,20 +4911,29 @@
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code>bool</code>
-        – <p>True if <code>x</code> is Hermitian, False otherwise.</p>
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
+        – <p><em>(qarray of shape (..., n, n))</em> Sine of <code>x</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>True if <code>x</code> is Hermitian, False otherwise.</p></span>
+      <span class="field-body"><p><em>(qarray of shape (..., n, n))</em> Sine of <code>x</code>.</p></span>
 
+<details class="note"
+ open >
+  <summary>Note</summary>
+  <p>This function uses <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.linalg.expm.html"><code>jax.scipy.linalg.expm()</code></a>
+to compute the sine of a matrix <span class="arithmatex">\(A\)</span>:
+$$
+    \sin(A) = \frac{e^{iA} - e^{-iA}}{2i}
+$$</p>
+</details>
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isherm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="go">Array(True, dtype=bool)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isherm</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-<span class="go">Array(False, dtype=bool)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">sinm</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
+<span class="go">[[0.-0.j 1.-0.j]</span>
+<span class="go"> [1.-0.j 0.-0.j]]</span>
 </code></pre></div>
 
     </div>
