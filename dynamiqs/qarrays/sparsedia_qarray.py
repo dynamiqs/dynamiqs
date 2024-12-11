@@ -7,10 +7,9 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jaxtyping import Array
+from jaxtyping import Array, ArrayLike
 from qutip import Qobj
 
-from .._utils import _is_batched_scalar
 from .dense_qarray import DenseQArray
 from .layout import Layout, dia
 from .qarray import (
@@ -95,22 +94,13 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
 
     def reshape(self, *shape: int) -> QArray:
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot reshape to shape {shape} because'
-                f' the last two dimensions do not match current '
-                f'shape dimensions ({self.shape})'
-            )
+        super().reshape(*shape)
+
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
         return SparseDIAQArray(self.dims, offsets, diags)
 
     def broadcast_to(self, *shape: int) -> QArray:
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot broadcast to shape {shape} because'
-                f' the last two dimensions do not match current '
-                f'shape dimensions ({self.shape})'
-            )
+        super().broadcast_to(*shape)
 
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
         return SparseDIAQArray(self.dims, offsets, diags)
@@ -218,9 +208,7 @@ class SparseDIAQArray(QArray):
     def __mul__(self, other: QArrayLike) -> QArray:
         super().__mul__(other)
 
-        if _is_batched_scalar(other):
-            return SparseDIAQArray(self.dims, self.offsets, other * self.diags)
-        elif isinstance(other, SparseDIAQArray):
+        if isinstance(other, SparseDIAQArray):
             offsets, diags = mul_sparsedia_sparsedia(
                 self.offsets, self.diags, other.offsets, other.diags
             )
@@ -232,31 +220,40 @@ class SparseDIAQArray(QArray):
 
         return NotImplemented
 
+    def elmul(self, other: QArrayLike) -> QArray:
+        return SparseDIAQArray(self.dims, self.offsets, other * self.diags)
+
     def __truediv__(self, other: QArrayLike) -> QArray:
         raise NotImplementedError
 
     def __add__(self, other: QArrayLike) -> QArray:
         super().__add__(other)
 
-        warning_dense_addition = (
-            'A sparse array has been converted to dense format due to '
-            'addition with a scalar or dense array.'
-        )
-
         if isinstance(other, SparseDIAQArray):
             offsets, diags = add_sparsedia_sparsedia(
                 self.offsets, self.diags, other.offsets, other.diags
             )
             return SparseDIAQArray(self.dims, offsets, diags)
-        elif _is_batched_scalar(other) or isqarraylike(other):
-            warnings.warn(warning_dense_addition, stacklevel=2)
+        elif isqarraylike(other):
+            warnings.warn(
+                'A sparse array has been converted to dense layout due to element-wise '
+                'addition with a dense array.',
+                stacklevel=2,
+            )
             return self.asdense() + other
 
         return NotImplemented
 
+    def addscalar(self, other: ArrayLike) -> QArray:
+        warnings.warn(
+            'A sparse array has been converted to dense layout due to element-wise '
+            'addition with a scalar.',
+            stacklevel=2,
+        )
+        return self.asdense().addscalar(other)
+
     def __matmul__(self, other: QArrayLike) -> QArray:
-        if _is_batched_scalar(other):
-            raise TypeError('Attempted matrix product between a scalar and a QArray.')
+        super().__matmul__(other)
 
         if isinstance(other, SparseDIAQArray):
             offsets, diags = matmul_sparsedia_sparsedia(
@@ -271,8 +268,7 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def __rmatmul__(self, other: QArrayLike) -> QArray:
-        if _is_batched_scalar(other):
-            raise TypeError('Attempted matrix product between a scalar and a QArray.')
+        super().__rmatmul__(other)
 
         if isqarraylike(other):
             other = _to_jax(other)
@@ -299,7 +295,7 @@ class SparseDIAQArray(QArray):
 
         return NotImplemented
 
-    def _pow(self, power: int) -> QArray:
+    def elpow(self, power: int) -> QArray:
         return SparseDIAQArray(self.dims, self.offsets, self.diags**power)
 
     def __getitem__(self, key: int | slice | tuple) -> QArray:
