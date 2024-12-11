@@ -385,7 +385,7 @@ class QArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: QArrayLike) -> QArray:
+    def __mul__(self, y: ArrayLike) -> QArray:
         if not _is_batched_scalar(y):
             raise NotImplementedError(
                 'Element-wise multiplication of a QArray with another QArray is not '
@@ -393,9 +393,6 @@ class QArray(eqx.Module):
                 '`x @ y` instead. If you want to perform element-wise multiplication, '
                 'consider using `x.elmul(y)`.'
             )
-
-        if isinstance(y, QArray):
-            _check_compatible_dims(self.dims, y.dims)
 
     @abstractmethod
     def elmul(self, y: QArrayLike) -> QArray:
@@ -407,6 +404,8 @@ class QArray(eqx.Module):
         Returns:
             New qarray object with element-wise multiplication.
         """
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y

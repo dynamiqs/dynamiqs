@@ -134,8 +134,13 @@ class DenseQArray(QArray):
     def __repr__(self) -> str:
         return super().__repr__() + f'\n{self.data}'
 
-    def __mul__(self, y: QArrayLike) -> QArray:
+    def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
+
+        return DenseQArray(self.dims, y * self.data)
+
+    def elmul(self, y: QArrayLike) -> QArray:
+        super().elmul(y)
 
         if isinstance(y, DenseQArray):
             data = self.data * y.data
@@ -145,10 +150,6 @@ class DenseQArray(QArray):
             return DenseQArray(self.dims, data)
 
         return NotImplemented
-
-    def elmul(self, y: QArrayLike) -> QArray:
-        data = self.data * _to_jax(y)
-        return DenseQArray(self.dims, data)
 
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)

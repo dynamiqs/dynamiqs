@@ -213,8 +213,13 @@ class SparseDIAQArray(QArray):
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
-    def __mul__(self, y: QArrayLike) -> QArray:
+    def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
+
+        return SparseDIAQArray(self.dims, self.offsets, y * self.diags)
+
+    def elmul(self, y: QArrayLike) -> QArray:
+        super().elmul(y)
 
         if isinstance(y, SparseDIAQArray):
             offsets, diags = mul_sparsedia_sparsedia(
@@ -227,9 +232,6 @@ class SparseDIAQArray(QArray):
             return SparseDIAQArray(self.dims, offsets, diags)
 
         return NotImplemented
-
-    def elmul(self, y: QArrayLike) -> QArray:
-        return SparseDIAQArray(self.dims, self.offsets, y * self.diags)
 
     def __truediv__(self, y: QArrayLike) -> QArray:
         raise NotImplementedError
