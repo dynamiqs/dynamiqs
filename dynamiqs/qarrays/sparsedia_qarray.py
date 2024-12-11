@@ -86,19 +86,16 @@ class SparseDIAQArray(QArray):
                 f'(..., len(offsets), prod(dims)), but got {self.diags.shape}'
             )
 
-        # if the code is jitted, disable following checks
-        if isinstance(self.diags, jax.core.Tracer):
-            return
-
-        # check that diagonals contain zeros outside the bounds of the matrix
+        # check that diagonals contain zeros outside the bounds of the matrix using
+        # equinox runtime checks
+        error = (
+            'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
+            'matrix bounds.'
+        )
         for i, offset in enumerate(self.offsets):
-            if (offset < 0 and jnp.any(self.diags[..., i, offset:] != 0)) or (
-                offset > 0 and jnp.any(self.diags[..., i, :offset] != 0)
-            ):
-                raise ValueError(
-                    'Diagonals of a `SparseDIAQArray` must contain zeros outside the '
-                    'matrix bounds.'
-                )
+            zero_slice = slice(None, offset) if offset >= 0 else slice(offset, None)
+            check = self.diags[..., i, zero_slice] != 0
+            eqx.error_if(self.diags, check, error)
 
     @property
     def dtype(self) -> jnp.dtype:
