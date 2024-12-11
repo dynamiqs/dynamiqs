@@ -70,7 +70,7 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
         delta_ts = jnp.diff(times)  # (ntimes-1,)
 
         # === batch-compute the propagators $e^{\Delta t A}$ on each time interval
-        As = jax.vmap(self.generator)(times[:-1])  # (ntimes-1, N, N)
+        As = jax.vmap(self.generator)(times[:-1]).asdense()  # (ntimes-1, N, N)
         step_propagators = expm(delta_ts[:, None, None] * As)  # (ntimes-1, N, N)
 
         # === combine the propagators together

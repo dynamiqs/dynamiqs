@@ -123,7 +123,11 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, offsets, diags)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
-        # todo: implement dia specific method or raise warning for dense conversion
+        warnings.warn(
+            'A SparseDIAQArray has been converted to a DenseQArray while computing its '
+            'matrix exponential.',
+            stacklevel=2,
+        )
         x = sparsedia_to_array(self.offsets, self.diags)
         expm_x = jax.linalg.expm(x, max_squarings=max_squarings)
         return DenseQArray(self.dims, expm_x)
