@@ -69,7 +69,7 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def norm(self) -> Array:
-        from ..utils.quantum_utils.general import norm
+        from ..utils.general import norm
 
         return norm(self.data)
 
