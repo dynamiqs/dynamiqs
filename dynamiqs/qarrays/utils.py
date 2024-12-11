@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Sequence
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
@@ -354,3 +355,11 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
             f'Argument `dims={dims}` is incompatible with the input shape'
             f' `shape={shape}`.'
         )
+
+
+def tree_sum(qarrays: list[QArray]) -> QArray:
+    # jax.tree.reduce doesn't call its initializer if the list is not empty
+    # this avoids unwanted conversion from sparse to dense qarrays when summing with 0
+    return jax.tree.reduce(
+        lambda x, y: x + y, qarrays, is_leaf=lambda x: isinstance(x, QArray)
+    )
