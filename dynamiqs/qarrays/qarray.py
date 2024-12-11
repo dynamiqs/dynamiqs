@@ -148,6 +148,7 @@ class QArray(eqx.Module):
     | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
     | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
+    | [`x.eig()`][dynamiqs.QArray.eig]                         | Returns the eigenvalues and eigenvectors of a qarray.          |
     | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
     """  # noqa: E501
@@ -157,8 +158,8 @@ class QArray(eqx.Module):
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
     #                     _abs, block_until_ready
-    #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
-    #                                     _eigvalsh, devices, isherm
+    #   - returning a JAX array or other: norm, trace, sum, squeeze, eig, _eigh,
+    #                                     _eigvals, _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
     #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, _pow, __getitem__
@@ -289,6 +290,14 @@ class QArray(eqx.Module):
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # todo
         pass
+
+    @abstractmethod
+    def eig(self) -> tuple[Array, QArray]:
+        """Returns the eigenvalues and eigenvectors of a qarray.
+
+        Returns:
+            Tuple of eigenvalues and eigenvectors.
+        """
 
     @abstractmethod
     def _eigh(self) -> tuple[Array, Array]:
