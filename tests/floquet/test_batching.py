@@ -5,7 +5,6 @@ import pytest
 import dynamiqs as dq
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 @pytest.mark.parametrize(('nH'), [(), (3,), (3, 4)])
 @pytest.mark.parametrize('H_type', ['constant', 'modulated', 'timecallable'])
 def test_batching(nH, H_type):
@@ -24,9 +23,7 @@ def test_batching(nH, H_type):
     else:  # timecallable
         _H = dq.random.herm(key_1, (*nH, n, n))
         omega_d = 2.0 * jnp.pi / T
-        H = dq.timecallable(
-            lambda t: jnp.einsum('...,...ij->...ij', jnp.cos(omega_d * t), _H)
-        )
+        H = dq.timecallable(lambda t: jnp.cos(omega_d * t)[..., None, None] * _H)
 
     result = dq.floquet(H, T, tsave=tsave)
     assert result.modes.shape == (*nH, tsave.shape[-1], n, n, 1)
