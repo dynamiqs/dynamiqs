@@ -129,7 +129,7 @@ class SparseDIAQArray(QArray):
             stacklevel=2,
         )
         x = sparsedia_to_array(self.offsets, self.diags)
-        expm_x = jax.linalg.expm(x, max_squarings=max_squarings)
+        expm_x = jax.scipy.linalg.expm(x, max_squarings=max_squarings)
         return DenseQArray(self.dims, expm_x)
 
     def norm(self) -> Array:
