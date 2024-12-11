@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from dynamiqs import basis, dag, sigmaz
+from dynamiqs import basis, dag, sigmaz, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.options import Options
@@ -81,7 +81,7 @@ class FloquetQubit(System):
         w1 = jnp.sin(0.5 * theta) * basis(2, 0) + jnp.exp(
             -1j * self.omega_d * t
         ) * jnp.cos(0.5 * theta) * basis(2, 1)
-        return jnp.stack([w0, w1])
+        return stack([w0, w1])
 
     def true_quasienergies(self) -> Array:
         delta_Omega = self.omega - self.omega_d

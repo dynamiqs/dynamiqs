@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
-from jax.numpy.linalg import eig
 from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
@@ -30,7 +29,7 @@ class FloquetIntegrator(SEIntegrator):
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0
-        evals, evecs = eig(seprop_result.final_propagator)
+        evals, evecs = seprop_result.final_propagator.eig()
 
         # extract quasienergies
         # minus sign and divide by T to account for e^{-i\epsilon T}
@@ -44,7 +43,7 @@ class FloquetIntegrator(SEIntegrator):
         propagators = seprop_result.propagators[:-1, :, :]
         modes = propagators @ evecs  # (ntsave, n, n) @ (n, m) = (ntsave, n, m)
         modes = modes * jnp.exp(1j * quasienergies * self.ts[:, None, None])
-        modes = jnp.swapaxes(modes, -1, -2)[..., None]  # (ntsave, m, n, 1)
+        modes = modes.mT[..., None]  # (ntsave, m, n, 1)
 
         # save the Floquet modes and quasienergies
         saved = FloquetSaved(ysave=modes, extra=None, quasienergies=quasienergies)
