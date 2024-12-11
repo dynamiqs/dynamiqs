@@ -43,6 +43,10 @@ class DenseQArray(QArray):
         data = self.data.mT
         return DenseQArray(self.dims, data)
 
+    @property
+    def _data(self) -> Array:
+        return self.data
+
     def conj(self) -> QArray:
         data = self.data.conj()
         return DenseQArray(self.dims, data)
