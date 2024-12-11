@@ -18,7 +18,6 @@ from ..mesolve.open_system import dense_ocavity
 from .mepropagator_utils import rand_mepropagator_args
 
 
-@pytest.mark.skip(reason='TODO')
 class TestMEPropagator(IntegratorTester):
     def test_correctness(self, ysave_atol: float = 1e-4):
         system = dense_ocavity
@@ -29,11 +28,10 @@ class TestMEPropagator(IntegratorTester):
         rho0 = y0 @ dag(y0)
         rho0_vec = operator_to_vector(rho0)
         propresult = mepropagator(H, Ls, system.tsave)
-        true_ysave = system.states(system.tsave)
-        prop_ysave = jnp.einsum('ijk,kd->ijd', propresult.propagators, rho0_vec)
-        prop_ysave = vector_to_operator(prop_ysave)
-        errs = jnp.linalg.norm(true_ysave - prop_ysave, axis=(-2, -1))
-        assert jnp.all(errs <= ysave_atol)
+        propagators = propresult.propagators.to_jax()
+        prop_ysave = vector_to_operator(propagators @ rho0_vec).to_jax()
+        true_ysave = system.states(system.tsave).to_jax()
+        assert jnp.allclose(prop_ysave, true_ysave, atol=ysave_atol)
 
     @pytest.mark.parametrize('save_states', [True, False])
     def test_correctness_pwc(self, save_states, ysave_atol: float = 1e-4):
@@ -43,12 +41,12 @@ class TestMEPropagator(IntegratorTester):
         H = pwc(times, values, _H)
         tsave = jnp.asarray([0.5, 1.0, 2.0])
         options = Options(save_states=save_states)
-        propresult = mepropagator(H, Ls, tsave, options=options).propagators
-        U0 = eye(H.shape[-1] ** 2)
+        propresult = mepropagator(H, Ls, tsave, options=options)
+        propagators = propresult.propagators.to_jax()
+        U0 = eye(H.shape[-1] ** 2).to_jax()
         lindbladian_1 = slindbladian(3.0 * H.array, Ls)
         lindbladian_2 = slindbladian(-2.0 * H.array, Ls)
-        U1 = jax.scipy.linalg.expm(lindbladian_1 * 0.5)
-        U2 = jax.scipy.linalg.expm(lindbladian_2 * 1.0)
-        trueresult = jnp.stack((U0, U1, U2 @ U1)) if save_states else U2 @ U1
-        errs = jnp.linalg.norm(propresult - trueresult)
-        assert jnp.all(errs <= ysave_atol)
+        U1 = jax.scipy.linalg.expm(lindbladian_1.to_jax() * 0.5)
+        U2 = jax.scipy.linalg.expm(lindbladian_2.to_jax() * 1.0)
+        true_propagators = jnp.stack([U0, U1, U2 @ U1]) if save_states else U2 @ U1
+        assert jnp.allclose(propagators, true_propagators, atol=ysave_atol)
