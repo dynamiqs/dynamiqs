@@ -24,10 +24,11 @@ dependencies = [
     "numpy",
     "matplotlib",
     "tqdm",
-    # todo: fix when https://github.com/patrick-kidger/equinox/pull/871 is released
+    # todo: fix when Diffrax 0.6.1 is released
+    # see https://github.com/patrick-kidger/diffrax/issues/532
     "jax<0.4.34",
     "jaxlib",
-    "jaxtyping<=0.2.34",  # see https://github.com/patrick-kidger/jaxtyping/issues/269
+    "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
     "pillow",

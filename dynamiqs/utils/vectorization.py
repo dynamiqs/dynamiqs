@@ -5,8 +5,8 @@ import numpy as np
 from .._checks import check_shape
 from ..qarrays.qarray import QArray, QArrayLike
 from ..qarrays.utils import asqarray, tree_sum
+from .general import dag
 from .operators import eye
-from .quantum_utils import dag
 
 __all__ = [
     'operator_to_vector',

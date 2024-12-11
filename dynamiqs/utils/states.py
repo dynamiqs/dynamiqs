@@ -12,8 +12,8 @@ from .._checks import check_type_int
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
+from .general import tensor
 from .operators import displace
-from .quantum_utils import tensor
 
 __all__ = [
     'basis',

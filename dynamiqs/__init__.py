@@ -7,7 +7,7 @@ from .result import *
 from .time_array import *
 from .utils import *
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 # set default matmul precision to 'highest'
 set_matmul_precision('highest')

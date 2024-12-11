@@ -92,3 +92,22 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
 ## Using a for loop
 
 If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a `for` loop. This functionality is explained in detail in the [Batching simulations](../basics/batching-simulations.md) tutorial, together with the associated gain in performance.
+
+## Computing the gradient with respect to complex parameters
+
+To optimize a real-valued function of complex parameters $f:\mathbb{C}^p\to\mathbb{R}$, you should take a step in the direction of the **conjugate** of the gradient given by JAX. For example, if you use the SciPy optimizers with `scipy.minimize()`, you need to conjuguate the gradient before providing it to the optimiser:
+
+<!-- skip: start -->
+=== ":material-check: Correct"
+    ```python
+    grad = lambda x: jax.grad(f)(x).conj()
+    scipy.minimize(f, ..., jac=grad)
+    ```
+=== ":material-close: Incorrect"
+    ```python
+    grad = lambda x: jax.grad(f)(x)
+    scipy.minimize(f, ..., jac=grad)
+    ```
+<!-- skip: end -->
+
+See the [JAX documentation](https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html#complex-numbers-and-differentiation) and the [PyTorch documentation](https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers) for detailed discussions on complex numbers and differentiation.

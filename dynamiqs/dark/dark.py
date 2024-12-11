@@ -4,8 +4,8 @@ import jax.numpy as jnp
 
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
+from ..utils.general import dag
 from ..utils.operators import quadrature
-from ..utils.quantum_utils import dag
 
 __all__ = ['quadrature_sign']
 

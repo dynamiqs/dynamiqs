@@ -7,8 +7,8 @@ from .._checks import check_shape
 from .._utils import cdtype
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
-from ..utils.operators import displace
-from ..utils.states import fock
+from .operators import displace
+from .states import fock
 
 __all__ = ['cd_gate', 'snap_gate']
 

@@ -11,7 +11,7 @@ from dynamiqs._utils import _concatenate_sort
 
 from ...qarrays.qarray import QArray
 from ...result import Result
-from ...utils.quantum_utils.general import expm
+from ...utils.general import expm
 from ...utils.vectorization import slindbladian
 from .._utils import ispwc
 from .abstract_integrator import AbstractIntegrator

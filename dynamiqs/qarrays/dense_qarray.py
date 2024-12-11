@@ -56,7 +56,7 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     def ptrace(self, *keep: int) -> QArray:
-        from ..utils.quantum_utils.general import ptrace
+        from ..utils.general import ptrace
 
         return ptrace(self.data, keep, self.dims)
 

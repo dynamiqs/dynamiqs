@@ -11,6 +11,7 @@ from ...gradient import Autograd, CheckpointAutograd
 from ...qarrays.utils import tree_sum
 from .abstract_integrator import BaseIntegrator
 from ...result import Result
+from ...utils.general import dag
 from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
 from .interfaces import SEInterface, MEInterface

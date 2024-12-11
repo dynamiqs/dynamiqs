@@ -9,7 +9,7 @@ from matplotlib.colors import ListedColormap, LogNorm, Normalize
 from .._checks import check_shape, check_times
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import to_jax
-from ..utils.quantum_utils import isdm, isket
+from ..utils.general import isdm, isket
 from .utils import (
     add_colorbar,
     colors,

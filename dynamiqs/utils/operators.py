@@ -11,7 +11,7 @@ from ..qarrays.layout import Layout, dense, get_layout
 from ..qarrays.qarray import QArray
 from ..qarrays.sparsedia_qarray import SparseDIAQArray
 from ..qarrays.utils import asqarray, sparsedia_from_dict
-from .quantum_utils import tensor
+from .general import tensor
 
 __all__ = [
     'cnot',
