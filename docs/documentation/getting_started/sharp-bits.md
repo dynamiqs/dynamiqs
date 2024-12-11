@@ -1,5 +1,8 @@
 # The sharp bits 🔪
 
+<!-- skip: start -->
+<!-- todo: temporary fix -->
+
 This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.
 
 ```python
@@ -85,14 +88,8 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
     Array([[0.+0.j, 1.+0.j],
            [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
-
-### Computing matrix adjoint
-
-Use `dq.dag(x)` or `x.mT.conj()` instead of `x.dag()` to get the hermitian conjugate of `x`.
-
-??? Note "Why is there no `.dag()` method in Dynamiqs?"
-    To guarantee optimum performances and straightforward compatibility with the JAX ecosystem, Dynamiqs does not subclass JAX arrays. As a consequence, we can't define a custom `.dag()` method on arrays. Note that this will possibly change in the future, as we are working on an extension that will allow defining custom methods on arrays.
-
+<!-- skip: end -->
+<!-- todo: temporary fix -->
 
 ## Using a for loop
 

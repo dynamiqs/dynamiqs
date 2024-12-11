@@ -7,6 +7,8 @@ from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap, LogNorm, Normalize
 
 from .._checks import check_shape, check_times
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.utils import to_jax
 from ..utils.general import isdm, isket
 from .utils import (
     add_colorbar,
@@ -34,7 +36,7 @@ def _populations(x: ArrayLike) -> Array:
 
 @optional_ax
 def fock(
-    state: ArrayLike,
+    state: QArrayLike,
     *,
     ax: Axes | None = None,
     allxticks: bool = False,
@@ -56,7 +58,7 @@ def fock(
         ![plot_fock](../../figs_code/plot_fock.png){.fig}
 
         >>> # the even cat state has only even photon number components
-        >>> psi = dq.unit(dq.coherent(32, 3.0) + dq.coherent(32, -3.0))
+        >>> psi = (dq.coherent(32, 3.0) + dq.coherent(32, -3.0)).unit()
         >>> dq.plot.fock(psi, allxticks=False, ymax=None)
         >>> renderfig('plot_fock_even_cat')
 
@@ -68,7 +70,7 @@ def fock(
 
         ![plot_fock_coherent](../../figs_code/plot_fock_coherent.png){.fig}
     """
-    state = jnp.asarray(state)
+    state = to_jax(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     n = state.shape[0]
@@ -92,7 +94,7 @@ def fock(
 
 @optional_ax
 def fock_evolution(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     ax: Axes | None = None,
     times: ArrayLike | None = None,
@@ -111,7 +113,7 @@ def fock_evolution(
         >>> n = 16
         >>> a = dq.destroy(n)
         >>> psi0 = dq.coherent(n, 0.0)
-        >>> H = 2.0 * (a + dq.dag(a))
+        >>> H = 2.0 * (a + a.dag())
         >>> tsave = jnp.linspace(0, 1.0, 11)
         >>> result = dq.sesolve(H, psi0, tsave)
         >>> dq.plot.fock_evolution(result.states, times=tsave)
@@ -125,7 +127,7 @@ def fock_evolution(
 
         ![plot_fock_evolution_log](../../figs_code/plot_fock_evolution_log.png){.fig}
     """
-    states = jnp.asarray(states)
+    states = to_jax(states)
     times = jnp.asarray(times) if times is not None else None
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
     if times is not None:

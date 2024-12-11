@@ -105,7 +105,7 @@ Also called the **quantum-jump** approach.
 
 ## Using Dynamiqs
 
-You can create the state, Hamiltonian and jump operators using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+You can create the state, Hamiltonian and jump operators using any qarray-like object. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
 import jax.numpy as jnp
@@ -120,9 +120,10 @@ print(res.states[-1])                       # print the final state
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 4.47ms ◆ remaining 0.00ms
-Array([[0.368+0.j, 0.   +0.j],
-       [0.   +0.j, 0.632+0.j]], dtype=complex64)
+|██████████| 100.0% ◆ elapsed 1.75ms ◆ remaining 0.00ms
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+[[0.368+0.j 0.   +0.j]
+ [0.   +0.j 0.632+0.j]]
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.mesolve()`][dynamiqs.mesolve] API documentation.

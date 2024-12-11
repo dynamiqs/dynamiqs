@@ -58,7 +58,7 @@ T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
-H = omega * dq.dag(a) @ a
+H = omega * a.dag() @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
 tsave = jnp.linspace(0, T, 101)
@@ -73,7 +73,7 @@ print(result)
 ==== MESolveResult ====
 Solver : Tsit5
 Infos  : 40 steps (40 accepted, 0 rejected)
-States : Array complex64 (101, 16, 16) | 202.0 Kb
+States : QArray complex64 (101, 16, 16) | 202.0 Kb
 ```
 
 ### Compute gradients with respect to some parameters
@@ -96,7 +96,7 @@ def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
     # initialize operators, initial state and saving times
     a = dq.destroy(n)
-    H = omega * dq.dag(a) @ a
+    H = omega * a.dag() @ a
     jump_ops = [jnp.sqrt(kappa) * a]
     psi0 = dq.coherent(n, alpha0)
     tsave = jnp.linspace(0, T, 101)
@@ -166,6 +166,7 @@ Below are some cool features of **Dynamiqs** that are either already available o
 **Utilities**
 
 - Balance **accuracy and speed** by choosing between single precision (`float32` and `complex64`) or double precision (`float64` and `complex128`).
+- Discover a custom **sparse data format** designed for matrices with only a few dense diagonals, offering substantial speedups for large systems.
 - Plot beautiful figures by using our **handcrafted plotting function**.
 - Apply any functions to **batched arrays** (e.g. `dq.wigner(states)` to compute the wigners of many states at once).
 - Use **QuTiP objects as arguments** to any functions (e.g. if you have existing code to define your Hamiltonian in QuTiP, or if you want to use our nice plotting functions on a list of QuTiP states).
@@ -177,7 +178,6 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 **Coming soon**
 
-- Discover a custom **sparse format**, with substantial speedups for large systems.
 - Simulate using propagators solvers based on **Krylov subspace methods**.
 - **Benchmark code** to compare solvers and performance for different systems.
 

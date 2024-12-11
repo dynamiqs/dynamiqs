@@ -12,6 +12,7 @@ import mkdocs_gen_files
 # value: (paths to include, namespace)
 doc_sections = {
     'integrators': (['dynamiqs/integrators/'], 'dq'),
+    'qarrays/qarray': (['dynamiqs/qarrays/qarray.py'], 'dq'),
     'time_array': (['dynamiqs/time_array.py'], 'dq'),
     'solver': (['dynamiqs/solver.py'], 'dq.solver'),
     'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
@@ -23,7 +24,8 @@ doc_sections = {
         ['dynamiqs/utils/general.py', 'dynamiqs/utils/wigner_utils.py'],
         'dq',
     ),
-    'utils/jax_utils': (['dynamiqs/utils/jax_utils.py'], 'dq'),
+    'qarrays/utils': (['dynamiqs/qarrays/utils.py'], 'dq'),
+    'utils/global_settings': (['dynamiqs/utils/global_settings.py'], 'dq'),
     'utils/vectorization': (['dynamiqs/utils/vectorization.py'], 'dq'),
     'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
     'random': (['dynamiqs/random.py'], 'dq.random'),

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools as ft
 from abc import abstractmethod
 from typing import get_args
 
@@ -12,18 +13,21 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
+from .qarrays.layout import Layout, promote_layouts
+from .qarrays.qarray import QArray, QArrayLike, isqarraylike
+from .qarrays.utils import asqarray
 
 __all__ = ['TimeArray', 'constant', 'modulated', 'pwc', 'timecallable']
 
 
-def constant(array: ArrayLike) -> ConstantTimeArray:
+def constant(qarray: QArrayLike) -> ConstantTimeArray:
     r"""Instantiate a constant time-array.
 
     A constant time-array is defined by $O(t) = O_0$ for any time $t$, where $O_0$ is a
     constant array.
 
     Args:
-        array _(array_like of shape (..., n, n))_: Constant array $O_0$.
+        qarray _(qarray_like of shape (..., n, n))_: Constant qarray $O_0$.
 
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -32,18 +36,20 @@ def constant(array: ArrayLike) -> ConstantTimeArray:
     Examples:
         >>> H = dq.constant(dq.sigmaz())
         >>> H(0.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 1.+0.j    ⋅   ]
+         [   ⋅    -1.+0.j]]
         >>> H(1.0)
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 1.+0.j    ⋅   ]
+         [   ⋅    -1.+0.j]]
     """
-    array = jnp.asarray(array, dtype=cdtype())
-    check_shape(array, 'array', '(..., n, n)')
-    return ConstantTimeArray(array)
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(..., n, n)')
+    return ConstantTimeArray(qarray)
 
 
-def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
+def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeArray:
     r"""Instantiate a piecewise constant (PWC) time-array.
 
     A PWC time-array takes constant values over some time intervals. It is defined by
@@ -67,7 +73,7 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
             of the time intervals, where _N_ is the number of time intervals.
         values _(array_like of shape (..., N))_: Constant values $c_k$ for each time
             interval.
-        array _(array_like of shape (n, n))_: Constant array $O_0$.
+        qarray _(qarray_like of shape (n, n))_: Constant qarray $O_0$.
 
     Returns:
         _(time-array object of shape (..., n, n) when called)_ Callable object
@@ -79,17 +85,21 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
         >>> array = dq.sigmaz()
         >>> H = dq.pwc(times, values, array)
         >>> H(-0.5)
-        Array([[ 0.+0.j,  0.+0.j],
-               [ 0.+0.j, -0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅   ]
+         [  ⋅      ⋅   ]]
         >>> H(0.0)
-        Array([[ 3.+0.j,  0.+0.j],
-               [ 0.+0.j, -3.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 3.+0.j    ⋅   ]
+         [   ⋅    -3.+0.j]]
         >>> H(0.5)
-        Array([[ 3.+0.j,  0.+0.j],
-               [ 0.+0.j, -3.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 3.+0.j    ⋅   ]
+         [   ⋅    -3.+0.j]]
         >>> H(1.0)
-        Array([[-2.+0.j, -0.+0.j],
-               [-0.+0.j,  2.-0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[-2.+0.j    ⋅   ]
+         [   ⋅     2.+0.j]]
     """
     # times
     times = jnp.asarray(times)
@@ -104,15 +114,15 @@ def pwc(times: ArrayLike, values: ArrayLike, array: ArrayLike) -> PWCTimeArray:
         )
 
     # array
-    array = jnp.asarray(array, dtype=cdtype())
-    check_shape(array, 'array', '(n, n)')
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(n, n)')
 
-    return PWCTimeArray(times, values, array)
+    return PWCTimeArray(times, values, qarray)
 
 
 def modulated(
     f: callable[[float], Scalar | Array],
-    array: ArrayLike,
+    qarray: QArrayLike,
     *,
     discontinuity_ts: ArrayLike | None = None,
 ) -> ModulatedTimeArray:
@@ -127,7 +137,7 @@ def modulated(
         f _(function returning scalar or array of shape (...))_: Function with signature
             `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
-        array _(array_like of shape (n, n))_: Constant array $O_0$.
+        qarray _(qarray_like of shape (n, n))_: Constant qarray $O_0$.
         discontinuity_ts _(array_like, optional)_: Times at which there is a
             discontinuous jump in the function values.
 
@@ -139,11 +149,13 @@ def modulated(
         >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
         >>> H = dq.modulated(f, dq.sigmax())
         >>> H(0.5)
-        Array([[-0.+0.j, -1.+0.j],
-               [-1.+0.j, -0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+        [[   ⋅    -1.+0.j]
+         [-1.+0.j    ⋅   ]]
         >>> H(1.0)
-        Array([[0.+0.j, 1.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+        [[  ⋅    1.+0.j]
+         [1.+0.j   ⋅   ]]
     """
     # check f is callable
     if not callable(f):
@@ -152,8 +164,8 @@ def modulated(
         )
 
     # array
-    array = jnp.asarray(array, dtype=cdtype())
-    check_shape(array, 'array', '(n, n)')
+    qarray = asqarray(qarray)
+    check_shape(qarray, 'qarray', '(n, n)')
 
     # discontinuity_ts
     if discontinuity_ts is not None:
@@ -163,27 +175,27 @@ def modulated(
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
 
-    return ModulatedTimeArray(f, array, discontinuity_ts)
+    return ModulatedTimeArray(f, qarray, discontinuity_ts)
 
 
 def timecallable(
-    f: callable[[float], Array], *, discontinuity_ts: ArrayLike | None = None
+    f: callable[[float], QArray], *, discontinuity_ts: ArrayLike | None = None
 ) -> CallableTimeArray:
     r"""Instantiate a callable time-array.
 
     A callable time-array is defined by $O(t) = f(t)$ where $f(t)$ is a
     time-dependent operator. The function $f$ is defined by passing a Python function
-    with signature `f(t: float) -> Array` that returns an array of shape
-    _(..., n, n)_ for any time $t$.
+    with signature `f(t: float) -> QArray` that returns a qarray of shape _(..., n, n)_
+    for any time $t$.
 
-    Warning: The function `f` must return a JAX array (not an array-like object!)
-        An error is raised if the function `f` does not return a JAX array. This error
-        concerns any other array-like objects. This is enforced to avoid costly
+    Warning: The function `f` must return a `QArray` (not a qarray-like object!)
+        An error is raised if the function `f` does not return a `QArray`. This error
+        concerns any other qarray-like objects. This is enforced to avoid costly
         conversions at every time step of the numerical integration.
 
     Args:
-        f _(function returning array of shape (..., n, n))_: Function with signature
-            `(t: float) -> Array` that returns the array $f(t)$.
+        f _(function returning qarray of shape (..., n, n))_: Function with
+            signature `(t: float) -> QArray` that returns the qarray $f(t)$.
         discontinuity_ts _(array_like, optional)_: Times at which there is a
             discontinuous jump in the function values.
 
@@ -192,14 +204,16 @@ def timecallable(
             returning $O(t)$ for any time $t$.
 
     Examples:
-        >>> f = lambda t: jnp.array([[t, 0], [0, 1 - t]])
+        >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
         >>> H = dq.timecallable(f)
         >>> H(0.5)
-        Array([[0.5, 0. ],
-               [0. , 0.5]], dtype=float32)
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        [[0.5 0. ]
+         [0.  0.5]]
         >>> H(1.0)
-        Array([[1., 0.],
-               [0., 0.]], dtype=float32)
+        QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
+        [[1. 0.]
+         [0. 0.]]
     """
     # check f is callable
     if not callable(f):
@@ -225,12 +239,13 @@ class Shape(tuple):
 class TimeArray(eqx.Module):
     r"""Base class for time-dependent arrays.
 
-    A time-array is a callable object that returns a JAX array for any time $t$. It is
+    A time-array is a callable object that returns a qarray for any time $t$. It is
     used to define time-dependent operators for Dynamiqs solvers.
 
     Attributes:
         dtype _(numpy.dtype)_: Data type.
         shape _(tuple of int)_: Shape.
+        layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         mT _(TimeArray)_: Returns the time-array transposed over its last two
             dimensions.
         ndim _(int)_: Number of dimensions.
@@ -242,18 +257,18 @@ class TimeArray(eqx.Module):
         Time-arrays support elementary operations:
 
         - negation (`__neg__`),
-        - left-and-right element-wise addition/subtraction with other arrays or
+        - left-and-right element-wise addition/subtraction with other arrays, qarrays or
             time-arrays (`__add__`, `__radd__`, `__sub__`, `__rsub__`),
         - left-and-right element-wise multiplication with other arrays (`__mul__`,
             `__rmul__`).
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, mT, in_axes, discontinuity_ts
+    # - the properties: dtype, shape, layout, mT, in_axes, discontinuity_ts
     # - the methods: reshape, broadcast_to, conj, __call__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
-    # with `Array`, `ConstantTimeArray` and the subclass type itself.
+    # with `QArray`, `ConstantTimeArray` and the subclass type itself.
 
     @property
     @abstractmethod
@@ -263,6 +278,11 @@ class TimeArray(eqx.Module):
     @property
     @abstractmethod
     def shape(self) -> tuple[int, ...]:
+        pass
+
+    @property
+    @abstractmethod
+    def layout(self) -> Layout:
         pass
 
     @property
@@ -341,45 +361,48 @@ class TimeArray(eqx.Module):
         return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
 
     @abstractmethod
-    def __call__(self, t: ScalarLike) -> Array:
+    def __call__(self, t: ScalarLike) -> QArray:
         """Returns the time-array evaluated at a given time.
 
         Args:
             t: Time at which to evaluate the array.
 
         Returns:
-            Array evaluated at time $t$.
+            QArray evaluated at time $t$.
         """
 
     def __neg__(self) -> TimeArray:
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: ArrayLike) -> TimeArray:
+    def __mul__(self, y: QArrayLike) -> TimeArray:
         pass
 
-    def __rmul__(self, y: ArrayLike) -> TimeArray:
+    def __rmul__(self, y: QArrayLike) -> TimeArray:
         return self * y
 
     @abstractmethod
-    def __add__(self, y: ArrayLike | TimeArray) -> TimeArray:
+    def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
         pass
 
-    def __radd__(self, y: ArrayLike | TimeArray) -> TimeArray:
+    def __radd__(self, y: QArrayLike | TimeArray) -> TimeArray:
         return self + y
 
-    def __sub__(self, y: ArrayLike | TimeArray) -> TimeArray:
+    def __sub__(self, y: QArrayLike | TimeArray) -> TimeArray:
         return self + (-y)
 
-    def __rsub__(self, y: ArrayLike | TimeArray) -> TimeArray:
+    def __rsub__(self, y: QArrayLike | TimeArray) -> TimeArray:
         return y + (-self)
 
     def __repr__(self) -> str:
-        return f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype})'
+        return (
+            f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype}, '
+            f'layout={self.layout})'
+        )
 
 
 class ConstantTimeArray(TimeArray):
-    array: Array
+    array: QArray
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -388,6 +411,10 @@ class ConstantTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return self.array.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.array.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -405,24 +432,24 @@ class ConstantTimeArray(TimeArray):
         return ConstantTimeArray(self.array.reshape(*shape))
 
     def broadcast_to(self, *shape: int) -> TimeArray:
-        return ConstantTimeArray(jnp.broadcast_to(self.array, shape))
+        return ConstantTimeArray(self.array.broadcast_to(*shape))
 
     def conj(self) -> TimeArray:
         return ConstantTimeArray(self.array.conj())
 
-    def __call__(self, t: ScalarLike) -> Array:  # noqa: ARG002
+    def __call__(self, t: ScalarLike) -> QArray:  # noqa: ARG002
         return self.array
 
-    def __mul__(self, y: ArrayLike) -> TimeArray:
+    def __mul__(self, y: QArrayLike) -> TimeArray:
         return ConstantTimeArray(self.array * y)
 
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            return ConstantTimeArray(jnp.asarray(other, dtype=cdtype()) + self.array)
-        elif isinstance(other, ConstantTimeArray):
-            return ConstantTimeArray(self.array + other.array)
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
+    def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
+        if isqarraylike(y):
+            return ConstantTimeArray(asqarray(y) + self.array)
+        elif isinstance(y, ConstantTimeArray):
+            return ConstantTimeArray(self.array + y.array)
+        elif isinstance(y, TimeArray):
+            return SummedTimeArray([self, y])
         else:
             return NotImplemented
 
@@ -430,7 +457,7 @@ class ConstantTimeArray(TimeArray):
 class PWCTimeArray(TimeArray):
     times: Array  # (nv+1,)
     values: Array  # (..., nv)
-    array: Array  # (n, n)
+    array: QArray  # (n, n)
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -439,6 +466,10 @@ class PWCTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return *self.values.shape[:-1], *self.array.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.array.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -477,25 +508,25 @@ class PWCTimeArray(TimeArray):
             jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
         )
 
-    def __call__(self, t: ScalarLike) -> Array:
+    def __call__(self, t: ScalarLike) -> QArray:
         return self.prefactor(t)[..., None, None] * self.array
 
-    def __mul__(self, y: ArrayLike) -> TimeArray:
+    def __mul__(self, y: QArrayLike) -> TimeArray:
         return PWCTimeArray(self.times, self.values, self.array * y)
 
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([self, other])
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
+    def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
+        if isqarraylike(y):
+            y = ConstantTimeArray(asqarray(y))
+            return SummedTimeArray([self, y])
+        elif isinstance(y, TimeArray):
+            return SummedTimeArray([self, y])
         else:
             return NotImplemented
 
 
 class ModulatedTimeArray(TimeArray):
     f: BatchedCallable  # (...)
-    array: Array  # (n, n)
+    array: QArray  # (n, n)
     _disc_ts: Array | None
 
     @property
@@ -505,6 +536,10 @@ class ModulatedTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return *self.f.shape, *self.array.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.array.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -533,18 +568,18 @@ class ModulatedTimeArray(TimeArray):
     def prefactor(self, t: ScalarLike) -> Array:
         return self.f(t)
 
-    def __call__(self, t: ScalarLike) -> Array:
+    def __call__(self, t: ScalarLike) -> QArray:
         return self.prefactor(t)[..., None, None] * self.array
 
-    def __mul__(self, y: ArrayLike) -> TimeArray:
+    def __mul__(self, y: QArrayLike) -> TimeArray:
         return ModulatedTimeArray(self.f, self.array * y, self._disc_ts)
 
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([self, other])
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
+    def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
+        if isqarraylike(y):
+            y = ConstantTimeArray(asqarray(y))
+            return SummedTimeArray([self, y])
+        elif isinstance(y, TimeArray):
+            return SummedTimeArray([self, y])
         else:
             return NotImplemented
 
@@ -560,6 +595,10 @@ class CallableTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return self.f.shape
+
+    @property
+    def layout(self) -> Layout:
+        return self.f.layout
 
     @property
     def mT(self) -> TimeArray:
@@ -586,19 +625,21 @@ class CallableTimeArray(TimeArray):
         f = self.f.conj()
         return CallableTimeArray(f, self._disc_ts)
 
-    def __call__(self, t: ScalarLike) -> Array:
+    def __call__(self, t: ScalarLike) -> QArray:
         return self.f(t)
 
-    def __mul__(self, y: ArrayLike) -> TimeArray:
+    def __mul__(self, y: QArrayLike) -> TimeArray:
         f = self.f * y
         return CallableTimeArray(f, self._disc_ts)
 
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([self, other])
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([self, other])
+    def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
+        if isinstance(y, get_args(ScalarLike)):
+            return ConstantTimeArray(self.f + y)
+        elif isqarraylike(y):
+            y = ConstantTimeArray(asqarray(y))
+            return SummedTimeArray([self, y])
+        elif isinstance(y, TimeArray):
+            return SummedTimeArray([self, y])
         else:
             return NotImplemented
 
@@ -617,11 +658,17 @@ class SummedTimeArray(TimeArray):
 
     @property
     def dtype(self) -> jnp.dtype:
-        return self.timearrays[0].dtype
+        dtypes = [tarray.dtype for tarray in self.timearrays]
+        return ft.reduce(jnp.promote_types, dtypes)
 
     @property
     def shape(self) -> tuple[int, ...]:
         return jnp.broadcast_shapes(*[tarray.shape for tarray in self.timearrays])
+
+    @property
+    def layout(self) -> Layout:
+        layouts = [tarray.layout for tarray in self.timearrays]
+        return ft.reduce(promote_layouts, layouts)
 
     @property
     def mT(self) -> TimeArray:
@@ -650,21 +697,19 @@ class SummedTimeArray(TimeArray):
         timearrays = [tarray.conj() for tarray in self.timearrays]
         return SummedTimeArray(timearrays)
 
-    def __call__(self, t: ScalarLike) -> Array:
-        return jax.tree_util.tree_reduce(
-            jnp.add, [tarray(t) for tarray in self.timearrays]
-        )
+    def __call__(self, t: ScalarLike) -> QArray:
+        return ft.reduce(lambda x, y: x + y, [tarray(t) for tarray in self.timearrays])
 
-    def __mul__(self, y: ArrayLike) -> TimeArray:
+    def __mul__(self, y: QArrayLike) -> TimeArray:
         timearrays = [tarray * y for tarray in self.timearrays]
         return SummedTimeArray(timearrays)
 
-    def __add__(self, other: ArrayLike | TimeArray) -> TimeArray:
-        if isinstance(other, get_args(ArrayLike)):
-            other = ConstantTimeArray(jnp.asarray(other, dtype=cdtype()))
-            return SummedTimeArray([*self.timearrays, other])
-        elif isinstance(other, TimeArray):
-            return SummedTimeArray([*self.timearrays, other])
+    def __add__(self, y: QArrayLike | TimeArray) -> TimeArray:
+        if isqarraylike(y):
+            y = ConstantTimeArray(asqarray(y))
+            return SummedTimeArray([*self.timearrays, y])
+        elif isinstance(y, TimeArray):
+            return SummedTimeArray([*self.timearrays, y])
         else:
             return NotImplemented
 
@@ -672,17 +717,24 @@ class SummedTimeArray(TimeArray):
 class BatchedCallable(eqx.Module):
     # this class turns a callable into a PyTree that is vmap-compatible
 
-    f: callable[[float], Array]
+    f: callable[[float], QArray]
     indices: list[Array]
 
-    def __init__(self, f: callable[[float], Scalar | Array]):
+    def __init__(self, f: callable[[float], QArray]):
         # make f a valid PyTree with `Partial` and convert its output to an array
-        self.f = jtu.Partial(lambda t: jnp.asarray(f(t)))
-        shape = jax.eval_shape(f, 0.0).shape
+        self.f = jtu.Partial(f)
+        eval_shape = jax.eval_shape(f, 0.0)
+        if isinstance(eval_shape, QArray):
+            shape = eval_shape.shape[:-2]
+        else:
+            shape = eval_shape.shape
         self.indices = list(jnp.indices(shape))
 
-    def __call__(self, t: ScalarLike) -> Array:
-        return self.f(t)[tuple(self.indices)]
+    def __call__(self, t: ScalarLike) -> QArray:
+        if len(self.indices) == 0:
+            return self.f(t)
+        else:
+            return self.f(t)[tuple(self.indices)]
 
     @property
     def dtype(self) -> tuple[int, ...]:
@@ -691,6 +743,10 @@ class BatchedCallable(eqx.Module):
     @property
     def shape(self) -> tuple[int, ...]:
         return jax.eval_shape(self.f, 0.0).shape
+
+    @property
+    def layout(self) -> Layout:
+        return jax.eval_shape(self.f, 0.0).layout
 
     def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
         f = lambda t: self.f(t).reshape(shape)
@@ -707,6 +763,9 @@ class BatchedCallable(eqx.Module):
     def squeeze(self, i: int) -> BatchedCallable:
         f = lambda t: jnp.squeeze(self.f(t), i)
         return BatchedCallable(f)
+
+    def __add__(self, y: ScalarLike) -> BatchedCallable:
+        return BatchedCallable(lambda t: self.f(t) + y)
 
     def __mul__(self, y: ArrayLike) -> BatchedCallable:
         f = lambda t: self.f(t) * y
