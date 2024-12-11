@@ -88,6 +88,8 @@ Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to com
     Array([[0.+0.j, 1.+0.j],
            [1.+0.j, 0.+0.j]], dtype=complex64)
     ```
+<!-- skip: end -->
+<!-- todo: temporary fix -->
 
 ## Using a for loop
 
