@@ -388,10 +388,9 @@ class QArray(eqx.Module):
     def __mul__(self, y: ArrayLike) -> QArray:
         if not _is_batched_scalar(y):
             raise NotImplementedError(
-                'Element-wise multiplication of a QArray with another QArray is not '
-                'supported. If you want to compute the matrix multiplication, use '
-                '`x @ y` instead. If you want to perform element-wise multiplication, '
-                'consider using `x.elmul(y)`.'
+                'Element-wise multiplication of a qarray with the `*` operator is not '
+                'supported. For matrix multiplication, use `x @ y`. For element-wise '
+                'multiplication, use `x.elmul(y)`.'
             )
 
     def __rmul__(self, y: QArrayLike) -> QArray:
@@ -412,10 +411,9 @@ class QArray(eqx.Module):
     def __add__(self, y: QArrayLike) -> QArray:
         if _is_batched_scalar(y):
             raise NotImplementedError(
-                'Adding a scalar to a QArray is not supported. If you want to add the '
-                'identity matrix scaled by a scalar, use '
-                '`x + scalar * dq.eye(*x.dims)` instead. If you want to perform '
-                'addition with a scalar, consider using `x.addscalar(scalar)`.'
+                'Adding a scalar to a qarray with the `+` operator is not supported. '
+                'To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`.'
+                ' To add a scalar, use `x.addscalar(scalar)`.'
             )
 
         if isinstance(y, QArray):
@@ -433,12 +431,12 @@ class QArray(eqx.Module):
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         if _is_batched_scalar(y):
-            raise TypeError('Attempted matrix product between a scalar and a QArray.')
+            raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
         if _is_batched_scalar(y):
-            raise TypeError('Attempted matrix product between a scalar and a QArray.')
+            raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
     def __and__(self, y: QArray) -> QArray:
@@ -450,9 +448,9 @@ class QArray(eqx.Module):
             return _Metaω.__rpow__(power, self)
 
         raise NotImplementedError(
-            'Computing the element-wise power of a QArray is not supported. If you '
-            'want to compute the matrix power, use `x.pomw(power)` instead. If you '
-            'want to compute the element-wise power, consider using `x.elpow(power)`.'
+            'Computing the element-wise power of a qarray with the `**` operator is '
+            'not supported. For the matrix power, use `x.pomw(power)`. For the '
+            'element-wise power, use `x.elpow(power)`.'
         )
 
     @abstractmethod
