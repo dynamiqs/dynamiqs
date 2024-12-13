@@ -1283,6 +1283,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.addscalar" class="md-nav__link">
+    <span class="md-ellipsis">
+      addscalar
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.elmul" class="md-nav__link">
+    <span class="md-ellipsis">
+      elmul
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.elpow" class="md-nav__link">
+    <span class="md-ellipsis">
+      elpow
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4948,6 +4975,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.addscalar" class="md-nav__link">
+    <span class="md-ellipsis">
+      addscalar
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.elmul" class="md-nav__link">
+    <span class="md-ellipsis">
+      elmul
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.elpow" class="md-nav__link">
+    <span class="md-ellipsis">
+      elpow
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -5160,6 +5214,18 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 <td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.broadcast_to"><code>x.broadcast_to(*shape)</code></a></td>
 <td>Broadcasts a qarray to a new shape.</td>
 </tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.addscalar"><code>x.addscalar(y)</code></a></td>
+<td>Adds a scalar.</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.elmul"><code>x.elmul(y)</code></a></td>
+<td>Computes the element-wise multiplication.</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.elpow"><code>x.elpow(power)</code></a></td>
+<td>Computes the element-wise power.</td>
+</tr>
 </tbody>
 </table>
 
@@ -5305,6 +5371,147 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
       </li>
   </ul> -->
       <span class="field-body"><p>New qarray object with the given shape.</p></span>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.addscalar" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">QArray.addscalar</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">addscalar</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Adds a scalar.</p>
+
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>y</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Scalar to add, whose shape should be broadcastable with the qarray.</p>
+        </li>
+    </ul>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
+        – <p>New qarray object resulting from the addition with the scalar.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p>New qarray object resulting from the addition with the scalar.</p></span>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.elmul" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">QArray.elmul</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">elmul</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Computes the element-wise multiplication.</p>
+
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>y</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p><abbr title="e.g. Python list, NumPy and JAX array or QuTiP Qobj">Array-like object</abbr> to multiply with element-wise.</p>
+        </li>
+    </ul>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
+        – <p>New qarray object resulting from the element-wise multiplication.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p>New qarray object resulting from the element-wise multiplication.</p></span>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.elpow" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">QArray.elpow</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">elpow</span><span class="p">(</span><span class="n">power</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Computes the element-wise power.</p>
+
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>power</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Power to raise to.</p>
+        </li>
+    </ul>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
+        – <p>New qarray object with elements raised to the specified power.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p>New qarray object with elements raised to the specified power.</p></span>
 
     </div>
 
