@@ -139,18 +139,6 @@ class DenseQArray(QArray):
 
         return DenseQArray(self.dims, y * self.data)
 
-    def elmul(self, y: QArrayLike) -> QArray:
-        super().elmul(y)
-
-        if isinstance(y, DenseQArray):
-            data = self.data * y.data
-            return DenseQArray(self.dims, data)
-        elif isqarraylike(y):
-            data = self.data * _to_jax(y)
-            return DenseQArray(self.dims, data)
-
-        return NotImplemented
-
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)
 
@@ -176,10 +164,6 @@ class DenseQArray(QArray):
             return DenseQArray(self.dims, data)
 
         return NotImplemented
-
-    def addscalar(self, y: ArrayLike) -> QArray:
-        data = self.data + _to_jax(y)
-        return DenseQArray(self.dims, data)
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         super().__matmul__(y)
@@ -222,6 +206,15 @@ class DenseQArray(QArray):
             return NotImplemented
 
         return DenseQArray(dims, data)
+
+    def addscalar(self, y: ArrayLike) -> QArray:
+        data = self.data + _to_jax(y)
+        return DenseQArray(self.dims, data)
+
+    def elmul(self, y: ArrayLike) -> QArray:
+        super().elmul(y)
+        data = self.data * _to_jax(y)
+        return DenseQArray(self.dims, data)
 
     def elpow(self, power: int) -> QArray:
         data = self.data**power

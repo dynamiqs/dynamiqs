@@ -28,7 +28,6 @@ from .sparsedia_primitives import (
     matmul_sparsedia_array,
     matmul_sparsedia_sparsedia,
     mul_sparsedia_array,
-    mul_sparsedia_sparsedia,
     powm_sparsedia,
     reshape_sparsedia,
     shape_sparsedia,
@@ -218,21 +217,6 @@ class SparseDIAQArray(QArray):
 
         return SparseDIAQArray(self.dims, self.offsets, y * self.diags)
 
-    def elmul(self, y: QArrayLike) -> QArray:
-        super().elmul(y)
-
-        if isinstance(y, SparseDIAQArray):
-            offsets, diags = mul_sparsedia_sparsedia(
-                self.offsets, self.diags, y.offsets, y.diags
-            )
-            return SparseDIAQArray(self.dims, offsets, diags)
-        elif isqarraylike(y):
-            y = _to_jax(y)
-            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
-            return SparseDIAQArray(self.dims, offsets, diags)
-
-        return NotImplemented
-
     def __truediv__(self, y: QArrayLike) -> QArray:
         raise NotImplementedError
 
@@ -253,14 +237,6 @@ class SparseDIAQArray(QArray):
             return self.asdense() + y
 
         return NotImplemented
-
-    def addscalar(self, y: ArrayLike) -> QArray:
-        warnings.warn(
-            'A sparse array has been converted to dense layout due to element-wise '
-            'addition with a scalar.',
-            stacklevel=2,
-        )
-        return self.asdense().addscalar(y)
 
     def __matmul__(self, y: QArrayLike) -> QArray:
         super().__matmul__(y)
@@ -304,6 +280,21 @@ class SparseDIAQArray(QArray):
             return y & self.asdense()
 
         return NotImplemented
+
+    def addscalar(self, y: ArrayLike) -> QArray:
+        warnings.warn(
+            'A sparse array has been converted to dense layout due to element-wise '
+            'addition with a scalar.',
+            stacklevel=2,
+        )
+        return self.asdense().addscalar(y)
+
+    def elmul(self, y: ArrayLike) -> QArray:
+        super().elmul(y)
+
+        y = _to_jax(y)
+        offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
+        return SparseDIAQArray(self.dims, offsets, diags)
 
     def elpow(self, power: int) -> QArray:
         return SparseDIAQArray(self.dims, self.offsets, self.diags**power)

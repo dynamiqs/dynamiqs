@@ -150,9 +150,9 @@ class QArray(eqx.Module):
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
     | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
-    | [`x.addscalar(y)`][dynamiqs.QArray.addscalar]            | Add a scalar-like to a qarray.                                 |
-    | [`x.elmul(y)`][dynamiqs.QArray.elmul]                    | Compute the element-wise multiplication with a qarray.         |
-    | [`x.elpow(power)`][dynamiqs.QArray.elpow]                | Compute the element-wise power of a qarray.                    |
+    | [`x.addscalar(y)`][dynamiqs.QArray.addscalar]            | Adds a scalar.                                                 |
+    | [`x.elmul(y)`][dynamiqs.QArray.elmul]                    | Computes the element-wise multiplication.                      |
+    | [`x.elpow(power)`][dynamiqs.QArray.elpow]                | Computes the element-wise power.                               |
     """  # noqa: E501
 
     # Subclasses should implement:
@@ -394,19 +394,6 @@ class QArray(eqx.Module):
                 'consider using `x.elmul(y)`.'
             )
 
-    @abstractmethod
-    def elmul(self, y: QArrayLike) -> QArray:
-        """Compute the element-wise multiplication with a qarray.
-
-        Args:
-            y: Qarray to multiply element-wise with.
-
-        Returns:
-            New qarray object with element-wise multiplication.
-        """
-        if isinstance(y, QArray):
-            _check_compatible_dims(self.dims, y.dims)
-
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
@@ -433,17 +420,6 @@ class QArray(eqx.Module):
 
         if isinstance(y, QArray):
             _check_compatible_dims(self.dims, y.dims)
-
-    @abstractmethod
-    def addscalar(self, y: ArrayLike) -> QArray:
-        """Add a scalar to a qarray.
-
-        Args:
-            y: Scalar to add, whose shape should be broadcastable with the qarray.
-
-        Returns:
-            New qarray object with the scalar added to all elements.
-        """
 
     def __radd__(self, y: QArrayLike) -> QArray:
         return self.__add__(y)
@@ -480,11 +456,33 @@ class QArray(eqx.Module):
         )
 
     @abstractmethod
-    def elpow(self, power: int) -> QArray:
-        """Compute the element-wise power of a QArray.
+    def addscalar(self, y: ArrayLike) -> QArray:
+        """Adds a scalar.
 
         Args:
-            power: Power to raise the QArray to.
+            y: Scalar to add, whose shape should be broadcastable with the qarray.
+
+        Returns:
+            New qarray object resulting from the addition with the scalar.
+        """
+
+    @abstractmethod
+    def elmul(self, y: ArrayLike) -> QArray:
+        """Computes the element-wise multiplication.
+
+        Args:
+            y: Array-like object to multiply with element-wise.
+
+        Returns:
+            New qarray object resulting from the element-wise multiplication.
+        """
+
+    @abstractmethod
+    def elpow(self, power: int) -> QArray:
+        """Computes the element-wise power.
+
+        Args:
+            power: Power to raise to.
 
         Returns:
             New qarray object with elements raised to the specified power.
