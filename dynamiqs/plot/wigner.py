@@ -114,7 +114,7 @@ def wigner(
 
         ![plot_wigner_01](../../figs_code/plot_wigner_01.png){.fig-half}
 
-        >>> psi = sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]).unit()
+        >>> psi = dq.coherent(32, [3, 3j, -3, -3j]).sum(0).unit()
         >>> dq.plot.wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 

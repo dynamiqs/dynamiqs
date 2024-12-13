@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
@@ -14,6 +13,7 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
+from .._utils import _is_batched_scalar
 from .layout import Layout
 
 __all__ = ['QArray']
@@ -150,6 +150,9 @@ class QArray(eqx.Module):
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
     | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
+    | [`x.addscalar(y)`][dynamiqs.QArray.addscalar]            | Adds a scalar.                                                 |
+    | [`x.elmul(y)`][dynamiqs.QArray.elmul]                    | Computes the element-wise multiplication.                      |
+    | [`x.elpow(power)`][dynamiqs.QArray.elpow]                | Computes the element-wise power.                               |
     """  # noqa: E501
 
     # Subclasses should implement:
@@ -161,7 +164,7 @@ class QArray(eqx.Module):
     #                                     _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
     #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
-    #                         __and__, _pow, __getitem__
+    #                         __and__, addscalar, elmul, elpow, __getitem__
 
     # TODO: Setting dims as static for now. Otherwise, I believe it is upgraded to a
     # complex dtype during the computation, which raises an error on diffrax side.
@@ -382,18 +385,13 @@ class QArray(eqx.Module):
         return self * (-1)
 
     @abstractmethod
-    def __mul__(self, y: QArrayLike) -> QArray:
-        from .._utils import _is_batched_scalar
-
+    def __mul__(self, y: ArrayLike) -> QArray:
         if not _is_batched_scalar(y):
-            logging.warning(
-                'Using the `*` operator between two arrays performs element-wise '
-                'multiplication. For matrix multiplication, use the `@` operator '
-                'instead.'
+            raise NotImplementedError(
+                'Element-wise multiplication of a qarray with the `*` operator is not '
+                'supported. For matrix multiplication, use `x @ y`. For element-wise '
+                'multiplication, use `x.elmul(y)`.'
             )
-
-        if isinstance(y, QArray):
-            _check_compatible_dims(self.dims, y.dims)
 
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
@@ -411,13 +409,11 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __add__(self, y: QArrayLike) -> QArray:
-        from .._utils import _is_batched_scalar
-
         if _is_batched_scalar(y):
-            logging.warning(
-                'Using the `+` or `-` operator between an array and a scalar performs '
-                'element-wise addition or subtraction. For addition with a scaled '
-                'identity matrix, use e.g. `x + 2 * x.I` instead.'
+            raise NotImplementedError(
+                'Adding a scalar to a qarray with the `+` operator is not supported. '
+                'To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`.'
+                ' To add a scalar, use `x.addscalar(scalar)`.'
             )
 
         if isinstance(y, QArray):
@@ -434,11 +430,13 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        pass
+        if _is_batched_scalar(y):
+            raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
-        pass
+        if _is_batched_scalar(y):
+            raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
     def __and__(self, y: QArray) -> QArray:
@@ -448,16 +446,45 @@ class QArray(eqx.Module):
         # to deal with the x**ω notation from equinox (used in diffrax internals)
         if isinstance(power, _Metaω):
             return _Metaω.__rpow__(power, self)
-        else:
-            logging.warning(
-                'Using the `**` operator performs element-wise power. For matrix '
-                'power, use `x @ x @ ... @ x` or `x.powm(power)` instead.'
-            )
-            return self._pow(power)
+
+        raise NotImplementedError(
+            'Computing the element-wise power of a qarray with the `**` operator is '
+            'not supported. For the matrix power, use `x.pomw(power)`. For the '
+            'element-wise power, use `x.elpow(power)`.'
+        )
 
     @abstractmethod
-    def _pow(self, power: int) -> QArray:
-        """Element-wise power of the quantum state."""
+    def addscalar(self, y: ArrayLike) -> QArray:
+        """Adds a scalar.
+
+        Args:
+            y: Scalar to add, whose shape should be broadcastable with the qarray.
+
+        Returns:
+            New qarray object resulting from the addition with the scalar.
+        """
+
+    @abstractmethod
+    def elmul(self, y: ArrayLike) -> QArray:
+        """Computes the element-wise multiplication.
+
+        Args:
+            y: Array-like object to multiply with element-wise.
+
+        Returns:
+            New qarray object resulting from the element-wise multiplication.
+        """
+
+    @abstractmethod
+    def elpow(self, power: int) -> QArray:
+        """Computes the element-wise power.
+
+        Args:
+            power: Power to raise to.
+
+        Returns:
+            New qarray object with elements raised to the specified power.
+        """
 
     @abstractmethod
     def __getitem__(self, key: int | slice) -> QArray:
