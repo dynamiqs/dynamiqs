@@ -109,7 +109,9 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         num_jumps = jump_state.num_jumps
 
         # === save and postprocess results
-        no_jump_saved = self.postprocess_saved(no_jump_saved, no_jump_solution.ys[1])
+        no_jump_saved = self.postprocess_saved(
+            no_jump_saved, unit(no_jump_solution.ys[1])
+        )
         no_jump_result = self.traj_result(
             no_jump_saved, infos=self.infos(no_jump_solution.stats)
         )
