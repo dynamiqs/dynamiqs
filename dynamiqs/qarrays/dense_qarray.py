@@ -177,10 +177,8 @@ class DenseQArray(QArray):
         super().__matmul__(y)
 
         if isinstance(y, DenseQArray):
-            dims = self.dims if len(self.dims) < len(y.dims) else y.dims
             data = self.data @ y.data
         elif isqarraylike(y):
-            dims = self.dims
             data = self.data @ _to_jax(y)
         else:
             return NotImplemented
@@ -188,21 +186,19 @@ class DenseQArray(QArray):
         if self.isbra() and y.isket():
             return data
 
-        return DenseQArray(dims, data)
+        return DenseQArray(self.dims, data)
 
     def __rmatmul__(self, y: QArrayLike) -> QArray:
         super().__rmatmul__(y)
 
         if isinstance(y, DenseQArray):
-            dims = self.dims if len(self.dims) < len(y.dims) else y.dims
             data = y.data @ self.data
         elif isqarraylike(y):
-            dims = self.dims
             data = _to_jax(y) @ self.data
         else:
             return NotImplemented
 
-        return DenseQArray(dims, data)
+        return DenseQArray(self.dims, data)
 
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
