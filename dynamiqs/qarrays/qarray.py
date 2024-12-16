@@ -180,8 +180,6 @@ class QArray(eqx.Module):
     #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
     #                         __and__, addscalar, elmul, elpow, __getitem__
 
-    # TODO: Setting dims as static for now. Otherwise, I believe it is upgraded to a
-    # complex dtype during the computation, which raises an error on diffrax side.
     dims: tuple[int, ...] = eqx.field(static=True)
     vectorized: bool = eqx.field(static=True)
 
