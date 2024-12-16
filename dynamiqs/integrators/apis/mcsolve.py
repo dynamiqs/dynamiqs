@@ -149,24 +149,24 @@ def _vectorized_mcsolve(
     options: Options,
 ) -> MCSolveResult:
     # === vectorize function
-    # vectorize input over H, Ls, and psi0. keys are vectorized over inside of run().
-    in_axes = (
-        H.in_axes,
-        [L.in_axes for L in Ls],
-        0,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )
     # vectorize output over `_no_jump_res`, `_jump_res`, `no_jump_prob`, `jump_times`,
     # `num_jumps`
     out_axes = MCSolveResult(None, None, None, None, 0, 0, 0, 0, 0)
 
     if options.cartesian_batching:
+        # vectorize input over H, Ls, psi0.
+        in_axes = (
+            H.in_axes,
+            [L.in_axes for L in Ls],
+            0,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
         nvmap = (
             H.ndim - 2,
             [L.ndim - 2 for L in Ls],
@@ -181,13 +181,28 @@ def _vectorized_mcsolve(
         )
         f = cartesian_vmap(_mcsolve, in_axes, out_axes, nvmap)
     else:
-        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
+        # vectorize input over H, Ls, psi0 and keys.
+        in_axes = (
+            H.in_axes,
+            [L.in_axes for L in Ls],
+            0,
+            None,
+            0,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        shapes = [x.shape[:-2] for x in [H, *Ls, psi0, keys]]
+        bshape = jnp.broadcast_shapes(*shapes)
         nvmap = len(bshape)
         # broadcast all vectorized input to same shape
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = jnp.broadcast_to(psi0, (*bshape, n, 1))
+        keys = jnp.broadcast_to(keys, (*bshape, *keys.shape[-2:]))
         # vectorize the function
         f = multi_vmap(_mcsolve, in_axes, out_axes, nvmap)
 
