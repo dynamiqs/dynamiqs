@@ -16,7 +16,7 @@ from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
-    from .sparse_dia_qarray import SparseDIAQArray
+    from .sparsedia_qarray import SparseDIAQArray
 
 __all__ = ['DenseQArray']
 
@@ -106,15 +106,6 @@ class DenseQArray(QArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
-    def asdense(self) -> DenseQArray:
-        return self
-
-    def assparsedia(self) -> SparseDIAQArray:
-        from .sparsedia_qarray import SparseDIAQArray
-
-        offsets, diags = array_to_sparsedia(self.data)
-        return SparseDIAQArray(self.dims, offsets, diags)
-
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
@@ -126,6 +117,15 @@ class DenseQArray(QArray):
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return np.asarray(self.data, dtype=dtype)
+
+    def asdense(self) -> DenseQArray:
+        return self
+
+    def assparsedia(self) -> SparseDIAQArray:
+        from .sparsedia_qarray import SparseDIAQArray
+
+        offsets, diags = array_to_sparsedia(self.data)
+        return SparseDIAQArray(self.dims, offsets, diags)
 
     def block_until_ready(self) -> QArray:
         _ = self.data.block_until_ready()

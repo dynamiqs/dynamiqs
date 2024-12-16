@@ -167,13 +167,6 @@ class SparseDIAQArray(QArray):
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
 
-    def asdense(self) -> DenseQArray:
-        data = sparsedia_to_array(self.offsets, self.diags)
-        return DenseQArray(self.dims, data)
-
-    def assparsedia(self) -> SparseDIAQArray:
-        return self
-
     def isherm(self) -> bool:
         raise NotImplementedError
 
@@ -185,6 +178,13 @@ class SparseDIAQArray(QArray):
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return self.asdense().__array__(dtype=dtype, copy=copy)
+
+    def asdense(self) -> DenseQArray:
+        data = sparsedia_to_array(self.offsets, self.diags)
+        return DenseQArray(self.dims, data)
+
+    def assparsedia(self) -> SparseDIAQArray:
+        return self
 
     def block_until_ready(self) -> QArray:
         _ = self.diags.block_until_ready()
