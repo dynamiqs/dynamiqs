@@ -43,6 +43,10 @@ class DenseQArray(QArray):
         data = self.data.mT
         return DenseQArray(self.dims, data)
 
+    @property
+    def _underlying_array(self) -> Array:
+        return self.data
+
     def conj(self) -> QArray:
         data = self.data.conj()
         return DenseQArray(self.dims, data)
@@ -93,6 +97,10 @@ class DenseQArray(QArray):
             return data
         else:
             return DenseQArray(self.dims, data)
+
+    def _eig(self) -> tuple[Array, QArray]:
+        evals, evecs = jax.lax.linalg.eig(self.data, compute_left_eigenvectors=False)
+        return evals, DenseQArray(self.dims, evecs)
 
     def _eigh(self) -> tuple[Array, Array]:
         return jnp.linalg.eigh(self.data)
