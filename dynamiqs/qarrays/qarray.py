@@ -170,7 +170,7 @@ class QArray(eqx.Module):
     # - the properties: dtype, layout, shape, mT
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
-    #                     _abs, block_until_ready
+    #                     block_until_ready
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eigh, _eigvals,
     #                                     _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready

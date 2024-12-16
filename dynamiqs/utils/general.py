@@ -9,9 +9,8 @@ from jax import Array
 
 from .._checks import check_shape
 from .._utils import on_cpu
-from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
-from ..qarrays.utils import _init_dims, asqarray, to_jax, tree_sum
+from ..qarrays.utils import _init_dims, asqarray, sum_qarrays, to_jax
 
 __all__ = [
     'bloch_coordinates',
@@ -470,7 +469,6 @@ def norm(x: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 
     if isket(x) or isbra(x):
-        assert isinstance(x, DenseQArray)
         return jnp.sqrt((jnp.abs(x.to_jax()) ** 2).sum((-2, -1)))
     else:
         return trace(x).real
@@ -596,7 +594,9 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
-    return -1j * (H @ rho - rho @ H) + tree_sum([dissipator(L, rho) for L in jump_ops])
+    return sum_qarrays(
+        -1j * H @ rho, 1j * rho @ H, *[dissipator(L, rho) for L in jump_ops]
+    )
 
 
 def isket(x: QArrayLike) -> bool:
