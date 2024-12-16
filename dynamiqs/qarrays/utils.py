@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
+from functools import reduce
 
-import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
@@ -357,9 +357,18 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
         )
 
 
-def tree_sum(qarrays: list[QArray]) -> QArray:
-    # jax.tree.reduce doesn't call its initializer if the list is not empty
-    # this avoids unwanted conversion from sparse to dense qarrays when summing with 0
-    return jax.tree.reduce(
-        lambda x, y: x + y, qarrays, is_leaf=lambda x: isinstance(x, QArray)
-    )
+def sum_qarrays(*args: QArray) -> QArray:
+    # Summing qarrays with Python native's sum() results in unwanted conversions from
+    # sparse to dense qarrays, because they are automatically summed with the
+    # initializer (zero). We instead use `functools.reduce`, which doesn't sum with the
+    # initializer if the list is not empty.
+
+    # Warning: this function will raise an exception if qarrays is an empty list.
+
+    if len(args) == 0:
+        raise ValueError(
+            'Argument `args` is an empty list, but it should contain at least one'
+            ' value.'
+        )
+
+    return reduce(lambda x, y: x + y, args)

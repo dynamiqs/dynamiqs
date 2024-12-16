@@ -16,7 +16,7 @@ from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
-    from .sparse_dia_qarray import SparseDIAQArray
+    from .sparsedia_qarray import SparseDIAQArray
 
 __all__ = ['DenseQArray']
 
@@ -114,15 +114,6 @@ class DenseQArray(QArray):
     def devices(self) -> set[Device]:
         return self.data.devices()
 
-    def asdense(self) -> DenseQArray:
-        return self
-
-    def assparsedia(self) -> SparseDIAQArray:
-        from .sparsedia_qarray import SparseDIAQArray
-
-        offsets, diags = array_to_sparsedia(self.data)
-        return SparseDIAQArray(self.dims, offsets, diags)
-
     def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
@@ -135,6 +126,15 @@ class DenseQArray(QArray):
     def __array__(self, dtype=None, copy=None) -> np.ndarray:  # noqa: ANN001
         return np.asarray(self.data, dtype=dtype)
 
+    def asdense(self) -> DenseQArray:
+        return self
+
+    def assparsedia(self) -> SparseDIAQArray:
+        from .sparsedia_qarray import SparseDIAQArray
+
+        offsets, diags = array_to_sparsedia(self.data)
+        return SparseDIAQArray(self.dims, offsets, diags)
+
     def block_until_ready(self) -> QArray:
         _ = self.data.block_until_ready()
         return self
@@ -142,19 +142,10 @@ class DenseQArray(QArray):
     def __repr__(self) -> str:
         return super().__repr__() + f'\n{self.data}'
 
-    def __mul__(self, y: QArrayLike) -> QArray:
+    def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
 
-        if _is_batched_scalar(y):
-            data = self.data * y
-        elif isinstance(y, DenseQArray):
-            data = self.data * y.data
-        elif isqarraylike(y):
-            data = self.data * _to_jax(y)
-        else:
-            return NotImplemented
-
-        return DenseQArray(self.dims, data)
+        return DenseQArray(self.dims, y * self.data)
 
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)
@@ -170,19 +161,17 @@ class DenseQArray(QArray):
 
         return DenseQArray(self.dims, data)
 
-    def __add__(self, y: QArray) -> QArray:
+    def __add__(self, y: QArrayLike) -> QArray:
         super().__add__(y)
 
-        if _is_batched_scalar(y):
-            data = self.data + y
-        elif isinstance(y, DenseQArray):
+        if isinstance(y, DenseQArray):
             data = self.data + y.data
+            return DenseQArray(self.dims, data)
         elif isinstance(y, get_args(ArrayLike)):
             data = self.data + _to_jax(y)
-        else:
-            return NotImplemented
+            return DenseQArray(self.dims, data)
 
-        return DenseQArray(self.dims, data)
+        return NotImplemented
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         super().__matmul__(y)
@@ -226,7 +215,16 @@ class DenseQArray(QArray):
 
         return DenseQArray(dims, data)
 
-    def _pow(self, power: int) -> QArray:
+    def addscalar(self, y: ArrayLike) -> QArray:
+        data = self.data + _to_jax(y)
+        return DenseQArray(self.dims, data)
+
+    def elmul(self, y: ArrayLike) -> QArray:
+        super().elmul(y)
+        data = self.data * _to_jax(y)
+        return DenseQArray(self.dims, data)
+
+    def elpow(self, power: int) -> QArray:
         data = self.data**power
         return DenseQArray(self.dims, data)
 
