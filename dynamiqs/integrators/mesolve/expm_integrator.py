@@ -18,6 +18,6 @@ class MESolveExpmIntegrator(MEExpmIntegrator, MESolveIntegrator, SolveSaveMixin)
 
     def save(self, y: PyTree) -> Saved:
         # TODO: implement bexpect for vectorized operators and convert at the end
-        #       instead ofat each step
+        # instead of at each step
         y = vector_to_operator(y)
         return super().save(y)

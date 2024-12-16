@@ -4,6 +4,7 @@ import jax
 from jax import Array
 from jaxtyping import PRNGKeyArray
 
+from .qarrays.qarray import QArray
 from .utils.general import dag, unit
 
 __all__ = ['complex', 'dm', 'herm', 'ket', 'psd', 'real']
@@ -96,21 +97,22 @@ def complex(  # noqa: A001
     return x[..., 0] + 1j * x[..., 1]
 
 
-def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
     """Returns a random complex Hermitian matrix.
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, n))_: Shape of the returned array.
+        shape _(shape of the form (..., n, n))_: Shape of the returned qarray.
 
     Returns:
-        _(array of shape (*shape))_ Random complex Hermitian matrix.
+        _(qarray of shape (*shape))_ Random complex Hermitian matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.herm(key, (2, 2))
-        Array([[-0.291+0.j   ,  0.473-0.446j],
-               [ 0.473+0.446j,  0.13 +0.j   ]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[-0.291+0.j     0.473-0.446j]
+         [ 0.473+0.446j  0.13 +0.j   ]]
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
         raise ValueError(
@@ -120,21 +122,22 @@ def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     return 0.5 * (x + dag(x))
 
 
-def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
     """Returns a random complex positive semi-definite matrix.
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, n))_: Shape of the returned array.
+        shape _(shape of the form (..., n, n))_: Shape of the returned qarray.
 
     Returns:
-        _(array of shape (*shape))_ Random complex positive semi-definite matrix.
+        _(qarray of shape (*shape))_ Random complex positive semi-definite matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.psd(key, (2, 2))
-        Array([[1.145+0.j  , 0.582+0.33j],
-               [0.582-0.33j, 0.844+0.j  ]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.145+0.j   0.582+0.33j]
+         [0.582-0.33j 0.844+0.j  ]]
 
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
@@ -145,22 +148,23 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     return x @ dag(x)
 
 
-def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
     """Returns a random density matrix (hermitian, positive semi-definite, and unit
     trace).
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, n))_: Shape of the returned array.
+        shape _(shape of the form (..., n, n))_: Shape of the returned qarray.
 
     Returns:
-        _(array of shape (*shape))_ Random density matrix.
+        _(qarray of shape (*shape))_ Random density matrix.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.dm(key, (2, 2))
-        Array([[0.576+0.j   , 0.293+0.166j],
-               [0.293-0.166j, 0.424+0.j   ]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[0.576+0.j    0.293+0.166j]
+         [0.293-0.166j 0.424+0.j   ]]
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
         raise ValueError(
@@ -170,21 +174,22 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
     return unit(x)
 
 
-def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> Array:
+def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
     """Returns a random ket with unit norm.
 
     Args:
         key: A PRNG key used as the random key.
-        shape _(shape of the form (..., n, 1))_: Shape of the returned array.
+        shape _(shape of the form (..., n, 1))_: Shape of the returned qarray.
 
     Returns:
-        _(array of shape (*shape))_ Random ket.
+        _(qarray of shape (*shape))_ Random ket.
 
     Examples:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.ket(key, (2, 1))
-        Array([[-0.004+0.083j],
-               [-0.26 +0.962j]], dtype=complex64)
+        QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+        [[-0.004+0.083j]
+         [-0.26 +0.962j]]
     """
     if not len(shape) >= 2 or not shape[-1] == 1:
         raise ValueError(

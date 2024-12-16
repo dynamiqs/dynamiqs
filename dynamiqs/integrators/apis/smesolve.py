@@ -1,26 +1,25 @@
-# ruff: noqa: ARG001
-
 from __future__ import annotations
 
 from jaxtyping import ArrayLike
 
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.qarray import QArrayLike
 from ...result import Result
 from ...solver import Solver
 from ...time_array import TimeArray
 
 
 def smesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    H: QArrayLike | TimeArray,
+    jump_ops: list[QArrayLike | TimeArray],
     etas: ArrayLike,
-    rho0: ArrayLike,
+    rho0: QArrayLike,
     tsave: ArrayLike,
     *,
     tmeas: ArrayLike | None = None,
     ntrajs: int = 10,
-    exp_ops: list[ArrayLike] | None = None,
+    exp_ops: list[QArrayLike] | None = None,
     solver: Solver | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
@@ -102,21 +101,21 @@ def smesolve(
         more details.
 
     Args:
-        H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, of shape (nL, n, n))_: List of
+        H _(qarray-like or time-array of shape (bH?, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-array, of shape (nL, n, n))_: List of
             jump operators.
         etas _(array-like of shape (nL,))_: Measurement efficiencies, must be of the
             same length as `jump_ops` with values between 0 and 1. For a purely
             dissipative loss channel, set the corresponding efficiency to 0. No
             measurement signal will be returned for such channels.
-        rho0 _(array-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
+        rho0 _(qarray-like of shape (brho?, n, 1) or (brho?, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         tmeas _(array-like of shape (ntmeas,), optional)_: Times between which
             measurement signals are averaged and saved. Defaults to `tsave`.
         ntrajs: Number of stochastic trajectories to solve concurrently.
-        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
+        exp_ops _(list of qarray-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration.
         gradient: Algorithm used to compute the gradient. The default is

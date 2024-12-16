@@ -9,9 +9,10 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape, check_times
-from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 from ...result import MESolveResult
 from ...solver import (
     Dopri5,
@@ -25,7 +26,6 @@ from ...solver import (
     Tsit5,
 )
 from ...time_array import TimeArray
-from ...utils.general import isket, todm
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -47,12 +47,12 @@ from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 
 def mesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
-    rho0: ArrayLike,
+    H: QArrayLike | TimeArray,
+    jump_ops: list[QArrayLike | TimeArray],
+    rho0: QArrayLike,
     tsave: ArrayLike,
     *,
-    exp_ops: list[ArrayLike] | None = None,
+    exp_ops: list[QArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
@@ -95,14 +95,14 @@ def mesolve(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-array, each of shape (...Lk, n, n))_:
             List of jump operators.
-        rho0 _(array-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
+        rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
+        exp_ops _(list of qarray-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
@@ -128,17 +128,17 @@ def mesolve(
     # === convert arguments
     H = _astimearray(H)
     Ls = [_astimearray(L) for L in jump_ops]
-    rho0 = jnp.asarray(rho0, dtype=cdtype())
+    rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
-        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
 
     # === convert rho0 to density matrix
-    rho0 = todm(rho0)
+    rho0 = rho0.todm()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
@@ -150,9 +150,9 @@ def mesolve(
 def _vectorized_mesolve(
     H: TimeArray,
     Ls: list[TimeArray],
-    rho0: Array,
+    rho0: QArray,
     tsave: Array,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -172,7 +172,7 @@ def _vectorized_mesolve(
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
-        rho0 = jnp.broadcast_to(rho0, (*bshape, n, n))
+        rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
@@ -182,9 +182,9 @@ def _vectorized_mesolve(
 def _mesolve(
     H: TimeArray,
     Ls: list[TimeArray],
-    rho0: Array,
+    rho0: QArray,
     tsave: Array,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -225,7 +225,7 @@ def _mesolve(
 
 
 def _check_mesolve_args(
-    H: TimeArray, Ls: list[TimeArray], rho0: Array, exp_ops: Array | None
+    H: TimeArray, Ls: list[TimeArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
@@ -234,7 +234,7 @@ def _check_mesolve_args(
     for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
-    if len(Ls) == 0 and isket(rho0):
+    if len(Ls) == 0 and rho0.isket():
         logging.warning(
             'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
             ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
@@ -245,4 +245,5 @@ def _check_mesolve_args(
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')

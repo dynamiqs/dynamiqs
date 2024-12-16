@@ -11,6 +11,7 @@ from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...integrators.floquet.floquet_integrator import FloquetIntegrator
 from ...options import Options
+from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...solver import Solver, Tsit5
 from ...time_array import TimeArray
@@ -20,7 +21,7 @@ __all__ = ['floquet']
 
 
 def floquet(
-    H: ArrayLike | TimeArray,
+    H: QArrayLike | TimeArray,
     T: float,
     tsave: ArrayLike,
     *,
@@ -75,7 +76,7 @@ def floquet(
         ```
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`, see above.
@@ -172,9 +173,13 @@ def _check_floquet_args(
     )
 
     # === check that the Hamiltonian is periodic with the supplied period
-    H = eqx.error_if(
-        H,
-        jnp.logical_not(jnp.isclose(H(0), H(T))),
+    # attach the check to `tsave` instead of `H` to workaround CallableTimeArrays that
+    # do not have an underlying array to attach the check to
+    tsave = eqx.error_if(
+        tsave,
+        jnp.logical_not(
+            jnp.isclose(H(0.0)._underlying_array, H(T)._underlying_array)  # noqa: SLF001
+        ),
         'The Hamiltonian H is not periodic with the supplied period T.',
     )
 

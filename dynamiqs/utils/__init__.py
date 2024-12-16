@@ -1,5 +1,5 @@
 from .general import *
-from .jax_utils import *
+from .global_settings import *
 from .operators import *
 from .optimal_control import *
 from .states import *

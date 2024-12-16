@@ -9,8 +9,10 @@ from jax import Array
 from jaxtyping import ArrayLike, PyTree
 
 import dynamiqs as dq
+from dynamiqs import QArray, asqarray, dense
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
+from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
 from dynamiqs.time_array import TimeArray
@@ -20,7 +22,7 @@ from ..system import System
 
 class OpenSystem(System):
     @abstractmethod
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
         """Compute the jump operators."""
 
     def run(
@@ -55,33 +57,44 @@ class OCavity(OpenSystem):
         kappa: float
 
     def __init__(
-        self, *, n: int, delta: float, alpha0: float, kappa: float, tsave: ArrayLike
+        self,
+        *,
+        n: int,
+        delta: float,
+        alpha0: float,
+        kappa: float,
+        tsave: ArrayLike,
+        layout: Layout,
     ):
         self.n = n
         self.delta = delta
         self.alpha0 = alpha0
         self.kappa = kappa
         self.tsave = tsave
+        self.layout = layout
 
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0, kappa)
 
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
-        return params.delta * dq.number(self.n)
+    def H(self, params: PyTree) -> QArray | TimeArray:
+        return params.delta * dq.number(self.n, layout=self.layout)
 
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
-        return [jnp.sqrt(params.kappa) * dq.destroy(self.n)]
+    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
+        return [jnp.sqrt(params.kappa) * dq.destroy(self.n, layout=self.layout)]
 
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> QArray:
         return dq.coherent(self.n, params.alpha0)
 
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.position(self.n), dq.momentum(self.n)])
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
+        return [
+            dq.position(self.n, layout=self.layout),
+            dq.momentum(self.n, layout=self.layout),
+        ]
 
     def _alpha(self, t: float) -> Array:
         return self.alpha0 * jnp.exp(-1j * self.delta * t - 0.5 * self.kappa * t)
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         return dq.coherent_dm(self.n, self._alpha(t))
 
     def expect(self, t: float) -> Array:
@@ -90,8 +103,8 @@ class OCavity(OpenSystem):
         exp_p = alpha_t.imag
         return jnp.array([exp_x, exp_p], dtype=alpha_t.dtype)
 
-    def loss_state(self, state: Array) -> Array:
-        return dq.expect(dq.number(self.n), state).real
+    def loss_state(self, state: QArray) -> Array:
+        return dq.expect(dq.number(self.n, layout=self.layout), state).real
 
     def grads_state(self, t: float) -> PyTree:
         grad_delta = 0.0
@@ -134,18 +147,18 @@ class OTDQubit(OpenSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega, gamma)
 
-    def H(self, params: PyTree):
+    def H(self, params: PyTree) -> QArray | TimeArray:
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 
-    def Ls(self, params: PyTree) -> list[ArrayLike | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
         return [jnp.sqrt(params.gamma) * dq.sigmax()]
 
-    def y0(self, params: PyTree) -> Array:  # noqa: ARG002
+    def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
         return dq.fock(2, 0)
 
-    def Es(self, params: PyTree) -> Array:  # noqa: ARG002
-        return jnp.stack([dq.sigmax(), dq.sigmay(), dq.sigmaz()])
+    def Es(self, params: PyTree) -> list[QArray]:  # noqa: ARG002
+        return [dq.sigmax(), dq.sigmay(), dq.sigmaz()]
 
     def _theta(self, t: float) -> float:
         return 2 * self.eps / self.omega * jnp.sin(self.omega * t)
@@ -153,14 +166,14 @@ class OTDQubit(OpenSystem):
     def _eta(self, t: float) -> float:
         return jnp.exp(-2 * self.gamma * t)
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         theta = self._theta(t)
         eta = self._eta(t)
         rho_00 = 0.5 * (1 + eta * jnp.cos(theta))
         rho_11 = 0.5 * (1 - eta * jnp.cos(theta))
         rho_01 = 0.5j * eta * jnp.sin(theta)
         rho_10 = -0.5j * eta * jnp.sin(theta)
-        return jnp.array([[rho_00, rho_01], [rho_10, rho_11]])
+        return asqarray([[rho_00, rho_01], [rho_10, rho_11]])
 
     def expect(self, t: float) -> Array:
         theta = self._theta(t)
@@ -170,7 +183,7 @@ class OTDQubit(OpenSystem):
         exp_z = eta * jnp.cos(theta)
         return jnp.array([exp_x, exp_y, exp_z]).real
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         return dq.expect(dq.sigmaz(), state).real
 
     def grads_state(self, t: float) -> PyTree:
@@ -220,7 +233,12 @@ class OTDQubit(OpenSystem):
 # # gradients
 Hz = 2 * jnp.pi
 tsave = np.linspace(0.0, 0.3, 11)
-ocavity = OCavity(n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave)
+dense_ocavity = OCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dense
+)
+dia_ocavity = OCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave, layout=dq.dia
+)
 
 tsave = np.linspace(0.0, 1.0, 11)
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)

@@ -17,6 +17,14 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Core
 
+### Quantum arrays
+
+::: dynamiqs.qarrays.qarray
+    options:
+        table: true
+        members:
+        - QArray
+
 ### Time-dependent arrays
 
 ::: dynamiqs.time_array
@@ -162,16 +170,30 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         namespace: utils/general/
 
 
-### JAX-related utilities
+### QArray utilities
 
-::: dynamiqs.utils.jax_utils
+::: dynamiqs.qarrays.utils
     options:
         table: true
         members:
+        - asqarray
+        - isqarraylike
+        - stack
+        - to_jax
+        - to_numpy
         - to_qutip
+        - sparsedia_from_dict
+
+### Global settings
+
+::: dynamiqs.utils.global_settings
+    options:
+        table: true
+        members:
         - set_device
         - set_precision
         - set_matmul_precision
+        - set_layout
 
 
 ### Vectorization
@@ -199,7 +221,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - cd_gate
 
 
-### Random arrays (dq.random)
+### Random (dq.random)
 
 ::: dynamiqs.random
     options:
