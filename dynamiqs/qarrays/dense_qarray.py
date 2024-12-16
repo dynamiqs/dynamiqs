@@ -177,6 +177,7 @@ class DenseQArray(QArray):
         super().__matmul__(y)
 
         if isinstance(y, DenseQArray):
+            # todo: fix this
             dims = self.dims if len(self.dims) < len(y.dims) else y.dims
             data = self.data @ y.data
         elif isqarraylike(y):
