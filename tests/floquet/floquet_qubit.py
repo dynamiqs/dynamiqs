@@ -6,13 +6,13 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from dynamiqs import basis, dag, sigmaz, stack
+from dynamiqs import basis, sigmam, sigmaz, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import CallableTimeArray, timecallable
+from dynamiqs.time_array import CallableTimeArray, modulated
 
 from ..system import System
 
@@ -63,14 +63,11 @@ class FloquetQubit(System):
         )
 
     def H(self, params: PyTree) -> CallableTimeArray:
-        sigmap = basis(2, 1) @ dag(basis(2, 0))
-
-        def H_func(t):
-            H0 = -0.5 * params.omega * sigmaz()
-            H1 = 0.5 * params.amp * sigmap * jnp.exp(-1j * params.omega_d * t)
-            return H0 + H1 + dag(H1)
-
-        return timecallable(H_func)
+        H0 = -0.5 * params.omega * sigmaz()
+        fn = lambda t: jnp.exp(-1j * params.omega_d * t)
+        H1 = modulated(fn, 0.5 * params.amp * sigmam())
+        H1 += H1.dag()
+        return H0 + H1
 
     def state(self, t: float) -> Array:
         delta_Omega = self.omega - self.omega_d
