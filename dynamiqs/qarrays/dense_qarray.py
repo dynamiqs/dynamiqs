@@ -26,6 +26,13 @@ class DenseQArray(QArray):
 
     data: Array
 
+    def _replace(
+        self, dims: tuple[int, ...] | None = None, data: Array | None = None
+    ) -> DenseQArray:
+        if data is None:
+            data = self.data
+        return super()._replace(dims=dims, data=data)
+
     @property
     def dtype(self) -> jnp.dtype:
         return self.data.dtype
@@ -41,7 +48,7 @@ class DenseQArray(QArray):
     @property
     def mT(self) -> QArray:
         data = self.data.mT
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     @property
     def _underlying_array(self) -> Array:
@@ -49,15 +56,15 @@ class DenseQArray(QArray):
 
     def conj(self) -> QArray:
         data = self.data.conj()
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def reshape(self, *shape: int) -> QArray:
         data = jnp.reshape(self.data, shape)
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def broadcast_to(self, *shape: int) -> QArray:
         data = jnp.broadcast_to(self.data, shape)
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def ptrace(self, *keep: int) -> QArray:
         from ..utils.general import ptrace
@@ -66,11 +73,11 @@ class DenseQArray(QArray):
 
     def powm(self, n: int) -> QArray:
         data = jnp.linalg.matrix_power(self.data, n)
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         data = jax.scipy.linalg.expm(self.data, max_squarings=max_squarings)
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def norm(self) -> Array:
         from ..utils.general import norm
@@ -87,7 +94,7 @@ class DenseQArray(QArray):
         if _in_last_two_dims(axis, self.ndim):
             return data
         else:
-            return DenseQArray(self.dims, data)
+            return self._replace(data=data)
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         data = self.data.squeeze(axis=axis)
@@ -96,11 +103,11 @@ class DenseQArray(QArray):
         if _in_last_two_dims(axis, self.ndim):
             return data
         else:
-            return DenseQArray(self.dims, data)
+            return self._replace(data=data)
 
     def _eig(self) -> tuple[Array, QArray]:
         evals, evecs = jax.lax.linalg.eig(self.data, compute_left_eigenvectors=False)
-        return evals, DenseQArray(self.dims, evecs)
+        return evals, self._replace(data=evecs)
 
     def _eigh(self) -> tuple[Array, Array]:
         return jnp.linalg.eigh(self.data)
@@ -145,7 +152,8 @@ class DenseQArray(QArray):
     def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
 
-        return DenseQArray(self.dims, y * self.data)
+        data = y * self.data
+        return self._replace(data=data)
 
     def __truediv__(self, y: QArrayLike) -> QArray:
         super().__truediv__(y)
@@ -159,19 +167,19 @@ class DenseQArray(QArray):
         else:
             return NotImplemented
 
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def __add__(self, y: QArrayLike) -> QArray:
         super().__add__(y)
 
         if isinstance(y, DenseQArray):
             data = self.data + y.data
-            return DenseQArray(self.dims, data)
         elif isinstance(y, get_args(ArrayLike)):
             data = self.data + _to_jax(y)
-            return DenseQArray(self.dims, data)
+        else:
+            return NotImplemented
 
-        return NotImplemented
+        return self._replace(data=data)
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
         super().__matmul__(y)
@@ -189,7 +197,7 @@ class DenseQArray(QArray):
         if self.isbra() and y.isket():
             return data
 
-        return DenseQArray(dims, data)
+        return self._replace(dims=dims, data=data)
 
     def __rmatmul__(self, y: QArrayLike) -> QArray:
         super().__rmatmul__(y)
@@ -201,7 +209,7 @@ class DenseQArray(QArray):
         else:
             return NotImplemented
 
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def __and__(self, y: QArray) -> QArray:
         super().__and__(y)
@@ -212,24 +220,24 @@ class DenseQArray(QArray):
         else:
             return NotImplemented
 
-        return DenseQArray(dims, data)
+        return self._replace(dims=dims, data=data)
 
     def addscalar(self, y: ArrayLike) -> QArray:
         data = self.data + _to_jax(y)
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def elmul(self, y: ArrayLike) -> QArray:
         super().elmul(y)
         data = self.data * _to_jax(y)
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def elpow(self, power: int) -> QArray:
         data = self.data**power
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
     def __getitem__(self, key: int | slice) -> QArray:
         data = self.data[key]
-        return DenseQArray(self.dims, data)
+        return self._replace(data=data)
 
 
 def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:

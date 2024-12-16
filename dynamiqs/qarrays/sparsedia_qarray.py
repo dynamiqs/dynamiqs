@@ -43,6 +43,18 @@ class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array = eqx.field(converter=jnp.asarray)
 
+    def _replace(
+        self,
+        dims: tuple[int, ...] | None = None,
+        offsets: tuple[int, ...] | None = None,
+        diags: Array | None = None,
+    ) -> SparseDIAQArray:
+        if offsets is None:
+            offsets = self.offsets
+        if diags is None:
+            diags = self.diags
+        return super()._replace(dims=dims, offsets=offsets, diags=diags)
+
     def __check_init__(self):
         # check diags and offsets have the right type and shape before compressing them
         if not isinstance(self.offsets, tuple):
@@ -83,7 +95,7 @@ class SparseDIAQArray(QArray):
     @property
     def mT(self) -> QArray:
         offsets, diags = transpose_sparsedia(self.offsets, self.diags)
-        return SparseDIAQArray(self.dims, offsets, diags)
+        return self._replace(offsets=offsets, diags=diags)
 
     @property
     def _underlying_array(self) -> Array:
@@ -94,7 +106,8 @@ class SparseDIAQArray(QArray):
         return len(self.offsets)
 
     def conj(self) -> QArray:
-        return SparseDIAQArray(self.dims, self.offsets, self.diags.conj())
+        diags = self.diags.conj()
+        return self._replace(diags=diags)
 
     def reshape(self, *shape: int) -> QArray:
         if shape[-2:] != self.shape[-2:]:
@@ -104,7 +117,7 @@ class SparseDIAQArray(QArray):
             )
 
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
-        return SparseDIAQArray(self.dims, offsets, diags)
+        return self._replace(offsets=offsets, diags=diags)
 
     def broadcast_to(self, *shape: int) -> QArray:
         if shape[-2:] != self.shape[-2:]:
@@ -114,14 +127,14 @@ class SparseDIAQArray(QArray):
             )
 
         offsets, diags = broadcast_sparsedia(self.offsets, self.diags, shape)
-        return SparseDIAQArray(self.dims, offsets, diags)
+        return self._replace(offsets=offsets, diags=diags)
 
     def ptrace(self, *keep: int) -> QArray:
         raise NotImplementedError
 
     def powm(self, n: int) -> QArray:
         offsets, diags = powm_sparsedia(self.offsets, self.diags, n)
-        return SparseDIAQArray(self.dims, offsets, diags)
+        return self._replace(offsets=offsets, diags=diags)
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         warnings.warn(
@@ -147,7 +160,8 @@ class SparseDIAQArray(QArray):
             else:
                 return self.to_jax().sum(axis)
         else:
-            return SparseDIAQArray(self.dims, self.offsets, self.diags.sum(axis))
+            diags = self.diags.sum(axis)
+            return self._replace(diags=diags)
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # return array if last two dimensions are modified, qarray otherwise
@@ -157,7 +171,8 @@ class SparseDIAQArray(QArray):
             else:
                 return self.to_jax().squeeze(axis)
         else:
-            return SparseDIAQArray(self.dims, self.offsets, self.diags.squeeze(axis))
+            diags = self.diags.squeeze(axis)
+            return self._replace(diags=diags)
 
     def _eig(self) -> tuple[Array, QArray]:
         warnings.warn(
@@ -227,7 +242,8 @@ class SparseDIAQArray(QArray):
     def __mul__(self, y: ArrayLike) -> QArray:
         super().__mul__(y)
 
-        return SparseDIAQArray(self.dims, self.offsets, y * self.diags)
+        diags = y * self.diags
+        return self._replace(diags=diags)
 
     def __truediv__(self, y: QArrayLike) -> QArray:
         raise NotImplementedError
@@ -239,7 +255,7 @@ class SparseDIAQArray(QArray):
             offsets, diags = add_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            return SparseDIAQArray(self.dims, offsets, diags)
+            return self._replace(offsets=offsets, diags=diags)
         elif isqarraylike(y):
             warnings.warn(
                 'A sparse array has been converted to dense layout due to element-wise '
@@ -257,7 +273,7 @@ class SparseDIAQArray(QArray):
             offsets, diags = matmul_sparsedia_sparsedia(
                 self.offsets, self.diags, y.offsets, y.diags
             )
-            return SparseDIAQArray(self.dims, offsets, diags)
+            return self._replace(offsets=offsets, diags=diags)
         elif isqarraylike(y):
             y = _to_jax(y)
             data = matmul_sparsedia_array(self.offsets, self.diags, y)
@@ -281,7 +297,7 @@ class SparseDIAQArray(QArray):
                 self.offsets, self.diags, y.offsets, y.diags
             )
             dims = self.dims + y.dims
-            return SparseDIAQArray(dims, offsets, diags)
+            return self._replace(dims=dims, offsets=offsets, diags=diags)
         elif isinstance(y, DenseQArray):
             return self.asdense() & y
 
@@ -306,17 +322,19 @@ class SparseDIAQArray(QArray):
 
         y = _to_jax(y)
         offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
-        return SparseDIAQArray(self.dims, offsets, diags)
+        return self._replace(offsets=offsets, diags=diags)
 
     def elpow(self, power: int) -> QArray:
-        return SparseDIAQArray(self.dims, self.offsets, self.diags**power)
+        diags = self.diags**power
+        return self._replace(diags=diags)
 
     def __getitem__(self, key: int | slice | tuple) -> QArray:
         if key in (slice(None, None, None), Ellipsis):
             return self
 
         _check_key_in_batch_dims(key, self.ndim)
-        return SparseDIAQArray(self.dims, self.offsets, self.diags[key])
+        diags = self.diags[key]
+        return self._replace(diags=diags)
 
 
 def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):

@@ -181,6 +181,11 @@ class QArray(eqx.Module):
     # complex dtype during the computation, which raises an error on diffrax side.
     dims: tuple[int, ...] = eqx.field(static=True)
 
+    def _replace(self, dims: tuple[int, ...] | None = None, **kwargs) -> QArray:
+        if dims is None:
+            dims = self.dims
+        return type(self)(dims=dims, **kwargs)
+
     def __check_init__(self):
         # === ensure dims is a tuple of ints
         if not isinstance(self.dims, tuple) or not all(
