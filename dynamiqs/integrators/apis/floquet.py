@@ -174,8 +174,8 @@ def _check_floquet_args(
     )
 
     # === check that the Hamiltonian is periodic with the supplied period
-    # attach the check to `tsave`` instead of `H` to workaround CallableTimeArrays that
-    # do not have an underlying array to attach the check to.
+    # attach the check to `tsave` instead of `H` to workaround CallableTimeArrays that
+    # do not have an underlying array to attach the check to
     tsave = eqx.error_if(
         tsave,
         jnp.logical_not(
