@@ -136,9 +136,9 @@ print(res.propagators[-1])  # print the final propagator
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 2.56ms ◆ remaining 0.00ms
-Array([[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
-       [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
-       [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
-       [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]], dtype=complex64)
+QArray: shape=(4, 4), dims=(2,), dtype=complex64, layout=dense, vectorized=True
+[[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
+ [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
+ [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
+ [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]]
 ```
