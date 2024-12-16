@@ -17,7 +17,7 @@ from ...options import Options
 from ...result import MCSolveResult
 from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
-from .._utils import _astimearray, cartesian_vmap, get_integrator_class, multi_vmap
+from .._utils import _astimearray, cartesian_vmap, get_integrator_class, multi_vmap, catch_xla_runtime_error
 from ..mcsolve.diffrax_integrator import (
     MCSolveDopri5Integrator,
     MCSolveDopri8Integrator,
@@ -134,6 +134,8 @@ def mcsolve(
     )
 
 
+@catch_xla_runtime_error
+@partial(jax.jit, static_argnames=['solver', 'root_finder', 'gradient', 'options'])
 def _vectorized_mcsolve(
     H: TimeArray,
     Ls: list[TimeArray],
@@ -192,7 +194,6 @@ def _vectorized_mcsolve(
     return f(H, Ls, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options)
 
 
-@partial(jax.jit, static_argnames=['solver', 'root_finder', 'gradient', 'options'])
 def _mcsolve(
     H: ArrayLike | TimeArray,
     Ls: list[ArrayLike | TimeArray],
