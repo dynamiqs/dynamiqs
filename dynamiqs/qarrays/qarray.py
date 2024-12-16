@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import Any, Union, get_args
+from typing import TYPE_CHECKING, Any, Union, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -14,6 +14,10 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .._utils import _is_batched_scalar
+
+if TYPE_CHECKING:
+    from .dense_qarray import DenseQArray
+    from .sparsedia_qarray import SparseDIAQArray
 from .layout import Layout
 
 __all__ = ['QArray']
@@ -145,14 +149,21 @@ class QArray(eqx.Module):
     | `x.tobra()`                                              | Alias of [`dq.tobra(x)`][dynamiqs.tobra].                      |
     | `x.todm()`                                               | Alias of [`dq.todm(x)`][dynamiqs.todm].                        |
     | `x.proj()`                                               | Alias of [`dq.proj(x)`][dynamiqs.proj].                        |
-    | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
-    | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
-    | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
     | [`x.reshape(*shape)`][dynamiqs.QArray.reshape]           | Returns a reshaped copy of a qarray.                           |
     | [`x.broadcast_to(*shape)`][dynamiqs.QArray.broadcast_to] | Broadcasts a qarray to a new shape.                            |
     | [`x.addscalar(y)`][dynamiqs.QArray.addscalar]            | Adds a scalar.                                                 |
     | [`x.elmul(y)`][dynamiqs.QArray.elmul]                    | Computes the element-wise multiplication.                      |
     | [`x.elpow(power)`][dynamiqs.QArray.elpow]                | Computes the element-wise power.                               |
+
+    There are also several conversion methods available:
+
+    | Method                                                   | Description                                                    |
+    |----------------------------------------------------------|----------------------------------------------------------------|
+    | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
+    | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
+    | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
+    | [`x.asdense()`][dynamiqs.QArray.asdense]                | Converts to a dense layout.                                     |
+    | [`x.assparsedia()`][dynamiqs.QArray.assparsedia]        | Converts to a sparse diagonal layout.                           |
     """  # noqa: E501
 
     # Subclasses should implement:
@@ -370,6 +381,22 @@ class QArray(eqx.Module):
 
     def to_numpy(self) -> np.ndarray:
         return np.asarray(self)
+
+    @abstractmethod
+    def asdense(self) -> DenseQArray:
+        """Converts to a dense layout.
+
+        Returns:
+            A `DenseQArray` object.
+        """
+
+    @abstractmethod
+    def assparsedia(self) -> SparseDIAQArray:
+        """Converts to a sparse diagonal layout.
+
+        Returns:
+            A `SparseDIAQArray` object.
+        """
 
     @abstractmethod
     def block_until_ready(self) -> QArray:
