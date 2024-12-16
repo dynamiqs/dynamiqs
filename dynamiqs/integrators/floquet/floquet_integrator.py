@@ -29,7 +29,7 @@ class FloquetIntegrator(SEIntegrator):
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0
-        evals, evecs = seprop_result.final_propagator.eig()
+        evals, evecs = seprop_result.final_propagator._eig()  # noqa: SLF001
 
         # extract quasienergies
         # minus sign and divide by T to account for e^{-i\epsilon T}

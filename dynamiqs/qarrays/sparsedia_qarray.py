@@ -162,13 +162,13 @@ class SparseDIAQArray(QArray):
         else:
             return SparseDIAQArray(self.dims, self.offsets, self.diags.squeeze(axis))
 
-    def eig(self) -> tuple[Array, QArray]:
+    def _eig(self) -> tuple[Array, QArray]:
         warnings.warn(
             'A SparseDIAQArray has been converted to a DenseQArray while attempting to '
             'compute its eigen-decomposition.',
             stacklevel=2,
         )
-        return self.to_dense().eig()
+        return self.to_dense()._eig()  # noqa: SLF001
 
     def _eigh(self) -> tuple[Array, Array]:
         raise NotImplementedError
