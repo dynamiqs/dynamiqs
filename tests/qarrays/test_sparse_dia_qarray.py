@@ -48,7 +48,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x]).reshape(2, 1, N, N),
         )
 
-        sparseA = dq.SparseDIAQArray(diags=diagsA, offsets=offsetsA, dims=(N,))
+        sparseA = dq.SparseDIAQArray((N,), False, offsetsA, diagsA)
         denseA = sparseA.asdense()
 
         self.denseA = make_dictA(denseA)
@@ -61,7 +61,7 @@ class TestSparseDIAQArray:
             batch_broadcast=dq.stack([x, 2 * x, 3 * x]).reshape(1, 3, N, N),
         )
 
-        sparseB = dq.SparseDIAQArray(diags=diagsB, offsets=offsetsB, dims=(N,))
+        sparseB = dq.SparseDIAQArray((N,), False, offsetsB, diagsB)
         denseB = sparseB.asdense()
 
         self.denseB = make_dictB(denseB)
@@ -211,7 +211,7 @@ class TestSparseDIAQArray:
         # assert an error is raised
         error_str = 'must contain zeros outside the matrix bounds'
         with pytest.raises(EquinoxRuntimeError, match=error_str):
-            dq.SparseDIAQArray(diags=diags, offsets=offsets, dims=(N,))
+            dq.SparseDIAQArray((N,), False, offsets, diags)
 
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
     def test_elpow(self, k):

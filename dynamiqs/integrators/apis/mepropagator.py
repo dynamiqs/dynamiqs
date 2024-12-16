@@ -10,12 +10,11 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
-from ...qarrays.layout import dense
+from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
 from ...time_array import TimeArray
-from ...utils.operators import eye
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -148,7 +147,10 @@ def _mepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1] ** 2, layout=dense)
+    # todo: replace with vectorized utils constructor for eye
+    data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
+    # todo: timearray should expose dims without having to call at specific time
+    y0 = DenseQArray(H(0.0).dims, True, data)
     integrator = integrator_class(
         ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
     )

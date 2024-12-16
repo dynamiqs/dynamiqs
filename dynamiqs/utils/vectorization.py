@@ -41,18 +41,18 @@ def operator_to_vector(x: QArrayLike) -> QArray:
         >>> A
         Array([[1.+1.j, 2.+2.j],
                [3.+3.j, 4.+4.j]], dtype=complex64)
-
-        # todo: temporary fix
-        # >>> dq.operator_to_vector(A)
-        # Array([[1.+1.j],
-        #        [3.+3.j],
-        #        [2.+2.j],
-        #        [4.+4.j]], dtype=complex64)
+        >>> dq.operator_to_vector(A)
+        QArray: shape=(4, 1), dims=(2,), dtype=complex64, layout=dense, vectorized=True
+        [[1.+1.j]
+         [3.+3.j]
+         [2.+2.j]
+         [4.+4.j]]
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
-    return x.mT.reshape(*bshape, -1, 1)
+    x = x.mT.reshape(*bshape, -1, 1)
+    return x._replace(vectorized=True)
 
 
 def vector_to_operator(x: QArrayLike) -> QArray:
@@ -80,17 +80,18 @@ def vector_to_operator(x: QArrayLike) -> QArray:
                [2.+2.j],
                [3.+3.j],
                [4.+4.j]], dtype=complex64)
-
-        # todo: temporary fix
-        # >>> dq.vector_to_operator(Avec)
-        # Array([[1.+1.j, 3.+3.j],
-        #        [2.+2.j, 4.+4.j]], dtype=complex64)
+        >>> dq.vector_to_operator(Avec)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.+1.j 3.+3.j]
+         [2.+2.j 4.+4.j]]
     """
     x = asqarray(x)
     check_shape(x, 'x', '(..., n^2, 1)')
     bshape = x.shape[:-2]
     n = int(np.sqrt(x.shape[-2]))
-    return x.reshape(*bshape, n, n).mT
+    x = x._replace(dims=(n,))
+    x = x.reshape(*bshape, n, n).mT
+    return x._replace(vectorized=False)
 
 
 def spre(x: QArrayLike) -> QArray:
@@ -115,7 +116,8 @@ def spre(x: QArrayLike) -> QArray:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
-    return eye(n) & x
+    xpre = eye(n) & x
+    return xpre._replace(dims=x.dims, vectorized=True)
 
 
 def spost(x: QArrayLike) -> QArray:
@@ -140,7 +142,8 @@ def spost(x: QArrayLike) -> QArray:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
-    return x.mT & eye(n)
+    xpost = x.mT & eye(n)
+    return xpost._replace(dims=x.dims, vectorized=True)
 
 
 def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
@@ -167,7 +170,8 @@ def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
     y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
-    return y.mT & x
+    xyprepost = y.mT & x
+    return xyprepost._replace(dims=x.dims, vectorized=True)
 
 
 def sdissipator(L: QArrayLike) -> QArray:
