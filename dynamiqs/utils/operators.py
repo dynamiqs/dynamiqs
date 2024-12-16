@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from math import prod
 
-import jax
 import jax.numpy as jnp
-from jax import Array
 from jax.typing import ArrayLike
 
 from .._utils import cdtype
-from .quantum_utils import dag, tensor
+from ..qarrays.dense_qarray import DenseQArray
+from ..qarrays.layout import Layout, dense, get_layout
+from ..qarrays.qarray import QArray
+from ..qarrays.sparsedia_qarray import SparseDIAQArray
+from ..qarrays.utils import asqarray, sparsedia_from_dict
+from .general import tensor
 
 __all__ = [
     'cnot',
@@ -38,7 +41,7 @@ __all__ = [
 ]
 
 
-def eye(*dims: int) -> Array:
+def eye(*dims: int, layout: Layout | None = None) -> QArray:
     r"""Returns the identity operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -49,32 +52,41 @@ def eye(*dims: int) -> Array:
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array of shape (n, n))_ Identity operator, with _n = prod(dims)_.
+        _(qarray of shape (n, n))_ Identity operator, with _n = prod(dims)_.
 
     Examples:
         Single-mode $I_4$:
         >>> dq.eye(4)
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j]]
 
         Multi-mode $I_2 \otimes I_3$:
         >>> dq.eye(2, 3)
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]]
     """
+    layout = get_layout(layout)
     dim = prod(dims)
-    return jnp.eye(dim, dtype=cdtype())
+    if layout is dense:
+        array = jnp.eye(dim, dtype=cdtype())
+        return asqarray(array, dims=dims)
+    else:
+        diag = jnp.ones(dim, dtype=cdtype())
+        return sparsedia_from_dict({0: diag}, dims=dims)
 
 
-def zero(*dims: int) -> Array:
+def zero(*dims: int, layout: Layout | None = None) -> QArray:
     r"""Returns the null operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -85,32 +97,41 @@ def zero(*dims: int) -> Array:
 
     Args:
         *dims: Hilbert space dimension of each subsystem.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array of shape (n, n))_ Null operator, with _n = prod(dims)_.
+        _(qarray of shape (n, n))_ Null operator, with _n = prod(dims)_.
 
     Examples:
         Single-mode $0_4$:
         >>> dq.zero(4)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0
+        [[  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]]
 
         Multi-mode $0_2 \otimes 0_3$:
         >>> dq.zero(2, 3)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
     """
+    layout = get_layout(layout)
     dim = prod(dims)
-    return jnp.zeros((dim, dim), dtype=cdtype())
+    if layout is dense:
+        array = jnp.zeros((dim, dim), dtype=cdtype())
+        return asqarray(array, dims=dims)
+    else:
+        diags = jnp.zeros((0, dim), dtype=cdtype())
+        return SparseDIAQArray(dims, False, (), diags)
 
 
-def destroy(*dims: int) -> Array | tuple[Array, ...]:
+def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic annihilation operator, or a tuple of annihilation operators
     for a multi-mode system.
 
@@ -124,53 +145,61 @@ def destroy(*dims: int) -> Array | tuple[Array, ...]:
 
     Args:
         *dims: Hilbert space dimension of each mode.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array or tuple of arrays, each of shape (n, n))_ Annihilation operator(s),
+        _(qarray or tuple of qarrays, each of shape (n, n))_ Annihilation operator(s),
             with _n = prod(dims)_.
 
     Examples:
         Single-mode $a$:
         >>> dq.destroy(4)
-        Array([[0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.732+0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        [[    ⋅     1.   +0.j     ⋅         ⋅    ]
+         [    ⋅         ⋅     1.414+0.j     ⋅    ]
+         [    ⋅         ⋅         ⋅     1.732+0.j]
+         [    ⋅         ⋅         ⋅         ⋅    ]]
 
         Multi-mode $a\otimes I_3$ and $I_2\otimes b$:
         >>> a, b = dq.destroy(2, 3)
         >>> a
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
         >>> b
-        Array([[0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j]],      dtype=complex64)
-    """  # noqa: E501
-    if len(dims) == 1:
-        return _destroy_single(dims[0])
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[    ⋅     1.   +0.j     ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅     1.414+0.j     ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅     1.   +0.j     ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅     1.414+0.j]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]]
+    """
+    layout = get_layout(layout)
 
-    a = [_destroy_single(dim) for dim in dims]
-    Id = [eye(dim) for dim in dims]
+    def destroy_single(dim: int) -> QArray:
+        diag = jnp.sqrt(jnp.arange(1, dim, dtype=cdtype()))
+        if layout is dense:
+            return asqarray(jnp.diag(diag, k=1))
+        else:
+            return sparsedia_from_dict({1: diag})
+
+    if len(dims) == 1:
+        return destroy_single(dims[0])
+
+    a = [destroy_single(dim) for dim in dims]
+    Id = [eye(dim, layout=layout) for dim in dims]
     return tuple(
         tensor(*[a[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _destroy_single(dim: int) -> Array:
-    """Bosonic annihilation operator."""
-    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=1)
-
-
-def create(*dims: int) -> Array | tuple[Array, ...]:
+def create(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
     r"""Returns a bosonic creation operator, or a tuple of creation operators for a
     multi-mode system.
 
@@ -184,53 +213,61 @@ def create(*dims: int) -> Array | tuple[Array, ...]:
 
     Args:
         *dims: Hilbert space dimension of each mode.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array or tuple of arrays, each of shape (n, n))_ Creation operator(s), with
+        _(qarray or tuple of qarrays, each of shape (n, n))_ Creation operator(s), with
             _n = prod(dims)_.
 
     Examples:
         Single-mode $a^\dag$:
         >>> dq.create(4)
-        Array([[0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [1.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 1.732+0.j, 0.   +0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        [[    ⋅         ⋅         ⋅         ⋅    ]
+         [1.   +0.j     ⋅         ⋅         ⋅    ]
+         [    ⋅     1.414+0.j     ⋅         ⋅    ]
+         [    ⋅         ⋅     1.732+0.j     ⋅    ]]
 
         Multi-mode $a^\dag\otimes I_3$ and $I_2\otimes b^\dag$:
         >>> adag, bdag = dq.create(2, 3)
         >>> adag
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [1.+0.j   ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]]
         >>> bdag
-        Array([[0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [1.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 1.414+0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 1.   +0.j, 0.   +0.j, 0.   +0.j],
-               [0.   +0.j, 0.   +0.j, 0.   +0.j, 0.   +0.j, 1.414+0.j, 0.   +0.j]],      dtype=complex64)
-    """  # noqa: E501
-    if len(dims) == 1:
-        return _create_single(dims[0])
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [1.   +0.j     ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅     1.414+0.j     ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅         ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅     1.   +0.j     ⋅         ⋅    ]
+         [    ⋅         ⋅         ⋅         ⋅     1.414+0.j     ⋅    ]]
+    """
+    layout = get_layout(layout)
 
-    adag = [_create_single(dim) for dim in dims]
-    Id = [eye(dim) for dim in dims]
+    def create_single(dim: int) -> QArray:
+        diag = jnp.sqrt(jnp.arange(1, dim, dtype=cdtype()))
+        if layout is dense:
+            return asqarray(jnp.diag(diag, k=-1))
+        else:
+            return sparsedia_from_dict({-1: diag})
+
+    if len(dims) == 1:
+        return create_single(dims[0])
+
+    adag = [create_single(dim) for dim in dims]
+    Id = [eye(dim, layout=layout) for dim in dims]
     return tuple(
         tensor(*[adag[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _create_single(dim: int) -> Array:
-    """Bosonic creation operator."""
-    return jnp.diag(jnp.sqrt(jnp.arange(1, stop=dim, dtype=cdtype())), k=-1)
-
-
-def number(*dims: int) -> Array | tuple[Array, ...]:
+def number(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
     r"""Returns the number operator of a bosonic mode, or a tuple of number operators
     for a multi-mode system.
 
@@ -245,53 +282,61 @@ def number(*dims: int) -> Array | tuple[Array, ...]:
 
     Args:
         *dims: Hilbert space dimension of each mode.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array or tuple of arrays, each of shape (n, n))_ Number operator(s), with
+        _(qarray or tuple of qarrays, each of shape (n, n))_ Number operator(s), with
             _n = prod(dims)_.
 
     Examples:
         Single-mode $a^\dag a$:
         >>> dq.number(4)
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 3.+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅    2.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    3.+0.j]]
 
         Multi-mode $a^\dag a \otimes I_3$ and $I_2\otimes b^\dag b$:
         >>> na, nb = dq.number(2, 3)
         >>> na
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]]
         >>> nb
-        Array([[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 2.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 2.+0.j]], dtype=complex64)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅    2.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    2.+0.j]]
     """  # noqa: E501
-    if len(dims) == 1:
-        return _number_single(dims[0])
+    layout = get_layout(layout)
 
-    nums = [_number_single(dim) for dim in dims]
-    Id = [eye(dim) for dim in dims]
+    def number_single(dim: int) -> QArray:
+        diag = jnp.arange(0, dim, dtype=cdtype())
+        if layout is dense:
+            return asqarray(jnp.diag(diag))
+        else:
+            return sparsedia_from_dict({0: diag})
+
+    if len(dims) == 1:
+        return number_single(dims[0])
+
+    nums = [number_single(dim) for dim in dims]
+    Id = [eye(dim, layout=layout) for dim in dims]
     return tuple(
         tensor(*[nums[j] if i == j else Id[j] for j in range(len(dims))])
         for i in range(len(dims))
     )
 
 
-def _number_single(dim: int) -> Array:
-    """Bosonic number operator."""
-    return jnp.diag(jnp.arange(0, stop=dim, dtype=cdtype()))
-
-
-def parity(dim: int) -> Array:
+def parity(dim: int, *, layout: Layout | None = None) -> QArray:
     r"""Returns the parity operator of a bosonic mode.
 
     It is defined by $P = e^{i\pi a^\dag a}$, where $a$ and $a^\dag$ are the
@@ -299,23 +344,28 @@ def parity(dim: int) -> Array:
 
     Args:
         dim: Dimension of the Hilbert space.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array of shape (dim, dim))_ Parity operator.
+        _(qarray of shape (dim, dim))_ Parity operator.
 
     Examples:
         >>> dq.parity(4)
-        Array([[ 1.+0.j,  0.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j,  0.+0.j,  0.+0.j],
-               [ 0.+0.j,  0.+0.j,  1.+0.j,  0.+0.j],
-               [ 0.+0.j,  0.+0.j,  0.+0.j, -1.+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        [[ 1.+0.j    ⋅       ⋅       ⋅   ]
+         [   ⋅    -1.+0.j    ⋅       ⋅   ]
+         [   ⋅       ⋅     1.+0.j    ⋅   ]
+         [   ⋅       ⋅       ⋅    -1.+0.j]]
     """
-    diag_values = jnp.ones(dim, dtype=cdtype())
-    diag_values = diag_values.at[1::2].set(-1)
-    return jnp.diag(diag_values)
+    layout = get_layout(layout)
+    diag = jnp.ones(dim, dtype=cdtype()).at[1::2].set(-1)
+    if layout is dense:
+        return asqarray(jnp.diag(diag))
+    else:
+        return sparsedia_from_dict({0: diag})
 
 
-def displace(dim: int, alpha: ArrayLike) -> Array:
+def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
     r"""Returns the displacement operator of complex amplitude $\alpha$.
 
     It is defined by
@@ -329,25 +379,25 @@ def displace(dim: int, alpha: ArrayLike) -> Array:
         alpha _(array_like of shape (...))_: Displacement amplitude.
 
     Returns:
-        _(array of shape (..., dim, dim))_ Displacement operator.
+        _(qarray of shape (..., dim, dim))_ Displacement operator.
 
     Examples:
         >>> dq.displace(4, 0.5)
-        Array([[ 0.882+0.j, -0.441+0.j,  0.156+0.j, -0.047+0.j],
-               [ 0.441+0.j,  0.662+0.j, -0.542+0.j,  0.27 +0.j],
-               [ 0.156+0.j,  0.542+0.j,  0.442+0.j, -0.697+0.j],
-               [ 0.047+0.j,  0.27 +0.j,  0.697+0.j,  0.662+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[ 0.882+0.j -0.441+0.j  0.156+0.j -0.047+0.j]
+         [ 0.441+0.j  0.662+0.j -0.542+0.j  0.27 +0.j]
+         [ 0.156+0.j  0.542+0.j  0.442+0.j -0.697+0.j]
+         [ 0.047+0.j  0.27 +0.j  0.697+0.j  0.662+0.j]]
         >>> dq.displace(4, [0.1, 0.2]).shape
         (2, 4, 4)
     """
     alpha = jnp.asarray(alpha, dtype=cdtype())
     alpha = alpha[..., None, None]  # (..., 1, 1)
+    a = destroy(dim, layout=dense)  # (n, n)
+    return (alpha * a.dag() - alpha.conj() * a).expm()
 
-    a = destroy(dim)  # (n, n)
-    return jax.scipy.linalg.expm(alpha * dag(a) - alpha.conj() * a)
 
-
-def squeeze(dim: int, z: ArrayLike) -> Array:
+def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
     r"""Returns the squeezing operator of complex squeezing amplitude $z$.
 
     It is defined by
@@ -361,26 +411,26 @@ def squeeze(dim: int, z: ArrayLike) -> Array:
         z _(array_like of shape (...))_: Squeezing amplitude.
 
     Returns:
-        _(array of shape (..., dim, dim))_ Squeezing operator.
+        _(qarray of shape (..., dim, dim))_ Squeezing operator.
 
     Examples:
         >>> dq.squeeze(4, 0.5)
-        Array([[ 0.938+0.j,  0.   +0.j,  0.346+0.j,  0.   +0.j],
-               [ 0.   +0.j,  0.818+0.j,  0.   +0.j,  0.575+0.j],
-               [-0.346+0.j,  0.   +0.j,  0.938+0.j,  0.   +0.j],
-               [ 0.   +0.j, -0.575+0.j,  0.   +0.j,  0.818+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[ 0.938+0.j  0.   +0.j  0.346+0.j  0.   +0.j]
+         [ 0.   +0.j  0.818+0.j  0.   +0.j  0.575+0.j]
+         [-0.346+0.j  0.   +0.j  0.938+0.j  0.   +0.j]
+         [ 0.   +0.j -0.575+0.j  0.   +0.j  0.818+0.j]]
         >>> dq.squeeze(4, [0.1, 0.2]).shape
         (2, 4, 4)
     """
     z = jnp.asarray(z, dtype=cdtype())
     z = z[..., None, None]  # (..., 1, 1)
-
-    a = destroy(dim)  # (n, n)
+    a = destroy(dim, layout=dense)  # (n, n)
     a2 = a @ a
-    return jax.scipy.linalg.expm(0.5 * (z.conj() * a2 - z * dag(a2)))
+    return (0.5 * (z.conj() * a2 - z * a2.dag())).expm()
 
 
-def quadrature(dim: int, phi: float) -> Array:
+def quadrature(dim: int, phi: float, *, layout: Layout | None = None) -> QArray:
     r"""Returns the quadrature operator of phase angle $\phi$.
 
     It is defined by $x_\phi = (e^{i\phi} a^\dag + e^{-i\phi} a) / 2$, where $a$ and
@@ -389,143 +439,197 @@ def quadrature(dim: int, phi: float) -> Array:
     Args:
         dim: Dimension of the Hilbert space.
         phi: Phase angle.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array of shape (dim, dim))_ Quadrature operator.
+        _(qarray of shape (dim, dim))_ Quadrature operator.
 
     Examples:
         >>> dq.quadrature(3, 0.0)
-        Array([[0.   +0.j, 0.5  +0.j, 0.   +0.j],
-               [0.5  +0.j, 0.   +0.j, 0.707+0.j],
-               [0.   +0.j, 0.707+0.j, 0.   +0.j]], dtype=complex64)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j]
+         [    ⋅     0.707+0.j     ⋅    ]]
         >>> dq.quadrature(3, jnp.pi / 2)
-        Array([[ 0.+0.j   , -0.-0.5j  ,  0.+0.j   ],
-               [-0.+0.5j  ,  0.+0.j   , -0.-0.707j],
-               [ 0.+0.j   , -0.+0.707j,  0.+0.j   ]], dtype=complex64)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        [[   ⋅       -0.-0.5j      ⋅      ]
+         [-0.+0.5j      ⋅       -0.-0.707j]
+         [   ⋅       -0.+0.707j    ⋅      ]]
     """
-    a = destroy(dim)
-    return 0.5 * (jnp.exp(1j * phi) * dag(a) + jnp.exp(-1j * phi) * a)
+    a = destroy(dim, layout=layout)
+    return 0.5 * (jnp.exp(1j * phi) * a.dag() + jnp.exp(-1j * phi) * a)
 
 
-def position(dim: int) -> Array:
+def position(dim: int, *, layout: Layout | None = None) -> QArray:
     r"""Returns the position operator $x = (a^\dag + a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array of shape (dim, dim))_ Position operator.
+        _(qarray of shape (dim, dim))_ Position operator.
 
     Examples:
         >>> dq.position(3)
-        Array([[0.   +0.j, 0.5  +0.j, 0.   +0.j],
-               [0.5  +0.j, 0.   +0.j, 0.707+0.j],
-               [0.   +0.j, 0.707+0.j, 0.   +0.j]], dtype=complex64)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j]
+         [    ⋅     0.707+0.j     ⋅    ]]
     """
-    a = destroy(dim)
-    return 0.5 * (a + dag(a))
+    a = destroy(dim, layout=layout)
+    return 0.5 * (a + a.dag())
 
 
-def momentum(dim: int) -> Array:
+def momentum(dim: int, *, layout: Layout | None = None) -> QArray:
     r"""Returns the momentum operator $p = i (a^\dag - a) / 2$.
 
     Args:
         dim: Dimension of the Hilbert space.
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(array of shape (dim, dim))_ Momentum operator.
+        _(qarray of shape (dim, dim))_ Momentum operator.
 
     Examples:
         >>> dq.momentum(3)
-        Array([[0.+0.j   , 0.-0.5j  , 0.+0.j   ],
-               [0.+0.5j  , 0.+0.j   , 0.-0.707j],
-               [0.+0.j   , 0.+0.707j, 0.+0.j   ]], dtype=complex64)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        [[  ⋅       0.-0.5j     ⋅      ]
+         [0.+0.5j     ⋅       0.-0.707j]
+         [  ⋅       0.+0.707j   ⋅      ]]
     """
-    a = destroy(dim)
-    return 0.5j * (dag(a) - a)
+    a = destroy(dim, layout=layout)
+    return 0.5j * (a.dag() - a)
 
 
-def sigmax() -> Array:
+def sigmax(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli $\sigma_x$ operator.
 
     It is defined by $\sigma_x = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$.
 
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_x$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_x$ operator.
 
     Examples:
         >>> dq.sigmax()
-        Array([[0.+0.j, 1.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+        [[  ⋅    1.+0.j]
+         [1.+0.j   ⋅   ]]
     """
-    return jnp.array([[0, 1], [1, 0]], dtype=cdtype())
+    layout = get_layout(layout)
+    if layout is dense:
+        array = jnp.array([[0, 1], [1, 0]], dtype=cdtype())
+        return asqarray(array)
+    else:
+        return sparsedia_from_dict({-1: [1], 1: [1]}, dtype=cdtype())
 
 
-def sigmay() -> Array:
+def sigmay(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli $\sigma_y$ operator.
 
     It is defined by $\sigma_y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}$.
 
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_y$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_y$ operator.
 
     Examples:
         >>> dq.sigmay()
-        Array([[ 0.+0.j, -0.-1.j],
-               [ 0.+1.j,  0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
+        [[  ⋅    0.-1.j]
+         [0.+1.j   ⋅   ]]
     """
-    return jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
+    layout = get_layout(layout)
+    if layout is dense:
+        array = jnp.array([[0, -1j], [1j, 0]], dtype=cdtype())
+        return asqarray(array)
+    else:
+        return sparsedia_from_dict({-1: [1j], 1: [-1j]}, dtype=cdtype())
 
 
-def sigmaz() -> Array:
+def sigmaz(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli $\sigma_z$ operator.
 
     It is defined by $\sigma_z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}$.
 
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_z$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_z$ operator.
 
     Examples:
         >>> dq.sigmaz()
-        Array([[ 1.+0.j,  0.+0.j],
-               [ 0.+0.j, -1.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[ 1.+0.j    ⋅   ]
+         [   ⋅    -1.+0.j]]
     """
-    return jnp.array([[1, 0], [0, -1]], dtype=cdtype())
+    layout = get_layout(layout)
+    if layout is dense:
+        array = jnp.array([[1, 0], [0, -1]], dtype=cdtype())
+        return asqarray(array)
+    else:
+        return sparsedia_from_dict({0: [1, -1]}, dtype=cdtype())
 
 
-def sigmap() -> Array:
+def sigmap(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli raising operator $\sigma_+$.
 
     It is defined by $\sigma_+ = \begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix}$.
 
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_+$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_+$ operator.
 
     Examples:
         >>> dq.sigmap()
-        Array([[0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅    1.+0.j]
+         [  ⋅      ⋅   ]]
     """
-    return jnp.array([[0, 1], [0, 0]], dtype=cdtype())
+    layout = get_layout(layout)
+
+    if layout is dense:
+        array = jnp.array([[0, 1], [0, 0]], dtype=cdtype())
+        return asqarray(array)
+    else:
+        return sparsedia_from_dict({1: [1]}, dtype=cdtype())
 
 
-def sigmam() -> Array:
+def sigmam(*, layout: Layout | None = None) -> QArray:
     r"""Returns the Pauli lowering operator $\sigma_-$.
 
     It is defined by $\sigma_- = \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix}$.
 
+    Args:
+        layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+
     Returns:
-        _(array of shape (2, 2))_ Pauli $\sigma_-$ operator.
+        _(qarray of shape (2, 2))_ Pauli $\sigma_-$ operator.
 
     Examples:
         >>> dq.sigmam()
-        Array([[0.+0.j, 0.+0.j],
-               [1.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+        [[  ⋅      ⋅   ]
+         [1.+0.j   ⋅   ]]
     """
-    return jnp.array([[0, 0], [1, 0]], dtype=cdtype())
+    layout = get_layout(layout)
+
+    if layout is dense:
+        array = jnp.array([[0, 0], [1, 0]], dtype=cdtype())
+        return asqarray(array)
+    else:
+        return sparsedia_from_dict({-1: [1]}, dtype=cdtype())
 
 
-def hadamard(n: int = 1) -> Array:
+def hadamard(n: int = 1) -> QArray:
     r"""Returns the Hadamard transform on $n$ qubits.
 
     For a single qubit, it is defined by
@@ -544,24 +648,26 @@ def hadamard(n: int = 1) -> Array:
         n: Number of qubits to act on.
 
     Returns:
-        _(array of shape (2^n, 2^n))_ Hadamard transform operator.
+        _(qarray of shape (2^n, 2^n))_ Hadamard transform operator.
 
     Examples:
         >>> dq.hadamard()
-        Array([[ 0.707+0.j,  0.707+0.j],
-               [ 0.707+0.j, -0.707+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[ 0.707+0.j  0.707+0.j]
+         [ 0.707+0.j -0.707+0.j]]
         >>> dq.hadamard(2)
-        Array([[ 0.5+0.j,  0.5+0.j,  0.5+0.j,  0.5+0.j],
-               [ 0.5+0.j, -0.5+0.j,  0.5+0.j, -0.5+0.j],
-               [ 0.5+0.j,  0.5+0.j, -0.5+0.j, -0.5+0.j],
-               [ 0.5+0.j, -0.5+0.j, -0.5+0.j,  0.5-0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
+        [[ 0.5+0.j  0.5+0.j  0.5+0.j  0.5+0.j]
+         [ 0.5+0.j -0.5+0.j  0.5+0.j -0.5+0.j]
+         [ 0.5+0.j  0.5+0.j -0.5+0.j -0.5+0.j]
+         [ 0.5+0.j -0.5+0.j -0.5+0.j  0.5-0.j]]
     """
     H1 = jnp.array([[1, 1], [1, -1]], dtype=cdtype()) / jnp.sqrt(2)
     Hs = jnp.broadcast_to(H1, (n, 2, 2))  # (n, 2, 2)
     return tensor(*Hs)
 
 
-def rx(theta: ArrayLike) -> Array:
+def rx(theta: ArrayLike) -> QArray:
     r"""Returns the $R_x(\theta)$ rotation gate.
 
     It is defined by
@@ -576,12 +682,13 @@ def rx(theta: ArrayLike) -> Array:
         theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
-        _(array of shape (..., 2, 2))_ $R_x(\theta)$ gate.
+        _(qarray of shape (2, 2))_ $R_x(\theta)$ gate.
 
     Examples:
         >>> dq.rx(jnp.pi)
-        Array([[-0.+0.j,  0.-1.j],
-               [ 0.-1.j, -0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[-0.+0.j  0.-1.j]
+         [ 0.-1.j -0.+0.j]]
         >>> dq.rx([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
         (5, 2, 2)
     """
@@ -589,10 +696,11 @@ def rx(theta: ArrayLike) -> Array:
     c = jnp.cos(theta / 2)
     s = jnp.sin(theta / 2)
     rx = jnp.array([[c, -1j * s], [-1j * s, c]], dtype=cdtype())
-    return jnp.moveaxis(rx, (0, 1), (-2, -1))
+    rx = jnp.moveaxis(rx, (0, 1), (-2, -1))
+    return asqarray(rx)
 
 
-def ry(theta: ArrayLike) -> Array:
+def ry(theta: ArrayLike) -> QArray:
     r"""Returns the $R_y(\theta)$ rotation gate.
 
     It is defined by
@@ -607,12 +715,13 @@ def ry(theta: ArrayLike) -> Array:
         theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
-        _(array of shape (..., 2, 2))_ $R_y(\theta)$ gate.
+        _(qarray of shape (2, 2))_ $R_y(\theta)$ gate.
 
     Examples:
         >>> dq.ry(jnp.pi)
-        Array([[-0.+0.j, -1.+0.j],
-               [ 1.+0.j, -0.+0.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[-0.+0.j -1.+0.j]
+         [ 1.+0.j -0.+0.j]]
         >>> dq.ry([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
         (5, 2, 2)
     """
@@ -620,10 +729,11 @@ def ry(theta: ArrayLike) -> Array:
     c = jnp.cos(theta / 2)
     s = jnp.sin(theta / 2)
     ry = jnp.array([[c, -s], [s, c]], dtype=cdtype())
-    return jnp.moveaxis(ry, (0, 1), (-2, -1))
+    ry = jnp.moveaxis(ry, (0, 1), (-2, -1))
+    return asqarray(ry)
 
 
-def rz(theta: ArrayLike) -> Array:
+def rz(theta: ArrayLike) -> QArray:
     r"""Returns the $R_z(\theta)$ rotation gate.
 
     It is defined by
@@ -638,12 +748,13 @@ def rz(theta: ArrayLike) -> Array:
         theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
-        _(array of shape (..., 2, 2))_ $R_z(\theta)$ gate.
+        _(qarray of shape (2, 2))_ $R_z(\theta)$ gate.
 
     Examples:
         >>> dq.rz(jnp.pi)
-        Array([[-0.-1.j,  0.+0.j],
-               [ 0.+0.j, -0.+1.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[-0.-1.j  0.+0.j]
+         [ 0.+0.j -0.+1.j]]
         >>> dq.rz([0, jnp.pi/4, jnp.pi/3, jnp.pi/2, jnp.pi]).shape
         (5, 2, 2)
     """
@@ -653,43 +764,48 @@ def rz(theta: ArrayLike) -> Array:
         [[jnp.exp(-1j * theta / 2), zero], [zero, jnp.exp(1j * theta / 2)]],
         dtype=cdtype(),
     )
-    return jnp.moveaxis(rz, (0, 1), (-2, -1))
+    rz = jnp.moveaxis(rz, (0, 1), (-2, -1))
+    return asqarray(rz)
 
 
-def sgate() -> Array:
+def sgate() -> QArray:
     r"""Returns the $\text{S}$ gate.
 
     It is defined by $\text{S} = \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ $\text{S}$ gate.
+        _(qarray of shape (2, 2))_ $\text{S}$ gate.
 
     Examples:
         >>> dq.sgate()
-        Array([[1.+0.j, 0.+0.j],
-               [0.+0.j, 0.+1.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j]
+         [0.+0.j 0.+1.j]]
     """
-    return jnp.array([[1, 0], [0, 1j]], dtype=cdtype())
+    array = jnp.array([[1, 0], [0, 1j]], dtype=cdtype())
+    return asqarray(array)
 
 
-def tgate() -> Array:
+def tgate() -> QArray:
     r"""Returns the $\text{T}$ gate.
 
     It is defined by
     $\text{T} = \begin{pmatrix} 1 & 0 \\ 0 & e^{i\frac{\pi}{4}} \end{pmatrix}$.
 
     Returns:
-        _(array of shape (2, 2))_ $\text{T}$ gate.
+        _(qarray of shape (2, 2))_ $\text{T}$ gate.
 
     Examples:
         >>> dq.tgate()
-        Array([[1.   +0.j   , 0.   +0.j   ],
-               [0.   +0.j   , 0.707+0.707j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.   +0.j    0.   +0.j   ]
+         [0.   +0.j    0.707+0.707j]]
     """
-    return jnp.array([[1, 0], [0, (1 + 1j) / jnp.sqrt(2)]], dtype=cdtype())
+    array = jnp.array([[1, 0], [0, (1 + 1j) / jnp.sqrt(2)]], dtype=cdtype())
+    return asqarray(array)
 
 
-def cnot() -> Array:
+def cnot() -> QArray:
     r"""Returns the $\text{CNOT}$ gate.
 
     It is defined by
@@ -703,21 +819,23 @@ def cnot() -> Array:
     $$
 
     Returns:
-        _(array of shape (4, 4))_ $\text{CNOT}$ gate.
+        _(qarray of shape (4, 4))_ $\text{CNOT}$ gate.
 
     Examples:
         >>> dq.cnot()
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]], dtype=complex64)
+        QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 1.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j]]
     """
-    return jnp.array(
+    array = jnp.array(
         [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=cdtype()
     )
+    return asqarray(array, dims=(2, 2))
 
 
-def toffoli() -> Array:
+def toffoli() -> QArray:
     r"""Returns the $\text{Toffoli}$ gate.
 
     It is defined by
@@ -735,20 +853,21 @@ def toffoli() -> Array:
     $$
 
     Returns:
-        _(array of shape (8, 8))_ $\text{Toffoli}$ gate.
+        _(qarray of shape (8, 8))_ $\text{Toffoli}$ gate.
 
     Examples:
         >>> dq.toffoli()
-        Array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
-               [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j]],      dtype=complex64)
-    """  # noqa: E501
-    return jnp.array(
+        QArray: shape=(8, 8), dims=(2, 2, 2), dtype=complex64, layout=dense
+        [[1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j 0.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j]
+         [0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 0.+0.j 1.+0.j 0.+0.j]]
+    """
+    array = jnp.array(
         [
             [1, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0],
@@ -761,3 +880,4 @@ def toffoli() -> Array:
         ],
         dtype=cdtype(),
     )
+    return asqarray(array, dims=(2, 2, 2))

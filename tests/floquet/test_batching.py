@@ -23,9 +23,7 @@ def test_batching(nH, H_type):
     else:  # timecallable
         _H = dq.random.herm(key_1, (*nH, n, n))
         omega_d = 2.0 * jnp.pi / T
-        H = dq.timecallable(
-            lambda t: jnp.einsum('...,...ij->...ij', jnp.cos(omega_d * t), _H)
-        )
+        H = dq.timecallable(lambda t: jnp.cos(omega_d * t)[..., None, None] * _H)
 
     result = dq.floquet(H, T, tsave=tsave)
     assert result.modes.shape == (*nH, tsave.shape[-1], n, n, 1)

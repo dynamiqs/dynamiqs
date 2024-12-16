@@ -100,13 +100,13 @@ def test_ket_dm_fidelity_batching():
 def test_hadamard():
     # one qubit
     H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=cdtype())
-    assert jnp.allclose(dq.hadamard(1), H1)
+    assert jnp.allclose(dq.hadamard(1).to_jax(), H1)
 
     # two qubits
     H2 = 0.5 * jnp.array(
         [[1, 1, 1, 1], [1, -1, 1, -1], [1, 1, -1, -1], [1, -1, -1, 1]], dtype=cdtype()
     )
-    assert jnp.allclose(dq.hadamard(2), H2)
+    assert jnp.allclose(dq.hadamard(2).to_jax(), H2)
 
     # three qubits
     H3 = 2 ** (-3 / 2) * jnp.array(
@@ -122,7 +122,7 @@ def test_hadamard():
         ],
         dtype=cdtype(),
     )
-    assert jnp.allclose(dq.hadamard(3), H3)
+    assert jnp.allclose(dq.hadamard(3).to_jax(), H3)
 
 
 @pytest.mark.skip('broken test')
@@ -137,7 +137,7 @@ def test_jit_ptrace():
     a = dq.random.ket(20, key=key1)
     b = dq.random.ket(30, key=key2)
 
-    ab = dq.tensor(a, b)
+    ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
     assert jnp.allclose(a, ap, 1e-3)
@@ -147,7 +147,7 @@ def test_jit_ptrace():
     a = dq.random.dm(20, key=key3)
     b = dq.random.dm(30, key=key4)
 
-    ab = dq.tensor(a, b)
+    ab = a & b
     ap = dq.ptrace(ab, 0, (20, 30))
 
     assert jnp.allclose(a, ap, 1e-3)

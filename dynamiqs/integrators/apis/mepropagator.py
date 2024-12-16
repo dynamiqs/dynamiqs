@@ -10,10 +10,11 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.dense_qarray import DenseQArray
+from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
 from ...time_array import TimeArray
-from ...utils.operators import eye
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -26,8 +27,8 @@ from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
 
 
 def mepropagator(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    H: QArrayLike | TimeArray,
+    jump_ops: list[QArrayLike | TimeArray],
     tsave: ArrayLike,
     *,
     solver: Solver = Expm(),  # noqa: B008
@@ -65,8 +66,8 @@ def mepropagator(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-array, each of shape (...Lk, n, n))_:
             List of jump operators.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
@@ -146,7 +147,10 @@ def _mepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1] ** 2)
+    # todo: replace with vectorized utils constructor for eye
+    data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
+    # todo: timearray should expose dims without having to call at specific time
+    y0 = DenseQArray(H(0.0).dims, True, data)
     integrator = integrator_class(
         ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
     )

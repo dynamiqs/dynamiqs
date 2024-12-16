@@ -5,11 +5,12 @@ from functools import wraps
 from typing import Any
 
 import jax
-import jax.numpy as jnp
 from jax._src.lib import xla_client
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import PyTree
 
-from .._utils import cdtype, obj_type_str
+from .._utils import obj_type_str
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.utils import asqarray
 from ..solver import Solver, _DEAdaptiveStep
 from ..time_array import (
     ConstantTimeArray,
@@ -21,17 +22,17 @@ from ..time_array import (
 from .core.abstract_integrator import AbstractIntegrator
 
 
-def _astimearray(x: ArrayLike | TimeArray) -> TimeArray:
+def _astimearray(x: QArrayLike | TimeArray) -> TimeArray:
     if isinstance(x, TimeArray):
         return x
     else:
         try:
             # same as dq.constant() but not checking the shape
-            array = jnp.asarray(x, dtype=cdtype())
+            array = asqarray(x)
             return ConstantTimeArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be an array-like or a time-array object, but has type'
+                'Argument must be a qarray-like or a time-array object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 

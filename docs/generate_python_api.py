@@ -7,24 +7,30 @@ from pathlib import Path
 
 import mkdocs_gen_files
 
-PATHS_TO_PARSE = [
-    # files
-    ('dynamiqs/utils/operators.py', 'dq'),
-    ('dynamiqs/utils/states.py', 'dq'),
-    ('dynamiqs/utils/jax_utils.py', 'dq'),
-    ('dynamiqs/utils/vectorization.py', 'dq'),
-    ('dynamiqs/utils/optimal_control.py', 'dq'),
-    ('dynamiqs/random.py', 'dq.random'),
-    ('dynamiqs/time_array.py', 'dq'),
-    ('dynamiqs/solver.py', 'dq.solver'),
-    ('dynamiqs/gradient.py', 'dq.gradient'),
-    ('dynamiqs/result.py', 'dq'),
-    ('dynamiqs/options.py', 'dq'),
-    # directories
-    ('dynamiqs/plot', 'dq.plot'),
-    ('dynamiqs/utils/quantum_utils', 'dq'),
-    ('dynamiqs/integrators/', 'dq'),
-]
+# dictionary structure
+# key: python_api directory path
+# value: (paths to include, namespace)
+doc_sections = {
+    'integrators': (['dynamiqs/integrators/'], 'dq'),
+    'qarrays/qarray': (['dynamiqs/qarrays/qarray.py'], 'dq'),
+    'time_array': (['dynamiqs/time_array.py'], 'dq'),
+    'solver': (['dynamiqs/solver.py'], 'dq.solver'),
+    'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
+    'options': (['dynamiqs/options.py'], 'dq'),
+    'result': (['dynamiqs/result.py'], 'dq'),
+    'utils/operators': (['dynamiqs/utils/operators.py'], 'dq'),
+    'utils/states': (['dynamiqs/utils/states.py'], 'dq'),
+    'utils/general': (
+        ['dynamiqs/utils/general.py', 'dynamiqs/utils/wigner_utils.py'],
+        'dq',
+    ),
+    'qarrays/utils': (['dynamiqs/qarrays/utils.py'], 'dq'),
+    'utils/global_settings': (['dynamiqs/utils/global_settings.py'], 'dq'),
+    'utils/vectorization': (['dynamiqs/utils/vectorization.py'], 'dq'),
+    'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
+    'random': (['dynamiqs/random.py'], 'dq.random'),
+    'plot': (['dynamiqs/plot/'], 'dq.plot'),
+}
 
 
 def get_elements_from_all(file_path):
@@ -48,28 +54,30 @@ def get_elements_from_all(file_path):
 
 
 # generate a documentation file for each function of each file/directory
-for path, namespace in PATHS_TO_PARSE:
-    # start with e.g. 'dynamiqs/utils/operators.py' or 'dynamiqs/plot'
-    src_path = Path(path)
-    # convert to e.g 'python_api/utils/operators' or 'python_api/plot'
-    doc_path = Path('python_api', *src_path.parts[1:]).with_suffix('')
-    # convert to e.g 'dynamiqs.utils.operators' or 'dynamiqs.plot'
-    identifier = src_path.with_suffix('').as_posix().replace('/', '.')
+for section, (paths, namespace) in doc_sections.items():
+    # e.g 'python_api/operators' or 'python_api/plot'
+    doc_path = Path('python_api', section)
 
-    # for a directory, we get the functions from the `__init__.py` file
-    if src_path.is_dir():
-        src_path = src_path / '__init__.py'
+    for path in paths:
+        # start with e.g. 'dynamiqs/utils/operators.py' or 'dynamiqs/plot'
+        src_path = Path(path)
 
-    # loop over all functions in file
-    for function in get_elements_from_all(src_path):
-        # convert to e.g 'python_api/utils/operators/eye.md'
-        doc_path_function = Path(doc_path, function).with_suffix('.md')
+        # convert to e.g 'dynamiqs.utils.operators' or 'dynamiqs.plot'
+        identifier = src_path.with_suffix('').as_posix().replace('/', '.')
 
-        # create the function page
-        with mkdocs_gen_files.open(doc_path_function, 'w') as f:
-            module = identifier.split('.')[0]
-            print(f'::: {identifier}.{function}', file=f)
-            print('    options:', file=f)
-            print(f'        namespace: {namespace}', file=f)
+        if src_path.is_dir():
+            src_path = src_path / '__init__.py'
 
-        mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)
+        # loop over all functions in file
+        for function in get_elements_from_all(src_path):
+            # convert to e.g 'python_api/utils/operators/eye.md'
+            doc_path_function = Path(doc_path, function).with_suffix('.md')
+
+            # create the function page
+            with mkdocs_gen_files.open(doc_path_function, 'w') as f:
+                module = identifier.split('.')[0]
+                print(f'::: {identifier}.{function}', file=f)
+                print('    options:', file=f)
+                print(f'        namespace: {namespace}', file=f)
+
+            mkdocs_gen_files.set_edit_path(doc_path_function, Path('..') / src_path)

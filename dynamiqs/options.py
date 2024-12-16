@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax.tree_util as jtu
-from jax import Array
 from jaxtyping import PyTree, ScalarLike
 
 from ._utils import tree_str_inline
 from .progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgressMeter
+from .qarrays.qarray import QArray
 
 __all__ = ['Options']
 
@@ -30,7 +30,7 @@ class Options(eqx.Module):
             forward pass.
         t0: Initial time. If `None`, defaults to the first time in `tsave`.
         save_extra _(function, optional)_: A function with signature
-            `f(Array) -> PyTree` that takes a state or propagator as input and returns
+            `f(QArray) -> PyTree` that takes a state or propagator as input and returns
             a PyTree. This can be used to save additional arbitrary data during the
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
@@ -42,7 +42,7 @@ class Options(eqx.Module):
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | None = TqdmProgressMeter()
     t0: ScalarLike | None = None
-    save_extra: callable[[Array], PyTree] | None = None
+    save_extra: callable[[QArray], PyTree] | None = None
     max_jumps: int = 100
 
     def __init__(
@@ -52,7 +52,7 @@ class Options(eqx.Module):
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),  # noqa: B008
         t0: ScalarLike | None = None,
-        save_extra: callable[[Array], PyTree] | None = None,
+        save_extra: callable[[QArray], PyTree] | None = None,
         max_jumps: int = 100,
     ):
         if progress_meter is None:

@@ -1,13 +1,10 @@
-from __future__ import annotations
-
 import equinox as eqx
-import jax.numpy as jnp
-from jax import Array
-from jax.random import PRNGKey
 from jaxtyping import Scalar
+from jax import Array
 from optimistix import AbstractRootFinder
 
 from ...options import Options
+from ...qarrays.qarray import QArray
 from ...time_array import TimeArray
 
 
@@ -27,8 +24,8 @@ class MEInterface(eqx.Module):
     H: TimeArray
     Ls: list[TimeArray]
 
-    def L(self, t: Scalar) -> Array:
-        return jnp.stack([L(t) for L in self.Ls])  # (nLs, n, n)
+    def L(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
 
 class MCInterface(eqx.Module):
@@ -36,9 +33,9 @@ class MCInterface(eqx.Module):
 
     H: TimeArray
     Ls: list[TimeArray]
-    keys: PRNGKey
+    keys: Array
     root_finder: AbstractRootFinder | None
 
 
 class SolveInterface(eqx.Module):
-    Es: Array
+    Es: QArray

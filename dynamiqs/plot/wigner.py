@@ -3,11 +3,12 @@ from __future__ import annotations
 import jax.numpy as jnp
 import numpy as np
 from IPython.display import Image
-from jax.typing import ArrayLike
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
 from .._checks import check_shape
+from ..qarrays.qarray import QArrayLike
+from ..qarrays.utils import asqarray, to_jax
 from ..utils import wigner as compute_wigner
 from .utils import add_colorbar, colors, gif_indices, gifit, grid, optional_ax
 
@@ -16,7 +17,7 @@ __all__ = ['wigner', 'wigner_gif', 'wigner_mosaic']
 
 @optional_ax
 def plot_wigner_data(
-    wigner: ArrayLike,
+    wigner: QArrayLike,
     xmax: float,
     ymax: float,
     *,
@@ -28,7 +29,7 @@ def plot_wigner_data(
     cross: bool = False,
     clear: bool = False,
 ):
-    w = jnp.asarray(wigner)
+    w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
 
     # set plot norm
@@ -68,7 +69,7 @@ def plot_wigner_data(
 
 @optional_ax
 def wigner(
-    state: ArrayLike,
+    state: QArrayLike,
     *,
     ax: Axes | None = None,
     xmax: float = 5.0,
@@ -101,25 +102,25 @@ def wigner(
 
         ![plot_wigner_coh](../../figs_code/plot_wigner_coh.png){.fig-half}
 
-        >>> psi = dq.unit(dq.coherent(16, 2) + dq.coherent(16, -2))
+        >>> psi = (dq.coherent(16, 2) + dq.coherent(16, -2)).unit()
         >>> dq.plot.wigner(psi, xmax=4.0, ymax=2.0, colorbar=False)
         >>> renderfig('plot_wigner_cat')
 
         ![plot_wigner_cat](../../figs_code/plot_wigner_cat.png){.fig-half}
 
-        >>> psi = dq.unit(dq.fock(2, 0) + dq.fock(2, 1))
+        >>> psi = (dq.fock(2, 0) + dq.fock(2, 1)).unit()
         >>> dq.plot.wigner(psi, xmax=2.0, cross=True)
         >>> renderfig('plot_wigner_01')
 
         ![plot_wigner_01](../../figs_code/plot_wigner_01.png){.fig-half}
 
-        >>> psi = dq.unit(sum(dq.coherent(32, 3 * a) for a in [1, 1j, -1, -1j]))
+        >>> psi = dq.coherent(32, [3, 3j, -3, -3j]).sum(0).unit()
         >>> dq.plot.wigner(psi, npixels=201, clear=True)
         >>> renderfig('plot_wigner_4legged')
 
         ![plot_wigner_4legged](../../figs_code/plot_wigner_4legged.png){.fig-half}
     """
-    state = jnp.asarray(state)
+    state = asqarray(state)
     check_shape(state, 'state', '(n, 1)', '(n, n)')
 
     ymax = xmax if ymax is None else ymax
@@ -140,7 +141,7 @@ def wigner(
 
 
 def wigner_mosaic(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     n: int = 8,
     nrows: int = 1,
@@ -182,7 +183,7 @@ def wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> H = a.dag() @ a.dag() @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 101)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -191,7 +192,7 @@ def wigner_mosaic(
 
         ![plot_wigner_mosaic_kerr](../../figs_code/plot_wigner_mosaic_kerr.png){.fig}
     """
-    states = jnp.asarray(states)
+    states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     nstates = len(states)
@@ -230,7 +231,7 @@ def wigner_mosaic(
 
 
 def wigner_gif(
-    states: ArrayLike,
+    states: QArrayLike,
     *,
     gif_duration: float = 5.0,
     fps: int = 10,
@@ -267,7 +268,7 @@ def wigner_gif(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.dag(a) @ dq.dag(a) @ a @ a  # Kerr Hamiltonian
+        >>> H = a.dag() @ a.dag() @ a @ a  # Kerr Hamiltonian
         >>> psi0 = dq.coherent(n, 2)
         >>> tsave = jnp.linspace(0, jnp.pi, 1001)
         >>> result = dq.sesolve(H, psi0, tsave)
@@ -278,7 +279,7 @@ def wigner_gif(
 
         ![plot_wigner_gif_kerr](../../figs_code/wigner-kerr.gif){.fig-half}
     """
-    states = jnp.asarray(states)
+    states = asqarray(states)
     check_shape(states, 'states', '(N, n, 1)', '(N, n, n)')
 
     ymax = xmax if ymax is None else ymax
