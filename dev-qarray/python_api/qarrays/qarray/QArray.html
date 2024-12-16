@@ -1284,6 +1284,24 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.asdense" class="md-nav__link">
+    <span class="md-ellipsis">
+      asdense
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.assparsedia" class="md-nav__link">
+    <span class="md-ellipsis">
+      assparsedia
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.qarrays.qarray.QArray.addscalar" class="md-nav__link">
     <span class="md-ellipsis">
       addscalar
@@ -4976,6 +4994,24 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.asdense" class="md-nav__link">
+    <span class="md-ellipsis">
+      asdense
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.qarrays.qarray.QArray.assparsedia" class="md-nav__link">
+    <span class="md-ellipsis">
+      assparsedia
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.qarrays.qarray.QArray.addscalar" class="md-nav__link">
     <span class="md-ellipsis">
       addscalar
@@ -5195,18 +5231,6 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 <td>Alias of <a class="autorefs autorefs-internal" href="../../utils/general/proj.html#dynamiqs.utils.general.proj"><code>dq.proj(x)</code></a>.</td>
 </tr>
 <tr>
-<td><code>x.to_qutip()</code></td>
-<td>Alias of <a class="autorefs autorefs-internal" href="../utils/to_qutip.html#dynamiqs.qarrays.utils.to_qutip"><code>dq.to_qutip(x, dims=x.dims)</code></a>.</td>
-</tr>
-<tr>
-<td><code>x.to_jax()</code></td>
-<td>Alias of <a class="autorefs autorefs-internal" href="../utils/to_jax.html#dynamiqs.qarrays.utils.to_jax"><code>dq.to_jax(x)</code></a>.</td>
-</tr>
-<tr>
-<td><code>x.to_numpy()</code></td>
-<td>Alias of <a class="autorefs autorefs-internal" href="../utils/to_numpy.html#dynamiqs.qarrays.utils.to_numpy"><code>dq.to_numpy(x)</code></a>.</td>
-</tr>
-<tr>
 <td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.reshape"><code>x.reshape(*shape)</code></a></td>
 <td>Returns a reshaped copy of a qarray.</td>
 </tr>
@@ -5225,6 +5249,37 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
 <tr>
 <td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.elpow"><code>x.elpow(power)</code></a></td>
 <td>Computes the element-wise power.</td>
+</tr>
+</tbody>
+</table>
+<p>There are also several conversion methods available:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x.to_qutip()</code></td>
+<td>Alias of <a class="autorefs autorefs-internal" href="../utils/to_qutip.html#dynamiqs.qarrays.utils.to_qutip"><code>dq.to_qutip(x, dims=x.dims)</code></a>.</td>
+</tr>
+<tr>
+<td><code>x.to_jax()</code></td>
+<td>Alias of <a class="autorefs autorefs-internal" href="../utils/to_jax.html#dynamiqs.qarrays.utils.to_jax"><code>dq.to_jax(x)</code></a>.</td>
+</tr>
+<tr>
+<td><code>x.to_numpy()</code></td>
+<td>Alias of <a class="autorefs autorefs-internal" href="../utils/to_numpy.html#dynamiqs.qarrays.utils.to_numpy"><code>dq.to_numpy(x)</code></a>.</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.asdense"><code>x.asdense()</code></a></td>
+<td>Converts to a dense layout.</td>
+</tr>
+<tr>
+<td><a class="autorefs autorefs-internal" href="#dynamiqs.qarrays.qarray.QArray.assparsedia"><code>x.assparsedia()</code></a></td>
+<td>Converts to a sparse diagonal layout.</td>
 </tr>
 </tbody>
 </table>
@@ -5371,6 +5426,76 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
       </li>
   </ul> -->
       <span class="field-body"><p>New qarray object with the given shape.</p></span>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.asdense" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">QArray.asdense</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">asdense</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DenseQArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Converts to a dense layout.</p>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><span title="dynamiqs.qarrays.dense_qarray.DenseQArray">DenseQArray</span></code>
+        – <p>A <code>DenseQArray</code> object.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p>A <code>DenseQArray</code> object.</p></span>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.qarrays.qarray.QArray.assparsedia" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">QArray.assparsedia</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assparsedia</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SparseDIAQArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Converts to a sparse diagonal layout.</p>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><span title="dynamiqs.qarrays.sparsedia_qarray.SparseDIAQArray">SparseDIAQArray</span></code>
+        – <p>A <code>SparseDIAQArray</code> object.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p>A <code>SparseDIAQArray</code> object.</p></span>
 
     </div>
 
