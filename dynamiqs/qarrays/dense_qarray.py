@@ -44,7 +44,7 @@ class DenseQArray(QArray):
         return DenseQArray(self.dims, data)
 
     @property
-    def _data(self) -> Array:
+    def _underlying_array(self) -> Array:
         return self.data
 
     def conj(self) -> QArray:

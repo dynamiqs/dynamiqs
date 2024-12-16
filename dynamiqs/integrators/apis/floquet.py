@@ -14,7 +14,7 @@ from ...options import Options
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...solver import Solver, Tsit5
-from ...time_array import CallableTimeArray, TimeArray
+from ...time_array import TimeArray
 from .._utils import _astimearray, cartesian_vmap, catch_xla_runtime_error
 
 __all__ = ['floquet']
@@ -174,13 +174,14 @@ def _check_floquet_args(
     )
 
     # === check that the Hamiltonian is periodic with the supplied period
-    if not isinstance(H, CallableTimeArray):
-        # disable the check for CallableTimeArray as equinox cannot find an
-        # underlying array to attach the error message to.
-        H = eqx.error_if(
-            H,
-            jnp.logical_not(jnp.isclose(H(0.0)._data, H(T)._data)),  # noqa: SLF001
-            'The Hamiltonian H is not periodic with the supplied period T.',
-        )
+    # attach the check to `tsave`` instead of `H` to workaround CallableTimeArrays that
+    # do not have an underlying array to attach the check to.
+    tsave = eqx.error_if(
+        tsave,
+        jnp.logical_not(
+            jnp.isclose(H(0.0)._underlying_array, H(T)._underlying_array)  # noqa: SLF001
+        ),
+        'The Hamiltonian H is not periodic with the supplied period T.',
+    )
 
     return H, T, tsave

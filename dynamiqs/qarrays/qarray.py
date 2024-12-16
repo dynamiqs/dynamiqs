@@ -154,7 +154,7 @@ class QArray(eqx.Module):
     """  # noqa: E501
 
     # Subclasses should implement:
-    # - the properties: dtype, layout, shape, mT, _data
+    # - the properties: dtype, layout, shape, mT, _underlying_array
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
     #                     _abs, block_until_ready
@@ -212,7 +212,7 @@ class QArray(eqx.Module):
         return len(self.shape)
 
     @property
-    def _data(self) -> Array:
+    def _underlying_array(self) -> Array:
         pass
 
     @abstractmethod

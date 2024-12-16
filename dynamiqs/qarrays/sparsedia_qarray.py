@@ -88,7 +88,7 @@ class SparseDIAQArray(QArray):
         return SparseDIAQArray(self.dims, offsets, diags)
 
     @property
-    def _data(self) -> Array:
+    def _underlying_array(self) -> Array:
         return self.diags
 
     @property
