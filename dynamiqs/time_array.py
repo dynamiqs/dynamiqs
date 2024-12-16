@@ -337,6 +337,14 @@ class TimeArray(eqx.Module):
             New time-array object with element-wise complex conjuguated values.
         """
 
+    def dag(self) -> TimeArray:
+        r"""Returns the adjoint (complex conjugate transpose) of the time-array.
+
+        Returns:
+            New time-array object with adjoint values.
+        """
+        return self.mT.conj()
+
     def squeeze(self, axis: int | None = None) -> TimeArray:
         """Squeeze a time-array.
 
