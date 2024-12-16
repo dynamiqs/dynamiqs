@@ -115,12 +115,12 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         no_jump_result = self.traj_result(
             no_jump_saved, infos=self.infos(no_jump_solution.stats)
         )
-
         jump_saved = self.postprocess_saved(
             jump_state.save_state.ys, jump_state.final_state[None]
         )
-        # TODO save stats for jumps
+        # TODO save stats for jumps?
         jump_result = self.traj_result(jump_saved)
+
         return self.result(
             no_jump_result, jump_result, no_jump_prob, jump_times, num_jumps
         )
@@ -154,19 +154,18 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             return _state.final_time < self.t1
 
         def _outer_body_fun(_state):
+            jump_time = _state.final_time
+            psi = _state.final_state
+            _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
+            jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
             # Something funky is that jax doesn't support dynamic array sizes. This
             # makes vmaps of loops tricky as discussed here
             # https://github.com/patrick-kidger/equinox/issues/870.
             # The issue is that some trajectories terminate before others do (they
             # experience fewer jumps), but the loop body needs to keep executing until
-            # the last trajectory finishes. See comments below for the various hacks
-            # necessary for those trajectories that are "idling".
-            jump_time = _state.final_time
-            psi = _state.final_state
-            _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
-            jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
-            # Need a conditional here on whether to apply the jump or not because of
-            # the idling problem.
+            # the last trajectory finishes. Thus we need a conditional here on whether
+            # to apply the jump or not (some trajectories are "idling" and shouldn't
+            # experience a jump).
             psi_after_jump = jnp.where(_state.final_time < self.t1, jump_op @ psi, psi)
             psi_after_jump = unit(psi_after_jump)
             # Construct a new linspace over the remaining times with the same shape as
