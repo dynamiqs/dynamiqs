@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
-from jaxtyping import Array, PyTree
+from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
 
@@ -43,12 +43,10 @@ class FloquetIntegrator(SEIntegrator):
         propagators = seprop_result.propagators[:-1, :, :]
         modes = propagators @ evecs  # (ntsave, n, n) @ (n, m) = (ntsave, n, m)
         modes = modes.mT[..., None]  # (ntsave, m, n, 1)
-        modes = modes * jnp.exp(1j * _batch(quasienergies) * _batch(self.ts, nbatch=3))
+        modes = modes * jnp.exp(
+            1j * quasienergies[:, None, None] * self.ts[:, None, None, None]
+        )
 
         # save the Floquet modes and quasienergies
         saved = FloquetSaved(ysave=modes, extra=None, quasienergies=quasienergies)
         return self.result(saved, infos=seprop_result.infos)
-
-
-def _batch(x: Array, *, nbatch: int = 2) -> Array:
-    return x[..., *(None,) * nbatch]
