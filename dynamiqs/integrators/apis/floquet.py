@@ -57,24 +57,23 @@ def floquet(
         drive frequencies. This however can be achieved straightforwardly with an
         external call to `jax.vmap`, as follows:
 
-        # TODO: fix before merge
-        # ```python
-        # import jax
-        # import jax.numpy as jnp
-        # import dynamiqs as dq
+        ```python
+        import jax
+        import jax.numpy as jnp
+        import dynamiqs as dq
 
 
-        # def single_floquet(omega):
-        #     H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-        #     T = 2.0 * jnp.pi / omega
-        #     tsave = jnp.linspace(0.0, T, 11)
-        #     return dq.floquet(H, T, tsave)
+        def single_floquet(omega):
+            H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
+            T = 2.0 * jnp.pi / omega
+            tsave = jnp.linspace(0.0, T, 11)
+            return dq.floquet(H, T, tsave)
 
 
-        # omegas = jnp.array([0.9, 1.0, 1.1])
-        # batched_floquet = jax.vmap(single_floquet)
-        # result = batched_floquet(omegas)
-        # ```
+        omegas = jnp.array([0.9, 1.0, 1.1])
+        batched_floquet = jax.vmap(single_floquet)
+        result = batched_floquet(omegas)
+        ```
 
     Args:
         H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
