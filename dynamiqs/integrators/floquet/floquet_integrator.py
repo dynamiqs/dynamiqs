@@ -42,8 +42,10 @@ class FloquetIntegrator(SEIntegrator):
         # propagate the Floquet modes to all times in tsave
         propagators = seprop_result.propagators[:-1, :, :]
         modes = propagators @ evecs  # (ntsave, n, n) @ (n, m) = (ntsave, n, m)
-        modes = modes * jnp.exp(1j * quasienergies * self.ts[:, None, None])
         modes = modes.mT[..., None]  # (ntsave, m, n, 1)
+        modes = modes * jnp.exp(
+            1j * quasienergies[:, None, None] * self.ts[:, None, None, None]
+        )
 
         # save the Floquet modes and quasienergies
         saved = FloquetSaved(ysave=modes, extra=None, quasienergies=quasienergies)
