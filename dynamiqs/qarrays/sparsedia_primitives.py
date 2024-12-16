@@ -9,7 +9,6 @@ from jaxtyping import Array
 
 
 def _sparsedia_slice(offset: int) -> slice:
-    offset = int(offset)  # todo: temporary fix
     # Return the slice that selects the non-zero elements of a diagonal of given offset.
     # For example, a diagonal with offset 2 is stored as [0, 0, a, b, ..., z], and
     # _sparsedia_slice(2) will return the slice(2, None) to select [a, b, ..., z].
