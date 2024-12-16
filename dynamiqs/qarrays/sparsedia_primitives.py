@@ -97,7 +97,6 @@ def mul_sparsedia_sparsedia(
 
 
 def _numpy_to_tuple(x: np.ndarray) -> tuple:
-    x = np.asarray(x)  # todo: temporary fix
     assert x.ndim == 1
     return tuple([sub_x.item() for sub_x in x])
 
@@ -211,10 +210,10 @@ def matmul_sparsedia_sparsedia(
             diag = left_diags[..., i, lslice] * right_diags[..., j, rslice]
             diag_dict[out_offset] = diag_dict[out_offset].at[..., rslice].add(diag)
 
-    out_offsets = sorted(diag_dict.keys())
+    out_offsets = tuple(sorted(diag_dict.keys()))
     out_diags = jnp.stack([diag_dict[offset] for offset in out_offsets])
     out_diags = jnp.moveaxis(out_diags, 0, -2)
-    return _numpy_to_tuple(out_offsets), out_diags
+    return out_offsets, out_diags
 
 
 def matmul_sparsedia_array(
@@ -294,7 +293,7 @@ def stack_sparsedia(
     axis: int,
 ) -> tuple[tuple[int, ...], Array]:
     # compute unique offsets of the output
-    out_offsets = reduce(np.union1d, offsets_sequence)
+    out_offsets = np.asarray(reduce(np.union1d, offsets_sequence))
     offset_to_index = {offset: idx for idx, offset in enumerate(out_offsets)}
 
     # prepare output diagonals with the correct shape and dtype
