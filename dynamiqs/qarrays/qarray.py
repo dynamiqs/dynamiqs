@@ -423,9 +423,9 @@ class QArray(eqx.Module):
     def __mul__(self, y: ArrayLike) -> QArray:
         if not _is_batched_scalar(y):
             raise NotImplementedError(
-                'Element-wise multiplication of a qarray with the `*` operator is not '
-                'supported. For matrix multiplication, use `x @ y`. For element-wise '
-                'multiplication, use `x.elmul(y)`.'
+                'Element-wise multiplication of two qarrays with the `*` operator is '
+                'not supported. For matrix multiplication, use `x @ y`. For '
+                'element-wise multiplication, use `x.elmul(y)`.'
             )
 
     def __rmul__(self, y: QArrayLike) -> QArray:

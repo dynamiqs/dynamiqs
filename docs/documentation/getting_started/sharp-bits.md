@@ -1,8 +1,5 @@
 # The sharp bits 🔪
 
-<!-- skip: start -->
-<!-- todo: temporary fix -->
-
 This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.
 
 ```python
@@ -11,13 +8,12 @@ import dynamiqs as dq
 
 ## Main differences with QuTiP
 
-<!-- If modifications are made in this section, ensure to also update the tutorials/time-dependent-operators.md document to reflect these changes in the "Differences with QuTiP" warning admonition at the top of the file. -->
-
 The syntax in Dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.
 
 ### Floating-point precision
 
-In Dynamiqs, all arrays are represented by default with **single-precision** floating-point numbers (`float32` or `complex64`), whereas the default in QuTiP or NumPy is double-precision (`float64` or `complex128`). We made this choice to match JAX's default, and for **performance** reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using [`dq.set_precision()`][dynamiqs.set_precision]:
+In Dynamiqs, all objects are represented by default with **single-precision** floating-point numbers (`float32` or `complex64`), whereas the default in QuTiP or NumPy is double-precision (`float64` or `complex128`). We made this choice to match JAX's default, and for **performance** reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using [`dq.set_precision()`][dynamiqs.set_precision]:
+
 ```python
 dq.set_precision('double')  # 'simple' by default
 ```
@@ -38,58 +34,68 @@ dq.set_precision('simple')
 
 ### Adding a scalar to an operator
 
-In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch or JAX. In Dynamiqs, adding a scalar to an array performs an element-wise addition. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**:
+In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch or JAX. In Dynamiqs, adding a scalar to an operator with `+` is forbidden. To achieve the same result as in QuTiP, you must **explicitly multiply the scalar with the identity matrix**:
 
 === ":material-check: Correct"
     ```pycon
     >>> sz = dq.sigmaz()
     >>> sz - 2 * dq.eye(2)
-    Array([[-1.+0.j,  0.+0.j],
-           [ 0.+0.j, -3.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[-1.+0.j    ⋅   ]
+     [   ⋅    -3.+0.j]]
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sz = dq.sigmaz()
     >>> sz - 2
-    Array([[-1.+0.j, -2.+0.j],
-           [-2.+0.j, -3.+0.j]], dtype=complex64)
+    Traceback (most recent call last):
+        ...
+    NotImplementedError: Adding a scalar to a qarray with the `+` operator is not supported. To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`. To add a scalar, use `x.addscalar(scalar)`.
     ```
+
+If you *actually* want to add a scalar element-wise to an operator, you can use `x.addscalar(scalar)`.
 
 ### Multiplying two operators
 
-In QuTiP, the `*` symbol is used to multiply two operators. This convention also differs from common scientific libraries. In Dynamiqs, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication:
+In QuTiP, the `*` symbol is used to multiply two operators. This convention also differs from common scientific libraries. In Dynamiqs, **the `@` symbol is used for matrix multiplication**, and the `*` symbol is reserved for element-wise multiplication with a scalar:
 
 === ":material-check: Correct"
     ```pycon
     >>> sx = dq.sigmax()
     >>> sx @ sx
-    Array([[1.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j]], dtype=complex64)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[1.+0.j   ⋅   ]
+     [  ⋅    1.+0.j]]
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx = dq.sigmax()
     >>> sx * sx
-    Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex64)
+    Traceback (most recent call last):
+        ...
+    NotImplementedError: Element-wise multiplication of two qarrays with the `*` operator is not supported. For matrix multiplication, use `x @ y`. For element-wise multiplication, use `x.elmul(y)`.
     ```
 
-Likewise, you should use `dq.powm()` instead of `**` (element-wise power) to compute the power of a matrix:
+If you *actually* want to multiply two operators element-wise,you can use `x.elmul(y)`.
+
+Likewise, you should use `x.powm()` instead of `**` (element-wise power) to compute the power of a matrix:
 
 === ":material-check: Correct"
     ```pycon
-    >>> dq.powm(sx, 2)
-    Array([[1.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j]], dtype=complex64)
+    >>> sx.powm(2)
+    QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+    [[1.+0.j   ⋅   ]
+     [  ⋅    1.+0.j]]
     ```
 === ":material-close: Incorrect"
     ```pycon
     >>> sx**2
-    Array([[0.+0.j, 1.+0.j],
-           [1.+0.j, 0.+0.j]], dtype=complex64)
+    Traceback (most recent call last):
+        ...
+    NotImplementedError: Computing the element-wise power of a qarray with the `**` operator is not supported. For the matrix power, use `x.pomw(power)`. For the element-wise power, use `x.elpow(power)`.
     ```
-<!-- skip: end -->
-<!-- todo: temporary fix -->
+
+If you *actually* want to compute the element-wise power, you can use `x.elpow(power)`.
 
 ## Using a for loop
 
