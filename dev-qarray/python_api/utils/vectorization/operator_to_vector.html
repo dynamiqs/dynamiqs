@@ -3980,17 +3980,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    operator_to_vector
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="operator_to_vector.html" class="md-nav__link md-nav__link--active">
         
   
@@ -4000,79 +3989,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--todo-temporary-fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      todo: temporary fix
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--dqoperator_to_vectora" class="md-nav__link">
-    <span class="md-ellipsis">
-      &gt;&gt;&gt; dq.operator_to_vector(A)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--array11j" class="md-nav__link">
-    <span class="md-ellipsis">
-      Array([[1.+1.j],
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--33j" class="md-nav__link">
-    <span class="md-ellipsis">
-      [3.+3.j],
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--22j" class="md-nav__link">
-    <span class="md-ellipsis">
-      [2.+2.j],
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--44j-dtypecomplex64" class="md-nav__link">
-    <span class="md-ellipsis">
-      [4.+4.j]], dtype=complex64)
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -4944,68 +4860,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--todo-temporary-fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      todo: temporary fix
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--dqoperator_to_vectora" class="md-nav__link">
-    <span class="md-ellipsis">
-      &gt;&gt;&gt; dq.operator_to_vector(A)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--array11j" class="md-nav__link">
-    <span class="md-ellipsis">
-      Array([[1.+1.j],
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--33j" class="md-nav__link">
-    <span class="md-ellipsis">
-      [3.+3.j],
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--22j" class="md-nav__link">
-    <span class="md-ellipsis">
-      [2.+2.j],
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.utils.vectorization.operator_to_vector--44j-dtypecomplex64" class="md-nav__link">
-    <span class="md-ellipsis">
-      [4.+4.j]], dtype=complex64)
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -5078,13 +4932,13 @@ $$</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">A</span>
 <span class="go">Array([[1.+1.j, 2.+2.j],</span>
 <span class="go">       [3.+3.j, 4.+4.j]], dtype=complex64)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">operator_to_vector</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">QArray: shape=(4, 1), dims=(2,), dtype=complex64, layout=dense, vectorized=True</span>
+<span class="go">[[1.+1.j]</span>
+<span class="go"> [3.+3.j]</span>
+<span class="go"> [2.+2.j]</span>
+<span class="go"> [4.+4.j]]</span>
 </code></pre></div>
-    <h2 id="dynamiqs.utils.vectorization.operator_to_vector--todo-temporary-fix">todo: temporary fix</h2>
-<h2 id="dynamiqs.utils.vectorization.operator_to_vector--dqoperator_to_vectora">&gt;&gt;&gt; dq.operator_to_vector(A)</h2>
-<h2 id="dynamiqs.utils.vectorization.operator_to_vector--array11j">Array([[1.+1.j],</h2>
-<h2 id="dynamiqs.utils.vectorization.operator_to_vector--33j">[3.+3.j],</h2>
-<h2 id="dynamiqs.utils.vectorization.operator_to_vector--22j">[2.+2.j],</h2>
-<h2 id="dynamiqs.utils.vectorization.operator_to_vector--44j-dtypecomplex64">[4.+4.j]], dtype=complex64)</h2>
 
     </div>
 

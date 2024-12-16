@@ -1134,17 +1134,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    floquet
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="floquet.html" class="md-nav__link md-nav__link--active">
         
   
@@ -1154,151 +1143,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--todo-fix-before-merge" class="md-nav__link">
-    <span class="md-ellipsis">
-      TODO: fix before merge
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--python" class="md-nav__link">
-    <span class="md-ellipsis">
-      ```python
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--import-jax" class="md-nav__link">
-    <span class="md-ellipsis">
-      import jax
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--import-jaxnumpy-as-jnp" class="md-nav__link">
-    <span class="md-ellipsis">
-      import jax.numpy as jnp
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--import-dynamiqs-as-dq" class="md-nav__link">
-    <span class="md-ellipsis">
-      import dynamiqs as dq
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--def-single_floquetomega" class="md-nav__link">
-    <span class="md-ellipsis">
-      def single_floquet(omega):
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--h-dqmodulatedlambda-t-jnpcosomega-t-dqsigmax" class="md-nav__link">
-    <span class="md-ellipsis">
-      H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--t-20-jnppi-omega" class="md-nav__link">
-    <span class="md-ellipsis">
-      T = 2.0 * jnp.pi / omega
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--tsave-jnplinspace00-t-11" class="md-nav__link">
-    <span class="md-ellipsis">
-      tsave = jnp.linspace(0.0, T, 11)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--return-dqfloqueth-t-tsave" class="md-nav__link">
-    <span class="md-ellipsis">
-      return dq.floquet(H, T, tsave)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--omegas-jnparray09-10-11" class="md-nav__link">
-    <span class="md-ellipsis">
-      omegas = jnp.array([0.9, 1.0, 1.1])
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--batched_floquet-jaxvmapsingle_floquet" class="md-nav__link">
-    <span class="md-ellipsis">
-      batched_floquet = jax.vmap(single_floquet)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--result-batched_floquetomegas" class="md-nav__link">
-    <span class="md-ellipsis">
-      result = batched_floquet(omegas)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      ```
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -5014,140 +4858,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--todo-fix-before-merge" class="md-nav__link">
-    <span class="md-ellipsis">
-      TODO: fix before merge
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--python" class="md-nav__link">
-    <span class="md-ellipsis">
-      ```python
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--import-jax" class="md-nav__link">
-    <span class="md-ellipsis">
-      import jax
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--import-jaxnumpy-as-jnp" class="md-nav__link">
-    <span class="md-ellipsis">
-      import jax.numpy as jnp
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--import-dynamiqs-as-dq" class="md-nav__link">
-    <span class="md-ellipsis">
-      import dynamiqs as dq
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--def-single_floquetomega" class="md-nav__link">
-    <span class="md-ellipsis">
-      def single_floquet(omega):
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--h-dqmodulatedlambda-t-jnpcosomega-t-dqsigmax" class="md-nav__link">
-    <span class="md-ellipsis">
-      H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--t-20-jnppi-omega" class="md-nav__link">
-    <span class="md-ellipsis">
-      T = 2.0 * jnp.pi / omega
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--tsave-jnplinspace00-t-11" class="md-nav__link">
-    <span class="md-ellipsis">
-      tsave = jnp.linspace(0.0, T, 11)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--return-dqfloqueth-t-tsave" class="md-nav__link">
-    <span class="md-ellipsis">
-      return dq.floquet(H, T, tsave)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--omegas-jnparray09-10-11" class="md-nav__link">
-    <span class="md-ellipsis">
-      omegas = jnp.array([0.9, 1.0, 1.1])
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--batched_floquet-jaxvmapsingle_floquet" class="md-nav__link">
-    <span class="md-ellipsis">
-      batched_floquet = jax.vmap(single_floquet)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--result-batched_floquetomegas" class="md-nav__link">
-    <span class="md-ellipsis">
-      result = batched_floquet(omegas)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      ```
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -5215,20 +4925,22 @@ However, a GPU implementation of eig is currently in the works, <a href="https:/
 periods, for instance if you wanted to batch over Hamiltonians with different
 drive frequencies. This however can be achieved straightforwardly with an
 external call to <code>jax.vmap</code>, as follows:</p>
-<h2 id="dynamiqs.integrators.floquet--todo-fix-before-merge">TODO: fix before merge</h2>
-<h2 id="dynamiqs.integrators.floquet--python">```python</h2>
-<h2 id="dynamiqs.integrators.floquet--import-jax">import jax</h2>
-<h2 id="dynamiqs.integrators.floquet--import-jaxnumpy-as-jnp">import jax.numpy as jnp</h2>
-<h2 id="dynamiqs.integrators.floquet--import-dynamiqs-as-dq">import dynamiqs as dq</h2>
-<h2 id="dynamiqs.integrators.floquet--def-single_floquetomega">def single_floquet(omega):</h2>
-<h2 id="dynamiqs.integrators.floquet--h-dqmodulatedlambda-t-jnpcosomega-t-dqsigmax">H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())</h2>
-<h2 id="dynamiqs.integrators.floquet--t-20-jnppi-omega">T = 2.0 * jnp.pi / omega</h2>
-<h2 id="dynamiqs.integrators.floquet--tsave-jnplinspace00-t-11">tsave = jnp.linspace(0.0, T, 11)</h2>
-<h2 id="dynamiqs.integrators.floquet--return-dqfloqueth-t-tsave">return dq.floquet(H, T, tsave)</h2>
-<h2 id="dynamiqs.integrators.floquet--omegas-jnparray09-10-11">omegas = jnp.array([0.9, 1.0, 1.1])</h2>
-<h2 id="dynamiqs.integrators.floquet--batched_floquet-jaxvmapsingle_floquet">batched_floquet = jax.vmap(single_floquet)</h2>
-<h2 id="dynamiqs.integrators.floquet--result-batched_floquetomegas">result = batched_floquet(omegas)</h2>
-<h2 id="dynamiqs.integrators.floquet--_1">```</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">jax</span>
+<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+<span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
+
+
+<span class="k">def</span> <span class="nf">single_floquet</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">omega</span>
+    <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dq</span><span class="o">.</span><span class="n">floquet</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
+
+
+<span class="n">omegas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">])</span>
+<span class="n">batched_floquet</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">single_floquet</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">batched_floquet</span><span class="p">(</span><span class="n">omegas</span><span class="p">)</span>
+</code></pre></div>
 </details>
     <!-- <p>Parameters:</p> -->
     <p>

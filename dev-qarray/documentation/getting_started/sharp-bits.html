@@ -5033,20 +5033,15 @@
 
 
 <h1 id="the-sharp-bits">The sharp bits 🔪</h1>
-<!-- skip: start -->
-<!-- todo: temporary fix -->
-
 <p>This page highlight common pitfalls that users may encounter when learning to use Dynamiqs.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
 </code></pre></div>
 <h2 id="main-differences-with-qutip">Main differences with QuTiP</h2>
-<!-- If modifications are made in this section, ensure to also update the tutorials/time-dependent-operators.md document to reflect these changes in the "Differences with QuTiP" warning admonition at the top of the file. -->
-
 <p>The syntax in Dynamiqs is similar to <a href="http://qutip.org/">QuTiP</a>, a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.</p>
 <h3 id="floating-point-precision">Floating-point precision</h3>
-<p>In Dynamiqs, all arrays are represented by default with <strong>single-precision</strong> floating-point numbers (<code>float32</code> or <code>complex64</code>), whereas the default in QuTiP or NumPy is double-precision (<code>float64</code> or <code>complex128</code>). We made this choice to match JAX's default, and for <strong>performance</strong> reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using <a class="autorefs autorefs-internal" href="../../python_api/utils/global_settings/set_precision.html#dynamiqs.utils.global_settings.set_precision"><code>dq.set_precision()</code></a>:
+<p>In Dynamiqs, all objects are represented by default with <strong>single-precision</strong> floating-point numbers (<code>float32</code> or <code>complex64</code>), whereas the default in QuTiP or NumPy is double-precision (<code>float64</code> or <code>complex128</code>). We made this choice to match JAX's default, and for <strong>performance</strong> reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using <a class="autorefs autorefs-internal" href="../../python_api/utils/global_settings/set_precision.html#dynamiqs.utils.global_settings.set_precision"><code>dq.set_precision()</code></a>:</p>
 <div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">set_precision</span><span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>  <span class="c1"># &#39;simple&#39; by default</span>
-</code></pre></div></p>
+</code></pre></div>
 <p>When using single-precision, there are certain limitations to be aware of:</p>
 <ul>
 <li><strong>Large numbers</strong>: Numerical errors in floating-point arithmetic become more significant when using large numbers. Therefore, you should try to choose units for your simulation such that all quantities involved are not too large.</li>
@@ -5062,65 +5057,71 @@
 -->
 
 <h3 id="adding-a-scalar-to-an-operator">Adding a scalar to an operator</h3>
-<p>In QuTiP, adding a scalar to a <code>Qobj</code> performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch or JAX. In Dynamiqs, adding a scalar to an array performs an element-wise addition. To achieve the same result as in QuTiP, you must <strong>explicitly multiply the scalar with the identity matrix</strong>:</p>
+<p>In QuTiP, adding a scalar to a <code>Qobj</code> performs an implicit multiplication of the scalar with the identity matrix. This convention differs from the one adopted by common scientific libraries such as NumPy, PyTorch or JAX. In Dynamiqs, adding a scalar to an operator with <code>+</code> is forbidden. To achieve the same result as in QuTiP, you must <strong>explicitly multiply the scalar with the identity matrix</strong>:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span> Correct</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span> Incorrect</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="go">Array([[-1.+0.j,  0.+0.j],</span>
-<span class="go">       [ 0.+0.j, -3.+0.j]], dtype=complex64)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
+<span class="go">[[-1.+0.j    ⋅   ]</span>
+<span class="go"> [   ⋅    -3.+0.j]]</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">-</span> <span class="mi">2</span>
-<span class="go">Array([[-1.+0.j, -2.+0.j],</span>
-<span class="go">       [-2.+0.j, -3.+0.j]], dtype=complex64)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">NotImplementedError</span>: <span class="n">Adding a scalar to a qarray with the `+` operator is not supported. To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`. To add a scalar, use `x.addscalar(scalar)`.</span>
 </code></pre></div>
 </div>
 </div>
 </div>
+<p>If you <em>actually</em> want to add a scalar element-wise to an operator, you can use <code>x.addscalar(scalar)</code>.</p>
 <h3 id="multiplying-two-operators">Multiplying two operators</h3>
-<p>In QuTiP, the <code>*</code> symbol is used to multiply two operators. This convention also differs from common scientific libraries. In Dynamiqs, <strong>the <code>@</code> symbol is used for matrix multiplication</strong>, and the <code>*</code> symbol is reserved for element-wise multiplication:</p>
+<p>In QuTiP, the <code>*</code> symbol is used to multiply two operators. This convention also differs from common scientific libraries. In Dynamiqs, <strong>the <code>@</code> symbol is used for matrix multiplication</strong>, and the <code>*</code> symbol is reserved for element-wise multiplication with a scalar:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span> Correct</label><label for="__tabbed_2_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span> Incorrect</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span> <span class="o">@</span> <span class="n">sx</span>
-<span class="go">Array([[1.+0.j, 0.+0.j],</span>
-<span class="go">       [0.+0.j, 1.+0.j]], dtype=complex64)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
+<span class="go">[[1.+0.j   ⋅   ]</span>
+<span class="go"> [  ⋅    1.+0.j]]</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span> <span class="o">*</span> <span class="n">sx</span>
-<span class="go">Array([[0.+0.j, 1.+0.j],</span>
-<span class="go">       [1.+0.j, 0.+0.j]], dtype=complex64)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">NotImplementedError</span>: <span class="n">Element-wise multiplication of two qarrays with the `*` operator is not supported. For matrix multiplication, use `x @ y`. For element-wise multiplication, use `x.elmul(y)`.</span>
 </code></pre></div>
 </div>
 </div>
 </div>
-<p>Likewise, you should use <code>dq.powm()</code> instead of <code>**</code> (element-wise power) to compute the power of a matrix:</p>
+<p>If you <em>actually</em> want to multiply two operators element-wise,you can use <code>x.elmul(y)</code>.</p>
+<p>Likewise, you should use <code>x.powm()</code> instead of <code>**</code> (element-wise power) to compute the power of a matrix:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span> Correct</label><label for="__tabbed_3_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span> Incorrect</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">powm</span><span class="p">(</span><span class="n">sx</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">Array([[1.+0.j, 0.+0.j],</span>
-<span class="go">       [0.+0.j, 1.+0.j]], dtype=complex64)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span><span class="o">.</span><span class="n">powm</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
+<span class="go">[[1.+0.j   ⋅   ]</span>
+<span class="go"> [  ⋅    1.+0.j]]</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span><span class="o">**</span><span class="mi">2</span>
-<span class="go">Array([[0.+0.j, 1.+0.j],</span>
-<span class="go">       [1.+0.j, 0.+0.j]], dtype=complex64)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">NotImplementedError</span>: <span class="n">Computing the element-wise power of a qarray with the `**` operator is not supported. For the matrix power, use `x.pomw(power)`. For the element-wise power, use `x.elpow(power)`.</span>
 </code></pre></div>
 </div>
 </div>
 </div>
-<!-- skip: end -->
-<!-- todo: temporary fix -->
-
+<p>If you <em>actually</em> want to compute the element-wise power, you can use <code>x.elpow(power)</code>.</p>
 <h2 id="using-a-for-loop">Using a for loop</h2>
 <p>If you want to simulate multiple Hamiltonians or initial states, you should use batching instead of a <code>for</code> loop. This functionality is explained in detail in the <a href="../basics/batching-simulations.html">Batching simulations</a> tutorial, together with the associated gain in performance.</p>
 <h2 id="computing-the-gradient-with-respect-to-complex-parameters">Computing the gradient with respect to complex parameters</h2>

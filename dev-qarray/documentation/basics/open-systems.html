@@ -5160,11 +5160,11 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
 <div class="highlight"><pre><span></span><code><span class="n">res</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mepropagator</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">propagators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># print the final propagator</span>
 </code></pre></div>
-<div class="highlight"><span class="filename">Output</span><pre><span></span><code>|██████████| 100.0% ◆ elapsed 2.56ms ◆ remaining 0.00ms
-Array([[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
-       [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
-       [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
-       [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]], dtype=complex64)
+<div class="highlight"><span class="filename">Output</span><pre><span></span><code>QArray: shape=(4, 4), dims=(2,), dtype=complex64, layout=dense, vectorized=True
+[[ 0.368+0.j     0.   +0.j     0.   +0.j     0.   +0.j   ]
+ [ 0.   +0.j    -0.252+0.552j  0.   +0.j     0.   +0.j   ]
+ [ 0.   +0.j     0.   +0.j    -0.252-0.552j  0.   +0.j   ]
+ [ 0.632+0.j     0.   +0.j     0.   +0.j     1.   +0.j   ]]
 </code></pre></div>
 
 
