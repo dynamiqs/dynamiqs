@@ -14,6 +14,8 @@ from ..._checks import check_shape, check_times
 from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 from ...result import MCSolveResult
 from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
@@ -30,13 +32,13 @@ from ..mcsolve.diffrax_integrator import (
 
 
 def mcsolve(
-    H: ArrayLike | TimeArray,
-    Ls: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
+    H: QArrayLike | TimeArray,
+    jump_ops: list[QArrayLike | TimeArray],
+    psi0: QArrayLike,
     tsave: ArrayLike,
     *,
     keys: ArrayLike = jax.random.split(jax.random.key(31), num=10),  # noqa: B008
-    exp_ops: list[ArrayLike] | None = None,
+    exp_ops: list[QArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     root_finder: AbstractRootFinder | None = optx.Newton(1e-5, 1e-5, optx.rms_norm),  # noqa: B008
     gradient: Gradient | None = None,
@@ -70,17 +72,17 @@ def mcsolve(
         concurrently. All other arguments are common to every batch.
 
     Args:
-        H _(array-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        Ls _(list of array-like or time-array, of shape (nL, n, n))_: List of
+        H _(qarray-like or time-array of shape (bH?, n, n))_: Hamiltonian.
+        Ls _(list of qarray-like or time-array, of shape (nL, n, n))_: List of
             jump operators.
-        psi0 _(array-like of shape (bpsi?, n, 1))_: Initial state.
+        psi0 _(qarray-like of shape (bpsi?, n, 1))_: Initial state.
         tsave _(array-like of shape (nt,))_: Times at which the states and expectation
             values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
             from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        keys _(KeyArray of shape (ntraj,))_: Total number of jump trajectories to
+        keys _(Array of shape (ntraj,))_: Total number of jump trajectories to
             simulate, not including the no-jump trajectory. Defaults to a list of keys
             of length 10.
-        exp_ops _(list of array-like, of shape (nE, n, n), optional)_: List of
+        exp_ops _(list of qarray-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
@@ -96,39 +98,25 @@ def mcsolve(
 
     Returns:
         [`dq.Result`](/python_api/result/Result.html) object holding the result of the
-            Monte-Carlo integration. It has the following attributes:
-
-            - **no_jump_states** _(array of shape (bH?, bpsi0?, nt, n, 1))_ -- Saved
-                no-jump states.
-            - **final_no_jump_state** _(array of shape (bH?, bpsi0?, n, 1))_ -- Saved
-                final no-jump state.
-            - **jump_states** _(array of shape (bH?, bpsi0?, ntraj, nt, n, 1))_ -- Saved
-                jump states.
-            - **final_jump_states** _(array of shape (bH?, bpsi0?, ntraj, n, 1))_ --
-                Saved final jump states.
-            - **expects** _(array of shape (bH?, brho?, nE, nt), optional)_ -- Saved
-                expectation values.
-            - **extra** _(PyTree, optional)_ -- Extra data saved with `save_extra()` if
-                specified in `options`.
-            - **infos** _(PyTree, optional)_ -- Solver-dependent information on the
-                resolution.
-            - **tsave** _(array of shape (nt,))_ -- Times for which states and
-                expectation values were saved.
-            - **solver** _(Solver)_ -- Solver used.
-            - **gradient** _(Gradient)_ -- Gradient used.
-            - **options** _(Options)_ -- Options used.
+            Monte-Carlo integration. Use the attributes `no_jump_states`, `jump_states`
+            and `expects` to access saved quantities, more details in
+            [`dq.MCSolveResult`][dynamiqs.MCSolveResult].
     """  # noqa E501
     # === convert arguments
     H = _astimearray(H)
-    Ls = [_astimearray(L) for L in Ls]
-    psi0 = jnp.asarray(psi0, dtype=cdtype())
+    Ls = [_astimearray(L) for L in jump_ops]
+    psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
-    exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if exp_ops is not None else None
+    if exp_ops is not None:
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_mcsolve_args(H, Ls, psi0, tsave, exp_ops)
+    _check_mcsolve_args(H, Ls, psi0, exp_ops)
+    check_times(tsave, 'tsave')
 
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_mcsolve(
         H, Ls, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options
     )
@@ -139,16 +127,15 @@ def mcsolve(
 def _vectorized_mcsolve(
     H: TimeArray,
     Ls: list[TimeArray],
-    psi0: Array,
+    psi0: QArray,
     tsave: Array,
     keys: Array,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
 ) -> MCSolveResult:
-    # === vectorize function
     # vectorize output over `_no_jump_res`, `_jump_res`, `no_jump_prob`, `jump_times`,
     # `num_jumps`
     out_axes = MCSolveResult(None, None, None, None, 0, 0, 0, 0, 0)
@@ -210,12 +197,12 @@ def _vectorized_mcsolve(
 
 
 def _mcsolve(
-    H: ArrayLike | TimeArray,
-    Ls: list[ArrayLike | TimeArray],
-    psi0: ArrayLike,
-    tsave: ArrayLike,
+    H: TimeArray,
+    Ls: list[TimeArray],
+    psi0: QArray,
+    tsave: Array,
     keys: Array,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     root_finder: AbstractRootFinder,
     gradient: Gradient | None,
@@ -256,7 +243,7 @@ def _mcsolve(
 
 
 def _check_mcsolve_args(
-    H: TimeArray, Ls: list[TimeArray], psi0: Array, tsave: Array, exp_ops: Array | None
+    H: TimeArray, Ls: list[TimeArray], psi0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
@@ -267,16 +254,14 @@ def _check_mcsolve_args(
 
     if len(Ls) == 0:
         logging.warning(
-            'Argument `Ls` is an empty list, consider using `dq.sesolve()` to'
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
 
     # === check psi0 shape
     check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
 
-    # === check tsave shape
-    check_times(tsave, 'tsave')
-
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')

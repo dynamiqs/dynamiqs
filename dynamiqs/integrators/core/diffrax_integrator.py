@@ -236,10 +236,8 @@ class MCDiffraxIntegrator(DiffraxIntegrator, MCInterface):
     @property
     def terms(self) -> dx.AbstractTerm:
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            Ls = jnp.stack([L(t) for L in self.Ls])
-            Lsd = dag(Ls)
-            LdL = (Lsd @ Ls).sum(0)
-            y = -1j * (self.H(t) - 1j * 0.5 * LdL) @ y
-            return y
+            L, H = self.L(t), self.H(t)
+            Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
+            return Hnh @ y
 
         return dx.ODETerm(vector_field)

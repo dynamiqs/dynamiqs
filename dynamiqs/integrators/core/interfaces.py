@@ -18,17 +18,20 @@ class SEInterface(eqx.Module):
     H: TimeArray
 
 
-class MEInterface(eqx.Module):
-    """Interface for the Lindblad master equation."""
-
-    H: TimeArray
-    Ls: list[TimeArray]
+class _MInterface(eqx.Module):
 
     def L(self, t: Scalar) -> list[QArray]:
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
 
-class MCInterface(eqx.Module):
+class MEInterface(_MInterface):
+    """Interface for the Lindblad master equation."""
+
+    H: TimeArray
+    Ls: list[TimeArray]
+
+
+class MCInterface(_MInterface):
     """Interface for the Monte-Carlo jump unraveling of the master equation."""
 
     H: TimeArray

@@ -13,7 +13,8 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..core.save_mixin import SolveSaveMixin
-from ...utils.quantum_utils import dag, unit, norm, expect
+from ...utils import dag, unit, norm, expect
+from ...qarrays.utils import stack
 from ..core.abstract_integrator import MCSolveIntegrator
 from ...gradient import Autograd, CheckpointAutograd
 from ..core.diffrax_integrator import (
@@ -261,7 +262,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         experiencing amplitude damping, if it is in the ground state then
         there is probability zero of experiencing an amplitude damping event.
         """
-        Ls = jnp.stack([L(t) for L in self.Ls])
+        Ls = stack([L(t) for L in self.Ls])
         Lsd = dag(Ls)
         probs = expect(Lsd @ Ls, psi)
         # for categorical we pass in the log of the probabilities
