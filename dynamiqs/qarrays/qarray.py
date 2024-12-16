@@ -162,8 +162,8 @@ class QArray(eqx.Module):
     | `x.to_qutip()`                                           | Alias of [`dq.to_qutip(x, dims=x.dims)`][dynamiqs.to_qutip].   |
     | `x.to_jax()`                                             | Alias of [`dq.to_jax(x)`][dynamiqs.to_jax].                    |
     | `x.to_numpy()`                                           | Alias of [`dq.to_numpy(x)`][dynamiqs.to_numpy].                |
-    | [`x.asdense()`][dynamiqs.QArray.asdense]                | Converts to a dense layout.                                     |
-    | [`x.assparsedia()`][dynamiqs.QArray.assparsedia]        | Converts to a sparse diagonal layout.                           |
+    | [`x.asdense()`][dynamiqs.QArray.asdense]                 | Converts to a dense layout.                                    |
+    | [`x.assparsedia()`][dynamiqs.QArray.assparsedia]         | Converts to a sparse diagonal layout.                          |
     """  # noqa: E501
 
     # Subclasses should implement:
