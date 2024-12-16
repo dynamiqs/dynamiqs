@@ -27,11 +27,14 @@ class DenseQArray(QArray):
     data: Array
 
     def _replace(
-        self, dims: tuple[int, ...] | None = None, data: Array | None = None
+        self,
+        dims: tuple[int, ...] | None = None,
+        vectorized: bool | None = None,
+        data: Array | None = None,
     ) -> DenseQArray:
         if data is None:
             data = self.data
-        return super()._replace(dims=dims, data=data)
+        return super()._replace(dims=dims, vectorized=vectorized, data=data)
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -140,7 +143,7 @@ class DenseQArray(QArray):
         from .sparsedia_qarray import SparseDIAQArray
 
         offsets, diags = array_to_sparsedia(self.data)
-        return SparseDIAQArray(self.dims, offsets, diags)
+        return SparseDIAQArray(self.dims, self.vectorized, offsets, diags)
 
     def block_until_ready(self) -> QArray:
         _ = self.data.block_until_ready()

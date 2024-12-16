@@ -128,7 +128,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
         return asqarray(array, dims=dims)
     else:
         diags = jnp.zeros((0, dim), dtype=cdtype())
-        return SparseDIAQArray(diags=diags, offsets=(), dims=dims)
+        return SparseDIAQArray(dims, False, (), diags)
 
 
 def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:

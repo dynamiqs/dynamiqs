@@ -115,6 +115,9 @@ class QArray(eqx.Module):
         layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
         mT _(QArray)_: Returns the qarray transposed over its last two dimensions.
+        vectorized _(bool)_: Whether the underlying object is non-vectorized (ket, bra
+            or operator) or vectorized (operator in vector form or superoperator in
+            matrix form).
 
     Note: Arithmetic operation support
         Qarrays support elementary operations, such as element-wise
@@ -180,11 +183,19 @@ class QArray(eqx.Module):
     # TODO: Setting dims as static for now. Otherwise, I believe it is upgraded to a
     # complex dtype during the computation, which raises an error on diffrax side.
     dims: tuple[int, ...] = eqx.field(static=True)
+    vectorized: bool = eqx.field(static=True)
 
-    def _replace(self, dims: tuple[int, ...] | None = None, **kwargs) -> QArray:
+    def _replace(
+        self,
+        dims: tuple[int, ...] | None = None,
+        vectorized: bool | None = None,
+        **kwargs,
+    ) -> QArray:
         if dims is None:
             dims = self.dims
-        return type(self)(dims=dims, **kwargs)
+        if vectorized is None:
+            vectorized = self.vectorized
+        return type(self)(dims=dims, vectorized=vectorized, **kwargs)
 
     def __check_init__(self):
         # === ensure dims is a tuple of ints
@@ -416,10 +427,13 @@ class QArray(eqx.Module):
         pass
 
     def __repr__(self) -> str:
-        return (
+        res = (
             f'QArray: shape={self.shape}, dims={self.dims}, dtype={self.dtype}, '
             f'layout={self.layout}'
         )
+        if self.vectorized:
+            res += f', vectorized={self.vectorized}'
+        return res
 
     def __neg__(self) -> QArray:
         return self * (-1)

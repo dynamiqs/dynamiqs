@@ -88,12 +88,12 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
         return x
     elif isinstance(x, SparseDIAQArray):
         data = sparsedia_to_array(x.offsets, x.diags)
-        return DenseQArray(x.dims, data)
+        return DenseQArray(x.dims, False, data)
 
     xdims = _get_dims(x)
     x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
-    return DenseQArray(dims, x)
+    return DenseQArray(dims, False, x)
 
 
 def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray:
@@ -106,7 +106,7 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray
     x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
     offsets, diags = array_to_sparsedia(x)
-    return SparseDIAQArray(dims, offsets, diags)
+    return SparseDIAQArray(dims, False, offsets, diags)
 
 
 def _init_dims(
@@ -175,14 +175,14 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
     # stack inputs depending on type
     if all(isinstance(q, DenseQArray) for q in qarrays):
         data = jnp.stack([q.data for q in qarrays], axis=axis)
-        return DenseQArray(dims, data)
+        return DenseQArray(dims, False, data)
     elif all(isinstance(q, SparseDIAQArray) for q in qarrays):
         offsets, diags = stack_sparsedia(
             [qarrays.offsets for qarrays in qarrays],
             [qarrays.diags for qarrays in qarrays],
             axis=axis,
         )
-        return SparseDIAQArray(dims, offsets, diags)
+        return SparseDIAQArray(dims, False, offsets, diags)
     else:
         raise NotImplementedError(
             'Stacking qarrays with different types is not implemented.'
@@ -345,7 +345,7 @@ def sparsedia_from_dict(
     dims = (shape[-1],) if dims is None else dims
     _assert_dims_match_shape(dims, shape)
 
-    return SparseDIAQArray(dims, offsets, diags)
+    return SparseDIAQArray(dims, False, offsets, diags)
 
 
 def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):

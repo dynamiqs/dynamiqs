@@ -46,6 +46,7 @@ class SparseDIAQArray(QArray):
     def _replace(
         self,
         dims: tuple[int, ...] | None = None,
+        vectorized: bool | None = None,
         offsets: tuple[int, ...] | None = None,
         diags: Array | None = None,
     ) -> SparseDIAQArray:
@@ -53,7 +54,9 @@ class SparseDIAQArray(QArray):
             offsets = self.offsets
         if diags is None:
             diags = self.diags
-        return super()._replace(dims=dims, offsets=offsets, diags=diags)
+        return super()._replace(
+            dims=dims, vectorized=vectorized, offsets=offsets, diags=diags
+        )
 
     def __check_init__(self):
         # check diags and offsets have the right type and shape before compressing them
@@ -144,7 +147,7 @@ class SparseDIAQArray(QArray):
         )
         x = sparsedia_to_array(self.offsets, self.diags)
         expm_x = jax.scipy.linalg.expm(x, max_squarings=max_squarings)
-        return DenseQArray(self.dims, expm_x)
+        return DenseQArray(self.dims, self.vectorized, expm_x)
 
     def norm(self) -> Array:
         return self.trace()
@@ -208,7 +211,7 @@ class SparseDIAQArray(QArray):
 
     def asdense(self) -> DenseQArray:
         data = sparsedia_to_array(self.offsets, self.diags)
-        return DenseQArray(self.dims, data)
+        return DenseQArray(self.dims, self.vectorized, data)
 
     def assparsedia(self) -> SparseDIAQArray:
         return self
@@ -277,7 +280,7 @@ class SparseDIAQArray(QArray):
         elif isqarraylike(y):
             y = _to_jax(y)
             data = matmul_sparsedia_array(self.offsets, self.diags, y)
-            return DenseQArray(self.dims, data)
+            return DenseQArray(self.dims, self.vectorized, data)
 
         return NotImplemented
 
@@ -287,7 +290,7 @@ class SparseDIAQArray(QArray):
         if isqarraylike(y):
             y = _to_jax(y)
             data = matmul_array_sparsedia(y, self.offsets, self.diags)
-            return DenseQArray(self.dims, data)
+            return DenseQArray(self.dims, self.vectorized, data)
 
         return NotImplemented
 
