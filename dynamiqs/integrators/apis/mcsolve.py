@@ -194,7 +194,7 @@ def _vectorized_mcsolve(
             None,
             None,
         )
-        shapes = [x.shape[:-2] for x in [H, *Ls, psi0, keys]]
+        shapes = [x.shape[:-2] for x in [H, *Ls, psi0]] + [keys.shape[:-1]]
         bshape = jnp.broadcast_shapes(*shapes)
         nvmap = len(bshape)
         # broadcast all vectorized input to same shape
@@ -202,7 +202,7 @@ def _vectorized_mcsolve(
         H = H.broadcast_to(*bshape, n, n)
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = jnp.broadcast_to(psi0, (*bshape, n, 1))
-        keys = jnp.broadcast_to(keys, (*bshape, *keys.shape[-2:]))
+        keys = jnp.broadcast_to(keys, (*bshape, *keys.shape[-1:]))
         # vectorize the function
         f = multi_vmap(_mcsolve, in_axes, out_axes, nvmap)
 

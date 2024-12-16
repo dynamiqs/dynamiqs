@@ -7,7 +7,7 @@ import dynamiqs as dq
 
 def rand_mcsolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 4
-    kH, *kLs, kpsi0, kEs, kmc = jax.random.split(jax.random.PRNGKey(42), nkeys)
+    kH, *kLs, kpsi0, kEs, kmc = jax.random.split(jax.random.key(31), nkeys)
     H = dq.random.herm(kH, (*nH, n, n))
     Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
     psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
