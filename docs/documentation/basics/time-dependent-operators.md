@@ -172,7 +172,7 @@ A modulated operator is defined by
 $$
     O(t) = f(t) O_0
 $$
-where $f(t)$ is an time-dependent scalar. In Dynamiqs, modulated operators are defined by:
+where $f(t)$ is a time-dependent scalar. In Dynamiqs, modulated operators are defined by:
 
 - `f`: a Python function with signature `f(t: float) -> Scalar | Array` that returns the modulating factor $f(t)$ for any time $t$, as a scalar or an array of shape _(...)_,
 - `qarray`: the qarray defining the constant operator $O_0$, of shape _(n, n)_.
