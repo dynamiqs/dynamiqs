@@ -159,19 +159,15 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             psi = _state.final_state
             _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
             jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
-            # Something funky is that jax doesn't support dynamic array sizes. This
-            # makes vmaps of loops tricky as discussed here
-            # https://github.com/patrick-kidger/equinox/issues/870.
-            # The issue is that some trajectories terminate before others do (they
-            # experience fewer jumps), but the loop body needs to keep executing until
-            # the last trajectory finishes. Thus we need a conditional here on whether
-            # to apply the jump or not (some trajectories are "idling" and shouldn't
-            # experience a jump).
-            psi_after_jump = jnp.where(_state.final_time < self.t1, jump_op @ psi, psi)
-            psi_after_jump = unit(psi_after_jump)
+            psi_after_jump = unit(jump_op @ psi)
             # Construct a new linspace over the remaining times with the same shape as
-            # self.ts (because the shape can't be dynamic!). In "idling" cases,
-            # new_times is a constant array with fill value self.t1. The interpolator
+            # self.ts (because the shape can't be dynamic!). Note that jax does not
+            # support dynamic array sizes: this makes vmaps of loops tricky as discussed
+            # here https://github.com/patrick-kidger/equinox/issues/870. The issue is
+            # that some trajectories terminate before others do (they experience fewer
+            # jumps), but the loop body needs to keep executing until the last
+            # trajectory finishes. In these "idling" cases, new_times is a constant
+            # array with fill value self.t1. The interpolator
             # dx.backward_hermite_coefficients below requires the time inputs to be
             # monotonically strictly increasing, which would then throw an error. So in
             # these cases we pass a placeholder of self.ts.
@@ -183,8 +179,8 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             result_after_jump = self._run(psi_after_jump, new_times, _rand)
             # extract saved y values to interpolate, replace infs with nans
             psis_after_jump = result_after_jump.ys[0]
-            psi_inf_to_nan = jnp.where(
-                jnp.isinf(psis_after_jump), jnp.nan, psis_after_jump
+            psi_inf_to_nan = jtu.tree_map(
+                lambda _y: jnp.where(jnp.isinf(_y), jnp.nan, _y), psis_after_jump
             )
             # setting fill_forward_nans_at_end prevents nan states from getting saved
             psi_coeffs = dx.backward_hermite_coefficients(
@@ -268,9 +264,8 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         # for categorical we pass in the log of the probabilities
         logits = jnp.log(jnp.real(probs / (jnp.sum(probs))))
         # randomly sample the index of a single jump operator
-        sample_idx = jax.random.categorical(key, logits, shape=(1,))
-        # extract that jump operator and squeeze size 1 dims
-        return jnp.squeeze(jnp.take(Ls, sample_idx, axis=0), axis=0)
+        sample_idx = jax.random.categorical(key, logits, shape=(1,))[0]
+        return Ls[sample_idx]
 
 
 # fmt: off
