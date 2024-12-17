@@ -7,12 +7,12 @@ from ...options import Options
 from ...qarrays.qarray import QArrayLike
 from ...result import Result
 from ...solver import Solver
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 
 
 def smesolve(
-    H: QArrayLike | TimeArray,
-    jump_ops: list[QArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     etas: ArrayLike,
     rho0: QArrayLike,
     tsave: ArrayLike,
@@ -86,7 +86,7 @@ def smesolve(
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+        to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
         [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -101,8 +101,8 @@ def smesolve(
         more details.
 
     Args:
-        H _(qarray-like or time-array of shape (bH?, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-array, of shape (nL, n, n))_: List of
+        H _(qarray-like or time-qarray of shape (bH?, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-qarray, of shape (nL, n, n))_: List of
             jump operators.
         etas _(array-like of shape (nL,))_: Measurement efficiencies, must be of the
             same length as `jump_ops` with values between 0 and 1. For a purely

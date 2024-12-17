@@ -44,8 +44,8 @@ class TestMEPropagator(IntegratorTester):
         propresult = mepropagator(H, Ls, tsave, options=options)
         propagators = propresult.propagators.to_jax()
         U0 = eye(H.shape[-1] ** 2).to_jax()
-        lindbladian_1 = slindbladian(3.0 * H.array, Ls)
-        lindbladian_2 = slindbladian(-2.0 * H.array, Ls)
+        lindbladian_1 = slindbladian(3.0 * H.qarray, Ls)
+        lindbladian_2 = slindbladian(-2.0 * H.qarray, Ls)
         U1 = jax.scipy.linalg.expm(lindbladian_1.to_jax() * 0.5)
         U2 = jax.scipy.linalg.expm(lindbladian_2.to_jax() * 1.0)
         true_propagators = jnp.stack([U0, U1, U2 @ U1]) if save_states else U2 @ U1
