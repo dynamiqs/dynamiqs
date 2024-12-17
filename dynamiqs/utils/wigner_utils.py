@@ -86,7 +86,7 @@ def _wigner(state: Array, xvec: Array, yvec: Array, g: float = 2.0) -> Array:
 
     w = lax.fori_loop(0, n - 1, loop, w)
 
-    return (w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi).T
+    return w.real * jnp.exp(-2 * a2) * 0.5 * g**2 / jnp.pi
 
 
 def _diag_element(mat: jnp.array, diag: int, element: int) -> float:

@@ -41,7 +41,7 @@ def plot_wigner_data(
 
     # plot
     ax.imshow(
-        w,
+        w.T,
         cmap=cmap,
         norm=norm,
         origin='lower',
