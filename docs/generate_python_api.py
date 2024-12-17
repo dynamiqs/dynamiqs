@@ -28,7 +28,7 @@ doc_sections = {
     'utils/global_settings': (['dynamiqs/utils/global_settings.py'], 'dq'),
     'utils/vectorization': (['dynamiqs/utils/vectorization.py'], 'dq'),
     'utils/optimal_control': (['dynamiqs/utils/optimal_control.py'], 'dq'),
-    'random': (['dynamiqs/random.py'], 'dq.random'),
+    'random': (['dynamiqs/rand.py'], 'dq.random'),
     'plot': (['dynamiqs/plot/'], 'dq.plot'),
 }
 
