@@ -767,6 +767,7 @@ class BatchedCallable(eqx.Module):
                 return res.broadcast_to(*shape)
             else:
                 return jnp.broadcast_to(res, shape)
+
         return BatchedCallable(f)
 
     def conj(self) -> BatchedCallable:
