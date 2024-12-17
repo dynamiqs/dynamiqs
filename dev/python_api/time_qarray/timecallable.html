@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/time_array/TimeArray.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/time_qarray/timecallable.html">
 
 
-    <link rel="prev" href="../qarrays/qarray/QArray.html">
+    <link rel="prev" href="modulated.html">
 
 
-    <link rel="next" href="constant.html">
+    <link rel="next" href="../solver/Tsit5.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>TimeArray - Dynamiqs</title>
+        <title>timecallable - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.time_array.TimeArray" class="md-skip">
+        <a href="#dynamiqs.time_qarray.timecallable" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                TimeArray
+                timecallable
               
             </span>
           </div>
@@ -1265,7 +1265,7 @@
             
   
   <span class="md-ellipsis">
-    Time-dependent arrays
+    Time-dependent qarrays
   </span>
   
 
@@ -1275,7 +1275,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Time-dependent arrays
+            Time-dependent qarrays
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1283,112 +1283,18 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    TimeArray
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="TimeArray.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="TimeQArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    TimeArray
+    TimeQArray
   </span>
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.reshape" class="md-nav__link">
-    <span class="md-ellipsis">
-      reshape
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.broadcast_to" class="md-nav__link">
-    <span class="md-ellipsis">
-      broadcast_to
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.conj" class="md-nav__link">
-    <span class="md-ellipsis">
-      conj
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.dag" class="md-nav__link">
-    <span class="md-ellipsis">
-      dag
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.squeeze" class="md-nav__link">
-    <span class="md-ellipsis">
-      squeeze
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.__call__" class="md-nav__link">
-    <span class="md-ellipsis">
-      __call__
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1461,10 +1367,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="timecallable.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="timecallable.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1473,6 +1388,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4944,68 +4860,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.reshape" class="md-nav__link">
-    <span class="md-ellipsis">
-      reshape
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.broadcast_to" class="md-nav__link">
-    <span class="md-ellipsis">
-      broadcast_to
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.conj" class="md-nav__link">
-    <span class="md-ellipsis">
-      conj
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.dag" class="md-nav__link">
-    <span class="md-ellipsis">
-      dag
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.squeeze" class="md-nav__link">
-    <span class="md-ellipsis">
-      squeeze
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.time_array.TimeArray.__call__" class="md-nav__link">
-    <span class="md-ellipsis">
-      __call__
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -5022,127 +4876,54 @@
   
 
 
-<div class="doc doc-object doc-class">
+<div class="doc doc-object doc-function">
 
 
-
-<h1 id="dynamiqs.time_array.TimeArray" class="doc doc-heading">
-    <span class="doc doc-object-name doc-class-name">dq.TimeArray</span>
+<h1 id="dynamiqs.time_qarray.timecallable" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.timecallable</span>
 
 
 </h1>
-
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">timecallable</span><span class="p">(</span>
+    <span class="n">f</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="n">QArray</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">discontinuity_ts</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CallableTimeQArray</span>
+</code></pre></div>
 
     <div class="doc doc-contents first">
 
+        <p>Instantiate a callable time-qarray.</p>
+<p>A callable time-qarray is defined by <span class="arithmatex">\(O(t) = f(t)\)</span> where <span class="arithmatex">\(f(t)\)</span> is a
+time-dependent operator. The function <span class="arithmatex">\(f\)</span> is defined by passing a Python function
+with signature <code>f(t: float) -&gt; QArray</code> that returns a qarray of shape <em>(..., n, n)</em>
+for any time <span class="arithmatex">\(t\)</span>.</p>
 
-        <p>Base class for time-dependent arrays.</p>
-<p>A time-array is a callable object that returns a qarray for any time <span class="arithmatex">\(t\)</span>. It is
-used to define time-dependent operators for Dynamiqs solvers.</p>
-
+<details class="warning"
+ open >
+  <summary>The function <code>f</code> must return a <code>QArray</code> (not a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like object</abbr>!)</summary>
+  <p>An error is raised if the function <code>f</code> does not return a <code>QArray</code>. This error
+concerns any other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr>. This is enforced to avoid costly
+conversions at every time step of the numerical integration.</p>
+</details>
+    <!-- <p>Parameters:</p> -->
     <p>
-      <strong>Attributes</strong>
+      <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
-          <b>dtype</b>
+          <b>f</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(numpy.dtype)              </i>
-          – <p>Data type.</p>
-        </li>
-        <li class="field-body">
-          <b>shape</b>
-              <i>
-(tuple of int)              </i>
-          – <p>Shape.</p>
-        </li>
-        <li class="field-body">
-          <b>layout</b>
-              <i>
-(Layout)              </i>
-          – <p>Data layout, either <code>dq.dense</code> or <code>dq.dia</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>mT</b>
-              <i>
-(TimeArray)              </i>
-          – <p>Returns the time-array transposed over its last two
-dimensions.</p>
-        </li>
-        <li class="field-body">
-          <b>ndim</b>
-              <i>
-(int)              </i>
-          – <p>Number of dimensions.</p>
+(function returning qarray of shape (..., n, n))              </i>
+          – <p>Function with
+signature <code>(t: float) -&gt; QArray</code> that returns the qarray <span class="arithmatex">\(f(t)\)</span>.</p>
         </li>
         <li class="field-body">
           <b>discontinuity_ts</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(Array | None)              </i>
-          – <p>Times at which there is a discontinuous jump
-in the time-array values (the array is always sorted, but does not
-necessarily contain unique values).</p>
-        </li>
-    </ul>
-
-<details class="note"
- open >
-  <summary>Arithmetic operation support</summary>
-  <p>Time-arrays support elementary operations:</p>
-<ul>
-<li>negation (<code>__neg__</code>),</li>
-<li>left-and-right element-wise addition/subtraction with other arrays, qarrays or
-    time-arrays (<code>__add__</code>, <code>__radd__</code>, <code>__sub__</code>, <code>__rsub__</code>),</li>
-<li>left-and-right element-wise multiplication with other arrays (<code>__mul__</code>,
-    <code>__rmul__</code>).</li>
-</ul>
-</details>
-
-
-
-
-
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.time_array.TimeArray.reshape" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">TimeArray.reshape</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
-  </span>
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeArray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Returns a reshaped copy of a time-array.</p>
-
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*shape</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>New shape, which must match the original size.</p>
+(array_like, optional)              </i>
+          – <p>Times at which there is a
+discontinuous jump in the function values.</p>
         </li>
     </ul>
 
@@ -5152,222 +4933,29 @@ necessarily contain unique values).</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.time_array.TimeArray" href="#dynamiqs.time_array.TimeArray">TimeArray</a></code>
-        – <p>New time-array object with the given shape.</p>
+            <code><span title="dynamiqs.time_qarray.CallableTimeQArray">CallableTimeQArray</span></code>
+        – <p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
+  returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New time-array object with the given shape.</p></span>
+      <span class="field-body"><p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
+  returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
 
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.time_array.TimeArray.broadcast_to" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">TimeArray.broadcast_to</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
-  </span>
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">broadcast_to</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeArray</span>
+<!-- <p><strong>Examples:</strong></p> -->
+<p>
+  <strong>Examples</strong>
+</p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">dq</span><span class="o">.</span><span class="n">asqarray</span><span class="p">([[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">timecallable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense</span>
+<span class="go">[[0.5 0. ]</span>
+<span class="go"> [0.  0.5]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense</span>
+<span class="go">[[1. 0.]</span>
+<span class="go"> [0. 0.]]</span>
 </code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Broadcasts a time-array to a new shape.</p>
-
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>*shape</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>New shape, which must be compatible with the original shape.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.time_array.TimeArray" href="#dynamiqs.time_array.TimeArray">TimeArray</a></code>
-        – <p>New time-array object with the given shape.</p>
-      </li>
-  </ul> -->
-      <span class="field-body"><p>New time-array object with the given shape.</p></span>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.time_array.TimeArray.conj" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">TimeArray.conj</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
-  </span>
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">conj</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TimeArray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Returns the element-wise complex conjugate of the time-array.</p>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.time_array.TimeArray" href="#dynamiqs.time_array.TimeArray">TimeArray</a></code>
-        – <p>New time-array object with element-wise complex conjuguated values.</p>
-      </li>
-  </ul> -->
-      <span class="field-body"><p>New time-array object with element-wise complex conjuguated values.</p></span>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.time_array.TimeArray.dag" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">TimeArray.dag</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">dag</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TimeArray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Returns the adjoint (complex conjugate transpose) of the time-array.</p>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.time_array.TimeArray" href="#dynamiqs.time_array.TimeArray">TimeArray</a></code>
-        – <p>New time-array object with adjoint values.</p>
-      </li>
-  </ul> -->
-      <span class="field-body"><p>New time-array object with adjoint values.</p></span>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.time_array.TimeArray.squeeze" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">TimeArray.squeeze</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeArray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Squeeze a time-array.</p>
-
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>axis</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Axis to squeeze. If <code>none</code>, all axes with dimension 1 are squeezed.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.time_array.TimeArray" href="#dynamiqs.time_array.TimeArray">TimeArray</a></code>
-        – <p>New time-array object with squeezed_shape</p>
-      </li>
-  </ul> -->
-      <span class="field-body"><p>New time-array object with squeezed_shape</p></span>
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="dynamiqs.time_array.TimeArray.__call__" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">TimeArray.__call__</span>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
-  </span>
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="fm">__call__</span><span class="p">(</span><span class="nf">t</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Returns the time-array evaluated at a given time.</p>
-
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>t</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Time at which to evaluate the array.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>QArray evaluated at time <span class="arithmatex">\(t\)</span>.</p>
-      </li>
-  </ul> -->
-      <span class="field-body"><p>QArray evaluated at time <span class="arithmatex">\(t\)</span>.</p></span>
-
-    </div>
-
-</div>
-
-
-
-  </div>
 
     </div>
 

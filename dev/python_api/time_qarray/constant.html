@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/time_array/pwc.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/time_qarray/constant.html">
 
 
-    <link rel="prev" href="constant.html">
+    <link rel="prev" href="TimeQArray.html">
 
 
-    <link rel="next" href="modulated.html">
+    <link rel="next" href="pwc.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>pwc - Dynamiqs</title>
+        <title>constant - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.time_array.pwc" class="md-skip">
+        <a href="#dynamiqs.time_qarray.constant" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                pwc
+                constant
               
             </span>
           </div>
@@ -1265,7 +1265,7 @@
             
   
   <span class="md-ellipsis">
-    Time-dependent arrays
+    Time-dependent qarrays
   </span>
   
 
@@ -1275,7 +1275,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Time-dependent arrays
+            Time-dependent qarrays
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1286,32 +1286,11 @@
   
   
     <li class="md-nav__item">
-      <a href="TimeArray.html" class="md-nav__link">
+      <a href="TimeQArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    TimeArray
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="constant.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    constant
+    TimeQArray
   </span>
   
 
@@ -1337,7 +1316,29 @@
         
       
       
-      <a href="pwc.html" class="md-nav__link md-nav__link--active">
+      <a href="constant.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    constant
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pwc.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1346,7 +1347,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4879,63 +4879,30 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.time_array.pwc" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.pwc</span>
+<h1 id="dynamiqs.time_qarray.constant" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.constant</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">pwc</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">qarray</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PWCTimeArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">constant</span><span class="p">(</span><span class="n">qarray</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstantTimeQArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Instantiate a piecewise constant (<abbr title="piecewise constant">PWC</abbr>) time-array.</p>
-<p>A <abbr title="piecewise constant">PWC</abbr> time-array takes constant values over some time intervals. It is defined by
-$$
-    O(t) = \left(\sum_{k=0}^{N-1} c_k\; \Omega_{[t_k, t_{k+1}[}(t)\right) O_0
-$$
-where <span class="arithmatex">\(c_k\)</span> are constant values, <span class="arithmatex">\(\Omega_{[t_k, t_{k+1}[}\)</span> is the rectangular
-window function defined by <span class="arithmatex">\(\Omega_{[t_a, t_b[}(t) = 1\)</span> if <span class="arithmatex">\(t \in [t_a, t_b[\)</span> and
-<span class="arithmatex">\(\Omega_{[t_a, t_b[}(t) = 0\)</span> otherwise, and <span class="arithmatex">\(O_0\)</span> is a constant array.</p>
+        <p>Instantiate a constant time-qarray.</p>
+<p>A constant time-qarray is defined by <span class="arithmatex">\(O(t) = O_0\)</span> for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is a
+constant qarray.</p>
 
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>The argument <code>times</code> must be sorted in ascending order, but does not
-need to be evenly spaced.</p>
-</details>
-<details class="note"
- open >
-  <summary>Note</summary>
-  <p>If the returned time-array is called for a time <span class="arithmatex">\(t\)</span> which does not belong to any
-time intervals, the returned array is null.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
-          <b>times</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (N+1,))              </i>
-          – <p>Time points <span class="arithmatex">\(t_k\)</span> defining the boundaries
-of the time intervals, where <em>N</em> is the number of time intervals.</p>
-        </li>
-        <li class="field-body">
-          <b>values</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array_like of shape (..., N))              </i>
-          – <p>Constant values <span class="arithmatex">\(c_k\)</span> for each time
-interval.</p>
-        </li>
-        <li class="field-body">
           <b>qarray</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (n, n))              </i>
+(qarray_like of shape (..., n, n))              </i>
           – <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
         </li>
     </ul>
@@ -4946,38 +4913,27 @@ interval.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="dynamiqs.time_array.PWCTimeArray">PWCTimeArray</span></code>
-        – <p><em>(time-array object of shape (..., n, n) when called)</em> Callable object
-returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
+            <code><span title="dynamiqs.time_qarray.ConstantTimeQArray">ConstantTimeQArray</span></code>
+        – <p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
+returning <span class="arithmatex">\(O_0\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(time-array object of shape (..., n, n) when called)</em> Callable object
-returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
+      <span class="field-body"><p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
+returning <span class="arithmatex">\(O_0\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">pwc</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
-<span class="go">[[  ⋅      ⋅   ]</span>
-<span class="go"> [  ⋅      ⋅   ]]</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
-<span class="go">[[ 3.+0.j    ⋅   ]</span>
-<span class="go"> [   ⋅    -3.+0.j]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
-<span class="go">[[ 3.+0.j    ⋅   ]</span>
-<span class="go"> [   ⋅    -3.+0.j]]</span>
+<span class="go">[[ 1.+0.j    ⋅   ]</span>
+<span class="go"> [   ⋅    -1.+0.j]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
-<span class="go">[[-2.+0.j    ⋅   ]</span>
-<span class="go"> [   ⋅     2.+0.j]]</span>
+<span class="go">[[ 1.+0.j    ⋅   ]</span>
+<span class="go"> [   ⋅    -1.+0.j]]</span>
 </code></pre></div>
 
     </div>

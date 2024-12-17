@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/time_array/constant.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/time_qarray/modulated.html">
 
 
-    <link rel="prev" href="TimeArray.html">
+    <link rel="prev" href="pwc.html">
 
 
-    <link rel="next" href="pwc.html">
+    <link rel="next" href="timecallable.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>constant - Dynamiqs</title>
+        <title>modulated - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.time_array.constant" class="md-skip">
+        <a href="#dynamiqs.time_qarray.modulated" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                constant
+                modulated
               
             </span>
           </div>
@@ -1265,7 +1265,7 @@
             
   
   <span class="md-ellipsis">
-    Time-dependent arrays
+    Time-dependent qarrays
   </span>
   
 
@@ -1275,7 +1275,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Time-dependent arrays
+            Time-dependent qarrays
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1286,11 +1286,11 @@
   
   
     <li class="md-nav__item">
-      <a href="TimeArray.html" class="md-nav__link">
+      <a href="TimeQArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    TimeArray
+    TimeQArray
   </span>
   
 
@@ -1304,19 +1304,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="constant.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="constant.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1325,7 +1316,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1356,10 +1346,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="modulated.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="modulated.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1368,6 +1367,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4879,19 +4879,26 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.time_array.constant" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.constant</span>
+<h1 id="dynamiqs.time_qarray.modulated" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.modulated</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">constant</span><span class="p">(</span><span class="n">qarray</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConstantTimeArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">modulated</span><span class="p">(</span>
+    <span class="n">f</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="n">Scalar</span> <span class="o">|</span> <span class="n">Array</span><span class="p">],</span>
+    <span class="n">qarray</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">discontinuity_ts</span><span class="p">:</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModulatedTimeQArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Instantiate a constant time-array.</p>
-<p>A constant time-array is defined by <span class="arithmatex">\(O(t) = O_0\)</span> for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is a
-constant array.</p>
+        <p>Instantiate a modulated time-qarray.</p>
+<p>A modulated time-qarray is defined by <span class="arithmatex">\(O(t) = f(t) O_0\)</span> where <span class="arithmatex">\(f(t)\)</span> is a
+time-dependent scalar. The function <span class="arithmatex">\(f\)</span> is defined by passing a Python function
+with signature <code>f(t: float) -&gt; Scalar | Array</code> that returns a scalar or an array of
+shape <em>(...)</em> for any time <span class="arithmatex">\(t\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4899,11 +4906,28 @@ constant array.</p>
     </p>
     <ul>
         <li class="field-body">
+          <b>f</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(function returning scalar or array of shape (...))              </i>
+          – <p>Function with signature
+<code>f(t: float) -&gt; Scalar | Array</code> that returns the modulating factor
+<span class="arithmatex">\(f(t)\)</span>.</p>
+        </li>
+        <li class="field-body">
           <b>qarray</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (..., n, n))              </i>
+(qarray_like of shape (n, n))              </i>
           – <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
+        </li>
+        <li class="field-body">
+          <b>discontinuity_ts</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(array_like, optional)              </i>
+          – <p>Times at which there is a
+discontinuous jump in the function values.</p>
         </li>
     </ul>
 
@@ -4913,27 +4937,28 @@ constant array.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="dynamiqs.time_array.ConstantTimeArray">ConstantTimeArray</span></code>
-        – <p><em>(time-array object of shape (..., n, n) when called)</em> Callable object
-returning <span class="arithmatex">\(O_0\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
+            <code><span title="dynamiqs.time_qarray.ModulatedTimeQArray">ModulatedTimeQArray</span></code>
+        – <p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
+returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(time-array object of shape (..., n, n) when called)</em> Callable object
-returning <span class="arithmatex">\(O_0\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
+      <span class="field-body"><p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
+returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
-<span class="go">[[ 1.+0.j    ⋅   ]</span>
-<span class="go"> [   ⋅    -1.+0.j]]</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[   ⋅    -1.+0.j]</span>
+<span class="go"> [-1.+0.j    ⋅   ]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1</span>
-<span class="go">[[ 1.+0.j    ⋅   ]</span>
-<span class="go"> [   ⋅    -1.+0.j]]</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[  ⋅    1.+0.j]</span>
+<span class="go"> [1.+0.j   ⋅   ]]</span>
 </code></pre></div>
 
     </div>

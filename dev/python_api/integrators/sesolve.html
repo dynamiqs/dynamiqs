@@ -1273,7 +1273,7 @@
             
   
   <span class="md-ellipsis">
-    Time-dependent arrays
+    Time-dependent qarrays
   </span>
   
 
@@ -1283,7 +1283,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Time-dependent arrays
+            Time-dependent qarrays
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1294,11 +1294,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/TimeArray.html" class="md-nav__link">
+      <a href="../time_qarray/TimeQArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    TimeArray
+    TimeQArray
   </span>
   
 
@@ -1315,7 +1315,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/constant.html" class="md-nav__link">
+      <a href="../time_qarray/constant.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1336,7 +1336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/pwc.html" class="md-nav__link">
+      <a href="../time_qarray/pwc.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1357,7 +1357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/modulated.html" class="md-nav__link">
+      <a href="../time_qarray/modulated.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1378,7 +1378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../time_array/timecallable.html" class="md-nav__link">
+      <a href="../time_qarray/timecallable.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4883,7 +4883,7 @@
 
 </h1>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">sesolve</span><span class="p">(</span>
-    <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeArray</span><span class="p">,</span>
+    <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">,</span>
     <span class="n">psi0</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
     <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -4915,9 +4915,9 @@ where <span class="arithmatex">\(H\)</span> is the system's Hamiltonian.</p>
 <details class="note"
  >
   <summary>Defining a time-dependent Hamiltonian</summary>
-  <p>If the Hamiltonian depends on time, it can be converted to a time-array using
-<a class="autorefs autorefs-internal" href="../time_array/pwc.html#dynamiqs.time_array.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" href="../time_array/modulated.html#dynamiqs.time_array.modulated"><code>dq.modulated()</code></a>, or
-<a class="autorefs autorefs-internal" href="../time_array/timecallable.html#dynamiqs.time_array.timecallable"><code>dq.timecallable()</code></a>. See the
+  <p>If the Hamiltonian depends on time, it can be converted to a time-qarray using
+<a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
+<a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
 tutorial for more details.</p>
 </details>
@@ -4939,7 +4939,7 @@ tutorial for more details.</p>
           <b>H</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray-like or time-array of shape (...H, n, n))              </i>
+(qarray-like or time-qarray of shape (...H, n, n))              </i>
           – <p>Hamiltonian.</p>
         </li>
         <li class="field-body">
