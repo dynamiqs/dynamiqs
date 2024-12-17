@@ -11,7 +11,6 @@ from jaxtyping import ArrayLike
 from optimistix import AbstractRootFinder
 
 from ..._checks import check_shape, check_times
-from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays.qarray import QArray, QArrayLike
@@ -19,7 +18,13 @@ from ...qarrays.utils import asqarray
 from ...result import MCSolveResult
 from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_array import TimeArray
-from .._utils import _astimearray, cartesian_vmap, get_integrator_class, multi_vmap, catch_xla_runtime_error
+from .._utils import (
+    _astimearray,
+    cartesian_vmap,
+    catch_xla_runtime_error,
+    get_integrator_class,
+    multi_vmap,
+)
 from ..mcsolve.diffrax_integrator import (
     MCSolveDopri5Integrator,
     MCSolveDopri8Integrator,

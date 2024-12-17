@@ -52,8 +52,8 @@ def test_flat_batching(nL1, npsi0):
 
     # run mcsolve
     H, Ls, psi0, Es, kmc = rand_mcsolve_args(n, nH, nLs, npsi0, nEs)
-    bshape = jnp.broadcast_shapes(*[x for x in [nH, nL1, npsi0]])
-    keys = jax.random.split(kmc, num=bshape+(ntraj,))
+    bshape = jnp.broadcast_shapes(nH, nL1, npsi0)
+    keys = jax.random.split(kmc, num=(*bshape, ntraj))
     tsave = jnp.linspace(0, 2.0, ntsave)
     options = dq.Options(progress_meter=None, cartesian_batching=False)
     result = dq.mcsolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)

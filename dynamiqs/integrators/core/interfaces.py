@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import equinox as eqx
-from jaxtyping import Scalar
 from jax import Array
+from jaxtyping import Scalar
 from optimistix import AbstractRootFinder
 
 from ...options import Options
@@ -19,7 +21,6 @@ class SEInterface(eqx.Module):
 
 
 class _MInterface(eqx.Module):
-
     def L(self, t: Scalar) -> list[QArray]:
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
