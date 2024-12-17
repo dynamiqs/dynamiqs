@@ -7,15 +7,15 @@ import dynamiqs as dq
 import jax.numpy as jnp
 ```
 
-## The [`TimeArray`][dynamiqs.TimeArray] type
+## The [`TimeQArray`][dynamiqs.TimeQArray] type
 
-In Dynamiqs, time-dependent operators are defined with [`TimeArray`][dynamiqs.TimeArray] objects. These objects can be called at arbitrary times, and return the corresponding array at that time. For example to define the Hamiltonian
+In Dynamiqs, time-dependent operators are defined with [`TimeQArray`][dynamiqs.TimeQArray] objects. These objects can be called at arbitrary times, and return the corresponding qarray at that time. For example to define the Hamiltonian
 $$
     H_x(t)=\cos(2\pi t)\sigma_x
 $$
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
->>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-array
+>>> Hx = dq.modulated(f, dq.sigmax())  # initialize a modulated time-qarray
 >>> Hx(1.0)
 QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 [[  ⋅    1.+0.j]
@@ -24,7 +24,7 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 (2, 2)
 ```
 
-Time-arrays support common arithmetic operations with scalars, regular arrays and other time-array objects. For example to define the Hamiltonian
+Time-qarrays support common arithmetic operations with scalars, qarray-like objects and other time-qarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
@@ -38,9 +38,9 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3
  [ 2.+0.j -1.+0.j]]
 ```
 
-Finally, time-arrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeArray`][dynamiqs.TimeArray] API page.
+Finally, time-qarrays also support common utility functions, such as `.conj()`, or `.reshape()`. More details can be found in the [`TimeQArray`][dynamiqs.TimeQArray] API page.
 
-## Defining a [`TimeArray`][dynamiqs.TimeArray]
+## Defining a [`TimeQArray`][dynamiqs.TimeQArray]
 
 ### Constant operators
 
@@ -48,7 +48,7 @@ A constant operator is defined by
 $$
     O(t) = O_0
 $$
-for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using array-like objects. They can also be instantiated as [`TimeArray`][dynamiqs.TimeArray] instances using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
+for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-like objects. They can also be instantiated as [`TimeQArray`][dynamiqs.TimeQArray] instances using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 === "Dynamiqs utilities"
     ```python
@@ -91,20 +91,20 @@ $$
 $$
 where $c_k$ are constant values, $\Omega_{[t_k, t_{k+1}[}$ is the rectangular window function defined by $\Omega_{[t_a, t_b[}(t) = 1$ if $t \in [t_a, t_b[$ and $\Omega_{[t_a, t_b[}(t) = 0$ otherwise, and $O_0$ is a constant operator.
 
-In Dynamiqs, PWC operators are defined by three array-like objects:
+In Dynamiqs, PWC operators are defined by:
 
 - `times`: the time points $(t_0, \ldots, t_N)$ defining the boundaries of the time intervals, of shape _(N+1,)_,
 - `values`: the constant values $(c_0, \ldots, c_{N-1})$ for each time interval, of shape _(..., N)_,
-- `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
+- `qarray`: the qarray defining the constant operator $O_0$, of shape _(n, n)_.
 
-To construct a PWC operator, these three arguments must be passed to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. When called at some time $t$, this object then returns an array with shape _(..., n, n)_. For example, let us define a PWC operator $H(t)$ with constant value $3\sigma_z$ for $t\in[0, 1[$ and $-2\sigma_z$ for $t\in[1, 2[$:
+To construct a PWC operator, these three arguments must be passed to the [`dq.pwc()`][dynamiqs.pwc] function, which returns a [`TimeQArray`][dynamiqs.TimeQArray] object. When called at some time $t$, this object then returns a qarray with shape _(..., n, n)_. For example, let us define a PWC operator $H(t)$ with constant value $3\sigma_z$ for $t\in[0, 1[$ and $-2\sigma_z$ for $t\in[1, 2[$:
 ```pycon
 >>> times = [0.0, 1.0, 2.0]
 >>> values = [3.0, -2.0]
->>> array = dq.sigmaz()
->>> H = dq.pwc(times, values, array)
+>>> qarray = dq.sigmaz()
+>>> H = dq.pwc(times, values, qarray)
 >>> H
-PWCTimeArray(shape=(2, 2), dtype=complex64, layout=dia)
+PWCTimeQArray(shape=(2, 2), dtype=complex64, layout=dia)
 ```
 
 The returned object can be called at different times:
@@ -152,16 +152,16 @@ The returned object can be called at different times:
     ```
 
 !!! Note
-    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-array object at time $t$, the returned array is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned array is null.
+    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray object at time $t$, the returned qarray is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned qarray is null.
 
 ??? Note "Batching PWC operators"
-    The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
+    The batching of the returned time-qarray is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
     >>> times = [0.0, 1.0, 2.0]
     >>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
-    >>> array = dq.sigmaz()
-    >>> H = dq.pwc(times, values, array)
+    >>> qarray = dq.sigmaz()
+    >>> H = dq.pwc(times, values, qarray)
     >>> H.shape
     (11, 2, 2)
     ```
@@ -172,17 +172,17 @@ A modulated operator is defined by
 $$
     O(t) = f(t) O_0
 $$
-where $f(t)$ is an time-dependent scalar. In Dynamiqs, modulated operators are defined by:
+where $f(t)$ is a time-dependent scalar. In Dynamiqs, modulated operators are defined by:
 
 - `f`: a Python function with signature `f(t: float) -> Scalar | Array` that returns the modulating factor $f(t)$ for any time $t$, as a scalar or an array of shape _(...)_,
-- `array`: the array defining the constant operator $O_0$, of shape _(n, n)_.
+- `qarray`: the qarray defining the constant operator $O_0$, of shape _(n, n)_.
 
-To construct a modulated operator, these two arguments must be passed to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. When called at some time $t$, this object then returns an array with shape _(..., n, n)_. For example, let us define the modulated operator $H(t)=\cos(2\pi t)\sigma_x$:
+To construct a modulated operator, these two arguments must be passed to the [`dq.modulated()`][dynamiqs.modulated] function, which returns a [`TimeQArray`][dynamiqs.TimeQArray] object. When called at some time $t$, this object then returns a qarray with shape _(..., n, n)_. For example, let us define the modulated operator $H(t)=\cos(2\pi t)\sigma_x$:
 ```pycon
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> H
-ModulatedTimeArray(shape=(2, 2), dtype=complex64, layout=dia)
+ModulatedTimeQArray(shape=(2, 2), dtype=complex64, layout=dia)
 ```
 
 The returned object can be called at different times:
@@ -202,7 +202,7 @@ The returned object can be called at different times:
     ```
 
 ??? Note "Batching modulated operators"
-    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    The batching of the returned time-qarray is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: jnp.cos(omegas * t)
@@ -235,16 +235,16 @@ $$
 $$
 where $f(t)$ is a time-dependent operator. In Dynamiqs, arbitrary time-dependent operators are defined by:
 
-- `f`: a Python function with signature `f(t: float) -> Array` that returns the operator $f(t)$ for any time $t$, as an array of shape _(..., n, n)_.
+- `f`: a Python function with signature `f(t: float) -> QArray` that returns the operator $f(t)$ for any time $t$, as a qarray of shape _(..., n, n)_.
 
-To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeArray`][dynamiqs.TimeArray] object. This object then returns an array with shape _(..., n, n)_ when called at any time $t$.
+To construct an arbitrary time-dependent operator, pass this argument to the [`dq.timecallable()`][dynamiqs.timecallable] function, which returns a [`TimeQArray`][dynamiqs.TimeQArray] object. This object then returns a qarray with shape _(..., n, n)_ when called at any time $t$.
 
 For example, let us define the arbitrary time-dependent operator $H(t)=\begin{pmatrix}t & 0\\0 & 1 - t\end{pmatrix}$:
 ```pycon
 >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
 >>> H = dq.timecallable(f)
 >>> H
-CallableTimeArray(shape=(2, 2), dtype=float32, layout=dense)
+CallableTimeQArray(shape=(2, 2), dtype=float32, layout=dense)
 ```
 
 The returned object can be called at different times:
@@ -263,11 +263,11 @@ The returned object can be called at different times:
      [0. 0.]]
     ```
 
-!!! Warning "The function `f` must return a JAX array (not an array-like object!)"
-    An error is raised if the function `f` does not return a JAX array. This error concerns any other array-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
+!!! Warning "The function `f` must return a `QArray` (not a qarray-like object!)"
+    An error is raised if the function `f` does not return a `QArray`. This error concerns any other qarray-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Batching arbitrary time-dependent operators"
-    The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
+    The batching of the returned time-qarray is specified by the qarray returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0, 1.0, 11)  # (11,)
     >>> f = lambda t: thetas[:, None, None] * dq.asqarray([[t, 0], [0, 1 - t]])
