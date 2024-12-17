@@ -761,7 +761,12 @@ class BatchedCallable(eqx.Module):
         return BatchedCallable(f)
 
     def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        f = lambda t: jnp.broadcast_to(self.f(t), shape)
+        def f(t):
+            res = self.f(t)
+            if isinstance(res, QArray):
+                return res.broadcast_to(*shape)
+            else:
+                return jnp.broadcast_to(res, shape)
         return BatchedCallable(f)
 
     def conj(self) -> BatchedCallable:
