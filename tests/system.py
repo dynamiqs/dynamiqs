@@ -11,7 +11,7 @@ from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import TimeArray
+from dynamiqs.time_qarray import TimeQArray
 
 
 class System(ABC):
@@ -21,7 +21,7 @@ class System(ABC):
         self.params_default = None
 
     @abstractmethod
-    def H(self, params: PyTree) -> QArray | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeQArray:
         """Compute the Hamiltonian."""
 
     @abstractmethod

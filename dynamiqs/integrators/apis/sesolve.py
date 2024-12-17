@@ -14,7 +14,7 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -35,7 +35,7 @@ from ..sesolve.expm_integrator import SESolveExpmIntegrator
 
 
 def sesolve(
-    H: QArrayLike | TimeArray,
+    H: QArrayLike | TimeQArray,
     psi0: QArrayLike,
     tsave: ArrayLike,
     *,
@@ -119,7 +119,7 @@ def sesolve(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_sesolve(
-    H: TimeArray,
+    H: TimeQArray,
     psi0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -149,7 +149,7 @@ def _vectorized_sesolve(
 
 
 def _sesolve(
-    H: TimeArray,
+    H: TimeQArray,
     psi0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -190,7 +190,7 @@ def _sesolve(
     return result  # noqa: RET504
 
 
-def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: list[QArray] | None):
+def _check_sesolve_args(H: TimeQArray, psi0: QArray, exp_ops: list[QArray] | None):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 

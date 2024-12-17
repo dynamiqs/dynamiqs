@@ -14,7 +14,7 @@ from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -27,8 +27,8 @@ from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
 
 
 def mepropagator(
-    H: QArrayLike | TimeArray,
-    jump_ops: list[QArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     tsave: ArrayLike,
     *,
     solver: Solver = Expm(),  # noqa: B008
@@ -103,8 +103,8 @@ def mepropagator(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_mepropagator(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -132,8 +132,8 @@ def _vectorized_mepropagator(
 
 
 def _mepropagator(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -162,7 +162,7 @@ def _mepropagator(
     return result  # noqa: RET504
 
 
-def _check_mepropagator_args(H: TimeArray, Ls: list[TimeArray]):
+def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 

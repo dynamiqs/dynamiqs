@@ -171,11 +171,11 @@ The previous examples illustrate batching over one dimension, but you can batch 
     psis = dq.coherent(16, alpha)  # (5, 6, 16, 1)
     ```
 
-### Batching over a TimeArray
+### Batching over a TimeQArray
 
-We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched [`TimeArray`][dynamiqs.TimeArray], in short:
+We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched [`TimeQArray`][dynamiqs.TimeQArray], in short:
 
-=== "For a `PWCTimeArray`"
+=== "For a `PWCTimeQArray`"
     The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0.0, 1.0, 11)  # (11,)
@@ -186,7 +186,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
     >>> H.shape
     (11, 2, 2)
     ```
-=== "For a `ModulatedTimeArray`"
+=== "For a `ModulatedTimeQArray`"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
@@ -195,7 +195,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
     >>> H.shape
     (11, 2, 2)
     ```
-=== "For a `CallableTimeArray`"
+=== "For a `CallableTimeQArray`"
     The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0.0, 1.0, 11)  # (11,)

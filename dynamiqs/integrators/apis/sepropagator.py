@@ -13,7 +13,7 @@ from ...qarrays.layout import dense
 from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
     _astimearray,
@@ -35,7 +35,7 @@ from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
 def sepropagator(
-    H: QArrayLike | TimeArray,
+    H: QArrayLike | TimeQArray,
     tsave: ArrayLike,
     *,
     solver: Solver | None = None,
@@ -113,7 +113,7 @@ def sepropagator(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_sepropagator(
-    H: TimeArray,
+    H: TimeQArray,
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -132,7 +132,7 @@ def _vectorized_sepropagator(
 
 
 def _sepropagator(
-    H: TimeArray,
+    H: TimeQArray,
     tsave: Array,
     solver: Solver | None,
     gradient: Gradient | None,
@@ -169,6 +169,6 @@ def _sepropagator(
     return result  # noqa: RET504
 
 
-def _check_sepropagator_args(H: TimeArray):
+def _check_sepropagator_args(H: TimeQArray):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})

@@ -7,12 +7,12 @@ from ...options import Options
 from ...qarrays.qarray import QArrayLike
 from ...result import Result
 from ...solver import Solver
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 
 
 def smesolve(
-    H: QArrayLike | TimeArray,
-    jump_ops: list[QArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     etas: ArrayLike,
     rho0: QArrayLike,
     tsave: ArrayLike,

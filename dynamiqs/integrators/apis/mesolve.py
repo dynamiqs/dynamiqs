@@ -25,7 +25,7 @@ from ...solver import (
     Solver,
     Tsit5,
 )
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
     _astimearray,
     cartesian_vmap,
@@ -47,8 +47,8 @@ from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
 
 
 def mesolve(
-    H: QArrayLike | TimeArray,
-    jump_ops: list[QArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     rho0: QArrayLike,
     tsave: ArrayLike,
     *,
@@ -148,8 +148,8 @@ def mesolve(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_mesolve(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -180,8 +180,8 @@ def _vectorized_mesolve(
 
 
 def _mesolve(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -225,7 +225,7 @@ def _mesolve(
 
 
 def _check_mesolve_args(
-    H: TimeArray, Ls: list[TimeArray], rho0: QArray, exp_ops: list[QArray] | None
+    H: TimeQArray, Ls: list[TimeQArray], rho0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})

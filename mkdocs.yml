@@ -158,7 +158,7 @@ nav:
       - Core:
           - Quantum arrays: python_api/qarrays/qarray/QArray.md
           - Time-dependent arrays:
-              - TimeArray: python_api/time_array/TimeArray.md
+              - TimeArray: python_api/time_array/TimeQArray.md
               - constant: python_api/time_array/constant.md
               - pwc: python_api/time_array/pwc.md
               - modulated: python_api/time_array/modulated.md

@@ -14,14 +14,14 @@ from ...options import Options
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...solver import Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import _astimearray, cartesian_vmap, catch_xla_runtime_error
 
 __all__ = ['floquet']
 
 
 def floquet(
-    H: QArrayLike | TimeArray,
+    H: QArrayLike | TimeQArray,
     T: float,
     tsave: ArrayLike,
     *,
@@ -116,7 +116,7 @@ def floquet(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_floquet(
-    H: TimeArray,
+    H: TimeQArray,
     T: float,
     tsave: Array,
     solver: Solver,
@@ -136,7 +136,7 @@ def _vectorized_floquet(
 
 
 def _floquet(
-    H: TimeArray,
+    H: TimeQArray,
     T: float,
     tsave: Array,
     solver: Solver,
@@ -159,8 +159,8 @@ def _floquet(
 
 
 def _check_floquet_args(
-    H: TimeArray, T: float, tsave: Array
-) -> tuple[TimeArray, float, Array]:
+    H: TimeQArray, T: float, tsave: Array
+) -> tuple[TimeQArray, float, Array]:
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
@@ -177,9 +177,7 @@ def _check_floquet_args(
     # do not have an underlying array to attach the check to
     tsave = eqx.error_if(
         tsave,
-        jnp.logical_not(
-            jnp.isclose(H(0.0)._underlying_array, H(T)._underlying_array)  # noqa: SLF001
-        ),
+        jnp.logical_not(jnp.isclose(H(0.0)._underlying_array, H(T)._underlying_array)),
         'The Hamiltonian H is not periodic with the supplied period T.',
     )
 

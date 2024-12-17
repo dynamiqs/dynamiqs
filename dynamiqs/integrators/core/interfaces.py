@@ -3,7 +3,7 @@ from jaxtyping import Scalar
 
 from ...options import Options
 from ...qarrays.qarray import QArray
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 
 
 class OptionsInterface(eqx.Module):
@@ -13,14 +13,14 @@ class OptionsInterface(eqx.Module):
 class SEInterface(eqx.Module):
     """Interface for the Schrödinger equation."""
 
-    H: TimeArray
+    H: TimeQArray
 
 
 class MEInterface(eqx.Module):
     """Interface for the Lindblad master equation."""
 
-    H: TimeArray
-    Ls: list[TimeArray]
+    H: TimeQArray
+    Ls: list[TimeQArray]
 
     def L(self, t: Scalar) -> list[QArray]:
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)

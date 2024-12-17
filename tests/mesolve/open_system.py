@@ -15,14 +15,14 @@ from dynamiqs.options import Options
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import TimeArray
+from dynamiqs.time_qarray import TimeQArray
 
 from ..system import System
 
 
 class OpenSystem(System):
     @abstractmethod
-    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:
         """Compute the jump operators."""
 
     def run(
@@ -76,10 +76,10 @@ class OCavity(OpenSystem):
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0, kappa)
 
-    def H(self, params: PyTree) -> QArray | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeQArray:
         return params.delta * dq.number(self.n, layout=self.layout)
 
-    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:
         return [jnp.sqrt(params.kappa) * dq.destroy(self.n, layout=self.layout)]
 
     def y0(self, params: PyTree) -> QArray:
@@ -147,11 +147,11 @@ class OTDQubit(OpenSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega, gamma)
 
-    def H(self, params: PyTree) -> QArray | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeQArray:
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 
-    def Ls(self, params: PyTree) -> list[QArray | TimeArray]:
+    def Ls(self, params: PyTree) -> list[QArray | TimeQArray]:
         return [jnp.sqrt(params.gamma) * dq.sigmax()]
 
     def y0(self, params: PyTree) -> QArray:  # noqa: ARG002
