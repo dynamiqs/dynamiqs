@@ -4,10 +4,11 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import QArray, asqarray
+from dynamiqs import QArray
 from dynamiqs.time_array import (
     ConstantTimeArray,
     SummedTimeArray,
+    constant,
     modulated,
     pwc,
     timecallable,
@@ -25,7 +26,7 @@ def assert_equal(x, y):
 class TestConstantTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        self.x = ConstantTimeArray(asqarray(jnp.arange(4).reshape(2, 2)))
+        self.x = constant(jnp.arange(4).reshape(2, 2))
 
     @pytest.mark.skip('broken test')
     def test_jit(self):
@@ -139,7 +140,7 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(asqarray(jnp.arange(4).reshape(2, 2)))
+        y = constant(jnp.arange(4).reshape(2, 2))
         x = self.x + y
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [[0, 1], [2, 3]])
@@ -159,7 +160,7 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [[1.0, 2.0], [3.0, 4.0]])
 
         # test type `ConstantTimeArray`
-        x = ConstantTimeArray(asqarray(jnp.ones_like(x))) + self.x
+        x = constant(jnp.ones_like(x)) + self.x
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [[1, 1], [1, 1]])
         assert_equal(x(1.0), [[1, 2], [3, 4]])
@@ -228,7 +229,7 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(asqarray(jnp.array([[1, 1], [1, 1]])))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = self.x + y
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
@@ -246,7 +247,7 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(asqarray(jnp.array([[1, 1], [1, 1]])))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = y + self.x
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
@@ -307,7 +308,7 @@ class TestModulatedTimeArray:
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(asqarray(jnp.array([[1, 1], [1, 1]])))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = self.x + y
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
@@ -324,7 +325,7 @@ class TestModulatedTimeArray:
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(asqarray(jnp.array([[1, 1], [1, 1]])))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = y + self.x
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
