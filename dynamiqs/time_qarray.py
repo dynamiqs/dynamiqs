@@ -706,7 +706,9 @@ class SummedTimeQArray(TimeQArray):
         return SummedTimeQArray(timeqarrays)
 
     def __call__(self, t: ScalarLike) -> QArray:
-        return ft.reduce(lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays])
+        return ft.reduce(
+            lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays]
+        )
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         timeqarrays = [tqarray * y for tqarray in self.timeqarrays]
