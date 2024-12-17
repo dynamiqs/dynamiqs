@@ -176,18 +176,18 @@ The previous examples illustrate batching over one dimension, but you can batch 
 We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched [`TimeQArray`][dynamiqs.TimeQArray], in short:
 
 === "For a `PWCTimeQArray`"
-    The batching of the returned time-array is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
+    The batching of the returned time-qarray is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> times = [0.0, 1.0, 2.0]
     >>> values = thetas[:, None] * jnp.array([3.0, -2.0])  # (11, 2)
-    >>> array = dq.sigmaz()
-    >>> H = dq.pwc(times, values, array)
+    >>> qarray = dq.sigmaz()
+    >>> H = dq.pwc(times, values, qarray)
     >>> H.shape
     (11, 2, 2)
     ```
 === "For a `ModulatedTimeQArray`"
-    The batching of the returned time-array is specified by the array returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
+    The batching of the returned time-qarray is specified by the qarray returned by `f`. For example, to define a modulated Hamiltonian $H(t)=\cos(\omega t)\sigma_x$ batched over the parameter $\omega$:
     ```pycon
     >>> omegas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: jnp.cos(omegas * t)
@@ -196,7 +196,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
     (11, 2, 2)
     ```
 === "For a `CallableTimeQArray`"
-    The batching of the returned time-array is specified by the array returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
+    The batching of the returned time-qarray is specified by the qarray returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:
     ```pycon
     >>> thetas = jnp.linspace(0.0, 1.0, 11)  # (11,)
     >>> f = lambda t: thetas[:, None, None] * dq.asqarray([[t, 0], [0, 1 - t]])

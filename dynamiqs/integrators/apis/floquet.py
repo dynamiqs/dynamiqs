@@ -15,7 +15,7 @@ from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...solver import Solver, Tsit5
 from ...time_qarray import TimeQArray
-from .._utils import _astimearray, cartesian_vmap, catch_xla_runtime_error
+from .._utils import _astimeqarray, cartesian_vmap, catch_xla_runtime_error
 
 __all__ = ['floquet']
 
@@ -76,7 +76,7 @@ def floquet(
         ```
 
     Args:
-        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
             be common over all elements in the batch. To batch over different periods,
             wrap the call to `floquet` in a `jax.vmap`, see above.
@@ -101,7 +101,7 @@ def floquet(
             quasienergies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
     """
     # === convert arguments
-    H = _astimearray(H)
+    H = _astimeqarray(H)
     tsave = jnp.asarray(tsave)
 
     # === check arguments
@@ -173,7 +173,7 @@ def _check_floquet_args(
     )
 
     # === check that the Hamiltonian is periodic with the supplied period
-    # attach the check to `tsave` instead of `H` to workaround CallableTimeArrays that
+    # attach the check to `tsave` instead of `H` to workaround CallableTimeQArrays that
     # do not have an underlying array to attach the check to
     tsave = eqx.error_if(
         tsave,

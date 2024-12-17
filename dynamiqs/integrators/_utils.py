@@ -22,7 +22,7 @@ from ..time_qarray import (
 from .core.abstract_integrator import AbstractIntegrator
 
 
-def _astimearray(x: QArrayLike | TimeQArray) -> TimeQArray:
+def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
     if isinstance(x, TimeQArray):
         return x
     else:
@@ -32,13 +32,13 @@ def _astimearray(x: QArrayLike | TimeQArray) -> TimeQArray:
             return ConstantTimeQArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be a qarray-like or a time-array object, but has type'
+                'Argument must be a qarray-like or a time-qarray object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 
 
 def ispwc(x: TimeQArray) -> bool:
-    # check if a time array is constant or piecewise constant
+    # check if a time qarray is constant or piecewise constant
     if isinstance(x, (ConstantTimeQArray, PWCTimeQArray)):
         return True
     elif isinstance(x, SummedTimeQArray):

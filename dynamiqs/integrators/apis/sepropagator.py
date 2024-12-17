@@ -16,7 +16,7 @@ from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, T
 from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -58,7 +58,7 @@ def sepropagator(
     propagator is computed by solving the Schrödinger equation with an ODE solver.
 
     Note-: Defining a time-dependent Hamiltonian
-        If the Hamiltonian depends on time, it can be converted to a time-array using
+        If the Hamiltonian depends on time, it can be converted to a time-qarray using
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -71,7 +71,7 @@ def sepropagator(
         tutorial for more details.
 
     Args:
-        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
             or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -98,7 +98,7 @@ def sepropagator(
             [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
+    H = _astimeqarray(H)
     tsave = jnp.asarray(tsave)
 
     # === check arguments

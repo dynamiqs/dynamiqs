@@ -27,7 +27,7 @@ from ...solver import (
 )
 from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -81,7 +81,7 @@ def mesolve(
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+        to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
         [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -95,8 +95,8 @@ def mesolve(
         tutorial for more details.
 
     Args:
-        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
             List of jump operators.
         rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
@@ -126,8 +126,8 @@ def mesolve(
             [`dq.MESolveResult`][dynamiqs.MESolveResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
+    H = _astimeqarray(H)
+    Ls = [_astimeqarray(L) for L in jump_ops]
     rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:

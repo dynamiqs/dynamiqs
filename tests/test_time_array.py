@@ -22,7 +22,7 @@ def assert_equal(x, y):
     assert jnp.array_equal(x, y)
 
 
-class TestConstantTimeArray:
+class TestConstantTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         self.x = ConstantTimeQArray(asqarray(jnp.arange(4).reshape(2, 2)))
@@ -81,7 +81,7 @@ class TestConstantTimeArray:
 
 
 @pytest.mark.skip(reason='TODO (fix before merge)')
-class TestCallableTimeArray:
+class TestCallableTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         f = lambda t: t * jnp.arange(4).reshape(2, 2)
@@ -167,7 +167,7 @@ class TestCallableTimeArray:
 
 
 @pytest.mark.skip(reason='TODO (fix before merge)')
-class TestPWCTimeArray:
+class TestPWCTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         times = jnp.array([0, 1, 2, 3])
@@ -256,7 +256,7 @@ class TestPWCTimeArray:
 
 
 @pytest.mark.skip(reason='TODO (fix before merge)')
-class TestModulatedTimeArray:
+class TestModulatedTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
         one = jnp.array(1.0)
