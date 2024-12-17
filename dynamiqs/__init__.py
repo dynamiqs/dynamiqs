@@ -1,4 +1,5 @@
-from . import dark, plot, random
+from . import dark, plot
+from . import rand as random
 from .integrators import *
 from .options import *
 from .qarrays import *
