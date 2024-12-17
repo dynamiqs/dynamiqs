@@ -24,7 +24,7 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 (2, 2)
 ```
 
-Time-qarrays support common arithmetic operations with scalars, regular arrays and qarrays and other time-qarray objects. For example to define the Hamiltonian
+Time-qarrays support common arithmetic operations with scalars, qarray-like objects and other time-qarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
