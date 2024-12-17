@@ -282,6 +282,20 @@ class TimeArray(eqx.Module):
 
     @property
     @abstractmethod
+    def dims(self) -> tuple[int, ...]:
+        pass
+
+    @property
+    def ndim(self) -> int:
+        return len(self.shape)
+
+    @property
+    @abstractmethod
+    def ndiags(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
     def layout(self) -> Layout:
         pass
 
@@ -296,10 +310,6 @@ class TimeArray(eqx.Module):
         # returns the `in_axes` arguments that should be passed to vmap in order
         # to vmap the TimeArray correctly
         pass
-
-    @property
-    def ndim(self) -> int:
-        return len(self.shape)
 
     @property
     @abstractmethod
@@ -421,6 +431,14 @@ class ConstantTimeArray(TimeArray):
         return self.array.shape
 
     @property
+    def dims(self) -> tuple[int, ...]:
+        return self.array.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.array.ndiags
+
+    @property
     def layout(self) -> Layout:
         return self.array.layout
 
@@ -474,6 +492,14 @@ class PWCTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return *self.values.shape[:-1], *self.array.shape
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.array.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.array.ndiags
 
     @property
     def layout(self) -> Layout:
@@ -546,6 +572,14 @@ class ModulatedTimeArray(TimeArray):
         return *self.f.shape, *self.array.shape
 
     @property
+    def dims(self) -> tuple[int, ...]:
+        return self.array.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.array.ndiags
+
+    @property
     def layout(self) -> Layout:
         return self.array.layout
 
@@ -605,6 +639,14 @@ class CallableTimeArray(TimeArray):
         return self.f.shape
 
     @property
+    def dims(self) -> tuple[int, ...]:
+        return self.f(0.0).dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.f(0.0).ndiags
+
+    @property
     def layout(self) -> Layout:
         return self.f.layout
 
@@ -662,6 +704,14 @@ class SummedTimeArray(TimeArray):
             # ensure all time-arrays can be jointly vmapped over (as specified by the
             # `in_axes` property)
             timearrays = [tarray.broadcast_to(*shape) for tarray in timearrays]
+
+            dims = {t.dims for t in timearrays}
+            if len(dims) > 1:
+                raise ValueError(
+                    f'All terms of a SummedTimeArray must have the'
+                    f'same Hilbert space dimensions, got {dims}'
+                )
+
         self.timearrays = timearrays
 
     @property
@@ -672,6 +722,14 @@ class SummedTimeArray(TimeArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return jnp.broadcast_shapes(*[tarray.shape for tarray in self.timearrays])
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.timearrays[0].dims
+
+    @property
+    def ndiags(self) -> int:
+        raise NotImplementedError
 
     @property
     def layout(self) -> Layout:
