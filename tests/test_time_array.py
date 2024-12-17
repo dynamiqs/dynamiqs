@@ -80,7 +80,6 @@ class TestConstantTimeArray:
         assert_equal(x(0.0), [[1, 2], [3, 4]])
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 class TestCallableTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -140,7 +139,7 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(jnp.arange(4).reshape(2, 2))
+        y = ConstantTimeArray(asqarray(jnp.arange(4).reshape(2, 2)))
         x = self.x + y
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [[0, 1], [2, 3]])
@@ -160,7 +159,7 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [[1.0, 2.0], [3.0, 4.0]])
 
         # test type `ConstantTimeArray`
-        x = ConstantTimeArray(jnp.ones_like(x)) + self.x
+        x = ConstantTimeArray(asqarray(jnp.ones_like(x))) + self.x
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(0.0), [[1, 1], [1, 1]])
         assert_equal(x(1.0), [[1, 2], [3, 4]])
