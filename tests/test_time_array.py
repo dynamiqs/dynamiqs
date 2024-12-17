@@ -165,7 +165,6 @@ class TestCallableTimeArray:
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 class TestPWCTimeArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -229,7 +228,7 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(jnp.array([[1, 1], [1, 1]]))
+        y = ConstantTimeArray(asqarray(jnp.array([[1, 1], [1, 1]])))
         x = self.x + y
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
@@ -247,7 +246,7 @@ class TestPWCTimeArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ConstantTimeArray`
-        y = ConstantTimeArray(jnp.array([[1, 1], [1, 1]]))
+        y = ConstantTimeArray(asqarray(jnp.array([[1, 1], [1, 1]])))
         x = y + self.x
         assert isinstance(x, SummedTimeArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
