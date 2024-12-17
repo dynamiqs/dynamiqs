@@ -14,7 +14,7 @@ from dynamiqs.options import Options
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import TimeArray
+from dynamiqs.time_qarray import TimeQArray
 
 from ..system import System
 
@@ -60,7 +60,7 @@ class Cavity(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(delta, alpha0)
 
-    def H(self, params: PyTree) -> QArray | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeQArray:
         return params.delta * dq.number(self.n, layout=self.layout)
 
     def y0(self, params: PyTree) -> QArray:
@@ -118,7 +118,7 @@ class TDQubit(ClosedSystem):
         # define default gradient parameters
         self.params_default = self.Params(eps, omega)
 
-    def H(self, params: PyTree) -> QArray | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeQArray:
         f = lambda t: params.eps * jnp.cos(params.omega * t) * dq.sigmax()
         return dq.timecallable(f)
 

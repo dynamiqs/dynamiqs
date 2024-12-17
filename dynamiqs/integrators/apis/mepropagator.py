@@ -14,9 +14,9 @@ from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
 from ...solver import Expm, Solver
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -27,8 +27,8 @@ from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
 
 
 def mepropagator(
-    H: QArrayLike | TimeArray,
-    jump_ops: list[QArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     tsave: ArrayLike,
     *,
     solver: Solver = Expm(),  # noqa: B008
@@ -52,7 +52,7 @@ def mepropagator(
 
     Note-: Defining a time-dependent Hamiltonian or jump operator
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+        to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
         [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -66,8 +66,8 @@ def mepropagator(
         tutorial for more details.
 
     Args:
-        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-array, each of shape (...Lk, n, n))_:
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
             List of jump operators.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
@@ -87,8 +87,8 @@ def mepropagator(
             [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
+    H = _astimeqarray(H)
+    Ls = [_astimeqarray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
 
     # === check arguments
@@ -103,8 +103,8 @@ def mepropagator(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_mepropagator(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -132,8 +132,8 @@ def _vectorized_mepropagator(
 
 
 def _mepropagator(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -149,7 +149,7 @@ def _mepropagator(
     # === init integrator
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
-    # todo: timearray should expose dims without having to call at specific time
+    # todo: timeqarray should expose dims without having to call at specific time
     y0 = DenseQArray(H(0.0).dims, True, data)
     integrator = integrator_class(
         ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
@@ -162,7 +162,7 @@ def _mepropagator(
     return result  # noqa: RET504
 
 
-def _check_mepropagator_args(H: TimeArray, Ls: list[TimeArray]):
+def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
