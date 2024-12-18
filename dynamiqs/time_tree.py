@@ -20,6 +20,10 @@ from .qarrays.utils import asqarray
 __all__ = ['TimeTree', 'constant', 'modulated', 'pwc', 'timecallable']
 
 
+def is_leaf(x):
+    """Generic method to check if object is PyTree or a QArray"""
+    return isinstance(x, QArray) and not isinstance(x, PyTree)
+
 def constant(tree: PyTree) -> ConstantTimeTree:
     r"""Instantiate a constant time-tree.
 
@@ -335,7 +339,11 @@ class ConstantTimeTree(TimeTree):
     def _map_callable(self, fun):
         def res(*args, **kwargs):
             f = ft.partial(fun.__func__, *args, **kwargs)
-            return jax.tree.map(f, self, is_leaf=lambda x: isinstance(x, QArray))
+            ret_tree =  jax.tree.map(f, self.tree, is_leaf=is_leaf)
+            if ret_tree == self.tree:
+                return ConstantTimeTree(ret_tree)
+            else:
+                 return ret_tree
         return res
 
     @property

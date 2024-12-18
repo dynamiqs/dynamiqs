@@ -23,14 +23,6 @@ def assert_equal(x, y):
         y = y.to_jax()
     assert jnp.array_equal(x, y)
 
-def test_ronan():
-    import dynamiqs as dq
-    from dynamiqs.time_tree import constant
-    x = dq.sigmaz()
-    tree = constant(x)
-    print(tree.tree)
-    tree = tree.dag()
-    print(tree.tree)
 
 
 class TestConstantTimeTree:
@@ -93,7 +85,7 @@ class TestConstantTimeTree:
     def test_dag(self):
         x = sigmay()
         tree = constant(x)
-        assert_equal(tree.dag(), -tree)
+        assert_equal(tree.dag(), -x)
 
 
 
