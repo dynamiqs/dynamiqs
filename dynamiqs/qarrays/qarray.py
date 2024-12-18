@@ -482,11 +482,17 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
+
         if _is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
+
         if _is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
@@ -546,7 +552,8 @@ class QArray(eqx.Module):
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+            f'QArrays have incompatible Hilbert space dimensions. '
+            f'Got {dims1} and {dims2}.'
         )
 
 
