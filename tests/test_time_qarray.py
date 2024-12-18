@@ -4,10 +4,11 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import QArray, asqarray
+from dynamiqs import QArray
 from dynamiqs.time_qarray import (
     ConstantTimeQArray,
     SummedTimeQArray,
+    constant,
     modulated,
     pwc,
     timecallable,
@@ -25,7 +26,7 @@ def assert_equal(x, y):
 class TestConstantTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        self.x = ConstantTimeQArray(asqarray(jnp.arange(4).reshape(2, 2)))
+        self.x = constant(jnp.arange(4).reshape(2, 2))
 
     @pytest.mark.skip('broken test')
     def test_jit(self):
@@ -80,7 +81,6 @@ class TestConstantTimeQArray:
         assert_equal(x(0.0), [[1, 2], [3, 4]])
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 class TestCallableTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -140,7 +140,7 @@ class TestCallableTimeQArray:
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
         # test type `ConstantTimeQArray`
-        y = ConstantTimeQArray(jnp.arange(4).reshape(2, 2))
+        y = constant(jnp.arange(4).reshape(2, 2))
         x = self.x + y
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[0, 1], [2, 3]])
@@ -160,13 +160,12 @@ class TestCallableTimeQArray:
         assert_equal(x(1.0), [[1.0, 2.0], [3.0, 4.0]])
 
         # test type `ConstantTimeQArray`
-        x = ConstantTimeQArray(jnp.ones_like(x)) + self.x
+        x = constant(jnp.ones_like(x)) + self.x
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1, 1], [1, 1]])
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 class TestPWCTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -230,7 +229,7 @@ class TestPWCTimeQArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ConstantTimeQArray`
-        y = ConstantTimeQArray(jnp.array([[1, 1], [1, 1]]))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = self.x + y
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
@@ -248,14 +247,13 @@ class TestPWCTimeQArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
         # test type `ConstantTimeQArray`
-        y = ConstantTimeQArray(jnp.array([[1, 1], [1, 1]]))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = y + self.x
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(-0.1), [[1, 1], [1, 1]])
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 class TestModulatedTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -310,7 +308,7 @@ class TestModulatedTimeQArray:
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
         # test type `ConstantTimeQArray`
-        y = ConstantTimeQArray(jnp.array([[1, 1], [1, 1]]))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = self.x + y
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
@@ -327,7 +325,7 @@ class TestModulatedTimeQArray:
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
         # test type `ConstantTimeQArray`
-        y = ConstantTimeQArray(jnp.array([[1, 1], [1, 1]]))
+        y = constant(jnp.array([[1, 1], [1, 1]]))
         x = y + self.x
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])

@@ -53,7 +53,6 @@ def test_flat_batching(npsi0):
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
-@pytest.mark.skip(reason='TODO (fix before merge)')
 def test_timeqarray_batching():
     # generic arrays
     a = dq.destroy(4)

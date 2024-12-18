@@ -727,10 +727,10 @@ class SummedTimeQArray(TimeQArray):
 class BatchedCallable(eqx.Module):
     # this class turns a callable into a PyTree that is vmap-compatible
 
-    f: callable[[float], QArray]
+    f: callable[[float], QArrayLike]
     indices: list[Array]
 
-    def __init__(self, f: callable[[float], QArray]):
+    def __init__(self, f: callable[[float], QArrayLike]):
         # make f a valid PyTree with `Partial` and convert its output to a qarray
         self.f = jtu.Partial(f)
         eval_shape = jax.eval_shape(f, 0.0)
@@ -740,7 +740,7 @@ class BatchedCallable(eqx.Module):
             shape = eval_shape.shape
         self.indices = list(jnp.indices(shape))
 
-    def __call__(self, t: ScalarLike) -> QArray:
+    def __call__(self, t: ScalarLike) -> QArrayLike:
         if len(self.indices) == 0:
             return self.f(t)
         else:
@@ -763,7 +763,13 @@ class BatchedCallable(eqx.Module):
         return BatchedCallable(f)
 
     def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        f = lambda t: jnp.broadcast_to(self.f(t), shape)
+        def f(t: float) -> QArrayLike:
+            res = self.f(t)
+            if isinstance(res, QArray):
+                return res.broadcast_to(*shape)
+            else:
+                return jnp.broadcast_to(res, shape)
+
         return BatchedCallable(f)
 
     def conj(self) -> BatchedCallable:
