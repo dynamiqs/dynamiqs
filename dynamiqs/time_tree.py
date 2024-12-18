@@ -334,8 +334,8 @@ class ConstantTimeTree(TimeTree):
 
     def _map_callable(self, fun):
         def res(*args, **kwargs):
-            f = ft.partial(fun, args=args, kwargs=kwargs)
-            return jax.tree.map(f, self)
+            f = ft.partial(fun.__func__, *args, **kwargs)
+            return jax.tree.map(f, self, is_leaf=lambda x: isinstance(x, QArray))
         return res
 
     @property
@@ -384,7 +384,7 @@ class PWCTimeTree(TimeTree):
 
     def _map_callable(self, fun):
         def res(*args, **kwargs):
-            # f1 = ft.partial(fun.__func__, args=args, kwargs=kwargs)
+            # f1 = ft.partial(fun.__func__, *args, **kwargs)
             f1 = fun.__func__
             # tree = jax.tree.map(self.tree, f1, is_leaf=lambda x: isinstance(x, QArray))
             tree = f1(self.tree)
@@ -447,7 +447,7 @@ class ModulatedTimeTree(TimeTree):
 
     def _map_callable(self, fun):
         def res(*args, **kwargs):
-            f = ft.partial(fun, args=args, kwargs=kwargs)
+            f = ft.partial(fun, *args, **kwargs)
             tree = jax.tree.map(self.tree, f)
             return PWCTimeTree(self.f, tree, self._disc_ts)
         return res
@@ -497,7 +497,7 @@ class CallableTimeTree(TimeTree):
 
     def _map_callable(self, fun):
         def res(*args, **kwargs):
-            # f1 = lambda x: ft.partial(fun.__func__, args=(x, args), kwargs=kwargs)
+            # f1 = lambda x: ft.partial(fun.__func__, x, *args, **kwargs)
             f1 = fun.__func__
             # f2 = lambda t: jax.tree.map(f1, self.f(t), is_leaf=lambda x: isinstance(x, QArray))
             f2 = lambda t: f1(self.f(t))
@@ -558,7 +558,7 @@ class SummedTimeTree(TimeTree):
 
     def _map_callable(self, fun):
         def res(*args, **kwargs):
-            f = ft.partial(fun, args=args, kwargs=kwargs)
+            f = ft.partial(fun, *args,**kwargs)
             time_trees = jax.tree.map(f, self.time_trees)
             return SummedTimeTree(time_trees, self._disc_ts)
         return res
