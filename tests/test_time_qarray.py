@@ -139,7 +139,7 @@ class TestCallableTimeQArray:
         assert_equal(x(0.0), [[1, 1], [1, 1]])
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
-        # test type `ConstantTimeArray`
+        # test type `ConstantTimeQArray`
         y = constant(jnp.arange(4).reshape(2, 2))
         x = self.x + y
         assert isinstance(x, SummedTimeQArray)
@@ -159,7 +159,7 @@ class TestCallableTimeQArray:
         assert_equal(x(0.0), [[1, 1], [1, 1]])
         assert_equal(x(1.0), [[1.0, 2.0], [3.0, 4.0]])
 
-        # test type `ConstantTimeArray`
+        # test type `ConstantTimeQArray`
         x = constant(jnp.ones_like(x)) + self.x
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1, 1], [1, 1]])
@@ -228,7 +228,7 @@ class TestPWCTimeQArray:
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
-        # test type `ConstantTimeArray`
+        # test type `ConstantTimeQArray`
         y = constant(jnp.array([[1, 1], [1, 1]]))
         x = self.x + y
         assert isinstance(x, SummedTimeQArray)
@@ -246,7 +246,7 @@ class TestPWCTimeQArray:
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
-        # test type `ConstantTimeArray`
+        # test type `ConstantTimeQArray`
         y = constant(jnp.array([[1, 1], [1, 1]]))
         x = y + self.x
         assert isinstance(x, SummedTimeQArray)
@@ -307,7 +307,7 @@ class TestModulatedTimeQArray:
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
-        # test type `ConstantTimeArray`
+        # test type `ConstantTimeQArray`
         y = constant(jnp.array([[1, 1], [1, 1]]))
         x = self.x + y
         assert isinstance(x, SummedTimeQArray)
@@ -324,7 +324,7 @@ class TestModulatedTimeQArray:
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1.0 + 1.0j, 1.0 + 2.0j], [1.0 + 3.0j, 1.0 + 4.0j]])
 
-        # test type `ConstantTimeArray`
+        # test type `ConstantTimeQArray`
         y = constant(jnp.array([[1, 1], [1, 1]]))
         x = y + self.x
         assert isinstance(x, SummedTimeQArray)
