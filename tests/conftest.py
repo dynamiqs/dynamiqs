@@ -14,7 +14,11 @@ def pytest_collection_modifyitems(config, items):
     # Assign a default priority of INSTANT to unmarked tests
     for item in items:
         marker = item.get_closest_marker('run')
-        item.priority = marker.args[0] if marker else TEST_INSTANT
+        if not marker:
+            continue
+
+        order = marker.kwargs.get('order', None)
+        item.priority = order or TEST_INSTANT
 
     # Sort items based on their priority
     items.sort(key=lambda x: getattr(x, 'priority', TEST_INSTANT))
