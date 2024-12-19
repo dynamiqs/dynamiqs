@@ -432,11 +432,11 @@ class ConstantTimeQArray(TimeQArray):
 
     @property
     def dims(self) -> tuple[int, ...]:
-        return self.array.dims
+        return self.qarray.dims
 
     @property
     def ndiags(self) -> int:
-        return self.array.ndiags
+        return self.qarray.ndiags
 
     @property
     def layout(self) -> Layout:
@@ -495,11 +495,11 @@ class PWCTimeQArray(TimeQArray):
 
     @property
     def dims(self) -> tuple[int, ...]:
-        return self.array.dims
+        return self.qarray.dims
 
     @property
     def ndiags(self) -> int:
-        return self.array.ndiags
+        return self.qarray.ndiags
 
     @property
     def layout(self) -> Layout:
@@ -573,11 +573,11 @@ class ModulatedTimeQArray(TimeQArray):
 
     @property
     def dims(self) -> tuple[int, ...]:
-        return self.array.dims
+        return self.qarray.dims
 
     @property
     def ndiags(self) -> int:
-        return self.array.ndiags
+        return self.qarray.ndiags
 
     @property
     def layout(self) -> Layout:
