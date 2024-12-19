@@ -955,7 +955,7 @@ def _dm_fidelity_cpu(x: QArray, y: QArray) -> Array:
     # matrix x @ y is not Hermitian.
 
     # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
-    w = (x @ y)._eigvals().real  # noqa: SLF001
+    w = (x @ y)._eigvals().real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return jnp.sqrt(w).sum(-1) ** 2
@@ -969,7 +969,7 @@ def _dm_fidelity_gpu(x: QArray, y: QArray) -> Array:
     # and compute the fidelity as F = (\sum_i \sqrt{w_i})^2.
 
     sqrtm_x = _sqrtm_gpu(x)
-    w = (sqrtm_x @ y @ sqrtm_x)._eigvalsh()  # noqa: SLF001
+    w = (sqrtm_x @ y @ sqrtm_x)._eigvalsh()
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return jnp.sqrt(w).sum(-1) ** 2
@@ -985,7 +985,7 @@ def _sqrtm_gpu(x: QArray) -> Array:
     # This method is a GPU-compatible implementation of `jax.scipy.linalg.sqrtm` for
     # symmetric or Hermitian positive definite matrix.
 
-    w, v = x._eigh()  # noqa: SLF001
+    w, v = x._eigh()
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     # numerical trick to compute 'v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()' faster with
@@ -1019,7 +1019,7 @@ def entropy_vn(x: QArrayLike) -> Array:
         return jnp.zeros(x.shape[:-2])
 
     # compute sum(w_i log(w_i)) where w_i are rho's eigenvalues
-    w = x._eigvalsh()  # noqa: SLF001
+    w = x._eigvalsh()
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
