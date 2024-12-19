@@ -61,7 +61,7 @@ class DenseQArray(QArray):
         data = self.data.conj()
         return self._replace(data=data)
 
-    def _reshape_unchecked(self, shape: tuple[int, ...]) -> QArray:
+    def _reshape_unchecked(self, *shape: int) -> QArray:
         data = jnp.reshape(self.data, shape)
         return self._replace(data=data)
 

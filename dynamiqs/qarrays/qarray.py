@@ -267,10 +267,10 @@ class QArray(eqx.Module):
                 f'Cannot reshape to shape {shape} because the last two dimensions do '
                 f'not match current shape dimensions, {self.shape}.'
             )
-        return self._reshape_unchecked(shape)
+        return self._reshape_unchecked(*shape)
 
     @abstractmethod
-    def _reshape_unchecked(self, shape: tuple[int, ...]) -> QArray:
+    def _reshape_unchecked(self, *shape: int) -> QArray:
         # Does the heavy-lifting for `reshape` but skips all checks.
         # This private method allows for more powerful reshapes that
         # are useful for vectorization.

@@ -112,7 +112,7 @@ class SparseDIAQArray(QArray):
         diags = self.diags.conj()
         return self._replace(diags=diags)
 
-    def _reshape_unchecked(self, shape: tuple[int, ...]) -> QArray:
+    def _reshape_unchecked(self, *shape: int) -> QArray:
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
         return self._replace(offsets=offsets, diags=diags)
 
