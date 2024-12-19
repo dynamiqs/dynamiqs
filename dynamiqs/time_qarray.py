@@ -296,6 +296,11 @@ class TimeQArray(eqx.Module):
 
     @property
     @abstractmethod
+    def vectorized(self) -> bool:
+        pass
+
+    @property
+    @abstractmethod
     def layout(self) -> Layout:
         pass
 
@@ -439,6 +444,10 @@ class ConstantTimeQArray(TimeQArray):
         return self.qarray.ndiags
 
     @property
+    def vectorized(self) -> bool:
+        return self.qarray.vectorized
+
+    @property
     def layout(self) -> Layout:
         return self.qarray.layout
 
@@ -580,6 +589,10 @@ class ModulatedTimeQArray(TimeQArray):
         return self.qarray.ndiags
 
     @property
+    def vectorized(self) -> bool:
+        return self.qarray.vectorized
+
+    @property
     def layout(self) -> Layout:
         return self.qarray.layout
 
@@ -645,6 +658,10 @@ class CallableTimeQArray(TimeQArray):
     @property
     def ndiags(self) -> int:
         return jax.eval_shape(self.f, 0.0).ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return jax.eval_shape(self.f, 0.0).vectorized
 
     @property
     def layout(self) -> Layout:
@@ -730,6 +747,10 @@ class SummedTimeQArray(TimeQArray):
     @property
     def ndiags(self) -> int:
         return jax.eval_shape(self.__call__, 0.0).ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return jax.eval_shape(self.__call__, 0.0).vectorized
 
     @property
     def layout(self) -> Layout:
