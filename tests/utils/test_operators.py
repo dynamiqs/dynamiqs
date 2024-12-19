@@ -1,8 +1,11 @@
 import jax.numpy as jnp
+import pytest
 
 import dynamiqs as dq
+from tests.order import TEST_INSTANT
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_global_dispatch():
     dim = 4
 
@@ -19,6 +22,7 @@ def test_global_dispatch():
     assert isinstance(dq.eye(dim, layout=dq.dense), dq.DenseQArray)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_operators_dispatch():
     dims = (3, 4)
     dim = 20

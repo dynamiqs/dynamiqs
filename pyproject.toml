@@ -50,6 +50,7 @@ dev = [
     "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
+    "pytest-ordering",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",

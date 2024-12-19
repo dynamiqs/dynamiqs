@@ -6,6 +6,7 @@ import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from tests.order import TEST_SHORT
 
 # list of all pairs of operations that are legal
 # i.e. all pairs except 'batch-batch'
@@ -22,6 +23,7 @@ valid_operation_keys = [
 ]
 
 
+@pytest.mark.run(order=TEST_SHORT)
 class TestSparseDIAQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):

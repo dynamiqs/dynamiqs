@@ -6,6 +6,7 @@ from jax import Array
 
 import dynamiqs as dq
 from dynamiqs._utils import cdtype
+from tests.order import TEST_INSTANT
 
 
 def qobj_to_array(x: qt.Qobj) -> Array:
@@ -16,6 +17,7 @@ def qobj_to_array(x: qt.Qobj) -> Array:
     return jnp.asarray(x.full())
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_ket_fidelity_correctness():
     n = 8
 
@@ -33,6 +35,7 @@ def test_ket_fidelity_correctness():
     assert qt_fid == pytest.approx(dq_fid)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_ket_fidelity_batching():
     b1, b2, n = 3, 5, 8
     psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
@@ -42,6 +45,7 @@ def test_ket_fidelity_batching():
     assert dq.fidelity(psi, phi).shape == (b1, b2)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_dm_fidelity_correctness():
     n = 8
 
@@ -59,6 +63,7 @@ def test_dm_fidelity_correctness():
     assert qt_fid == pytest.approx(dq_fid, abs=1e-5)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_dm_fidelity_batching():
     b1, b2, n = 3, 5, 8
     rho = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
@@ -68,6 +73,7 @@ def test_dm_fidelity_batching():
     assert dq.fidelity(rho, sigma).shape == (b1, b2)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_ket_dm_fidelity_correctness():
     n = 8
 
@@ -87,6 +93,7 @@ def test_ket_dm_fidelity_correctness():
     assert qt_fid == pytest.approx(dq_fid_dm_ket, abs=1e-6)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_ket_dm_fidelity_batching():
     b1, b2, n = 3, 5, 8
     psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n)
@@ -97,6 +104,7 @@ def test_ket_dm_fidelity_batching():
     assert dq.fidelity(psi, rho).shape == (b1, b2)
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_hadamard():
     # one qubit
     H1 = 2 ** (-1 / 2) * jnp.array([[1, 1], [1, -1]], dtype=cdtype())
@@ -126,6 +134,7 @@ def test_hadamard():
 
 
 @pytest.mark.skip('broken test')
+@pytest.mark.run(order=TEST_INSTANT)
 def test_jit_ptrace():
     key = jax.random.PRNGKey(0)
     key1, key2, key3, key4 = jax.random.split(key, 4)

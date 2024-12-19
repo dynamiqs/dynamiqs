@@ -4,6 +4,7 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs import asqarray
+from tests.order import TEST_LONG
 
 
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
@@ -17,6 +18,7 @@ def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     return H, Ls, psi0, Es
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('npsi0', [(), (5,)])
 @pytest.mark.parametrize('nL1', [(), (7, 8)])
