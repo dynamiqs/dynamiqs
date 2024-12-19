@@ -640,11 +640,11 @@ class CallableTimeArray(TimeArray):
 
     @property
     def dims(self) -> tuple[int, ...]:
-        return self.f(0.0).dims
+        return jax.eval_shape(self.f, 0.0).dims
 
     @property
     def ndiags(self) -> int:
-        return self.f(0.0).ndiags
+        return jax.eval_shape(self.f, 0.0).ndiags
 
     @property
     def layout(self) -> Layout:
