@@ -271,10 +271,10 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def _reshape_unchecked(self, shape: tuple[int, ...]) -> QArray:
-        """Does the heavy-lifting for `reshape` but skips all checks.
-        This private method allows for more powerful reshapes that
-        are useful for vectorization.
-        """
+        # Does the heavy-lifting for `reshape` but skips all checks.
+        # This private method allows for more powerful reshapes that
+        # are useful for vectorization.
+        pass
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> QArray:
