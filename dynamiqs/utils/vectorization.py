@@ -51,7 +51,7 @@ def operator_to_vector(x: QArrayLike) -> QArray:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
-    x = x.mT.reshape(*bshape, -1, 1)
+    x = x.mT._reshape_unchecked(*bshape, -1, 1)  # noqa: SLF001
     return x._replace(vectorized=True)
 
 
@@ -90,7 +90,7 @@ def vector_to_operator(x: QArrayLike) -> QArray:
     bshape = x.shape[:-2]
     n = int(np.sqrt(x.shape[-2]))
     x = x._replace(dims=(n,))
-    x = x.reshape(*bshape, n, n).mT
+    x = x._reshape_unchecked(*bshape, n, n).mT  # noqa: SLF001
     return x._replace(vectorized=False)
 
 
