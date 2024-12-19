@@ -157,12 +157,12 @@ nav:
           - floquet: python_api/integrators/floquet.md
       - Core:
           - Quantum arrays: python_api/qarrays/qarray/QArray.md
-          - Time-dependent arrays:
-              - TimeArray: python_api/time_array/TimeArray.md
-              - constant: python_api/time_array/constant.md
-              - pwc: python_api/time_array/pwc.md
-              - modulated: python_api/time_array/modulated.md
-              - timecallable: python_api/time_array/timecallable.md
+          - Time-dependent qarrays:
+              - TimeQArray: python_api/time_qarray/TimeQArray.md
+              - constant: python_api/time_qarray/constant.md
+              - pwc: python_api/time_qarray/pwc.md
+              - modulated: python_api/time_qarray/modulated.md
+              - timecallable: python_api/time_qarray/timecallable.md
           - Solvers (dq.solver):
               - Tsit5: python_api/solver/Tsit5.md
               - Dopri5: python_api/solver/Dopri5.md
