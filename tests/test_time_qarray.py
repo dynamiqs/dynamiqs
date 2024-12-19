@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import QArray
+from dynamiqs import QArray, asqarray
 from dynamiqs.time_qarray import (
     ConstantTimeQArray,
     SummedTimeQArray,
@@ -87,7 +87,7 @@ class TestConstantTimeQArray:
 class TestCallableTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
-        f = lambda t: t * jnp.arange(4).reshape(2, 2)
+        f = lambda t: t * asqarray(jnp.arange(4).reshape(2, 2))
         self.x = timecallable(f)
 
     @pytest.mark.skip('broken test')
@@ -137,7 +137,7 @@ class TestCallableTimeQArray:
 
     def test_add(self):
         # test type `ArrayLike`
-        x = self.x + jnp.ones_like(self.x)
+        x = self.x + constant(jnp.ones_like(self.x))
         assert isinstance(x, SummedTimeQArray)
         assert_equal(x(0.0), [[1, 1], [1, 1]])
         assert_equal(x(1.0), [[1, 2], [3, 4]])
