@@ -4,8 +4,10 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs import asqarray
+from tests.order import TEST_LONG
 
 
+@pytest.mark.run(order=TEST_LONG)
 def rand_sesolve_args(n, nH, npsi0, nEs):
     kH, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), 3)
     H = dq.random.herm(kH, (*nH, n, n))
@@ -15,6 +17,7 @@ def rand_sesolve_args(n, nH, npsi0, nEs):
     return H, psi0, Es
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('npsi0', [(), (5,)])
 def test_cartesian_batching(nH, npsi0):
@@ -34,6 +37,7 @@ def test_cartesian_batching(nH, npsi0):
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
 def test_flat_batching(npsi0):
     n = 2
@@ -53,6 +57,7 @@ def test_flat_batching(npsi0):
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
+@pytest.mark.run(order=TEST_LONG)
 def test_timeqarray_batching():
     # generic arrays
     a = dq.destroy(4)
@@ -96,6 +101,7 @@ def test_timeqarray_batching():
     assert result.states.shape == (5, 11, 4, 1)
 
 
+@pytest.mark.run(order=TEST_LONG)
 def test_sum_batching():
     a = dq.destroy(3)
     omegas = jnp.linspace(0, 2 * jnp.pi, 5)

@@ -13,6 +13,7 @@ from dynamiqs.time_qarray import (
     pwc,
     timecallable,
 )
+from tests.order import TEST_SHORT
 
 
 def assert_equal(x, y):
@@ -23,6 +24,7 @@ def assert_equal(x, y):
     assert jnp.array_equal(x, y)
 
 
+@pytest.mark.run(order=TEST_SHORT)
 class TestConstantTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -81,6 +83,7 @@ class TestConstantTimeQArray:
         assert_equal(x(0.0), [[1, 2], [3, 4]])
 
 
+@pytest.mark.run(order=TEST_SHORT)
 class TestCallableTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -166,6 +169,7 @@ class TestCallableTimeQArray:
         assert_equal(x(1.0), [[1, 2], [3, 4]])
 
 
+@pytest.mark.run(order=TEST_SHORT)
 class TestPWCTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
@@ -254,6 +258,7 @@ class TestPWCTimeQArray:
         assert_equal(x(0.0), [[2, 3], [4, 5]])
 
 
+@pytest.mark.run(order=TEST_SHORT)
 class TestModulatedTimeQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):

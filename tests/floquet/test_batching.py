@@ -3,8 +3,10 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from tests.order import TEST_LONG
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize(('nH'), [(), (3,), (3, 4)])
 @pytest.mark.parametrize('H_type', ['constant', 'modulated', 'timecallable'])
 def test_batching(nH, H_type):

@@ -1,8 +1,11 @@
 import jax.numpy as jnp
+import pytest
 
 import dynamiqs as dq
+from tests.order import TEST_SHORT
 
 
+@pytest.mark.run(order=TEST_SHORT)
 def test_wigner_cat():
     # parameters
     n = 16
@@ -26,6 +29,7 @@ def test_wigner_cat():
     assert jnp.allclose(nbar, nbar_wig)
 
 
+@pytest.mark.run(order=TEST_SHORT)
 def test_wigner_coherent():
     # parameters
     n = 16
