@@ -177,7 +177,7 @@ class SparseDIAQArray(QArray):
             'compute its eigen-decomposition.',
             stacklevel=2,
         )
-        return self.to_dense()._eig()  # noqa: SLF001
+        return self.to_dense()._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
         raise NotImplementedError

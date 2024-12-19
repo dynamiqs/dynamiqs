@@ -177,9 +177,7 @@ def _check_floquet_args(
     # do not have an underlying array to attach the check to
     tsave = eqx.error_if(
         tsave,
-        jnp.logical_not(
-            jnp.isclose(H(0.0)._underlying_array, H(T)._underlying_array)  # noqa: SLF001
-        ),
+        jnp.logical_not(jnp.isclose(H(0.0)._underlying_array, H(T)._underlying_array)),
         'The Hamiltonian H is not periodic with the supplied period T.',
     )
 
