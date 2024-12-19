@@ -3,9 +3,11 @@ import pytest
 
 import dynamiqs as dq
 
+from ..order import TEST_LONG
 from .mepropagator_utils import rand_mepropagator_args
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('nL1', [(), (7, 8)])
 @pytest.mark.parametrize('nL2', [(), (9,)])

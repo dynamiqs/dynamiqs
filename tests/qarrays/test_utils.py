@@ -3,8 +3,10 @@ import jax.random as jr
 import pytest
 
 import dynamiqs as dq
+from tests.order import TEST_INSTANT
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_stack_simple(rtol=1e-05, atol=1e-08):
     n = 10
     key = jr.key(42)
@@ -28,6 +30,7 @@ def test_stack_simple(rtol=1e-05, atol=1e-08):
     )
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 def test_stack_double(rtol=1e-05, atol=1e-08):
     n = 10
     key = jr.key(42)
@@ -62,6 +65,7 @@ def test_stack_double(rtol=1e-05, atol=1e-08):
     )
 
 
+@pytest.mark.run(order=TEST_INSTANT)
 @pytest.mark.parametrize('layout', [dq.dense, dq.dia])
 def test_conversions(layout):
     sx, sy = dq.sigmax(), dq.sigmay()

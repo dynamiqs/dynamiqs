@@ -2,8 +2,10 @@ import jax.numpy as jnp
 import pytest
 
 from dynamiqs import asqarray, tensor
+from tests.order import TEST_SHORT
 
 
+@pytest.mark.run(order=TEST_SHORT)
 class TestDenseQArray:
     @pytest.fixture(autouse=True)
     def _setup(self):
