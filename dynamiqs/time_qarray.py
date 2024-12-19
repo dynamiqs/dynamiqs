@@ -817,7 +817,7 @@ class BatchedCallable(eqx.Module):
         return jax.eval_shape(self.f, 0.0).layout
 
     def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        f = lambda t: self.f(t).reshape(shape)
+        f = lambda t: self.f(t).reshape(*shape)
         return BatchedCallable(f)
 
     def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
