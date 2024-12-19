@@ -729,7 +729,7 @@ class SummedTimeQArray(TimeQArray):
 
     @property
     def ndiags(self) -> int:
-        raise NotImplementedError
+        return jax.eval_shape(self.__call__, 0.0).ndiags
 
     @property
     def layout(self) -> Layout:
