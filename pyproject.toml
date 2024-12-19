@@ -91,7 +91,8 @@ ignore = [
     "ARG001",
     "RET505", "RUF022",
     "TRY003",
-    "PLR0913", "PLR2004"
+    "PLR0913", "PLR2004",
+    "SLF001",
 ]
 
 [tool.ruff.lint.isort]
