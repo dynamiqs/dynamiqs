@@ -253,6 +253,7 @@ class QArray(eqx.Module):
     def dag(self) -> QArray:
         return self.mT.conj()
 
+    @abstractmethod
     def reshape(self, *shape: int) -> QArray:
         """Returns a reshaped copy of a qarray.
 
@@ -262,19 +263,6 @@ class QArray(eqx.Module):
         Returns:
             New qarray object with the given shape.
         """
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot reshape to shape {shape} because the last two dimensions do '
-                f'not match current shape dimensions, {self.shape}.'
-            )
-        return self._reshape_unchecked(*shape)
-
-    @abstractmethod
-    def _reshape_unchecked(self, *shape: int) -> QArray:
-        # Does the heavy-lifting for `reshape` but skips all checks.
-        # This private method allows for more powerful reshapes that
-        # are useful for vectorization.
-        pass
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> QArray:
