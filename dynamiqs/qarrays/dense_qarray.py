@@ -53,10 +53,6 @@ class DenseQArray(QArray):
         data = self.data.mT
         return self._replace(data=data)
 
-    @property
-    def _underlying_array(self) -> Array:
-        return self.data
-
     def conj(self) -> QArray:
         data = self.data.conj()
         return self._replace(data=data)

@@ -101,10 +101,6 @@ class SparseDIAQArray(QArray):
         return self._replace(offsets=offsets, diags=diags)
 
     @property
-    def _underlying_array(self) -> Array:
-        return self.diags
-
-    @property
     def ndiags(self) -> int:
         return len(self.offsets)
 
