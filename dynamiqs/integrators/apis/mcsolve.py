@@ -49,7 +49,7 @@ def mcsolve(
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MCSolveResult:
-    r"""Perform Monte-Carlo evolution, unraveling the master equation.
+    r"""Solve the Lindblad master equation through Monte-Carlo sampling of its jump unraveling.
 
     We follow the algorithm outlined in Abdelhafez et al. to efficiently perform
     Monte-Carlo sampling. First the no-jump trajectory is computed for a state vector
