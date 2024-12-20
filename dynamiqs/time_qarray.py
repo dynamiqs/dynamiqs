@@ -511,6 +511,10 @@ class PWCTimeQArray(TimeQArray):
         return self.qarray.ndiags
 
     @property
+    def vectorized(self) -> int:
+        return self.qarray.vectorized
+
+    @property
     def layout(self) -> Layout:
         return self.qarray.layout
 
