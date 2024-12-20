@@ -41,11 +41,11 @@ def mcsolve(
     jump_ops: list[QArrayLike | TimeArray],
     psi0: QArrayLike,
     tsave: ArrayLike,
+    keys: ArrayLike,
     *,
-    keys: ArrayLike = jax.random.split(jax.random.key(31), num=10),  # noqa: B008
     exp_ops: list[QArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
-    root_finder: AbstractRootFinder | None = optx.Newton(1e-5, 1e-5, optx.rms_norm),  # noqa: B008
+    root_finder: AbstractRootFinder | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MCSolveResult:
