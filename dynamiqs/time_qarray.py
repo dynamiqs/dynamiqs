@@ -282,6 +282,25 @@ class TimeQArray(eqx.Module):
 
     @property
     @abstractmethod
+    def dims(self) -> tuple[int, ...]:
+        pass
+
+    @property
+    def ndim(self) -> int:
+        return len(self.shape)
+
+    @property
+    @abstractmethod
+    def ndiags(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def vectorized(self) -> bool:
+        pass
+
+    @property
+    @abstractmethod
     def layout(self) -> Layout:
         pass
 
@@ -296,10 +315,6 @@ class TimeQArray(eqx.Module):
         # returns the `in_axes` arguments that should be passed to vmap in order
         # to vmap the TimeQArray correctly
         pass
-
-    @property
-    def ndim(self) -> int:
-        return len(self.shape)
 
     @property
     @abstractmethod
@@ -421,6 +436,18 @@ class ConstantTimeQArray(TimeQArray):
         return self.qarray.shape
 
     @property
+    def dims(self) -> tuple[int, ...]:
+        return self.qarray.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.qarray.ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return self.qarray.vectorized
+
+    @property
     def layout(self) -> Layout:
         return self.qarray.layout
 
@@ -474,6 +501,18 @@ class PWCTimeQArray(TimeQArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return *self.values.shape[:-1], *self.qarray.shape
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.qarray.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.qarray.ndiags
+
+    @property
+    def vectorized(self) -> int:
+        return self.qarray.vectorized
 
     @property
     def layout(self) -> Layout:
@@ -546,6 +585,18 @@ class ModulatedTimeQArray(TimeQArray):
         return *self.f.shape, *self.qarray.shape
 
     @property
+    def dims(self) -> tuple[int, ...]:
+        return self.qarray.dims
+
+    @property
+    def ndiags(self) -> int:
+        return self.qarray.ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return self.qarray.vectorized
+
+    @property
     def layout(self) -> Layout:
         return self.qarray.layout
 
@@ -605,6 +656,18 @@ class CallableTimeQArray(TimeQArray):
         return self.f.shape
 
     @property
+    def dims(self) -> tuple[int, ...]:
+        return jax.eval_shape(self.f, 0.0).dims
+
+    @property
+    def ndiags(self) -> int:
+        return jax.eval_shape(self.f, 0.0).ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return jax.eval_shape(self.f, 0.0).vectorized
+
+    @property
     def layout(self) -> Layout:
         return self.f.layout
 
@@ -662,6 +725,14 @@ class SummedTimeQArray(TimeQArray):
             # ensure all time-qarrays can be jointly vmapped over (as specified by the
             # `in_axes` property)
             timeqarrays = [tqarray.broadcast_to(*shape) for tqarray in timeqarrays]
+
+            dims = {t.dims for t in timeqarrays}
+            if len(dims) > 1:
+                raise ValueError(
+                    f'All terms of a SummedTimeArray must have the'
+                    f'same Hilbert space dimensions, got {dims}'
+                )
+
         self.timeqarrays = timeqarrays
 
     @property
@@ -672,6 +743,18 @@ class SummedTimeQArray(TimeQArray):
     @property
     def shape(self) -> tuple[int, ...]:
         return jnp.broadcast_shapes(*[tqarray.shape for tqarray in self.timeqarrays])
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        return self.timearrays[0].dims
+
+    @property
+    def ndiags(self) -> int:
+        return jax.eval_shape(self.__call__, 0.0).ndiags
+
+    @property
+    def vectorized(self) -> bool:
+        return jax.eval_shape(self.__call__, 0.0).vectorized
 
     @property
     def layout(self) -> Layout:
@@ -759,7 +842,7 @@ class BatchedCallable(eqx.Module):
         return jax.eval_shape(self.f, 0.0).layout
 
     def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
-        f = lambda t: self.f(t).reshape(shape)
+        f = lambda t: self.f(t).reshape(*shape)
         return BatchedCallable(f)
 
     def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
