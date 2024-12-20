@@ -51,10 +51,12 @@ def mcsolve(
 ) -> MCSolveResult:
     r"""Solve the Lindblad master equation through Monte-Carlo sampling of its jump unraveling.
 
-    We follow the algorithm outlined in Abdelhafez et al. to efficiently perform
-    Monte-Carlo sampling. First the no-jump trajectory is computed for a state vector
-    $\ket{\psi(t)}$ at time $t$, starting from an initial state $\ket{\psi_0}$,
-    according to the Schrödinger equation with non-Hermitian Hamiltonian ($\hbar=1$)
+    We follow the algorithm outlined in Abdelhafez et al. (2019) 
+    https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.052327
+    to efficiently perform Monte-Carlo sampling. First the no-jump trajectory is
+    computed for a state vector $\ket{\psi(t)}$ at time $t$, starting from an initial
+    state $\ket{\psi_0}$, according to the Schrödinger equation with non-Hermitian
+    Hamiltonian ($\hbar=1$)
     $$
         \frac{\dd\ket{\psi(t)}}{\dt}
         = -i [H(t) -\frac{i}{2} \sum_{k=1}^{N} L_{k}^{\dagger} (t)L_{k}(t)] \ket{\psi(t)},
