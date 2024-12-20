@@ -27,6 +27,7 @@ def test_cartesian_batching(nH, nL1, nL2):
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test flat batching
 # of jump operators
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nL1', [(), (5, 1, 4)])
 def test_flat_batching(nL1):
     n = 2
