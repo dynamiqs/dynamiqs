@@ -6,7 +6,8 @@ import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
-from tests.order import TEST_SHORT
+
+from ..order import TEST_SHORT
 
 # list of all pairs of operations that are legal
 # i.e. all pairs except 'batch-batch'

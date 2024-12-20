@@ -6,7 +6,8 @@ from jax import Array
 
 import dynamiqs as dq
 from dynamiqs._utils import cdtype
-from tests.order import TEST_INSTANT
+
+from ..order import TEST_INSTANT
 
 
 def qobj_to_array(x: qt.Qobj) -> Array:

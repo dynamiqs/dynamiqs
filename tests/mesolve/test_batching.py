@@ -4,7 +4,8 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs import asqarray
-from tests.order import TEST_LONG
+
+from ..order import TEST_LONG
 
 
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):

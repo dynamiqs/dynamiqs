@@ -1,7 +1,7 @@
 import matplotlib
 import pytest
 
-from tests.order import TEST_INSTANT
+from .order import TEST_INSTANT
 
 
 @pytest.fixture(scope='session', autouse=True)
