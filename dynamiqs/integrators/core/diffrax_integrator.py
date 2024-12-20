@@ -5,6 +5,7 @@ from abc import abstractmethod
 
 import diffrax as dx
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 from ...gradient import Autograd, CheckpointAutograd
@@ -14,7 +15,7 @@ from ...result import Result
 from ...utils.general import dag
 from .abstract_integrator import BaseIntegrator
 from .save_mixin import SaveMixin
-from .interfaces import SEInterface, MEInterface
+from .interfaces import SEInterface, MEInterface, MCInterface
 
 
 class DiffraxIntegrator(BaseIntegrator, SaveMixin):
@@ -223,5 +224,20 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
             Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
             tmp = sum_qarrays(Hnh @ y, *[0.5 * _L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
+
+        return dx.ODETerm(vector_field)
+
+
+class MCDiffraxIntegrator(DiffraxIntegrator, MCInterface):
+    """Integrator solving the Schrödinger equation with Diffrax."""
+
+    # subclasses should implement: diffrax_solver, discontinuity_ts
+
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
+            return Hnh @ y
 
         return dx.ODETerm(vector_field)
