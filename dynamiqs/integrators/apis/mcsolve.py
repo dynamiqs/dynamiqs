@@ -5,7 +5,6 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
-import optimistix as optx
 from jax import Array
 from jaxtyping import ArrayLike
 from optimistix import AbstractRootFinder
@@ -51,7 +50,7 @@ def mcsolve(
 ) -> MCSolveResult:
     r"""Solve the Lindblad master equation through Monte-Carlo sampling of its jump unraveling.
 
-    We follow the algorithm outlined in Abdelhafez et al. (2019) 
+    We follow the algorithm outlined in Abdelhafez et al. (2019)
     https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.052327
     to efficiently perform Monte-Carlo sampling. First the no-jump trajectory is
     computed for a state vector $\ket{\psi(t)}$ at time $t$, starting from an initial
@@ -93,7 +92,7 @@ def mcsolve(
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
-        root_finder: Root finder passed to dx.diffeqsolve() (see here https://docs.kidger.site/diffrax/api/diffeqsolve/) 
+        root_finder: Root finder passed to dx.diffeqsolve() (see here https://docs.kidger.site/diffrax/api/diffeqsolve/)
             to find the exact time an event occurs. Can be `None`, in which case the
             root finding functionality is not utilized. It is recommended to pass a root
             finder (such as the optimistix Newton root finder https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton)
