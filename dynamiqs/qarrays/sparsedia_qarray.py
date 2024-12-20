@@ -345,8 +345,6 @@ def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
     valid_key = False
     if isinstance(key, (int, slice)):
         valid_key = ndim > 2
-    elif isinstance(key, Array):
-        valid_key = len(key.shape) == 0 and ndim > 2
     elif isinstance(key, tuple):
         if Ellipsis in key:
             ellipsis_key = key.index(Ellipsis)
