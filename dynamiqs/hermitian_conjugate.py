@@ -1,17 +1,17 @@
-from jaxtyping import ArrayLike
-from qutip import Qobj
+from typing import get_args
 
-from .qarrays import QArray, QArrayLike, asqarray
+from jaxtyping import ArrayLike
+
+from .qarrays import QArray, QArrayLike
+
+__all__ = ['hc']
 
 
 class HermitianConjugate:
     def __radd__(self, y: QArrayLike) -> QArrayLike:
-        if isinstance(y, Qobj):
-            y = asqarray(y)
-
         if isinstance(y, QArray):
             return y + y.dag()
-        elif isinstance(y, ArrayLike):
+        elif isinstance(y, get_args(ArrayLike)):
             return y + y.mT.conj()
         else:
             raise TypeError(

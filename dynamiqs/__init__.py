@@ -1,5 +1,5 @@
 from . import dark, plot, random
-from .hermitian_conjugate import hc
+from .hermitian_conjugate import *
 from .integrators import *
 from .options import *
 from .qarrays import *
