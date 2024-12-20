@@ -5104,13 +5104,13 @@ sequence of these types. See also <a class="autorefs autorefs-internal" href="..
           <b>shape</b>
               <i>
 (tuple of ints)              </i>
-          – <p>Array shape.</p>
+          – <p>Shape.</p>
         </li>
         <li class="field-body">
           <b>ndim</b>
               <i>
 (int)              </i>
-          – <p>Number of dimensions of the array.</p>
+          – <p>Number of dimensions in the shape.</p>
         </li>
         <li class="field-body">
           <b>layout</b>
@@ -5143,9 +5143,8 @@ matrix form).</p>
 <details class="note"
  open >
   <summary>Arithmetic operation support</summary>
-  <p>Qarrays support elementary operations, such as element-wise
-addition/subtraction, element-wise multiplication and matrix multiplications
-with other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr>.</p>
+  <p>Qarrays support basic arithmetic operations <code>-, +, *, /, @</code> with other
+<abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr>.</p>
 </details>
 <details class="note"
  open >

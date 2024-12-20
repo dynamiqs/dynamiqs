@@ -5057,10 +5057,22 @@ used to define time-dependent operators for Dynamiqs solvers.</p>
           – <p>Shape.</p>
         </li>
         <li class="field-body">
+          <b>ndim</b>
+              <i>
+(int)              </i>
+          – <p>Number of dimensions in the shape.</p>
+        </li>
+        <li class="field-body">
           <b>layout</b>
               <i>
 (Layout)              </i>
           – <p>Data layout, either <code>dq.dense</code> or <code>dq.dia</code>.</p>
+        </li>
+        <li class="field-body">
+          <b>dims</b>
+              <i>
+(tuple of ints)              </i>
+          – <p>Hilbert space dimension of each subsystem.</p>
         </li>
         <li class="field-body">
           <b>mT</b>
@@ -5070,10 +5082,12 @@ used to define time-dependent operators for Dynamiqs solvers.</p>
 dimensions.</p>
         </li>
         <li class="field-body">
-          <b>ndim</b>
+          <b>vectorized</b>
               <i>
-(int)              </i>
-          – <p>Number of dimensions.</p>
+(bool)              </i>
+          – <p>Whether the underlying qarray is non-vectorized (ket, bra
+or operator) or vectorized (operator in vector form or superoperator in
+matrix form).</p>
         </li>
         <li class="field-body">
           <b>discontinuity_ts</b>
@@ -5088,14 +5102,8 @@ necessarily contain unique values).</p>
 <details class="note"
  open >
   <summary>Arithmetic operation support</summary>
-  <p>Time-qarrays support elementary operations:</p>
-<ul>
-<li>negation (<code>__neg__</code>),</li>
-<li>left-and-right element-wise addition/subtraction with other arrays, qarrays or
-    time-qarrays (<code>__add__</code>, <code>__radd__</code>, <code>__sub__</code>, <code>__rsub__</code>),</li>
-<li>left-and-right element-wise multiplication with other arrays (<code>__mul__</code>,
-    <code>__rmul__</code>).</li>
-</ul>
+  <p>Time-qarrays support basic arithmetic operations <code>-, +, *</code> with other
+<abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr> or time-qarrays.</p>
 </details>
 
 
