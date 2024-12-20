@@ -245,22 +245,21 @@ class TimeQArray(eqx.Module):
     Attributes:
         dtype _(numpy.dtype)_: Data type.
         shape _(tuple of int)_: Shape.
+        ndim _(int)_: Number of dimensions in the shape.
         layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
+        dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
         mT _(TimeQArray)_: Returns the time-qarray transposed over its last two
             dimensions.
-        ndim _(int)_: Number of dimensions.
+        vectorized _(bool)_: Whether the underlying qarray is non-vectorized (ket, bra
+            or operator) or vectorized (operator in vector form or superoperator in
+            matrix form).
         discontinuity_ts _(Array | None)_: Times at which there is a discontinuous jump
             in the time-qarray values (the array is always sorted, but does not
             necessarily contain unique values).
 
     Note: Arithmetic operation support
-        Time-qarrays support elementary operations:
-
-        - negation (`__neg__`),
-        - left-and-right element-wise addition/subtraction with other arrays, qarrays or
-            time-qarrays (`__add__`, `__radd__`, `__sub__`, `__rsub__`),
-        - left-and-right element-wise multiplication with other arrays (`__mul__`,
-            `__rmul__`).
+        Time-qarrays support basic arithmetic operations `-, +, *` with other
+        qarray-like objects or time-qarrays.
     """
 
     # Subclasses should implement:
