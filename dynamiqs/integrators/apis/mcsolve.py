@@ -16,9 +16,9 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MCSolveResult
 from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -36,8 +36,8 @@ from ..mcsolve.diffrax_integrator import (
 
 
 def mcsolve(
-    H: QArrayLike | TimeArray,
-    jump_ops: list[QArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     psi0: QArrayLike,
     tsave: ArrayLike,
     keys: ArrayLike,
@@ -110,8 +110,8 @@ def mcsolve(
             [`dq.MCSolveResult`][dynamiqs.MCSolveResult].
     """  # noqa E501
     # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
+    H = _astimeqarray(H)
+    Ls = [_astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
@@ -132,8 +132,8 @@ def mcsolve(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=['solver', 'root_finder', 'gradient', 'options'])
 def _vectorized_mcsolve(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     psi0: QArray,
     tsave: Array,
     keys: Array,
@@ -204,8 +204,8 @@ def _vectorized_mcsolve(
 
 
 def _mcsolve(
-    H: TimeArray,
-    Ls: list[TimeArray],
+    H: TimeQArray,
+    Ls: list[TimeQArray],
     psi0: QArray,
     tsave: Array,
     keys: Array,
@@ -250,7 +250,7 @@ def _mcsolve(
 
 
 def _check_mcsolve_args(
-    H: TimeArray, Ls: list[TimeArray], psi0: QArray, exp_ops: list[QArray] | None
+    H: TimeQArray, Ls: list[TimeQArray], psi0: QArray, exp_ops: list[QArray] | None
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
