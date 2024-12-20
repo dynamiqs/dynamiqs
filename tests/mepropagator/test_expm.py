@@ -15,9 +15,11 @@ from dynamiqs import (
 
 from ..integrator_tester import IntegratorTester
 from ..mesolve.open_system import dense_ocavity
+from ..order import TEST_LONG
 from .mepropagator_utils import rand_mepropagator_args
 
 
+@pytest.mark.run(order=TEST_LONG)
 class TestMEPropagator(IntegratorTester):
     def test_correctness(self, ysave_atol: float = 1e-4):
         system = dense_ocavity

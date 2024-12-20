@@ -1,9 +1,12 @@
 import numpy as np
+import pytest
 
 import dynamiqs as dq
+from tests.order import TEST_INSTANT
 
 
 # test for the `dq.coherent` method
+@pytest.mark.run(order=TEST_INSTANT)
 def test_coherent():
     alpha1, alpha2 = 1.0, 1.0j
     alphas1, alphas2 = np.linspace(0, 1, 5), np.linspace(0, 1, 7) * 1j
