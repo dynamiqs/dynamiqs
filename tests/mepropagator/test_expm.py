@@ -15,9 +15,11 @@ from dynamiqs import (
 
 from ..integrator_tester import IntegratorTester
 from ..mesolve.open_system import dense_ocavity
+from ..order import TEST_LONG
 from .mepropagator_utils import rand_mepropagator_args
 
 
+@pytest.mark.run(order=TEST_LONG)
 class TestMEPropagator(IntegratorTester):
     def test_correctness(self, ysave_atol: float = 1e-4):
         system = dense_ocavity
@@ -44,8 +46,8 @@ class TestMEPropagator(IntegratorTester):
         propresult = mepropagator(H, Ls, tsave, options=options)
         propagators = propresult.propagators.to_jax()
         U0 = eye(H.shape[-1] ** 2).to_jax()
-        lindbladian_1 = slindbladian(3.0 * H.array, Ls)
-        lindbladian_2 = slindbladian(-2.0 * H.array, Ls)
+        lindbladian_1 = slindbladian(3.0 * H.qarray, Ls)
+        lindbladian_2 = slindbladian(-2.0 * H.qarray, Ls)
         U1 = jax.scipy.linalg.expm(lindbladian_1.to_jax() * 0.5)
         U2 = jax.scipy.linalg.expm(lindbladian_2.to_jax() * 1.0)
         true_propagators = jnp.stack([U0, U1, U2 @ U1]) if save_states else U2 @ U1

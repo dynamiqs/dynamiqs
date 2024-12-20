@@ -6,9 +6,11 @@ from dynamiqs import Options, constant, eye, pwc, random, sepropagator, sigmax, 
 from dynamiqs.solver import Tsit5
 
 from ..integrator_tester import IntegratorTester
+from ..order import TEST_LONG
 from ..sesolve.closed_system import dense_cavity, tdqubit
 
 
+@pytest.mark.run(order=TEST_LONG)
 class TestSEPropagator(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):
@@ -32,7 +34,7 @@ class TestSEPropagator(IntegratorTester):
         propresult = sepropagator(H, tsave, solver=solver, options=options)
         propagators = propresult.propagators.to_jax()
         ts = tsave if save_states else jnp.asarray([10.0])
-        Hts = jnp.einsum('...ij,t->...tij', H.array.to_jax(), ts)
+        Hts = jnp.einsum('...ij,t->...tij', H.qarray.to_jax(), ts)
         true_propagators = jax.scipy.linalg.expm(-1j * Hts)
         assert jnp.allclose(propagators, true_propagators, atol=ysave_atol)
 
@@ -48,8 +50,8 @@ class TestSEPropagator(IntegratorTester):
         propresult = sepropagator(H, tsave, solver=solver, options=options)
         propagators = propresult.propagators.to_jax()
         U0 = eye(H.shape[-1]).to_jax()
-        U1 = jax.scipy.linalg.expm(-1j * H.array.to_jax() * 3.0 * 0.5)
-        U2 = jax.scipy.linalg.expm(-1j * H.array.to_jax() * -2.0 * 1.0)
+        U1 = jax.scipy.linalg.expm(-1j * H.qarray.to_jax() * 3.0 * 0.5)
+        U2 = jax.scipy.linalg.expm(-1j * H.qarray.to_jax() * -2.0 * 1.0)
         if save_states:
             true_propagators = jnp.stack((U0, U1, U2 @ U1))
         else:
@@ -72,8 +74,8 @@ class TestSEPropagator(IntegratorTester):
         options = Options(save_states=save_states)
         propresult = sepropagator(H, tsave, solver=solver, options=options)
         propagators = propresult.propagators.to_jax()
-        H1_array = H1.array.to_jax()
-        H2_array = H2.array.to_jax()
+        H1_array = H1.qarray.to_jax()
+        H2_array = H2.qarray.to_jax()
         U0 = eye(H.shape[-1]).to_jax()
         U1 = jax.scipy.linalg.expm(-1j * (H1_array * 3.0 + H2_array * (-5.0)) * 0.5)
         U2 = jax.scipy.linalg.expm(-1j * (H1_array * (-2.0) + H2_array * 1.0) * 1.0)

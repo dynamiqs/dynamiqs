@@ -14,9 +14,9 @@ from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -35,7 +35,7 @@ from ..sesolve.expm_integrator import SESolveExpmIntegrator
 
 
 def sesolve(
-    H: QArrayLike | TimeArray,
+    H: QArrayLike | TimeQArray,
     psi0: QArrayLike,
     tsave: ArrayLike,
     *,
@@ -60,7 +60,7 @@ def sesolve(
         - $H\to H(t)$
 
     Note-: Defining a time-dependent Hamiltonian
-        If the Hamiltonian depends on time, it can be converted to a time-array using
+        If the Hamiltonian depends on time, it can be converted to a time-qarray using
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -74,7 +74,7 @@ def sesolve(
         tutorial for more details.
 
     Args:
-        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
@@ -101,7 +101,7 @@ def sesolve(
             [`dq.SESolveResult`][dynamiqs.SESolveResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
+    H = _astimeqarray(H)
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
@@ -119,7 +119,7 @@ def sesolve(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_sesolve(
-    H: TimeArray,
+    H: TimeQArray,
     psi0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -149,7 +149,7 @@ def _vectorized_sesolve(
 
 
 def _sesolve(
-    H: TimeArray,
+    H: TimeQArray,
     psi0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
@@ -190,7 +190,7 @@ def _sesolve(
     return result  # noqa: RET504
 
 
-def _check_sesolve_args(H: TimeArray, psi0: QArray, exp_ops: list[QArray] | None):
+def _check_sesolve_args(H: TimeQArray, psi0: QArray, exp_ops: list[QArray] | None):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 

@@ -4,7 +4,7 @@ from .options import *
 from .qarrays import *
 from .qarrays.layout import dense, dia
 from .result import *
-from .time_array import *
+from .time_qarray import *
 from .utils import *
 
 __version__ = '0.2.3'

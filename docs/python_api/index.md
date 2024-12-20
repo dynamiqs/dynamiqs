@@ -26,13 +26,13 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - QArray
 
-### Time-dependent arrays
+### Time-dependent qarrays
 
-::: dynamiqs.time_array
+::: dynamiqs.time_qarray
     options:
         table: true
         members:
-        - TimeArray
+        - TimeQArray
         - constant
         - pwc
         - modulated

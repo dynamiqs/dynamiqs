@@ -170,7 +170,7 @@ class QArray(eqx.Module):
     """  # noqa: E501
 
     # Subclasses should implement:
-    # - the properties: dtype, layout, shape, mT, _underlying_array
+    # - the properties: dtype, layout, shape, mT
     # - the methods:
     #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
     #                     block_until_ready
@@ -238,10 +238,6 @@ class QArray(eqx.Module):
     def ndim(self) -> int:
         return len(self.shape)
 
-    @property
-    def _underlying_array(self) -> Array:
-        pass
-
     @abstractmethod
     def conj(self) -> QArray:
         """Returns the element-wise complex conjugate of the qarray.
@@ -253,7 +249,6 @@ class QArray(eqx.Module):
     def dag(self) -> QArray:
         return self.mT.conj()
 
-    @abstractmethod
     def reshape(self, *shape: int) -> QArray:
         """Returns a reshaped copy of a qarray.
 
@@ -263,6 +258,19 @@ class QArray(eqx.Module):
         Returns:
             New qarray object with the given shape.
         """
+        if shape[-2:] != self.shape[-2:]:
+            raise ValueError(
+                f'Cannot reshape to shape {shape} because the last two dimensions do '
+                f'not match current shape dimensions, {self.shape}.'
+            )
+        return self._reshape_unchecked(*shape)
+
+    @abstractmethod
+    def _reshape_unchecked(self, *shape: int) -> QArray:
+        # Does the heavy-lifting for `reshape` but skips all checks.
+        # This private method allows for more powerful reshapes that
+        # are useful for vectorization.
+        pass
 
     @abstractmethod
     def broadcast_to(self, *shape: int) -> QArray:
@@ -482,11 +490,17 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
+
         if _is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod
     def __rmatmul__(self, y: QArrayLike) -> QArray:
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
+
         if _is_batched_scalar(y):
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
@@ -546,7 +560,8 @@ class QArray(eqx.Module):
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+            f'QArrays have incompatible Hilbert space dimensions. '
+            f'Got {dims1} and {dims2}.'
         )
 
 

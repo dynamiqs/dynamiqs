@@ -12,7 +12,7 @@ from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import CallableTimeArray, modulated
+from dynamiqs.time_qarray import CallableTimeQArray, modulated
 
 from ..system import System
 
@@ -62,7 +62,7 @@ class FloquetQubit(System):
             omega, omega_d, amp, tsave, modes_0, quasienergies
         )
 
-    def H(self, params: PyTree) -> CallableTimeArray:
+    def H(self, params: PyTree) -> CallableTimeQArray:
         H0 = -0.5 * params.omega * sigmaz()
         fn = lambda t: jnp.exp(-1j * params.omega_d * t)
         H1 = modulated(fn, 0.5 * params.amp * sigmam())

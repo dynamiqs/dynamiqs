@@ -101,10 +101,6 @@ class SparseDIAQArray(QArray):
         return self._replace(offsets=offsets, diags=diags)
 
     @property
-    def _underlying_array(self) -> Array:
-        return self.diags
-
-    @property
     def ndiags(self) -> int:
         return len(self.offsets)
 
@@ -112,13 +108,7 @@ class SparseDIAQArray(QArray):
         diags = self.diags.conj()
         return self._replace(diags=diags)
 
-    def reshape(self, *shape: int) -> QArray:
-        if shape[-2:] != self.shape[-2:]:
-            raise ValueError(
-                f'Cannot reshape to shape {shape} because the last two dimensions do '
-                f'not match current shape dimensions, {self.shape}.'
-            )
-
+    def _reshape_unchecked(self, *shape: int) -> QArray:
         offsets, diags = reshape_sparsedia(self.offsets, self.diags, shape)
         return self._replace(offsets=offsets, diags=diags)
 
@@ -183,7 +173,7 @@ class SparseDIAQArray(QArray):
             'compute its eigen-decomposition.',
             stacklevel=2,
         )
-        return self.to_dense()._eig()  # noqa: SLF001
+        return self.to_dense()._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
         raise NotImplementedError

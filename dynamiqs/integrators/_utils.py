@@ -12,37 +12,37 @@ from .._utils import obj_type_str
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import asqarray
 from ..solver import Solver, _DEAdaptiveStep
-from ..time_array import (
-    ConstantTimeArray,
-    PWCTimeArray,
+from ..time_qarray import (
+    ConstantTimeQArray,
+    PWCTimeQArray,
     Shape,
-    SummedTimeArray,
-    TimeArray,
+    SummedTimeQArray,
+    TimeQArray,
 )
 from .core.abstract_integrator import AbstractIntegrator
 
 
-def _astimearray(x: QArrayLike | TimeArray) -> TimeArray:
-    if isinstance(x, TimeArray):
+def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
+    if isinstance(x, TimeQArray):
         return x
     else:
         try:
             # same as dq.constant() but not checking the shape
             array = asqarray(x)
-            return ConstantTimeArray(array)
+            return ConstantTimeQArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be a qarray-like or a time-array object, but has type'
+                'Argument must be a qarray-like or a time-qarray object, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 
 
-def ispwc(x: TimeArray) -> bool:
-    # check if a time array is constant or piecewise constant
-    if isinstance(x, (ConstantTimeArray, PWCTimeArray)):
+def ispwc(x: TimeQArray) -> bool:
+    # check if a time-qarray is constant or piecewise constant
+    if isinstance(x, (ConstantTimeQArray, PWCTimeQArray)):
         return True
-    elif isinstance(x, SummedTimeArray):
-        return all(ispwc(timearray) for timearray in x.timearrays)
+    elif isinstance(x, SummedTimeQArray):
+        return all(ispwc(timeqarray) for timeqarray in x.timeqarrays)
     else:
         return False
 
@@ -183,8 +183,8 @@ def cartesian_vmap(
     for path, n in keyleaf[::-1]:
         if n > 0:
             # set all elements `in_axes` to `None` except for a specific subpart
-            keep_path_only = (
-                lambda cpath, x, path=path: x if cpath[: len(path)] == path else None
+            keep_path_only = lambda cpath, x, path=path: (
+                x if cpath[: len(path)] == path else None
             )
             in_axes_single = jax.tree_util.tree_map_with_path(keep_path_only, in_axes)
             for _ in range(n):
