@@ -264,7 +264,8 @@ class TimeQArray(eqx.Module):
     """
 
     # Subclasses should implement:
-    # - the properties: dtype, shape, layout, mT, in_axes, discontinuity_ts
+    # - the properties: dtype, shape, dims, ndiags, vectorized, layout, mT, in_axes,
+    #                   discontinuity_ts
     # - the methods: reshape, broadcast_to, conj, __call__, __mul__, __add__
 
     # Note that a subclass implementation of `__add__` only need to support addition
