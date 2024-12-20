@@ -110,8 +110,8 @@ class QArray(eqx.Module):
 
     Attributes:
         dtype _(numpy dtype)_: Data type.
-        shape _(tuple of ints)_: Array shape.
-        ndim _(int)_: Number of dimensions of the array.
+        shape _(tuple of ints)_: Shape.
+        ndim _(int)_: Number of dimensions in the shape.
         layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
         mT _(QArray)_: Returns the qarray transposed over its last two dimensions.
@@ -120,9 +120,8 @@ class QArray(eqx.Module):
             matrix form).
 
     Note: Arithmetic operation support
-        Qarrays support elementary operations, such as element-wise
-        addition/subtraction, element-wise multiplication and matrix multiplications
-        with other qarray-like objects.
+        Qarrays support basic arithmetic operations `-, +, *, /, @` with other
+        qarray-like objects.
 
     Note: Shortcuts methods to use quantum utilities
         Many functions of the library can be called directly on a qarray rather than
@@ -172,8 +171,8 @@ class QArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, layout, shape, mT
     # - the methods:
-    #   - QArray methods: conj, dag, reshape, broadcast_to, ptrace, powm, expm,
-    #                     block_until_ready
+    #   - QArray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
+    #                     expm, block_until_ready
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
     #                                     _eigvals, _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
