@@ -175,11 +175,11 @@ def _check_floquet_args(
     # === check that the Hamiltonian is periodic with the supplied period
     # attach the check to `tsave` instead of `H` to workaround CallableTimeQArrays that
     # do not have an underlying array to attach the check to
-    tol = 1e-6  # TODO: fix hard-coded tolerance for periodicity check
+    rtol, atol = 1e-5, 1e-8  # TODO: fix hard-coded tolerance for periodicity check
     tsave = eqx.error_if(
         tsave,
         jnp.logical_not(
-            eqx.tree_equal(H(0.0), H(T), rtol=tol, atol=tol, typematch=True)
+            eqx.tree_equal(H(0.0), H(T), rtol=rtol, atol=atol, typematch=True)
         ),
         'The Hamiltonian H is not periodic with the supplied period T.',
     )
