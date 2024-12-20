@@ -101,10 +101,6 @@ class SparseDIAQArray(QArray):
         return self._replace(offsets=offsets, diags=diags)
 
     @property
-    def _underlying_array(self) -> Array:
-        return self.diags
-
-    @property
     def ndiags(self) -> int:
         return len(self.offsets)
 
@@ -339,6 +335,8 @@ def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
     valid_key = False
     if isinstance(key, (int, slice)):
         valid_key = ndim > 2
+    if isinstance(key, Array):
+        valid_key = key.ndim == 0 and ndim > 2
     elif isinstance(key, tuple):
         if Ellipsis in key:
             ellipsis_key = key.index(Ellipsis)
