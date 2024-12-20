@@ -93,13 +93,14 @@ def mcsolve(
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
-        root_finder: Root finder passed to dx.diffeqsolve() to find the exact time an
-            event occurs. Can be `None`, in which case the root finding functionality
-            is not utilized. It is recommended to pass a root finder (such as the
-            default Newton root finder) so that event times are not determined by the
-            integration step sizes in diffeqsolve. However there are cases where the
-            root finding can fail, causing the whole simulation to fail. Passing `None`
-            for `root_finder` can alleviate the issue in these cases.
+        root_finder: Root finder passed to dx.diffeqsolve() (see here https://docs.kidger.site/diffrax/api/diffeqsolve/) 
+            to find the exact time an event occurs. Can be `None`, in which case the
+            root finding functionality is not utilized. It is recommended to pass a root
+            finder (such as the optimistix Newton root finder https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton)
+            so that event times are not determined by the integration step sizes in
+            diffeqsolve. However there are cases where the root finding can fail,
+            causing the whole simulation to fail. Passing `None` for `root_finder` can
+            alleviate the issue in these cases.
         gradient: Algorithm used to compute the gradient.
         options: Generic options, see [`dq.Options`](/python_api/options/Options.html).
 
