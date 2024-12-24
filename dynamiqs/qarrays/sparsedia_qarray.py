@@ -173,16 +173,31 @@ class SparseDIAQArray(QArray):
             'compute its eigen-decomposition.',
             stacklevel=2,
         )
-        return self.to_dense()._eig()
+        return self.asdense()._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
-        raise NotImplementedError
+        warnings.warn(
+            'A SparseDIAQArray has been converted to a DenseQArray while attempting to '
+            'compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigh()
 
     def _eigvals(self) -> Array:
-        raise NotImplementedError
+        warnings.warn(
+            'A SparseDIAQArray has been converted to a DenseQArray while attempting to '
+            'compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigvals()
 
     def _eigvalsh(self) -> Array:
-        raise NotImplementedError
+        warnings.warn(
+            'A SparseDIAQArray has been converted to a DenseQArray while attempting to '
+            'compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigvalsh()
 
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError

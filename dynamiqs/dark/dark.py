@@ -24,7 +24,7 @@ def quadrature_sign(dim: int, phi: float) -> QArray:
         _(qarray of shape (dim, dim))_ Quadrature sign operator.
     """
     quad = quadrature(dim, phi)
-    L, Q = quad._eigh()
+    L, Q = quad.asdense()._eigh()
     sign_L = jnp.diag(jnp.sign(L))
     array = Q @ sign_L @ dag(Q)
     return asqarray(array)
