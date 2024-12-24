@@ -27,7 +27,7 @@ def constant(qarray: QArrayLike) -> ConstantTimeQArray:
     constant qarray.
 
     Args:
-        qarray _(qarray_like of shape (..., n, n))_: Constant qarray $O_0$.
+        qarray _(qarray-like of shape (..., n, n))_: Constant qarray $O_0$.
 
     Returns:
         _(time-qarray object of shape (..., n, n) when called)_ Callable object
@@ -69,11 +69,11 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
         any time intervals, the returned qarray is null.
 
     Args:
-        times _(array_like of shape (N+1,))_: Time points $t_k$ defining the boundaries
+        times _(array-like of shape (N+1,))_: Time points $t_k$ defining the boundaries
             of the time intervals, where _N_ is the number of time intervals.
-        values _(array_like of shape (..., N))_: Constant values $c_k$ for each time
+        values _(array-like of shape (..., N))_: Constant values $c_k$ for each time
             interval.
-        qarray _(qarray_like of shape (n, n))_: Constant qarray $O_0$.
+        qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
 
     Returns:
         _(time-qarray object of shape (..., n, n) when called)_ Callable object
@@ -137,8 +137,8 @@ def modulated(
         f _(function returning scalar or array of shape (...))_: Function with signature
             `f(t: float) -> Scalar | Array` that returns the modulating factor
             $f(t)$.
-        qarray _(qarray_like of shape (n, n))_: Constant qarray $O_0$.
-        discontinuity_ts _(array_like, optional)_: Times at which there is a
+        qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
+        discontinuity_ts _(array-like, optional)_: Times at which there is a
             discontinuous jump in the function values.
 
     Returns:
@@ -196,7 +196,7 @@ def timecallable(
     Args:
         f _(function returning qarray of shape (..., n, n))_: Function with
             signature `(t: float) -> QArray` that returns the qarray $f(t)$.
-        discontinuity_ts _(array_like, optional)_: Times at which there is a
+        discontinuity_ts _(array-like, optional)_: Times at which there is a
             discontinuous jump in the function values.
 
     Returns:

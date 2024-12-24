@@ -31,7 +31,7 @@ def operator_to_vector(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Operator.
+        x _(qarray-like of shape (..., n, n))_: Operator.
 
     Returns:
         _(qarray of shape (..., n^2, 1))_ Vectorized operator.
@@ -68,7 +68,7 @@ def vector_to_operator(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray_like of shape (..., n^2, 1))_: Vectorized operator.
+        x _(qarray-like of shape (..., n^2, 1))_: Vectorized operator.
 
     Returns:
         _(qarray of shape (..., n, n))_ Operator.
@@ -104,7 +104,7 @@ def spre(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Operator.
+        x _(qarray-like of shape (..., n, n))_: Operator.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Pre-multiplication superoperator.
@@ -130,7 +130,7 @@ def spost(x: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Operator.
+        x _(qarray-like of shape (..., n, n))_: Operator.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Post-multiplication superoperator.
@@ -156,8 +156,8 @@ def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
     $$
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Operator for pre-multiplication.
-        y _(qarray_like of shape (..., n, n))_: Operator for post-multiplication.
+        x _(qarray-like of shape (..., n, n))_: Operator for pre-multiplication.
+        y _(qarray-like of shape (..., n, n))_: Operator for post-multiplication.
 
     Returns:
         _(Qarray of shape (..., n^2, n^2))_ Pre- and post-multiplication superoperator.
@@ -191,7 +191,7 @@ def sdissipator(L: QArrayLike) -> QArray:
     $$
 
     Args:
-        L _(qarray_like of shape (..., n, n))_: Jump operator.
+        L _(qarray-like of shape (..., n, n))_: Jump operator.
 
     Returns:
         _(qarray of shape (..., n^2, n^2))_ Dissipation superoperator.
@@ -232,8 +232,8 @@ def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(qarray_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(list of qarray_like, each of shape (..., n, n))_: List of jump
+        H _(qarray-like of shape (..., n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like, each of shape (..., n, n))_: List of jump
             operators.
 
     Returns:

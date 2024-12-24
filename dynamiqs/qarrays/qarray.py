@@ -533,7 +533,7 @@ class QArray(eqx.Module):
         """Computes the element-wise multiplication.
 
         Args:
-            y: Array-like object to multiply with element-wise.
+            y: Array-like to multiply with element-wise.
 
         Returns:
             New qarray object resulting from the element-wise multiplication.
@@ -586,7 +586,7 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # - a nested sequence of these types.
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 
-# extended array like type
+# extended array-like type
 _QArrayLike = Union[ArrayLike, QArray, Qobj]
 # a type alias for nested sequence of _QArrayLike
 _NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
