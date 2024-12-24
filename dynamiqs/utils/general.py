@@ -741,7 +741,7 @@ def tobra(x: QArrayLike) -> QArray:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
-        _(qarray of shape (..., 1, n))_ QArray.
+        _(qarray of shape (..., 1, n))_ Qarray.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)

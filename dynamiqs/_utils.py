@@ -68,5 +68,5 @@ def _is_batched_scalar(y: ArrayLike) -> bool:
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+            f'Qarrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )

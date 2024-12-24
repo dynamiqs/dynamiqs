@@ -113,7 +113,7 @@ class QArray(eqx.Module):
         ndim _(int)_: Number of dimensions in the shape.
         layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(QArray)_: Returns the qarray transposed over its last two dimensions.
+        mT _(qarray)_: Returns the qarray transposed over its last two dimensions.
         vectorized _(bool)_: Whether the underlying object is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
@@ -170,7 +170,7 @@ class QArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, layout, shape, mT
     # - the methods:
-    #   - QArray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
+    #   - qarray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
     #                     expm, block_until_ready
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
     #                                     _eigvals, _eigvalsh, devices, isherm
@@ -208,7 +208,7 @@ class QArray(eqx.Module):
         allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
         if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
-                'Argument `dims` must be compatible with the shape of the QArray, but '
+                'Argument `dims` must be compatible with the shape of the qarray, but '
                 f'got dims {self.dims} and shape {self.shape}.'
             )
 
@@ -558,7 +558,7 @@ class QArray(eqx.Module):
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'QArrays have incompatible Hilbert space dimensions. '
+            f'Qarrays have incompatible Hilbert space dimensions. '
             f'Got {dims1} and {dims2}.'
         )
 
@@ -582,13 +582,13 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # - a JAX array,
 # - a NumPy array,
 # - a QuTiP Qobj,
-# - a dynamiqs QArray,
+# - a dynamiqs `QArray`,
 # - a nested sequence of these types.
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 
 # extended array-like type
 _QArrayLike = Union[ArrayLike, QArray, Qobj]
-# a type alias for nested sequence of _QArrayLike
+# a type alias for nested sequence of `_QArrayLike`
 _NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
 # a type alias for any type compatible with asqarray
 QArrayLike = Union[_QArrayLike, _NestedQArrayLikeSequence]

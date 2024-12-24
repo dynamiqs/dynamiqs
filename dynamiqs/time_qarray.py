@@ -248,7 +248,7 @@ class TimeQArray(eqx.Module):
         ndim _(int)_: Number of dimensions in the shape.
         layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(TimeQArray)_: Returns the time-qarray transposed over its last two
+        mT _(time-qarray)_: Returns the time-qarray transposed over its last two
             dimensions.
         vectorized _(bool)_: Whether the underlying qarray is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
@@ -313,7 +313,7 @@ class TimeQArray(eqx.Module):
     @abstractmethod
     def in_axes(self) -> PyTree[int | None]:
         # returns the `in_axes` arguments that should be passed to vmap in order
-        # to vmap the TimeQArray correctly
+        # to vmap the `TimeQArray` correctly
         pass
 
     @property
@@ -391,7 +391,7 @@ class TimeQArray(eqx.Module):
             t: Time at which to evaluate the time-qarray.
 
         Returns:
-            QArray evaluated at time $t$.
+            Qarray evaluated at time $t$.
         """
 
     def __neg__(self) -> TimeQArray:
