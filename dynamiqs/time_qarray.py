@@ -13,7 +13,7 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import _concatenate_sort, cdtype, obj_type_str
-from .qarrays.layout import Layout, promote_layouts
+from .qarrays.layout import Layout, dia, promote_layouts
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
 from .qarrays.utils import asqarray
 
@@ -418,10 +418,15 @@ class TimeQArray(eqx.Module):
         return y + (-self)
 
     def __repr__(self) -> str:
-        return (
-            f'{type(self).__name__}(shape={self.shape}, dtype={self.dtype}, '
-            f'layout={self.layout})'
+        res = (
+            f'{type(self).__name__}: shape={self.shape}, dims={self.dims}, '
+            f'dtype={self.dtype}, layout={self.layout}'
         )
+        if self.vectorized:
+            res += f', vectorized={self.vectorized}'
+        if self.layout is dia:
+            res += f', ndiags={self.ndiags}'
+        return res
 
 
 class ConstantTimeQArray(TimeQArray):
