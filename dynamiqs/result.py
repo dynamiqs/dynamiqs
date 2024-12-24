@@ -103,6 +103,11 @@ class Result(eqx.Module):
         parts_str = '\n'.join(f'{k:<{padding}}: {v}' for k, v in parts.items())
         return f'==== {self.__class__.__name__} ====\n' + parts_str
 
+    @classmethod
+    @property
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0)
+
 
 class SolveResult(Result):
     @property
@@ -178,6 +183,11 @@ class FloquetResult(Result):
             'Modes': array_str(self.modes),
             'Quasienergies': array_str(self.quasienergies),
         }
+
+    @classmethod
+    @property
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, None)
 
 
 class SESolveResult(SolveResult):

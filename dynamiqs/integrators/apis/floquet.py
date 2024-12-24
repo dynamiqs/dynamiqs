@@ -125,8 +125,7 @@ def _vectorized_floquet(
 ) -> FloquetResult:
     # vectorize input over H
     in_axes = (H.in_axes, None, None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = FloquetResult(None, None, None, None, 0, 0, None)
+    out_axes = FloquetResult.out_axes
 
     # cartesian batching only
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0, 0)

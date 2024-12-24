@@ -159,8 +159,7 @@ def _vectorized_mesolve(
 ) -> MESolveResult:
     # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = MESolveResult(None, None, None, None, 0, 0)
+    out_axes = MESolveResult.out_axes
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
