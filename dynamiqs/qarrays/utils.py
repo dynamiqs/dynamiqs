@@ -36,7 +36,7 @@ __all__ = [
 def asqarray(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
-    """Converts a qarray-like object into a qarray.
+    """Converts a qarray-like into a qarray.
 
     Args:
         x: Object to convert.
@@ -51,7 +51,7 @@ def asqarray(
 
     See also:
         - [`dq.isqarraylike()`][dynamiqs.isqarraylike]: returns True if the input is
-            a qarray-like object.
+            a qarray-like.
 
     Examples:
         >>> dq.asqarray([[1, 0], [0, -1]])
@@ -190,7 +190,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
 
 
 def to_jax(x: QArrayLike) -> Array:
-    """Convert a qarray-like object into a JAX array.
+    """Convert a qarray-like into a JAX array.
 
     Args:
         x: Object to convert.
@@ -217,7 +217,7 @@ def to_jax(x: QArrayLike) -> Array:
 
 
 def to_numpy(x: QArrayLike) -> np.ndarray:
-    """Convert a qarray-like object into a NumPy array.
+    """Convert a qarray-like into a NumPy array.
 
     Args:
         x: Object to convert.
@@ -244,7 +244,7 @@ def to_numpy(x: QArrayLike) -> np.ndarray:
 
 
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
-    r"""Convert a qarray-like object into a QuTiP Qobj or list of Qobjs.
+    r"""Convert a qarray-like into a QuTiP Qobj or list of Qobjs.
 
     Args:
         x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra,

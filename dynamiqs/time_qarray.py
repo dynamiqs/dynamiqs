@@ -188,9 +188,9 @@ def timecallable(
     with signature `f(t: float) -> QArray` that returns a qarray of shape _(..., n, n)_
     for any time $t$.
 
-    Warning: The function `f` must return a `QArray` (not a qarray-like object!)
+    Warning: The function `f` must return a `QArray` (not a qarray-like!)
         An error is raised if the function `f` does not return a `QArray`. This error
-        concerns any other qarray-like objects. This is enforced to avoid costly
+        concerns any other qarray-likes. This is enforced to avoid costly
         conversions at every time step of the numerical integration.
 
     Args:
@@ -259,7 +259,7 @@ class TimeQArray(eqx.Module):
 
     Note: Arithmetic operation support
         Time-qarrays support basic arithmetic operations `-, +, *` with other
-        qarray-like objects or time-qarrays.
+        qarray-likes or time-qarrays.
     """
 
     # Subclasses should implement:

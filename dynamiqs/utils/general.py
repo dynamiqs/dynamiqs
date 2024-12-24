@@ -280,7 +280,7 @@ def ptrace(
         >>> rho_bc.shape
         (20, 20)
 
-        If the input qarray-like object `x` does not hold Hilbert space dimensions, you
+        If the input qarray-like `x` does not hold Hilbert space dimensions, you
         can specify them with the argument `dims`. For example, to trace out the second
         subsystem of the Bell state $(\ket{00}+\ket{11})/\sqrt2$:
         >>> bell_state = np.array([1, 0, 0, 1])[:, None] / np.sqrt(2)

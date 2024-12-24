@@ -24,7 +24,7 @@ QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 (2, 2)
 ```
 
-Time-qarrays support common arithmetic operations with scalars, qarray-like objects and other time-qarrays. For example to define the Hamiltonian
+Time-qarrays support common arithmetic operations with scalars, qarray-likes and other time-qarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
@@ -48,7 +48,7 @@ A constant operator is defined by
 $$
     O(t) = O_0
 $$
-for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-like objects. They can also be instantiated as [`TimeQArray`][dynamiqs.TimeQArray] instances using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
+for any time $t$, where $O_0$ is an arbitrary operator. The most practical way to define constant operators is using qarray-likes. They can also be instantiated as [`TimeQArray`][dynamiqs.TimeQArray] instances using the [`dq.constant()`][dynamiqs.constant] function. For instance, to define the Pauli operator $H = \sigma_z$, you can use any of the following syntaxes:
 
 === "Dynamiqs utilities"
     ```python
@@ -263,8 +263,8 @@ The returned object can be called at different times:
      [0. 0.]]
     ```
 
-!!! Warning "The function `f` must return a `QArray` (not a qarray-like object!)"
-    An error is raised if the function `f` does not return a `QArray`. This error concerns any other qarray-like objects. This is enforced to avoid costly conversions at every time step of the numerical integration.
+!!! Warning "The function `f` must return a `QArray` (not a qarray-like!)"
+    An error is raised if the function `f` does not return a `QArray`. This error concerns any other qarray-likes. This is enforced to avoid costly conversions at every time step of the numerical integration.
 
 ??? Note "Batching arbitrary time-dependent operators"
     The batching of the returned time-qarray is specified by the qarray returned by `f`. For example, to define an arbitrary time-dependent operator batched over a parameter $\theta$:

@@ -91,7 +91,7 @@ There are two main types of ODE solvers:
 
 ## Using Dynamiqs
 
-You can create the state and Hamiltonian using any qarray-like object. Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using any qarray-like. Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
 import jax.numpy as jnp

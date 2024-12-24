@@ -24,7 +24,7 @@ __all__ = ['QArray']
 
 
 def isqarraylike(x: Any) -> bool:
-    r"""Returns True if the input is a qarray-like object.
+    r"""Returns True if the input is a qarray-like.
 
     Args:
         x: Any object.
@@ -35,8 +35,7 @@ def isqarraylike(x: Any) -> bool:
             types.
 
     See also:
-        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like object into a
-            qarray.
+        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like into a qarray.
 
     Examples:
         >>> dq.isqarraylike(1)
@@ -103,7 +102,7 @@ class QArray(eqx.Module):
 
     Note: Constructing a new qarray from an other array type
         Use the function [`dq.asqarray()`][dynamiqs.asqarray] to create a qarray from a
-        qarray-like object. Objects that can be converted to a `QArray` are of type
+        qarray-like. Objects that can be converted to a `QArray` are of type
         `dq.QArrayLike`. This includes all numeric types (`bool`, `int`, `float`,
         `complex`), a JAX or NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested
         sequence of these types. See also [`dq.isqarraylike()`][dynamiqs.isqarraylike].
@@ -121,7 +120,7 @@ class QArray(eqx.Module):
 
     Note: Arithmetic operation support
         Qarrays support basic arithmetic operations `-, +, *, /, @` with other
-        qarray-like objects.
+        qarray-likes.
 
     Note: Shortcuts methods to use quantum utilities
         Many functions of the library can be called directly on a qarray rather than
