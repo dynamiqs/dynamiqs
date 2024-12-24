@@ -241,7 +241,7 @@ class QArray(eqx.Module):
         """Returns the element-wise complex conjugate of the qarray.
 
         Returns:
-            New qarray object with element-wise complex conjuguated values.
+            New qarray with element-wise complex conjuguated values.
         """
 
     def dag(self) -> QArray:
@@ -254,7 +254,7 @@ class QArray(eqx.Module):
             *shape: New shape, which must match the original size.
 
         Returns:
-            New qarray object with the given shape.
+            New qarray with the given shape.
         """
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
@@ -278,7 +278,7 @@ class QArray(eqx.Module):
             *shape: New shape, which must be compatible with the original shape.
 
         Returns:
-            New qarray object with the given shape.
+            New qarray with the given shape.
         """
 
     @abstractmethod
@@ -415,7 +415,7 @@ class QArray(eqx.Module):
         """Converts to a dense layout.
 
         Returns:
-            A `DenseQArray` object.
+            A `DenseQArray`.
         """
 
     @abstractmethod
@@ -423,7 +423,7 @@ class QArray(eqx.Module):
         """Converts to a sparse diagonal layout.
 
         Returns:
-            A `SparseDIAQArray` object.
+            A `SparseDIAQArray`.
         """
 
     @abstractmethod
@@ -525,7 +525,7 @@ class QArray(eqx.Module):
             y: Scalar to add, whose shape should be broadcastable with the qarray.
 
         Returns:
-            New qarray object resulting from the addition with the scalar.
+            New qarray resulting from the addition with the scalar.
         """
 
     @abstractmethod
@@ -536,7 +536,7 @@ class QArray(eqx.Module):
             y: Array-like to multiply with element-wise.
 
         Returns:
-            New qarray object resulting from the element-wise multiplication.
+            New qarray resulting from the element-wise multiplication.
         """
 
     @abstractmethod
@@ -547,7 +547,7 @@ class QArray(eqx.Module):
             power: Power to raise to.
 
         Returns:
-            New qarray object with elements raised to the specified power.
+            New qarray with elements raised to the specified power.
         """
 
     @abstractmethod

@@ -152,7 +152,7 @@ The returned object can be called at different times:
     ```
 
 !!! Note
-    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray object at time $t$, the returned qarray is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned qarray is null.
+    The argument `times` must be sorted in ascending order, but does not need to be evenly spaced. When calling the resulting time-qarray at time $t$, the returned qarray is the operator $c_k\ O_0$ corresponding to the interval $[t_k, t_{k+1}[$ in which the time $t$ falls. If $t$ does not belong to any time intervals, the returned qarray is null.
 
 ??? Note "Batching PWC operators"
     The batching of the returned time-qarray is specified by `values`. For example, to define a PWC operator batched over a parameter $\theta$:

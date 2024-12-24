@@ -30,8 +30,8 @@ def constant(qarray: QArrayLike) -> ConstantTimeQArray:
         qarray _(qarray-like of shape (..., n, n))_: Constant qarray $O_0$.
 
     Returns:
-        _(time-qarray object of shape (..., n, n) when called)_ Callable object
-            returning $O_0$ for any time $t$.
+        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O_0$ for
+            any time $t$.
 
     Examples:
         >>> H = dq.constant(dq.sigmaz())
@@ -76,8 +76,8 @@ def pwc(times: ArrayLike, values: ArrayLike, qarray: QArrayLike) -> PWCTimeQArra
         qarray _(qarray-like of shape (n, n))_: Constant qarray $O_0$.
 
     Returns:
-        _(time-qarray object of shape (..., n, n) when called)_ Callable object
-            returning $O(t)$ for any time $t$.
+        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+            any time $t$.
 
     Examples:
         >>> times = [0.0, 1.0, 2.0]
@@ -142,8 +142,8 @@ def modulated(
             discontinuous jump in the function values.
 
     Returns:
-        _(time-qarray object of shape (..., n, n) when called)_ Callable object
-            returning $O(t)$ for any time $t$.
+        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+            any time $t$.
 
     Examples:
         >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
@@ -188,8 +188,8 @@ def timecallable(
     with signature `f(t: float) -> QArray` that returns a qarray of shape _(..., n, n)_
     for any time $t$.
 
-    Warning: The function `f` must return a `QArray` (not a qarray-like!)
-        An error is raised if the function `f` does not return a `QArray`. This error
+    Warning: The function `f` must return a qarray (not a qarray-like!)
+        An error is raised if the function `f` does not return a qarray. This error
         concerns any other qarray-likes. This is enforced to avoid costly
         conversions at every time step of the numerical integration.
 
@@ -200,8 +200,8 @@ def timecallable(
             discontinuous jump in the function values.
 
     Returns:
-       _(time-qarray object of shape (..., n, n) when called)_ Callable object
-            returning $O(t)$ for any time $t$.
+        _(time-qarray of shape (..., n, n) when called)_ Callable returning $O(t)$ for
+            any time $t$.
 
     Examples:
         >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
@@ -330,7 +330,7 @@ class TimeQArray(eqx.Module):
             *shape: New shape, which must match the original size.
 
         Returns:
-            New time-qarray object with the given shape.
+            New time-qarray with the given shape.
         """
 
     @abstractmethod
@@ -341,7 +341,7 @@ class TimeQArray(eqx.Module):
             *shape: New shape, which must be compatible with the original shape.
 
         Returns:
-            New time-qarray object with the given shape.
+            New time-qarray with the given shape.
         """
 
     @abstractmethod
@@ -349,14 +349,14 @@ class TimeQArray(eqx.Module):
         """Returns the element-wise complex conjugate of the time-qarray.
 
         Returns:
-            New time-qarray object with element-wise complex conjuguated values.
+            New time-qarray with element-wise complex conjuguated values.
         """
 
     def dag(self) -> TimeQArray:
         r"""Returns the adjoint (complex conjugate transpose) of the time-qarray.
 
         Returns:
-            New time-qarray object with adjoint values.
+            New time-qarray with adjoint values.
         """
         return self.mT.conj()
 
@@ -367,7 +367,7 @@ class TimeQArray(eqx.Module):
             axis: Axis to squeeze. If `none`, all axes with dimension 1 are squeezed.
 
         Returns:
-            New time-qarray object with squeezed_shape
+            New time-qarray with squeezed_shape
         """
         if axis is None:
             shape = self.shape
