@@ -182,7 +182,7 @@ To construct a modulated operator, these two arguments must be passed to the [`d
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> H
-ModulatedTimeQArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
+ModulatedTimeQArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2
 ```
 
 The returned object can be called at different times:
