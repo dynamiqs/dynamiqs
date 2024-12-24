@@ -104,7 +104,7 @@ To construct a PWC operator, these three arguments must be passed to the [`dq.pw
 >>> qarray = dq.sigmaz()
 >>> H = dq.pwc(times, values, qarray)
 >>> H
-PWCTimeQArray(shape=(2, 2), dtype=complex64, layout=dia)
+PWCTimeQArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
 ```
 
 The returned object can be called at different times:
@@ -182,7 +182,7 @@ To construct a modulated operator, these two arguments must be passed to the [`d
 >>> f = lambda t: jnp.cos(2.0 * jnp.pi * t)
 >>> H = dq.modulated(f, dq.sigmax())
 >>> H
-ModulatedTimeQArray(shape=(2, 2), dtype=complex64, layout=dia)
+ModulatedTimeQArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=1
 ```
 
 The returned object can be called at different times:
@@ -244,7 +244,7 @@ For example, let us define the arbitrary time-dependent operator $H(t)=\begin{pm
 >>> f = lambda t: dq.asqarray([[t, 0], [0, 1 - t]])
 >>> H = dq.timecallable(f)
 >>> H
-CallableTimeQArray(shape=(2, 2), dtype=float32, layout=dense)
+CallableTimeQArray: shape=(2, 2), dims=(2,), dtype=float32, layout=dense
 ```
 
 The returned object can be called at different times:
