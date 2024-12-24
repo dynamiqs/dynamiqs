@@ -34,7 +34,7 @@ def memory_str(x: Array) -> str:
 
 
 def array_str(x: Array | QArray | None) -> str | None:
-    # TODO: implement memory_str for QArray rather than converting to JAX array
+    # TODO: implement memory_str for `QArray` rather than converting to JAX array
     if x is None:
         return None
     type_name = 'Array' if isinstance(x, Array) else 'QArray'

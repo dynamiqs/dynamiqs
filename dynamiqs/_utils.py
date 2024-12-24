@@ -54,7 +54,7 @@ def _concatenate_sort(*args: Array | None) -> Array | None:
 
 
 def _is_batched_scalar(y: ArrayLike) -> bool:
-    # check if a qarray-like object is a scalar or a set of scalars of shape (..., 1, 1)
+    # check if a qarray-like is a scalar or a set of scalars of shape (..., 1, 1)
     return isinstance(y, get_args(ScalarLike)) or (
         isinstance(y, get_args(ArrayLike))
         and (
@@ -68,5 +68,5 @@ def _is_batched_scalar(y: ArrayLike) -> bool:
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'QArrays have incompatible dimensions. Got {dims1} and {dims2}.'
+            f'Qarrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )

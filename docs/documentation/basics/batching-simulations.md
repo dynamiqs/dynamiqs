@@ -171,7 +171,7 @@ The previous examples illustrate batching over one dimension, but you can batch 
     psis = dq.coherent(16, alpha)  # (5, 6, 16, 1)
     ```
 
-### Batching over a TimeQArray
+### Batching over a time-qarray
 
 We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched [`TimeQArray`][dynamiqs.TimeQArray], in short:
 

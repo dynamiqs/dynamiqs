@@ -29,14 +29,14 @@ def wigner(
     The Wigner distribution is computed on a grid of coordinates $(x, y)$.
 
     Args:
-        state _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density
+        state _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density
             matrix.
         xmax: Maximum absolute value of the $x$ coordinate.
         ymax: Maximum absolute value of the $y$ coordinate.
         npixels: Number of pixels in each direction.
-        xvec _(array_like of shape (nxvec,), optional)_: $x$ coordinates. If `None`,
+        xvec _(array-like of shape (nxvec,), optional)_: $x$ coordinates. If `None`,
             defaults to `xvec = jnp.linspace(-xmax, xmax, npixels)`.
-        yvec _(array_like of shape (nyvec,), optional)_: $y$ coordinates. If `None`,
+        yvec _(array-like of shape (nyvec,), optional)_: $y$ coordinates. If `None`,
             defaults to `yvec = jnp.linspace(-ymax, ymax, npixels)`.
         g: Scaling factor of Wigner quadratures, such that $a = g(x + iy)/2$.
 

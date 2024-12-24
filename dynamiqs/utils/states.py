@@ -32,7 +32,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array_like of shape (...) or (..., len(dim)))_: Fock state number
+        number _(array-like of shape (...) or (..., len(dim)))_: Fock state number
             for each mode, of integer type. If `dim` is a tuple, the last dimension of
             `number` should match the length of `dim`.
 
@@ -129,7 +129,7 @@ def fock_dm(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        number _(array_like of shape (...) or (..., len(dim)))_: Fock state number
+        number _(array-like of shape (...) or (..., len(dim)))_: Fock state number
             for each mode, of integer type. If `dim` is a tuple, the last dimension of
             `number` should match the length of `dim`.
 
@@ -195,7 +195,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array_like of shape (...) or (len(dim), ...))_: Coherent state
+        alpha _(array-like of shape (...) or (len(dim), ...))_: Coherent state
             amplitude for each mode. If `dim` is a tuple, the first dimension of
             `alpha` should match the length of `dim`.
 
@@ -267,7 +267,7 @@ def coherent_dm(dim: int | tuple[int, ...], alpha: ArrayLike) -> QArray:
 
     Args:
         dim: Hilbert space dimension of each mode.
-        alpha _(array_like of shape (...) or (..., len(dim)))_: Coherent state
+        alpha _(array-like of shape (...) or (..., len(dim)))_: Coherent state
             amplitude for each mode. If `dim` is a tuple, the last dimension of
             `alpha` should match the length of `dim`.
 

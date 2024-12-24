@@ -376,7 +376,7 @@ def displace(dim: int, alpha: ArrayLike) -> DenseQArray:
 
     Args:
         dim: Dimension of the Hilbert space.
-        alpha _(array_like of shape (...))_: Displacement amplitude.
+        alpha _(array-like of shape (...))_: Displacement amplitude.
 
     Returns:
         _(qarray of shape (..., dim, dim))_ Displacement operator.
@@ -408,7 +408,7 @@ def squeeze(dim: int, z: ArrayLike) -> DenseQArray:
 
     Args:
         dim: Dimension of the Hilbert space.
-        z _(array_like of shape (...))_: Squeezing amplitude.
+        z _(array-like of shape (...))_: Squeezing amplitude.
 
     Returns:
         _(qarray of shape (..., dim, dim))_ Squeezing operator.
@@ -679,7 +679,7 @@ def rx(theta: ArrayLike) -> QArray:
     $$
 
     Args:
-        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
+        theta _(array-like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(qarray of shape (2, 2))_ $R_x(\theta)$ gate.
@@ -712,7 +712,7 @@ def ry(theta: ArrayLike) -> QArray:
     $$
 
     Args:
-        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
+        theta _(array-like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(qarray of shape (2, 2))_ $R_y(\theta)$ gate.
@@ -745,7 +745,7 @@ def rz(theta: ArrayLike) -> QArray:
     $$
 
     Args:
-        theta _(array_like of shape (...))_: Rotation angle $\theta$ in radians.
+        theta _(array-like of shape (...))_: Rotation angle $\theta$ in radians.
 
     Returns:
         _(qarray of shape (2, 2))_ $R_z(\theta)$ gate.

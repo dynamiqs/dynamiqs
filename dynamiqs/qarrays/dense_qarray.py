@@ -22,7 +22,7 @@ __all__ = ['DenseQArray']
 
 
 class DenseQArray(QArray):
-    r"""DenseQArray is QArray that uses JAX arrays as data storage."""
+    r"""A dense qarray is a qarray that uses JAX arrays as data storage."""
 
     data: Array
 
