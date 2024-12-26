@@ -28,6 +28,7 @@ from .sparsedia_primitives import (
     matmul_sparsedia_array,
     matmul_sparsedia_sparsedia,
     mul_sparsedia_array,
+    mul_sparsedia_sparsedia,
     powm_sparsedia,
     reshape_sparsedia,
     shape_sparsedia,
@@ -328,8 +329,11 @@ class SparseDIAQArray(QArray):
     def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
 
-        y = _to_jax(y)
-        offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
+        if isinstance(y, SparseDIAQArray):
+            offsets, diags = mul_sparsedia_sparsedia(self.offsets, self.diags, y.diags)
+        else:
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, _to_jax(y))
+
         return self._replace(offsets=offsets, diags=diags)
 
     def elpow(self, power: int) -> QArray:

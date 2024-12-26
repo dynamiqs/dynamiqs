@@ -224,6 +224,10 @@ class DenseQArray(QArray):
 
     def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
+
+        if isinstance(y, SparseDIAQArray):
+            return y.elmul(self)
+
         data = self.data * _to_jax(y)
         return self._replace(data=data)
 
