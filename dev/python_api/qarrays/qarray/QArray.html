@@ -5085,7 +5085,7 @@ methods.</p>
  open >
   <summary>Constructing a new qarray from an other array type</summary>
   <p>Use the function <a class="autorefs autorefs-internal" href="../utils/asqarray.html#dynamiqs.qarrays.utils.asqarray"><code>dq.asqarray()</code></a> to create a qarray from a
-<abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like object</abbr>. Objects that can be converted to a <code>QArray</code> are of type
+<abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>. Objects that can be converted to a <code>QArray</code> are of type
 <code>dq.QArrayLike</code>. This includes all numeric types (<code>bool</code>, <code>int</code>, <code>float</code>,
 <code>complex</code>), a JAX or NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested
 sequence of these types. See also <a class="autorefs autorefs-internal" href="../utils/isqarraylike.html#dynamiqs.qarrays.utils.isqarraylike"><code>dq.isqarraylike()</code></a>.</p>
@@ -5127,7 +5127,7 @@ sequence of these types. See also <a class="autorefs autorefs-internal" href="..
         <li class="field-body">
           <b>mT</b>
               <i>
-(QArray)              </i>
+(qarray)              </i>
           – <p>Returns the qarray transposed over its last two dimensions.</p>
         </li>
         <li class="field-body">
@@ -5144,7 +5144,7 @@ matrix form).</p>
  open >
   <summary>Arithmetic operation support</summary>
   <p>Qarrays support basic arithmetic operations <code>-, +, *, /, @</code> with other
-<abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr>.</p>
+<abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr>.</p>
 </details>
 <details class="note"
  open >
@@ -5335,10 +5335,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray object with element-wise complex conjuguated values.</p>
+        – <p>New qarray with element-wise complex conjuguated values.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New qarray object with element-wise complex conjuguated values.</p></span>
+      <span class="field-body"><p>New qarray with element-wise complex conjuguated values.</p></span>
 
     </div>
 
@@ -5378,10 +5378,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray object with the given shape.</p>
+        – <p>New qarray with the given shape.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New qarray object with the given shape.</p></span>
+      <span class="field-body"><p>New qarray with the given shape.</p></span>
 
     </div>
 
@@ -5425,10 +5425,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray object with the given shape.</p>
+        – <p>New qarray with the given shape.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New qarray object with the given shape.</p></span>
+      <span class="field-body"><p>New qarray with the given shape.</p></span>
 
     </div>
 
@@ -5460,10 +5460,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><span title="dynamiqs.qarrays.dense_qarray.DenseQArray">DenseQArray</span></code>
-        – <p>A <code>DenseQArray</code> object.</p>
+        – <p>A <code>DenseQArray</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>A <code>DenseQArray</code> object.</p></span>
+      <span class="field-body"><p>A <code>DenseQArray</code>.</p></span>
 
     </div>
 
@@ -5495,10 +5495,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><span title="dynamiqs.qarrays.sparsedia_qarray.SparseDIAQArray">SparseDIAQArray</span></code>
-        – <p>A <code>SparseDIAQArray</code> object.</p>
+        – <p>A <code>SparseDIAQArray</code>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>A <code>SparseDIAQArray</code> object.</p></span>
+      <span class="field-body"><p>A <code>SparseDIAQArray</code>.</p></span>
 
     </div>
 
@@ -5542,10 +5542,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray object resulting from the addition with the scalar.</p>
+        – <p>New qarray resulting from the addition with the scalar.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New qarray object resulting from the addition with the scalar.</p></span>
+      <span class="field-body"><p>New qarray resulting from the addition with the scalar.</p></span>
 
     </div>
 
@@ -5578,7 +5578,7 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
         <li class="field-body">
           <b>y</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="e.g. Python list, NumPy and JAX array or QuTiP Qobj">Array-like object</abbr> to multiply with element-wise.</p>
+          – <p><abbr title="e.g. Python list, NumPy and JAX array or QuTiP Qobj">Array-like</abbr> to multiply with element-wise.</p>
         </li>
     </ul>
 
@@ -5589,10 +5589,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray object resulting from the element-wise multiplication.</p>
+        – <p>New qarray resulting from the element-wise multiplication.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New qarray object resulting from the element-wise multiplication.</p></span>
+      <span class="field-body"><p>New qarray resulting from the element-wise multiplication.</p></span>
 
     </div>
 
@@ -5636,10 +5636,10 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
     <!-- <ul>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p>New qarray object with elements raised to the specified power.</p>
+        – <p>New qarray with elements raised to the specified power.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p>New qarray object with elements raised to the specified power.</p></span>
+      <span class="field-body"><p>New qarray with elements raised to the specified power.</p></span>
 
     </div>
 

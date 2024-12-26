@@ -4919,7 +4919,7 @@ any time intervals, the returned qarray is null.</p>
           <b>times</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (N+1,))              </i>
+(array-like of shape (N+1,))              </i>
           – <p>Time points <span class="arithmatex">\(t_k\)</span> defining the boundaries
 of the time intervals, where <em>N</em> is the number of time intervals.</p>
         </li>
@@ -4927,7 +4927,7 @@ of the time intervals, where <em>N</em> is the number of time intervals.</p>
           <b>values</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like of shape (..., N))              </i>
+(array-like of shape (..., N))              </i>
           – <p>Constant values <span class="arithmatex">\(c_k\)</span> for each time
 interval.</p>
         </li>
@@ -4935,7 +4935,7 @@ interval.</p>
           <b>qarray</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (n, n))              </i>
+(qarray-like of shape (n, n))              </i>
           – <p>Constant qarray <span class="arithmatex">\(O_0\)</span>.</p>
         </li>
     </ul>
@@ -4947,12 +4947,12 @@ interval.</p>
     <!-- <ul>
       <li class="field-body">
             <code><span title="dynamiqs.time_qarray.PWCTimeQArray">PWCTimeQArray</span></code>
-        – <p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
-returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
+        – <p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
+any time <span class="arithmatex">\(t\)</span>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
-returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
+      <span class="field-body"><p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
+any time <span class="arithmatex">\(t\)</span>.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>

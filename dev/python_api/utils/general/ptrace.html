@@ -4902,7 +4902,7 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))              </i>
+(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))              </i>
           – <p>Ket, bra
 or density matrix of a composite system.</p>
         </li>
@@ -4982,7 +4982,7 @@ bra.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rho_bc</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(20, 20)</span>
 </code></pre></div>
-    <p>If the input <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like object</abbr> <code>x</code> does not hold Hilbert space dimensions, you
+    <p>If the input <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr> <code>x</code> does not hold Hilbert space dimensions, you
 can specify them with the argument <code>dims</code>. For example, to trace out the second
 subsystem of the Bell state <span class="arithmatex">\((\ket{00}+\ket{11})/\sqrt2\)</span>:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bell_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>

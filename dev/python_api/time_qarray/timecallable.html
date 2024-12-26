@@ -4899,9 +4899,9 @@ for any time <span class="arithmatex">\(t\)</span>.</p>
 
 <details class="warning"
  open >
-  <summary>The function <code>f</code> must return a <code>QArray</code> (not a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like object</abbr>!)</summary>
-  <p>An error is raised if the function <code>f</code> does not return a <code>QArray</code>. This error
-concerns any other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-like objects</abbr>. This is enforced to avoid costly
+  <summary>The function <code>f</code> must return a qarray (not a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>!)</summary>
+  <p>An error is raised if the function <code>f</code> does not return a qarray. This error
+concerns any other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr>. This is enforced to avoid costly
 conversions at every time step of the numerical integration.</p>
 </details>
     <!-- <p>Parameters:</p> -->
@@ -4921,7 +4921,7 @@ signature <code>(t: float) -&gt; QArray</code> that returns the qarray <span cla
           <b>discontinuity_ts</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(array_like, optional)              </i>
+(array-like, optional)              </i>
           – <p>Times at which there is a
 discontinuous jump in the function values.</p>
         </li>
@@ -4934,12 +4934,12 @@ discontinuous jump in the function values.</p>
     <!-- <ul>
       <li class="field-body">
             <code><span title="dynamiqs.time_qarray.CallableTimeQArray">CallableTimeQArray</span></code>
-        – <p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
-  returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p>
+        – <p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
+any time <span class="arithmatex">\(t\)</span>.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(time-qarray object of shape (..., n, n) when called)</em> Callable object
-  returning <span class="arithmatex">\(O(t)\)</span> for any time <span class="arithmatex">\(t\)</span>.</p></span>
+      <span class="field-body"><p><em>(time-qarray of shape (..., n, n) when called)</em> Callable returning <span class="arithmatex">\(O(t)\)</span> for
+any time <span class="arithmatex">\(t\)</span>.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
