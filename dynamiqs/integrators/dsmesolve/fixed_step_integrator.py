@@ -7,7 +7,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import Scalar
+from jaxtyping import PRNGKeyArray, Scalar
 
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack, sum_qarrays
@@ -48,12 +48,61 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
     def dt(self) -> float:
         return self.solver.dt
 
+    def integrate(
+        self, t0: float, y0: YDSME, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, YDSME]:
+        # integrate the SME for nsteps of length dt
+        nLm = len(self.etas)
+
+        # sample wiener
+        dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, nLm))
+
+        # iterate over the fixed step size dt
+        def step(carry, dW):  # noqa: ANN001, ANN202
+            t, y = carry
+            y = y + self.forward(t, y, dW)
+            t = t + self.dt
+            return (t, y), None
+
+        (t, y), _ = jax.lax.scan(step, (t0, y0), dWs)
+
+        return t, y
+
+    def integrate_by_chunks(
+        self, t0: float, y0: YDSME, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, YDSME]:
+        # integrate the SME for nsteps of length dt, splitting the integration in
+        # chunks of 1000 dts to ensure a fixed memory usage
+
+        nsteps_per_chunk = 1000
+        nchunks = int(nsteps // nsteps_per_chunk)
+
+        # iterate over each chunk
+        def step(carry, key):  # noqa: ANN001, ANN202
+            t, y = carry
+            t, y = self.integrate(t, y, key, nsteps_per_chunk)
+            return (t, y), None
+
+        # split the key for each chunk
+        key, lastkey = jax.random.split(key)
+        keys = jax.random.split(key, (nchunks,))
+        (t, y), _ = jax.lax.scan(step, (t0, y0), keys)
+
+        # integrate for the remaining number of steps (< nsubsteps)
+        nremaining = nsteps % nsteps_per_chunk
+        t, y = self.integrate(t, y, lastkey, nremaining)
+
+        return t, y
+
     def run(self) -> Result:
+        # this function assumes that ts is linearly spaced with each value an exact
+        # multiple of dt
+
         # === define variables
         nLm = len(self.etas)
         # number of save interval
         nsave = len(self.ts) - 1
-        # number of steps (of length dt)
+        # total number of steps (of length dt)
         nsteps = int((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
         nsteps_per_save = int(nsteps // nsave)
@@ -67,31 +116,13 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         saved0 = self.save(y0)
 
         # === run the simulation
-        # The run section encapsulates two loop. The outer loop iterates over each time
-        # in `self.ts` to regularly save the integrated state rho and measurement Y. The
-        # inner loop iterates over the fixed step size dt.
-
-        # iterate over each save interval
+        # integrate the SME for each save interval
         def outer_step(carry, key):  # noqa: ANN001, ANN202
             t, y = carry
-
-            # sample wiener
-            # note: we could do this once outside the outer loop, but doing it here
-            # prevents memory overload
-            dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps_per_save, nLm))
-
-            # iterate over the fixed step size dt
-            def step(carry, dW):  # noqa: ANN001, ANN202
-                t, y = carry
-                y = y + self.forward(t, y, dW)
-                t = t + self.dt
-                return (t, y), None
-
-            (t, y), _ = jax.lax.scan(step, (t, y), dWs)
-
+            t, y = self.integrate_by_chunks(t, y, key, nsteps_per_save)
             return (t, y), self.save(y)
 
-        # split the key to generate wiener on each save interval
+        # split the key for each save interval
         keys = jax.random.split(self.key, nsave)
         ylast, saved = jax.lax.scan(outer_step, (self.t0, y0), keys)
         ylast = ylast[1]
