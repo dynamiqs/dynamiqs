@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from functools import partial
 
 import jax
@@ -170,7 +170,8 @@ def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0:
-        logging.warning(
+        warnings.warn(
             'Argument `jump_ops` is an empty list, consider using `dq.sepropagator()`'
-            ' to compute propagators for the Schrödinger equation.'
+            ' to compute propagators for the Schrödinger equation.',
+            stacklevel=2,
         )
