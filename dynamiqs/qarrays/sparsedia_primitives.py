@@ -211,8 +211,12 @@ def matmul_sparsedia_sparsedia(
             diag_dict[out_offset] = diag_dict[out_offset].at[..., rslice].add(diag)
 
     out_offsets = tuple(sorted(diag_dict.keys()))
-    out_diags = jnp.stack([diag_dict[offset] for offset in out_offsets])
-    out_diags = jnp.moveaxis(out_diags, 0, -2)
+    if len(out_offsets) == 0:
+        # edge case where the result is a zero matrix
+        out_diags = jnp.zeros((*batch_shape, 0, n), dtype=dtype)
+    else:
+        out_diags = jnp.stack([diag_dict[offset] for offset in out_offsets])
+        out_diags = jnp.moveaxis(out_diags, 0, -2)
     return out_offsets, out_diags
 
 
