@@ -56,6 +56,10 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         if not _is_linearly_spaced(self.ts):
             raise ValueError('Argument `tsave` should be linearly spaced.')
 
+        # check that options.t0 is not used
+        if self.options.t0 is not None:
+            raise ValueError('Option `t0` is invalid for fixed step SME solvers.')
+
     class Infos(eqx.Module):
         nsteps: Array
 
