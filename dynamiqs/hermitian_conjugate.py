@@ -5,6 +5,9 @@ __all__ = ['hc']
 
 
 class HermitianConjugate:
+    def __add__(self, _):  # noqa
+        raise TypeError('The symbol `dq.hq` can only be right-added to a qarray.')
+
     def __radd__(self, y: QArray) -> QArray:
         if isinstance(y, QArray):
             return y + y.dag()
