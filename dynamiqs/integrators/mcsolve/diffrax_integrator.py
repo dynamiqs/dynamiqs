@@ -68,13 +68,6 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
             saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
-            if self.gradient is None:
-                adjoint = dx.RecursiveCheckpointAdjoint()
-            elif isinstance(self.gradient, CheckpointAutograd):
-                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-            elif isinstance(self.gradient, Autograd):
-                adjoint = dx.DirectAdjoint()
-
             def cond_fn(t, y, *args, **kwargs):
                 return norm(y) ** 2 - rand
 
@@ -89,7 +82,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
                 y0=y0,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
-                adjoint=adjoint,
+                adjoint=self.adjoint,
                 event=event,
                 max_steps=self.max_steps,
                 progress_meter=self.options.progress_meter.to_diffrax(),

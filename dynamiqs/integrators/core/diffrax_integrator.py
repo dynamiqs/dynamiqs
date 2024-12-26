@@ -49,6 +49,17 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
     def terms(self) -> dx.AbstractTerm:
         pass
 
+    @property
+    def adjoint(self) -> dx.AbstractAdjoint:
+        if self.gradient is None:
+            return dx.RecursiveCheckpointAdjoint()
+        elif isinstance(self.gradient, CheckpointAutograd):
+            return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+        elif isinstance(self.gradient, Autograd):
+            return dx.DirectAdjoint()
+        else:
+            raise TypeError(f'Unknown gradient type {self.gradient}')
+
     def run(self) -> Result:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
@@ -60,13 +71,6 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
             subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
             saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
-            if self.gradient is None:
-                adjoint = dx.RecursiveCheckpointAdjoint()
-            elif isinstance(self.gradient, CheckpointAutograd):
-                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-            elif isinstance(self.gradient, Autograd):
-                adjoint = dx.DirectAdjoint()
-
             # === solve differential equation with diffrax
             solution = dx.diffeqsolve(
                 self.terms,
@@ -77,7 +81,7 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
                 y0=self.y0,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
-                adjoint=adjoint,
+                adjoint=self.adjoint,
                 max_steps=self.max_steps,
                 progress_meter=self.options.progress_meter.to_diffrax(),
             )
