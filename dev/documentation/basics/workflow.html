@@ -4996,6 +4996,8 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
 <span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">dq</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">mplstyle</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>  <span class="c1"># set custom matplotlib style</span>
 </code></pre></div>
 <h2 id="i-define-the-system">I. Define the system</h2>
 <p>After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in Dynamiqs, see the <a href="../../python_api/index.html">Python API</a> for more details. Otherwise, you can define specific states and operators using any <abbr title="e.g. Python list, NumPy and JAX array or QuTiP Qobj">array-like</abbr>.</p>

@@ -5114,6 +5114,8 @@ where we used the Schrödinger equation to replace the time derivative of the st
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
 <span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
 
+<span class="n">jnp</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># set custom array print style</span>
+
 <span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">ground</span><span class="p">()</span>                <span class="c1"># initial state</span>
 <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>                   <span class="c1"># Hamiltonian</span>
 <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># saving times</span>
