@@ -60,31 +60,43 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
         else:
             raise TypeError(f'Unknown gradient type {self.gradient}')
 
-    def run(self) -> Result:
+    def diffeqsolve(
+        self,
+        t0: Scalar,
+        t1: Scalar,
+        y0: PyTree,
+        saveat: dx.SaveAt,
+        event: dx.Event | None = None,
+    ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
 
-            # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
             # === solve differential equation with diffrax
-            solution = dx.diffeqsolve(
+            return dx.diffeqsolve(
                 self.terms,
                 self.diffrax_solver,
-                t0=self.t0,
-                t1=self.t1,
+                t0=t0,
+                t1=t1,
                 dt0=self.dt0,
-                y0=self.y0,
+                y0=y0,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
                 adjoint=self.adjoint,
+                event=event,
                 max_steps=self.max_steps,
                 progress_meter=self.options.progress_meter.to_diffrax(),
             )
+
+    def run(self) -> Result:
+        # === prepare diffrax arguments
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+        # === solve differential equation
+        solution = self.diffeqsolve(t0=self.t0, t1=self.t1, y0=self.y0, saveat=saveat)
 
         # === collect and return results
         saved = self.postprocess_saved(*solution.ys)

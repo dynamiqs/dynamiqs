@@ -59,35 +59,21 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
     Lindblad master equation using the Diffrax library."""
 
     def _run(self, y0, tsave, rand):
-        with warnings.catch_warnings():
-            # TODO: remove once complex support is stabilized in diffrax
-            warnings.simplefilter('ignore', UserWarning)
+        # === prepare saveat
+        subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
-            # === prepare diffrax arguments
-            subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+        # === prepare event
+        def cond_fn(t, y, *args, **kwargs):
+            return norm(y) ** 2 - rand
 
-            def cond_fn(t, y, *args, **kwargs):
-                return norm(y) ** 2 - rand
+        event = dx.Event(cond_fn, self.root_finder)
 
-            event = dx.Event(cond_fn, self.root_finder)
-            # === solve differential equation with diffrax
-            solution = dx.diffeqsolve(
-                self.terms,
-                self.diffrax_solver,
-                t0=tsave[0],
-                t1=tsave[-1],
-                dt0=tsave[1] - tsave[0],
-                y0=y0,
-                saveat=saveat,
-                stepsize_controller=self.stepsize_controller,
-                adjoint=self.adjoint,
-                event=event,
-                max_steps=self.max_steps,
-                progress_meter=self.options.progress_meter.to_diffrax(),
-            )
-        return solution
+        # === solve differential equation with diffrax
+        return self.diffeqsolve(
+            t0=tsave[0], t1=tsave[-1], y0=y0, saveat=saveat, event=event
+        )
 
     def run(self):
         # === run no jump, extract no-jump probability
