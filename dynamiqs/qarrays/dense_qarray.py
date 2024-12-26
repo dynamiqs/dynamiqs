@@ -223,6 +223,8 @@ class DenseQArray(QArray):
         return self._replace(data=data)
 
     def elmul(self, y: QArrayLike) -> QArray:
+        from .sparsedia_qarray import SparseDIAQArray
+
         super().elmul(y)
 
         if isinstance(y, SparseDIAQArray):

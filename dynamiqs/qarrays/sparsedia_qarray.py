@@ -330,7 +330,9 @@ class SparseDIAQArray(QArray):
         super().elmul(y)
 
         if isinstance(y, SparseDIAQArray):
-            offsets, diags = mul_sparsedia_sparsedia(self.offsets, self.diags, y.diags)
+            offsets, diags = mul_sparsedia_sparsedia(
+                self.offsets, self.diags, y.offsets, y.diags
+            )
         else:
             offsets, diags = mul_sparsedia_array(self.offsets, self.diags, _to_jax(y))
 
