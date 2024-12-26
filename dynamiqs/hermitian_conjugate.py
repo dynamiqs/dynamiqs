@@ -1,3 +1,4 @@
+from ._utils import obj_type_str
 from .qarrays import QArray
 
 __all__ = ['hc']
@@ -9,8 +10,8 @@ class HermitianConjugate:
             return y + y.dag()
         else:
             raise TypeError(
-                f'`dq.hq` can only be right-added '
-                f'to a QArrayLike, {y.__class__} given.'
+                f'The symbol `dq.hq` can only be right-added to a qarray, but it was'
+                f' added to a {obj_type_str(y)}.'
             )
 
 
