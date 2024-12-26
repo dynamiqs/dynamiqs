@@ -24,7 +24,7 @@ __all__ = ['QArray']
 
 
 def isqarraylike(x: Any) -> bool:
-    r"""Returns True if the input is a qarray-like object.
+    r"""Returns True if the input is a qarray-like.
 
     Args:
         x: Any object.
@@ -35,8 +35,7 @@ def isqarraylike(x: Any) -> bool:
             types.
 
     See also:
-        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like object into a
-            qarray.
+        - [`dq.asqarray()`][dynamiqs.asqarray]: converts a qarray-like into a qarray.
 
     Examples:
         >>> dq.isqarraylike(1)
@@ -103,7 +102,7 @@ class QArray(eqx.Module):
 
     Note: Constructing a new qarray from an other array type
         Use the function [`dq.asqarray()`][dynamiqs.asqarray] to create a qarray from a
-        qarray-like object. Objects that can be converted to a `QArray` are of type
+        qarray-like. Objects that can be converted to a `QArray` are of type
         `dq.QArrayLike`. This includes all numeric types (`bool`, `int`, `float`,
         `complex`), a JAX or NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested
         sequence of these types. See also [`dq.isqarraylike()`][dynamiqs.isqarraylike].
@@ -114,14 +113,14 @@ class QArray(eqx.Module):
         ndim _(int)_: Number of dimensions in the shape.
         layout _(Layout)_: Data layout, either `dq.dense` or `dq.dia`.
         dims _(tuple of ints)_: Hilbert space dimension of each subsystem.
-        mT _(QArray)_: Returns the qarray transposed over its last two dimensions.
+        mT _(qarray)_: Returns the qarray transposed over its last two dimensions.
         vectorized _(bool)_: Whether the underlying object is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
 
     Note: Arithmetic operation support
         Qarrays support basic arithmetic operations `-, +, *, /, @` with other
-        qarray-like objects.
+        qarray-likes.
 
     Note: Shortcuts methods to use quantum utilities
         Many functions of the library can be called directly on a qarray rather than
@@ -171,7 +170,7 @@ class QArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, layout, shape, mT
     # - the methods:
-    #   - QArray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
+    #   - qarray methods: conj, dag, _reshape_unchecked, broadcast_to, ptrace, powm,
     #                     expm, block_until_ready
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
     #                                     _eigvals, _eigvalsh, devices, isherm
@@ -209,7 +208,7 @@ class QArray(eqx.Module):
         allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
         if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
-                'Argument `dims` must be compatible with the shape of the QArray, but '
+                'Argument `dims` must be compatible with the shape of the qarray, but '
                 f'got dims {self.dims} and shape {self.shape}.'
             )
 
@@ -242,7 +241,7 @@ class QArray(eqx.Module):
         """Returns the element-wise complex conjugate of the qarray.
 
         Returns:
-            New qarray object with element-wise complex conjuguated values.
+            New qarray with element-wise complex conjuguated values.
         """
 
     def dag(self) -> QArray:
@@ -255,7 +254,7 @@ class QArray(eqx.Module):
             *shape: New shape, which must match the original size.
 
         Returns:
-            New qarray object with the given shape.
+            New qarray with the given shape.
         """
         if shape[-2:] != self.shape[-2:]:
             raise ValueError(
@@ -279,7 +278,7 @@ class QArray(eqx.Module):
             *shape: New shape, which must be compatible with the original shape.
 
         Returns:
-            New qarray object with the given shape.
+            New qarray with the given shape.
         """
 
     @abstractmethod
@@ -416,7 +415,7 @@ class QArray(eqx.Module):
         """Converts to a dense layout.
 
         Returns:
-            A `DenseQArray` object.
+            A `DenseQArray`.
         """
 
     @abstractmethod
@@ -424,7 +423,7 @@ class QArray(eqx.Module):
         """Converts to a sparse diagonal layout.
 
         Returns:
-            A `SparseDIAQArray` object.
+            A `SparseDIAQArray`.
         """
 
     @abstractmethod
@@ -526,7 +525,7 @@ class QArray(eqx.Module):
             y: Scalar to add, whose shape should be broadcastable with the qarray.
 
         Returns:
-            New qarray object resulting from the addition with the scalar.
+            New qarray resulting from the addition with the scalar.
         """
 
     @abstractmethod
@@ -534,10 +533,10 @@ class QArray(eqx.Module):
         """Computes the element-wise multiplication.
 
         Args:
-            y: Array-like object to multiply with element-wise.
+            y: Array-like to multiply with element-wise.
 
         Returns:
-            New qarray object resulting from the element-wise multiplication.
+            New qarray resulting from the element-wise multiplication.
         """
 
     @abstractmethod
@@ -548,7 +547,7 @@ class QArray(eqx.Module):
             power: Power to raise to.
 
         Returns:
-            New qarray object with elements raised to the specified power.
+            New qarray with elements raised to the specified power.
         """
 
     @abstractmethod
@@ -559,7 +558,7 @@ class QArray(eqx.Module):
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'QArrays have incompatible Hilbert space dimensions. '
+            f'Qarrays have incompatible Hilbert space dimensions. '
             f'Got {dims1} and {dims2}.'
         )
 
@@ -583,13 +582,13 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # - a JAX array,
 # - a NumPy array,
 # - a QuTiP Qobj,
-# - a dynamiqs QArray,
+# - a dynamiqs `QArray`,
 # - a nested sequence of these types.
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 
-# extended array like type
+# extended array-like type
 _QArrayLike = Union[ArrayLike, QArray, Qobj]
-# a type alias for nested sequence of _QArrayLike
+# a type alias for nested sequence of `_QArrayLike`
 _NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
 # a type alias for any type compatible with asqarray
 QArrayLike = Union[_QArrayLike, _NestedQArrayLikeSequence]
