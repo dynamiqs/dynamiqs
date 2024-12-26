@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import Any
 
@@ -59,6 +60,12 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
         # check that options.t0 is not used
         if self.options.t0 is not None:
             raise ValueError('Option `t0` is invalid for fixed step SME solvers.')
+
+        if self.discontinuity_ts is not None:
+            logging.warning(
+                'The Hamiltonian or jump operators are time-dependent with '
+                'discontinuities, which will be ignored by the solver.'
+            )
 
     class Infos(eqx.Module):
         nsteps: Array
