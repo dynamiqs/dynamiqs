@@ -31,7 +31,7 @@ def _jax_set_printoptions():
 
 @pytest.fixture(scope='session', autouse=True)
 def _mpl_params():
-    dynamiqs.plot.utils.mplstyle(dpi=150)
+    dynamiqs.plot.mplstyle(dpi=150)
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
 

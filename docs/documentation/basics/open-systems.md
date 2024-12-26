@@ -105,11 +105,13 @@ Also called the **quantum-jump** approach.
 
 ## Using Dynamiqs
 
-You can create the state, Hamiltonian and jump operators using any qarray-like object. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
+You can create the state, Hamiltonian and jump operators using any qarray-like. Let's take the example of a two-level system with a simple Hamiltonian and a single jump operator:
 
 ```python
 import jax.numpy as jnp
 import dynamiqs as dq
+
+jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
 
 psi0 = dq.excited()                         # initial state
 H = dq.sigmaz()                             # Hamiltonian

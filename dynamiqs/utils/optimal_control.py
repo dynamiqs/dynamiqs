@@ -24,7 +24,7 @@ def snap_gate(phase: ArrayLike) -> QArray:
     $$
 
     Args:
-        phase _(array_like of shape (..., n))_: Phase for each Fock state. The last
+        phase _(array-like of shape (..., n))_: Phase for each Fock state. The last
             dimension of the array _n_ defines the Hilbert space dimension.
 
     Returns:
@@ -61,7 +61,7 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
 
     Args:
         dim: Dimension of the oscillator Hilbert space.
-        alpha _(array_like of shape (...))_: Displacement amplitude.
+        alpha _(array-like of shape (...))_: Displacement amplitude.
 
     Returns:
         _(qarray of shape (..., n, n))_ CD gate operator (acting on the oscillator + TLS

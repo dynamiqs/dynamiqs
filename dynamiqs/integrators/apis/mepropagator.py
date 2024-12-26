@@ -112,8 +112,7 @@ def _vectorized_mepropagator(
 ) -> MEPropagatorResult:
     # vectorize input over H and Ls
     in_axes = (H.in_axes, [L.in_axes for L in Ls], None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = MEPropagatorResult(None, None, None, None, 0, 0)
+    out_axes = MEPropagatorResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], 0, 0, 0, 0)

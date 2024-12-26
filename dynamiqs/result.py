@@ -34,7 +34,7 @@ def memory_str(x: Array) -> str:
 
 
 def array_str(x: Array | QArray | None) -> str | None:
-    # TODO: implement memory_str for QArray rather than converting to JAX array
+    # TODO: implement memory_str for `QArray` rather than converting to JAX array
     if x is None:
         return None
     type_name = 'Array' if isinstance(x, Array) else 'QArray'
@@ -44,7 +44,7 @@ def array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: Array
+    ysave: QArray
     extra: PyTree | None
 
 
@@ -102,6 +102,10 @@ class Result(eqx.Module):
         padding = max(len(k) for k in parts) + 1
         parts_str = '\n'.join(f'{k:<{padding}}: {v}' for k, v in parts.items())
         return f'==== {self.__class__.__name__} ====\n' + parts_str
+
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0)
 
 
 class SolveResult(Result):
@@ -178,6 +182,10 @@ class FloquetResult(Result):
             'Modes': array_str(self.modes),
             'Quasienergies': array_str(self.quasienergies),
         }
+
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, None)
 
 
 class SESolveResult(SolveResult):
