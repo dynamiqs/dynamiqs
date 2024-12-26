@@ -118,6 +118,10 @@ def dsmesolve(
         hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
+    Warning:
+        For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
+        are exact multiples of the solver fixed step size `dt`.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
