@@ -121,7 +121,7 @@ def _vectorized_sepropagator(
 ) -> SEPropagatorResult:
     # vectorize input over H
     in_axes = (H.in_axes, None, None, None, None)
-    out_axes = SEPropagatorResult.out_axes
+    out_axes = SEPropagatorResult.out_axes()
 
     # cartesian batching only
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0)
