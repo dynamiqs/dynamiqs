@@ -15,6 +15,8 @@ import dynamiqs as dq
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
+
+dq.plot.mplstyle(dpi=150)  # set custom matplotlib style
 ```
 
 ## Basic time evolution

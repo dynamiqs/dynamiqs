@@ -2,7 +2,8 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
-from tests.order import TEST_SHORT
+
+from ..order import TEST_SHORT
 
 
 @pytest.mark.run(order=TEST_SHORT)
