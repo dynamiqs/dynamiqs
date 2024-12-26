@@ -222,7 +222,7 @@ class DenseQArray(QArray):
         data = self.data + _to_jax(y)
         return self._replace(data=data)
 
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
         data = self.data * _to_jax(y)
         return self._replace(data=data)

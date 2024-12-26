@@ -325,7 +325,7 @@ class SparseDIAQArray(QArray):
         )
         return self.asdense().addscalar(y)
 
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
 
         y = _to_jax(y)
