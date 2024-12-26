@@ -13,7 +13,8 @@ from dynamiqs.time_qarray import (
     pwc,
     timecallable,
 )
-from tests.order import TEST_SHORT
+
+from .order import TEST_SHORT
 
 
 def assert_equal(x, y):

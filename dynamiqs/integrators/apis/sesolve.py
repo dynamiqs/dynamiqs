@@ -129,7 +129,7 @@ def _vectorized_sesolve(
 ) -> SESolveResult:
     # vectorize input over H and psi0
     in_axes = (H.in_axes, 0, None, None, None, None, None)
-    out_axes = SESolveResult.out_axes
+    out_axes = SESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)

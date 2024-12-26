@@ -13,6 +13,8 @@ In the rest of this tutorial, we go over these steps in detail, taking the examp
 import dynamiqs as dq
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
+
+dq.plot.mplstyle(dpi=150)  # set custom matplotlib style
 ```
 
 ## I. Define the system
