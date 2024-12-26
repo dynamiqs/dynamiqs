@@ -13,6 +13,8 @@ import jax.numpy as jnp
 import numpy as np
 from matplotlib import pyplot as plt
 import dynamiqs as dq
+
+dq.plot.mplstyle(dpi=150)  # set custom matplotlib style
 ```
 
 ## Simulation

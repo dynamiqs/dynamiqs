@@ -205,7 +205,7 @@ def _vectorized_dsmesolve(
     # the input is vectorized over `key`
     in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
     # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSMESolveResult.out_axes
+    out_axes = DSMESolveResult.out_axes()
     f = jax.vmap(f, in_axes, out_axes)
 
     # === vectorize function

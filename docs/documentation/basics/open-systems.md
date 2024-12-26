@@ -111,6 +111,8 @@ You can create the state, Hamiltonian and jump operators using any qarray-like. 
 import jax.numpy as jnp
 import dynamiqs as dq
 
+jnp.set_printoptions(precision=3, suppress=True)  # set custom array print style
+
 psi0 = dq.excited()                         # initial state
 H = dq.sigmaz()                             # Hamiltonian
 jump_ops = [dq.sigmam()]                    # list of jump operators

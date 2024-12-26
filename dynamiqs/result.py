@@ -45,7 +45,7 @@ def array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: Array
+    ysave: QArray
     extra: PyTree | None
 
 
@@ -109,7 +109,6 @@ class Result(eqx.Module):
         return f'==== {self.__class__.__name__} ====\n' + parts_str
 
     @classmethod
-    @property
     def out_axes(cls) -> SolveResult:
         return cls(None, None, None, None, 0, 0)
 
@@ -190,7 +189,6 @@ class FloquetResult(Result):
         }
 
     @classmethod
-    @property
     def out_axes(cls) -> SolveResult:
         return cls(None, None, None, None, 0, 0, None)
 
@@ -370,7 +368,6 @@ class DSMESolveResult(SolveResult):
         return d | {'Measurements': array_str(self.measurements)}
 
     @classmethod
-    @property
     def out_axes(cls) -> SolveResult:
         return cls(None, None, None, None, 0, 0, 0)
 
