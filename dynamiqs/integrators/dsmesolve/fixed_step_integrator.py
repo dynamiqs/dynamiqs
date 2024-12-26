@@ -8,7 +8,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import PRNGKeyArray, Scalar
+from jaxtyping import ArrayLike, PRNGKeyArray, Scalar
 
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack, sum_qarrays
@@ -27,21 +27,33 @@ class YDSME(eqx.Module):
         return YDSME(self.rho + other.rho, self.Y + other.Y)
 
 
+def _is_multiple_of(
+    x: ArrayLike, dt: float, *, rtol: float = 1e-5, atol: float = 1e-5
+) -> bool:
+    x_rounded = np.round(np.array(x) / dt) * dt
+    return np.allclose(x, x_rounded, rtol=rtol, atol=atol)
+
+
+def _is_linearly_spaced(
+    x: ArrayLike, *, rtol: float = 1e-5, atol: float = 1e-5
+) -> bool:
+    diffs = np.diff(x)
+    return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
+
+
 class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
     """Integrator solving the diffusive SME with a fixed step size integrator."""
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
-        rounded_ts = np.round(np.array(self.ts) / self.dt) * self.dt
-        if not np.allclose(self.ts, rounded_ts, rtol=1e-5, atol=1e-5):
+        if not _is_multiple_of(self.ts, self.dt):
             raise ValueError(
                 'Argument `tsave` should only contain exact multiples of the solver '
                 'fixed step size `dt`.'
             )
 
         # check that tsave is linearly spaced
-        diffs = np.diff(self.ts)
-        if not np.allclose(diffs, diffs[0], rtol=1e-5, atol=1e-5):
+        if not _is_linearly_spaced(self.ts):
             raise ValueError('Argument `tsave` should be linearly spaced.')
 
     class Infos(eqx.Module):
