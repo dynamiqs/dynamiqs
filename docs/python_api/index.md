@@ -251,3 +251,11 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - gifit
         - grid
         - mplstyle
+
+### Magic
+
+::: dynamiqs
+    options:
+        table: true
+        members:
+        - hc
