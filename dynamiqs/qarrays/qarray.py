@@ -529,15 +529,17 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         """Computes the element-wise multiplication.
 
         Args:
-            y: Array-like to multiply with element-wise.
+            y: Qarray-like to multiply with element-wise.
 
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     @abstractmethod
     def elpow(self, power: int) -> QArray:
