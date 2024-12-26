@@ -6,6 +6,7 @@ from typing import Any
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax import Array
 from jaxtyping import PRNGKeyArray, Scalar
 
@@ -30,8 +31,18 @@ class DSMEFixedStepIntegrator(DSMESolveIntegrator, DSMESolveSaveMixin):
     """Integrator solving the diffusive SME with a fixed step size integrator."""
 
     def __check_init__(self):
-        # todo: check tsave elements align correctly with dt
-        pass
+        # check that all tsave values are exact multiples of dt
+        rounded_ts = np.round(np.array(self.ts) / self.dt) * self.dt
+        if not np.allclose(self.ts, rounded_ts, rtol=1e-5, atol=1e-5):
+            raise ValueError(
+                'Argument `tsave` should only contain exact multiples of the solver '
+                'fixed step size `dt`.'
+            )
+
+        # check that tsave is linearly spaced
+        diffs = np.diff(self.ts)
+        if not np.allclose(diffs, diffs[0], rtol=1e-5, atol=1e-5):
+            raise ValueError('Argument `tsave` should be linearly spaced.')
 
     class Infos(eqx.Module):
         nsteps: Array
