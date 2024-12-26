@@ -44,7 +44,7 @@ def array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: Array
+    ysave: QArray
     extra: PyTree | None
 
 
