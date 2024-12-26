@@ -17,9 +17,3 @@ def assert_equal(x, y):
 def test_hc_qarray():
     x = sigmay(layout=dense)
     assert_equal(x + hc, x + x.dag())
-
-
-@pytest.mark.run(order=TEST_INSTANT)
-def test_hc_jax():
-    x = jnp.array([[1.0, 1.0j], [1.0j, 1.0]])
-    assert_equal(x + hc, jnp.array([[2.0, 0.0], [0.0, 2.0]]))

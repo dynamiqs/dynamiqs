@@ -1,18 +1,12 @@
-from typing import get_args
-
-from jaxtyping import ArrayLike
-
-from .qarrays import QArray, QArrayLike
+from .qarrays import QArray
 
 __all__ = ['hc']
 
 
 class HermitianConjugate:
-    def __radd__(self, y: QArrayLike) -> QArrayLike:
+    def __radd__(self, y: QArray) -> QArray:
         if isinstance(y, QArray):
             return y + y.dag()
-        elif isinstance(y, get_args(ArrayLike)):
-            return y + y.mT.conj()
         else:
             raise TypeError(
                 f'`dq.hq` can only be right-added '
