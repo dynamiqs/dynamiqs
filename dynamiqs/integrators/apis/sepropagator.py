@@ -9,12 +9,14 @@ from jaxtyping import Array, ArrayLike
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.layout import dense
+from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -33,7 +35,7 @@ from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
 
 
 def sepropagator(
-    H: ArrayLike | TimeArray,
+    H: QArrayLike | TimeQArray,
     tsave: ArrayLike,
     *,
     solver: Solver | None = None,
@@ -56,7 +58,7 @@ def sepropagator(
     propagator is computed by solving the Schrödinger equation with an ODE solver.
 
     Note-: Defining a time-dependent Hamiltonian
-        If the Hamiltonian depends on time, it can be converted to a time-array using
+        If the Hamiltonian depends on time, it can be converted to a time-qarray using
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -69,7 +71,7 @@ def sepropagator(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
             or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -96,7 +98,7 @@ def sepropagator(
             [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
+    H = _astimeqarray(H)
     tsave = jnp.asarray(tsave)
 
     # === check arguments
@@ -111,7 +113,7 @@ def sepropagator(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_sepropagator(
-    H: TimeArray,
+    H: TimeQArray,
     tsave: Array,
     solver: Solver,
     gradient: Gradient | None,
@@ -119,8 +121,7 @@ def _vectorized_sepropagator(
 ) -> SEPropagatorResult:
     # vectorize input over H
     in_axes = (H.in_axes, None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = SEPropagatorResult(None, None, None, None, 0, 0)
+    out_axes = SEPropagatorResult.out_axes
 
     # cartesian batching only
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0)
@@ -130,7 +131,7 @@ def _vectorized_sepropagator(
 
 
 def _sepropagator(
-    H: TimeArray,
+    H: TimeQArray,
     tsave: Array,
     solver: Solver | None,
     gradient: Gradient | None,
@@ -155,7 +156,7 @@ def _sepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1])
+    y0 = eye(H.shape[-1], layout=dense)
     integrator = integrator_class(
         ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H
     )
@@ -167,6 +168,6 @@ def _sepropagator(
     return result  # noqa: RET504
 
 
-def _check_sepropagator_args(H: TimeArray):
+def _check_sepropagator_args(H: TimeQArray):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})

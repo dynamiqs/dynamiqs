@@ -24,7 +24,7 @@ a = dq.destroy(n)
 kappa = 1.0
 omega = 10.0
 alpha0 = 2.0
-H = omega * dq.dag(a) @ a
+H = omega * a.dag() @ a
 jump_ops = [jnp.sqrt(kappa/2) * a, jnp.sqrt(kappa/2) * (-1j * a)]
 etas = [1.0, 1.0]
 psi0 = dq.coherent(n, alpha0)
@@ -50,7 +50,7 @@ print(result)
 ==== SMESolveResult ====
 Solver       : Euler
 Infos        : 1000 steps | infos shape (1000,)
-States       : Array complex64 (1000, 101, 16, 16) | 197.3 Mb
+States       : QArray complex64 (1000, 16, 16) | 2.0 Mb
 Measurements : Array float32 (1000, 2, 100) | 781.2 Kb
 ```
 

@@ -19,7 +19,7 @@ T = 2 * jnp.pi  # total evolution time (one full revolution)
 
 # initialize operators, initial state and saving times
 a = dq.destroy(n)
-H = omega * dq.dag(a) @ a
+H = omega * a.dag() @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.coherent(n, alpha0)
 tsave = jnp.linspace(0, T, 101)
@@ -34,7 +34,7 @@ print(result)
 ==== MESolveResult ====
 Solver : Tsit5
 Infos  : 40 steps (40 accepted, 0 rejected)
-States : Array complex64 (101, 16, 16) | 202.0 Kb
+States : QArray complex64 (101, 16, 16) | 202.0 Kb
 ```
 
 ## Compute gradients with respect to some parameters
@@ -57,7 +57,7 @@ def population(omega, kappa, alpha0):
     """Return the oscillator population after time evolution."""
     # initialize operators, initial state and saving times
     a = dq.destroy(n)
-    H = omega * dq.dag(a) @ a
+    H = omega * a.dag() @ a
     jump_ops = [jnp.sqrt(kappa) * a]
     psi0 = dq.coherent(n, alpha0)
     tsave = jnp.linspace(0, T, 101)

@@ -4,13 +4,14 @@ from abc import ABC, abstractmethod
 
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PyTree
+from jaxtyping import PyTree
 
+from dynamiqs import QArray, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
 from dynamiqs.solver import Solver
-from dynamiqs.time_array import TimeArray
+from dynamiqs.time_qarray import TimeQArray
 
 
 class System(ABC):
@@ -20,23 +21,23 @@ class System(ABC):
         self.params_default = None
 
     @abstractmethod
-    def H(self, params: PyTree) -> ArrayLike | TimeArray:
+    def H(self, params: PyTree) -> QArray | TimeQArray:
         """Compute the Hamiltonian."""
 
     @abstractmethod
-    def y0(self, params: PyTree) -> Array:
+    def y0(self, params: PyTree) -> QArray:
         """Compute the initial state."""
 
     @abstractmethod
-    def Es(self, params: PyTree) -> Array:
+    def Es(self, params: PyTree) -> list[QArray]:
         """Compute the expectation value operators."""
 
-    def state(self, t: float) -> Array:
+    def state(self, t: float) -> QArray:
         """Compute the exact state at a given time."""
         raise NotImplementedError
 
-    def states(self, t: Array) -> Array:
-        return jnp.stack([self.state(t_.item()) for t_ in t])
+    def states(self, t: Array) -> QArray:
+        return stack([self.state(t_.item()) for t_ in t])
 
     def expect(self, t: float) -> Array:
         """Compute the exact (complex) expectation values at a given time."""
@@ -45,7 +46,7 @@ class System(ABC):
     def expects(self, t: Array) -> Array:
         return jnp.stack([self.expect(t_.item()) for t_ in t]).swapaxes(0, 1)
 
-    def loss_state(self, state: Array) -> Array:
+    def loss_state(self, state: QArray) -> Array:
         """Compute an example loss function from a given state."""
         raise NotImplementedError
 

@@ -3,6 +3,8 @@ import jax.numpy as jnp
 import pytest
 
 import dynamiqs as dq
+from dynamiqs import asqarray
+from tests.order import TEST_LONG
 
 
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
@@ -12,9 +14,11 @@ def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
     psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
     Es = dq.random.complex(kEs, (nEs, n, n))
+    Es = [asqarray(E) for E in Es]
     return H, Ls, psi0, Es
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('npsi0', [(), (5,)])
 @pytest.mark.parametrize('nL1', [(), (7, 8)])
@@ -65,12 +69,12 @@ def test_batching_boris():
     # first modulated operator (1, 5, 9, 9)
     omega1 = jnp.linspace(0, 1, 5)[None, :]
     f = lambda t: jnp.cos(omega1 * t)
-    H1 = dq.modulated(f, a + dq.dag(a))
+    H1 = dq.modulated(f, a + a.dag())
 
     # second modulated operator 2 (7, 1, 9, 9)
     omega2 = jnp.linspace(0, 1, 7)[:, None]
     f = lambda t: jnp.cos(omega2 * t)
-    H2 = dq.modulated(f, 1j * a - 1j * dq.dag(a))
+    H2 = dq.modulated(f, 1j * a - 1j * a.dag())
 
     # Hamiltonian
     H = H1 + H2

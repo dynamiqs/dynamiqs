@@ -9,8 +9,9 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import Scalar
 
+from ...qarrays.qarray import QArray
+from ...qarrays.utils import stack, sum_qarrays
 from ...result import Result
-from ...utils.quantum_utils.general import dag, trace
 from ..core.abstract_integrator import DSMESolveIntegrator
 from ..core.save_mixin import DSMESolveSaveMixin
 
@@ -18,7 +19,7 @@ from ..core.save_mixin import DSMESolveSaveMixin
 class YDSME(eqx.Module):
     """State for the diffusive SME fixed step integrators."""
 
-    rho: Array  # state (integrated from initial to current time)
+    rho: QArray  # state (integrated from initial to current time)
     Y: Array  # measurement (integrated from initial to current time)
 
     def __add__(self, other: Any) -> YDSME:
@@ -122,21 +123,19 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         # with
         # - Lcal the Liouvillian
         # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
+        L, Lm, H = self.L(t), self.Lm(t), self.H(t)
 
         # === Lcal(rho)
         # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
-        L = self.L(t)
-        Ld = dag(L)
-        LdL = (Ld @ L).sum(0)
-        tmp = (-1j * self.H(t) - 0.5 * LdL) @ y.rho + 0.5 * (L @ y.rho @ Ld).sum(0)
-        Lcal_rho = tmp + dag(tmp)
+        Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
+        tmp = sum_qarrays(Hnh @ y.rho, *[0.5 * _L @ y.rho @ _L.dag() for _L in L])
+        Lcal_rho = tmp + tmp.dag()
 
         # === Ccal(rho)
-        Lm = self.Lm(t)  # (nLm, n, n)
-        Lm_rho = Lm @ y.rho
+        Lm_rho = stack([_L @ y.rho for _L in Lm])
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
-        Ccal_rho = jnp.sqrt(etas) * (Lm_rho + dag(Lm_rho))  # (nLm, n, n)
-        tr_Ccal_rho = trace(Ccal_rho).real  # (nLm,)
+        Ccal_rho = jnp.sqrt(etas) * (Lm_rho + Lm_rho.dag())  # (nLm, n, n)
+        tr_Ccal_rho = Ccal_rho.trace().real  # (nLm,)
 
         # === state rho
         drho_det = Lcal_rho

@@ -1,10 +1,10 @@
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
 from jaxtyping import Scalar
 
 from ...options import Options
-from ...time_array import TimeArray
+from ...qarrays.qarray import QArray
+from ...time_qarray import TimeQArray
 
 
 class OptionsInterface(eqx.Module):
@@ -14,37 +14,37 @@ class OptionsInterface(eqx.Module):
 class SEInterface(eqx.Module):
     """Interface for the Schrödinger equation."""
 
-    H: TimeArray
+    H: TimeQArray
 
 
 class MEInterface(eqx.Module):
     """Interface for the Lindblad master equation."""
 
-    H: TimeArray
-    Ls: list[TimeArray]
+    H: TimeQArray
+    Ls: list[TimeQArray]
 
-    def L(self, t: Scalar) -> Array:
-        return jnp.stack([L(t) for L in self.Ls])  # (nLs, n, n)
+    def L(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
 
 class DSMEInterface(eqx.Module):
     """Interface for the diffusive SME."""
 
-    H: TimeArray
-    Lcs: list[TimeArray]  # (nLc, n, n)
-    Lms: list[TimeArray]  # (nLm, n, n)
+    H: TimeQArray
+    Lcs: list[TimeQArray]  # (nLc, n, n)
+    Lms: list[TimeQArray]  # (nLm, n, n)
     etas: Array  # (nLm,)
 
     @property
-    def Ls(self) -> list[TimeArray]:
+    def Ls(self) -> list[TimeQArray]:
         return self.Lcs + self.Lms  # (nLc + nLm, n, n)
 
-    def L(self, t: Scalar) -> Array:
-        return jnp.stack([L(t) for L in self.Ls])  # (nLs, n, n)
+    def L(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
-    def Lm(self, t: Scalar) -> Array:
-        return jnp.stack([L(t) for L in self.Lms])  # (nLm, n, n)
+    def Lm(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Lms]  # (nLm, n, n)
 
 
 class SolveInterface(eqx.Module):
-    Es: Array
+    Es: QArray

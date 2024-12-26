@@ -22,7 +22,7 @@ import dynamiqs as dq
 H = dq.zero(2)
 jump_ops = [dq.sigmaz()]
 etas = [1.0]
-psi0 = dq.unit(dq.ground() + dq.excited())
+psi0 = (dq.ground() + dq.excited()).unit()
 
 # define save times
 nbins = 100
@@ -43,8 +43,8 @@ print(result)
 ```text title="Output"
 ==== DSMESolveResult ====
 Solver       : EulerMaruyama
-Infos        : 10000 steps | infos shape (5,)
-States       : Array complex64 (5, 101, 2, 2) | 15.8 Kb
+Infos        : 1000 steps | infos shape (5,)
+States       : QArray complex64 (5, 101, 2, 2) | 15.8 Kb
 Measurements : Array float32 (5, 1, 100) | 2.0 Kb
 ```
 

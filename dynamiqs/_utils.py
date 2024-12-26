@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 
 def type_str(type: Any) -> str:  # noqa: A002
@@ -51,3 +51,22 @@ def _concatenate_sort(*args: Array | None) -> Array | None:
     if len(args) == 0:
         return None
     return jnp.sort(jnp.concatenate(args))
+
+
+def _is_batched_scalar(y: ArrayLike) -> bool:
+    # check if a qarray-like is a scalar or a set of scalars of shape (..., 1, 1)
+    return isinstance(y, get_args(ScalarLike)) or (
+        isinstance(y, get_args(ArrayLike))
+        and (
+            y.ndim == 0
+            or (y.ndim == 1 and y.shape == (1,))
+            or (y.ndim > 1 and y.shape[-2:] == (1, 1))
+        )
+    )
+
+
+def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+    if dims1 != dims2:
+        raise ValueError(
+            f'Qarrays have incompatible dimensions. Got {dims1} and {dims2}.'
+        )

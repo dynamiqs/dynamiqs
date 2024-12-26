@@ -24,10 +24,9 @@ dependencies = [
     "numpy",
     "matplotlib",
     "tqdm",
-    # todo: fix when https://github.com/patrick-kidger/equinox/pull/871 is released
-    "jax<0.4.34",
+    "jax",
     "jaxlib",
-    "jaxtyping<=0.2.34",  # see https://github.com/patrick-kidger/jaxtyping/issues/269
+    "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",
     "pillow",
@@ -48,9 +47,10 @@ build-backend = "flit_core.buildapi"
 [project.optional-dependencies]
 dev = [
     "taskipy",
-    "ruff",
+    "ruff>=0.8",
     "codespell",
     "pytest>=8.0",
+    "pytest-ordering",
     "pytest-sugar",
     "pytest-xdist",
     "mkdocs-material",
@@ -87,10 +87,12 @@ ignore = [
     "F403", "F405",
     "E203", "E731", "E741",
     "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D405", "D417",
-    "ANN101", "ANN002", "ANN003", "ANN401",
-    "RET505",
+    "ANN002", "ANN003", "ANN401",
+    "ARG001",
+    "RET505", "RUF022",
     "TRY003",
-    "PLR0913", "PLR2004"
+    "PLR0913", "PLR2004",
+    "SLF001",
 ]
 
 [tool.ruff.lint.isort]

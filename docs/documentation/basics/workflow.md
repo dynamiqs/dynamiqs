@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 ## I. Define the system
 
-After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in Dynamiqs, see the [Python API](../../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like object.
+After having imported the necessary packages, we can define our system, namely the initial state, the Hamiltonian, and the eventual loss operators. Common states and operators are already defined in Dynamiqs, see the [Python API](../../python_api/index.md) for more details. Otherwise, you can define specific states and operators using any array-like.
 
 Here, we will use [`dq.fock()`][dynamiqs.fock] to define the initial state $\ket{\psi_0}=\ket{0}$, [`dq.sigmaz()`][dynamiqs.sigmaz] and [`dq.sigmax()`][dynamiqs.sigmax] to define the Hamiltonian $H = \delta \sigma_z + \Omega \sigma_x$.
 
@@ -35,8 +35,8 @@ print(f"Hamiltonian of type {type(H)} and shape {H.shape}.")
 ```
 
 ```text title="Output"
-State of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 1).
-Hamiltonian of type <class 'jaxlib.xla_extension.ArrayImpl'> and shape (2, 2).
+State of type <class 'dynamiqs.qarrays.dense_qarray.DenseQArray'> and shape (2, 1).
+Hamiltonian of type <class 'dynamiqs.qarrays.sparsedia_qarray.SparseDIAQArray'> and shape (2, 2).
 ```
 
 In Dynamiqs, all quantum objects are defined directly with [JAX arrays](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.array.html), and without subclassing. This allows for easy interfacing with JAX utility functions, and avoids runtime overheads. Also, all quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have a shape `(..., n, 1)` and density matrices have shape `(..., n, n)`.
@@ -76,15 +76,15 @@ print(result)
 ```
 
 ```text title="Output"
-|██████████| 100.0% ◆ elapsed 3.25ms ◆ remaining 0.00ms
 `result` is of type <class 'dynamiqs.result.SESolveResult'>.
 `result` has the following attributes:
-['Esave', '_abc_impl', 'expects', 'gradient', 'options', 'solver', 'states', 'to_numpy', 'to_qutip', 'tsave', 'ysave']
+['_abc_impl', '_saved', '_str_parts', 'block_until_ready', 'expects', 'extra', 'final_state', 'gradient', 'infos', 'options', 'solver', 'states', 'to_numpy', 'to_qutip', 'tsave']
 
+|██████████| 100.0% ◆ elapsed 4.57ms ◆ remaining 0.00ms
 ==== SESolveResult ====
 Solver  : Dopri5
 Infos   : 56 steps (48 accepted, 8 rejected)
-States  : Array complex64 (101, 2, 1) | 1.6 Kb
+States  : QArray complex64 (101, 2, 1) | 1.6 Kb
 Expects : Array complex64 (1, 101) | 0.8 Kb
 ```
 
