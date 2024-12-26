@@ -32,8 +32,8 @@ T = 5.0        # simulation time
 ntsave = 201   # number of saved states
 
 # operators
-a, adag = dq.destroy(n), dq.create(n)
-H = -K * adag @ adag @ a @ a + epsilon * (a + adag)
+a = dq.destroy(n)
+H = -K * a.dag() @ a.dag() @ a @ a + epsilon * (a + a.dag())
 jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
@@ -49,7 +49,7 @@ result = dq.mesolve(H, jump_ops, psi0, tsave)
 From this simulation, we can extract any property of the evolved state at any saved time. We can for instance access the number of photons in the final state using
 
 ```pycon
->>> dq.expect(adag @ a, result.states[-1])
+>>> dq.expect(a.dag() @ a, result.states[-1])
 Array(1.434+0.j, dtype=complex64)
 ```
 
@@ -77,8 +77,8 @@ alpha0 = 2.0
 ntsave = 201
 
 # operators
-a, adag = dq.destroy(n), dq.create(n)
-H = -K * adag @ adag @ a @ a
+a = dq.destroy(n)
+H = -K * a.dag() @ a.dag() @ a @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
@@ -157,8 +157,8 @@ T = 10 * jnp.pi / epsilon
 ntsave = 401
 
 # operators
-a, adag = dq.destroy(n), dq.create(n)
-H = -K * adag @ adag @ a @ a + epsilon * (a + adag)
+a = dq.destroy(n)
+H = -K * a.dag() @ a.dag() @ a @ a + epsilon * (a + a.dag())
 jump_ops = [jnp.sqrt(kappa) * a]
 
 # initial state
@@ -234,8 +234,8 @@ Ts = jnp.linspace(0.05, 0.5, 24)
 sigmas = jnp.linspace(0.05, 0.2, 14)
 
 # operators, initial state, and expectation operator
-a, adag = dq.destroy(n), dq.create(n)
-H0 = -K * adag @ adag @ a @ a
+a = dq.destroy(n)
+H0 = -K * a.dag() @ a.dag() @ a @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.basis(n, 0)
 exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
@@ -246,7 +246,7 @@ def compute_fidelity(T):
     # time-dependent Hamiltonian, defined with functools.partial and broadcasting
     # `f` has signature (t: float) -> Array of shape (len(sigmas),)
     f = partial(pulse, T=T, sigma=sigmas)
-    H = H0 + dq.modulated(f, a + adag)
+    H = H0 + dq.modulated(f, a + a.dag())
 
     # save times
     tsave = jnp.linspace(0.0, T, ntsave)
@@ -295,8 +295,8 @@ nepochs = 300       # number of optimization epochs
 learning_rate = 0.2 # gradient descent learning rate
 
 # operators, initial state, and expectation operator
-a, adag = dq.destroy(n), dq.create(n)
-H0 = -K * adag @ adag @ a @ a
+a = dq.destroy(n)
+H0 = -K * a.dag() @ a.dag() @ a @ a
 jump_ops = [jnp.sqrt(kappa) * a]
 psi0 = dq.basis(n, 0)
 exp_ops = [dq.proj(dq.basis(n, 0)), dq.proj(dq.basis(n, 1))]
@@ -309,8 +309,8 @@ tpulse = jnp.linspace(0.0, T, ntpulse)
 def compute_fidelity(amps):
     # time-dependent Hamiltonian
     # (sum of two piece-wise constant Hamiltonians and of the static Hamiltonian)
-    Hx = dq.pwc(tpulse, jnp.real(amps), a + adag)
-    Hp = dq.pwc(tpulse, jnp.imag(amps), 1j * (a - adag))
+    Hx = dq.pwc(tpulse, jnp.real(amps), a + a.dag())
+    Hp = dq.pwc(tpulse, jnp.imag(amps), 1j * (a - a.dag()))
     H = H0 + Hx + Hp
 
     # run simulation

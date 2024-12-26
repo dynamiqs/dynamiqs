@@ -11,15 +11,15 @@ from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
-from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
 from ...solver import EulerMaruyama, Solver
-from ...time_array import TimeArray
-from ...utils.quantum_utils.general import isket, todm
+from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -30,15 +30,15 @@ from ..dsmesolve.fixed_step_integrator import DSMESolveEulerMayuramaIntegrator
 
 
 def dsmesolve(
-    H: ArrayLike | TimeArray,
-    jump_ops: list[ArrayLike | TimeArray],
+    H: QArrayLike | TimeQArray,
+    jump_ops: list[QArrayLike | TimeQArray],
     etas: ArrayLike,
-    rho0: ArrayLike,
+    rho0: QArrayLike,
     tsave: ArrayLike,
     keys: PRNGKeyArray,
     solver: Solver,
     *,
-    exp_ops: list[ArrayLike] | None = None,
+    exp_ops: list[QArrayLike] | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> DSMESolveResult:
@@ -119,13 +119,13 @@ def dsmesolve(
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of array-like or time-array, each of shape (n, n))_: List of
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
             jump operators.
         etas _(array-like of shape (len(jump_ops),))_: Measurement efficiency for each
             loss channel with values between 0 (purely dissipative) and 1 (perfectly
             measured). No measurement is returned for purely dissipative loss channels.
-        rho0 _(array-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
+        rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -150,21 +150,21 @@ def dsmesolve(
             [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
-    Ls = [_astimearray(L) for L in jump_ops]
+    H = _astimeqarray(H)
+    Ls = [_astimeqarray(L) for L in jump_ops]
     etas = jnp.asarray(etas)
-    rho0 = jnp.asarray(rho0, dtype=cdtype())
+    rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
     if exp_ops is not None:
-        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
 
     # === convert rho0 to density matrix
-    rho0 = todm(rho0)
+    rho0 = rho0.todm()
 
     # === split jump operators
     # split between purely dissipative (eta = 0) and measured (eta != 0)
@@ -183,14 +183,14 @@ def dsmesolve(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
 def _vectorized_dsmesolve(
-    H: TimeArray,
-    Lcs: list[TimeArray],
-    Lms: list[TimeArray],
+    H: TimeQArray,
+    Lcs: list[TimeQArray],
+    Lms: list[TimeQArray],
     etas: Array,
-    rho0: Array,
+    rho0: QArray,
     tsave: Array,
     keys: PRNGKeyArray,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -201,15 +201,12 @@ def _vectorized_dsmesolve(
     # the input is vectorized over `key`
     in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
     # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSMESolveResult(None, None, None, None, 0, 0, 0)
+    out_axes = DSMESolveResult.out_axes
     f = jax.vmap(f, in_axes, out_axes)
 
     # === vectorize function
     # vectorize input over H and rho0
     in_axes = (H.in_axes, None, None, None, 0, None, None, None, None, None, None)
-
-    # the result is vectorized over `_saved` and `infos`
-    out_axes = DSMESolveResult(None, None, None, None, 0, 0, None)
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, 0, rho0.ndim - 2, 0, 0, 0, 0, 0)
@@ -220,7 +217,7 @@ def _vectorized_dsmesolve(
         # broadcast all vectorized input to same shape
         n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
-        rho0 = jnp.broadcast_to(rho0, (*bshape, n, n))
+        rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
         f = multi_vmap(f, in_axes, out_axes, nvmap)
 
@@ -229,14 +226,14 @@ def _vectorized_dsmesolve(
 
 
 def _dsmesolve_single_trajectory(
-    H: TimeArray,
-    Lcs: list[TimeArray],
-    Lms: list[TimeArray],
+    H: TimeQArray,
+    Lcs: list[TimeQArray],
+    Lms: list[TimeQArray],
     etas: Array,
-    rho0: Array,
+    rho0: QArray,
     tsave: Array,
     key: PRNGKeyArray,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -271,7 +268,11 @@ def _dsmesolve_single_trajectory(
 
 
 def _check_dsmesolve_args(
-    H: TimeArray, Ls: list[TimeArray], etas: Array, rho0: Array, exp_ops: Array | None
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    etas: Array,
+    rho0: Array,
+    exp_ops: list[QArray] | None,
 ):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
@@ -280,7 +281,7 @@ def _check_dsmesolve_args(
     for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
 
-    if len(Ls) == 0 and isket(rho0):
+    if len(Ls) == 0 and rho0.isket():
         logging.warning(
             'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
             ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
@@ -312,4 +313,5 @@ def _check_dsmesolve_args(
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')

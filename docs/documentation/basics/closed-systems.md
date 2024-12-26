@@ -64,7 +64,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 1. Computing a matrix exponential requires a few matrix multiplications, and the time complexity of multiplying two dense matrices of size $n\times n$ is $\mathcal{O(n^3)}$.
 
 !!! Example "Example for a two-level system"
-    For $H=\frac{\omega}{2}\sigma_z$, the propagator is straighforward to compute:
+    For $H=\frac{\omega}{2}\sigma_z$, the propagator is straightforward to compute:
     $$
         U(t) = e^{-iHt} = \begin{pmatrix}e^{-i\omega t/2} & 0 \\\\ 0 & e^{i\omega t/2}\end{pmatrix}.
     $$
@@ -91,7 +91,7 @@ There are two main types of ODE solvers:
 
 ## Using Dynamiqs
 
-You can create the state and Hamiltonian using any array-like object. Let's take the example of a two-level system with a simple Hamiltonian:
+You can create the state and Hamiltonian using any qarray-like. Let's take the example of a two-level system with a simple Hamiltonian:
 
 ```python
 import jax.numpy as jnp
@@ -106,8 +106,9 @@ print(res.states[-1])             # print the final state
 
 ```text title="Output"
 |██████████| 100.0% ◆ elapsed 2.52ms ◆ remaining 0.00ms
-Array([[0.  +0.j   ],
-       [0.54+0.841j]], dtype=complex64)
+QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
+[[0.  +0.j   ]
+ [0.54+0.841j]]
 ```
 
 If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
@@ -120,6 +121,7 @@ print(res.propagators[-1])  # print the final propagator
 ```
 
 ```text title="Output"
-Array([[0.54-0.841j 0.  +0.j   ]
-       [0.  +0.j    0.54+0.841j]], dtype=complex64)
+QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+[[0.54-0.841j 0.  +0.j   ]
+ [0.  +0.j    0.54+0.841j]]
 ```

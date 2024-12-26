@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import matplotlib
 import numpy as np
 import pytest
+import qutip
 from matplotlib import pyplot as plt
 from sybil import Sybil
 from sybil.parsers.doctest import DocTestParser
@@ -20,6 +21,7 @@ def sybil_setup(namespace):
     namespace['plt'] = plt
     namespace['jax'] = jax
     namespace['jnp'] = jnp
+    namespace['qt'] = qutip
 
 
 @pytest.fixture(scope='session', autouse=True)

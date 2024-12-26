@@ -8,16 +8,16 @@ from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
 
 __all__ = [
-    'Expm',
-    'Euler',
-    'EulerMaruyama',
-    'Rouchon1',
-    'Rouchon2',
     'Dopri5',
     'Dopri8',
-    'Tsit5',
+    'Euler',
+    'EulerMaruyama',
+    'Expm',
     'Kvaerno3',
     'Kvaerno5',
+    'Rouchon1',
+    'Rouchon2',
+    'Tsit5',
 ]
 
 
@@ -30,11 +30,11 @@ class Solver(eqx.Module):
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient]
 
     @classmethod
-    def supports_gradient(cls, gradient: Gradient | None) -> bool:  # noqa: ANN102
+    def supports_gradient(cls, gradient: Gradient | None) -> bool:
         return isinstance(gradient, cls.SUPPORTED_GRADIENT)
 
     @classmethod
-    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:  # noqa: ANN102
+    def assert_supports_gradient(cls, gradient: Gradient | None) -> None:
         if gradient is not None and not cls.supports_gradient(gradient):
             support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
             raise ValueError(
@@ -72,6 +72,10 @@ class Expm(Solver):
     $$
         \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
     $$
+
+    Warning:
+        If the Hamiltonian or jump operators are sparse arrays, they will be silently
+        converted to dense arrays before computing their matrix exponentials.
 
     Warning:
         This solver is not recommended for open systems of large dimension, due to

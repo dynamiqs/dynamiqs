@@ -4,9 +4,11 @@ import pytest
 
 from dynamiqs.solver import Tsit5
 
+from ..order import TEST_LONG
 from .floquet_qubit import FloquetQubit
 
 
+@pytest.mark.run(order=TEST_LONG)
 class TestFloquet:
     @pytest.mark.parametrize('omega', 2.0 * jnp.pi * jnp.array([1.0, 2.5]))
     @pytest.mark.parametrize('amp', 2.0 * jnp.pi * jnp.array([0.01, 0.1]))
@@ -18,17 +20,15 @@ class TestFloquet:
         omega_d = omega_d_frac * omega
         floquet_qubit = FloquetQubit(omega, omega_d, amp, tsave)
         floquet_result = floquet_qubit.run(Tsit5())
-        modes = floquet_result.modes
+        modes = floquet_result.modes.to_jax()
         state_phases = jnp.angle(modes[..., :, 0, 0])
         modes = jnp.einsum('...ijk,...i->...ijk', modes, jnp.exp(-1j * state_phases))
         quasienergies = floquet_result.quasienergies
-        true_modes = jax.vmap(floquet_qubit.state)(tsave)
+        true_modes = jax.vmap(floquet_qubit.state)(tsave).to_jax()
         true_quasienergies = floquet_qubit.true_quasienergies()
         # sort them appropriately for comparison
         idxs = jnp.argmin(
             jnp.abs(quasienergies - true_quasienergies[..., None]), axis=1
         )
-        state_errs = jnp.linalg.norm(modes[:, idxs] - true_modes, axis=(-1, -2))
-        assert jnp.all(state_errs <= ysave_atol)
-        quasi_errs = jnp.linalg.norm(quasienergies[idxs] - true_quasienergies, axis=-1)
-        assert jnp.all(quasi_errs <= ysave_atol)
+        assert jnp.allclose(modes[:, idxs], true_modes, atol=ysave_atol)
+        assert jnp.allclose(quasienergies[idxs], true_quasienergies, atol=ysave_atol)

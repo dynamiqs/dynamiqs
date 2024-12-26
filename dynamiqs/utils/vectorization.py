@@ -1,27 +1,25 @@
 from __future__ import annotations
 
-import jax.numpy as jnp
 import numpy as np
-from jax import Array
-from jaxtyping import ArrayLike
 
 from .._checks import check_shape
+from ..qarrays.qarray import QArray, QArrayLike
+from ..qarrays.utils import asqarray, sum_qarrays
+from .general import dag
 from .operators import eye
-from .quantum_utils import dag
-from .quantum_utils.general import _bkron
 
 __all__ = [
     'operator_to_vector',
-    'vector_to_operator',
-    'spre',
-    'spost',
-    'sprepost',
     'sdissipator',
     'slindbladian',
+    'spost',
+    'spre',
+    'sprepost',
+    'vector_to_operator',
 ]
 
 
-def operator_to_vector(x: ArrayLike) -> Array:
+def operator_to_vector(x: QArrayLike) -> QArray:
     r"""Returns the vectorized version of an operator.
 
     The vectorized column vector $\kett{A}$ (shape $n^2\times 1$) is obtained by
@@ -33,10 +31,10 @@ def operator_to_vector(x: ArrayLike) -> Array:
     $$
 
     Args:
-        x _(array_like of shape (..., n, n))_: Operator.
+        x _(qarray-like of shape (..., n, n))_: Operator.
 
     Returns:
-        _(array of shape (..., n^2, 1))_ Vectorized operator.
+        _(qarray of shape (..., n^2, 1))_ Vectorized operator.
 
     Examples:
         >>> A = jnp.array([[1 + 1j, 2 + 2j], [3 + 3j, 4 + 4j]])
@@ -44,18 +42,20 @@ def operator_to_vector(x: ArrayLike) -> Array:
         Array([[1.+1.j, 2.+2.j],
                [3.+3.j, 4.+4.j]], dtype=complex64)
         >>> dq.operator_to_vector(A)
-        Array([[1.+1.j],
-               [3.+3.j],
-               [2.+2.j],
-               [4.+4.j]], dtype=complex64)
+        QArray: shape=(4, 1), dims=(2,), dtype=complex64, layout=dense, vectorized=True
+        [[1.+1.j]
+         [3.+3.j]
+         [2.+2.j]
+         [4.+4.j]]
     """
-    x = jnp.asarray(x)
+    x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     bshape = x.shape[:-2]
-    return x.mT.reshape(*bshape, -1, 1)
+    x = x.mT._reshape_unchecked(*bshape, -1, 1)
+    return x._replace(vectorized=True)
 
 
-def vector_to_operator(x: ArrayLike) -> Array:
+def vector_to_operator(x: QArrayLike) -> QArray:
     r"""Returns the operator version of a vectorized operator.
 
     The matrix $A$ (shape $n\times n$) is obtained by stacking horizontally next to
@@ -68,10 +68,10 @@ def vector_to_operator(x: ArrayLike) -> Array:
     $$
 
     Args:
-        x _(array_like of shape (..., n^2, 1))_: Vectorized operator.
+        x _(qarray-like of shape (..., n^2, 1))_: Vectorized operator.
 
     Returns:
-        _(array of shape (..., n, n))_ Operator.
+        _(qarray of shape (..., n, n))_ Operator.
 
     Examples:
         >>> Avec = jnp.array([[1 + 1j], [2 + 2j], [3 + 3j], [4 + 4j]])
@@ -81,17 +81,20 @@ def vector_to_operator(x: ArrayLike) -> Array:
                [3.+3.j],
                [4.+4.j]], dtype=complex64)
         >>> dq.vector_to_operator(Avec)
-        Array([[1.+1.j, 3.+3.j],
-               [2.+2.j, 4.+4.j]], dtype=complex64)
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[1.+1.j 3.+3.j]
+         [2.+2.j 4.+4.j]]
     """
-    x = jnp.asarray(x)
+    x = asqarray(x)
     check_shape(x, 'x', '(..., n^2, 1)')
     bshape = x.shape[:-2]
     n = int(np.sqrt(x.shape[-2]))
-    return x.reshape(*bshape, n, n).mT
+    x = x._replace(dims=(n,))
+    x = x._reshape_unchecked(*bshape, n, n).mT
+    return x._replace(vectorized=False)
 
 
-def spre(x: ArrayLike) -> Array:
+def spre(x: QArrayLike) -> QArray:
     r"""Returns the superoperator formed from pre-multiplication by an operator.
 
     Pre-multiplication by matrix $A$ is defined by the superoperator
@@ -101,23 +104,23 @@ def spre(x: ArrayLike) -> Array:
     $$
 
     Args:
-        x _(array_like of shape (..., n, n))_: Operator.
+        x _(qarray-like of shape (..., n, n))_: Operator.
 
     Returns:
-        _(array of shape (..., n^2, n^2))_ Pre-multiplication superoperator.
+        _(qarray of shape (..., n^2, n^2))_ Pre-multiplication superoperator.
 
     Examples:
         >>> dq.spre(dq.destroy(3)).shape
         (9, 9)
     """
-    x = jnp.asarray(x)
+    x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
-    Id = eye(n)
-    return _bkron(Id, x)
+    xpre = eye(n) & x
+    return xpre._replace(dims=x.dims, vectorized=True)
 
 
-def spost(x: ArrayLike) -> Array:
+def spost(x: QArrayLike) -> QArray:
     r"""Returns the superoperator formed from post-multiplication by an operator.
 
     Post-multiplication by matrix $A$ is defined by the superoperator
@@ -127,23 +130,23 @@ def spost(x: ArrayLike) -> Array:
     $$
 
     Args:
-        x _(array_like of shape (..., n, n))_: Operator.
+        x _(qarray-like of shape (..., n, n))_: Operator.
 
     Returns:
-        _(array of shape (..., n^2, n^2))_ Post-multiplication superoperator.
+        _(qarray of shape (..., n^2, n^2))_ Post-multiplication superoperator.
 
     Examples:
         >>> dq.spost(dq.destroy(3)).shape
         (9, 9)
     """
-    x = jnp.asarray(x)
+    x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     n = x.shape[-1]
-    Id = eye(n)
-    return _bkron(x.mT, Id)
+    xpost = x.mT & eye(n)
+    return xpost._replace(dims=x.dims, vectorized=True)
 
 
-def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
+def sprepost(x: QArrayLike, y: QArrayLike) -> QArray:
     r"""Returns the superoperator formed from pre- and post-multiplication by operators.
 
     Pre-multiplication by matrix $A$ and post-multiplication by matrix $B$ is defined
@@ -153,24 +156,25 @@ def sprepost(x: ArrayLike, y: ArrayLike) -> Array:
     $$
 
     Args:
-        x _(array_like of shape (..., n, n))_: Operator for pre-multiplication.
-        y _(array_like of shape (..., n, n))_: Operator for post-multiplication.
+        x _(qarray-like of shape (..., n, n))_: Operator for pre-multiplication.
+        y _(qarray-like of shape (..., n, n))_: Operator for post-multiplication.
 
     Returns:
-        _(array of shape (..., n^2, n^2))_ Pre- and post-multiplication superoperator.
+        _(Qarray of shape (..., n^2, n^2))_ Pre- and post-multiplication superoperator.
 
     Examples:
         >>> dq.sprepost(dq.destroy(3), dq.create(3)).shape
         (9, 9)
     """
-    x = jnp.asarray(x)
-    y = jnp.asarray(y)
+    x = asqarray(x)
+    y = asqarray(y)
     check_shape(x, 'x', '(..., n, n)')
     check_shape(y, 'y', '(..., n, n)')
-    return _bkron(y.mT, x)
+    xyprepost = y.mT & x
+    return xyprepost._replace(dims=x.dims, vectorized=True)
 
 
-def sdissipator(L: ArrayLike) -> Array:
+def sdissipator(L: QArrayLike) -> QArray:
     r"""Returns the Lindblad dissipation superoperator (in matrix form).
 
     The dissipation superoperator $\mathcal{D}[L]$ is defined by:
@@ -187,23 +191,23 @@ def sdissipator(L: ArrayLike) -> Array:
     $$
 
     Args:
-        L _(array_like of shape (..., n, n))_: Jump operator.
+        L _(qarray-like of shape (..., n, n))_: Jump operator.
 
     Returns:
-        _(array of shape (..., n^2, n^2))_ Dissipation superoperator.
+        _(qarray of shape (..., n^2, n^2))_ Dissipation superoperator.
 
     See also:
         - [`dq.dissipator()`][dynamiqs.dissipator]: applies the dissipation
             superoperator to a state using only $n\times n$ matrix multiplications.
     """
-    L = jnp.asarray(L)
+    L = asqarray(L)
     check_shape(L, 'L', '(..., n, n)')
     Ldag = dag(L)
     LdagL = Ldag @ L
     return sprepost(L, Ldag) - 0.5 * spre(LdagL) - 0.5 * spost(LdagL)
 
 
-def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
+def slindbladian(H: QArrayLike, jump_ops: list[QArrayLike]) -> QArray:
     r"""Returns the Lindbladian superoperator (in matrix form).
 
     The Lindbladian superoperator $\mathcal{L}$ is defined by:
@@ -228,22 +232,27 @@ def slindbladian(H: ArrayLike, jump_ops: ArrayLike) -> Array:
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(array_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(array_like of shape (N, ..., n, n))_: Sequence of jump operators.
+        H _(qarray-like of shape (..., n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like, each of shape (..., n, n))_: List of jump
+            operators.
 
     Returns:
-        _(array of shape (..., n^2, n^2))_ Lindbladian superoperator.
+        _(qarray of shape (..., n^2, n^2))_ Lindbladian superoperator.
 
     See also:
         - [`dq.lindbladian()`][dynamiqs.lindbladian]: applies the Lindbladian
             superoperator to a state using only $n\times n$ matrix multiplications.
     """
-    H = jnp.asarray(H)
-    jump_ops = jnp.asarray(jump_ops)
-    check_shape(H, 'H', '(..., n, n)')
-    check_shape(jump_ops, 'jump_ops', '(N, ..., n, n)', '(0,)')
+    H = asqarray(H)
+    jump_ops = [asqarray(L) for L in jump_ops]
 
-    Lcal = -1j * (spre(H) - spost(H))
-    if jump_ops.shape != (0,):  # empty 1D array
-        Lcal += sdissipator(jump_ops).sum(0)
-    return Lcal
+    # === check H shape
+    check_shape(H, 'H', '(..., n, n)')
+
+    # === check jump_ops shape
+    for i, L in enumerate(jump_ops):
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)')
+
+    return sum_qarrays(
+        -1j * spre(H), 1j * spost(H), *[sdissipator(L) for L in jump_ops]
+    )

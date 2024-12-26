@@ -8,14 +8,15 @@ from jax import Array
 from jaxtyping import ArrayLike
 
 from ..._checks import check_shape, check_times
-from ..._utils import cdtype
 from ...gradient import Gradient
 from ...options import Options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 from ...result import SESolveResult
 from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
-from ...time_array import TimeArray
+from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimearray,
+    _astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     get_integrator_class,
@@ -34,11 +35,11 @@ from ..sesolve.expm_integrator import SESolveExpmIntegrator
 
 
 def sesolve(
-    H: ArrayLike | TimeArray,
-    psi0: ArrayLike,
+    H: QArrayLike | TimeQArray,
+    psi0: QArrayLike,
     tsave: ArrayLike,
     *,
-    exp_ops: list[ArrayLike] | None = None,
+    exp_ops: list[QArrayLike] | None = None,
     solver: Solver = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
@@ -59,7 +60,7 @@ def sesolve(
         - $H\to H(t)$
 
     Note-: Defining a time-dependent Hamiltonian
-        If the Hamiltonian depends on time, it can be converted to a time-array using
+        If the Hamiltonian depends on time, it can be converted to a time-qarray using
         [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
         [`dq.timecallable()`][dynamiqs.timecallable]. See the
         [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
@@ -73,12 +74,12 @@ def sesolve(
         tutorial for more details.
 
     Args:
-        H _(array-like or time-array of shape (...H, n, n))_: Hamiltonian.
-        psi0 _(array-like of shape (...psi0, n, 1))_: Initial state.
+        H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
+        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
+        exp_ops _(list of qarray-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
             [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
@@ -100,11 +101,11 @@ def sesolve(
             [`dq.SESolveResult`][dynamiqs.SESolveResult].
     """  # noqa: E501
     # === convert arguments
-    H = _astimearray(H)
-    psi0 = jnp.asarray(psi0, dtype=cdtype())
+    H = _astimeqarray(H)
+    psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
-        exp_ops = jnp.asarray(exp_ops, dtype=cdtype()) if len(exp_ops) > 0 else None
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
@@ -118,18 +119,17 @@ def sesolve(
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
 def _vectorized_sesolve(
-    H: TimeArray,
-    psi0: Array,
+    H: TimeQArray,
+    psi0: QArray,
     tsave: Array,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
 ) -> SESolveResult:
     # vectorize input over H and psi0
     in_axes = (H.in_axes, 0, None, None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = SESolveResult(None, None, None, None, 0, 0)
+    out_axes = SESolveResult.out_axes
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
@@ -140,7 +140,7 @@ def _vectorized_sesolve(
         nvmap = len(bshape)
         # broadcast all vectorized input to same shape
         H = H.broadcast_to(*bshape, n, n)
-        psi0 = jnp.broadcast_to(psi0, (*bshape, n, 1))
+        psi0 = psi0.broadcast_to(*bshape, n, 1)
         # vectorize the function
         f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
 
@@ -148,10 +148,10 @@ def _vectorized_sesolve(
 
 
 def _sesolve(
-    H: TimeArray,
-    psi0: Array,
+    H: TimeQArray,
+    psi0: QArray,
     tsave: Array,
-    exp_ops: Array | None,
+    exp_ops: list[QArray] | None,
     solver: Solver,
     gradient: Gradient | None,
     options: Options,
@@ -189,7 +189,7 @@ def _sesolve(
     return result  # noqa: RET504
 
 
-def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
+def _check_sesolve_args(H: TimeQArray, psi0: QArray, exp_ops: list[QArray] | None):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
@@ -198,4 +198,5 @@ def _check_sesolve_args(H: TimeArray, psi0: Array, exp_ops: Array | None):
 
     # === check exp_ops shape
     if exp_ops is not None:
-        check_shape(exp_ops, 'exp_ops', '(N, n, n)', subs={'N': 'len(exp_ops)'})
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')
