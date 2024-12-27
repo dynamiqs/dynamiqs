@@ -50,44 +50,49 @@ def mcsolve(
 ) -> MCSolveResult:
     r"""Solve the Lindblad master equation through Monte-Carlo sampling of its jump unraveling.
 
-    We follow the algorithm outlined in Abdelhafez et al. (2019)
-    https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.052327
-    to efficiently perform Monte-Carlo sampling. First the no-jump trajectory is
-    computed for a state vector $\ket{\psi(t)}$ at time $t$, starting from an initial
-    state $\ket{\psi_0}$, according to the Schrödinger equation with non-Hermitian
-    Hamiltonian ($\hbar=1$)
+    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
+    starting from an initial state vector $\psi_0$, according to the Monte-Carlo jump unraveling
+    of the Lindblad master equation. In this unraveling, a state vector evolves in between jumps
+    with with non-Hermitian Hamiltonian ($\hbar=1$)
     $$
         \frac{\dd\ket{\psi(t)}}{\dt}
         = -i [H(t) -\frac{i}{2} \sum_{k=1}^{N} L_{k}^{\dagger} (t)L_{k}(t)] \ket{\psi(t)},
     $$
     where $H(t)$ is the system's Hamiltonian at time $t$ and $\{L_k(t)\}$ is a
-    collection of jump operators at time $t$. We then extract the norm of the state
-    at the final time, and take this as a lower bound for random numbers sampled
-    for other trajectories such that they all experience at least one jump.
+    collection of jump operators at time $t$. The norm of the state is tracked, and jumps
+    are applied when the norm of the state falls below that of a random number.
+    We follow the algorithm outlined in [Abdelhafez et al. (2019)](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.99.052327)
+    to efficiently perform this Monte-Carlo sampling: first the no-jump trajectory is
+    computed, and we extract the norm of the resulting final state. This norm is then
+    taken as a lower bound for random numbers sampled for the jump trajectories, such
+    that they all experience at least one jump.
 
     Quote: Time-dependent Hamiltonian or jump operators
         If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.constant()`](/python_api/time_array/constant.html),
-        [`dq.pwc()`](/python_api/time_array/pwc.html),
-        [`dq.modulated()`](/python_api/time_array/modulated.html), or
-        [`dq.timecallable()`](/python_api/time_array/timecallable.html).
+        to time-qarrays using [`dq.constant()`](/python_api/time_qarray/constant.html),
+        [`dq.pwc()`](/python_api/time_qarray/pwc.html),
+        [`dq.modulated()`](/python_api/time_qarray/modulated.html), or
+        [`dq.timecallable()`](/python_api/time_qarray/timecallable.html).
 
     Quote: Running multiple simulations concurrently
-        The Hamiltonian `H`, the jump operators `Ls` and the
-        initial state `psi0` can be batched to solve multiple monte-carlo equations
-        concurrently. All other arguments are common to every batch.
+        The Hamiltonian `H`, the jump operators `Ls` the initial state `psi0` and the
+        `keys` can be batched to solve multiple monte-carlo equations concurrently. All
+        other arguments are common to every batch.
 
     Args:
-        H _(qarray-like or time-array of shape (bH?, n, n))_: Hamiltonian.
+        H _(qarray-like or time-array of shape (...H, n, n))_: Hamiltonian.
         Ls _(list of qarray-like or time-array, of shape (nL, n, n))_: List of
             jump operators.
-        psi0 _(qarray-like of shape (bpsi?, n, 1))_: Initial state.
+        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (nt,))_: Times at which the states and expectation
             values are saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or
             from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        keys _(Array of shape (ntraj,))_: Total number of jump trajectories to
-            simulate, not including the no-jump trajectory. Defaults to a list of keys
-            of length 10.
+        keys _(Array of shape (...ntraj,))_: PRNG keys used to sample the jump trajectories.
+            With options.cartesian_batching=True, this array must be 1D and the number of
+            elements defines the number of sampled trajectories, not including the no-jump
+            trajectory. With options.cartesian_batching=False, the leading dimensions
+            of keys must be broadcastable with those of H, Ls, psi0, with the final
+            dimension determining the number of trajectories.
         exp_ops _(list of qarray-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. Defaults to
