@@ -134,38 +134,17 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
             jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
             psi_after_jump = unit(jump_op @ psi)
-            # Construct a new linspace over the remaining times with the same shape as
-            # self.ts (because the shape can't be dynamic!). Note that jax does not
-            # support dynamic array sizes: this makes vmaps of loops tricky as discussed
-            # here https://github.com/patrick-kidger/equinox/issues/870. The issue is
-            # that some trajectories terminate before others do (they experience fewer
-            # jumps), but the loop body needs to keep executing until the last
-            # trajectory finishes. In these "idling" cases, new_times is a constant
-            # array with fill value self.t1. The interpolator
-            # dx.backward_hermite_coefficients below requires the time inputs to be
-            # monotonically strictly increasing, which would then throw an error. So in
-            # these cases we pass a placeholder of self.ts.
-            new_times = jnp.linspace(jump_time, self.t1, len(self.ts))
-            new_times = jnp.where(_state.final_time < self.t1, new_times, self.ts)
+            # new_times needs to have a static size: fill it with times from self.ts
+            # and nans. The saved states at times from the original self.ts are saved
+            # below, while the states at the nan times are ignored.
+            new_times = jnp.sort(jnp.where(self.ts > jump_time, self.ts, jnp.nan))
             # This new random value should be uniform over [0, 1), not restricted to
             # [no_jump_prob, 1) like in the first case.
             _rand = jax.random.uniform(_rand_key)
             result_after_jump = self._solve_until_jump(
-                psi_after_jump, new_times[0], new_times, _rand
+                psi_after_jump, jump_time, new_times, _rand
             )
-            # extract saved y values to interpolate, replace infs with nans
-            psis_after_jump = result_after_jump.ys[0]
-            psi_inf_to_nan = jtu.tree_map(
-                lambda _y: jnp.where(jnp.isinf(_y), jnp.nan, _y), psis_after_jump
-            )
-            # setting fill_forward_nans_at_end prevents nan states from getting saved
-            psi_coeffs = dx.backward_hermite_coefficients(
-                new_times, psi_inf_to_nan, fill_forward_nans_at_end=True
-            )
-            psi_interpolator = dx.CubicInterpolation(new_times, psi_coeffs)
-
             final_time = result_after_jump.ts[1][0]
-            final_state = result_after_jump.ys[1][0]
 
             def save_ts_and_states(_save_state: SaveState):
                 # Save intermediate states and expectation values. Based on the code
@@ -177,7 +156,8 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
 
                 def _inner_body_fun(__save_state):
                     _t = self.ts[__save_state.save_index]
-                    _y = psi_interpolator.evaluate(_t)
+                    t_idx_in_new_times = jnp.nanargmin(jnp.abs(new_times - _t))
+                    _y = result_after_jump.ys[0][t_idx_in_new_times]
                     _ts = __save_state.ts.at[__save_state.save_index].set(_t)
                     _ys = jtu.tree_map(
                         lambda __y, __ys: __ys.at[__save_state.save_index].set(__y),
@@ -211,7 +191,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             )
             return State(
                 save_state=save_state,
-                final_state=final_state,
+                final_state=result_after_jump.ys[1][0],
                 final_time=final_time,
                 num_jumps=_state.num_jumps + 1,
                 key=_next_key,
