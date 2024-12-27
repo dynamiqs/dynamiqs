@@ -95,7 +95,7 @@ def mcsolve(
         root_finder: Root finder passed to dx.diffeqsolve() (see [here](https://docs.kidger.site/diffrax/api/diffeqsolve/))
             to find the exact time an event occurs. Can be `None`, in which case the
             root finding functionality is not utilized. It is recommended to pass a root
-            finder (such as the optimistix Newton root finder https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton)
+            finder (such as the optimistix Newton root finder, see [here](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton))
             so that event times are not determined by the integration step sizes in
             diffeqsolve. However there are cases where the root finding can fail,
             causing the whole simulation to fail. Passing `None` for `root_finder` can
