@@ -6,7 +6,7 @@ from dynamiqs import Options, mcsolve, mesolve, timecallable
 
 
 def test_against_mesolve_oscillator(ysave_atol=1e-1):
-    num_traj = 161
+    num_traj = 181
     options = Options(progress_meter=None)
     dim = 4
     a = dq.destroy(dim)
@@ -32,7 +32,7 @@ def test_against_mesolve_oscillator(ysave_atol=1e-1):
 
 
 def test_against_mesolve_qubit(ysave_atol=1e-1):
-    num_traj = 161
+    num_traj = 181
     options = dq.Options(progress_meter=None)
     initial_states = [dq.basis(2, 1)]
     omega = 2.0 * jnp.pi * 1.0
