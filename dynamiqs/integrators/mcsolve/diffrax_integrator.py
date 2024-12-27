@@ -58,7 +58,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
     """Integrator computing the time evolution of the Monte-Carlo unraveling of the
     Lindblad master equation using the Diffrax library."""
 
-    def _run(self, y0, tsave, rand):
+    def _solve_until_jump(self, y0, tsave, rand):
         # === prepare saveat
         subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
