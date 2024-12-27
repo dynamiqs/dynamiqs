@@ -75,8 +75,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         # === run no jump, extract no-jump probability
         no_jump_solution = self._solve_until_jump(self.y0, self.t0, self.ts, 0.0)
         no_jump_saved = jax.vmap(self.save)(unit(no_jump_solution.ys[0]))
-        final_no_jump_state = no_jump_solution.ys[1][0]
-        no_jump_prob = norm(final_no_jump_state) ** 2
+        no_jump_prob = norm(no_jump_solution.ys[1][0]) ** 2
 
         # === run jump trajectories
         jump_state_fun = jax.vmap(self._loop_over_jumps, in_axes=(0, None))
