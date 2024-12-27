@@ -7,16 +7,14 @@ import equinox as eqx
 import jax.tree_util as jtu
 from equinox.internal import while_loop
 
-import warnings
-
 from jax import Array
 from jaxtyping import PyTree
 
 from ..core.save_mixin import SolveSaveMixin
 from ...utils import dag, unit, norm, expect
+from ...qarrays import QArray
 from ...qarrays.utils import stack
 from ..core.abstract_integrator import MCSolveIntegrator
-from ...gradient import Autograd, CheckpointAutograd
 from ..core.diffrax_integrator import (
     Dopri5Integrator,
     Dopri8Integrator,
@@ -58,7 +56,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
     """Integrator computing the time evolution of the Monte-Carlo unraveling of the
     Lindblad master equation using the Diffrax library."""
 
-    def _solve_until_jump(self, y0, tsave, rand):
+    def _solve_until_jump(self, y0: QArray, t0: Array, tsave: Array, rand: Array):
         # === prepare saveat
         subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
@@ -71,13 +69,11 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         event = dx.Event(cond_fn, self.root_finder)
 
         # === solve differential equation with diffrax
-        return self.diffeqsolve(
-            t0=tsave[0], t1=tsave[-1], y0=y0, saveat=saveat, event=event
-        )
+        return self.diffeqsolve(t0=t0, t1=self.t1, y0=y0, saveat=saveat, event=event)
 
     def run(self):
         # === run no jump, extract no-jump probability
-        no_jump_solution = self._run(self.y0, self.ts, 0.0)
+        no_jump_solution = self._solve_until_jump(self.y0, self.t0, self.ts, 0.0)
         no_jump_saved = jax.vmap(self.save)(unit(no_jump_solution.ys[0]))
         final_no_jump_state = no_jump_solution.ys[1][0]
         no_jump_prob = norm(final_no_jump_state) ** 2
@@ -109,7 +105,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         """loop over jumps until the simulation reaches the final time"""
         rand_key, sample_key = jax.random.split(key)
         rand = jax.random.uniform(rand_key, minval=no_jump_prob)
-        first_result = self._run(self.y0, self.ts, rand)
+        first_result = self._solve_until_jump(self.y0, self.t0, self.ts, rand)
         first_jump_time = first_result.ts[1][0]
         time_diffs = self.ts - first_jump_time
         # want to start with a time after the jump
@@ -155,7 +151,9 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             # This new random value should be uniform over [0, 1), not restricted to
             # [no_jump_prob, 1) like in the first case.
             _rand = jax.random.uniform(_rand_key)
-            result_after_jump = self._run(psi_after_jump, new_times, _rand)
+            result_after_jump = self._solve_until_jump(
+                psi_after_jump, new_times[0], new_times, _rand
+            )
             # extract saved y values to interpolate, replace infs with nans
             psis_after_jump = result_after_jump.ys[0]
             psi_inf_to_nan = jtu.tree_map(
