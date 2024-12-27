@@ -211,7 +211,7 @@ def _vectorized_dsmesolve(
     in_axes = (H.in_axes, None, None, None, 0, None, None, None, None, None, None)
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, 0, rho0.ndim - 2, 0, 0, 0, 0, 0)
+        nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
         f = cartesian_vmap(f, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, rho0]])
