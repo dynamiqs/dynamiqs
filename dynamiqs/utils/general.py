@@ -53,7 +53,7 @@ def dag(x: QArrayLike) -> QArray:
     Returns:
        _(qarray of shape (..., n, m))_ Adjoint of `x`.
 
-    Note-: Equivalent JAX syntax
+    Note-: Equivalent syntax
         This function is equivalent to `x.mT.conj()`.
 
     Examples:
@@ -79,9 +79,6 @@ def powm(x: QArrayLike, n: int) -> QArray:
 
     Returns:
         _(qarray of shape (..., n, n))_ Matrix power of `x`.
-
-    Note-: Equivalent JAX syntax
-        This function is equivalent to `jnp.linalg.matrix_power(x, n)`.
 
     Examples:
         >>> dq.powm(dq.sigmax(), 2)
