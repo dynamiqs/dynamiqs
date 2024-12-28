@@ -41,7 +41,7 @@ State of type <class 'dynamiqs.qarrays.dense_qarray.DenseQArray'> and shape (2, 
 Hamiltonian of type <class 'dynamiqs.qarrays.sparsedia_qarray.SparseDIAQArray'> and shape (2, 2).
 ```
 
-In Dynamiqs, all quantum objects are defined directly with [JAX arrays](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.array.html), and without subclassing. This allows for easy interfacing with JAX utility functions, and avoids runtime overheads. Also, all quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have a shape `(..., n, 1)` and density matrices have shape `(..., n, n)`.
+In Dynamiqs, all quantum objects are defined with the [`QArray`][dynamiqs.QArray] type. All quantum objects have at least two dimensions to avoid systematic reshaping or coding mistakes (e.g. trying to multiply a ket and an operator in the wrong order). In particular, kets have shape `(..., n, 1)` and density matrices have shape `(..., n, n)`.
 
 ## II. Set the scope
 
