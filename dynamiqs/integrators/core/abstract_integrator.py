@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import ClassVar
+from enum import Enum
 
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...result import (
+    FloquetResult,
     MEPropagatorResult,
     MESolveResult,
     Result,
@@ -18,7 +18,15 @@ from ...result import (
     SESolveResult,
 )
 from ...solver import Solver
-from .interfaces import MEInterface, OptionsInterface, SEInterface, SolveInterface
+from .interfaces import OptionsInterface, TimeInterface
+
+
+class SOLVER_FUNCTION(Enum):
+    SESOLVE = 0
+    MESOLVE = 1
+    SEPROPAGATOR = 2
+    MEPROPAGATOR = 3
+    FLOQUET = 4
 
 
 class AbstractIntegrator(eqx.Module):
@@ -29,14 +37,12 @@ class AbstractIntegrator(eqx.Module):
     kept abstract to simplify the implementation of new integrators from scratch.
     """
 
-    # subclasses should implement: run()
-
     @abstractmethod
     def run(self) -> PyTree:
         pass
 
 
-class BaseIntegrator(AbstractIntegrator, OptionsInterface):
+class BaseIntegrator(AbstractIntegrator, OptionsInterface, TimeInterface):
     """Integrator evolving an initial state over a set of times.
 
     This integrator evolves the initial pytree `y0` over a set of times specified by
@@ -44,14 +50,11 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
     `options`, and return a `result` object.
     """
 
-    # subclasses should implement: discontinuity_ts, run()
-
-    RESULT_CLASS: ClassVar[Result]
-
-    y0: PyTree
     ts: Array
+    y0: PyTree
     solver: Solver
     gradient: Gradient | None
+    solver_function: str
 
     @property
     def t0(self) -> Scalar:
@@ -61,65 +64,23 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
     def t1(self) -> Scalar:
         return self.ts[-1]
 
-    @property
-    @abstractmethod
-    def discontinuity_ts(self) -> Array | None:
-        pass
-
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return self.RESULT_CLASS(
+        result_classes = {
+            SOLVER_FUNCTION.SESOLVE: SESolveResult,
+            SOLVER_FUNCTION.MESOLVE: MESolveResult,
+            SOLVER_FUNCTION.SEPROPAGATOR: SEPropagatorResult,
+            SOLVER_FUNCTION.MEPROPAGATOR: MEPropagatorResult,
+        }
+        result_class = result_classes[self.solver_function]
+        return result_class(
             self.ts, self.solver, self.gradient, self.options, saved, infos
         )
 
 
-class SEIntegrator(BaseIntegrator, SEInterface):
-    """Integrator for the Schrödinger equation."""
+class BaseFloquetIntegrator(BaseIntegrator):
+    T: float
 
-    # subclasses should implement: run()
-
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        return self.H.discontinuity_ts
-
-
-class MEIntegrator(BaseIntegrator, MEInterface):
-    """Integrator for the Lindblad master equation."""
-
-    # subclasses should implement: run()
-
-    @property
-    def discontinuity_ts(self) -> Array | None:
-        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
-        return _concatenate_sort(*ts)
-
-
-class SEPropagatorIntegrator(SEIntegrator):
-    """Integrator computing the propagator of the Schrödinger equation."""
-
-    # subclasses should implement: run()
-
-    RESULT_CLASS = SEPropagatorResult
-
-
-class MEPropagatorIntegrator(MEIntegrator):
-    """Integrator computing the propagator of the Lindblad master equation."""
-
-    # subclasses should implement: run()
-
-    RESULT_CLASS = MEPropagatorResult
-
-
-class SESolveIntegrator(SEIntegrator, SolveInterface):
-    """Integrator computing the time evolution of the Schrödinger equation."""
-
-    # subclasses should implement: run()
-
-    RESULT_CLASS = SESolveResult
-
-
-class MESolveIntegrator(MEIntegrator, SolveInterface):
-    """Integrator computing the time evolution of the Lindblad master equation."""
-
-    # subclasses should implement: run()
-
-    RESULT_CLASS = MESolveResult
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return FloquetResult(
+            self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
+        )

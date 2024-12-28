@@ -17,13 +17,13 @@ from ...solver import Expm, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     multi_vmap,
 )
-from ..core.abstract_integrator import MEPropagatorIntegrator
-from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
+from ..core.abstract_integrator import SOLVER_FUNCTION
+from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
 
 def mepropagator(
@@ -138,9 +138,10 @@ def _mepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === select integrator class
-    integrators = {Expm: MEPropagatorExpmIntegrator}
-    integrator_class: MEPropagatorIntegrator = get_integrator_class(integrators, solver)
+    # === select integrator constructor
+    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
@@ -150,8 +151,15 @@ def _mepropagator(
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
     # todo: timeqarray should expose dims without having to call at specific time
     y0 = DenseQArray(H(0.0).dims, True, data)
-    integrator = integrator_class(
-        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=y0,
+        solver=solver,
+        gradient=gradient,
+        solver_function=SOLVER_FUNCTION.MEPROPAGATOR,
+        options=options,
+        H=H,
+        Ls=Ls,
     )
 
     # === run integrator

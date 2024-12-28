@@ -6,20 +6,21 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
+from jaxtyping import PyTree
 
 from dynamiqs._utils import _concatenate_sort
 
 from ...qarrays.qarray import QArray
-from ...result import Result
+from ...result import Result, Saved
 from ...utils.general import expm
-from ...utils.vectorization import slindbladian
+from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 from .._utils import ispwc
-from .abstract_integrator import AbstractIntegrator
+from ..core.abstract_integrator import BaseIntegrator
 from .interfaces import MEInterface, SEInterface
-from .save_mixin import SaveMixin
+from .save_mixin import SaveMixin, SolveSaveMixin
 
 
-class ExpmIntegrator(AbstractIntegrator, SaveMixin):
+class ExpmIntegrator(BaseIntegrator, SaveMixin):
     r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
     exponentiating the propagator.
 
@@ -37,8 +38,6 @@ class ExpmIntegrator(AbstractIntegrator, SaveMixin):
     - for sesolve/mesolve, the state $X$ is an (N, 1) column vector,
     - for sepropagator/mepropagator, the state $X$ is an (N, N) matrix.
     """
-
-    # subclasses should implement: discontinuity_ts, generator()
 
     class Infos(eqx.Module):
         nsteps: Array
@@ -110,6 +109,24 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
         return -1j * self.H(t)  # (n, n)
 
 
+class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin):
+    """Integrator computing the time evolution of the Schrödinger equation by
+    explicitly exponentiating the propagator.
+    """
+
+
+sesolve_expm_integrator_constructor = SESolveExpmIntegrator
+
+
+class SEPropagatorExpmIntegrator(SEExpmIntegrator):
+    """Integrator computing the propagator of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """
+
+
+sepropagator_expm_integrator_constructor = SEPropagatorExpmIntegrator
+
+
 class MEExpmIntegrator(ExpmIntegrator, MEInterface):
     """Integrator solving the Lindblad master equation by explicitly exponentiating the
     propagator.
@@ -130,3 +147,31 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
 
     def generator(self, t: float) -> QArray:
         return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)
+
+
+class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin):
+    """Integrator computing the time evolution of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """
+
+    def __post_init__(self):
+        # convert to vectorized form
+        self.y0 = operator_to_vector(self.y0)  # (n^2, 1)
+
+    def save(self, y: PyTree) -> Saved:
+        # TODO: implement bexpect for vectorized operators and convert at the end
+        # instead of at each step
+        y = vector_to_operator(y)
+        return super().save(y)
+
+
+mesolve_expm_integrator_constructor = MESolveExpmIntegrator
+
+
+class MEPropagatorExpmIntegrator(MEExpmIntegrator):
+    """Integrator computing the propagator of the Lindblad master equation by
+    explicitly exponentiating the propagator.
+    """
+
+
+mepropagator_expm_integrator_constructor = MEPropagatorExpmIntegrator

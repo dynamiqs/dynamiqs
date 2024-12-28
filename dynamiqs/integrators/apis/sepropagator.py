@@ -17,21 +17,21 @@ from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     ispwc,
 )
-from ..core.abstract_integrator import SEPropagatorIntegrator
-from ..sepropagator.diffrax_integrator import (
-    SEPropagatorDopri5Integrator,
-    SEPropagatorDopri8Integrator,
-    SEPropagatorEulerIntegrator,
-    SEPropagatorKvaerno3Integrator,
-    SEPropagatorKvaerno5Integrator,
-    SEPropagatorTsit5Integrator,
+from ..core.abstract_integrator import SOLVER_FUNCTION
+from ..core.diffrax_integrator import (
+    sepropagator_dopri5_integrator_constructor,
+    sepropagator_dopri8_integrator_constructor,
+    sepropagator_euler_integrator_constructor,
+    sepropagator_kvaerno3_integrator_constructor,
+    sepropagator_kvaerno5_integrator_constructor,
+    sepropagator_tsit5_integrator_constructor,
 )
-from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
+from ..core.expm_integrator import sepropagator_expm_integrator_constructor
 
 
 def sepropagator(
@@ -137,28 +137,35 @@ def _sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === select integrator class
+    # === select integrator constructor
     if solver is None:  # default solver
         solver = Expm() if ispwc(H) else Tsit5()
 
-    integrators = {
-        Expm: SEPropagatorExpmIntegrator,
-        Euler: SEPropagatorEulerIntegrator,
-        Dopri5: SEPropagatorDopri5Integrator,
-        Dopri8: SEPropagatorDopri8Integrator,
-        Tsit5: SEPropagatorTsit5Integrator,
-        Kvaerno3: SEPropagatorKvaerno3Integrator,
-        Kvaerno5: SEPropagatorKvaerno5Integrator,
+    integrator_constructors = {
+        Expm: sepropagator_expm_integrator_constructor,
+        Euler: sepropagator_euler_integrator_constructor,
+        Dopri5: sepropagator_dopri5_integrator_constructor,
+        Dopri8: sepropagator_dopri8_integrator_constructor,
+        Tsit5: sepropagator_tsit5_integrator_constructor,
+        Kvaerno3: sepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
-    integrator_class: SEPropagatorIntegrator = get_integrator_class(integrators, solver)
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     y0 = eye(H.shape[-1], layout=dense)
-    integrator = integrator_class(
-        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=y0,
+        solver=solver,
+        gradient=gradient,
+        solver_function=SOLVER_FUNCTION.SEPROPAGATOR,
+        options=options,
+        H=H,
     )
 
     # === run integrator
