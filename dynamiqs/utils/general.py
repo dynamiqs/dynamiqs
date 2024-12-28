@@ -179,7 +179,7 @@ def trace(x: QArrayLike) -> Array:
     r"""Returns the trace of a qarray along its last two dimensions.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Array.
+        x _(qarray-like of shape (..., n, n))_: Qarray-like.
 
     Returns:
         _(array of shape (...))_ Trace of `x`.
@@ -212,8 +212,8 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
         instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Array.
-        y _(qarray-like of shape (..., n, n))_: Array.
+        x _(qarray-like of shape (..., n, n))_: Qarray-like.
+        y _(qarray-like of shape (..., n, n))_: Qarray-like.
 
     Returns:
         _(array of shape (...))_ Trace of `x @ y`.
@@ -603,7 +603,7 @@ def isket(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of a ket.
 
     Args:
-        x _(qarray-like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Qarray-like.
 
     Returns:
         True if the last dimension of `x` is 1, False otherwise.
@@ -624,7 +624,7 @@ def isbra(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of a bra.
 
     Args:
-        x _(qarray-like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Qarray-like.
 
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
@@ -645,7 +645,7 @@ def isdm(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of a density matrix.
 
     Args:
-        x _(qarray-like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Qarray-like.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -666,7 +666,7 @@ def isop(x: QArrayLike) -> bool:
     r"""Returns True if the qarray is in the format of an operator.
 
     Args:
-        x _(qarray-like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Qarray-like.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -687,7 +687,7 @@ def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
     r"""Returns True if the qarray is Hermitian.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Array.
+        x _(qarray-like of shape (..., n, n))_: Qarray-like.
         rtol: Relative tolerance of the check.
         atol: Absolute tolerance of the check.
 
