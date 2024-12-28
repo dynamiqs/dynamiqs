@@ -251,11 +251,6 @@ def ptrace(
     Returns:
         _(qarray of shape (..., m, m))_ Density matrix (with `m <= n`).
 
-    Raises:
-        ValueError: If `x` is not a ket, bra or density matrix.
-        ValueError: If `dims` does not match the shape of `x`, or if `keep` is
-            incompatible with `dims`.
-
     Note:
         The returned object is always a density matrix, even if the input is a ket or a
         bra.
@@ -399,9 +394,6 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
     Returns:
         _(array of shape (nO?, ...))_ Complex-valued expectation value.
 
-    Raises:
-        ValueError: If `x` is not a ket, bra or density matrix.
-
     Examples:
         >>> O = dq.number(16)
         >>> psi = dq.coherent(16, 2.0)
@@ -447,9 +439,6 @@ def norm(x: QArrayLike) -> Array:
 
     Returns:
         _(array of shape (...))_ Real-valued norm of `x`.
-
-    Raises:
-        ValueError: If `x` is not a ket, bra or density matrix.
 
     Examples:
         For a ket:
