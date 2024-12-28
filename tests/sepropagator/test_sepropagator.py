@@ -43,8 +43,8 @@ class TestSEPropagator(IntegratorTester):
     def test_correctness_pwc(self, save_states, solver, ysave_atol: float = 1e-4):
         times = [0.0, 1.0, 2.0]
         values = [3.0, -2.0]
-        array = sigmay()
-        H = pwc(times, values, array)
+        qarray = sigmay()
+        H = pwc(times, values, qarray)
         tsave = jnp.asarray([0.5, 1.0, 2.0])
         options = Options(save_states=save_states)
         propresult = sepropagator(H, tsave, solver=solver, options=options)

@@ -112,7 +112,7 @@ def sesolve(
     tsave = check_times(tsave, 'tsave')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_sesolve(H, psi0, tsave, exp_ops, solver, gradient, options)
 
 

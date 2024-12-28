@@ -71,7 +71,7 @@ def dag(x: QArrayLike) -> QArray:
 
 
 def powm(x: QArrayLike, n: int) -> QArray:
-    """Returns the $n$-th matrix power of an array.
+    """Returns the $n$-th matrix power of a qarray.
 
     Args:
         x _(qarray-like of shape (..., n, n))_: Square matrix.
@@ -95,7 +95,7 @@ def powm(x: QArrayLike, n: int) -> QArray:
 
 
 def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
-    """Returns the matrix exponential of an array.
+    """Returns the matrix exponential of a qarray.
 
     The exponential is computed using the scaling-and-squaring approximation method.
 
@@ -122,7 +122,7 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
 
 
 def cosm(x: QArrayLike) -> QArray:
-    r"""Returns the cosine of an array.
+    r"""Returns the cosine of a qarray.
 
     Args:
         x _(qarray-like of shape (..., n, n))_: Square matrix.
@@ -149,7 +149,7 @@ def cosm(x: QArrayLike) -> QArray:
 
 
 def sinm(x: QArrayLike) -> QArray:
-    r"""Returns the sine of an array.
+    r"""Returns the sine of a qarray.
 
     Args:
         x _(qarray-like of shape (..., n, n))_: Square matrix.
@@ -176,7 +176,7 @@ def sinm(x: QArrayLike) -> QArray:
 
 
 def trace(x: QArrayLike) -> Array:
-    r"""Returns the trace of an array along its last two dimensions.
+    r"""Returns the trace of a qarray along its last two dimensions.
 
     Args:
         x _(qarray-like of shape (..., n, n))_: Array.
@@ -352,13 +352,13 @@ def tensor(*args: QArrayLike) -> QArray:
     r"""Returns the tensor product of multiple kets, bras, density matrices or
     operators.
 
-    The returned array shape is:
+    The returned qarray shape is:
 
-    - $(..., n, 1)$ with $n=\prod_k n_k$ if all input arrays are kets with shape
+    - $(..., n, 1)$ with $n=\prod_k n_k$ if all input qarrays are kets with shape
       $(..., n_k, 1)$,
-    - $(..., 1, n)$ with $n=\prod_k n_k$ if all input arrays are bras with shape
+    - $(..., 1, n)$ with $n=\prod_k n_k$ if all input qarrays are bras with shape
       $(..., 1, n_k)$,
-    - $(..., n, n)$ with $n=\prod_k n_k$ if all input arrays are density matrices or
+    - $(..., n, n)$ with $n=\prod_k n_k$ if all input qarrays are density matrices or
       operators with shape $(..., n_k, n_k)$.
 
     Args:
@@ -367,7 +367,7 @@ def tensor(*args: QArrayLike) -> QArray:
 
     Returns:
         _(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))_ Tensor product of
-            the input arrays.
+            the input qarrays.
 
     Examples:
         >>> psi = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
@@ -600,7 +600,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
 
 
 def isket(x: QArrayLike) -> bool:
-    r"""Returns True if the array is in the format of a ket.
+    r"""Returns True if the qarray is in the format of a ket.
 
     Args:
         x _(qarray-like of shape (...))_: Array.
@@ -621,7 +621,7 @@ def isket(x: QArrayLike) -> bool:
 
 
 def isbra(x: QArrayLike) -> bool:
-    r"""Returns True if the array is in the format of a bra.
+    r"""Returns True if the qarray is in the format of a bra.
 
     Args:
         x _(qarray-like of shape (...))_: Array.
@@ -642,7 +642,7 @@ def isbra(x: QArrayLike) -> bool:
 
 
 def isdm(x: QArrayLike) -> bool:
-    r"""Returns True if the array is in the format of a density matrix.
+    r"""Returns True if the qarray is in the format of a density matrix.
 
     Args:
         x _(qarray-like of shape (...))_: Array.
@@ -663,7 +663,7 @@ def isdm(x: QArrayLike) -> bool:
 
 
 def isop(x: QArrayLike) -> bool:
-    r"""Returns True if the array is in the format of an operator.
+    r"""Returns True if the qarray is in the format of an operator.
 
     Args:
         x _(qarray-like of shape (...))_: Array.
@@ -684,7 +684,7 @@ def isop(x: QArrayLike) -> bool:
 
 
 def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
-    r"""Returns True if the array is Hermitian.
+    r"""Returns True if the qarray is Hermitian.
 
     Args:
         x _(qarray-like of shape (..., n, n))_: Array.

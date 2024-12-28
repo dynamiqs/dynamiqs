@@ -106,7 +106,7 @@ def sepropagator(
     tsave = check_times(tsave, 'tsave')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_sepropagator(H, tsave, solver, gradient, options)
 
 

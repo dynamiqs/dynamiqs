@@ -141,7 +141,7 @@ def mesolve(
     rho0 = rho0.todm()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, solver, gradient, options)
 
 

@@ -73,8 +73,8 @@ class Expm(Solver):
     $$
 
     Warning:
-        If the Hamiltonian or jump operators are sparse arrays, they will be silently
-        converted to dense arrays before computing their matrix exponentials.
+        If the Hamiltonian or jump operators are sparse qarrays, they will be silently
+        converted to dense qarrays before computing their matrix exponentials.
 
     Warning:
         This solver is not recommended for open systems of large dimension, due to
