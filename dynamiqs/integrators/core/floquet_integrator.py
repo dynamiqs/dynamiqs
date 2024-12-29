@@ -10,8 +10,6 @@ from ..apis.sepropagator import _sepropagator
 from .abstract_integrator import BaseIntegrator
 from .interfaces import SEInterface
 
-__all__ = ['SEFloquetIntegrator']
-
 
 class FloquetIntegrator(BaseIntegrator):
     T: float
