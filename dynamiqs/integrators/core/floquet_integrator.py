@@ -10,10 +10,10 @@ from ..apis.sepropagator import _sepropagator
 from .abstract_integrator import BaseIntegrator
 from .interfaces import SEInterface
 
-__all__ = ['FloquetIntegrator']
+__all__ = ['SEFloquetIntegrator']
 
 
-class BaseFloquetIntegrator(BaseIntegrator):
+class FloquetIntegrator(BaseIntegrator):
     T: float
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
@@ -22,7 +22,7 @@ class BaseFloquetIntegrator(BaseIntegrator):
         )
 
 
-class FloquetIntegrator(BaseFloquetIntegrator, SEInterface):
+class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
     def run(self) -> PyTree:
         # compute propagators for all times at once, with the last being one period
         ts = jnp.append(self.ts, self.t0 + self.T)
@@ -54,4 +54,4 @@ class FloquetIntegrator(BaseFloquetIntegrator, SEInterface):
         return self.result(saved, infos=seprop_result.infos)
 
 
-floquet_integrator_constructor = FloquetIntegrator
+floquet_integrator_constructor = SEFloquetIntegrator
