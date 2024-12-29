@@ -116,10 +116,10 @@ The main goal to keep in mind is that if someone reads a past PR, they should qu
 When writing your function:
 
 - Type all arguments of your function, and its return type.
-- When typing a public function, use `ArrayLike` for array inputs (and `jnp.asarray()` to convert to a proper array), and `Array` for array outputs. See [JAX typing best practices](https://jax.readthedocs.io/en/latest/jax.typing.html#jax-typing-best-practices).
+- When typing a public function, use `QArrayLike` for qarray inputs, `asqarray()` to convert to a proper qarray, and `QArray` for qarray outputs. Use `ArrayLike` for array inputs, `jnp.asarray()` to convert to a proper array, and `Array` for array outputs. See related [JAX typing best practices](https://jax.readthedocs.io/en/latest/jax.typing.html#jax-typing-best-practices).
 - Ensure you run `task docserve` to verify how the documentation for your function appears, and correct any issues with rendering.
-- To type an array shape, use `...` to denote possible batch dimensions, use `n` for the Hilbert space dimension.
-- To add an axis to an array, favor `[None, ...]` over `unsqueeze`.
+- To type a qarray or an array shape, use `...` to denote possible batch dimensions, use `n` for the Hilbert space dimension.
+- To add an axis to a qarray or an array, favor `[None, ...]` over `unsqueeze`.
 - Favor `(...).sum(0)` over `jnp.sum(..., 0)`.
 
 Make sure to add your function:
@@ -135,7 +135,7 @@ We use [Google-style docstrings](https://google.github.io/styleguide/pyguide.htm
 - Headers can include (in this order and with these names): `Args`, `Returns`, `Raises`, `Examples`, `See also`.
 - You can use the admonitions (colored blocks in the documentation) `Note` and `Warning` if relevant.
 - Avoid using `The` in arguments description, for example change `x: The quantum state.` to `x: Quantum state.`.
-- Specify arguments type in `_(...)_` after the argument name and _only if it is necessary_. Adding a type can for example be useful to add a shape information for an array, or because the argument typing in the function signature is opaque.
+- Specify arguments type in `_(...)_` after the argument name and _only if it is necessary_. Adding a type can for example be useful to add a shape information for a qarray or an array, or because the argument typing in the function signature is opaque.
 
 ### Documentation
 
