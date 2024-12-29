@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import abstractmethod
+
 import equinox as eqx
 from jaxtyping import PyTree
 
@@ -9,9 +11,10 @@ from ...utils.general import expect
 from .interfaces import OptionsInterface
 
 
-class SaveMixin(OptionsInterface):
+class AbstractSaveMixin(OptionsInterface):
     """Mixin to assist integrators with data saving."""
 
+    @abstractmethod
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_states else None
         extra = self.options.save_extra(y) if self.options.save_extra else None
@@ -26,7 +29,7 @@ class SaveMixin(OptionsInterface):
         return saved
 
 
-class PropagatorSaveMixin(SaveMixin):
+class PropagatorSaveMixin(AbstractSaveMixin):
     """Mixin to assist integrators computing propagators with data saving."""
 
     def save(self, y: PyTree) -> Saved:
@@ -34,7 +37,7 @@ class PropagatorSaveMixin(SaveMixin):
         return PropagatorSaved(saved.ysave, saved.extra)
 
 
-class SolveSaveMixin(SaveMixin):
+class SolveSaveMixin(AbstractSaveMixin):
     """Mixin to assist integrators computing time evolution with data saving."""
 
     Es: list[QArray]

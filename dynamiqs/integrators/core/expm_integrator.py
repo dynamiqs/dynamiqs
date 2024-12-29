@@ -17,10 +17,10 @@ from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_o
 from .._utils import ispwc
 from ..core.abstract_integrator import BaseIntegrator
 from .interfaces import MEInterface, SEInterface
-from .save_mixin import SaveMixin, SolveSaveMixin
+from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class ExpmIntegrator(BaseIntegrator, SaveMixin):
+class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin):
     r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
     exponentiating the propagator.
 
@@ -118,7 +118,7 @@ class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin):
 sesolve_expm_integrator_constructor = SESolveExpmIntegrator
 
 
-class SEPropagatorExpmIntegrator(SEExpmIntegrator):
+class SEPropagatorExpmIntegrator(SEExpmIntegrator, PropagatorSaveMixin):
     """Integrator computing the propagator of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
@@ -168,7 +168,7 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin):
 mesolve_expm_integrator_constructor = MESolveExpmIntegrator
 
 
-class MEPropagatorExpmIntegrator(MEExpmIntegrator):
+class MEPropagatorExpmIntegrator(MEExpmIntegrator, PropagatorSaveMixin):
     """Integrator computing the propagator of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """

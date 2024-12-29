@@ -14,7 +14,7 @@ from ...qarrays.utils import sum_qarrays
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
 from .interfaces import MEInterface, SEInterface
-from .save_mixin import SaveMixin, SolveSaveMixin
+from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
 class FixedStepInfos(eqx.Module):
@@ -45,7 +45,7 @@ class AdaptiveStepInfos(eqx.Module):
         )
 
 
-class DiffraxIntegrator(BaseIntegrator, SaveMixin):
+class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin):
     """Integrator using the Diffrax library."""
 
     diffrax_solver: dx.AbstractSolver
@@ -137,7 +137,7 @@ class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
         return dx.ODETerm(vector_field)
 
 
-class SEPropagatorDiffraxIntegrator(SEDiffraxIntegrator):
+class SEPropagatorDiffraxIntegrator(SEDiffraxIntegrator, PropagatorSaveMixin):
     """Integrator computing the propagator of the Schrödinger equation using the Diffrax
     library.
     """
