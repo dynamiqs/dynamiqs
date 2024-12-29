@@ -32,7 +32,7 @@ def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
             return ConstantTimeQArray(array)
         except (TypeError, ValueError) as e:
             raise TypeError(
-                'Argument must be a qarray-like or a time-qarray object, but has type'
+                'Argument must be a qarray-like or a time-qarray, but has type'
                 f' {obj_type_str(x)}.'
             ) from e
 

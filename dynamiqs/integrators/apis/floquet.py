@@ -125,8 +125,7 @@ def _vectorized_floquet(
 ) -> FloquetResult:
     # vectorize input over H
     in_axes = (H.in_axes, None, None, None, None, None)
-    # vectorize output over `_saved` and `infos`
-    out_axes = FloquetResult(None, None, None, None, 0, 0, None)
+    out_axes = FloquetResult.out_axes()
 
     # cartesian batching only
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0, 0)
@@ -173,7 +172,7 @@ def _check_floquet_args(
     )
 
     # === check that the Hamiltonian is periodic with the supplied period
-    # attach the check to `tsave` instead of `H` to workaround CallableTimeQArrays that
+    # attach the check to `tsave` instead of `H` to workaround `CallableTimeQArray` that
     # do not have an underlying array to attach the check to
     rtol, atol = 1e-5, 1e-8  # TODO: fix hard-coded tolerance for periodicity check
     tsave = eqx.error_if(

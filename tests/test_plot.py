@@ -5,7 +5,8 @@ from matplotlib import pyplot as plt
 
 from dynamiqs import coherent, plot, stack, todm
 from dynamiqs.utils.wigner_utils import _diag_element, wigner
-from tests.order import TEST_SHORT
+
+from .order import TEST_SHORT
 
 # TODO : add comparison with analytical wigner for coherent states and cat states
 

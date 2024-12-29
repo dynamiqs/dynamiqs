@@ -28,6 +28,7 @@ from .sparsedia_primitives import (
     matmul_sparsedia_array,
     matmul_sparsedia_sparsedia,
     mul_sparsedia_array,
+    mul_sparsedia_sparsedia,
     powm_sparsedia,
     reshape_sparsedia,
     shape_sparsedia,
@@ -131,8 +132,8 @@ class SparseDIAQArray(QArray):
 
     def expm(self, *, max_squarings: int = 16) -> QArray:
         warnings.warn(
-            'A SparseDIAQArray has been converted to a DenseQArray while computing its '
-            'matrix exponential.',
+            'A `SparseDIAQArray` has been converted to a `DenseQArray` while computing '
+            'its matrix exponential.',
             stacklevel=2,
         )
         x = sparsedia_to_array(self.offsets, self.diags)
@@ -169,20 +170,35 @@ class SparseDIAQArray(QArray):
 
     def _eig(self) -> tuple[Array, QArray]:
         warnings.warn(
-            'A SparseDIAQArray has been converted to a DenseQArray while attempting to '
-            'compute its eigen-decomposition.',
+            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
             stacklevel=2,
         )
-        return self.to_dense()._eig()
+        return self.asdense()._eig()
 
     def _eigh(self) -> tuple[Array, Array]:
-        raise NotImplementedError
+        warnings.warn(
+            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigh()
 
     def _eigvals(self) -> Array:
-        raise NotImplementedError
+        warnings.warn(
+            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigvals()
 
     def _eigvalsh(self) -> Array:
-        raise NotImplementedError
+        warnings.warn(
+            'A `SparseDIAQArray` has been converted to a `DenseQArray` while attempting'
+            ' to compute its eigen-decomposition.',
+            stacklevel=2,
+        )
+        return self.asdense()._eigvalsh()
 
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
@@ -223,7 +239,7 @@ class SparseDIAQArray(QArray):
             pattern = r'(?<!\d)0\s*'
         else:
             raise ValueError(
-                'Unsupported dtype for SparseDIAQArray representation, got '
+                'Unsupported dtype for `SparseDIAQArray` representation, got '
                 f'{self.dtype}.'
             )
 
@@ -310,11 +326,16 @@ class SparseDIAQArray(QArray):
         )
         return self.asdense().addscalar(y)
 
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
 
-        y = _to_jax(y)
-        offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
+        if isinstance(y, SparseDIAQArray):
+            offsets, diags = mul_sparsedia_sparsedia(
+                self.offsets, self.diags, y.offsets, y.diags
+            )
+        else:
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, _to_jax(y))
+
         return self._replace(offsets=offsets, diags=diags)
 
     def elpow(self, power: int) -> QArray:
@@ -354,6 +375,6 @@ def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
 
     if not valid_key:
         raise NotImplementedError(
-            'Getting items from non batching dimensions of a SparseDIAQArray is not '
+            'Getting items from non batching dimensions of a `SparseDIAQArray` is not '
             'supported.'
         )

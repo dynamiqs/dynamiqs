@@ -22,7 +22,7 @@ __all__ = ['DenseQArray']
 
 
 class DenseQArray(QArray):
-    r"""DenseQArray is QArray that uses JAX arrays as data storage."""
+    r"""A dense qarray is a qarray that uses JAX arrays as data storage."""
 
     data: Array
 
@@ -222,8 +222,14 @@ class DenseQArray(QArray):
         data = self.data + _to_jax(y)
         return self._replace(data=data)
 
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
+        from .sparsedia_qarray import SparseDIAQArray
+
         super().elmul(y)
+
+        if isinstance(y, SparseDIAQArray):
+            return y.elmul(self)
+
         data = self.data * _to_jax(y)
         return self._replace(data=data)
 

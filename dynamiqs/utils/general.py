@@ -48,7 +48,7 @@ def dag(x: QArrayLike) -> QArray:
     r"""Returns the adjoint (complex conjugate transpose) of a matrix.
 
     Args:
-        x _(qarray_like of shape (..., m, n))_: Matrix.
+        x _(qarray-like of shape (..., m, n))_: Matrix.
 
     Returns:
        _(qarray of shape (..., n, m))_ Adjoint of `x`.
@@ -74,7 +74,7 @@ def powm(x: QArrayLike, n: int) -> QArray:
     """Returns the $n$-th matrix power of an array.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Square matrix.
+        x _(qarray-like of shape (..., n, n))_: Square matrix.
         n: Integer exponent.
 
     Returns:
@@ -100,7 +100,7 @@ def expm(x: QArrayLike, *, max_squarings: int = 16) -> QArray:
     The exponential is computed using the scaling-and-squaring approximation method.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Square matrix.
+        x _(qarray-like of shape (..., n, n))_: Square matrix.
         max_squarings: Number of squarings.
 
     Returns:
@@ -125,7 +125,7 @@ def cosm(x: QArrayLike) -> QArray:
     r"""Returns the cosine of an array.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Square matrix.
+        x _(qarray-like of shape (..., n, n))_: Square matrix.
 
     Returns:
         _(qarray of shape (..., n, n))_ Cosine of `x`.
@@ -152,7 +152,7 @@ def sinm(x: QArrayLike) -> QArray:
     r"""Returns the sine of an array.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Square matrix.
+        x _(qarray-like of shape (..., n, n))_: Square matrix.
 
     Returns:
         _(qarray of shape (..., n, n))_ Sine of `x`.
@@ -179,7 +179,7 @@ def trace(x: QArrayLike) -> Array:
     r"""Returns the trace of an array along its last two dimensions.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Array.
+        x _(qarray-like of shape (..., n, n))_: Array.
 
     Returns:
         _(array of shape (...))_ Trace of `x`.
@@ -212,8 +212,8 @@ def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
         instead of $\mathcal{O}(n^3)$ with the naive formula.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Array.
-        y _(qarray_like of shape (..., n, n))_: Array.
+        x _(qarray-like of shape (..., n, n))_: Array.
+        y _(qarray-like of shape (..., n, n))_: Array.
 
     Returns:
         _(array of shape (...))_ Trace of `x @ y`.
@@ -244,7 +244,7 @@ def ptrace(
     r"""Returns the partial trace of a ket, bra or density matrix.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix of a composite system.
         keep _(int or tuple of ints)_: Dimensions to keep after partial trace.
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
@@ -280,7 +280,7 @@ def ptrace(
         >>> rho_bc.shape
         (20, 20)
 
-        If the input qarray-like object `x` does not hold Hilbert space dimensions, you
+        If the input qarray-like `x` does not hold Hilbert space dimensions, you
         can specify them with the argument `dims`. For example, to trace out the second
         subsystem of the Bell state $(\ket{00}+\ket{11})/\sqrt2$:
         >>> bell_state = np.array([1, 0, 0, 1])[:, None] / np.sqrt(2)
@@ -362,7 +362,7 @@ def tensor(*args: QArrayLike) -> QArray:
       operators with shape $(..., n_k, n_k)$.
 
     Args:
-        *args _(qarray_like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k))_:
+        *args _(qarray-like of shape (..., n_k, 1) or (..., 1, n_k) or (..., n_k, n_k))_:
             Variable length argument list of kets, bras, density matrices or operators.
 
     Returns:
@@ -394,9 +394,9 @@ def expect(O: QArrayLike, x: QArrayLike) -> Array:
         `dq.expect(O, x).real`.
 
     Args:
-        O _(qarray_like of shape (nO?, n, n))_: Arbitrary operator or list of _nO_
+        O _(qarray-like of shape (nO?, n, n))_: Arbitrary operator or list of _nO_
             operators.
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket,
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket,
             bra or density matrix.
 
     Returns:
@@ -445,7 +445,7 @@ def norm(x: QArrayLike) -> Array:
     matrix, it is $\tr{\rho}$.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix.
 
     Returns:
@@ -480,7 +480,7 @@ def unit(x: QArrayLike) -> QArray:
     The returned object is divided by its norm (see [`dq.norm()`][dynamiqs.norm]).
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix.
 
     Returns:
@@ -510,8 +510,8 @@ def dissipator(L: QArrayLike, rho: QArrayLike) -> QArray:
     $$
 
     Args:
-        L _(qarray_like of shape (..., n, n))_: Jump operator.
-        rho _(qarray_like of shape (..., n, n))_: Density matrix.
+        L _(qarray-like of shape (..., n, n))_: Jump operator.
+        rho _(qarray-like of shape (..., n, n))_: Density matrix.
 
     Returns:
         _(qarray of shape (..., n, n))_ Resulting operator (it is not a density matrix).
@@ -556,10 +556,10 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
         This superoperator is also sometimes called *Liouvillian*.
 
     Args:
-        H _(qarray_like of shape (..., n, n))_: Hamiltonian.
-        jump_ops _(list of qarray_like, each of shape (, ..., n, n))_: List of jump
+        H _(qarray-like of shape (..., n, n))_: Hamiltonian.
+        jump_ops _(list of qarray-like, each of shape (, ..., n, n))_: List of jump
             operators.
-        rho _(qarray_like of shape (..., n, n))_: Density matrix.
+        rho _(qarray-like of shape (..., n, n))_: Density matrix.
 
     Returns:
         _(qarray of shape (..., n, n))_ Resulting operator (it is not a density matrix).
@@ -603,7 +603,7 @@ def isket(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of a ket.
 
     Args:
-        x _(qarray_like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Array.
 
     Returns:
         True if the last dimension of `x` is 1, False otherwise.
@@ -624,7 +624,7 @@ def isbra(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of a bra.
 
     Args:
-        x _(qarray_like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Array.
 
     Returns:
         True if the second to last dimension of `x` is 1, False otherwise.
@@ -645,7 +645,7 @@ def isdm(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of a density matrix.
 
     Args:
-        x _(qarray_like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Array.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -666,7 +666,7 @@ def isop(x: QArrayLike) -> bool:
     r"""Returns True if the array is in the format of an operator.
 
     Args:
-        x _(qarray_like of shape (...))_: Array.
+        x _(qarray-like of shape (...))_: Array.
 
     Returns:
         True if the last two dimensions of `x` are equal, False otherwise.
@@ -687,7 +687,7 @@ def isherm(x: QArrayLike, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
     r"""Returns True if the array is Hermitian.
 
     Args:
-        x _(qarray_like of shape (..., n, n))_: Array.
+        x _(qarray-like of shape (..., n, n))_: Array.
         rtol: Relative tolerance of the check.
         atol: Absolute tolerance of the check.
 
@@ -709,7 +709,7 @@ def toket(x: QArrayLike) -> QArray:
     r"""Returns the ket representation of a pure quantum state.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
         _(qarray of shape (..., n, 1))_ Ket.
@@ -738,10 +738,10 @@ def tobra(x: QArrayLike) -> QArray:
     r"""Returns the bra representation of a pure quantum state.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
-        _(qarray of shape (..., 1, n))_ QArray.
+        _(qarray of shape (..., 1, n))_ Qarray.
 
     Examples:
         >>> psi = dq.fock(3, 0)  # shape: (3, 1)
@@ -771,7 +771,7 @@ def todm(x: QArrayLike) -> QArray:
         density matrix, it is returned directly.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
             or density matrix.
 
     Returns:
@@ -806,7 +806,7 @@ def proj(x: QArrayLike) -> QArray:
     $P_{\ket\psi} = \ket\psi\bra\psi$.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n))_: Ket or bra.
 
     Returns:
         _(qarray of shape (..., n, n))_ Projection operator.
@@ -832,8 +832,8 @@ def braket(x: QArrayLike, y: QArrayLike) -> Array:
     r"""Returns the inner product $\braket{\psi|\varphi}$ between two kets.
 
     Args:
-        x (qarray_like of shape _(..., n, 1))_: Left-side ket.
-        y (qarray_like of shape _(..., n, 1))_: Right-side ket.
+        x (qarray-like of shape _(..., n, 1))_: Left-side ket.
+        y (qarray-like of shape _(..., n, 1))_: Right-side ket.
 
     Returns:
         _(array of shape (...))_ Complex-valued inner product.
@@ -865,8 +865,8 @@ def overlap(x: QArrayLike, y: QArrayLike) -> Array:
       $\sigma$.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        y _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        y _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
 
     Returns:
         _(array of shape (...))_ Real-valued overlap.
@@ -911,8 +911,8 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
         fidelity $F_\text{qutip} = \sqrt{F}$.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        y _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        y _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
 
     Returns:
         _(array of shape (...))_ Real-valued fidelity.
@@ -999,7 +999,7 @@ def entropy_vn(x: QArrayLike) -> Array:
     It is defined by $S(\rho) = -\tr{\rho \ln \rho}$.
 
     Args:
-        x _(qarray_like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
 
     Returns:
         _(array of shape (...))_ Real-valued Von Neumann entropy.
@@ -1041,7 +1041,7 @@ def bloch_coordinates(x: QArrayLike) -> Array:
     By convention, we choose $\phi=0$ if $\theta=0$, and $\theta=\phi=0$ if $r=0$.
 
     Args:
-        x _(qarray_like of shape (2, 1) or (2, 2))_: Ket or density matrix.
+        x _(qarray-like of shape (2, 1) or (2, 2))_: Ket or density matrix.
 
     Returns:
         _(array of shape (3,))_ Spherical coordinates $(r, \theta, \phi)$.

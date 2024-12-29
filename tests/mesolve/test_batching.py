@@ -4,7 +4,8 @@ import pytest
 
 import dynamiqs as dq
 from dynamiqs import asqarray
-from tests.order import TEST_LONG
+
+from ..order import TEST_LONG
 
 
 def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
@@ -41,6 +42,7 @@ def test_cartesian_batching(nH, npsi0, nL1, nL2):
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nL1', [(), (5, 1, 4)])
 @pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
 def test_flat_batching(nL1, npsi0):
@@ -62,6 +64,7 @@ def test_flat_batching(nL1, npsi0):
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
 
 
+@pytest.mark.run(order=TEST_LONG)
 def test_batching_boris():
     n = 9
     a = dq.destroy(n)
