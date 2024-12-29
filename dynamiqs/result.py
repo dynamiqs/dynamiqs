@@ -357,9 +357,11 @@ class MCSolveResult(SolveResult):
         no_jump_states _(qarray of shape (..., nsave, n, 1))_: Saved no-jump states with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
         no_jump_final_state _(qarray of shape (..., n, 1))_: Saved no-jump final state.
-        jump_states _(qarray of shape (..., ntraj, nsave, n, 1))_: Saved jump states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        jump_final_states _(qarray of shape (..., ntraj, n, 1))_: Saved final jump states.
+        jump_states _(qarray of shape (..., ntraj, nsave, n, 1))_: Saved jump states
+            with `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to
+            `False`.
+        jump_final_states _(qarray of shape (..., ntraj, n, 1))_: Saved final jump
+            states.
         no_jump_prob _(Array)_: No jump probability.
         jump_times _(Array)_: Times at which each trajectory experienced a jump. This
             quantity has shape ..., options.max_jumps where the array is filled with
