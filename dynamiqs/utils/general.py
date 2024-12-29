@@ -256,7 +256,7 @@ def ptrace(
         bra.
 
     Examples:
-        >>> psi_abc = dq.tensor(dq.fock(3, 0), dq.fock(4, 2), dq.fock(5, 1))
+        >>> psi_abc = dq.fock((3, 4, 5), (0, 2, 1))
         >>> psi_abc.dims
         (3, 4, 5)
         >>> psi_abc.shape

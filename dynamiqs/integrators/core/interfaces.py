@@ -27,4 +27,4 @@ class MEInterface(eqx.Module):
 
 
 class SolveInterface(eqx.Module):
-    Es: QArray
+    Es: list[QArray]
