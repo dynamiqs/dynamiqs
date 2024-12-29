@@ -27,8 +27,10 @@ def test_against_mesolve_oscillator(ysave_atol=1e-1):
         root_finder=None,
     )
     meresult = mesolve(H0, jump_ops, y0, tsave, exp_ops=exp_ops, options=options)
-    errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
-    assert jnp.all(errs <= ysave_atol)
+    fidel = dq.fidelity(meresult.states, mcresult.states)
+    expect_errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
+    assert jnp.all(expect_errs <= ysave_atol)
+    assert jnp.all(1 - fidel <= ysave_atol)
 
 
 def test_against_mesolve_qubit(ysave_atol=1e-1):
@@ -60,5 +62,7 @@ def test_against_mesolve_qubit(ysave_atol=1e-1):
     meresult = dq.mesolve(
         timecallable(H_func), jump_ops, initial_states, tsave, exp_ops=exp_ops
     )
-    errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
-    assert jnp.all(errs <= ysave_atol)
+    fidel = dq.fidelity(meresult.states, mcresult.states)
+    expect_errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
+    assert jnp.all(expect_errs <= ysave_atol)
+    assert jnp.all(1 - fidel <= ysave_atol)
