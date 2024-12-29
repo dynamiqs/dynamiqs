@@ -5051,7 +5051,7 @@ $$
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Hx</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(2, 2)</span>
 </code></pre></div></p>
-<p>Time-qarrays support common arithmetic operations with scalars, <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr> and other time-qarrays. For example to define the Hamiltonian
+<p>Time-qarrays support common arithmetic operations with scalars, <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr> and other time-qarrays. For example to define the Hamiltonian
 $$
     H(t) = \sigma_z + 2 H_x(t) - \sin(\pi t) \sigma_y
 $$
@@ -5070,7 +5070,7 @@ $$
 $$
     O(t) = O_0
 $$
-for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is an arbitrary operator. The most practical way to define constant operators is using <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr>. They can also be instantiated as time-qarrays using the <a class="autorefs autorefs-internal" href="../../python_api/time_qarray/constant.html#dynamiqs.time_qarray.constant"><code>dq.constant()</code></a> function. For instance, to define the Pauli operator <span class="arithmatex">\(H = \sigma_z\)</span>, you can use any of the following syntaxes:</p>
+for any time <span class="arithmatex">\(t\)</span>, where <span class="arithmatex">\(O_0\)</span> is an arbitrary operator. The most practical way to define constant operators is using <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>. They can also be instantiated as time-qarrays using the <a class="autorefs autorefs-internal" href="../../python_api/time_qarray/constant.html#dynamiqs.time_qarray.constant"><code>dq.constant()</code></a> function. For instance, to define the Pauli operator <span class="arithmatex">\(H = \sigma_z\)</span>, you can use any of the following syntaxes:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:6"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><input id="__tabbed_1_6" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Dynamiqs utilities</label><label for="__tabbed_1_2">Dynamiqs qarray</label><label for="__tabbed_1_3">NumPy array</label><label for="__tabbed_1_4">JAX array</label><label for="__tabbed_1_5">QuTiP Qobj</label><label for="__tabbed_1_6">Python list</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -5289,8 +5289,8 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator. In 
 </div>
 </div>
 <div class="admonition warning">
-<p class="admonition-title">The function <code>f</code> must return a qarray (not a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>!)</p>
-<p>An error is raised if the function <code>f</code> does not return a qarray. This error concerns any other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr>. This is enforced to avoid costly conversions at every time step of the numerical integration.</p>
+<p class="admonition-title">The function <code>f</code> must return a qarray (not a <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>!)</p>
+<p>An error is raised if the function <code>f</code> does not return a qarray. This error concerns any other <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>. This is enforced to avoid costly conversions at every time step of the numerical integration.</p>
 </div>
 <details class="note">
 <summary>Batching arbitrary time-dependent operators</summary>

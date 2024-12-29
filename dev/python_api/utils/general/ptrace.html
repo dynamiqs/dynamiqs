@@ -4936,26 +4936,6 @@ available, single Hilbert space <code>dims=(n,)</code> otherwise).</p>
   </ul> -->
       <span class="field-body"><p><em>(qarray of shape (..., m, m))</em> Density matrix (with <code>m &lt;= n</code>).</p></span>
 
-    <!-- <p>Raises:</p> -->
-    <p>
-      <strong>Raises</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-              <code>
-ValueError              </code>
-            –
-          <div class="doc-md-description"><p>If <code>x</code> is not a ket, bra or density matrix.</p></div>
-        </li>
-        <li class="field-body">
-              <code>
-ValueError              </code>
-            –
-          <div class="doc-md-description"><p>If <code>dims</code> does not match the shape of <code>x</code>, or if <code>keep</code> is
-incompatible with <code>dims</code>.</p></div>
-        </li>
-    </ul>
-
 <details class="note"
  open >
   <summary>Note</summary>
@@ -4982,7 +4962,7 @@ bra.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rho_bc</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(20, 20)</span>
 </code></pre></div>
-    <p>If the input <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr> <code>x</code> does not hold Hilbert space dimensions, you
+    <p>If the input <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr> <code>x</code> does not hold Hilbert space dimensions, you
 can specify them with the argument <code>dims</code>. For example, to trace out the second
 subsystem of the Bell state <span class="arithmatex">\((\ket{00}+\ket{11})/\sqrt2\)</span>:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bell_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>

@@ -5085,9 +5085,9 @@ methods.</p>
  open >
   <summary>Constructing a new qarray from an other array type</summary>
   <p>Use the function <a class="autorefs autorefs-internal" href="../utils/asqarray.html#dynamiqs.qarrays.utils.asqarray"><code>dq.asqarray()</code></a> to create a qarray from a
-<abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>. Objects that can be converted to a <code>QArray</code> are of type
+<abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>. Objects that can be converted to a <code>QArray</code> are of type
 <code>dq.QArrayLike</code>. This includes all numeric types (<code>bool</code>, <code>int</code>, <code>float</code>,
-<code>complex</code>), a JAX or NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested
+<code>complex</code>), a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any nested
 sequence of these types. See also <a class="autorefs autorefs-internal" href="../utils/isqarraylike.html#dynamiqs.qarrays.utils.isqarraylike"><code>dq.isqarraylike()</code></a>.</p>
 </details>
     <p>
@@ -5144,7 +5144,7 @@ matrix form).</p>
  open >
   <summary>Arithmetic operation support</summary>
   <p>Qarrays support basic arithmetic operations <code>-, +, *, /, @</code> with other
-<abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr>.</p>
+<abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>.</p>
 </details>
 <details class="note"
  open >
@@ -5578,7 +5578,7 @@ through the functional API. For example, you can use <code>x.dag()</code> instea
         <li class="field-body">
           <b>y</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p><abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">Qarray-like</abbr> to multiply with element-wise.</p>
+          – <p><abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">Qarray-like</abbr> to multiply with element-wise.</p>
         </li>
     </ul>
 

@@ -4889,7 +4889,7 @@
 
     <div class="doc doc-contents first">
 
-        <p>Convert a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr> into a QuTiP Qobj or list of Qobjs.</p>
+        <p>Convert a <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr> into a QuTiP Qobj or list of Qobjs.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4943,7 +4943,7 @@ available, single Hilbert space <code>dims=(n,)</code> otherwise).</p>
 <span class="go"> [1.]</span>
 <span class="go"> [0.]]</span>
 </code></pre></div>
-    <p>For a batched array:</p>
+    <p>For a batched qarray:</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">rhos</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">dq</span><span class="o">.</span><span class="n">coherent_dm</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rhos</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(5, 16, 16)</span>

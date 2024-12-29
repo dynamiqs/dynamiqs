@@ -4899,9 +4899,9 @@ for any time <span class="arithmatex">\(t\)</span>.</p>
 
 <details class="warning"
  open >
-  <summary>The function <code>f</code> must return a qarray (not a <abbr title="a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>!)</summary>
+  <summary>The function <code>f</code> must return a qarray (not a <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>!)</summary>
   <p>An error is raised if the function <code>f</code> does not return a qarray. This error
-concerns any other <abbr title="NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types">qarray-likes</abbr>. This is enforced to avoid costly
+concerns any other <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-likes</abbr>. This is enforced to avoid costly
 conversions at every time step of the numerical integration.</p>
 </details>
     <!-- <p>Parameters:</p> -->

@@ -5334,7 +5334,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </div>
 </div>
 <h2 id="why-batching">Why batching?</h2>
-<p>When batching multiple simulations, the state is not a 2-D array that evolves in time but a N-D array which holds all independent simulations. This allows running <strong>multiple simulations simultaneously</strong> with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large array.</p>
+<p>When batching multiple simulations, the state is not a 2-D qarray that evolves in time but a N-D qarray which holds all independent simulations. This allows running <strong>multiple simulations simultaneously</strong> with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large qarray.</p>
 <p>Common use cases for batching include:</p>
 <ul>
 <li>simulating a system with different values of a parameter (e.g. a drive amplitude),</li>

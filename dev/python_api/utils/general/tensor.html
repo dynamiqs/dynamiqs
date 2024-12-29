@@ -4891,13 +4891,13 @@
 
         <p>Returns the tensor product of multiple kets, bras, density matrices or
 operators.</p>
-<p>The returned array shape is:</p>
+<p>The returned qarray shape is:</p>
 <ul>
-<li><span class="arithmatex">\((..., n, 1)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input arrays are kets with shape
+<li><span class="arithmatex">\((..., n, 1)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input qarrays are kets with shape
   <span class="arithmatex">\((..., n_k, 1)\)</span>,</li>
-<li><span class="arithmatex">\((..., 1, n)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input arrays are bras with shape
+<li><span class="arithmatex">\((..., 1, n)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input qarrays are bras with shape
   <span class="arithmatex">\((..., 1, n_k)\)</span>,</li>
-<li><span class="arithmatex">\((..., n, n)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input arrays are density matrices or
+<li><span class="arithmatex">\((..., n, n)\)</span> with <span class="arithmatex">\(n=\prod_k n_k\)</span> if all input qarrays are density matrices or
   operators with shape <span class="arithmatex">\((..., n_k, n_k)\)</span>.</li>
 </ul>
 
@@ -4923,11 +4923,11 @@ operators.</p>
       <li class="field-body">
             <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
         – <p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Tensor product of
-the input arrays.</p>
+the input qarrays.</p>
       </li>
   </ul> -->
       <span class="field-body"><p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Tensor product of
-the input arrays.</p></span>
+the input qarrays.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>

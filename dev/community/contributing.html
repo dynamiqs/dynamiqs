@@ -5251,10 +5251,10 @@ pre-commit<span class="w"> </span>install
 <p>When writing your function:</p>
 <ul>
 <li>Type all arguments of your function, and its return type.</li>
-<li>When typing a public function, use <code>ArrayLike</code> for array inputs (and <code>jnp.asarray()</code> to convert to a proper array), and <code>Array</code> for array outputs. See <a href="https://jax.readthedocs.io/en/latest/jax.typing.html#jax-typing-best-practices">JAX typing best practices</a>.</li>
+<li>When typing a public function, use <code>QArrayLike</code> for qarray inputs, <code>asqarray()</code> to convert to a proper qarray, and <code>QArray</code> for qarray outputs. Use <code>ArrayLike</code> for array inputs, <code>jnp.asarray()</code> to convert to a proper array, and <code>Array</code> for array outputs. See related <a href="https://jax.readthedocs.io/en/latest/jax.typing.html#jax-typing-best-practices">JAX typing best practices</a>.</li>
 <li>Ensure you run <code>task docserve</code> to verify how the documentation for your function appears, and correct any issues with rendering.</li>
-<li>To type an array shape, use <code>...</code> to denote possible batch dimensions, use <code>n</code> for the Hilbert space dimension.</li>
-<li>To add an axis to an array, favor <code>[None, ...]</code> over <code>unsqueeze</code>.</li>
+<li>To type a qarray or an array shape, use <code>...</code> to denote possible batch dimensions, use <code>n</code> for the Hilbert space dimension.</li>
+<li>To add an axis to a qarray or an array, favor <code>[None, ...]</code> over <code>unsqueeze</code>.</li>
 <li>Favor <code>(...).sum(0)</code> over <code>jnp.sum(..., 0)</code>.</li>
 </ul>
 <p>Make sure to add your function:</p>
@@ -5269,7 +5269,7 @@ pre-commit<span class="w"> </span>install
 <li>Headers can include (in this order and with these names): <code>Args</code>, <code>Returns</code>, <code>Raises</code>, <code>Examples</code>, <code>See also</code>.</li>
 <li>You can use the admonitions (colored blocks in the documentation) <code>Note</code> and <code>Warning</code> if relevant.</li>
 <li>Avoid using <code>The</code> in arguments description, for example change <code>x: The quantum state.</code> to <code>x: Quantum state.</code>.</li>
-<li>Specify arguments type in <code>_(...)_</code> after the argument name and <em>only if it is necessary</em>. Adding a type can for example be useful to add a shape information for an array, or because the argument typing in the function signature is opaque.</li>
+<li>Specify arguments type in <code>_(...)_</code> after the argument name and <em>only if it is necessary</em>. Adding a type can for example be useful to add a shape information for a qarray or an array, or because the argument typing in the function signature is opaque.</li>
 </ul>
 <h3 id="documentation">Documentation</h3>
 <ul>
