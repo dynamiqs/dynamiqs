@@ -153,7 +153,6 @@ Below are some cool features of **Dynamiqs** that are either already available o
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
 - Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.
 - Simulate SME trajectories **orders of magnitude faster** by batching the simulation over the stochastic trajectories.
-- Use **adaptive step-size solvers** to solve the SME (based on Brownian bridges to generate the correct statistics).
 - **Parallelise** large simulations across multiple CPUs/GPUs.
 
 **Gradients**

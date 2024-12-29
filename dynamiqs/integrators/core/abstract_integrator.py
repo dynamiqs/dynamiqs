@@ -4,12 +4,14 @@ from abc import abstractmethod
 from typing import ClassVar
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree, Scalar
+from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...result import (
+    DSMESolveResult,
     MEPropagatorResult,
     MESolveResult,
     Result,
@@ -18,7 +20,13 @@ from ...result import (
     SESolveResult,
 )
 from ...solver import Solver
-from .interfaces import MEInterface, OptionsInterface, SEInterface, SolveInterface
+from .interfaces import (
+    DSMEInterface,
+    MEInterface,
+    OptionsInterface,
+    SEInterface,
+    SolveInterface,
+)
 
 
 class AbstractIntegrator(eqx.Module):
@@ -72,6 +80,25 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
         )
 
 
+class SMEBaseIntegrator(BaseIntegrator):
+    """Integrator stochastically evolving an initial state over a set of times, and
+    saving measurement results at another set of times.
+
+    In addition to `BaseIntegrator`, it includes a PRNG key `key` for the stochastic
+    evolution.
+    """
+
+    # subclasses should implement: discontinuity_ts, run()
+
+    key: PRNGKeyArray
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        ts = jnp.asarray(self.ts)  # todo: fix static tsave
+        return self.RESULT_CLASS(
+            ts, self.solver, self.gradient, self.options, saved, infos, self.key
+        )
+
+
 class SEIntegrator(BaseIntegrator, SEInterface):
     """Integrator for the Schrödinger equation."""
 
@@ -84,6 +111,17 @@ class SEIntegrator(BaseIntegrator, SEInterface):
 
 class MEIntegrator(BaseIntegrator, MEInterface):
     """Integrator for the Lindblad master equation."""
+
+    # subclasses should implement: run()
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(*ts)
+
+
+class DSMEIntegrator(SMEBaseIntegrator, DSMEInterface):
+    """Integrator for the diffusive SME."""
 
     # subclasses should implement: run()
 
@@ -123,3 +161,11 @@ class MESolveIntegrator(MEIntegrator, SolveInterface):
     # subclasses should implement: run()
 
     RESULT_CLASS = MESolveResult
+
+
+class DSMESolveIntegrator(DSMEIntegrator, SolveInterface):
+    """Integrator computing the time evolution of the diffusive SME."""
+
+    # subclasses should implement: run()
+
+    RESULT_CLASS = DSMESolveResult
