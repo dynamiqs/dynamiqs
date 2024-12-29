@@ -4895,8 +4895,9 @@ the state of a coupled two-level system (TLS) state. It is defined by
 $$
    \mathrm{CD}(\alpha) = D(\alpha/2)\ket{g}\bra{g} + D(-\alpha/2)\ket{e}\bra{e},
 $$
-where <span class="arithmatex">\(\ket{g}=\ket0\)</span> and <span class="arithmatex">\(\ket{e}=\ket1\)</span> are the ground and excited states of the
-TLS, respectively.</p>
+where <span class="arithmatex">\(\ket{g}\)</span> (defined by <a class="autorefs autorefs-internal" href="../states/ground.html#dynamiqs.utils.states.ground"><code>dq.ground()</code></a>) and <span class="arithmatex">\(\ket{e}\)</span>
+(defined by <a class="autorefs autorefs-internal" href="../states/excited.html#dynamiqs.utils.states.excited"><code>dq.excited()</code></a>) are the ground and excited states of
+the TLS.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -4937,10 +4938,10 @@ system of dimension <em>n = 2 x dim</em>).</p></span>
 </p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">cd_gate</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
 <span class="go">QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense</span>
-<span class="go">[[ 0.999+0.j  0.   +0.j -0.05 +0.j  0.   +0.j]</span>
-<span class="go"> [ 0.   +0.j  0.999+0.j  0.   +0.j  0.05 +0.j]</span>
-<span class="go"> [ 0.05 +0.j  0.   +0.j  0.999+0.j  0.   +0.j]</span>
-<span class="go"> [ 0.   +0.j -0.05 +0.j  0.   +0.j  0.999+0.j]]</span>
+<span class="go">[[ 0.999+0.j  0.   +0.j  0.05 +0.j  0.   +0.j]</span>
+<span class="go"> [ 0.   +0.j  0.999+0.j  0.   +0.j -0.05 +0.j]</span>
+<span class="go"> [-0.05 +0.j  0.   +0.j  0.999+0.j  0.   +0.j]</span>
+<span class="go"> [ 0.   +0.j  0.05 +0.j  0.   +0.j  0.999+0.j]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">cd_gate</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(2, 6, 6)</span>
 </code></pre></div>
