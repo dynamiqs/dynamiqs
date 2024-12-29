@@ -9,7 +9,6 @@ from jaxtyping import PyTree, Scalar
 
 from ...gradient import Gradient
 from ...result import (
-    FloquetResult,
     MEPropagatorResult,
     MESolveResult,
     Result,
@@ -74,13 +73,4 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface, TimeInterface):
         result_class = result_classes[self.solver_function]
         return result_class(
             self.ts, self.solver, self.gradient, self.options, saved, infos
-        )
-
-
-class BaseFloquetIntegrator(BaseIntegrator):
-    T: float
-
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return FloquetResult(
-            self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
         )

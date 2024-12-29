@@ -5,11 +5,21 @@ from jaxtyping import PyTree
 
 from dynamiqs.result import FloquetSaved
 
+from ...result import FloquetResult, Result, Saved
 from ..apis.sepropagator import _sepropagator
-from .abstract_integrator import BaseFloquetIntegrator
+from .abstract_integrator import BaseIntegrator
 from .interfaces import SEInterface
 
 __all__ = ['FloquetIntegrator']
+
+
+class BaseFloquetIntegrator(BaseIntegrator):
+    T: float
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        return FloquetResult(
+            self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
+        )
 
 
 class FloquetIntegrator(BaseFloquetIntegrator, SEInterface):
