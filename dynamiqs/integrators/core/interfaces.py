@@ -46,7 +46,3 @@ class MEInterface(TimeInterface):
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return _concatenate_sort(*ts)
-
-
-class SolveInterface(eqx.Module):
-    Es: QArray
