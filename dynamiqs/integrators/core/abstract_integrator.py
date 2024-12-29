@@ -17,7 +17,7 @@ from ...result import (
     SESolveResult,
 )
 from ...solver import Solver
-from .interfaces import OptionsInterface, TimeInterface
+from .interfaces import OptionsInterface
 
 
 class SOLVER_FUNCTION(Enum):
@@ -41,7 +41,7 @@ class AbstractIntegrator(eqx.Module):
         pass
 
 
-class BaseIntegrator(AbstractIntegrator, OptionsInterface, TimeInterface):
+class BaseIntegrator(AbstractIntegrator, OptionsInterface):
     """Integrator evolving an initial state over a set of times.
 
     This integrator evolves the initial pytree `y0` over a set of times specified by
