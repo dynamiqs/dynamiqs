@@ -22,7 +22,6 @@ from .._utils import (
     catch_xla_runtime_error,
     ispwc,
 )
-from ..core.abstract_integrator import SOLVER_FUNCTION
 from ..core.diffrax_integrator import (
     sepropagator_dopri5_integrator_constructor,
     sepropagator_dopri8_integrator_constructor,
@@ -163,7 +162,7 @@ def _sepropagator(
         y0=y0,
         solver=solver,
         gradient=gradient,
-        solver_function=SOLVER_FUNCTION.SEPROPAGATOR,
+        result_class=SEPropagatorResult,
         options=options,
         H=H,
     )

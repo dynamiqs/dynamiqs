@@ -20,7 +20,6 @@ from .._utils import (
     cartesian_vmap,
     catch_xla_runtime_error,
 )
-from ..core.abstract_integrator import SOLVER_FUNCTION
 from ..core.floquet_integrator import floquet_integrator_constructor
 
 __all__ = ['floquet']
@@ -163,7 +162,7 @@ def _floquet(
         H=H,
         solver=solver,
         gradient=gradient,
-        solver_function=SOLVER_FUNCTION.FLOQUET,
+        result_class=FloquetResult,
         options=options,
         T=T,
     )

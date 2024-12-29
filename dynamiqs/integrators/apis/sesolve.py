@@ -22,7 +22,6 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.abstract_integrator import SOLVER_FUNCTION
 from ..core.diffrax_integrator import (
     sesolve_dopri5_integrator_constructor,
     sesolve_dopri8_integrator_constructor,
@@ -178,7 +177,7 @@ def _sesolve(
         y0=psi0,
         solver=solver,
         gradient=gradient,
-        solver_function=SOLVER_FUNCTION.SESOLVE,
+        result_class=SESolveResult,
         options=options,
         H=H,
         Es=exp_ops,

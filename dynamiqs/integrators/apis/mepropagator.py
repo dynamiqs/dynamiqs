@@ -22,7 +22,6 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.abstract_integrator import SOLVER_FUNCTION
 from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
 
@@ -156,7 +155,7 @@ def _mepropagator(
         y0=y0,
         solver=solver,
         gradient=gradient,
-        solver_function=SOLVER_FUNCTION.MEPROPAGATOR,
+        result_class=MEPropagatorResult,
         options=options,
         H=H,
         Ls=Ls,

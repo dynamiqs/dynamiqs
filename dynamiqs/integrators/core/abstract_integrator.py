@@ -1,31 +1,15 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from enum import Enum
 
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ...gradient import Gradient
-from ...result import (
-    MEPropagatorResult,
-    MESolveResult,
-    Result,
-    Saved,
-    SEPropagatorResult,
-    SESolveResult,
-)
+from ...result import Result, Saved
 from ...solver import Solver
 from .interfaces import OptionsInterface
-
-
-class SOLVER_FUNCTION(Enum):
-    SESOLVE = 0
-    MESOLVE = 1
-    SEPROPAGATOR = 2
-    MEPROPAGATOR = 3
-    FLOQUET = 4
 
 
 class AbstractIntegrator(eqx.Module):
@@ -53,7 +37,7 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
     y0: PyTree
     solver: Solver
     gradient: Gradient | None
-    solver_function: str
+    result_class: type[Result]
 
     @property
     def t0(self) -> Scalar:
@@ -64,13 +48,6 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
         return self.ts[-1]
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        result_classes = {
-            SOLVER_FUNCTION.SESOLVE: SESolveResult,
-            SOLVER_FUNCTION.MESOLVE: MESolveResult,
-            SOLVER_FUNCTION.SEPROPAGATOR: SEPropagatorResult,
-            SOLVER_FUNCTION.MEPROPAGATOR: MEPropagatorResult,
-        }
-        result_class = result_classes[self.solver_function]
-        return result_class(
+        return self.result_class(
             self.ts, self.solver, self.gradient, self.options, saved, infos
         )

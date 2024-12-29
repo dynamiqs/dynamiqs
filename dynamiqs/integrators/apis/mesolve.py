@@ -33,7 +33,6 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.abstract_integrator import SOLVER_FUNCTION
 from ..core.diffrax_integrator import (
     mesolve_dopri5_integrator_constructor,
     mesolve_dopri8_integrator_constructor,
@@ -211,7 +210,7 @@ def _mesolve(
         y0=rho0,
         solver=solver,
         gradient=gradient,
-        solver_function=SOLVER_FUNCTION.MESOLVE,
+        result_class=MESolveResult,
         options=options,
         H=H,
         Ls=Ls,
