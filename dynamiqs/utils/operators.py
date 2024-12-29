@@ -8,9 +8,9 @@ from jax.typing import ArrayLike
 from .._utils import cdtype
 from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
-from ..qarrays.qarray import QArray
+from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
 from ..qarrays.sparsedia_qarray import SparseDIAQArray
-from ..qarrays.utils import asqarray, sparsedia_from_dict
+from ..qarrays.utils import _init_dims, asqarray, sparsedia_from_dict
 from .general import tensor
 
 __all__ = [
@@ -19,6 +19,7 @@ __all__ = [
     'destroy',
     'displace',
     'eye',
+    'eye_like',
     'hadamard',
     'momentum',
     'number',
@@ -38,6 +39,7 @@ __all__ = [
     'tgate',
     'toffoli',
     'zero',
+    'zero_like',
 ]
 
 
@@ -75,6 +77,10 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
          [  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]]
+
+    See also:
+        - [`dq.eye_like()`][dynamiqs.eye_like]: returns the identity operator of the
+        input Hilbert space.
     """
     layout = get_layout(layout)
     dim = prod(dims)
@@ -84,6 +90,53 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
     else:
         diag = jnp.ones(dim, dtype=cdtype())
         return sparsedia_from_dict({0: diag}, dims=dims)
+
+
+def eye_like(
+    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
+) -> QArray:
+    r"""Returns the identity operator of the input Hilbert space.
+
+    Args:
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+            or operator.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
+            available, single Hilbert space `dims=(n,)` otherwise).
+        layout _(dq.dense, dq.dia or None)_: Matrix layout.
+
+    Returns:
+        _(qarray of shape (n, n))_ Identity operator, with _n = prod(dims)_.
+
+    Examples:
+        Single-mode $I_4$:
+        >>> a = dq.destroy(4)
+        >>> dq.eye_like(a)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j]]
+
+        Multi-mode $I_2 \otimes I_3$:
+        >>> a, b = dq.destroy(2, 3)
+        >>> dq.eye_like(a)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=1
+        [[1.+0.j   ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅    1.+0.j   ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅    1.+0.j   ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅    1.+0.j   ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅    1.+0.j   ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]]
+
+    See also:
+        - [`dq.eye()`][dynamiqs.eye]: returns the identity operator.
+    """
+    xdims = _get_dims(x)
+    # todo: we should rather use a _get_shape util that never converts to a jax array
+    x = _to_jax(x)
+    dims = _init_dims(xdims, dims, x.shape)
+    return eye(*dims, layout=layout)
 
 
 def zero(*dims: int, layout: Layout | None = None) -> QArray:
@@ -120,6 +173,10 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
+
+    See also:
+        - [`dq.zero_like()`][dynamiqs.zero_like]: returns the null operator of the
+        input Hilbert space.
     """
     layout = get_layout(layout)
     dim = prod(dims)
@@ -129,6 +186,53 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
     else:
         diags = jnp.zeros((0, dim), dtype=cdtype())
         return SparseDIAQArray(dims, False, (), diags)
+
+
+def zero_like(
+    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
+) -> QArray:
+    r"""Returns the null operator of the input Hilbert space.
+
+    Args:
+        x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
+            or operator.
+        dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
+            system Hilbert space tensor product. Defaults to `None` (`x.dims` if
+            available, single Hilbert space `dims=(n,)` otherwise).
+        layout _(dq.dense, dq.dia or None)_: Matrix layout.
+
+    Returns:
+        _(qarray of shape (n, n))_ Null operator, with _n = prod(dims)_.
+
+    Examples:
+        Single-mode $0_4$:
+        >>> a = dq.destroy(4)
+        >>> dq.zero_like(a)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0
+        [[  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅   ]]
+
+        Multi-mode $0_2 \otimes 0_3$:
+        >>> a, b = dq.destroy(2, 3)
+        >>> dq.zero_like(a)
+        QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0
+        [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
+         [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
+
+    See also:
+        - [`dq.zero()`][dynamiqs.zero]: returns the null operator.
+    """
+    xdims = _get_dims(x)
+    # todo: we should rather use a _get_shape util that never converts to a jax array
+    x = _to_jax(x)
+    dims = _init_dims(xdims, dims, x.shape)
+    return zero(*dims, layout=layout)
 
 
 def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
