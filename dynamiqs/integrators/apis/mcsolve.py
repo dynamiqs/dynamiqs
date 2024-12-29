@@ -150,7 +150,7 @@ def _vectorized_mcsolve(
 ) -> MCSolveResult:
     # vectorize output over `_no_jump_res`, `_jump_res`, `no_jump_prob`, `jump_times`,
     # `num_jumps`
-    out_axes = MCSolveResult(None, None, None, None, 0, 0, 0, 0, 0)
+    out_axes = MCSolveResult(None, None, None, None, 0, 0, 0, 0)
 
     if options.cartesian_batching:
         # vectorize input over H, Ls, psi0.

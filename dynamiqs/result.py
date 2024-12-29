@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import equinox as eqx
-import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
@@ -297,14 +296,19 @@ class MESolveResult(SolveResult):
     """
 
 
-class MCTrajResult(SolveResult):
-    """Result of Monte Carlo trajectories.
+class MCJumpResult(SolveResult):
+    """Result of Monte Carlo jump trajectories.
 
 
     Attributes:
-        states _(array of shape (..., nsave, n, 1))_: Saved states with
+        states _(qarray of shape (..., ntraj, nsave, n, 1))_: Saved jump states with
             `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(array of shape (..., n, 1))_: Saved final state.
+        final_state _(qarray of shape (..., ntraj, n, 1))_: Saved final jump state.
+        jump_times _(Array)_: Times at which each trajectory experienced a jump. This
+            quantity has shape ..., options.max_jumps where the array is filled with
+            nans for the final options.max_jumps - num_jumps values.
+        num_jumps _(Array)_: Number of jumps each jump trajectory experienced. The times
+            at which each jump occurred is saved in jump_times.
         expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
             expectation values, if specified by `exp_ops`.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
@@ -316,15 +320,46 @@ class MCTrajResult(SolveResult):
         options _(Options)_: Options used.
     """
 
+    jump_times: Array
+    num_jumps: Array
 
-class MCSolveResult(eqx.Module):
+
+class MCNoJumpResult(SolveResult):
+    """Result of Monte Carlo no-jump trajectories.
+
+
+    Attributes:
+        states _(qarray of shape (..., nsave, n, 1))_: Saved no-jump states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+        final_state _(qarray of shape (..., n, 1))_: Saved no-jump final state.
+        no_jump_prob _(Array)_: No jump probability.
+        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
+            expectation values, if specified by `exp_ops`.
+        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
+            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
+        infos _(PyTree or None)_: Solver-dependent information on the resolution.
+        tsave _(array of shape (ntsave,))_: Times for which results were saved.
+        solver _(Solver)_: Solver used.
+        gradient _(Gradient)_: Gradient used.
+        options _(Options)_: Options used.
+    """
+
+    no_jump_prob: Array
+
+
+class MCSolveResult(SolveResult):
     """Result of Monte Carlo integration.
 
     Attributes:
-        no_jump_states _(Array)_: Saved no-jump states.
-        final_no_jump_state _(Array)_: Saved final no-jump state.
-        jump_states _(Array)_: Saved states for jump trajectories.
-        final_jump_states _(Array)_: Saved final states for jump trajectories.
+        states _(qarray of shape (..., nsave, n, n))_: Saved states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+        final_state _(qarray of shape (..., n, n))_: Saved final state.
+        no_jump_states _(qarray of shape (..., nsave, n, 1))_: Saved no-jump states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+        no_jump_final_state _(qarray of shape (..., n, 1))_: Saved no-jump final state.
+        jump_states _(qarray of shape (..., ntraj, nsave, n, 1))_: Saved jump states with
+            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+        jump_final_states _(qarray of shape (..., ntraj, n, 1))_: Saved final jump states.
         no_jump_prob _(Array)_: No jump probability.
         jump_times _(Array)_: Times at which each trajectory experienced a jump. This
             quantity has shape ..., options.max_jumps where the array is filled with
@@ -351,7 +386,7 @@ class MCSolveResult(eqx.Module):
         === "If `cartesian_batching = True` (default value)"
             The results leading dimensions are
             ```
-            ... = ...H, ...L0, ...L1, (...), ...rho0, len(keys)
+            ... = ...H, ...L0, ...L1, (...), ...psi0
             ```
             For example if:
 
@@ -360,79 +395,61 @@ class MCSolveResult(eqx.Module):
             - `psi0` has shape _(7, n, 1)_,
             - `keys` has len(keys) == 8
 
-            then `jump_states` has shape _(2, 3, 4, 5, 6, 7, 8, ntsave, n, 1)_ and
-            `no_jump_states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, 1)_
+            then `states` (which is an average over the jump and no-jump states) has
+            shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
+            `no_jump_states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, 1)_ and
+            `jump_states` has shape _(2, 3, 4, 5, 6, 7, 8, ntsave, n, 1)_
         === "If `cartesian_batching = False`"
             The results leading dimensions are
             ```
-            ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
+            ... = ...H = ...L0 = ...L1 = (...) = ...rho0 = ...keys  # (once broadcasted)
             ```
-            The number of keys is not included in the broadcasting.
             For example if:
 
             - `H` has shape _(2, 3, n, n)_,
             - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
             - `rho0` has shape _(3, n, n)_,
-            - `keys` has len(keys) == 4
+            - `keys` has shape (2, 3, 4)
 
-            then `jump_states` has shape _(2, 3, 4, ntsave, n, 1)_ and
-            `no_jump_states` has shape _(2, 3, ntsave, n, 1)_
+            then `states` has shape _(2, 3, ntsave, n, n)_,
+            `no_jump_states` has shape _(2, 3, ntsave, n, 1)_ and
+            `jump_states` has shape _(2, 3, 4, ntsave, n, 1)_ and
 
         See the
         [Batching simulations](../../documentation/basics/batching-simulations.md)
         tutorial for more details.
     """
 
-    tsave: Array
-    solver: Solver
-    gradient: Gradient | None
-    options: Options
-    _no_jump_res: MCTrajResult
-    _jump_res: MCTrajResult
-    no_jump_prob: Array
-    jump_times: Array
-    num_jumps: Array
-
-    def _average_and_sum(self, no_jump: Array, jump: Array) -> Array:
-        # Average over trajectories. Dimensions are ..., trajectories, expects, times
-        # where ... is batch so we average over axis=-3
-        jump_expects = jnp.mean(jump, axis=-3)
-        no_jump_prob = jnp.expand_dims(self.no_jump_prob, axis=(-1, -2))
-        return no_jump_prob * no_jump + (1 - no_jump_prob) * jump_expects
+    _no_jump_result: MCNoJumpResult
+    _jump_result: MCJumpResult
 
     @property
-    def expects(self) -> Array | None:
-        if self._no_jump_res.expects is not None:
-            return self._average_and_sum(
-                self._no_jump_res.expects, self._jump_res.expects
-            )
-        return None
+    def no_jump_states(self) -> QArray:
+        return self._no_jump_result.states
 
     @property
-    def extra(self) -> PyTree | None:
-        if self._no_jump_res.extra is not None:
-            return self._average_and_sum(self._no_jump_res.extra, self._jump_res.extra)
-        return None
+    def jump_states(self) -> QArray:
+        return self._jump_result.states
 
     @property
-    def infos(self) -> PyTree | None:
-        return self._no_jump_res.infos
+    def final_no_jump_state(self) -> QArray:
+        return self._no_jump_result.final_state
 
     @property
-    def no_jump_states(self) -> Array:
-        return self._no_jump_res.states
+    def final_jump_states(self) -> QArray:
+        return self._jump_result.final_state
 
     @property
-    def jump_states(self) -> Array:
-        return self._jump_res.states
+    def no_jump_prob(self) -> Array:
+        return self._no_jump_result.no_jump_prob
 
     @property
-    def final_no_jump_state(self) -> Array:
-        return self._no_jump_res.final_state
+    def jump_times(self) -> Array:
+        return self._jump_result.jump_times
 
     @property
-    def final_jump_states(self) -> Array:
-        return self._jump_res.final_state
+    def num_jumps(self) -> Array:
+        return self._jump_result.jump_times
 
     def __str__(self) -> str:
         parts = {

@@ -11,7 +11,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..core.save_mixin import SolveSaveMixin
-from ...utils import dag, unit, norm, expect
+from ...utils import unit, norm
 from ...qarrays import QArray
 from ...qarrays.utils import stack
 from ..core.abstract_integrator import MCSolveIntegrator
@@ -56,7 +56,9 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
     """Integrator computing the time evolution of the Monte-Carlo unraveling of the
     Lindblad master equation using the Diffrax library."""
 
-    def _solve_until_jump(self, y0: QArray, t0: Array, tsave: Array, rand: Array):
+    def _solve_until_jump(
+        self, y0: QArray, t0: Array, tsave: Array, rand: Array | float
+    ):
         # === prepare saveat
         subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
@@ -83,22 +85,29 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         jump_times = jump_state.save_state.jump_times
         num_jumps = jump_state.num_jumps
 
-        # === save and postprocess results
+        # === save and postprocess jump and no-jump results
         no_jump_saved = self.postprocess_saved(
             no_jump_saved, unit(no_jump_solution.ys[1])
         )
-        no_jump_result = self.traj_result(
-            no_jump_saved, infos=self.infos(no_jump_solution.stats)
+        no_jump_result = self.no_jump_result(
+            no_jump_saved, no_jump_prob, infos=self.infos(no_jump_solution.stats)
         )
         jump_saved = self.postprocess_saved(
-            jump_state.save_state.ys, jump_state.final_state[None]
+            jump_state.save_state.saved, jump_state.final_state[None]
         )
         # TODO save stats for jumps?
-        jump_result = self.traj_result(jump_saved)
+        jump_result = self.jump_result(jump_saved, jump_times, num_jumps)
 
-        return self.result(
-            no_jump_result, jump_result, no_jump_prob, jump_times, num_jumps
+        rho = self._average_jump_and_no_jump(
+            no_jump_result.states, jump_result.states, no_jump_prob
         )
+        final_rho = self._average_jump_and_no_jump(
+            no_jump_result.final_state, jump_result.final_state, no_jump_prob
+        )
+        saved = jax.vmap(self.save)(rho)
+        saved = self.postprocess_saved(saved, final_rho)
+
+        return self.result(saved, no_jump_result, jump_result)
 
     def _loop_over_jumps(self, key: Array, no_jump_prob: Array) -> State:
         """loop over jumps until the simulation reaches the final time"""
@@ -222,6 +231,15 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         # randomly sample the index of a single jump operator
         sample_idx = jax.random.categorical(key, logits, shape=(1,))[0]
         return Ls[sample_idx]
+
+    def _average_jump_and_no_jump(
+        self, no_jump_state: QArray, jump_state: QArray, no_jump_prob: Array | float
+    ):
+        no_jump_rho = no_jump_state @ no_jump_state.dag()
+        jump_rho = jtu.tree_map(
+            lambda y: jnp.average(y, axis=0), jump_state @ jump_state.dag()
+        )
+        return unit(no_jump_prob * no_jump_rho + (1 - no_jump_prob) * jump_rho)
 
 
 # fmt: off

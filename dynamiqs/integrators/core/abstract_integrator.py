@@ -10,8 +10,9 @@ from jaxtyping import PyTree, Scalar
 from ..._utils import _concatenate_sort
 from ...gradient import Gradient
 from ...result import (
+    MCJumpResult,
+    MCNoJumpResult,
     MCSolveResult,
-    MCTrajResult,
     MEPropagatorResult,
     MESolveResult,
     Result,
@@ -106,36 +107,61 @@ class MCIntegrator(BaseIntegrator, MCInterface):
 
     # subclasses should implement: run()
 
-    TRAJECTORY_RESULT_CLASS: ClassVar[Result]
+    JUMP_RESULT_CLASS: ClassVar[Result]
+    NO_JUMP_RESULT_CLASS: ClassVar[Result]
 
     @property
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return _concatenate_sort(*ts)
 
-    def traj_result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return self.TRAJECTORY_RESULT_CLASS(
-            self.ts, self.solver, self.gradient, self.options, saved, infos
+    def jump_result(
+        self,
+        saved: Saved,
+        jump_times: Array,
+        num_jumps: Array,
+        infos: PyTree | None = None,
+    ) -> Result:
+        return self.JUMP_RESULT_CLASS(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            jump_times,
+            num_jumps,
+        )
+
+    def no_jump_result(
+        self, saved: Saved, no_jump_prob: Array, infos: PyTree | None = None
+    ) -> Result:
+        return self.NO_JUMP_RESULT_CLASS(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            no_jump_prob,
         )
 
     def result(
         self,
+        saved: Saved,
         no_jump_result: Result,
         jump_result: Result,
-        no_jump_prob: Array,
-        jump_times: Array,
-        num_jumps: Array,
+        infos: PyTree | None = None,
     ) -> Result:
         return self.RESULT_CLASS(
             self.ts,
             self.solver,
             self.gradient,
             self.options,
+            saved,
+            infos,
             no_jump_result,
             jump_result,
-            no_jump_prob,
-            jump_times,
-            num_jumps,
         )
 
 
@@ -179,4 +205,5 @@ class MCSolveIntegrator(MCIntegrator, SolveInterface):
     # subclasses should implement: run()
 
     RESULT_CLASS = MCSolveResult
-    TRAJECTORY_RESULT_CLASS = MCTrajResult
+    JUMP_RESULT_CLASS = MCJumpResult
+    NO_JUMP_RESULT_CLASS = MCNoJumpResult
