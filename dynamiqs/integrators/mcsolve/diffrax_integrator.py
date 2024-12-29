@@ -11,7 +11,7 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ..core.save_mixin import SolveSaveMixin
-from ...utils import unit, norm
+from ...utils import unit, norm, dag
 from ...qarrays import QArray
 from ...qarrays.utils import stack
 from ..core.abstract_integrator import MCSolveIntegrator
