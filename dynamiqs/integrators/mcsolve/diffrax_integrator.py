@@ -28,7 +28,7 @@ from ..core.diffrax_integrator import (
 
 class SaveState(eqx.Module):
     ts: Array
-    ys: PyTree
+    saved: PyTree
     save_index: int
     jump_times: Array
 
@@ -43,13 +43,13 @@ class State(eqx.Module):
 
 def _inner_buffers(save_state):
     assert type(save_state) is SaveState
-    return save_state.ts, save_state.ys, save_state.jump_times
+    return save_state.ts, save_state.saved, save_state.jump_times
 
 
 def _outer_buffers(state):
     assert type(state) is State
     save_state = state.save_state
-    return save_state.ts, save_state.ys, save_state.jump_times
+    return save_state.ts, save_state.saved, save_state.jump_times
 
 
 class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSaveMixin):
@@ -122,7 +122,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
         # allocate memory for the state that is updated during the loop
         save_state = SaveState(
             ts=first_result.ts[0],
-            ys=jax.vmap(self.save)(unit(first_result.ys[0])),
+            saved=jax.vmap(self.save)(unit(first_result.ys[0])),
             save_index=save_index,
             jump_times=jnp.full(self.options.max_jumps, jnp.nan),
         )
@@ -168,14 +168,16 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
                     t_idx_in_new_times = jnp.nanargmin(jnp.abs(new_times - _t))
                     _y = result_after_jump.ys[0][t_idx_in_new_times]
                     _ts = __save_state.ts.at[__save_state.save_index].set(_t)
-                    _ys = jtu.tree_map(
-                        lambda __y, __ys: __ys.at[__save_state.save_index].set(__y),
+                    _saved = jtu.tree_map(
+                        lambda __y, __saved: __saved.at[__save_state.save_index].set(
+                            __y
+                        ),
                         self.save(unit(_y)),
-                        __save_state.ys,
+                        __save_state.saved,
                     )
                     return SaveState(
                         ts=_ts,
-                        ys=_ys,
+                        saved=_saved,
                         save_index=__save_state.save_index + 1,
                         jump_times=__save_state.jump_times,
                     )
@@ -194,7 +196,7 @@ class MCSolveDiffraxIntegrator(MCDiffraxIntegrator, MCSolveIntegrator, SolveSave
             jump_times = save_state.jump_times.at[_state.num_jumps].set(jump_time)
             save_state = SaveState(
                 ts=save_state.ts,
-                ys=save_state.ys,
+                saved=save_state.saved,
                 save_index=save_state.save_index,
                 jump_times=jump_times,
             )
