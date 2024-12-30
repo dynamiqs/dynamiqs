@@ -16,14 +16,14 @@ class OptionsInterface(eqx.Module):
     options: Options
 
 
-class TimeInterface(eqx.Module):
+class AbstractTimeInterface(eqx.Module):
     @property
     @abstractmethod
     def discontinuity_ts(self) -> Array | None:
         pass
 
 
-class SEInterface(TimeInterface):
+class SEInterface(AbstractTimeInterface):
     """Interface for the Schrödinger equation."""
 
     H: TimeQArray
@@ -33,7 +33,7 @@ class SEInterface(TimeInterface):
         return self.H.discontinuity_ts
 
 
-class MEInterface(TimeInterface):
+class MEInterface(AbstractTimeInterface):
     """Interface for the Lindblad master equation."""
 
     H: TimeQArray
@@ -46,3 +46,7 @@ class MEInterface(TimeInterface):
     def discontinuity_ts(self) -> Array | None:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return _concatenate_sort(*ts)
+
+
+class SolveInterface(eqx.Module):
+    Es: list[QArray]

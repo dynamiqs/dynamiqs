@@ -6,7 +6,6 @@ import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
-from ...qarrays.qarray import QArray
 from ...result import PropagatorSaved, Saved, SolveSaved
 from ...utils.general import expect
 from .interfaces import OptionsInterface
@@ -40,8 +39,6 @@ class PropagatorSaveMixin(AbstractSaveMixin):
 
 class SolveSaveMixin(AbstractSaveMixin):
     """Mixin to assist integrators computing time evolution with data saving."""
-
-    Es: list[QArray]
 
     def save(self, y: PyTree) -> Saved:
         saved = super().save(y)

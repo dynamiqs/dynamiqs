@@ -13,7 +13,7 @@ from ...gradient import Autograd, CheckpointAutograd
 from ...qarrays.utils import sum_qarrays
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
-from .interfaces import MEInterface, SEInterface
+from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
@@ -45,7 +45,7 @@ class AdaptiveStepInfos(eqx.Module):
         )
 
 
-class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin):
+class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     """Integrator using the Diffrax library."""
 
     diffrax_solver: dx.AbstractSolver
@@ -163,7 +163,7 @@ sepropagator_kvaerno5_integrator_constructor = partial(
 )
 
 
-class SESolveDiffraxIntegrator(SEDiffraxIntegrator, SolveSaveMixin):
+class SESolveDiffraxIntegrator(SEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
     """Integrator computing the time evolution of the Schrödinger equation using the
     Diffrax library.
     """
@@ -222,7 +222,7 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         return dx.ODETerm(vector_field)
 
 
-class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin):
+class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
     """Integrator computing the time evolution of the Lindblad master equation using the
     Diffrax library.
     """

@@ -16,11 +16,11 @@ from ...utils.general import expm
 from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 from .._utils import ispwc
 from ..core.abstract_integrator import BaseIntegrator
-from .interfaces import MEInterface, SEInterface
+from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin):
+class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
     exponentiating the propagator.
 
@@ -109,7 +109,7 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
         return -1j * self.H(t)  # (n, n)
 
 
-class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin):
+class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin, SolveInterface):
     """Integrator computing the time evolution of the Schrödinger equation by
     explicitly exponentiating the propagator.
     """
@@ -149,7 +149,7 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
         return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)
 
 
-class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin):
+class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
     """Integrator computing the time evolution of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
