@@ -17,8 +17,6 @@ class Options(eqx.Module):
     Args:
         save_states: If `True`, the state is saved at every time in `tsave`,
             otherwise only the final state is returned.
-        verbose: If `True`, print information about the integration, otherwise
-            nothing is printed.
         cartesian_batching: If `True`, batched arguments are treated as separated
             batch dimensions, otherwise the batching is performed over a single
             shared batched dimension.
@@ -37,7 +35,6 @@ class Options(eqx.Module):
     """
 
     save_states: bool = True
-    verbose: bool = True
     cartesian_batching: bool = True
     progress_meter: AbstractProgressMeter | None = TqdmProgressMeter()
     t0: ScalarLike | None = None
@@ -46,7 +43,6 @@ class Options(eqx.Module):
     def __init__(
         self,
         save_states: bool = True,
-        verbose: bool = True,
         cartesian_batching: bool = True,
         progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),  # noqa: B008
         t0: ScalarLike | None = None,
@@ -56,7 +52,6 @@ class Options(eqx.Module):
             progress_meter = NoProgressMeter()
 
         self.save_states = save_states
-        self.verbose = verbose
         self.cartesian_batching = cartesian_batching
         self.progress_meter = progress_meter
         self.t0 = t0
