@@ -9,13 +9,18 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...integrators.floquet.floquet_integrator import FloquetIntegrator
 from ...options import Options
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
-from ...solver import Solver, Tsit5
+from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_qarray import TimeQArray
-from .._utils import _astimeqarray, cartesian_vmap, catch_xla_runtime_error
+from .._utils import (
+    _astimeqarray,
+    assert_solver_supported,
+    cartesian_vmap,
+    catch_xla_runtime_error,
+)
+from ..core.floquet_integrator import floquet_integrator_constructor
 
 __all__ = ['floquet']
 
@@ -142,12 +147,24 @@ def _floquet(
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
+    # === select integrator constructor
+    supported_solvers = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
+    assert_solver_supported(solver, supported_solvers)
+    integrator_constructor = floquet_integrator_constructor
+
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === integrator class is always FloquetIntegrator
-    integrator = FloquetIntegrator(
-        ts=tsave, y0=None, H=H, solver=solver, gradient=gradient, options=options, T=T
+    # === init integrator
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=None,
+        H=H,
+        solver=solver,
+        gradient=gradient,
+        result_class=FloquetResult,
+        options=options,
+        T=T,
     )
 
     # === run integrator

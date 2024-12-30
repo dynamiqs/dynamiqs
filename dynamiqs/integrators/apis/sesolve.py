@@ -17,21 +17,20 @@ from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, T
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     multi_vmap,
 )
-from ..core.abstract_integrator import SESolveIntegrator
-from ..sesolve.diffrax_integrator import (
-    SESolveDopri5Integrator,
-    SESolveDopri8Integrator,
-    SESolveEulerIntegrator,
-    SESolveKvaerno3Integrator,
-    SESolveKvaerno5Integrator,
-    SESolveTsit5Integrator,
+from ..core.diffrax_integrator import (
+    sesolve_dopri5_integrator_constructor,
+    sesolve_dopri8_integrator_constructor,
+    sesolve_euler_integrator_constructor,
+    sesolve_kvaerno3_integrator_constructor,
+    sesolve_kvaerno5_integrator_constructor,
+    sesolve_tsit5_integrator_constructor,
 )
-from ..sesolve.expm_integrator import SESolveExpmIntegrator
+from ..core.expm_integrator import sesolve_expm_integrator_constructor
 
 
 def sesolve(
@@ -156,27 +155,29 @@ def _sesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> SESolveResult:
-    # === select integrator class
-    integrators = {
-        Euler: SESolveEulerIntegrator,
-        Dopri5: SESolveDopri5Integrator,
-        Dopri8: SESolveDopri8Integrator,
-        Tsit5: SESolveTsit5Integrator,
-        Kvaerno3: SESolveKvaerno3Integrator,
-        Kvaerno5: SESolveKvaerno5Integrator,
-        Expm: SESolveExpmIntegrator,
+    # === select integrator constructor
+    integrator_constructors = {
+        Euler: sesolve_euler_integrator_constructor,
+        Dopri5: sesolve_dopri5_integrator_constructor,
+        Dopri8: sesolve_dopri8_integrator_constructor,
+        Tsit5: sesolve_tsit5_integrator_constructor,
+        Kvaerno3: sesolve_kvaerno3_integrator_constructor,
+        Kvaerno5: sesolve_kvaerno5_integrator_constructor,
+        Expm: sesolve_expm_integrator_constructor,
     }
-    integrator_class: SESolveIntegrator = get_integrator_class(integrators, solver)
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(
+    integrator = integrator_constructor(
         ts=tsave,
         y0=psi0,
         solver=solver,
         gradient=gradient,
+        result_class=SESolveResult,
         options=options,
         H=H,
         Es=exp_ops,
