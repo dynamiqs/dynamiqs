@@ -49,4 +49,4 @@ class MEInterface(AbstractTimeInterface):
 
 
 class SolveInterface(eqx.Module):
-    Es: list[QArray]
+    Es: list[QArray] | None
