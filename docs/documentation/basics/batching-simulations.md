@@ -207,7 +207,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
 
 ## Why batching?
 
-When batching multiple simulations, the state is not a 2-D array that evolves in time but a N-D array which holds all independent simulations. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large array.
+When batching multiple simulations, the state is not a 2-D qarray that evolves in time but a N-D qarray which holds all independent simulations. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large qarray.
 
 Common use cases for batching include:
 
