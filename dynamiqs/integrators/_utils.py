@@ -27,8 +27,8 @@ def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
     else:
         try:
             # same as dq.constant() but not checking the shape
-            array = asqarray(x)
-            return ConstantTimeQArray(array)
+            qarray = asqarray(x)
+            return ConstantTimeQArray(qarray)
         except (TypeError, ValueError) as e:
             raise TypeError(
                 'Argument must be a qarray-like or a time-qarray, but has type'

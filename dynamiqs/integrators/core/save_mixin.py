@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import equinox as eqx
+import jax.numpy as jnp
 from jaxtyping import PyTree
 
 from ...qarrays.qarray import QArray
@@ -44,7 +45,10 @@ class SolveSaveMixin(AbstractSaveMixin):
 
     def save(self, y: PyTree) -> Saved:
         saved = super().save(y)
-        Esave = expect(self.Es, y) if self.Es is not None else None
+        if self.Es is not None:
+            Esave = jnp.stack([expect(E, y) for E in self.Es])
+        else:
+            Esave = None
         return SolveSaved(saved.ysave, saved.extra, Esave)
 
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:

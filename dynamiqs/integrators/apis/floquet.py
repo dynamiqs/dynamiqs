@@ -114,7 +114,7 @@ def floquet(
     H, T, tsave = _check_floquet_args(H, T, tsave)
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_floquet(H, T, tsave, solver, gradient, options)
 
 

@@ -267,8 +267,8 @@ class SparseDIAQArray(QArray):
             return self._replace(offsets=offsets, diags=diags)
         elif isqarraylike(y):
             warnings.warn(
-                'A sparse array has been converted to dense layout due to element-wise '
-                'addition with a dense array.',
+                'A sparse qarray has been converted to dense layout due to element-wise'
+                ' addition with a dense qarray.',
                 stacklevel=2,
             )
             return self.asdense() + y
@@ -320,7 +320,7 @@ class SparseDIAQArray(QArray):
 
     def addscalar(self, y: ArrayLike) -> QArray:
         warnings.warn(
-            'A sparse array has been converted to dense layout due to element-wise '
+            'A sparse qarray has been converted to dense layout due to element-wise '
             'addition with a scalar.',
             stacklevel=2,
         )
