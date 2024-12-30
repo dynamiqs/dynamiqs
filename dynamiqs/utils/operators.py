@@ -79,8 +79,8 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
          [  ⋅      ⋅      ⋅      ⋅      ⋅    1.+0.j]]
 
     See also:
-        - [`dq.eye_like()`][dynamiqs.eye_like]: returns the identity operator of the
-        input Hilbert space.
+        - [`dq.eye_like()`][dynamiqs.eye_like]: returns the identity operator in the
+        Hilbert space of the input.
     """
     layout = get_layout(layout)
     dim = prod(dims)
@@ -95,7 +95,7 @@ def eye(*dims: int, layout: Layout | None = None) -> QArray:
 def eye_like(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
-    r"""Returns the identity operator of the input Hilbert space.
+    r"""Returns the identity operator in the Hilbert space of the input.
 
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
@@ -175,8 +175,8 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
 
     See also:
-        - [`dq.zero_like()`][dynamiqs.zero_like]: returns the null operator of the
-        input Hilbert space.
+        - [`dq.zero_like()`][dynamiqs.zero_like]: returns the null operator in the
+        Hilbert space of the input.
     """
     layout = get_layout(layout)
     dim = prod(dims)
@@ -191,7 +191,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
 def zero_like(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
-    r"""Returns the null operator of the input Hilbert space.
+    r"""Returns the null operator in the Hilbert space of the input.
 
     Args:
         x _(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))_: Ket, bra
