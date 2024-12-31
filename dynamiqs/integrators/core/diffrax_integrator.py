@@ -10,7 +10,7 @@ import jax
 import jax.numpy as jnp
 from equinox.internal import while_loop
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
 from ...gradient import Autograd, CheckpointAutograd
 from ...qarrays.qarray import QArray
@@ -290,12 +290,12 @@ class State(eqx.Module):
     key: Array
 
 
-def _inner_buffers(save_state):
+def _inner_buffers(save_state: SaveState) -> tuple[Array, Saved, Array]:
     assert type(save_state) is SaveState
     return save_state.ts, save_state.saved, save_state.jump_times
 
 
-def _outer_buffers(state):
+def _outer_buffers(state: State) -> tuple[Array, Saved, Array]:
     assert type(state) is State
     save_state = state.save_state
     return save_state.ts, save_state.saved, save_state.jump_times
@@ -365,7 +365,7 @@ class MCSolveDiffraxIntegrator(
 
         return dx.ODETerm(vector_field)
 
-    def run(self):
+    def run(self) -> Result:
         # === run no jump, extract no-jump probability
         no_jump_solution = self._solve_until_jump(self.y0, self.t0, self.ts, 0.0)
         no_jump_saved = jax.vmap(self.save)(unit(no_jump_solution.ys[0]))
@@ -403,14 +403,14 @@ class MCSolveDiffraxIntegrator(
 
     def _solve_until_jump(
         self, y0: QArray, t0: Array, tsave: Array, rand: Array | float
-    ):
+    ) -> dx.Solution:
         # === prepare saveat
         subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
         saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
         # === prepare event
-        def cond_fn(t, y, *args, **kwargs):
+        def cond_fn(t: Scalar, y: QArray, *args, **kwargs) -> Array:
             return norm(y) ** 2 - rand
 
         event = dx.Event(cond_fn, self.root_finder)
@@ -430,27 +430,27 @@ class MCSolveDiffraxIntegrator(
         time_diffs = jnp.where(time_diffs < 0, jnp.inf, time_diffs)
         save_index = jnp.argmin(time_diffs)
         # allocate memory for the state that is updated during the loop
-        save_state = SaveState(
+        initial_save_state = SaveState(
             ts=first_result.ts[0],
             saved=jax.vmap(self.save)(unit(first_result.ys[0])),
             save_index=save_index,
             jump_times=jnp.full(self.options.max_jumps, jnp.nan),
         )
-        state = State(
-            save_state=save_state,
+        initial_state = State(
+            save_state=initial_save_state,
             final_state=first_result.ys[1][0, :, :],
             final_time=first_jump_time,
             num_jumps=0,
             key=sample_key,
         )
 
-        def _outer_cond_fun(_state):
-            return _state.final_time < self.t1
+        def _outer_cond_fun(state: State) -> bool:
+            return state.final_time < self.t1
 
-        def _outer_body_fun(_state):
-            jump_time = _state.final_time
-            psi = _state.final_state
-            _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
+        def _outer_body_fun(state: State) -> State:
+            jump_time = state.final_time
+            psi = state.final_state
+            _next_key, _rand_key, _sample_key = jax.random.split(state.key, num=3)
             jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
             psi_after_jump = unit(jump_op @ psi)
             # new_times needs to have a static size: fill it with times from self.ts
@@ -465,45 +465,45 @@ class MCSolveDiffraxIntegrator(
             )
             final_time = result_after_jump.ts[1][0]
 
-            def save_ts_and_states(_save_state: SaveState):
+            def save_ts_and_states(save_state: SaveState) -> SaveState:
                 # Save intermediate states and expectation values. Based on the code
-                # in diffrax/_integrate.py which can be found here https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458  # noqa E501
-                def _inner_cond_fun(__save_state):
-                    return (self.ts[__save_state.save_index] <= final_time) & (
-                        __save_state.save_index < len(self.ts)
+                # in diffrax/_integrate.py which can be found at:
+                # https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458  # noqa E501
+                def _inner_cond_fun(_save_state: SaveState) -> bool:
+                    return (self.ts[_save_state.save_index] <= final_time) & (
+                        _save_state.save_index < len(self.ts)
                     )
 
-                def _inner_body_fun(__save_state):
-                    _t = self.ts[__save_state.save_index]
+                def _inner_body_fun(_save_state: SaveState) -> SaveState:
+                    _t = self.ts[_save_state.save_index]
                     t_idx_in_new_times = jnp.nanargmin(jnp.abs(new_times - _t))
                     _y = result_after_jump.ys[0][t_idx_in_new_times]
-                    _ts = __save_state.ts.at[__save_state.save_index].set(_t)
+                    _ts = _save_state.ts.at[_save_state.save_index].set(_t)
                     _saved = jax.tree.map(
-                        lambda __y, __saved: __saved.at[__save_state.save_index].set(
+                        lambda __y, __saved: __saved.at[_save_state.save_index].set(
                             __y
                         ),
                         self.save(unit(_y)),
-                        __save_state.saved,
+                        _save_state.saved,
                     )
                     return SaveState(
                         ts=_ts,
                         saved=_saved,
-                        save_index=__save_state.save_index + 1,
-                        jump_times=__save_state.jump_times,
+                        save_index=_save_state.save_index + 1,
+                        jump_times=_save_state.jump_times,
                     )
 
-                save_state = while_loop(
+                return while_loop(
                     _inner_cond_fun,
                     _inner_body_fun,
-                    _save_state,
+                    save_state,
                     max_steps=len(self.ts),
                     buffers=_inner_buffers,
                     kind='checkpointed',
                 )
-                return save_state
 
-            save_state = save_ts_and_states(_state.save_state)
-            jump_times = save_state.jump_times.at[_state.num_jumps].set(jump_time)
+            save_state = save_ts_and_states(state.save_state)
+            jump_times = save_state.jump_times.at[state.num_jumps].set(jump_time)
             save_state = SaveState(
                 ts=save_state.ts,
                 saved=save_state.saved,
@@ -514,14 +514,14 @@ class MCSolveDiffraxIntegrator(
                 save_state=save_state,
                 final_state=result_after_jump.ys[1][0],
                 final_time=final_time,
-                num_jumps=_state.num_jumps + 1,
+                num_jumps=state.num_jumps + 1,
                 key=_next_key,
             )
 
         return while_loop(
             _outer_cond_fun,
             _outer_body_fun,
-            state,
+            initial_state,
             max_steps=self.options.max_jumps,
             buffers=_outer_buffers,
             kind='checkpointed',
@@ -546,7 +546,7 @@ class MCSolveDiffraxIntegrator(
 
     def _average_jump_and_no_jump(
         self, no_jump_state: QArray, jump_state: QArray, no_jump_prob: Array | float
-    ):
+    ) -> QArray:
         no_jump_rho = no_jump_state @ no_jump_state.dag()
         jump_rho = jax.tree.map(
             lambda y: jnp.average(y, axis=0), jump_state @ jump_state.dag()
