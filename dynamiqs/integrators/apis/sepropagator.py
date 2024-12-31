@@ -8,7 +8,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
@@ -103,6 +103,7 @@ def sepropagator(
     # === check arguments
     _check_sepropagator_args(H)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'sepropagator')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays

@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
@@ -112,6 +112,7 @@ def floquet(
     # === check arguments
     tsave = check_times(tsave, 'tsave')
     H, T, tsave = _check_floquet_args(H, T, tsave)
+    check_options(options, 'floquet')
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays

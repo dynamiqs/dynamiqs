@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
@@ -93,6 +93,7 @@ def mepropagator(
     # === check arguments
     _check_mepropagator_args(H, Ls)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'mepropagator')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays

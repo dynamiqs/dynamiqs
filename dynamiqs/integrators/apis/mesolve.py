@@ -10,7 +10,7 @@ from jaxtyping import ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MESolveResult
@@ -135,6 +135,7 @@ def mesolve(
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'mesolve')
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()

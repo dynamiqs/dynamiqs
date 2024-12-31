@@ -66,3 +66,36 @@ class Options(eqx.Module):
 
     def __str__(self) -> str:
         return tree_str_inline(self)
+
+
+def check_options(options: Options, solver_name: str):
+    if solver_name in ('sesolve', 'mesolve'):
+        valid_options = (
+            'save_states',
+            'cartesian_batching',
+            'progress_meter',
+            't0',
+            'save_extra',
+        )
+    elif solver_name in ('sepropagator', 'mepropagator'):
+        valid_options = (
+            'save_propagators',
+            'cartesian_batching',
+            'progress_meter',
+            't0',
+            'save_extra',
+        )
+    elif solver_name == 'floquet':
+        valid_options = ('progress_meter', 't0')
+    else:
+        raise ValueError(f'Unknown solver name: {solver_name}')
+
+    # check that all attributes are set to their default values except for the ones
+    # specified in `valid_options`
+    for key, value in options.__dict__.items():
+        if key not in valid_options and value != getattr(Options(), key):
+            raise ValueError(
+                f'Option {key} was set to {value} but is not used by '
+                f'the quantum solver. Valid options for {solver_name} are: '
+                f'{", ".join(valid_options)}'
+            )
