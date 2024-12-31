@@ -300,7 +300,8 @@ class SEPropagatorResult(PropagatorResult):
 
     Attributes:
         propagators _(qarray of shape (..., nsave, n, n))_: Saved propagators with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+            `nsave = ntsave`, or `nsave = 1` if `options.save_propagators` is set to
+            `False`.
         final_propagator _(qarray of shape (..., n, n))_: Saved final propagator.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
@@ -326,7 +327,8 @@ class MEPropagatorResult(PropagatorResult):
 
     Attributes:
         propagators _(qarray of shape (..., nsave, n^2, n^2))_: Saved propagators with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
+            `nsave = ntsave`, or `nsave = 1` if `options.save_propagators` is set to
+            `False`.
         final_propagator _(qarray of shape (..., n^2, n^2))_: Saved final propagator.
         extra _(PyTree or None)_: Extra data saved with `save_extra()` if
             specified in `options` (see [`dq.Options`][dynamiqs.Options]).
