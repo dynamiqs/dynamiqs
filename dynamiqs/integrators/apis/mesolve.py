@@ -116,7 +116,9 @@ def mesolve(
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options, see [`dq.Options`][dynamiqs.Options] (supported:
+            `save_states`, `cartesian_batching`, `progress_meter`, `t0`,
+            `save_extra`).
 
     Returns:
         [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the

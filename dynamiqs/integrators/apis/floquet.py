@@ -97,7 +97,8 @@ def floquet(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler]).
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options, see [`dq.Options`][dynamiqs.Options] (supported:
+            `progress_meter`, `t0`).
 
     Returns:
         [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
