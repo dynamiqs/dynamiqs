@@ -30,8 +30,8 @@ def isqarraylike(x: Any) -> bool:
         x: Any object.
 
     Returns:
-        True if `x` is a numeric types (`bool`, `int`, `float`, `complex`), a JAX or
-            NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested sequence of these
+        True if `x` is a numeric types (`bool`, `int`, `float`, `complex`), a NumPy or
+            JAX array, a Dynamiqs qarray, a QuTiP qobj, or any nested sequence of these
             types.
 
     See also:
@@ -104,7 +104,7 @@ class QArray(eqx.Module):
         Use the function [`dq.asqarray()`][dynamiqs.asqarray] to create a qarray from a
         qarray-like. Objects that can be converted to a `QArray` are of type
         `dq.QArrayLike`. This includes all numeric types (`bool`, `int`, `float`,
-        `complex`), a JAX or NumPy array, a QuTiP Qobj, a dynamiqs qarray or any nested
+        `complex`), a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any nested
         sequence of these types. See also [`dq.isqarraylike()`][dynamiqs.isqarraylike].
 
     Attributes:
@@ -529,15 +529,17 @@ class QArray(eqx.Module):
         """
 
     @abstractmethod
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         """Computes the element-wise multiplication.
 
         Args:
-            y: Array-like to multiply with element-wise.
+            y: Qarray-like to multiply with element-wise.
 
         Returns:
             New qarray resulting from the element-wise multiplication.
         """
+        if isinstance(y, QArray):
+            _check_compatible_dims(self.dims, y.dims)
 
     @abstractmethod
     def elpow(self, power: int) -> QArray:
@@ -579,10 +581,10 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
 # `QArrayLike` can be:
 # - any numeric type (bool, int, float, complex),
-# - a JAX array,
 # - a NumPy array,
-# - a QuTiP Qobj,
+# - a JAX array,
 # - a dynamiqs `QArray`,
+# - a QuTiP Qobj,
 # - a nested sequence of these types.
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 

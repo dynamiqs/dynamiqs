@@ -28,6 +28,7 @@ from .sparsedia_primitives import (
     matmul_sparsedia_array,
     matmul_sparsedia_sparsedia,
     mul_sparsedia_array,
+    mul_sparsedia_sparsedia,
     powm_sparsedia,
     reshape_sparsedia,
     shape_sparsedia,
@@ -266,8 +267,8 @@ class SparseDIAQArray(QArray):
             return self._replace(offsets=offsets, diags=diags)
         elif isqarraylike(y):
             warnings.warn(
-                'A sparse array has been converted to dense layout due to element-wise '
-                'addition with a dense array.',
+                'A sparse qarray has been converted to dense layout due to element-wise'
+                ' addition with a dense qarray.',
                 stacklevel=2,
             )
             return self.asdense() + y
@@ -319,17 +320,22 @@ class SparseDIAQArray(QArray):
 
     def addscalar(self, y: ArrayLike) -> QArray:
         warnings.warn(
-            'A sparse array has been converted to dense layout due to element-wise '
+            'A sparse qarray has been converted to dense layout due to element-wise '
             'addition with a scalar.',
             stacklevel=2,
         )
         return self.asdense().addscalar(y)
 
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
 
-        y = _to_jax(y)
-        offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
+        if isinstance(y, SparseDIAQArray):
+            offsets, diags = mul_sparsedia_sparsedia(
+                self.offsets, self.diags, y.offsets, y.diags
+            )
+        else:
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, _to_jax(y))
+
         return self._replace(offsets=offsets, diags=diags)
 
     def elpow(self, power: int) -> QArray:

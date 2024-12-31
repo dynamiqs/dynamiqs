@@ -3,25 +3,25 @@ from __future__ import annotations
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
-from dynamiqs.result import FloquetResult, FloquetSaved, Result, Saved
+from dynamiqs.result import FloquetSaved
 
+from ...result import Result, Saved
 from ..apis.sepropagator import _sepropagator
-from ..core.abstract_integrator import SEIntegrator
+from .abstract_integrator import BaseIntegrator
+from .interfaces import SEInterface
 
-__all__ = ['FloquetIntegrator']
 
-
-class FloquetIntegrator(SEIntegrator):
+class FloquetIntegrator(BaseIntegrator):
     T: float
 
-    RESULT_CLASS = FloquetResult
-
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        return self.RESULT_CLASS(
+        return self.result_class(
             self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
         )
 
-    def run(self) -> FloquetResult:
+
+class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
+    def run(self) -> PyTree:
         # compute propagators for all times at once, with the last being one period
         ts = jnp.append(self.ts, self.t0 + self.T)
         seprop_result = _sepropagator(
@@ -50,3 +50,6 @@ class FloquetIntegrator(SEIntegrator):
         # save the Floquet modes and quasienergies
         saved = FloquetSaved(ysave=modes, extra=None, quasienergies=quasienergies)
         return self.result(saved, infos=seprop_result.infos)
+
+
+floquet_integrator_constructor = SEFloquetIntegrator

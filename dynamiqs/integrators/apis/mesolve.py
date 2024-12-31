@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from functools import partial
 
 import jax
@@ -28,22 +28,21 @@ from ...solver import (
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     multi_vmap,
 )
-from ..core.abstract_integrator import MESolveIntegrator
-from ..mesolve.diffrax_integrator import (
-    MESolveDopri5Integrator,
-    MESolveDopri8Integrator,
-    MESolveEulerIntegrator,
-    MESolveKvaerno3Integrator,
-    MESolveKvaerno5Integrator,
-    MESolveTsit5Integrator,
+from ..core.diffrax_integrator import (
+    mesolve_dopri5_integrator_constructor,
+    mesolve_dopri8_integrator_constructor,
+    mesolve_euler_integrator_constructor,
+    mesolve_kvaerno3_integrator_constructor,
+    mesolve_kvaerno5_integrator_constructor,
+    mesolve_tsit5_integrator_constructor,
 )
-from ..mesolve.expm_integrator import MESolveExpmIntegrator
-from ..mesolve.rouchon_integrator import MESolveRouchon1Integrator
+from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.rouchon_integrator import mesolve_rouchon1_integrator_constructor
 
 
 def mesolve(
@@ -141,7 +140,7 @@ def mesolve(
     rho0 = rho0.todm()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, solver, gradient, options)
 
 
@@ -188,28 +187,30 @@ def _mesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
-    # === select integrator class
-    integrators = {
-        Euler: MESolveEulerIntegrator,
-        Rouchon1: MESolveRouchon1Integrator,
-        Dopri5: MESolveDopri5Integrator,
-        Dopri8: MESolveDopri8Integrator,
-        Tsit5: MESolveTsit5Integrator,
-        Kvaerno3: MESolveKvaerno3Integrator,
-        Kvaerno5: MESolveKvaerno5Integrator,
-        Expm: MESolveExpmIntegrator,
+    # === select integrator constructor
+    integrator_constructors = {
+        Euler: mesolve_euler_integrator_constructor,
+        Rouchon1: mesolve_rouchon1_integrator_constructor,
+        Dopri5: mesolve_dopri5_integrator_constructor,
+        Dopri8: mesolve_dopri8_integrator_constructor,
+        Tsit5: mesolve_tsit5_integrator_constructor,
+        Kvaerno3: mesolve_kvaerno3_integrator_constructor,
+        Kvaerno5: mesolve_kvaerno5_integrator_constructor,
+        Expm: mesolve_expm_integrator_constructor,
     }
-    integrator_class: MESolveIntegrator = get_integrator_class(integrators, solver)
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(
+    integrator = integrator_constructor(
         ts=tsave,
         y0=rho0,
         solver=solver,
         gradient=gradient,
+        result_class=MESolveResult,
         options=options,
         H=H,
         Ls=Ls,
@@ -234,9 +235,10 @@ def _check_mesolve_args(
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0 and rho0.isket():
-        logging.warning(
+        warnings.warn(
             'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
-            ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.',
+            stacklevel=2,
         )
 
     # === check rho0 shape

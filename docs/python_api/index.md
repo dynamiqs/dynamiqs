@@ -91,7 +91,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - eye
+        - eye_like
         - zero
+        - zero_like
         - destroy
         - create
         - number
