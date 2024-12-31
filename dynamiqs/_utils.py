@@ -19,11 +19,6 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def on_cpu(x: Array) -> bool:
-    # TODO: this is a temporary solution, it won't work when we have multiple devices
-    return x.devices().pop().device_kind == 'cpu'
-
-
 def _get_default_dtype() -> jnp.float32 | jnp.float64:
     default_dtype = jnp.array(0.0).dtype
     return jnp.float64 if default_dtype == jnp.float64 else jnp.float32
