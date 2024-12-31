@@ -2,47 +2,88 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
+from functools import partial
 
 import diffrax as dx
 import equinox as eqx
+import jax
 import jax.numpy as jnp
+from equinox.internal import while_loop
 from jax import Array
 from jaxtyping import PyTree
+
 from ...gradient import Autograd, CheckpointAutograd
-from ...qarrays.utils import sum_qarrays
+from ...qarrays.qarray import QArray
+from ...qarrays.utils import stack, sum_qarrays
+from ...result import MCJumpResult, MCNoJumpResult, Result, Saved
+from ...utils.general import dag, expect, norm, unit
 from .abstract_integrator import BaseIntegrator
-from ...result import Result
-from ...utils.general import dag
-from .abstract_integrator import BaseIntegrator
-from .save_mixin import SaveMixin
-from .interfaces import SEInterface, MEInterface, MCInterface
+from .interfaces import (
+    AbstractTimeInterface,
+    MCInterface,
+    MEInterface,
+    SEInterface,
+    SolveInterface,
+)
+from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class DiffraxIntegrator(BaseIntegrator, SaveMixin):
+class FixedStepInfos(eqx.Module):
+    nsteps: Array
+
+    def __str__(self) -> str:
+        if self.nsteps.ndim >= 1:
+            # note: fixed step solvers always make the same number of steps
+            return f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
+        return f'{self.nsteps} steps'
+
+
+class AdaptiveStepInfos(eqx.Module):
+    nsteps: Array
+    naccepted: Array
+    nrejected: Array
+
+    def __str__(self) -> str:
+        if self.nsteps.ndim >= 1:
+            return (
+                f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
+                f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
+                f' {self.nsteps.shape}'
+            )
+        return (
+            f'{self.nsteps} steps ({self.naccepted} accepted,'
+            f' {self.nrejected} rejected)'
+        )
+
+
+class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
     """Integrator using the Diffrax library."""
 
-    # subclasses should implement: stepsize_controller, dt0, max_steps, diffrax_solver,
-    # terms, discontinuity_ts, infos()
+    diffrax_solver: dx.AbstractSolver
+    fixed_step: bool
 
     @property
-    @abstractmethod
     def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        pass
+        if self.fixed_step:
+            return dx.ConstantStepSize()
+        else:
+            return dx.PIDController(
+                rtol=self.solver.rtol,
+                atol=self.solver.atol,
+                safety=self.solver.safety_factor,
+                factormin=self.solver.min_factor,
+                factormax=self.solver.max_factor,
+                jump_ts=self.discontinuity_ts,
+            )
 
     @property
-    @abstractmethod
     def dt0(self) -> float | None:
-        pass
+        return self.solver.dt if self.fixed_step else None
 
     @property
-    @abstractmethod
     def max_steps(self) -> int:
-        pass
-
-    @property
-    @abstractmethod
-    def diffrax_solver(self) -> dx.AbstractSolver:
-        pass
+        # TODO: fix hard-coded max_steps for fixed solvers
+        return 100_000 if self.fixed_step else self.solver.max_steps
 
     @property
     @abstractmethod
@@ -102,105 +143,19 @@ class DiffraxIntegrator(BaseIntegrator, SaveMixin):
         saved = self.postprocess_saved(*solution.ys)
         return self.result(saved, infos=self.infos(solution.stats))
 
-    @abstractmethod
     def infos(self, stats: dict[str, Array]) -> PyTree:
-        pass
-
-
-class FixedStepDiffraxIntegrator(DiffraxIntegrator):
-    """Integrator using a fixed step Diffrax solver."""
-
-    # subclasses should implement: diffrax_solver, terms, discontinuity_ts
-
-    class Infos(eqx.Module):
-        nsteps: Array
-
-        def __str__(self) -> str:
-            if self.nsteps.ndim >= 1:
-                # note: fixed step solvers always make the same number of steps
-                return (
-                    f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
-                )
-            return f'{self.nsteps} steps'
-
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        return self.Infos(stats['num_steps'])
-
-    @property
-    def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        return dx.ConstantStepSize()
-
-    @property
-    def dt0(self) -> float | None:
-        return self.solver.dt
-
-    @property
-    def max_steps(self) -> int:
-        return 100_000  # TODO: fix hard-coded max_steps
-
-
-class AdaptiveStepDiffraxIntegrator(DiffraxIntegrator):
-    """Integrator using an adaptive step Diffrax solver."""
-
-    # subclasses should implement: diffrax_solver, terms, discontinuity_ts
-
-    class Infos(eqx.Module):
-        nsteps: Array
-        naccepted: Array
-        nrejected: Array
-
-        def __str__(self) -> str:
-            if self.nsteps.ndim >= 1:
-                return (
-                    f'avg. {self.nsteps.mean():.1f} steps ({self.naccepted.mean():.1f}'
-                    f' accepted, {self.nrejected.mean():.1f} rejected) | infos shape'
-                    f' {self.nsteps.shape}'
-                )
-            return (
-                f'{self.nsteps} steps ({self.naccepted} accepted,'
-                f' {self.nrejected} rejected)'
+        if self.fixed_step:
+            return FixedStepInfos(stats['num_steps'])
+        else:
+            return AdaptiveStepInfos(
+                stats['num_steps'],
+                stats['num_accepted_steps'],
+                stats['num_rejected_steps'],
             )
-
-    def infos(self, stats: dict[str, Array]) -> PyTree:
-        return self.Infos(
-            stats['num_steps'], stats['num_accepted_steps'], stats['num_rejected_steps']
-        )
-
-    @property
-    def stepsize_controller(self) -> dx.AbstractStepSizeController:
-        return dx.PIDController(
-            rtol=self.solver.rtol,
-            atol=self.solver.atol,
-            safety=self.solver.safety_factor,
-            factormin=self.solver.min_factor,
-            factormax=self.solver.max_factor,
-            jump_ts=self.discontinuity_ts,
-        )
-
-    @property
-    def dt0(self) -> float | None:
-        return None
-
-    @property
-    def max_steps(self) -> int:
-        return self.solver.max_steps
-
-
-# fmt: off
-# ruff: noqa
-class EulerIntegrator(FixedStepDiffraxIntegrator): diffrax_solver = dx.Euler()
-class Dopri5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri5()
-class Dopri8Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Dopri8()
-class Tsit5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Tsit5()
-class Kvaerno3Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno3()
-class Kvaerno5Integrator(AdaptiveStepDiffraxIntegrator): diffrax_solver = dx.Kvaerno5()
-# fmt: on
 
 
 class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
     """Integrator solving the Schrödinger equation with Diffrax."""
-
-    # subclasses should implement: diffrax_solver, discontinuity_ts
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -209,10 +164,60 @@ class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
         return dx.ODETerm(vector_field)
 
 
+class SEPropagatorDiffraxIntegrator(SEDiffraxIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Schrödinger equation using the Diffrax
+    library.
+    """
+
+
+sepropagator_euler_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+sepropagator_dopri5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+sepropagator_dopri8_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+sepropagator_tsit5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+sepropagator_kvaerno3_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+sepropagator_kvaerno5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class SESolveDiffraxIntegrator(SEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Schrödinger equation using the
+    Diffrax library.
+    """
+
+
+sesolve_euler_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+sesolve_dopri5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+sesolve_dopri8_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+sesolve_tsit5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+sesolve_kvaerno3_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+sesolve_kvaerno5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
 class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
     """Integrator solving the Lindblad master equation with Diffrax."""
-
-    # subclasses should implement: diffrax_solver, discontinuity_ts
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -244,10 +249,113 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
         return dx.ODETerm(vector_field)
 
 
-class MCDiffraxIntegrator(DiffraxIntegrator, MCInterface):
-    """Integrator solving the Schrödinger equation with Diffrax."""
+class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Lindblad master equation using the
+    Diffrax library.
+    """
 
-    # subclasses should implement: diffrax_solver, discontinuity_ts
+
+mesolve_euler_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+mesolve_dopri5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+mesolve_dopri8_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+mesolve_tsit5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+mesolve_kvaerno3_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+mesolve_kvaerno5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class SaveState(eqx.Module):
+    ts: Array
+    saved: PyTree
+    save_index: int
+    jump_times: Array
+
+
+class State(eqx.Module):
+    save_state: PyTree[SaveState]
+    final_state: Array
+    final_time: float
+    num_jumps: int
+    key: Array
+
+
+def _inner_buffers(save_state):
+    assert type(save_state) is SaveState
+    return save_state.ts, save_state.saved, save_state.jump_times
+
+
+def _outer_buffers(state):
+    assert type(state) is State
+    save_state = state.save_state
+    return save_state.ts, save_state.saved, save_state.jump_times
+
+
+class MCSolveDiffraxIntegrator(
+    DiffraxIntegrator, MCInterface, SolveSaveMixin, SolveInterface
+):
+    """Integrator computing the time evolution of the Monte-Carlo unraveling of the
+    Lindblad master equation using the Diffrax library.
+    """
+
+    def jump_result(
+        self,
+        saved: Saved,
+        jump_times: Array,
+        num_jumps: Array,
+        infos: PyTree | None = None,
+    ) -> Result:
+        return MCJumpResult(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            jump_times,
+            num_jumps,
+        )
+
+    def no_jump_result(
+        self, saved: Saved, no_jump_prob: Array, infos: PyTree | None = None
+    ) -> Result:
+        return MCNoJumpResult(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            no_jump_prob,
+        )
+
+    def result(
+        self,
+        saved: Saved,
+        no_jump_result: Result,
+        jump_result: Result,
+        infos: PyTree | None = None,
+    ) -> Result:
+        return self.result_class(
+            self.ts,
+            self.solver,
+            self.gradient,
+            self.options,
+            saved,
+            infos,
+            no_jump_result,
+            jump_result,
+        )
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -256,3 +364,211 @@ class MCDiffraxIntegrator(DiffraxIntegrator, MCInterface):
             return sum_qarrays(-1j * H @ y, *[-0.5 * _L.dag() @ (_L @ y) for _L in L])
 
         return dx.ODETerm(vector_field)
+
+    def run(self):
+        # === run no jump, extract no-jump probability
+        no_jump_solution = self._solve_until_jump(self.y0, self.t0, self.ts, 0.0)
+        no_jump_saved = jax.vmap(self.save)(unit(no_jump_solution.ys[0]))
+        no_jump_prob = norm(no_jump_solution.ys[1][0]) ** 2
+
+        # === run jump trajectories
+        jump_state_fun = jax.vmap(self._loop_over_jumps, in_axes=(0, None))
+        jump_state = jump_state_fun(self.keys, no_jump_prob)
+        jump_times = jump_state.save_state.jump_times
+        num_jumps = jump_state.num_jumps
+
+        # === save and postprocess jump and no-jump results
+        no_jump_saved = self.postprocess_saved(
+            no_jump_saved, unit(no_jump_solution.ys[1])
+        )
+        no_jump_result = self.no_jump_result(
+            no_jump_saved, no_jump_prob, infos=self.infos(no_jump_solution.stats)
+        )
+        jump_saved = self.postprocess_saved(
+            jump_state.save_state.saved, jump_state.final_state[None]
+        )
+        # TODO save stats for jumps?
+        jump_result = self.jump_result(jump_saved, jump_times, num_jumps)
+
+        rho = self._average_jump_and_no_jump(
+            no_jump_result.states, jump_result.states, no_jump_prob
+        )
+        final_rho = self._average_jump_and_no_jump(
+            no_jump_result.final_state, jump_result.final_state, no_jump_prob
+        )
+        saved = jax.vmap(self.save)(rho)
+        saved = self.postprocess_saved(saved, final_rho)
+
+        return self.result(saved, no_jump_result, jump_result)
+
+    def _solve_until_jump(
+        self, y0: QArray, t0: Array, tsave: Array, rand: Array | float
+    ):
+        # === prepare saveat
+        subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+        # === prepare event
+        def cond_fn(t, y, *args, **kwargs):
+            return norm(y) ** 2 - rand
+
+        event = dx.Event(cond_fn, self.root_finder)
+
+        # === solve differential equation with diffrax
+        return self.diffeqsolve(t0=t0, t1=self.t1, y0=y0, saveat=saveat, event=event)
+
+    def _loop_over_jumps(self, key: Array, no_jump_prob: Array) -> State:
+        # loop over jumps until the simulation reaches the final time
+
+        rand_key, sample_key = jax.random.split(key)
+        rand = jax.random.uniform(rand_key, minval=no_jump_prob)
+        first_result = self._solve_until_jump(self.y0, self.t0, self.ts, rand)
+        first_jump_time = first_result.ts[1][0]
+        time_diffs = self.ts - first_jump_time
+        # want to start with a time after the jump
+        time_diffs = jnp.where(time_diffs < 0, jnp.inf, time_diffs)
+        save_index = jnp.argmin(time_diffs)
+        # allocate memory for the state that is updated during the loop
+        save_state = SaveState(
+            ts=first_result.ts[0],
+            saved=jax.vmap(self.save)(unit(first_result.ys[0])),
+            save_index=save_index,
+            jump_times=jnp.full(self.options.max_jumps, jnp.nan),
+        )
+        state = State(
+            save_state=save_state,
+            final_state=first_result.ys[1][0, :, :],
+            final_time=first_jump_time,
+            num_jumps=0,
+            key=sample_key,
+        )
+
+        def _outer_cond_fun(_state):
+            return _state.final_time < self.t1
+
+        def _outer_body_fun(_state):
+            jump_time = _state.final_time
+            psi = _state.final_state
+            _next_key, _rand_key, _sample_key = jax.random.split(_state.key, num=3)
+            jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
+            psi_after_jump = unit(jump_op @ psi)
+            # new_times needs to have a static size: fill it with times from self.ts
+            # and nans. The saved states at times from the original self.ts are saved
+            # below, while the states at the nan times are ignored.
+            new_times = jnp.sort(jnp.where(self.ts > jump_time, self.ts, jnp.nan))
+            # This new random value should be uniform over [0, 1), not restricted to
+            # [no_jump_prob, 1) like in the first case.
+            _rand = jax.random.uniform(_rand_key)
+            result_after_jump = self._solve_until_jump(
+                psi_after_jump, jump_time, new_times, _rand
+            )
+            final_time = result_after_jump.ts[1][0]
+
+            def save_ts_and_states(_save_state: SaveState):
+                # Save intermediate states and expectation values. Based on the code
+                # in diffrax/_integrate.py which can be found here https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458  # noqa E501
+                def _inner_cond_fun(__save_state):
+                    return (self.ts[__save_state.save_index] <= final_time) & (
+                        __save_state.save_index < len(self.ts)
+                    )
+
+                def _inner_body_fun(__save_state):
+                    _t = self.ts[__save_state.save_index]
+                    t_idx_in_new_times = jnp.nanargmin(jnp.abs(new_times - _t))
+                    _y = result_after_jump.ys[0][t_idx_in_new_times]
+                    _ts = __save_state.ts.at[__save_state.save_index].set(_t)
+                    _saved = jax.tree.map(
+                        lambda __y, __saved: __saved.at[__save_state.save_index].set(
+                            __y
+                        ),
+                        self.save(unit(_y)),
+                        __save_state.saved,
+                    )
+                    return SaveState(
+                        ts=_ts,
+                        saved=_saved,
+                        save_index=__save_state.save_index + 1,
+                        jump_times=__save_state.jump_times,
+                    )
+
+                save_state = while_loop(
+                    _inner_cond_fun,
+                    _inner_body_fun,
+                    _save_state,
+                    max_steps=len(self.ts),
+                    buffers=_inner_buffers,
+                    kind='checkpointed',
+                )
+                return save_state
+
+            save_state = save_ts_and_states(_state.save_state)
+            jump_times = save_state.jump_times.at[_state.num_jumps].set(jump_time)
+            save_state = SaveState(
+                ts=save_state.ts,
+                saved=save_state.saved,
+                save_index=save_state.save_index,
+                jump_times=jump_times,
+            )
+            return State(
+                save_state=save_state,
+                final_state=result_after_jump.ys[1][0],
+                final_time=final_time,
+                num_jumps=_state.num_jumps + 1,
+                key=_next_key,
+            )
+
+        return while_loop(
+            _outer_cond_fun,
+            _outer_body_fun,
+            state,
+            max_steps=self.options.max_jumps,
+            buffers=_outer_buffers,
+            kind='checkpointed',
+        )
+
+    def _sample_jump_ops(self, t: Array, psi: Array, key: Array) -> Array:
+        # given a state psi at time t that should experience a jump,
+        # randomly sample one jump operator from among the provided jump_ops.
+        # The probability that a certain jump operator is selected is weighted
+        # by the probability that such a jump can occur. For instance for a qubit
+        # experiencing amplitude damping, if it is in the ground state then
+        # there is probability zero of experiencing an amplitude damping event.
+
+        Ls = stack([L(t) for L in self.Ls])
+        Lsd = dag(Ls)
+        probs = expect(Lsd @ Ls, psi)
+        # for categorical we pass in the log of the probabilities
+        logits = jnp.log(jnp.real(probs / (jnp.sum(probs))))
+        # randomly sample the index of a single jump operator
+        sample_idx = jax.random.categorical(key, logits, shape=(1,))[0]
+        return Ls[sample_idx]
+
+    def _average_jump_and_no_jump(
+        self, no_jump_state: QArray, jump_state: QArray, no_jump_prob: Array | float
+    ):
+        no_jump_rho = no_jump_state @ no_jump_state.dag()
+        jump_rho = jax.tree.map(
+            lambda y: jnp.average(y, axis=0), jump_state @ jump_state.dag()
+        )
+        return unit(no_jump_prob * no_jump_rho + (1 - no_jump_prob) * jump_rho)
+
+
+mcsolve_euler_integrator_constructor = partial(
+    MCSolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+mcsolve_dopri5_integrator_constructor = partial(
+    MCSolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+mcsolve_dopri8_integrator_constructor = partial(
+    MCSolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+mcsolve_tsit5_integrator_constructor = partial(
+    MCSolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+mcsolve_kvaerno3_integrator_constructor = partial(
+    MCSolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+mcsolve_kvaerno5_integrator_constructor = partial(
+    MCSolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)

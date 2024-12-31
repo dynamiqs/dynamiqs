@@ -19,19 +19,18 @@ from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     multi_vmap,
 )
-from ..mcsolve.diffrax_integrator import (
-    MCSolveDopri5Integrator,
-    MCSolveDopri8Integrator,
-    MCSolveEulerIntegrator,
-    MCSolveIntegrator,
-    MCSolveKvaerno3Integrator,
-    MCSolveKvaerno5Integrator,
-    MCSolveTsit5Integrator,
+from ..core.diffrax_integrator import (
+    mcsolve_dopri5_integrator_constructor,
+    mcsolve_dopri8_integrator_constructor,
+    mcsolve_euler_integrator_constructor,
+    mcsolve_kvaerno3_integrator_constructor,
+    mcsolve_kvaerno5_integrator_constructor,
+    mcsolve_tsit5_integrator_constructor,
 )
 
 
@@ -125,7 +124,7 @@ def mcsolve(
 
     # === check arguments
     _check_mcsolve_args(H, Ls, psi0, exp_ops)
-    check_times(tsave, 'tsave')
+    tsave = check_times(tsave, 'tsave')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
@@ -150,7 +149,7 @@ def _vectorized_mcsolve(
 ) -> MCSolveResult:
     # vectorize output over `_no_jump_res`, `_jump_res`, `no_jump_prob`, `jump_times`,
     # `num_jumps`
-    out_axes = MCSolveResult(None, None, None, None, 0, 0, 0, 0)
+    out_axes = MCSolveResult.out_axes()
 
     if options.cartesian_batching:
         # vectorize input over H, Ls, psi0.
@@ -220,25 +219,27 @@ def _mcsolve(
     gradient: Gradient | None,
     options: Options,
 ) -> MCSolveResult:
-    integrators = {
-        Euler: MCSolveEulerIntegrator,
-        Dopri5: MCSolveDopri5Integrator,
-        Dopri8: MCSolveDopri8Integrator,
-        Tsit5: MCSolveTsit5Integrator,
-        Kvaerno3: MCSolveKvaerno3Integrator,
-        Kvaerno5: MCSolveKvaerno5Integrator,
+    integrator_constructors = {
+        Euler: mcsolve_euler_integrator_constructor,
+        Dopri5: mcsolve_dopri5_integrator_constructor,
+        Dopri8: mcsolve_dopri8_integrator_constructor,
+        Tsit5: mcsolve_tsit5_integrator_constructor,
+        Kvaerno3: mcsolve_kvaerno3_integrator_constructor,
+        Kvaerno5: mcsolve_kvaerno5_integrator_constructor,
     }
-    integrator_class: MCSolveIntegrator = get_integrator_class(integrators, solver)
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    integrator = integrator_class(
+    integrator = integrator_constructor(
         ts=tsave,
         y0=psi0,
         solver=solver,
         gradient=gradient,
+        result_class=MCSolveResult,
         options=options,
         H=H,
         Ls=Ls,

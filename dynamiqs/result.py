@@ -467,6 +467,10 @@ class MCSolveResult(SolveResult):
         parts_str = '\n'.join(f'{k}: {v}' for k, v in parts.items())
         return '==== MCResult ====\n' + parts_str
 
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, 0, 0)
+
 
 class SEPropagatorResult(PropagatorResult):
     r"""Result of the Schrödinger equation integration to obtain the propagator.

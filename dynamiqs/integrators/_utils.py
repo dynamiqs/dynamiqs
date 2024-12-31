@@ -19,7 +19,6 @@ from ..time_qarray import (
     SummedTimeQArray,
     TimeQArray,
 )
-from .core.abstract_integrator import AbstractIntegrator
 
 
 def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
@@ -28,8 +27,8 @@ def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
     else:
         try:
             # same as dq.constant() but not checking the shape
-            array = asqarray(x)
-            return ConstantTimeQArray(array)
+            qarray = asqarray(x)
+            return ConstantTimeQArray(qarray)
         except (TypeError, ValueError) as e:
             raise TypeError(
                 'Argument must be a qarray-like or a time-qarray, but has type'
@@ -80,16 +79,13 @@ def catch_xla_runtime_error(func: callable) -> callable:
     return wrapper
 
 
-def get_integrator_class(
-    integrators: dict[Solver, AbstractIntegrator], solver: Solver
-) -> AbstractIntegrator:
-    if not isinstance(solver, tuple(integrators.keys())):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in integrators)
+def assert_solver_supported(solver: Solver, supported_solvers: Sequence[Solver]):
+    if not isinstance(solver, tuple(supported_solvers)):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in supported_solvers)
         raise TypeError(
             f'Solver of type `{type(solver).__name__}` is not supported (supported'
             f' solver types: {supported_str}).'
         )
-    return integrators[type(solver)]
 
 
 def is_shape(x: object) -> bool:
