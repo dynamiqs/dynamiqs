@@ -254,7 +254,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Magic
 
-::: dynamiqs
+::: dynamiqs.hermitian_conjugate
     options:
         table: true
         members:
