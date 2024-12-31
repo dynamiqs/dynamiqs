@@ -62,9 +62,7 @@ class Options(eqx.Module):
         self.t0 = t0
 
         # make `save_extra` a valid Pytree with `Partial`
-        if save_extra is not None:
-            save_extra = jtu.Partial(save_extra)
-        self.save_extra = save_extra
+        self.save_extra = jtu.Partial(save_extra) if save_extra is not None else None
 
     def __str__(self) -> str:
         return tree_str_inline(self)
