@@ -8,7 +8,6 @@ import numpy as np
 from jax import Array
 
 from .._checks import check_shape
-from .._utils import on_cpu
 from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
 from ..qarrays.utils import _init_dims, asqarray, sum_qarrays, to_jax
 
@@ -920,13 +919,11 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
 
     if isket(x) or isket(y):
         return overlap(x, y)
-    elif on_cpu(x):
-        return _dm_fidelity_cpu(x, y)
     else:
-        return _dm_fidelity_gpu(x, y)
+        return _dm_fidelity(x, y)
 
 
-def _dm_fidelity_cpu(x: QArray, y: QArray) -> Array:
+def _dm_fidelity(x: QArray, y: QArray) -> Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
 
@@ -935,48 +932,11 @@ def _dm_fidelity_cpu(x: QArray, y: QArray) -> Array:
     # the eigenvalues w_i of the matrix product x @ y and compute the fidelity as
     # F = (\sum_i \sqrt{w_i})^2.
 
-    # This method only works on CPU because we use `jnp.linalg.eigvals` which is only
-    # implemented on the CPU backend (see https://github.com/google/jax/issues/1259
-    # tracking support on GPU). Note that we can't use eigvalsh here, because the
-    # matrix x @ y is not Hermitian.
-
     # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
     w = (x @ y)._eigvals().real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return jnp.sqrt(w).sum(-1) ** 2
-
-
-def _dm_fidelity_gpu(x: QArray, y: QArray) -> Array:
-    # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
-    # x: (..., n, n), y: (..., n, n) -> (...)
-
-    # We compute the eigenvalues w_i of the matrix product sqrt(x) @ y @ sqrt(x)
-    # and compute the fidelity as F = (\sum_i \sqrt{w_i})^2.
-
-    sqrtm_x = _sqrtm_gpu(x)
-    w = (sqrtm_x @ y @ sqrtm_x)._eigvalsh()
-    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    w = jnp.where(w < 0, 0, w)
-    return jnp.sqrt(w).sum(-1) ** 2
-
-
-def _sqrtm_gpu(x: QArray) -> Array:
-    # returns the square root of a symmetric or Hermitian positive definite matrix
-    # x: (..., n, n) -> (..., n, n)
-
-    # code inspired by
-    # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
-
-    # This method is a GPU-compatible implementation of `jax.scipy.linalg.sqrtm` for
-    # symmetric or Hermitian positive definite matrix.
-
-    w, v = x._eigh()
-    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    w = jnp.where(w < 0, 0, w)
-    # numerical trick to compute 'v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()' faster with
-    # broadcasting
-    return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
 
 
 def entropy_vn(x: QArrayLike) -> Array:
