@@ -92,8 +92,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - eye
         - eye_like
-        - zero
-        - zero_like
+        - zeros
+        - zeros_like
         - destroy
         - create
         - number
@@ -253,3 +253,11 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - gifit
         - grid
         - mplstyle
+
+### Magic helpers
+
+::: dynamiqs.hermitian_conjugate
+    options:
+        table: true
+        members:
+        - hc

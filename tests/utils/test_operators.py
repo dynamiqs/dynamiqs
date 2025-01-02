@@ -33,7 +33,8 @@ def test_operators_dispatch():
     )
 
     assert jnp.allclose(
-        dq.zero(*dims, layout=dq.dense).to_jax(), dq.zero(*dims, layout=dq.dia).to_jax()
+        dq.zeros(*dims, layout=dq.dense).to_jax(),
+        dq.zeros(*dims, layout=dq.dia).to_jax(),
     )
 
     # === dq.destroy ===

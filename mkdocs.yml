@@ -83,6 +83,7 @@ plugins:
             show_root_heading: true
             show_root_toc_entry: false
             show_root_full_path: false
+            show_labels: false
             heading_level: 1
             members_order: source
             docstring_section_style: list
@@ -187,8 +188,8 @@ nav:
           - Operators:
               - eye: python_api/utils/operators/eye.md
               - eye_like: python_api/utils/operators/eye_like.md
-              - zero: python_api/utils/operators/zero.md
-              - zero_like: python_api/utils/operators/zero_like.md
+              - zeros: python_api/utils/operators/zeros.md
+              - zeros_like: python_api/utils/operators/zeros_like.md
               - destroy: python_api/utils/operators/destroy.md
               - create: python_api/utils/operators/create.md
               - number: python_api/utils/operators/number.md
@@ -292,6 +293,8 @@ nav:
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
+          - Magic helpers:
+            - hc: python_api/hermitian_conjugate/hc.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

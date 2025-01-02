@@ -12,7 +12,7 @@ def rand_mesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 3
     kH, *kLs, kpsi0, kEs = jax.random.split(jax.random.PRNGKey(42), nkeys)
     H = dq.random.herm(kH, (*nH, n, n))
-    Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs)]
+    Ls = [dq.random.herm(kL, (*nL, n, n)) for kL, nL in zip(kLs, nLs, strict=True)]
     psi0 = dq.random.ket(kpsi0, (*npsi0, n, 1))
     Es = dq.random.complex(kEs, (nEs, n, n))
     Es = [asqarray(E) for E in Es]

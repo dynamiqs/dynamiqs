@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING, Any, Union, get_args
+from typing import TYPE_CHECKING, Any, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -589,8 +589,8 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 
 # extended array-like type
-_QArrayLike = Union[ArrayLike, QArray, Qobj]
+_QArrayLike = ArrayLike | QArray | Qobj
 # a type alias for nested sequence of `_QArrayLike`
-_NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
+_NestedQArrayLikeSequence = Sequence[_QArrayLike | '_NestedQArrayLikeSequence']
 # a type alias for any type compatible with asqarray
-QArrayLike = Union[_QArrayLike, _NestedQArrayLikeSequence]
+QArrayLike = _QArrayLike | _NestedQArrayLikeSequence
