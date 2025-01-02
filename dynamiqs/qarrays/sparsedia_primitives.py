@@ -305,7 +305,9 @@ def stack_sparsedia(
     in_shape = diags_sequence[0].shape
     out_shape = (len(diags_sequence), *in_shape[:-2], len(out_offsets), in_shape[-1])
     out_diags = jnp.zeros(out_shape, dtype=dtype)
-    for i, (offsets, diags) in enumerate(zip(offsets_sequence, diags_sequence)):
+    for i, (offsets, diags) in enumerate(
+        zip(offsets_sequence, diags_sequence, strict=True)
+    ):
         for j, offset in enumerate(offsets):
             idx = offset_to_index[offset]
             out_diags = out_diags.at[i, ..., idx, :].add(diags[..., j, :])
@@ -320,7 +322,10 @@ def autopad_sparsedia_diags(
 ) -> tuple[Array]:
     # stack diags in a square matrix by padding each according to its offset
     pads_width = [(abs(k), 0) if k >= 0 else (0, abs(k)) for k in offsets]
-    diags = [jnp.pad(diag, pad_width) for pad_width, diag in zip(pads_width, diags)]
+    diags = [
+        jnp.pad(diag, pad_width)
+        for pad_width, diag in zip(pads_width, diags, strict=True)
+    ]
     dtype = reduce(jnp.promote_types, [diag.dtype for diag in diags])
     diags = jnp.stack(diags, dtype=dtype)
     return jnp.moveaxis(diags, 0, -2)
