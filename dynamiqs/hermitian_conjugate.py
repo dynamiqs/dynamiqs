@@ -14,7 +14,7 @@ class HermitianConjugate:
         )
 
     def __radd__(self, y: QArray | TimeQArray) -> QArray | TimeQArray:
-        if isinstance(y, (QArray, TimeQArray)):
+        if isinstance(y, QArray | TimeQArray):
             return y + y.dag()
         else:
             raise TypeError(
