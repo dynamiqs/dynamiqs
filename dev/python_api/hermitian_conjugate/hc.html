@@ -8,28 +8,28 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/isket.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/hermitian_conjugate/hc.html">
 
 
-    <link rel="prev" href="lindbladian.html">
+    <link rel="prev" href="../plot/mplstyle.html">
 
 
-    <link rel="next" href="isbra.html">
+    <link rel="next" href="../../community/index.html">
 
-<link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
-<link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
+<link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
+<link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
 <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.1.21">
 
     
       
-        <title>isket - Dynamiqs</title>
+        <title>hc - Dynamiqs</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.6f8fc17f.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
   
@@ -65,24 +65,24 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-      <link rel="stylesheet" href="../../../stylesheets/theme.css">
+      <link rel="stylesheet" href="../../stylesheets/theme.css">
     
-      <link rel="stylesheet" href="../../../stylesheets/home.css">
+      <link rel="stylesheet" href="../../stylesheets/home.css">
     
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
     
-   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
     html.glightbox-open { overflow: initial; height: 100%; }
     .gslide-title { margin-top: 0px; user-select: text; }
     .gslide-desc { color: #666; user-select: text; }
@@ -91,7 +91,7 @@
     .gdesc-inner { font-size: 0.75rem; }
     body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
     body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
-    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
   
   
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.general.isket" class="md-skip">
+        <a href="#dynamiqs.hermitian_conjugate.hc" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
             <div class="md-banner__inner md-grid md-typeset">
               
   You're not viewing the latest version.
-  <a href="../../../..">
+  <a href="../../..">
     Click here to go to latest.
   </a>
 
@@ -140,9 +140,9 @@
   
   <header class="md-header" data-md-component="header">
     <nav class="md-header__inner md-grid" aria-label="Header">
-      <a href="../../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
+      <a href="../../index.html" title="Dynamiqs" class="md-header__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
         
-  <img src="../../../media/logo.png" alt="logo">
+  <img src="../../media/logo.png" alt="logo">
 
       </a>
       <label class="md-header__button md-icon" for="__drawer">
@@ -152,7 +152,7 @@
         <div class="md-header__ellipsis">
           <div class="md-header__topic">
             <span class="md-ellipsis">
-              <a href="/../../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
+              <a href="/../../index.html" title="Dynamiqs" aria-label="Dynamiqs">
                 Dynamiqs
               </a>
             </span>
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                isket
+                hc
               
             </span>
           </div>
@@ -277,7 +277,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../index.html" class="md-tabs__link">
+      <a href="../../index.html" class="md-tabs__link">
         
   
     
@@ -296,7 +296,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../documentation/index.html" class="md-tabs__link">
+        <a href="../../documentation/index.html" class="md-tabs__link">
           
   
     
@@ -318,7 +318,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../index.html" class="md-tabs__link">
+        <a href="../index.html" class="md-tabs__link">
           
   
     
@@ -338,7 +338,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../community/index.html" class="md-tabs__link">
+        <a href="../../community/index.html" class="md-tabs__link">
           
   
     
@@ -373,9 +373,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
+    <a href="../../index.html" title="Dynamiqs" class="md-nav__button md-logo" aria-label="Dynamiqs" data-md-component="logo">
       
-  <img src="../../../media/logo.png" alt="logo">
+  <img src="../../media/logo.png" alt="logo">
 
     </a>
     Dynamiqs
@@ -402,7 +402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../index.html" class="md-nav__link">
+      <a href="../../index.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -451,7 +451,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../documentation/index.html" class="md-nav__link ">
+            <a href="../../documentation/index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -534,7 +534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/getting_started/whatis.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/whatis.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -555,7 +555,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/getting_started/installation.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/installation.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -576,7 +576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/getting_started/examples.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/examples.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -597,7 +597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/getting_started/sharp-bits.html" class="md-nav__link">
+      <a href="../../documentation/getting_started/sharp-bits.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -680,7 +680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/basics/workflow.html" class="md-nav__link">
+      <a href="../../documentation/basics/workflow.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -701,7 +701,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/basics/time-dependent-operators.html" class="md-nav__link">
+      <a href="../../documentation/basics/time-dependent-operators.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -722,7 +722,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/basics/closed-systems.html" class="md-nav__link">
+      <a href="../../documentation/basics/closed-systems.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -743,7 +743,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/basics/open-systems.html" class="md-nav__link">
+      <a href="../../documentation/basics/open-systems.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -764,7 +764,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/basics/batching-simulations.html" class="md-nav__link">
+      <a href="../../documentation/basics/batching-simulations.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -785,7 +785,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/basics/computing-gradients.html" class="md-nav__link">
+      <a href="../../documentation/basics/computing-gradients.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -858,7 +858,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../documentation/advanced_examples/kerr-oscillator.html" class="md-nav__link">
+      <a href="../../documentation/advanced_examples/kerr-oscillator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -928,7 +928,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../index.html" class="md-nav__link ">
+            <a href="../index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1018,7 +1018,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../integrators/sesolve.html" class="md-nav__link">
+      <a href="../integrators/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1039,7 +1039,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../integrators/mesolve.html" class="md-nav__link">
+      <a href="../integrators/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1060,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../integrators/smesolve.html" class="md-nav__link">
+      <a href="../integrators/smesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1081,7 +1081,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../integrators/sepropagator.html" class="md-nav__link">
+      <a href="../integrators/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1102,7 +1102,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../integrators/mepropagator.html" class="md-nav__link">
+      <a href="../integrators/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1123,7 +1123,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../integrators/floquet.html" class="md-nav__link">
+      <a href="../integrators/floquet.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1209,7 +1209,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/qarray/QArray.html" class="md-nav__link">
+      <a href="../qarrays/qarray/QArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1282,7 +1282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../time_qarray/TimeQArray.html" class="md-nav__link">
+      <a href="../time_qarray/TimeQArray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1303,7 +1303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../time_qarray/constant.html" class="md-nav__link">
+      <a href="../time_qarray/constant.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1324,7 +1324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../time_qarray/pwc.html" class="md-nav__link">
+      <a href="../time_qarray/pwc.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1345,7 +1345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../time_qarray/modulated.html" class="md-nav__link">
+      <a href="../time_qarray/modulated.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1366,7 +1366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../time_qarray/timecallable.html" class="md-nav__link">
+      <a href="../time_qarray/timecallable.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1455,7 +1455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Tsit5.html" class="md-nav__link">
+      <a href="../solver/Tsit5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1476,7 +1476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Dopri5.html" class="md-nav__link">
+      <a href="../solver/Dopri5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1497,7 +1497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Dopri8.html" class="md-nav__link">
+      <a href="../solver/Dopri8.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1518,7 +1518,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Kvaerno3.html" class="md-nav__link">
+      <a href="../solver/Kvaerno3.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1539,7 +1539,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Kvaerno5.html" class="md-nav__link">
+      <a href="../solver/Kvaerno5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1560,7 +1560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Euler.html" class="md-nav__link">
+      <a href="../solver/Euler.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1581,7 +1581,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Rouchon1.html" class="md-nav__link">
+      <a href="../solver/Rouchon1.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1602,7 +1602,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Rouchon2.html" class="md-nav__link">
+      <a href="../solver/Rouchon2.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1623,7 +1623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solver/Expm.html" class="md-nav__link">
+      <a href="../solver/Expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1698,7 +1698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gradient/Autograd.html" class="md-nav__link">
+      <a href="../gradient/Autograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1719,7 +1719,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gradient/CheckpointAutograd.html" class="md-nav__link">
+      <a href="../gradient/CheckpointAutograd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1748,7 +1748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../options/Options.html" class="md-nav__link">
+      <a href="../options/Options.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1821,7 +1821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../result/SESolveResult.html" class="md-nav__link">
+      <a href="../result/SESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1842,7 +1842,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../result/MESolveResult.html" class="md-nav__link">
+      <a href="../result/MESolveResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1863,7 +1863,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../result/SEPropagatorResult.html" class="md-nav__link">
+      <a href="../result/SEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1884,7 +1884,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../result/MEPropagatorResult.html" class="md-nav__link">
+      <a href="../result/MEPropagatorResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1905,7 +1905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../result/FloquetResult.html" class="md-nav__link">
+      <a href="../result/FloquetResult.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2103,7 +2103,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/eye.html" class="md-nav__link">
+      <a href="../utils/operators/eye.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2124,7 +2124,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/eye_like.html" class="md-nav__link">
+      <a href="../utils/operators/eye_like.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2145,7 +2145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/zeros.html" class="md-nav__link">
+      <a href="../utils/operators/zeros.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2166,7 +2166,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/zeros_like.html" class="md-nav__link">
+      <a href="../utils/operators/zeros_like.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2187,7 +2187,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/destroy.html" class="md-nav__link">
+      <a href="../utils/operators/destroy.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2208,7 +2208,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/create.html" class="md-nav__link">
+      <a href="../utils/operators/create.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2229,7 +2229,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/number.html" class="md-nav__link">
+      <a href="../utils/operators/number.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2250,7 +2250,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/parity.html" class="md-nav__link">
+      <a href="../utils/operators/parity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2271,7 +2271,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/displace.html" class="md-nav__link">
+      <a href="../utils/operators/displace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2292,7 +2292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/squeeze.html" class="md-nav__link">
+      <a href="../utils/operators/squeeze.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2313,7 +2313,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/quadrature.html" class="md-nav__link">
+      <a href="../utils/operators/quadrature.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2334,7 +2334,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/position.html" class="md-nav__link">
+      <a href="../utils/operators/position.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2355,7 +2355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/momentum.html" class="md-nav__link">
+      <a href="../utils/operators/momentum.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2376,7 +2376,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/sigmax.html" class="md-nav__link">
+      <a href="../utils/operators/sigmax.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2397,7 +2397,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/sigmay.html" class="md-nav__link">
+      <a href="../utils/operators/sigmay.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2418,7 +2418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/sigmaz.html" class="md-nav__link">
+      <a href="../utils/operators/sigmaz.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2439,7 +2439,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/sigmap.html" class="md-nav__link">
+      <a href="../utils/operators/sigmap.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2460,7 +2460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/sigmam.html" class="md-nav__link">
+      <a href="../utils/operators/sigmam.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2481,7 +2481,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/hadamard.html" class="md-nav__link">
+      <a href="../utils/operators/hadamard.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2502,7 +2502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/rx.html" class="md-nav__link">
+      <a href="../utils/operators/rx.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2523,7 +2523,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/ry.html" class="md-nav__link">
+      <a href="../utils/operators/ry.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2544,7 +2544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/rz.html" class="md-nav__link">
+      <a href="../utils/operators/rz.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2565,7 +2565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/sgate.html" class="md-nav__link">
+      <a href="../utils/operators/sgate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2586,7 +2586,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/tgate.html" class="md-nav__link">
+      <a href="../utils/operators/tgate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2607,7 +2607,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/cnot.html" class="md-nav__link">
+      <a href="../utils/operators/cnot.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2628,7 +2628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../operators/toffoli.html" class="md-nav__link">
+      <a href="../utils/operators/toffoli.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2715,7 +2715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/fock.html" class="md-nav__link">
+      <a href="../utils/states/fock.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2736,7 +2736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/fock_dm.html" class="md-nav__link">
+      <a href="../utils/states/fock_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2757,7 +2757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/basis.html" class="md-nav__link">
+      <a href="../utils/states/basis.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2778,7 +2778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/basis_dm.html" class="md-nav__link">
+      <a href="../utils/states/basis_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2799,7 +2799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/coherent.html" class="md-nav__link">
+      <a href="../utils/states/coherent.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2820,7 +2820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/coherent_dm.html" class="md-nav__link">
+      <a href="../utils/states/coherent_dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2841,7 +2841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/ground.html" class="md-nav__link">
+      <a href="../utils/states/ground.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2862,7 +2862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../states/excited.html" class="md-nav__link">
+      <a href="../utils/states/excited.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2888,10 +2888,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -2961,11 +2959,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4_3" >
         
           
           <label class="md-nav__link" for="__nav_3_4_3" id="__nav_3_4_3_label" tabindex="0">
@@ -2979,7 +2977,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_4_3">
             <span class="md-nav__icon md-icon"></span>
             Quantum utilities
@@ -2993,7 +2991,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dag.html" class="md-nav__link">
+      <a href="../utils/general/dag.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3014,7 +3012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="powm.html" class="md-nav__link">
+      <a href="../utils/general/powm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3035,7 +3033,7 @@
   
   
     <li class="md-nav__item">
-      <a href="expm.html" class="md-nav__link">
+      <a href="../utils/general/expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3056,7 +3054,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cosm.html" class="md-nav__link">
+      <a href="../utils/general/cosm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3077,7 +3075,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sinm.html" class="md-nav__link">
+      <a href="../utils/general/sinm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3098,7 +3096,7 @@
   
   
     <li class="md-nav__item">
-      <a href="trace.html" class="md-nav__link">
+      <a href="../utils/general/trace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3119,7 +3117,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tracemm.html" class="md-nav__link">
+      <a href="../utils/general/tracemm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3140,7 +3138,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ptrace.html" class="md-nav__link">
+      <a href="../utils/general/ptrace.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3161,7 +3159,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tensor.html" class="md-nav__link">
+      <a href="../utils/general/tensor.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3182,7 +3180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="expect.html" class="md-nav__link">
+      <a href="../utils/general/expect.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3203,7 +3201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="norm.html" class="md-nav__link">
+      <a href="../utils/general/norm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3224,7 +3222,7 @@
   
   
     <li class="md-nav__item">
-      <a href="unit.html" class="md-nav__link">
+      <a href="../utils/general/unit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3245,7 +3243,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dissipator.html" class="md-nav__link">
+      <a href="../utils/general/dissipator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3266,7 +3264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="lindbladian.html" class="md-nav__link">
+      <a href="../utils/general/lindbladian.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3284,19 +3282,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="isket.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../utils/general/isket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3305,7 +3294,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3318,7 +3306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="isbra.html" class="md-nav__link">
+      <a href="../utils/general/isbra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3339,7 +3327,7 @@
   
   
     <li class="md-nav__item">
-      <a href="isdm.html" class="md-nav__link">
+      <a href="../utils/general/isdm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3360,7 +3348,7 @@
   
   
     <li class="md-nav__item">
-      <a href="isop.html" class="md-nav__link">
+      <a href="../utils/general/isop.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3381,7 +3369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="isherm.html" class="md-nav__link">
+      <a href="../utils/general/isherm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3402,7 +3390,7 @@
   
   
     <li class="md-nav__item">
-      <a href="toket.html" class="md-nav__link">
+      <a href="../utils/general/toket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3423,7 +3411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tobra.html" class="md-nav__link">
+      <a href="../utils/general/tobra.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3444,7 +3432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="todm.html" class="md-nav__link">
+      <a href="../utils/general/todm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3465,7 +3453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="proj.html" class="md-nav__link">
+      <a href="../utils/general/proj.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3486,7 +3474,7 @@
   
   
     <li class="md-nav__item">
-      <a href="braket.html" class="md-nav__link">
+      <a href="../utils/general/braket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3507,7 +3495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="overlap.html" class="md-nav__link">
+      <a href="../utils/general/overlap.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3528,7 +3516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="fidelity.html" class="md-nav__link">
+      <a href="../utils/general/fidelity.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3549,7 +3537,7 @@
   
   
     <li class="md-nav__item">
-      <a href="entropy_vn.html" class="md-nav__link">
+      <a href="../utils/general/entropy_vn.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3570,7 +3558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="bloch_coordinates.html" class="md-nav__link">
+      <a href="../utils/general/bloch_coordinates.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3591,7 +3579,7 @@
   
   
     <li class="md-nav__item">
-      <a href="wigner.html" class="md-nav__link">
+      <a href="../utils/general/wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3676,7 +3664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/asqarray.html" class="md-nav__link">
+      <a href="../qarrays/utils/asqarray.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3697,7 +3685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/isqarraylike.html" class="md-nav__link">
+      <a href="../qarrays/utils/isqarraylike.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3718,7 +3706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/stack.html" class="md-nav__link">
+      <a href="../qarrays/utils/stack.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3739,7 +3727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/to_jax.html" class="md-nav__link">
+      <a href="../qarrays/utils/to_jax.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3760,7 +3748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/to_numpy.html" class="md-nav__link">
+      <a href="../qarrays/utils/to_numpy.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3781,7 +3769,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/to_qutip.html" class="md-nav__link">
+      <a href="../qarrays/utils/to_qutip.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3802,7 +3790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../qarrays/utils/sparsedia_from_dict.html" class="md-nav__link">
+      <a href="../qarrays/utils/sparsedia_from_dict.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3881,7 +3869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global_settings/set_device.html" class="md-nav__link">
+      <a href="../utils/global_settings/set_device.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3902,7 +3890,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global_settings/set_precision.html" class="md-nav__link">
+      <a href="../utils/global_settings/set_precision.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3923,7 +3911,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global_settings/set_matmul_precision.html" class="md-nav__link">
+      <a href="../utils/global_settings/set_matmul_precision.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3944,7 +3932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global_settings/set_layout.html" class="md-nav__link">
+      <a href="../utils/global_settings/set_layout.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4029,7 +4017,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/operator_to_vector.html" class="md-nav__link">
+      <a href="../utils/vectorization/operator_to_vector.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4050,7 +4038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/vector_to_operator.html" class="md-nav__link">
+      <a href="../utils/vectorization/vector_to_operator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4071,7 +4059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/spre.html" class="md-nav__link">
+      <a href="../utils/vectorization/spre.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4092,7 +4080,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/spost.html" class="md-nav__link">
+      <a href="../utils/vectorization/spost.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4113,7 +4101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/sprepost.html" class="md-nav__link">
+      <a href="../utils/vectorization/sprepost.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4134,7 +4122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/sdissipator.html" class="md-nav__link">
+      <a href="../utils/vectorization/sdissipator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4155,7 +4143,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectorization/slindbladian.html" class="md-nav__link">
+      <a href="../utils/vectorization/slindbladian.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4230,7 +4218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../optimal_control/snap_gate.html" class="md-nav__link">
+      <a href="../utils/optimal_control/snap_gate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4251,7 +4239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../optimal_control/cd_gate.html" class="md-nav__link">
+      <a href="../utils/optimal_control/cd_gate.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4334,7 +4322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../random/real.html" class="md-nav__link">
+      <a href="../random/real.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4355,7 +4343,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../random/complex.html" class="md-nav__link">
+      <a href="../random/complex.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4376,7 +4364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../random/herm.html" class="md-nav__link">
+      <a href="../random/herm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4397,7 +4385,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../random/psd.html" class="md-nav__link">
+      <a href="../random/psd.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4418,7 +4406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../random/dm.html" class="md-nav__link">
+      <a href="../random/dm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4439,7 +4427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../random/ket.html" class="md-nav__link">
+      <a href="../random/ket.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4530,7 +4518,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/wigner.html" class="md-nav__link">
+      <a href="../plot/wigner.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4551,7 +4539,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/wigner_mosaic.html" class="md-nav__link">
+      <a href="../plot/wigner_mosaic.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4572,7 +4560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/wigner_gif.html" class="md-nav__link">
+      <a href="../plot/wigner_gif.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4593,7 +4581,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/pwc_pulse.html" class="md-nav__link">
+      <a href="../plot/pwc_pulse.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4614,7 +4602,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/fock.html" class="md-nav__link">
+      <a href="../plot/fock.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4635,7 +4623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/fock_evolution.html" class="md-nav__link">
+      <a href="../plot/fock_evolution.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4656,7 +4644,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/hinton.html" class="md-nav__link">
+      <a href="../plot/hinton.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4677,7 +4665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/gifit.html" class="md-nav__link">
+      <a href="../plot/gifit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4698,7 +4686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/grid.html" class="md-nav__link">
+      <a href="../plot/grid.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4719,7 +4707,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plot/mplstyle.html" class="md-nav__link">
+      <a href="../plot/mplstyle.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4745,8 +4733,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -4760,11 +4750,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4_10" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4_10" checked>
         
           
           <label class="md-nav__link" for="__nav_3_4_10" id="__nav_3_4_10_label" tabindex="0">
@@ -4778,7 +4768,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_10_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_4_10_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4_10">
             <span class="md-nav__icon md-icon"></span>
             Magic helpers
@@ -4789,10 +4779,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../hermitian_conjugate/hc.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="hc.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -4801,6 +4800,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -4865,7 +4865,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../community/index.html" class="md-nav__link ">
+            <a href="../../community/index.html" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -4898,7 +4898,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../community/contributing.html" class="md-nav__link">
+      <a href="../../community/contributing.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4919,7 +4919,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../community/lets-talk.html" class="md-nav__link">
+      <a href="../../community/lets-talk.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4940,7 +4940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../community/citing.html" class="md-nav__link">
+      <a href="../../community/citing.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4997,60 +4997,64 @@
   
 
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-attribute">
 
 
-<h1 id="dynamiqs.utils.general.isket" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.isket</span>
+
+<h1 id="dynamiqs.hermitian_conjugate.hc" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">hc</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">isket</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">hc</span> <span class="o">=</span> <span class="n">HermitianConjugate</span><span class="p">()</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Returns True if the qarray is in the format of a ket.</p>
-
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>x</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(qarray-like of shape (...))              </i>
-          – <p><abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">Qarray-like</abbr>.</p>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code>bool</code>
-        – <p>True if the last dimension of <code>x</code> is 1, False otherwise.</p>
-      </li>
-  </ul> -->
-      <span class="field-body"><p>True if the last dimension of <code>x</code> is 1, False otherwise.</p></span>
+        <p>This symbol can be used as a shortcut to sum a qarray or a time-qarray with its
+Hermitian conjugate.</p>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isket</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isket</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">isket</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
-<span class="go">False</span>
-</code></pre></div>
+    <p>For a linear drive with amplitude <code>omega</code>:
+<div class="highlight"><pre><span></span><code><span class="gd">- H = a.dag() @ a + omega * a + omega.conj() * a.dag()</span>
+<span class="gi">+ H = a.dag() @ a + (omega * a + dq.hc)</span>
+</code></pre></div></p>
+<p>For two linear drives on two different modes:
+<div class="highlight"><pre><span></span><code><span class="gd">- H = omega_a * a + omega_a.conj() * a.dag() + omega_b * b + omega_b.conj() * b</span>
+<span class="gi">+ H = (omega_a * a + dq.hc) + (omega_b * b + dq.hc)</span>
+</code></pre></div></p>
+<p>For a time-dependent linear drive:
+<div class="highlight"><pre><span></span><code>omega = lambda t: jnp.cos(2.0 * jnp.pi * t)
+<span class="gd">- H = dq.modulated(omega, a)</span>
+<span class="gd">- H += H.dag()</span>
+<span class="gi">+ H = dq.modulated(omega, a) + dq.hc</span>
+</code></pre></div></p>
 
-    </div>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>The only valid operation with this symbol is right-addition to a qarray or a
+time-qarray. Any other operation will raise a <code>TypeError</code>.</p>
+</details>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>The symbol applies on all terms present in the left-hand side of the addition. If
+you want to apply it to a single term, you should use parentheses to isolate it:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">sx</span><span class="p">,</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">(),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmaz</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">+</span> <span class="p">(</span><span class="n">sx</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">hc</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3</span>
+<span class="go">[[ 1.+0.j  2.+0.j]</span>
+<span class="go"> [ 2.+0.j -1.+0.j]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">+</span> <span class="n">sx</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">hc</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=3</span>
+<span class="go">[[ 2.+0.j  2.+0.j]</span>
+<span class="go"> [ 2.+0.j -2.+0.j]]</span>
+</code></pre></div>
+</details>    </div>
 
 </div>
 
@@ -5128,12 +5132,12 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.88dd0f4e.min.js"></script>
       
-        <script src="../../../javascripts/katex.js"></script>
+        <script src="../../javascripts/katex.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js"></script>
       
