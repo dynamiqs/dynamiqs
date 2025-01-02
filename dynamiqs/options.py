@@ -12,29 +12,108 @@ __all__ = ['Options']
 
 
 class Options(eqx.Module):
-    """Generic options for the quantum solvers.
+    """Generic options for quantum solvers.
 
-    Args:
-        save_states: If `True`, the state is saved at every time in `tsave`,
+    The `Options` class provides a unified interface for specifying options specific to
+    quantum solvers. Each quantum solver may only use a subset of these options,
+    so if you modify an option that the solver does not recognize from its default
+    value, an error is raised.
+
+    === "`dq.sesolve`"
+        **Parameters**
+
+        - **save_states** – If `True`, the state is saved at every time in `tsave`,
             otherwise only the final state is returned.
-        save_propagators: If `True`, the propagator is saved at every time in `tsave`,
-            otherwise only the final propagator is returned.
-        cartesian_batching: If `True`, batched arguments are treated as separated
+        - **cartesian_batching** – If `True`, batched arguments are treated as separated
             batch dimensions, otherwise the batching is performed over a single
             shared batched dimension.
-        progress_meter: Progress meter indicating how far the solve has progressed.
-            Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress meter. Pass
-            `None` for no output, see other options in
+        - **progress_meter** – Progress meter indicating how far the solve has
+            progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
+            meter. Pass `None` for no output, see other options in
             [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
             If gradients are computed, the progress meter only displays during the
             forward pass.
-        t0: Initial time. If `None`, defaults to the first time in `tsave`.
-        save_extra _(function, optional)_: A function with signature
+        - **t0** – Initial time. If `None`, defaults to the first time in `tsave`.
+        - **save_extra** _(function, optional)_ – A function with signature
             `f(QArray) -> PyTree` that takes a state or propagator as input and returns
             a PyTree. This can be used to save additional arbitrary data during the
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
-    """
+
+    === "`dq.mesolve`"
+        **Parameters**
+
+        - **save_states** – If `True`, the state is saved at every time in `tsave`,
+            otherwise only the final state is returned.
+        - **cartesian_batching** – If `True`, batched arguments are treated as separated
+            batch dimensions, otherwise the batching is performed over a single
+            shared batched dimension.
+        - **progress_meter** – Progress meter indicating how far the solve has
+            progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
+            meter. Pass `None` for no output, see other options in
+            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+            If gradients are computed, the progress meter only displays during the
+            forward pass.
+        - **t0** – Initial time. If `None`, defaults to the first time in `tsave`.
+        - **save_extra** _(function, optional)_ – A function with signature
+            `f(QArray) -> PyTree` that takes a state or propagator as input and returns
+            a PyTree. This can be used to save additional arbitrary data during the
+            integration. The additional data is accessible in the `extra` attribute of
+            the result object returned by the solvers.
+
+    === "`dq.sepropagator`"
+        **Parameters**
+
+        - **save_propagators** – If `True`, the propagator is saved at every time in
+            `tsave`, otherwise only the final propagator is returned.
+        - **cartesian_batching** – If `True`, batched arguments are treated as separated
+            batch dimensions, otherwise the batching is performed over a single
+            shared batched dimension.
+        - **progress_meter** – Progress meter indicating how far the solve has
+            progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
+            meter. Pass `None` for no output, see other options in
+            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+            If gradients are computed, the progress meter only displays during the
+            forward pass.
+        - **t0** – Initial time. If `None`, defaults to the first time in `tsave`.
+        - **save_extra** _(function, optional)_ – A function with signature
+            `f(QArray) -> PyTree` that takes a state or propagator as input and returns
+            a PyTree. This can be used to save additional arbitrary data during the
+            integration. The additional data is accessible in the `extra` attribute of
+            the result object returned by the solvers.
+
+    === "`dq.mepropagator`"
+        **Parameters**
+
+        - **save_propagators** – If `True`, the propagator is saved at every time in
+            `tsave`, otherwise only the final propagator is returned.
+        - **cartesian_batching** – If `True`, batched arguments are treated as separated
+            batch dimensions, otherwise the batching is performed over a single
+            shared batched dimension.
+        - **progress_meter** – Progress meter indicating how far the solve has
+            progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
+            meter. Pass `None` for no output, see other options in
+            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+            If gradients are computed, the progress meter only displays during the
+            forward pass.
+        - **t0** – Initial time. If `None`, defaults to the first time in `tsave`.
+        - **save_extra** _(function, optional)_ – A function with signature
+            `f(QArray) -> PyTree` that takes a state or propagator as input and returns
+            a PyTree. This can be used to save additional arbitrary data during the
+            integration. The additional data is accessible in the `extra` attribute of
+            the result object returned by the solvers.
+
+    === "`dq.floquet`"
+        **Parameters**
+
+        - **progress_meter** – Progress meter indicating how far the solve has
+            progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
+            meter. Pass `None` for no output, see other options in
+            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+            If gradients are computed, the progress meter only displays during the
+            forward pass.
+        - **t0** – Initial time. If `None`, defaults to the first time in `tsave`.
+    """  # noqa: RUF002
 
     save_states: bool = True
     save_propagators: bool = True
