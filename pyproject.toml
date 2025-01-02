@@ -25,7 +25,6 @@ dependencies = [
     "matplotlib",
     "tqdm",
     "jax>=0.4.36", # for GPU eig support
-    "jaxlib",
     "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",

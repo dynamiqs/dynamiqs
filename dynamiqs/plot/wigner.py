@@ -171,7 +171,7 @@ def wigner_mosaic(
 
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.zero(n)
+        >>> H = dq.zeros(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = jnp.linspace(0, 1.0, 101)
@@ -256,7 +256,7 @@ def wigner_gif(
     Examples:
         >>> n = 16
         >>> a = dq.destroy(n)
-        >>> H = dq.zero(n)
+        >>> H = dq.zeros(n)
         >>> jump_ops = [a @ a - 4.0 * dq.eye(n)]  # cat state inflation
         >>> psi0 = dq.coherent(n, 0)
         >>> tsave = jnp.linspace(0, 1.0, 1001)
