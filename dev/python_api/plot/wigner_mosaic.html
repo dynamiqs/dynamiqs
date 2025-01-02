@@ -2143,11 +2143,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/zero.html" class="md-nav__link">
+      <a href="../utils/operators/zeros.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    zero
+    zeros
   </span>
   
 
@@ -2164,11 +2164,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../utils/operators/zero_like.html" class="md-nav__link">
+      <a href="../utils/operators/zeros_like.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    zero_like
+    zeros_like
   </span>
   
 
@@ -4967,7 +4967,7 @@
     <p><a class="glightbox" href="../../figs_code/plot_wigner_mosaic_fock.png" data-type="image" data-width="70%" data-height="auto" data-desc-position="bottom"><img alt="plot_wigner_mosaic_fock" class="fig" src="../../figs_code/plot_wigner_mosaic_fock.png" /></a></p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">zero</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">jump_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">@</span> <span class="n">a</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">dq</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>  <span class="c1"># cat state inflation</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">coherent</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>

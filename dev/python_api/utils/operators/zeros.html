@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/operators/zero.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/operators/zeros.html">
 
 
     <link rel="prev" href="eye_like.html">
 
 
-    <link rel="next" href="zero_like.html">
+    <link rel="next" href="zeros_like.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>zero - Dynamiqs</title>
+        <title>zeros - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.operators.zero" class="md-skip">
+        <a href="#dynamiqs.utils.operators.zeros" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                zero
+                zeros
               
             </span>
           </div>
@@ -2154,11 +2154,11 @@
         
       
       
-      <a href="zero.html" class="md-nav__link md-nav__link--active">
+      <a href="zeros.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    zero
+    zeros
   </span>
   
 
@@ -2176,11 +2176,11 @@
   
   
     <li class="md-nav__item">
-      <a href="zero_like.html" class="md-nav__link">
+      <a href="zeros_like.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    zero_like
+    zeros_like
   </span>
   
 
@@ -4925,12 +4925,12 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.operators.zero" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.zero</span>
+<h1 id="dynamiqs.utils.operators.zeros" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.zeros</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">zero</span><span class="p">(</span><span class="o">*</span><span class="n">dims</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">Layout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">dims</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">Layout</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4976,7 +4976,7 @@ $$</p>
   <strong>Examples</strong>
 </p>
     <p>Single-mode <span class="arithmatex">\(0_4\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">zero</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="go">QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0</span>
 <span class="go">[[  ⋅      ⋅      ⋅      ⋅   ]</span>
 <span class="go"> [  ⋅      ⋅      ⋅      ⋅   ]</span>
@@ -4984,7 +4984,7 @@ $$</p>
 <span class="go"> [  ⋅      ⋅      ⋅      ⋅   ]]</span>
 </code></pre></div>
     <p>Multi-mode <span class="arithmatex">\(0_2 \otimes 0_3\)</span>:</p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">zero</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="go">QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0</span>
 <span class="go">[[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]</span>
 <span class="go"> [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]</span>
@@ -4998,7 +4998,7 @@ $$</p>
  open >
   <summary>See also</summary>
   <ul>
-<li><a class="autorefs autorefs-internal" href="zero_like.html#dynamiqs.utils.operators.zero_like"><code>dq.zero_like()</code></a>: returns the null operator in the
+<li><a class="autorefs autorefs-internal" href="zeros_like.html#dynamiqs.utils.operators.zeros_like"><code>dq.zeros_like()</code></a>: returns the null operator in the
 Hilbert space of the input.</li>
 </ul>
 </details>
