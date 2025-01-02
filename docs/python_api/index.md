@@ -254,7 +254,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - grid
         - mplstyle
 
-### Magic
+### Magic helpers
 
 ::: dynamiqs.hermitian_conjugate
     options:

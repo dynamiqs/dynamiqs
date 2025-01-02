@@ -293,7 +293,7 @@ nav:
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
-          - Magic:
+          - Magic helpers:
             - hc: python_api/hermitian_conjugate/hc.md
   - Community:
       - community/index.md
