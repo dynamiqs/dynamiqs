@@ -83,6 +83,7 @@ plugins:
             show_root_heading: true
             show_root_toc_entry: false
             show_root_full_path: false
+            show_labels: false
             heading_level: 1
             members_order: source
             docstring_section_style: list
@@ -292,6 +293,8 @@ nav:
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
+          - Magic helpers:
+            - hc: python_api/hermitian_conjugate/hc.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

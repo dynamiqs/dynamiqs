@@ -18,6 +18,7 @@ doc_sections = {
     'gradient': (['dynamiqs/gradient.py'], 'dq.gradient'),
     'options': (['dynamiqs/options.py'], 'dq'),
     'result': (['dynamiqs/result.py'], 'dq'),
+    'hermitian_conjugate': (['dynamiqs/hermitian_conjugate.py'], 'dq'),
     'utils/operators': (['dynamiqs/utils/operators.py'], 'dq'),
     'utils/states': (['dynamiqs/utils/states.py'], 'dq'),
     'utils/general': (
