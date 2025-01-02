@@ -4957,13 +4957,6 @@ $$
     \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
 $$</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p><code>floquet</code> is not yet GPU compatible because <code>jax.numpy.linalg.eig</code> is only
-implemented on the CPU backend, <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.linalg.eig.html">see here</a>.
-However, a GPU implementation of eig is currently in the works, <a href="https://github.com/jax-ml/jax/pull/24663">see here</a>.</p>
-</details>
 <details class="note"
  >
   <summary>Batching over drive periods</summary>
