@@ -38,7 +38,7 @@ def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
 
 def ispwc(x: TimeQArray) -> bool:
     # check if a time-qarray is constant or piecewise constant
-    if isinstance(x, (ConstantTimeQArray, PWCTimeQArray)):
+    if isinstance(x, ConstantTimeQArray | PWCTimeQArray):
         return True
     elif isinstance(x, SummedTimeQArray):
         return all(ispwc(timeqarray) for timeqarray in x.timeqarrays)

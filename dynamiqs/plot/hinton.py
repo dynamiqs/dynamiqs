@@ -60,7 +60,7 @@ def _plot_squares(
 
     patch_list = [
         patches.Rectangle(xy, side, side, facecolor=color)
-        for xy, side, color in zip(corners, sides, colors)
+        for xy, side, color in zip(corners, sides, colors, strict=True)
     ]
 
     squares = PatchCollection(

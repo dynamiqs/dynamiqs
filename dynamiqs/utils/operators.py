@@ -38,8 +38,8 @@ __all__ = [
     'squeeze',
     'tgate',
     'toffoli',
-    'zero',
-    'zero_like',
+    'zeros',
+    'zeros_like',
 ]
 
 
@@ -139,7 +139,7 @@ def eye_like(
     return eye(*dims, layout=layout)
 
 
-def zero(*dims: int, layout: Layout | None = None) -> QArray:
+def zeros(*dims: int, layout: Layout | None = None) -> QArray:
     r"""Returns the null operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -157,7 +157,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
 
     Examples:
         Single-mode $0_4$:
-        >>> dq.zero(4)
+        >>> dq.zeros(4)
         QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0
         [[  ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅   ]
@@ -165,7 +165,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
          [  ⋅      ⋅      ⋅      ⋅   ]]
 
         Multi-mode $0_2 \otimes 0_3$:
-        >>> dq.zero(2, 3)
+        >>> dq.zeros(2, 3)
         QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0
         [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
@@ -175,7 +175,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
 
     See also:
-        - [`dq.zero_like()`][dynamiqs.zero_like]: returns the null operator in the
+        - [`dq.zeros_like()`][dynamiqs.zeros_like]: returns the null operator in the
         Hilbert space of the input.
     """
     layout = get_layout(layout)
@@ -188,7 +188,7 @@ def zero(*dims: int, layout: Layout | None = None) -> QArray:
         return SparseDIAQArray(dims, False, (), diags)
 
 
-def zero_like(
+def zeros_like(
     x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
 ) -> QArray:
     r"""Returns the null operator in the Hilbert space of the input.
@@ -207,7 +207,7 @@ def zero_like(
     Examples:
         Single-mode $0_4$:
         >>> a = dq.destroy(4)
-        >>> dq.zero_like(a)
+        >>> dq.zeros_like(a)
         QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=0
         [[  ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅   ]
@@ -216,7 +216,7 @@ def zero_like(
 
         Multi-mode $0_2 \otimes 0_3$:
         >>> a, b = dq.destroy(2, 3)
-        >>> dq.zero_like(a)
+        >>> dq.zeros_like(a)
         QArray: shape=(6, 6), dims=(2, 3), dtype=complex64, layout=dia, ndiags=0
         [[  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]
@@ -226,13 +226,13 @@ def zero_like(
          [  ⋅      ⋅      ⋅      ⋅      ⋅      ⋅   ]]
 
     See also:
-        - [`dq.zero()`][dynamiqs.zero]: returns the null operator.
+        - [`dq.zeros()`][dynamiqs.zeros]: returns the null operator.
     """
     xdims = _get_dims(x)
     # todo: we should rather use a _get_shape util that never converts to a jax array
     x = _to_jax(x)
     dims = _init_dims(xdims, dims, x.shape)
-    return zero(*dims, layout=layout)
+    return zeros(*dims, layout=layout)
 
 
 def destroy(*dims: int, layout: Layout | None = None) -> QArray | tuple[QArray, ...]:
