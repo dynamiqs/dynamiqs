@@ -16,8 +16,8 @@ class Options(eqx.Module):
 
     The `Options` class provides a unified interface for specifying options specific to
     quantum solvers. Each quantum solver may only use a subset of these options,
-    so if you modify an option that the solver does not recognize from its default
-    value, an error is raised.
+    and an error will be raised if you modify an option that the solver does not
+    support.
 
     === "`dq.sesolve`"
         **Parameters**
