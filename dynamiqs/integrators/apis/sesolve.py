@@ -9,7 +9,7 @@ from jaxtyping import ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import SESolveResult
@@ -91,7 +91,9 @@ def sesolve(
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options, see [`dq.Options`][dynamiqs.Options] (supported:
+            `save_states`, `cartesian_batching`, `progress_meter`, `t0`,
+            `save_extra`).
 
     Returns:
         [`dq.SESolveResult`][dynamiqs.SESolveResult] object holding the result of the
@@ -109,6 +111,7 @@ def sesolve(
     # === check arguments
     _check_sesolve_args(H, psi0, exp_ops)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'sesolve')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
