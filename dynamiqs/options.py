@@ -164,8 +164,9 @@ def check_options(options: Options, solver_name: str):
     # specified in `valid_options`
     for key, value in options.__dict__.items():
         if key not in valid_options and value != getattr(Options(), key):
+            valid_options_str = ', '.join(f'`{x}`' for x in valid_options)
             raise ValueError(
-                f'Option {key} was set to {value} but is not used by '
-                f'the quantum solver. Valid options for {solver_name} are: '
-                f'{', '.join(valid_options)}'
+                f'Option `{key}` was set to `{value}` but is not used by '
+                f'the quantum solver `dq.{solver_name}()` (valid options: '
+                f'{valid_options_str}).'
             )
