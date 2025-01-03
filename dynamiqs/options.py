@@ -87,12 +87,6 @@ class Options(eqx.Module):
         - **cartesian_batching** – If `True`, batched arguments are treated as separated
             batch dimensions, otherwise the batching is performed over a single
             shared batched dimension.
-        - **progress_meter** – Progress meter indicating how far the solve has
-            progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
-            meter. Pass `None` for no output, see other options in
-            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
-            If gradients are computed, the progress meter only displays during the
-            forward pass.
         - **t0** – Initial time. If `None`, defaults to the first time in `tsave`.
         - **save_extra** _(function, optional)_ – A function with signature
             `f(QArray) -> PyTree` that takes a state or propagator as input and returns
