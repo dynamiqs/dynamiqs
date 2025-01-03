@@ -66,9 +66,6 @@ class Options(eqx.Module):
 
         - **save_propagators** – If `True`, the propagator is saved at every time in
             `tsave`, otherwise only the final propagator is returned.
-        - **cartesian_batching** – If `True`, batched arguments are treated as separated
-            batch dimensions, otherwise the batching is performed over a single
-            shared batched dimension.
         - **progress_meter** – Progress meter indicating how far the solve has
             progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm) progress
             meter. Pass `None` for no output, see other options in
@@ -176,5 +173,5 @@ def check_options(options: Options, solver_name: str):
             raise ValueError(
                 f'Option {key} was set to {value} but is not used by '
                 f'the quantum solver. Valid options for {solver_name} are: '
-                f'{", ".join(valid_options)}'
+                f'{', '.join(valid_options)}'
             )
