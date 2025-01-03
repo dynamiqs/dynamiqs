@@ -19,7 +19,7 @@ class Options(eqx.Module):
     and an error will be raised if you modify an option that the solver does not
     support.
 
-    === "`dq.sesolve`"
+    === "`dq.sesolve()`"
         **Parameters**
 
         - **save_states** – If `True`, the state is saved at every time in `tsave`,
@@ -40,7 +40,7 @@ class Options(eqx.Module):
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
 
-    === "`dq.mesolve`"
+    === "`dq.mesolve()`"
         **Parameters**
 
         - **save_states** – If `True`, the state is saved at every time in `tsave`,
@@ -61,7 +61,7 @@ class Options(eqx.Module):
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
 
-    === "`dq.sepropagator`"
+    === "`dq.sepropagator()`"
         **Parameters**
 
         - **save_propagators** – If `True`, the propagator is saved at every time in
@@ -79,7 +79,7 @@ class Options(eqx.Module):
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
 
-    === "`dq.mepropagator`"
+    === "`dq.mepropagator()`"
         **Parameters**
 
         - **save_propagators** – If `True`, the propagator is saved at every time in
@@ -94,7 +94,7 @@ class Options(eqx.Module):
             integration. The additional data is accessible in the `extra` attribute of
             the result object returned by the solvers.
 
-    === "`dq.floquet`"
+    === "`dq.floquet()`"
         **Parameters**
 
         - **progress_meter** – Progress meter indicating how far the solve has
