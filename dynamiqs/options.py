@@ -20,6 +20,16 @@ class Options(eqx.Module):
     support.
 
     === "`dq.sesolve()`"
+        ```python
+        Options(
+            save_states: bool = True,
+            cartesian_batching: bool = True,
+            progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+            t0: ScalarLike | None = None,
+            save_extra: callable[[Array], PyTree] | None = None,
+        )
+        ```
+
         **Parameters**
 
         - **save_states** – If `True`, the state is saved at every time in `tsave`,
@@ -41,6 +51,16 @@ class Options(eqx.Module):
             the result object returned by the solvers.
 
     === "`dq.mesolve()`"
+        ```python
+        Options(
+            save_states: bool = True,
+            cartesian_batching: bool = True,
+            progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+            t0: ScalarLike | None = None,
+            save_extra: callable[[Array], PyTree] | None = None,
+        )
+        ```
+
         **Parameters**
 
         - **save_states** – If `True`, the state is saved at every time in `tsave`,
@@ -62,6 +82,15 @@ class Options(eqx.Module):
             the result object returned by the solvers.
 
     === "`dq.sepropagator()`"
+        ```python
+        Options(
+            save_propagators: bool = True,
+            progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+            t0: ScalarLike | None = None,
+            save_extra: callable[[Array], PyTree] | None = None,
+        )
+        ```
+
         **Parameters**
 
         - **save_propagators** – If `True`, the propagator is saved at every time in
@@ -80,6 +109,15 @@ class Options(eqx.Module):
             the result object returned by the solvers.
 
     === "`dq.mepropagator()`"
+        ```python
+        Options(
+            save_propagators: bool = True,
+            cartesian_batching: bool = True,
+            t0: ScalarLike | None = None,
+            save_extra: callable[[Array], PyTree] | None = None,
+        )
+        ```
+
         **Parameters**
 
         - **save_propagators** – If `True`, the propagator is saved at every time in
@@ -95,6 +133,13 @@ class Options(eqx.Module):
             the result object returned by the solvers.
 
     === "`dq.floquet()`"
+        ```python
+        Options(
+            progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+            t0: ScalarLike | None = None,
+        )
+        ```
+
         **Parameters**
 
         - **progress_meter** – Progress meter indicating how far the solve has
