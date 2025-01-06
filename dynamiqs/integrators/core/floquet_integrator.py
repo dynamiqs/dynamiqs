@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
@@ -22,10 +24,13 @@ class FloquetIntegrator(BaseIntegrator):
 
 class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
     def run(self) -> PyTree:
+        # enforce `save_propagators` to be `True` for _sepropagator
+        options = replace(self.options, save_propagators=True)
+
         # compute propagators for all times at once, with the last being one period
         ts = jnp.append(self.ts, self.t0 + self.T)
         seprop_result = _sepropagator(
-            self.H, ts, solver=self.solver, gradient=self.gradient, options=self.options
+            self.H, ts, solver=self.solver, gradient=self.gradient, options=options
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0
