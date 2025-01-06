@@ -5000,76 +5000,150 @@
 
 
 <h1 id="dynamiqs.options.Options" class="doc doc-heading">
-    <span class="doc doc-object-name doc-class-name">dq.Options</span>
+  <span class="doc doc-object-name doc-class-name">dq.Options</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Options</span><span class="p">(</span>
-    <span class="n">save_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">cartesian_batching</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">progress_meter</span><span class="p">:</span> <span class="n">AbstractProgressMeter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">TqdmProgressMeter</span><span class="p">(),</span>
-    <span class="n">t0</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">save_extra</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="n">QArray</span><span class="p">],</span> <span class="n">PyTree</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span>
-</code></pre></div>
+
 
     <div class="doc doc-contents first">
 
 
-        <p>Generic options for the quantum solvers.</p>
-
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>save_states</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>If <code>True</code>, the state is saved at every time in <code>tsave</code>,
-otherwise only the final state is returned.</p>
-        </li>
-        <li class="field-body">
-          <b>verbose</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>If <code>True</code>, print information about the integration, otherwise
-nothing is printed.</p>
-        </li>
-        <li class="field-body">
-          <b>cartesian_batching</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>If <code>True</code>, batched arguments are treated as separated
-batch dimensions, otherwise the batching is performed over a single
-shared batched dimension.</p>
-        </li>
-        <li class="field-body">
-          <b>progress_meter</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Progress meter indicating how far the solve has progressed.
-Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter. Pass
-<code>None</code> for no output, see other options in
-<a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
-If gradients are computed, the progress meter only displays during the
-forward pass.</p>
-        </li>
-        <li class="field-body">
-          <b>t0</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Initial time. If <code>None</code>, defaults to the first time in <code>tsave</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>save_extra</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(function, optional)              </i>
-          – <p>A function with signature
-<code>f(QArray) -&gt; PyTree</code> that takes a state or propagator as input and returns
-a PyTree. This can be used to save additional arbitrary data during the
-integration. The additional data is accessible in the <code>extra</code> attribute of
-the result object returned by the solvers.</p>
-        </li>
-    </ul>
+        <p>Generic options for quantum solvers.</p>
+<p>The <code>Options</code> class provides a unified interface for specifying options specific to
+quantum solvers. Each quantum solver may only use a subset of these options,
+and an error will be raised if you modify an option that the solver does not
+support.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:5"><input checked="checked" id="dynamiqs.options.Options--__tabbed_1_1" name="dynamiqs.options.Options--__tabbed_1" type="radio" /><input id="dynamiqs.options.Options--__tabbed_1_2" name="dynamiqs.options.Options--__tabbed_1" type="radio" /><input id="dynamiqs.options.Options--__tabbed_1_3" name="dynamiqs.options.Options--__tabbed_1" type="radio" /><input id="dynamiqs.options.Options--__tabbed_1_4" name="dynamiqs.options.Options--__tabbed_1" type="radio" /><input id="dynamiqs.options.Options--__tabbed_1_5" name="dynamiqs.options.Options--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.options.Options--__tabbed_1_1"><code>dq.sesolve()</code></label><label for="dynamiqs.options.Options--__tabbed_1_2"><code>dq.mesolve()</code></label><label for="dynamiqs.options.Options--__tabbed_1_3"><code>dq.sepropagator()</code></label><label for="dynamiqs.options.Options--__tabbed_1_4"><code>dq.mepropagator()</code></label><label for="dynamiqs.options.Options--__tabbed_1_5"><code>dq.floquet()</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">Options</span><span class="p">(</span>
+    <span class="n">save_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">cartesian_batching</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">progress_meter</span><span class="p">:</span> <span class="n">AbstractProgressMeter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">TqdmProgressMeter</span><span class="p">(),</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_extra</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="n">Array</span><span class="p">],</span> <span class="n">PyTree</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>save_states</strong> – If <code>True</code>, the state is saved at every time in <code>tsave</code>,
+    otherwise only the final state is returned.</li>
+<li><strong>cartesian_batching</strong> – If <code>True</code>, batched arguments are treated as separated
+    batch dimensions, otherwise the batching is performed over a single
+    shared batched dimension.</li>
+<li><strong>progress_meter</strong> – Progress meter indicating how far the solve has
+    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress
+    meter. Pass <code>None</code> for no output, see other options in
+    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
+    If gradients are computed, the progress meter only displays during the
+    forward pass.</li>
+<li><strong>t0</strong> – Initial time. If <code>None</code>, defaults to the first time in <code>tsave</code>.</li>
+<li><strong>save_extra</strong> <em>(function, optional)</em> – A function with signature
+    <code>f(QArray) -&gt; PyTree</code> that takes a state or propagator as input and returns
+    a PyTree. This can be used to save additional arbitrary data during the
+    integration. The additional data is accessible in the <code>extra</code> attribute of
+    the result object returned by the solvers.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">Options</span><span class="p">(</span>
+    <span class="n">save_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">cartesian_batching</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">progress_meter</span><span class="p">:</span> <span class="n">AbstractProgressMeter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">TqdmProgressMeter</span><span class="p">(),</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_extra</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="n">Array</span><span class="p">],</span> <span class="n">PyTree</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>save_states</strong> – If <code>True</code>, the state is saved at every time in <code>tsave</code>,
+    otherwise only the final state is returned.</li>
+<li><strong>cartesian_batching</strong> – If <code>True</code>, batched arguments are treated as separated
+    batch dimensions, otherwise the batching is performed over a single
+    shared batched dimension.</li>
+<li><strong>progress_meter</strong> – Progress meter indicating how far the solve has
+    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress
+    meter. Pass <code>None</code> for no output, see other options in
+    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
+    If gradients are computed, the progress meter only displays during the
+    forward pass.</li>
+<li><strong>t0</strong> – Initial time. If <code>None</code>, defaults to the first time in <code>tsave</code>.</li>
+<li><strong>save_extra</strong> <em>(function, optional)</em> – A function with signature
+    <code>f(QArray) -&gt; PyTree</code> that takes a state or propagator as input and returns
+    a PyTree. This can be used to save additional arbitrary data during the
+    integration. The additional data is accessible in the <code>extra</code> attribute of
+    the result object returned by the solvers.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">Options</span><span class="p">(</span>
+    <span class="n">save_propagators</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">progress_meter</span><span class="p">:</span> <span class="n">AbstractProgressMeter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">TqdmProgressMeter</span><span class="p">(),</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_extra</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="n">Array</span><span class="p">],</span> <span class="n">PyTree</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>save_propagators</strong> – If <code>True</code>, the propagator is saved at every time in
+    <code>tsave</code>, otherwise only the final propagator is returned.</li>
+<li><strong>progress_meter</strong> – Progress meter indicating how far the solve has
+    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress
+    meter. Pass <code>None</code> for no output, see other options in
+    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
+    If gradients are computed, the progress meter only displays during the
+    forward pass.</li>
+<li><strong>t0</strong> – Initial time. If <code>None</code>, defaults to the first time in <code>tsave</code>.</li>
+<li><strong>save_extra</strong> <em>(function, optional)</em> – A function with signature
+    <code>f(QArray) -&gt; PyTree</code> that takes a state or propagator as input and returns
+    a PyTree. This can be used to save additional arbitrary data during the
+    integration. The additional data is accessible in the <code>extra</code> attribute of
+    the result object returned by the solvers.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">Options</span><span class="p">(</span>
+    <span class="n">save_propagators</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">cartesian_batching</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_extra</span><span class="p">:</span> <span class="nb">callable</span><span class="p">[[</span><span class="n">Array</span><span class="p">],</span> <span class="n">PyTree</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>save_propagators</strong> – If <code>True</code>, the propagator is saved at every time in
+    <code>tsave</code>, otherwise only the final propagator is returned.</li>
+<li><strong>cartesian_batching</strong> – If <code>True</code>, batched arguments are treated as separated
+    batch dimensions, otherwise the batching is performed over a single
+    shared batched dimension.</li>
+<li><strong>t0</strong> – Initial time. If <code>None</code>, defaults to the first time in <code>tsave</code>.</li>
+<li><strong>save_extra</strong> <em>(function, optional)</em> – A function with signature
+    <code>f(QArray) -&gt; PyTree</code> that takes a state or propagator as input and returns
+    a PyTree. This can be used to save additional arbitrary data during the
+    integration. The additional data is accessible in the <code>extra</code> attribute of
+    the result object returned by the solvers.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">Options</span><span class="p">(</span>
+    <span class="n">progress_meter</span><span class="p">:</span> <span class="n">AbstractProgressMeter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">TqdmProgressMeter</span><span class="p">(),</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>progress_meter</strong> – Progress meter indicating how far the solve has
+    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress
+    meter. Pass <code>None</code> for no output, see other options in
+    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
+    If gradients are computed, the progress meter only displays during the
+    forward pass.</li>
+<li><strong>t0</strong> – Initial time. If <code>None</code>, defaults to the first time in <code>tsave</code>.</li>
+</ul>
+</div>
+</div>
+</div>
 
 
 

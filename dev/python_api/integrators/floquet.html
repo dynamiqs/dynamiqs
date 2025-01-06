@@ -5039,12 +5039,12 @@ $$</p>
 periods, for instance if you wanted to batch over Hamiltonians with different
 drive frequencies. This however can be achieved straightforwardly with an
 external call to <code>jax.vmap</code>, as follows:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">jax</span>
-<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
-<span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
 
 
-<span class="k">def</span> <span class="nf">single_floquet</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">single_floquet</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
     <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
     <span class="n">T</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">omega</span>
     <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
@@ -5104,7 +5104,8 @@ that <code>tsave[-1] - tsave[0] &lt;= T</code>.</p>
         <li class="field-body">
           <b>options</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options, see <a class="autorefs autorefs-internal" href="../options/Options.html#dynamiqs.options.Options"><code>dq.Options</code></a>.</p>
+          – <p>Generic options, see <a class="autorefs autorefs-internal" href="../options/Options.html#dynamiqs.options.Options"><code>dq.Options</code></a> (supported:
+<code>progress_meter</code>, <code>t0</code>).</p>
         </li>
     </ul>
 

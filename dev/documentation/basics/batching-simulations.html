@@ -5251,9 +5251,9 @@
 
 <h1 id="batching-simulations">Batching simulations</h1>
 <p>Batching allows <strong>running many independent simulations concurrently</strong>. It can dramatically speedup simulations, especially on GPUs. In this tutorial, we explain how to batch quantum simulations in Dynamiqs.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
-<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
-<span class="kn">import</span> <span class="nn">timeit</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
 </code></pre></div>
 <h2 id="batching-in-short">Batching in short</h2>
 <p>Batching in Dynamiqs is achieved by <strong>passing a list of Hamiltonians, initial states, or jump operators</strong> to the simulation functions. The result of a batched simulation is a single qarray that contains all the individual simulations results. For example, let's simulate the Schrödinger equation for all combinations of the three Hamiltonians <span class="arithmatex">\(\{\sigma_x, \sigma_y, \sigma_z\}\)</span> and the four initial states <span class="arithmatex">\(\{\ket{g}, \ket{e}, \ket{+}, \ket{-}\}\)</span>:</p>
@@ -5475,7 +5475,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 <span class="n">options</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">progress_meter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <span class="c1"># running the simulations successively</span>
-<span class="k">def</span> <span class="nf">run_unbatched</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_unbatched</span><span class="p">():</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">omega</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">epsilon</span><span class="p">)):</span>
@@ -5484,7 +5484,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
     <span class="k">return</span> <span class="n">results</span>
 
 <span class="c1"># running the simulations simultaneously</span>
-<span class="k">def</span> <span class="nf">run_batched</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_batched</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
 
 <span class="c1"># exclude JIT time from benchmarking by running each function once first</span>

@@ -5073,8 +5073,8 @@
 <p>First time using Dynamiqs? Below are a few basic examples to help you get started.</p>
 <h2 id="simulate-a-lossy-quantum-harmonic-oscillator">Simulate a lossy quantum harmonic oscillator</h2>
 <p>This first example shows simulation of a lossy harmonic oscillator with Hamiltonian <span class="arithmatex">\(H=\omega a^\dagger a\)</span> and a single jump operator <span class="arithmatex">\(L=\sqrt{\kappa} a\)</span> from time <span class="arithmatex">\(0\)</span> to time <span class="arithmatex">\(T\)</span>, starting from the initial coherent state <span class="arithmatex">\(\ket{\alpha_0}\)</span>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
-<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 
 <span class="c1"># parameters</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>          <span class="c1"># Hilbert space dimension</span>
@@ -5102,9 +5102,9 @@ States : QArray complex64 (101, 16, 16) | 202.0 Kb
 </code></pre></div>
 <h2 id="compute-gradients-with-respect-to-some-parameters">Compute gradients with respect to some parameters</h2>
 <p>Suppose that in the above example, we want to compute the gradient of the number of photons in the final state at time <span class="arithmatex">\(T\)</span>, <span class="arithmatex">\(\bar{n} = \mathrm{Tr}[a^\dagger a \rho(T)]\)</span>, with respect to the frequency <span class="arithmatex">\(\omega\)</span>, the decay rate <span class="arithmatex">\(\kappa\)</span> and the initial coherent state amplitude <span class="arithmatex">\(\alpha_0\)</span>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
-<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
-<span class="kn">import</span> <span class="nn">jax</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
 
 <span class="c1"># parameters</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">16</span>          <span class="c1"># Hilbert space dimension</span>
@@ -5113,7 +5113,7 @@ States : QArray complex64 (101, 16, 16) | 202.0 Kb
 <span class="n">alpha0</span> <span class="o">=</span> <span class="mf">1.0</span>    <span class="c1"># initial coherent state amplitude</span>
 <span class="n">T</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># total evolution time (one full revolution)</span>
 
-<span class="k">def</span> <span class="nf">population</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">alpha0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">population</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">alpha0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the oscillator population after time evolution.&quot;&quot;&quot;</span>
     <span class="c1"># initialize operators, initial state and saving times</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">destroy</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>

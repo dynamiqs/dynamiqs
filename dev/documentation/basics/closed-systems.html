@@ -5232,8 +5232,8 @@ where we used the Schrödinger equation to replace the time derivative of the st
 <p><ins>Time complexity</ins>: <span class="arithmatex">\(O(n^2\times\text{number of time steps})\)</span> (complexity of the matrix-vector product at each time step).</p>
 <h2 id="using-dynamiqs">Using Dynamiqs</h2>
 <p>You can create the state and Hamiltonian using any <abbr title="a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types">qarray-like</abbr>. Let's take the example of a two-level system with a simple Hamiltonian:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
-<span class="kn">import</span> <span class="nn">dynamiqs</span> <span class="k">as</span> <span class="nn">dq</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
 
 <span class="n">jnp</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># set custom array print style</span>
 
