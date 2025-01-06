@@ -68,6 +68,7 @@ def rendergif():
 pytest_collect_file = Sybil(
     parsers=[DocTestParser(optionflags=ELLIPSIS), PythonCodeBlockParser()],
     patterns=['*.py'],
+    excludes=['options.py'],
     setup=sybil_setup,
     fixtures=[
         '_jax_set_printoptions',
