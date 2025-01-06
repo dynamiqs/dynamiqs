@@ -24,7 +24,7 @@ class FloquetIntegrator(BaseIntegrator):
 class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
     def run(self) -> PyTree:
         # enforce `save_propagators` to be `True` for _sepropagator
-        options = eqx.tree_at(lambda opt: opt.save_propagators, self.options, False)
+        options = eqx.tree_at(lambda opt: opt.save_propagators, self.options, True)
 
         # compute propagators for all times at once, with the last being one period
         ts = jnp.append(self.ts, self.t0 + self.T)
