@@ -244,7 +244,7 @@ class SparseDIAQArray(QArray):
             )
 
         # replace with a centered dot of the same length as the matched string
-        replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
+        replace_with_dot = lambda match: f'{"⋅":^{len(match.group(0))}}'
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
