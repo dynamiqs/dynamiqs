@@ -90,8 +90,8 @@ def floquet(
 
     Returns:
         `dq.FloquetResult` object holding the result of the Floquet computation. Use
-            the attribute `result.modes` to access the saved Floquet modes, and the
-            attribute `result.quasienergies` for the associated quasienergies.
+            `result.modes` to access the saved Floquet modes and `result.quasienergies`
+            for the associated quasienergies.
 
             ??? "Detailed result API"
                 ```python

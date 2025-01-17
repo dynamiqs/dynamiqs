@@ -102,13 +102,12 @@ def sepropagator(
                 - **save_extra** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a propagator as input and returns
                     a PyTree. This can be used to save additional arbitrary data
-                    during the integration. The additional data is accessible in the
-                    `extra` attribute of the result object returned by the solvers.
+                    during the integration, accessible in `result.extra`.
 
 
     Returns:
         `dq.SEPropagatorResult` object holding the result of the propagator computation.
-            Use the attribute `result.propagators` to access saved quantities.
+            Use `result.propagators` to access the saved propagators.
 
             ??? "Detailed result API"
                 ```python
@@ -119,7 +118,7 @@ def sepropagator(
 
                 - **propagators** _(qarray of shape (..., nsave, n, n))_ - Saved
                     propagators with `nsave = ntsave`, or `nsave = 1` if
-                    `options.save_propagators` is set to `False`.
+                    `options.save_propagators=False`.
                 - **final_propagator** _(qarray of shape (..., n, n))_ - Saved final
                     propagator.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if

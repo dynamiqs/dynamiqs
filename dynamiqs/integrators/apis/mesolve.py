@@ -133,13 +133,12 @@ def mesolve(
                 - **save_extra** _(function, optional)_ - A function with signature
                     `f(QArray) -> PyTree` that takes a state as input and returns a
                     PyTree. This can be used to save additional arbitrary data
-                    during the integration. The additional data is accessible in the
-                    `extra` attribute of the result object returned by the solvers.
+                    during the integration, accessible in `result.extra`.
 
     Returns:
         `dq.MESolveResult` object holding the result of the
-            Lindblad master equation integration. Use the attributes `result.states` and
-            `result.expects` to access saved quantities.
+            Lindblad master equation integration. Use `result.states` to access the
+            saved states and `result.expects` to access the saved expectation values.
 
             ??? "Detailed result API"
                 ```python
@@ -149,8 +148,7 @@ def mesolve(
                 **Attributes**
 
                 - **states** _(qarray of shape (..., nsave, n, n))_ - Saved states with
-                    `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to
-                    `False`.
+                    `nsave = ntsave`, or `nsave = 1` if `options.save_states=False`.
                 - **final_state** _(qarray of shape (..., n, n))_ - Saved final state.
                 - **expects** _(array of shape (..., len(exp_ops), ntsave) or None)_ - Saved
                     expectation values, if specified by `exp_ops`.
