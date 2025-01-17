@@ -246,7 +246,7 @@ def _check_mesolve_args(
             stacklevel=2,
         )
 
-    # === check rho0 shape and hermitian
+    # === check rho0 shape
     check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
 
     # === check exp_ops shape
