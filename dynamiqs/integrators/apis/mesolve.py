@@ -141,6 +141,9 @@ def mesolve(
             `result.expects` to access saved quantities.
 
             ??? "Detailed result API"
+                ```python
+                dq.MESolveResult
+                ```
 
                 **Attributes**
 
