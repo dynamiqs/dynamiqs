@@ -177,13 +177,14 @@ def mesolve(
     `rho0` can be batched to solve multiple master equations concurrently. All other
     arguments are common to every batch. The resulting states and expectation values
     are batched according to the leading dimensions of `H`, `jump_ops` and  `rho0`. The
-    behaviour depends on the value of the `cartesian_batching` option
+    behaviour depends on the value of the `cartesian_batching` option.
 
     === "If `cartesian_batching = True` (default value)"
         The results leading dimensions are
         ```
         ... = ...H, ...L0, ...L1, (...), ...rho0
         ```
+
         For example if:
 
         - `H` has shape _(2, 3, n, n)_,
@@ -196,6 +197,7 @@ def mesolve(
         ```
         ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
         ```
+
         For example if:
 
         - `H` has shape _(2, 3, n, n)_,
