@@ -51,30 +51,6 @@ def floquet(
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
 
-    Note-: Batching over drive periods
-        The current API does not yet natively support batching over multiple drive
-        periods, for instance if you wanted to batch over Hamiltonians with different
-        drive frequencies. This however can be achieved straightforwardly with an
-        external call to `jax.vmap`, as follows:
-
-        ```python
-        import jax
-        import jax.numpy as jnp
-        import dynamiqs as dq
-
-
-        def single_floquet(omega):
-            H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-            T = 2.0 * jnp.pi / omega
-            tsave = jnp.linspace(0.0, T, 11)
-            return dq.floquet(H, T, tsave)
-
-
-        omegas = jnp.array([0.9, 1.0, 1.1])
-        batched_floquet = jax.vmap(single_floquet)
-        result = batched_floquet(omegas)
-        ```
-
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
@@ -92,14 +68,88 @@ def floquet(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler]).
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options] (supported:
-            `progress_meter`, `t0`).
+        options: Generic options (supported: `progress_meter`, `t0`).
+            ??? "Detailed options API"
+                ```
+                dq.Options(
+                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    t0: ScalarLike | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **progress_meter** - Progress meter indicating how far the solve has
+                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
+                    progress meter. Pass `None` for no output, see other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
+                - **t0** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
 
     Returns:
-        [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
-            Floquet computation. Use the attribute `modes` to access the saved
-            Floquet modes, and the attribute `quasienergies` for the associated
-            quasienergies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
+        `dq.FloquetResult` object holding the result of the Floquet computation. Use
+            the attribute `result.modes` to access the saved Floquet modes, and the
+            attribute `result.quasienergies` for the associated quasienergies.
+
+            ??? "Detailed result API"
+                ```python
+                dq.FloquetResult
+                ```
+
+                **Attributes**
+
+                - **modes** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
+                    modes.
+                - **quasienergies** _(array of shape (..., n))_ - Saved quasienergies
+                - **T** _(float)_ - Drive period
+                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **solver** _(Solver)_ - Solver used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H` can be batched to compute multiple Floquet modes and
+    quasienergies concurrently. All other arguments are common to every batch. The
+    Floquet modes and quasienergies are batched according to the leading dimensions of
+    `H`. For example if `H` has shape _(2, 3, n, n)_, then `result.modes` has shape
+    _(2, 3, ntsave, n, n, 1)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
+
+    ## Batching over drive periods
+
+    The current API does not yet natively support batching over multiple drive
+    periods, for instance if you wanted to batch over Hamiltonians with different
+    drive frequencies. This however can be achieved straightforwardly with an
+    external call to `jax.vmap`, as follows:
+
+    ```python
+    import jax
+    import jax.numpy as jnp
+    import dynamiqs as dq
+
+
+    def single_floquet(omega):
+        H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
+        T = 2.0 * jnp.pi / omega
+        tsave = jnp.linspace(0.0, T, 11)
+        return dq.floquet(H, T, tsave)
+
+
+    omegas = jnp.array([0.9, 1.0, 1.1])
+    batched_floquet = jax.vmap(single_floquet)
+    result = batched_floquet(omegas)
+    ```
     """
     # === convert arguments
     H = _astimeqarray(H)

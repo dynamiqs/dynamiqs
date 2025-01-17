@@ -121,6 +121,6 @@ def smesolve(
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options.
     """  # noqa: E501
     return NotImplementedError

@@ -104,7 +104,8 @@ def mesolve(
         options: Generic options (supported: `save_states`, `cartesian_batching`,
             `progress_meter`, `t0`, `save_extra`).
             ??? "Detailed options API"
-                ```python
+
+                ```
                 dq.Options(
                     save_states: bool = True,
                     cartesian_batching: bool = True,
@@ -130,8 +131,8 @@ def mesolve(
                 - **t0** - Initial time. If `None`, defaults to the first time in
                     `tsave`.
                 - **save_extra** _(function, optional)_ - A function with signature
-                    `f(QArray) -> PyTree` that takes a state or propagator as input and
-                    returns a PyTree. This can be used to save additional arbitrary data
+                    `f(QArray) -> PyTree` that takes a state as input and returns a
+                    PyTree. This can be used to save additional arbitrary data
                     during the integration. The additional data is accessible in the
                     `extra` attribute of the result object returned by the solvers.
 

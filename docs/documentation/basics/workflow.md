@@ -64,7 +64,7 @@ solver = dq.solver.Dopri5(rtol=1e-6, atol=1e-8)
 
 ## III. Run the simulation
 
-We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of the [`SESolveResult`][dynamiqs.SESolveResult] class. This object contains the computed states, the observables, and various information about the solver.
+We can now run the simulation. This is done by calling the [`dq.sesolve()`][dynamiqs.sesolve] function, which returns an instance of `SESolveResult`. This object contains the computed states, the observables, and various information about the solver.
 
 ```python
 # run simulation

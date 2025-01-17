@@ -62,26 +62,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Autograd
         - CheckpointAutograd
 
-### Options
-
-::: dynamiqs.options
-    options:
-        table: true
-        members:
-        - Options
-
-### Results
-
-::: dynamiqs.result
-    options:
-        table: true
-        members:
-        - SESolveResult
-        - MESolveResult
-        - SEPropagatorResult
-        - MEPropagatorResult
-        - FloquetResult
-
 ## Utilities
 
 ### Operators
