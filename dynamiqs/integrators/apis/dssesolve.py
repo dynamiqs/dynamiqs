@@ -32,7 +32,17 @@ def dssesolve(
     starting from an initial state $\ket{\psi_0}$ according to the diffusive SSE in Itô
     form (with $\hbar=1$ and where time is implicit(1))
     $$
-        \dd\ket\psi = \dots
+        \begin{split}
+            \dd\ket\psi = \Bigg[
+                &-iH \dt
+                -\frac12 \sum_{k=1}^N \left(
+                    L_k^\dag L_k - \braket{\psi| L_k + L_k^\dag |\psi} L_k + \braket{\psi| L_k + L_k^\dag |\psi}^2 I
+                \right) \dt \\\\
+                &+ \sum_{k=1}^N \left(
+                    L_k - \frac12 \braket{\psi| L_k + L_k^\dag |\psi}
+                \right) \dd W_k
+            \Bigg] \ket\psi
+        \end{split}
     $$
     where $H$ is the system's Hamiltonian, $\{L_k\}$ is a collection of jump operators,
     each continuously measured with perfect efficiency and $\dd W_k$ are independent

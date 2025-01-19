@@ -32,7 +32,17 @@ def jssesolve(
     starting from an initial state $\ket{\psi_0}$, according to the jump SSE (with
     $\hbar=1$ and where time is implicit(1))
     $$
-        \dd\ket\psi = \dots
+        \begin{split}
+            \dd\ket\psi = \Bigg[
+                &-iH \dt
+                - \frac12 \sum_{k=1}^N \left(
+                    L_k^\dag L_k - \braket{\psi| L_k^\dag L_k |\psi}
+                \right) \dt \\\\
+                &+ \sum_{k=1}^N \left(
+                    \frac{L_k}{\sqrt{\braket{\psi| L_k^\dag L_k |\psi}}} - I
+                \right) \dd N_k
+            \Bigg] \ket\psi
+        \end{split}
     $$
     where $H$ is the system's Hamiltonian, $\{L_k\}$ is a collection of jump operators,
     each continuously measured with perfect efficiency, and $\dd N_k$ are independent
