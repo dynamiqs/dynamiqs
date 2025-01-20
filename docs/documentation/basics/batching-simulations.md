@@ -77,7 +77,7 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 
 ### Flat batching
 
-The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by setting `cartesian_batching=False` in [`dq.Options`][dynamiqs.Options]. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
+The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing `options=dq.Options(cartesian_batching=False)`. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
 
 ??? Note "What is broadcasting?"
     JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the [NumPy documentation on broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html).
