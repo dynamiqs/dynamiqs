@@ -155,7 +155,7 @@ nav:
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
           - floquet: python_api/integrators/floquet.md
-          - SSE and SME:
+          - stochastic:
             - jssesolve: python_api/integrators/jssesolve.md
             - dssesolve: python_api/integrators/dssesolve.md
             - jsmesolve: python_api/integrators/jsmesolve.md

@@ -16,7 +16,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - mepropagator
         - floquet
 
-### SSE and SME
+### Stochastic
 
 ::: dynamiqs.integrators
     options:
