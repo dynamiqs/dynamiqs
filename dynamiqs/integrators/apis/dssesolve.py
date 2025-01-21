@@ -28,18 +28,21 @@ def dssesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
+    In quantum optics, the diffusive SSE describes the evolution of a quantum
+    system under homodyne or heterodyne detection with unit detection efficiency.
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time $t$,
     starting from an initial state $\ket{\psi_0}$ according to the diffusive SSE in Itô
-    form (with $\hbar=1$ and where time is implicit(1))
+    form ($\hbar=1$, time is implicit(1))
     $$
         \begin{split}
-            \dd\ket\psi = \Bigg[
+            \dd\\!\ket\psi = \Bigg[
                 &-iH \dt
                 -\frac12 \sum_{k=1}^N \left(
-                    L_k^\dag L_k - \braket{\psi| L_k + L_k^\dag |\psi} L_k + \braket{\psi| L_k + L_k^\dag |\psi}^2 I
+                    L_k^\dag L_k - \braket{L_k + L_k^\dag} L_k
+                    + \braket{L_k + L_k^\dag }^2 \\! / 4
                 \right) \dt \\\\
                 &+ \sum_{k=1}^N \left(
-                    L_k - \frac12 \braket{\psi| L_k + L_k^\dag |\psi}
+                    L_k - \braket{L_k + L_k^\dag} \\! / 2
                 \right) \dd W_k
             \Bigg] \ket\psi
         \end{split}
@@ -55,24 +58,19 @@ def dssesolve(
         - $L_k\to L_k(t)$
         - $\dd W_k\to \dd W_k(t)$
 
-    Note-: Jump vs. diffusive SSE
-        In quantum optics the _jump_ SSE corresponds to photon counting schemes, as
-        opposed to the _diffusive_ SSE which corresponds to homodyne or heterodyne
-        detection schemes.
-
-    The continuous-time measurements are defined with the Itô processes $\dd Y_k$ (again
-    time is implicit):
+    The continuous-time measurements are defined with the Itô processes $\dd Y_k$ (time
+    is implicit)
     $$
-        \dd Y_k = \braket{\psi| L_k + L_k^\dag |\psi} \dt + \dd W_k.
+        \dd Y_k = \braket{L_k + L_k^\dag} \dt + \dd W_k.
     $$
 
     The solver returns the time-averaged measurements $I_k(t_n, t_{n+1})$ defined for
-    each time interval $[t_n, t_{n+1})$ by:
+    each time interval $[t_n, t_{n+1}[$ by
     $$
         I_k(t_n, t_{n+1}) = \frac{Y_k(t_{n+1}) - Y_k(t_n)}{t_{n+1} - t_n}
         = \frac{1}{t_{n+1}-t_n}\int_{t_n}^{t_{n+1}} \dd Y_k(t)
     $$
-    The time intervals $[t_n, t_{n+1})$ are defined by `tsave`, so the number of
+    The time intervals $[t_n, t_{n+1}[$ are defined by `tsave`, so the number of
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:

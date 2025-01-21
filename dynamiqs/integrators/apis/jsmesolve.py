@@ -30,9 +30,10 @@ def jsmesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
-    starting from an initial state $\rho_0$, according to the jump SME (with $\hbar=1$
-    and where time is implicit(1))
+    In quantum optics, the jump SME describes the evolution of an open quantum system
+    under photon counting schemes. This function computes the evolution of the density
+    matrix $\rho(t)$ at time $t$, starting from an initial state $\rho_0$, according to
+    the jump SME ($\hbar=1$, time is implicit(1))
     $$
         \begin{split}
             \dd\rho =&~ -i[H, \rho]\,\dt + \sum_{k=1}^N \left(
@@ -64,14 +65,9 @@ def jsmesolve(
         - $L_k\to L_k(t)$
         - $\dd N_k\to \dd N_k(t)$
 
-    Note-: Jump vs. diffusive SME
-        In quantum optics the _jump_ SME corresponds to photon counting schemes, as
-        opposed to the _diffusive_ SME which corresponds to homodyne or heterodyne
-        detection schemes.
-
     The continuous-time measurements are defined by the point processes $\dd N_k$. The
-    solver returns the times at which the detector clicked:
-    $I_k = \{t \text{ s.t. } \dd N_k(t)=1\}$.
+    solver returns the times at which the detector clicked,
+    $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     Warning:
         For now, `jsmesolve()` only supports linearly spaced `tsave` with values that

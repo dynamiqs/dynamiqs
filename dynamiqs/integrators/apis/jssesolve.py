@@ -28,18 +28,20 @@ def jssesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
+    In quantum optics, the jump SSE describes the evolution of a quantum system under
+    photon counting schemes, with unit detection efficiency and zero dark count rate.
     This function computes the evolution of the state vector $\ket{\psi(t)}$ at time $t$,
-    starting from an initial state $\ket{\psi_0}$, according to the jump SSE (with
-    $\hbar=1$ and where time is implicit(1))
+    starting from an initial state $\ket{\psi_0}$, according to the jump SSE ($\hbar=1$,
+    time is implicit(1))
     $$
         \begin{split}
             \dd\ket\psi = \Bigg[
                 &-iH \dt
                 - \frac12 \sum_{k=1}^N \left(
-                    L_k^\dag L_k - \braket{\psi| L_k^\dag L_k |\psi}
+                    L_k^\dag L_k - \braket{L_k^\dag L_k}
                 \right) \dt \\\\
                 &+ \sum_{k=1}^N \left(
-                    \frac{L_k}{\sqrt{\braket{\psi| L_k^\dag L_k |\psi}}} - I
+                    \frac{L_k}{\sqrt{\braket{L_k^\dag L_k}}} - 1
                 \right) \dd N_k
             \Bigg] \ket\psi
         \end{split}
@@ -50,7 +52,7 @@ def jssesolve(
     $$
         \begin{split}
             \mathbb{P}[\dd N_k = 0] &= 1 - \mathbb{P}[\dd N_k = 1], \\\\
-            \mathbb{P}[\dd N_k = 1] &= \braket{\psi| L_k^\dag L_k|\psi} \dt.
+            \mathbb{P}[\dd N_k = 1] &= \braket{L_k^\dag L_k} \dt.
         \end{split}
     $$
     { .annotate }
@@ -61,14 +63,9 @@ def jssesolve(
         - $L_k\to L_k(t)$
         - $\dd N_k\to \dd N_k(t)$
 
-    Note-: Jump vs. diffusive SSE
-        In quantum optics the _jump_ SSE corresponds to photon counting schemes, as
-        opposed to the _diffusive_ SSE which corresponds to homodyne or heterodyne
-        detection schemes.
-
     The continuous-time measurements are defined by the point processes $\dd N_k$. The
-    solver returns the times at which the detector clicked:
-    $I_k = \{t \text{ s.t. } \dd N_k(t)=1\}$.
+    solver returns the times at which the detector clicked,
+    $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     Warning:
         For now, `jssesolve()` only supports linearly spaced `tsave` with values that

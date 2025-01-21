@@ -29,9 +29,11 @@ def dsmesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
-    starting from an initial state $\rho_0$, according to the diffusive SME in Itô
-    form (with $\hbar=1$ and where time is implicit(1))
+    In quantum optics, the diffusive SME describes the evolution of an open quantum
+    system under homodyne or heterodyne detection. This function computes the evolution
+    of the density matrix $\rho(t)$ at time $t$, starting from an initial state
+    $\rho_0$, according to the diffusive SME in Itô form ($\hbar=1$, time is
+    implicit(1))
     $$
         \begin{split}
             \dd\rho =&~ -i[H, \rho]\,\dt + \sum_{k=1}^N \left(
@@ -57,24 +59,19 @@ def dsmesolve(
         - $L_k\to L_k(t)$
         - $\dd W_k\to \dd W_k(t)$
 
-    Note-: Jump vs. diffusive SME
-        In quantum optics the _jump_ SME corresponds to photon counting schemes, as
-        opposed to the _diffusive_ SME which corresponds to homodyne or heterodyne
-        detection schemes.
-
-    The continuous-time measurements are defined with the Itô processes $\dd Y_k$ (again
-    time is implicit):
+    The continuous-time measurements are defined with the Itô processes $\dd Y_k$ (time
+    is implicit)
     $$
         \dd Y_k = \sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
     $$
 
     The solver returns the time-averaged measurements $I_k(t_n, t_{n+1})$ defined for
-    each time interval $[t_n, t_{n+1})$ by:
+    each time interval $[t_n, t_{n+1}[$ by
     $$
         I_k(t_n, t_{n+1}) = \frac{Y_k(t_{n+1}) - Y_k(t_n)}{t_{n+1} - t_n}
         = \frac{1}{t_{n+1}-t_n}\int_{t_n}^{t_{n+1}} \dd Y_k(t)
     $$
-    The time intervals $[t_n, t_{n+1})$ are defined by `tsave`, so the number of
+    The time intervals $[t_n, t_{n+1}[$ are defined by `tsave`, so the number of
     returned measurement values for each detector is `len(tsave)-1`.
 
     Warning:
