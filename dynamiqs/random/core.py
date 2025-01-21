@@ -34,8 +34,8 @@ def real(
     Examples:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.real(key, (2, 5), max=5.0)
-        Array([[3.22 , 1.613, 0.967, 4.432, 4.21 ],
-               [0.96 , 1.726, 1.262, 3.16 , 3.274]], dtype=float32)
+        Array([[2.444, 3.399, 3.081, 2.805, 2.253],
+               [2.929, 0.374, 3.876, 3.495, 4.093]], dtype=float32)
     """
     shape = (shape,) if isinstance(shape, int) else shape
     # sample uniformly in [min, max)
@@ -88,8 +88,8 @@ def complex(  # noqa: A001
     Examples:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.complex(key, (2, 3), rmax=5.0)
-        Array([[ 1.341+4.17j ,  3.978-0.979j, -2.592-0.946j],
-               [-4.428+1.744j, -0.53 +1.668j,  2.582+0.65j ]], dtype=complex64)
+        Array([[ 1.617+0.307j,  0.078+2.351j, -0.817+3.812j],
+               [-4.221-0.581j, -3.044+2.898j, -0.668+4.552j]], dtype=complex64)
     """
     shape = (shape,) if isinstance(shape, int) else shape
     # sample uniformly in the unit L2 ball and scale
@@ -111,8 +111,8 @@ def herm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.herm(key, (2, 2))
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[-0.291+0.j     0.473-0.446j]
-         [ 0.473+0.446j  0.13 +0.j   ]]
+        [[ 0.323+0.j    -0.074-0.146j]
+         [-0.074+0.146j -0.844+0.j   ]]
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
         raise ValueError(
@@ -136,8 +136,8 @@ def psd(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.psd(key, (2, 2))
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[1.145+0.j   0.582+0.33j]
-         [0.582-0.33j 0.844+0.j  ]]
+        [[ 0.33 +0.j    -0.074-0.652j]
+         [-0.074+0.652j  1.334+0.j   ]]
 
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
@@ -163,8 +163,8 @@ def dm(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.dm(key, (2, 2))
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
-        [[0.576+0.j    0.293+0.166j]
-         [0.293-0.166j 0.424+0.j   ]]
+        [[ 0.198+0.j    -0.044-0.392j]
+         [-0.044+0.392j  0.802+0.j   ]]
     """
     if not len(shape) >= 2 or not shape[-1] == shape[-2]:
         raise ValueError(
@@ -188,8 +188,8 @@ def ket(key: PRNGKeyArray, shape: tuple[int, ...]) -> QArray:
         >>> key = jax.random.PRNGKey(42)
         >>> dq.random.ket(key, (2, 1))
         QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
-        [[-0.004+0.083j]
-         [-0.26 +0.962j]]
+        [[0.563+0.107j]
+         [0.027+0.819j]]
     """
     if not len(shape) >= 2 or not shape[-1] == 1:
         raise ValueError(
