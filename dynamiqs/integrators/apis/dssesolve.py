@@ -28,11 +28,11 @@ def dssesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    In quantum optics, the diffusive SSE describes the evolution of a quantum
-    system under homodyne or heterodyne detection with unit detection efficiency.
-    This function computes the evolution of the state vector $\ket{\psi(t)}$ at time $t$,
-    starting from an initial state $\ket{\psi_0}$ according to the diffusive SSE in Itô
-    form ($\hbar=1$, time is implicit(1))
+    The diffusive SSE describes the evolution of a quantum system under measurement
+    by an ideal diffusive detector (for example homodyne or heterodyne detection
+    in quantum optics). This function computes the evolution of the state vector
+    $\ket{\psi(t)}$ at time $t$, starting from an initial state $\ket{\psi_0}$
+    according to the diffusive SSE in Itô form ($\hbar=1$, time is implicit(1))
     $$
         \begin{split}
             \dd\\!\ket\psi = \Bigg[

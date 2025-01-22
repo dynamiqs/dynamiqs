@@ -29,11 +29,11 @@ def dsmesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    In quantum optics, the diffusive SME describes the evolution of an open quantum
-    system under homodyne or heterodyne detection. This function computes the evolution
-    of the density matrix $\rho(t)$ at time $t$, starting from an initial state
-    $\rho_0$, according to the diffusive SME in Itô form ($\hbar=1$, time is
-    implicit(1))
+    The diffusive SME describes the evolution of an open quantum system under
+    measurement by a diffusive detector (for example homodyne or heterodyne detection
+    in quantum optics). This function computes the evolution of the density matrix
+    $\rho(t)$ at time $t$, starting from an initial state $\rho_0$, according to the
+    diffusive SME in Itô form ($\hbar=1$, time is implicit(1))
     $$
         \begin{split}
             \dd\rho =&~ -i[H, \rho]\,\dt + \sum_{k=1}^N \left(
