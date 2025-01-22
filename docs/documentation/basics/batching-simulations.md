@@ -77,7 +77,7 @@ The simulation runs for all possible combinations of Hamiltonians, jump operator
 
 ### Flat batching
 
-The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by setting `cartesian_batching=False` in [`dq.Options`][dynamiqs.Options]. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
+The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing `options=dq.Options(cartesian_batching=False)`. In particular for [`dq.mesolve()`][dynamiqs.mesolve], each jump operator can be batched independently from the others.
 
 ??? Note "What is broadcasting?"
     JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the [NumPy documentation on broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html).
@@ -207,7 +207,7 @@ We have seen how to batch over time-independent objects, but how about time-depe
 
 ## Why batching?
 
-When batching multiple simulations, the state is not a 2-D array that evolves in time but a N-D array which holds all independent simulations. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large array.
+When batching multiple simulations, the state is not a 2-D qarray that evolves in time but a N-D qarray which holds all independent simulations. This allows running **multiple simulations simultaneously** with great efficiency, especially on GPUs. Moreover, it usually simplifies the simulation code and also the subsequent analysis of the results, because they are all gathered in a single large qarray.
 
 Common use cases for batching include:
 

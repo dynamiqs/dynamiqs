@@ -8,7 +8,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
@@ -17,21 +17,20 @@ from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     ispwc,
 )
-from ..core.abstract_integrator import SEPropagatorIntegrator
-from ..sepropagator.diffrax_integrator import (
-    SEPropagatorDopri5Integrator,
-    SEPropagatorDopri8Integrator,
-    SEPropagatorEulerIntegrator,
-    SEPropagatorKvaerno3Integrator,
-    SEPropagatorKvaerno5Integrator,
-    SEPropagatorTsit5Integrator,
+from ..core.diffrax_integrator import (
+    sepropagator_dopri5_integrator_constructor,
+    sepropagator_dopri8_integrator_constructor,
+    sepropagator_euler_integrator_constructor,
+    sepropagator_kvaerno3_integrator_constructor,
+    sepropagator_kvaerno5_integrator_constructor,
+    sepropagator_tsit5_integrator_constructor,
 )
-from ..sepropagator.expm_integrator import SEPropagatorExpmIntegrator
+from ..core.expm_integrator import sepropagator_expm_integrator_constructor
 
 
 def sepropagator(
@@ -57,19 +56,6 @@ def sepropagator(
     computed by directly exponentiating the Hamiltonian. Otherwise, the
     propagator is computed by solving the Schrödinger equation with an ODE solver.
 
-    Note-: Defining a time-dependent Hamiltonian
-        If the Hamiltonian depends on time, it can be converted to a time-qarray using
-        [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See the
-        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
-        tutorial for more details.
-
-    Note-: Running multiple simulations concurrently
-        The Hamiltonian `H` can be batched to compute multiple propagators
-        concurrently. All other arguments are common to every batch. See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
@@ -89,14 +75,84 @@ def sepropagator(
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options (supported: `save_propagators`, `progress_meter`, `t0`,
+            `save_extra`).
+            ??? "Detailed options API"
+                ```
+                dq.Options(
+                    save_propagators: bool = True,
+                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    t0: ScalarLike | None = None,
+                    save_extra: callable[[Array], PyTree] | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **save_propagators** - If `True`, the propagator is saved at every
+                    time in `tsave`, otherwise only the final propagator is returned.
+                - **progress_meter** - Progress meter indicating how far the solve has
+                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
+                    progress meter. Pass `None` for no output, see other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
+                - **t0** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
+                - **save_extra** _(function, optional)_ - A function with signature
+                    `f(QArray) -> PyTree` that takes a propagator as input and returns
+                    a PyTree. This can be used to save additional arbitrary data
+                    during the integration, accessible in `result.extra`.
+
 
     Returns:
-        [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult] object holding
-            the result of the propagator computation. Use the attribute
-            `propagators` to access saved quantities, more details in
-            [`dq.SEPropagatorResult`][dynamiqs.SEPropagatorResult].
-    """  # noqa: E501
+        `dq.SEPropagatorResult` object holding the result of the propagator computation.
+            Use `result.propagators` to access the saved propagators.
+
+            ??? "Detailed result API"
+                ```python
+                dq.SEPropagatorResult
+                ```
+
+                **Attributes**
+
+                - **propagators** _(qarray of shape (..., nsave, n, n))_ - Saved
+                    propagators with `nsave = ntsave`, or `nsave = 1` if
+                    `options.save_propagators=False`.
+                - **final_propagator** _(qarray of shape (..., n, n))_ - Saved final
+                    propagator.
+                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
+                    specified in `options`.
+                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **solver** _(Solver)_ - Solver used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Defining a time-dependent Hamiltonian
+
+    If the Hamiltonian depends on time, it can be converted to a time-qarray using
+    [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+    [`dq.timecallable()`][dynamiqs.timecallable]. See the
+    [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+    tutorial for more details.
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H` can be batched to compute multiple propagators
+    concurrently. All other arguments are common to every batch. The resulting
+    propagators are batched according to the leading dimensions of `H`. For example if
+    `H` has shape _(2, 3, n, n)_, then `result.propagators` has shape
+    _(2, 3, ntsave, n, n)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
+    """
     # === convert arguments
     H = _astimeqarray(H)
     tsave = jnp.asarray(tsave)
@@ -104,9 +160,10 @@ def sepropagator(
     # === check arguments
     _check_sepropagator_args(H)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'sepropagator')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_sepropagator(H, tsave, solver, gradient, options)
 
 
@@ -137,28 +194,35 @@ def _sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === select integrator class
+    # === select integrator constructor
     if solver is None:  # default solver
         solver = Expm() if ispwc(H) else Tsit5()
 
-    integrators = {
-        Expm: SEPropagatorExpmIntegrator,
-        Euler: SEPropagatorEulerIntegrator,
-        Dopri5: SEPropagatorDopri5Integrator,
-        Dopri8: SEPropagatorDopri8Integrator,
-        Tsit5: SEPropagatorTsit5Integrator,
-        Kvaerno3: SEPropagatorKvaerno3Integrator,
-        Kvaerno5: SEPropagatorKvaerno5Integrator,
+    integrator_constructors = {
+        Expm: sepropagator_expm_integrator_constructor,
+        Euler: sepropagator_euler_integrator_constructor,
+        Dopri5: sepropagator_dopri5_integrator_constructor,
+        Dopri8: sepropagator_dopri8_integrator_constructor,
+        Tsit5: sepropagator_tsit5_integrator_constructor,
+        Kvaerno3: sepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
-    integrator_class: SEPropagatorIntegrator = get_integrator_class(integrators, solver)
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     y0 = eye(H.shape[-1], layout=dense)
-    integrator = integrator_class(
-        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=y0,
+        solver=solver,
+        gradient=gradient,
+        result_class=SEPropagatorResult,
+        options=options,
+        H=H,
     )
 
     # === run integrator

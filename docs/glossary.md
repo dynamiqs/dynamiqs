@@ -1,12 +1,12 @@
-*[array-like]: e.g. Python list, NumPy and JAX array or QuTiP Qobj
-*[Array-like]: e.g. Python list, NumPy and JAX array or QuTiP Qobj
-*[array-likes]: e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs
-*[Array-likes]: e.g. Python lists, NumPy and JAX arrays or QuTiP Qobjs
+*[array-like]: a Python list, a NumPy or JAX array, or any (potentially nested) sequence of these types
+*[Array-like]: a Python list, a NumPy or JAX array, or any (potentially nested) sequence of these types
+*[array-likes]: a Python list, a NumPy or JAX array, or any (potentially nested) sequence of these types
+*[Array-likes]: a Python list, a NumPy or JAX array, or any (potentially nested) sequence of these types
 
-*[qarray-like]: a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types
-*[Qarray-like]: a NumPy array, a JAX array, a Dynamiqs qarray, a QuTiP Qobj, or any (potentially nested) sequence of these types
-*[qarray-likes]: NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences of these types
-*[Qarray-likes]: NumPy arrays, JAX arrays, Dynamiqs qarrays, QuTiP Qobjs, or any (potentially nested) sequences  of these types
+*[qarray-like]: a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types
+*[Qarray-like]: a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types
+*[qarray-likes]: a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types
+*[Qarray-likes]: a Python list, a NumPy or JAX array, a Dynamiqs qarray, a QuTiP qobj, or any (potentially nested) sequence of these types
 
 *[PWC]: piecewise constant
 *[SME]: stochastic master equation

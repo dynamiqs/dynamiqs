@@ -28,6 +28,7 @@ from .sparsedia_primitives import (
     matmul_sparsedia_array,
     matmul_sparsedia_sparsedia,
     mul_sparsedia_array,
+    mul_sparsedia_sparsedia,
     powm_sparsedia,
     reshape_sparsedia,
     shape_sparsedia,
@@ -243,7 +244,7 @@ class SparseDIAQArray(QArray):
             )
 
         # replace with a centered dot of the same length as the matched string
-        replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
+        replace_with_dot = lambda match: f'{"⋅":^{len(match.group(0))}}'
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
@@ -266,8 +267,8 @@ class SparseDIAQArray(QArray):
             return self._replace(offsets=offsets, diags=diags)
         elif isqarraylike(y):
             warnings.warn(
-                'A sparse array has been converted to dense layout due to element-wise '
-                'addition with a dense array.',
+                'A sparse qarray has been converted to dense layout due to element-wise'
+                ' addition with a dense qarray.',
                 stacklevel=2,
             )
             return self.asdense() + y
@@ -319,17 +320,22 @@ class SparseDIAQArray(QArray):
 
     def addscalar(self, y: ArrayLike) -> QArray:
         warnings.warn(
-            'A sparse array has been converted to dense layout due to element-wise '
+            'A sparse qarray has been converted to dense layout due to element-wise '
             'addition with a scalar.',
             stacklevel=2,
         )
         return self.asdense().addscalar(y)
 
-    def elmul(self, y: ArrayLike) -> QArray:
+    def elmul(self, y: QArrayLike) -> QArray:
         super().elmul(y)
 
-        y = _to_jax(y)
-        offsets, diags = mul_sparsedia_array(self.offsets, self.diags, y)
+        if isinstance(y, SparseDIAQArray):
+            offsets, diags = mul_sparsedia_sparsedia(
+                self.offsets, self.diags, y.offsets, y.diags
+            )
+        else:
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, _to_jax(y))
+
         return self._replace(offsets=offsets, diags=diags)
 
     def elpow(self, power: int) -> QArray:
@@ -348,7 +354,7 @@ class SparseDIAQArray(QArray):
 def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
     full_slice = slice(None, None, None)
     valid_key = False
-    if isinstance(key, (int, slice)):
+    if isinstance(key, int | slice):
         valid_key = ndim > 2
     if isinstance(key, Array):
         valid_key = key.ndim == 0 and ndim > 2

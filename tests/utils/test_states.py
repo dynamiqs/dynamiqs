@@ -35,7 +35,7 @@ def test_coherent():
     state2 = dq.coherent((n1, n2), (alphas1, alphas2[:, None]))
     assert np.allclose(state1, state2)
 
-    # Double short batching + tensor product with single full array
+    # Double short batching + tensor product with single full qarray
     state1 = (
         dq.coherent(n1, alphas1)[None, ...] & dq.coherent(n2, alphas2)[:, None, ...]
     )

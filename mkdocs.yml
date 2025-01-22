@@ -83,6 +83,7 @@ plugins:
             show_root_heading: true
             show_root_toc_entry: false
             show_root_full_path: false
+            show_labels: false
             heading_level: 1
             members_order: source
             docstring_section_style: list
@@ -179,18 +180,12 @@ nav:
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
-          - Options: python_api/options/Options.md
-          - Results:
-              - SESolveResult: python_api/result/SESolveResult.md
-              - MESolveResult: python_api/result/MESolveResult.md
-              - DSMESolveResult: python_api/result/DSMESolveResult.md
-              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
-              - MEPropagatorResult: python_api/result/MEPropagatorResult.md
-              - FloquetResult: python_api/result/FloquetResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
-              - zero: python_api/utils/operators/zero.md
+              - eye_like: python_api/utils/operators/eye_like.md
+              - zeros: python_api/utils/operators/zeros.md
+              - zeros_like: python_api/utils/operators/zeros_like.md
               - destroy: python_api/utils/operators/destroy.md
               - create: python_api/utils/operators/create.md
               - number: python_api/utils/operators/number.md
@@ -294,6 +289,8 @@ nav:
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
+          - Magic helpers:
+            - hc: python_api/hermitian_conjugate/hc.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

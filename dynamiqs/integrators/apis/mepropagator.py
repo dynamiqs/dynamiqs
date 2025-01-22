@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from functools import partial
 
 import jax
@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
@@ -17,13 +17,12 @@ from ...solver import Expm, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     multi_vmap,
 )
-from ..core.abstract_integrator import MEPropagatorIntegrator
-from ..mepropagator.expm_integrator import MEPropagatorExpmIntegrator
+from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
 
 def mepropagator(
@@ -50,21 +49,6 @@ def mepropagator(
         This function only supports constant or piecewise constant Hamiltonians and jump
         operators. Support for arbitrary time dependence will be added soon.
 
-    Note-: Defining a time-dependent Hamiltonian or jump operator
-        If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See the
-        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
-        tutorial for more details.
-
-    Note-: Running multiple simulations concurrently
-        The Hamiltonian `H` and the jump operators `jump_ops` can be batched to compute
-        multiple propagators concurrently. All other arguments are common to every
-        batch. See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
@@ -78,14 +62,104 @@ def mepropagator(
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options (supported: `save_propagators`, `cartesian_batching`,
+            `t0`, `save_extra`).
+            ??? "Detailed options API"
+                ```
+                dq.Options(
+                    save_propagators: bool = True,
+                    cartesian_batching: bool = True,
+                    t0: ScalarLike | None = None,
+                    save_extra: callable[[Array], PyTree] | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **save_propagators** - If `True`, the propagator is saved at every
+                    time in `tsave`, otherwise only the final propagator is returned.
+                - **cartesian_batching** - If `True`, batched arguments are treated as
+                    separated batch dimensions, otherwise the batching is performed over
+                    a single shared batched dimension.
+                - **t0** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
+                - **save_extra** _(function, optional)_ - A function with signature
+                    `f(QArray) -> PyTree` that takes a propagator as input and returns
+                    a PyTree. This can be used to save additional arbitrary data
+                    during the integration, accessible in `result.extra`.
 
     Returns:
-        [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult] object holding
-            the result of the propagator computation. Use the attribute
-            `propagators` to access saved quantities, more details in
-            [`dq.MEPropagatorResult`][dynamiqs.MEPropagatorResult].
-    """  # noqa: E501
+        `dq.MEPropagatorResult` object holding the result of the propagator computation.
+            Use `result.propagators` to access the saved propagators.
+
+            ??? "Detailed result API"
+                ```python
+                dq.MEPropagatorResult
+                ```
+
+                **Attributes**
+
+                - **propagators** _(qarray of shape (..., nsave, n^2, n^2))_ - Saved
+                    propagators with `nsave = ntsave`, or `nsave = 1` if
+                    `options.save_propagators=False`.
+                - **final_propagator** _(qarray of shape (..., n^2, n^2))_ - Saved final
+                    propagator.
+                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
+                    specified in `options`.
+                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **solver** _(Solver)_ - Solver used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Defining a time-dependent Hamiltonian or jump operator
+
+    If the Hamiltonian or the jump operators depend on time, they can be converted
+    to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
+    [`dq.modulated()`][dynamiqs.modulated], or
+    [`dq.timecallable()`][dynamiqs.timecallable]. See the
+    [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+    tutorial for more details.
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H` and the jump operators `jump_ops` can be batched to compute
+    multiple propagators concurrently. All other arguments are common to every
+    batch. The resulting propagators are batched according to the leading dimensions of
+    `H` and `jump_ops`. The behaviour depends on the value of the `cartesian_batching`
+    option.
+
+    === "If `cartesian_batching = True` (default value)"
+        The results leading dimensions are
+        ```
+        ... = ...H, ...L0, ...L1, (...)
+        ```
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+
+        then `result.propagators` has shape _(2, 3, 4, 5, 6, ntsave, n, n)_.
+    === "If `cartesian_batching = False`"
+        The results leading dimensions are
+        ```
+        ... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
+        ```
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+
+        then `result.propagators` has shape _(2, 3, ntsave, n, n)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
+    """
     # === convert arguments
     H = _astimeqarray(H)
     Ls = [_astimeqarray(L) for L in jump_ops]
@@ -94,9 +168,10 @@ def mepropagator(
     # === check arguments
     _check_mepropagator_args(H, Ls)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'mepropagator')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
-    # objects (which are not JIT-compatible) to JAX arrays
+    # objects (which are not JIT-compatible) to qarrays
     return _vectorized_mepropagator(H, Ls, tsave, solver, gradient, options)
 
 
@@ -138,9 +213,10 @@ def _mepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === select integrator class
-    integrators = {Expm: MEPropagatorExpmIntegrator}
-    integrator_class: MEPropagatorIntegrator = get_integrator_class(integrators, solver)
+    # === select integrator constructor
+    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
@@ -150,8 +226,15 @@ def _mepropagator(
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
     # todo: timeqarray should expose dims without having to call at specific time
     y0 = DenseQArray(H(0.0).dims, True, data)
-    integrator = integrator_class(
-        ts=tsave, y0=y0, solver=solver, gradient=gradient, options=options, H=H, Ls=Ls
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=y0,
+        solver=solver,
+        gradient=gradient,
+        result_class=MEPropagatorResult,
+        options=options,
+        H=H,
+        Ls=Ls,
     )
 
     # === run integrator
@@ -170,7 +253,8 @@ def _check_mepropagator_args(H: TimeQArray, Ls: list[TimeQArray]):
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0:
-        logging.warning(
+        warnings.warn(
             'Argument `jump_ops` is an empty list, consider using `dq.sepropagator()`'
-            ' to compute propagators for the Schrödinger equation.'
+            ' to compute propagators for the Schrödinger equation.',
+            stacklevel=2,
         )

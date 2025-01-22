@@ -8,7 +8,7 @@ from .._utils import cdtype
 from ..qarrays.qarray import QArray
 from ..qarrays.utils import asqarray
 from .operators import displace
-from .states import fock
+from .states import excited, ground
 
 __all__ = ['cd_gate', 'snap_gate']
 
@@ -56,8 +56,9 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
     $$
        \mathrm{CD}(\alpha) = D(\alpha/2)\ket{g}\bra{g} + D(-\alpha/2)\ket{e}\bra{e},
     $$
-    where $\ket{g}=\ket0$ and $\ket{e}=\ket1$ are the ground and excited states of the
-    TLS, respectively.
+    where $\ket{g}$ (defined by [`dq.ground()`][dynamiqs.ground]) and $\ket{e}$
+    (defined by [`dq.excited()`][dynamiqs.excited]) are the ground and excited states of
+    the TLS.
 
     Args:
         dim: Dimension of the oscillator Hilbert space.
@@ -70,16 +71,16 @@ def cd_gate(dim: int, alpha: ArrayLike) -> QArray:
     Examples:
         >>> dq.cd_gate(2, 0.1)
         QArray: shape=(4, 4), dims=(2, 2), dtype=complex64, layout=dense
-        [[ 0.999+0.j  0.   +0.j -0.05 +0.j  0.   +0.j]
-         [ 0.   +0.j  0.999+0.j  0.   +0.j  0.05 +0.j]
-         [ 0.05 +0.j  0.   +0.j  0.999+0.j  0.   +0.j]
-         [ 0.   +0.j -0.05 +0.j  0.   +0.j  0.999+0.j]]
+        [[ 0.999+0.j  0.   +0.j  0.05 +0.j  0.   +0.j]
+         [ 0.   +0.j  0.999+0.j  0.   +0.j -0.05 +0.j]
+         [-0.05 +0.j  0.   +0.j  0.999+0.j  0.   +0.j]
+         [ 0.   +0.j  0.05 +0.j  0.   +0.j  0.999+0.j]]
         >>> dq.cd_gate(3, [0.1, 0.2]).shape
         (2, 6, 6)
     """
     alpha = jnp.asarray(alpha, dtype=cdtype())
-    g = fock(2, 0)  # (2, 1)
-    e = fock(2, 1)  # (2, 1)
+    g = ground()  # (2, 1)
+    e = excited()  # (2, 1)
     disp_plus = displace(dim, alpha / 2)  # (..., dim, dim)
     disp_minus = displace(dim, -alpha / 2)  # (..., dim, dim)
     return (disp_plus & g.proj()) + (disp_minus & e.proj())

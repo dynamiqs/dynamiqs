@@ -63,26 +63,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Autograd
         - CheckpointAutograd
 
-### Options
-
-::: dynamiqs.options
-    options:
-        table: true
-        members:
-        - Options
-
-### Results
-
-::: dynamiqs.result
-    options:
-        table: true
-        members:
-        - SESolveResult
-        - MESolveResult
-        - SEPropagatorResult
-        - MEPropagatorResult
-        - FloquetResult
-
 ## Utilities
 
 ### Operators
@@ -92,7 +72,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - eye
-        - zero
+        - eye_like
+        - zeros
+        - zeros_like
         - destroy
         - create
         - number
@@ -252,3 +234,11 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - gifit
         - grid
         - mplstyle
+
+### Magic helpers
+
+::: dynamiqs.hermitian_conjugate
+    options:
+        table: true
+        members:
+        - hc

@@ -60,7 +60,7 @@ def test_flat_batching(npsi0):
 
 @pytest.mark.run(order=TEST_LONG)
 def test_timeqarray_batching():
-    # generic arrays
+    # generic qarrays
     a = dq.destroy(4)
     H0 = a + a.dag()
     psi0 = dq.basis(4, 0)

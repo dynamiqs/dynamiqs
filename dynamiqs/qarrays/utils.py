@@ -170,7 +170,7 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
             'Argument `qarrays` must contain elements with identical `dims` attribute.'
         )
     if not all(qarray.shape == qarrays[0].shape for qarray in qarrays):
-        raise ValueError('All input arrays must have the same shape.')
+        raise ValueError('All input qarrays must have the same shape.')
 
     # stack inputs depending on type
     if all(isinstance(q, DenseQArray) for q in qarrays):
@@ -269,7 +269,7 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [1.]
          [0.]]
 
-        For a batched array:
+        For a batched qarray:
         >>> rhos = dq.stack([dq.coherent_dm(16, i) for i in range(5)])
         >>> rhos.shape
         (5, 16, 16)
@@ -315,7 +315,7 @@ def sparsedia_from_dict(
         dims _(tuple of ints or None)_: Dimensions of each subsystem in the composite
             system Hilbert space tensor product. Defaults to `None` (single Hilbert
             space `dims=(n,)`).
-        dtype: Data type of the array. If `None`, the data type is inferred from the
+        dtype: Data type of the qarray. If `None`, the data type is inferred from the
             diagonals.
 
     Returns:

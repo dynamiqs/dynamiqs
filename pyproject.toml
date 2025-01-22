@@ -17,15 +17,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "qutip>=4.7.5",
     "scipy",
     "numpy",
     "matplotlib",
     "tqdm",
-    "jax",
-    "jaxlib",
+    "jax>=0.4.36", # for GPU eig support
     "jaxtyping",
     "diffrax>=0.5.1",  # for complex support (0.5.0) and progress meter (0.5.1)
     "equinox",

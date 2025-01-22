@@ -18,13 +18,12 @@ from ...solver import EulerMaruyama, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
+    assert_solver_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
-    get_integrator_class,
     multi_vmap,
 )
-from ..core.abstract_integrator import DSMESolveIntegrator
-from ..dsmesolve.fixed_step_integrator import DSMESolveEulerMayuramaIntegrator
+from ..core.fixed_step_integrator import dsmesolve_integrator_constructor
 
 
 def dsmesolve(
@@ -170,8 +169,8 @@ def dsmesolve(
 
     # === split jump operators
     # split between purely dissipative (eta = 0) and measured (eta != 0)
-    Lcs = [L for L, eta in zip(Ls, etas) if eta == 0]
-    Lms = [L for L, eta in zip(Ls, etas) if eta != 0]
+    Lcs = [L for L, eta in zip(Ls, etas, strict=False) if eta == 0]
+    Lms = [L for L, eta in zip(Ls, etas, strict=False) if eta != 0]
     etas = etas[etas != 0]
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
@@ -241,25 +240,27 @@ def _dsmesolve_single_trajectory(
     options: Options,
 ) -> DSMESolveResult:
     # === select integrator class
-    integrators = {EulerMaruyama: DSMESolveEulerMayuramaIntegrator}
-    integrator_class: DSMESolveIntegrator = get_integrator_class(integrators, solver)
+    supported_solvers = (EulerMaruyama,)
+    assert_solver_supported(solver, supported_solvers)
+    integrator_constructor = dsmesolve_integrator_constructor
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
-    # === init solver
-    integrator = integrator_class(
-        ts=tsave,
-        y0=rho0,
-        solver=solver,
-        gradient=gradient,
-        options=options,
-        key=key,
+    # === init integrator
+    integrator = integrator_constructor(
         H=H,
         Lcs=Lcs,
         Lms=Lms,
         etas=etas,
+        y0=rho0,
+        ts=tsave,
+        key=key,
         Es=exp_ops,
+        solver=solver,
+        gradient=gradient,
+        result_class=DSMESolveResult,
+        options=options,
     )
 
     # === run solver
