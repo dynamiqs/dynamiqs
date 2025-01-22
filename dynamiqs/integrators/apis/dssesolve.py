@@ -39,10 +39,10 @@ def dssesolve(
                 &-iH \dt
                 -\frac12 \sum_{k=1}^N \left(
                     L_k^\dag L_k - \braket{L_k + L_k^\dag} L_k
-                    + \braket{L_k + L_k^\dag }^2 \\! / 4
+                    + \frac14 \braket{L_k + L_k^\dag }^2
                 \right) \dt \\\\
                 &+ \sum_{k=1}^N \left(
-                    L_k - \braket{L_k + L_k^\dag} \\! / 2
+                    L_k - \frac12 \braket{L_k + L_k^\dag}
                 \right) \dd W_k
             \Bigg] \ket\psi
         \end{split}
