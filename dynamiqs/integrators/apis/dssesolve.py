@@ -44,7 +44,7 @@ def dssesolve(
                 &+ \sum_{k=1}^N \left(
                     L_k - \frac12 \braket{L_k + L_k^\dag}
                 \right) \dd W_k
-            \Bigg] \ket\psi
+            \Bigg] \\!\ket\psi
         \end{split}
     $$
     where $H$ is the system's Hamiltonian, $\{L_k\}$ is a collection of jump operators,
