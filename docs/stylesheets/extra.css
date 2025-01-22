@@ -339,7 +339,7 @@ p {
 }
 
 /* Fix for two-line parameters when deploying doc */
-.field-body p {
+.field-body p:not(details p) {
   display: inline;
 }
 
