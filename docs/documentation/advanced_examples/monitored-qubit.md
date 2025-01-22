@@ -21,7 +21,7 @@ dq.plot.mplstyle(dpi=150)  # set custom matplotlib style
 
 ```python
 # define Hamiltonian, jump operators, efficiencies, initial state
-H = dq.zero(2)
+H = dq.zeros(2)
 jump_ops = [dq.sigmaz()]
 etas = [1.0]
 psi0 = (dq.ground() + dq.excited()).unit()
