@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import abstractmethod
+
 import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree
@@ -13,6 +15,10 @@ from .solver import Solver
 __all__ = [
     'FloquetResult',
     'MEPropagatorResult',
+    'JSSESolveResult',
+    'DSSESolveResult',
+    'JSMESolveResult',
+    'DSMESolveResult',
     'MESolveResult',
     'SEPropagatorResult',
     'SESolveResult',
@@ -179,4 +185,26 @@ class SEPropagatorResult(PropagatorResult):
 
 
 class MEPropagatorResult(PropagatorResult):
+    pass
+
+
+class JSSESolveResult(SolveResult):
+    @abstractmethod
+    def no_jump_state(self) -> Array | None:
+        pass
+
+    @abstractmethod
+    def no_jump_proba(self) -> Array | None:
+        pass
+
+
+class DSSESolveResult(SolveResult):
+    pass
+
+
+class JSMESolveResult(SolveResult):
+    pass
+
+
+class DSMESolveResult(SolveResult):
     pass
