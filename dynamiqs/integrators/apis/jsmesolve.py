@@ -30,7 +30,7 @@ def jsmesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    The jump SME describes the evolution of an open quantum system under measurement by
+    The jump SME describes the evolution of a quantum system measured by
     a jump detector (for example photodetection in quantum optics). This function
     computes the evolution of the density matrix $\rho(t)$ at time $t$, starting from
     an initial state $\rho_0$, according to the jump SME ($\hbar=1$, time is

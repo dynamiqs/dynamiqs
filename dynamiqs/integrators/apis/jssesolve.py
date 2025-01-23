@@ -28,8 +28,8 @@ def jssesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    The jump SSE describes the evolution of a quantum system under measurement by
-    am ideal jump detector (for example photodetection in quantum optics). This
+    The jump SSE describes the evolution of a quantum system measured by an ideal jump
+    detector (for example photodetection in quantum optics). This
     function computes the evolution of the state vector $\ket{\psi(t)}$ at time $t$,
     starting from an initial state $\ket{\psi_0}$, according to the jump SSE ($\hbar=1$,
     time is implicit(1))

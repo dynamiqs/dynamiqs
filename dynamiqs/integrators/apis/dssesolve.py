@@ -28,7 +28,7 @@ def dssesolve(
         This function has not been implemented yet. The following API is indicative
         of the planned implementation.
 
-    The diffusive SSE describes the evolution of a quantum system under measurement
+    The diffusive SSE describes the evolution of a quantum system measured
     by an ideal diffusive detector (for example homodyne or heterodyne detection
     in quantum optics). This function computes the evolution of the state vector
     $\ket{\psi(t)}$ at time $t$, starting from an initial state $\ket{\psi_0}$
