@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/Expm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/EulerMaruyama.html">
 
 
-    <link rel="prev" href="Rouchon2.html">
+    <link rel="prev" href="Euler.html">
 
 
-    <link rel="next" href="../gradient/Autograd.html">
+    <link rel="next" href="Rouchon1.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Expm - Dynamiqs</title>
+        <title>EulerMaruyama - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solver.Expm" class="md-skip">
+        <a href="#dynamiqs.solver.EulerMaruyama" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Expm
+                EulerMaruyama
               
             </span>
           </div>
@@ -1701,10 +1701,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="EulerMaruyama.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="EulerMaruyama.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1713,6 +1722,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -1764,19 +1774,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="Expm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="Expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1785,7 +1786,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4955,57 +4955,33 @@
 
 
 
-<h1 id="dynamiqs.solver.Expm" class="doc doc-heading">
-  <span class="doc doc-object-name doc-class-name">dq.solver.Expm</span>
+<h1 id="dynamiqs.solver.EulerMaruyama" class="doc doc-heading">
+  <span class="doc doc-object-name doc-class-name">dq.solver.EulerMaruyama</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Expm</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">EulerMaruyama</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
 
-        <p>Explicit matrix exponentiation to compute propagators.</p>
-<p>Explicitly batch-compute the propagators for all time intervals in <code>tsave</code>. These
-propagators are then iteratively applied:</p>
-<ul>
-<li>starting from the initial state for <a class="autorefs autorefs-internal" href="../integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> and
-  <a class="autorefs autorefs-internal" href="../integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, to compute states for all times in <code>tsave</code>,</li>
-<li>starting from the identity matrix for <a class="autorefs autorefs-internal" href="../integrators/sepropagator.html#dynamiqs.integrators.sepropagator"><code>dq.sepropagator()</code></a>
-  and <a class="autorefs autorefs-internal" href="../integrators/mepropagator.html#dynamiqs.integrators.mepropagator"><code>dq.mepropagator()</code></a>, to compute propagators for all
-  times in <code>tsave</code>.</li>
-</ul>
-<p>For the Schrödinger equation with constant Hamiltonian <span class="arithmatex">\(H\)</span>, the propagator from
-time <span class="arithmatex">\(t_0\)</span> to time <span class="arithmatex">\(t_1\)</span> is an <span class="arithmatex">\(n\times n\)</span> matrix given by
-$$
-    U(t_0, t_1) = \exp(-i (t_1 - t_0) H).
-$$</p>
-<p>For the Lindblad master equation with constant Liouvillian <span class="arithmatex">\(\mathcal{L}\)</span>, the
-problem is vectorized and the propagator from time <span class="arithmatex">\(t_0\)</span> to time <span class="arithmatex">\(t_1\)</span> is an
-<span class="arithmatex">\(n^2\times n^2\)</span> matrix given by
-$$
-    \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
-$$</p>
+        <p>Euler-Maruyama method (fixed step size SDE solver).</p>
+<p>For a fixed step size <span class="arithmatex">\(\dt\)</span>, it has weak order of convergence <span class="arithmatex">\(\dt\)</span> and strong order
+of convergence <span class="arithmatex">\(\sqrt{\dt}\)</span>.</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>If the Hamiltonian or jump operators are sparse qarrays, they will be silently
-converted to dense qarrays before computing their matrix exponentials.</p>
-</details>
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This solver is not recommended for open systems of large dimension, due to
-the <span class="arithmatex">\(\mathcal{O}(n^6)\)</span> scaling of computing the Liouvillian exponential.</p>
-</details>
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This solver only supports constant or piecewise constant Hamiltonian and jump
-operators.</p>
-</details>
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>dt</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Fixed time step.</p>
+        </li>
+    </ul>
+
 <details class="note"
  >
   <summary>Supported gradients</summary>

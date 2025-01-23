@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/Expm.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/jssesolve.html">
 
 
-    <link rel="prev" href="Rouchon2.html">
+    <link rel="prev" href="floquet.html">
 
 
-    <link rel="next" href="../gradient/Autograd.html">
+    <link rel="next" href="dssesolve.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Expm - Dynamiqs</title>
+        <title>jssesolve - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solver.Expm" class="md-skip">
+        <a href="#dynamiqs.integrators.jssesolve" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Expm
+                jssesolve
               
             </span>
           </div>
@@ -958,6 +958,8 @@
                 
   
   
+    
+  
   
   
     
@@ -986,11 +988,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
         
           
           <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
@@ -1004,7 +1006,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
             Quantum solvers
@@ -1018,7 +1020,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/sesolve.html" class="md-nav__link">
+      <a href="sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1039,7 +1041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/mesolve.html" class="md-nav__link">
+      <a href="mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1060,7 +1062,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/sepropagator.html" class="md-nav__link">
+      <a href="sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1081,7 +1083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/mepropagator.html" class="md-nav__link">
+      <a href="mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1102,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/floquet.html" class="md-nav__link">
+      <a href="floquet.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1120,8 +1122,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1141,11 +1145,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_6" checked>
         
           
           <label class="md-nav__link" for="__nav_3_2_6" id="__nav_3_2_6_label" tabindex="0">
@@ -1159,7 +1163,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_2_6">
             <span class="md-nav__icon md-icon"></span>
             stochastic
@@ -1170,10 +1174,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../integrators/jssesolve.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    jssesolve
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="jssesolve.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1182,6 +1206,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.jssesolve--advanced-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced use-cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced use-cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.jssesolve--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
+    <span class="md-ellipsis">
+      Defining a time-dependent Hamiltonian or jump operator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.jssesolve--running-multiple-simulations-concurrently" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running multiple simulations concurrently
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1194,7 +1271,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/dssesolve.html" class="md-nav__link">
+      <a href="dssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1215,7 +1292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/jsmesolve.html" class="md-nav__link">
+      <a href="jsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1236,7 +1313,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/dsmesolve.html" class="md-nav__link">
+      <a href="dsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1270,8 +1347,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1296,11 +1371,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
           
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
@@ -1314,7 +1389,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             Core
@@ -1511,10 +1586,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -1546,11 +1619,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_3" >
         
           
           <label class="md-nav__link" for="__nav_3_3_3" id="__nav_3_3_3_label" tabindex="0">
@@ -1564,7 +1637,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3_3">
             <span class="md-nav__icon md-icon"></span>
             Solvers (dq.solver)
@@ -1578,7 +1651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Tsit5.html" class="md-nav__link">
+      <a href="../solver/Tsit5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1599,7 +1672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Dopri5.html" class="md-nav__link">
+      <a href="../solver/Dopri5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1620,7 +1693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Dopri8.html" class="md-nav__link">
+      <a href="../solver/Dopri8.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1641,7 +1714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Kvaerno3.html" class="md-nav__link">
+      <a href="../solver/Kvaerno3.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1662,7 +1735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Kvaerno5.html" class="md-nav__link">
+      <a href="../solver/Kvaerno5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1683,7 +1756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Euler.html" class="md-nav__link">
+      <a href="../solver/Euler.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1704,7 +1777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="EulerMaruyama.html" class="md-nav__link">
+      <a href="../solver/EulerMaruyama.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1725,7 +1798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Rouchon1.html" class="md-nav__link">
+      <a href="../solver/Rouchon1.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1746,7 +1819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="Rouchon2.html" class="md-nav__link">
+      <a href="../solver/Rouchon2.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1764,19 +1837,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="Expm.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../solver/Expm.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1785,7 +1849,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -4935,6 +4998,47 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.jssesolve--advanced-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced use-cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced use-cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.jssesolve--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
+    <span class="md-ellipsis">
+      Defining a time-dependent Hamiltonian or jump operator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.jssesolve--running-multiple-simulations-concurrently" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running multiple simulations concurrently
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -4951,89 +5055,323 @@
   
 
 
-<div class="doc doc-object doc-class">
+<div class="doc doc-object doc-function">
 
 
-
-<h1 id="dynamiqs.solver.Expm" class="doc doc-heading">
-  <span class="doc doc-object-name doc-class-name">dq.solver.Expm</span>
+<h1 id="dynamiqs.integrators.jssesolve" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.jssesolve</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Expm</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">jssesolve</span><span class="p">(</span>
+    <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">,</span>
+    <span class="n">jump_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">],</span>
+    <span class="n">psi0</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
+    <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">exp_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">solver</span><span class="p">:</span> <span class="n">Solver</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSSESolveResult</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
+        <p>Solve the jump stochastic Schrödinger equation (<abbr title="stochastic Schrödinger equation">SSE</abbr>).</p>
 
-        <p>Explicit matrix exponentiation to compute propagators.</p>
-<p>Explicitly batch-compute the propagators for all time intervals in <code>tsave</code>. These
-propagators are then iteratively applied:</p>
-<ul>
-<li>starting from the initial state for <a class="autorefs autorefs-internal" href="../integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> and
-  <a class="autorefs autorefs-internal" href="../integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, to compute states for all times in <code>tsave</code>,</li>
-<li>starting from the identity matrix for <a class="autorefs autorefs-internal" href="../integrators/sepropagator.html#dynamiqs.integrators.sepropagator"><code>dq.sepropagator()</code></a>
-  and <a class="autorefs autorefs-internal" href="../integrators/mepropagator.html#dynamiqs.integrators.mepropagator"><code>dq.mepropagator()</code></a>, to compute propagators for all
-  times in <code>tsave</code>.</li>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>This function has not been implemented yet. The following API is indicative
+of the planned implementation.</p>
+</details>        <p class="annotate">The jump <abbr title="stochastic Schrödinger equation">SSE</abbr> describes the evolution of a quantum system measured by an ideal jump
+detector (for example photodetection in quantum optics). This
+function computes the evolution of the state vector <span class="arithmatex">\(\ket{\psi(t)}\)</span> at time <span class="arithmatex">\(t\)</span>,
+starting from an initial state <span class="arithmatex">\(\ket{\psi_0}\)</span>, according to the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> (<span class="arithmatex">\(\hbar=1\)</span>,
+time is implicit(1))
+$$
+    \dd\!\ket\psi = \left[
+        -iH \dt
+        - \frac12 \sum_{k=1}^N \left(
+            L_k^\dag L_k - \braket{L_k^\dag L_k}
+        \right) \dt
+        + \sum_{k=1}^N \left(
+            \frac{L_k}{\sqrt{\braket{L_k^\dag L_k}}} - 1
+        \right) \dd N_k
+    \right] \!\ket\psi
+$$
+where <span class="arithmatex">\(H\)</span> is the system's Hamiltonian, <span class="arithmatex">\(\{L_k\}\)</span> is a collection of jump operators,
+each continuously measured with perfect efficiency, and <span class="arithmatex">\(\dd N_k\)</span> are independent
+point processes with law
+$$
+    \begin{split}
+        \mathbb{P}[\dd N_k = 0] &amp;= 1 - \mathbb{P}[\dd N_k = 1], \\
+        \mathbb{P}[\dd N_k = 1] &amp;= \braket{L_k^\dag L_k} \dt.
+    \end{split}
+$$</p>
+<ol>
+<li>With explicit time dependence:<ul>
+<li><span class="arithmatex">\(\ket\psi\to\ket{\psi(t)}\)</span></li>
+<li><span class="arithmatex">\(H\to H(t)\)</span></li>
+<li><span class="arithmatex">\(L_k\to L_k(t)\)</span></li>
+<li><span class="arithmatex">\(\dd N_k\to \dd N_k(t)\)</span></li>
 </ul>
-<p>For the Schrödinger equation with constant Hamiltonian <span class="arithmatex">\(H\)</span>, the propagator from
-time <span class="arithmatex">\(t_0\)</span> to time <span class="arithmatex">\(t_1\)</span> is an <span class="arithmatex">\(n\times n\)</span> matrix given by
-$$
-    U(t_0, t_1) = \exp(-i (t_1 - t_0) H).
-$$</p>
-<p>For the Lindblad master equation with constant Liouvillian <span class="arithmatex">\(\mathcal{L}\)</span>, the
-problem is vectorized and the propagator from time <span class="arithmatex">\(t_0\)</span> to time <span class="arithmatex">\(t_1\)</span> is an
-<span class="arithmatex">\(n^2\times n^2\)</span> matrix given by
-$$
-    \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
-$$</p>
+</li>
+</ol>
+<p>The continuous-time measurements are defined by the point processes <span class="arithmatex">\(\dd N_k\)</span>. The
+solver returns the times at which the detector clicked,
+<span class="arithmatex">\(I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}\)</span>.</p>
 
 <details class="warning"
  open >
   <summary>Warning</summary>
-  <p>If the Hamiltonian or jump operators are sparse qarrays, they will be silently
-converted to dense qarrays before computing their matrix exponentials.</p>
+  <p>For now, <code>jssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
+are exact multiples of the solver fixed step size <code>dt</code>.</p>
 </details>
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>H</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(qarray-like or time-qarray of shape (...H, n, n))              </i>
+          – <p>Hamiltonian.</p>
+        </li>
+        <li class="field-body">
+          <b>jump_ops</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(list of qarray-like or time-qarray, each of shape (n, n))              </i>
+          – <p>List of
+jump operators.</p>
+        </li>
+        <li class="field-body">
+          <b>psi0</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(qarray-like of shape (...psi0, n, 1))              </i>
+          – <p>Initial state.</p>
+        </li>
+        <li class="field-body">
+          <b>tsave</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(array-like of shape (ntsave,))              </i>
+          – <p>Times at which the states and
+expectation values are saved. The equation is solved from <code>tsave[0]</code> to
+<code>tsave[-1]</code>.</p>
+        </li>
+        <li class="field-body">
+          <b>keys</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(list of PRNG keys)              </i>
+          – <p>PRNG keys used to sample the point processes.
+The number of elements defines the number of sampled stochastic
+trajectories.</p>
+        </li>
+        <li class="field-body">
+          <b>exp_ops</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(list of array-like, each of shape (n, n), optional)              </i>
+          – <p>List of
+operators for which the expectation value is computed.</p>
+        </li>
+        <li class="field-body">
+          <b>solver</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Solver for the integration. No defaults for now, you have to specify a
+solver (supported: <a class="autorefs autorefs-internal" href="../solver/EulerMaruyama.html#dynamiqs.solver.EulerMaruyama"><code>EulerMaruyama</code></a>).</p>
+        </li>
+        <li class="field-body">
+          <b>gradient</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Algorithm used to compute the gradient. The default is
+solver-dependent, refer to the documentation of the chosen solver for more
+details.</p>
+        </li>
+        <li class="field-body">
+          <b>options</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
+<code>save_extra</code>, <code>nmaxclick</code>, <code>smart_sampling</code>).</p>
+<details>
+<summary>Detailed options API</summary>
+<div class="highlight"><pre><span></span><code>dq.Options(
+    save_states: bool = True,
+    cartesian_batching: bool = True,
+    save_extra: callable[[Array], PyTree] | None = None,
+    nmaxclick: int = 10_000,
+    smart_sampling: bool = False,
+)
+</code></pre></div>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>save_states</strong> - If <code>True</code>, the state is saved at every time in
+    <code>tsave</code>, otherwise only the final state is returned.</li>
+<li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
+    separated batch dimensions, otherwise the batching is performed over
+    a single shared batched dimension.</li>
+<li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
+    <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
+    PyTree. This can be used to save additional arbitrary data
+    during the integration, accessible in <code>result.extra</code>.</li>
+<li><strong>nmaxclick</strong> - Maximum buffer size for <code>result.clicktimes</code>, should be
+    set higher than the expected maximum number of jump event.</li>
+<li><strong>smart_sampling</strong> - If <code>True</code>, the no jump trajectory is simulated
+    only once, and only trajectories with one or more jumps are sampled
+    in <code>result.states</code>. The no jump state is accessible in
+    <code>result.no_jump_state</code> with its associated probability
+    <code>result.no_jump_proba</code>.</li>
+</ul>
+</details>
+        </li>
+    </ul>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><span title="dynamiqs.result.JSSESolveResult">JSSESolveResult</span></code>
+        – <p><code>dq.JSSESolveResult</code> object holding the result of the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> integration. Use
+<code>result.states</code> to access the saved states, <code>result.expects</code> to access the
+saved expectation values and <code>result.clicktimes</code> to access the detector
+click times.</p>
+<details>
+<summary>Detailed result API</summary>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">JSSESolveResult</span>
+</code></pre></div>
+<p>For the shape indications we define <code>ntrajs</code> as the number of
+trajectories (<code>ntrajs = len(keys)</code>).</p>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
+    states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
+    <code>options.save_states=False</code>.</li>
+<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved final
+    state.</li>
+<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
+    expectation values, if specified by <code>exp_ops</code>.</li>
+<li><strong>clicktimes</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nmaxclick))</em> - Times
+    at which the detectors clicked. Variable-length array padded with
+    <code>None</code> up to <code>nmaxclick</code>.</li>
+<li><strong>no_jump_state</strong> <em>(..., nsave, n, 1)</em> - Saved state for the no jump
+    trajectory, only if <code>options.smart_sampling=True</code>.</li>
+<li><strong>no_jump_proba</strong> <em>(..., nsave)</em> - Probability of the no jump
+    trajectory, only if <code>options.smart_sampling=True</code>.</li>
+<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
+    specified in <code>options</code>.</li>
+<li><strong>keys</strong> <em>(PRNG key array of shape (ntrajs,))</em> - PRNG keys used to
+    sample the Wiener processes.</li>
+<li><strong>infos</strong> <em>(PyTree or None)</em> - Solver-dependent information on the
+    resolution.</li>
+<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
+    saved.</li>
+<li><strong>solver</strong> <em>(Solver)</em> - Solver used.</li>
+<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
+<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
+</ul>
+</details>
+      </li>
+  </ul> -->
+      <span class="field-body"><p><code>dq.JSSESolveResult</code> object holding the result of the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> integration. Use
+<code>result.states</code> to access the saved states, <code>result.expects</code> to access the
+saved expectation values and <code>result.clicktimes</code> to access the detector
+click times.</p>
+<details>
+<summary>Detailed result API</summary>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">JSSESolveResult</span>
+</code></pre></div>
+<p>For the shape indications we define <code>ntrajs</code> as the number of
+trajectories (<code>ntrajs = len(keys)</code>).</p>
+<p><strong>Attributes</strong></p>
+<ul>
+<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
+    states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
+    <code>options.save_states=False</code>.</li>
+<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved final
+    state.</li>
+<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
+    expectation values, if specified by <code>exp_ops</code>.</li>
+<li><strong>clicktimes</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nmaxclick))</em> - Times
+    at which the detectors clicked. Variable-length array padded with
+    <code>None</code> up to <code>nmaxclick</code>.</li>
+<li><strong>no_jump_state</strong> <em>(..., nsave, n, 1)</em> - Saved state for the no jump
+    trajectory, only if <code>options.smart_sampling=True</code>.</li>
+<li><strong>no_jump_proba</strong> <em>(..., nsave)</em> - Probability of the no jump
+    trajectory, only if <code>options.smart_sampling=True</code>.</li>
+<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
+    specified in <code>options</code>.</li>
+<li><strong>keys</strong> <em>(PRNG key array of shape (ntrajs,))</em> - PRNG keys used to
+    sample the Wiener processes.</li>
+<li><strong>infos</strong> <em>(PyTree or None)</em> - Solver-dependent information on the
+    resolution.</li>
+<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
+    saved.</li>
+<li><strong>solver</strong> <em>(Solver)</em> - Solver used.</li>
+<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
+<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
+</ul>
+</details></span>
+        <h2 id="dynamiqs.integrators.jssesolve--advanced-use-cases">Advanced use-cases</h2>
+<h3 id="dynamiqs.integrators.jssesolve--defining-a-time-dependent-hamiltonian-or-jump-operator">Defining a time-dependent Hamiltonian or jump operator</h3>
+<p>If the Hamiltonian or the jump operators depend on time, they can be converted
+to time-arrays using <a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>,
+<a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
+<a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
+<a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
+tutorial for more details.</p>
+<h3 id="dynamiqs.integrators.jssesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
+<p>The Hamiltonian <code>H</code> and the initial state <code>psi0</code> can be batched to
+solve multiple <abbr title="stochastic Schrödinger equations">SSEs</abbr> concurrently. All other arguments (including the PRNG key)
+are common to every batch. The resulting states, click times and expectation values
+are batched according to the leading dimensions of <code>H</code> and <code>psi0</code>. The
+behaviour depends on the value of the <code>cartesian_batching</code> option.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.integrators.jssesolve--__tabbed_1_1" name="dynamiqs.integrators.jssesolve--__tabbed_1" type="radio" /><input id="dynamiqs.integrators.jssesolve--__tabbed_1_2" name="dynamiqs.integrators.jssesolve--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.integrators.jssesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.integrators.jssesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>The results leading dimensions are
+<div class="highlight"><pre><span></span><code>... = ...H, ...psi0
+</code></pre></div>
+For example if:</p>
+<ul>
+<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>psi0</code> has shape <em>(4, n, 1)</em>,</li>
+</ul>
+<p>then <code>result.states</code> has shape <em>(2, 3, 4, ntrajs, ntsave, n, 1)</em>.</p>
+</div>
+<div class="tabbed-block">
+<p>The results leading dimensions are
+<div class="highlight"><pre><span></span><code>... = ...H = ...psi0  # (once broadcasted)
+</code></pre></div>
+For example if:</p>
+<ul>
+<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>psi0</code> has shape <em>(3, n, 1)</em>,</li>
+</ul>
+<p>then <code>result.states</code> has shape <em>(2, 3, ntrajs, ntsave, n, 1)</em>.</p>
+</div>
+</div>
+</div>
+<p>See the
+<a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
+tutorial for more details.</p>
+
 <details class="warning"
  open >
   <summary>Warning</summary>
-  <p>This solver is not recommended for open systems of large dimension, due to
-the <span class="arithmatex">\(\mathcal{O}(n^6)\)</span> scaling of computing the Liouvillian exponential.</p>
+  <p>Batching on <code>jump_ops</code> is not yet supported, if this is needed don't
+hesitate to
+<a href="https://github.com/dynamiqs/dynamiqs/issues/new">open an issue on GitHub</a>.</p>
 </details>
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This solver only supports constant or piecewise constant Hamiltonian and jump
-operators.</p>
-</details>
-<details class="note"
- >
-  <summary>Supported gradients</summary>
-  <p>This solver supports differentiation with
-<a class="autorefs autorefs-internal" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> (default).</p>
-</details>
-
-
-
-
-
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
     </div>
 
 </div>
