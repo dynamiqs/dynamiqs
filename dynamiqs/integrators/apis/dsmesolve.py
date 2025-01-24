@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from functools import partial
 
 import jax
@@ -285,9 +285,10 @@ def _check_dsmesolve_args(
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
 
     if len(Ls) == 0 and rho0.isket():
-        logging.warning(
+        warnings.warns(
             'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
-            ' consider using `dq.sesolve()` to solve the Schrödinger equation.'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.',
+            stacklevel=2,
         )
 
     # === check etas
