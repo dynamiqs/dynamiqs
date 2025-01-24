@@ -818,6 +818,8 @@
       
         
       
+        
+      
     
     
       
@@ -863,6 +865,27 @@
   
   <span class="md-ellipsis">
     Driven-dissipative Kerr oscillator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation/advanced_examples/continuous-diffusive-measurement.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Continuous diffusive measurement
   </span>
   
 
@@ -5193,7 +5216,7 @@ expectation values are saved. The equation is solved from <code>tsave[0]</code> 
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (list of PRNG keys)              </i>
-          – <p>PRNG keys used to sample the point processes.
+          – <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the point processes.
 The number of elements defines the number of sampled stochastic
 trajectories.</p>
         </li>
@@ -5282,7 +5305,7 @@ loss channels (those for which the measurement efficiency is not zero).</p>
     <code>None</code> up to <code>nmaxclick</code>.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(PRNG key array of shape (ntrajs,))</em> - PRNG keys used to
+<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
     sample the Wiener processes.</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Solver-dependent information on the
     resolution.</li>
@@ -5320,7 +5343,7 @@ loss channels (those for which the measurement efficiency is not zero).</p>
     <code>None</code> up to <code>nmaxclick</code>.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(PRNG key array of shape (ntrajs,))</em> - PRNG keys used to
+<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
     sample the Wiener processes.</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Solver-dependent information on the
     resolution.</li>
@@ -5341,7 +5364,7 @@ to time-arrays using <a class="autorefs autorefs-internal" href="../time_qarray/
 tutorial for more details.</p>
 <h3 id="dynamiqs.integrators.jsmesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
 <p>The Hamiltonian <code>H</code> and the initial density matrix <code>rho0</code> can be batched to
-solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. All other arguments (including the PRNG key)
+solve multiple <abbr title="stochastic master equations">SMEs</abbr> concurrently. All other arguments (including the <abbr title="pseudorandom number generator">PRNG</abbr> key)
 are common to every batch. The resulting states, click times and expectation values
 are batched according to the leading dimensions of <code>H</code> and <code>rho0</code>. The behaviour
 depends on the value of the <code>cartesian_batching</code> option.</p>
