@@ -1,10 +1,5 @@
 [
   {
-    "version": "dev-smesolve",
-    "title": "dev-smesolve",
-    "aliases": []
-  },
-  {
     "version": "dev",
     "title": "dev",
     "aliases": []
