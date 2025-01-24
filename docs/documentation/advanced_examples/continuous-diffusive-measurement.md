@@ -1,4 +1,4 @@
-# Diffusive SME
+# Continuous diffusive measurement
 
 !!! Warning "Work in progress."
     This tutorial is under construction, this is a draft version.
