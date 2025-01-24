@@ -40,7 +40,7 @@ keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
 solver = dq.solver.EulerMaruyama(dt=1e-3)
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver)
+result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver=solver)
 print(result)
 ```
 
@@ -149,7 +149,7 @@ keys = jax.random.split(key, ntrajs)
 # simulate trajectories
 solver = dq.solver.EulerMaruyama(dt=1e-3)
 options = dq.Options(save_states=False)
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver, options=options)
+result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver=solver, options=options)
 print(result)
 ```
 
