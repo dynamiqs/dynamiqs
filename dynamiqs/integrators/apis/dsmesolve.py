@@ -10,7 +10,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
@@ -23,7 +23,7 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.fixed_step_integrator import dsmesolve_integrator_constructor
+from ..core.fixed_step_integrator import dsmesolve_euler_maruyama_integrator_constructor
 
 
 def dsmesolve(
@@ -242,6 +242,7 @@ def dsmesolve(
     # === check arguments
     _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'dsmesolve')
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
@@ -319,28 +320,30 @@ def _dsmesolve_single_trajectory(
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
-    # === select integrator class
-    supported_solvers = (EulerMaruyama,)
-    assert_solver_supported(solver, supported_solvers)
-    integrator_constructor = dsmesolve_integrator_constructor
+    # === select integrator constructor
+    integrator_constructors = {
+        EulerMaruyama: dsmesolve_euler_maruyama_integrator_constructor
+    }
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
 
     # === check gradient is supported
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
-        H=H,
-        Lcs=Lcs,
-        Lms=Lms,
-        etas=etas,
-        y0=rho0,
         ts=tsave,
-        key=key,
-        Es=exp_ops,
+        y0=rho0,
         solver=solver,
         gradient=gradient,
         result_class=DSMESolveResult,
         options=options,
+        H=H,
+        Lcs=Lcs,
+        Lms=Lms,
+        etas=etas,
+        Es=exp_ops,
+        key=key,
     )
 
     # === run solver

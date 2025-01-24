@@ -232,4 +232,4 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
         return YDSME(drho, dY)
 
 
-dsmesolve_integrator_constructor = DSMESolveEulerMayuramaIntegrator
+dsmesolve_euler_maruyama_integrator_constructor = DSMESolveEulerMayuramaIntegrator
