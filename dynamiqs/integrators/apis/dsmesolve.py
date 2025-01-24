@@ -43,10 +43,6 @@ def dsmesolve(
 ) -> DSMESolveResult:
     r"""Solve the diffusive stochastic master equation (SME).
 
-    Warning:
-        This function has not been implemented yet. The following API is indicative
-        of the planned implementation.
-
     The diffusive SME describes the evolution of a quantum system measured
     by a diffusive detector (for example homodyne or heterodyne detection
     in quantum optics). This function computes the evolution of the density matrix
