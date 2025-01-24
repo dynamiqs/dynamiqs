@@ -201,7 +201,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
         Lcal_rho = tmp + tmp.dag()
 
         # === Ccal(rho)
-        Lm_rho = stack([_L @ y.rho for _L in Lm])
+        Lm_rho = stack([_Lm @ y.rho for _Lm in Lm])
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
         Ccal_rho = jnp.sqrt(etas) * (Lm_rho + Lm_rho.dag())  # (nLm, n, n)
         tr_Ccal_rho = Ccal_rho.trace().real  # (nLm,)
