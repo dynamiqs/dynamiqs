@@ -1,13 +1,31 @@
 from __future__ import annotations
 
+import warnings
+from functools import partial
+
+import jax
+import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
+from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
-from ...qarrays.qarray import QArrayLike
+from ...options import Options, check_options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
-from ...solver import Solver
+from ...solver import EulerMaruyama, Solver
 from ...time_qarray import TimeQArray
+from .._utils import (
+    _astimeqarray,
+    assert_solver_supported,
+    cartesian_vmap,
+    catch_xla_runtime_error,
+    multi_vmap,
+)
+from ..core.fixed_step_stochastic_integrator import (
+    dsmesolve_euler_maruyama_integrator_constructor,
+)
 
 
 def dsmesolve(
@@ -24,10 +42,6 @@ def dsmesolve(
     options: Options = Options(),  # noqa: B008
 ) -> DSMESolveResult:
     r"""Solve the diffusive stochastic master equation (SME).
-
-    Warning:
-        This function has not been implemented yet. The following API is indicative
-        of the planned implementation.
 
     The diffusive SME describes the evolution of a quantum system measured
     by a diffusive detector (for example homodyne or heterodyne detection
@@ -213,4 +227,179 @@ def dsmesolve(
         needed don't hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
-    return NotImplemented
+    # === convert arguments
+    H = _astimeqarray(H)
+    Ls = [_astimeqarray(L) for L in jump_ops]
+    etas = jnp.asarray(etas)
+    rho0 = asqarray(rho0)
+    tsave = jnp.asarray(tsave)
+    keys = jnp.asarray(keys)
+    if exp_ops is not None:
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === check arguments
+    _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
+    check_options(options, 'dsmesolve')
+
+    if solver is None:
+        raise ValueError('Argument `solver` must be specified.')
+
+    # === convert rho0 to density matrix
+    rho0 = rho0.todm()
+    rho0 = check_hermitian(rho0, 'rho0')
+
+    # === split jump operators
+    # split between purely dissipative (eta = 0) and measured (eta != 0)
+    Lcs = [L for L, eta in zip(Ls, etas, strict=False) if eta == 0]
+    Lms = [L for L, eta in zip(Ls, etas, strict=False) if eta != 0]
+    etas = etas[etas != 0]
+
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    tsave = tuple(tsave.tolist())  # todo: fix static tsave
+    return _vectorized_dsmesolve(
+        H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, solver, gradient, options
+    )
+
+
+@catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
+def _vectorized_dsmesolve(
+    H: TimeQArray,
+    Lcs: list[TimeQArray],
+    Lms: list[TimeQArray],
+    etas: Array,
+    rho0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSMESolveResult:
+    f = _dsmesolve_single_trajectory
+
+    # === vectorize function over stochastic trajectories
+    # the input is vectorized over `key`
+    in_axes = (None, None, None, None, None, None, 0, None, None, None, None)
+    # the result is vectorized over `_saved`, `infos` and `keys`
+    out_axes = DSMESolveResult.out_axes()
+    f = jax.vmap(f, in_axes, out_axes)
+
+    # === vectorize function
+    # vectorize input over H and rho0
+    in_axes = (H.in_axes, None, None, None, 0, None, None, None, None, None, None)
+
+    if options.cartesian_batching:
+        nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+    else:
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, rho0]])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        n = H.shape[-1]
+        H = H.broadcast_to(*bshape, n, n)
+        rho0 = rho0.broadcast_to(*bshape, n, n)
+        # vectorize the function
+        f = multi_vmap(f, in_axes, out_axes, nvmap)
+
+    # === apply vectorized function
+    return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, solver, gradient, options)
+
+
+def _dsmesolve_single_trajectory(
+    H: TimeQArray,
+    Lcs: list[TimeQArray],
+    Lms: list[TimeQArray],
+    etas: Array,
+    rho0: QArray,
+    tsave: Array,
+    key: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSMESolveResult:
+    # === select integrator constructor
+    integrator_constructors = {
+        EulerMaruyama: dsmesolve_euler_maruyama_integrator_constructor
+    }
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
+
+    # === check gradient is supported
+    solver.assert_supports_gradient(gradient)
+
+    # === init integrator
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=rho0,
+        solver=solver,
+        gradient=gradient,
+        result_class=DSMESolveResult,
+        options=options,
+        H=H,
+        Lcs=Lcs,
+        Lms=Lms,
+        etas=etas,
+        Es=exp_ops,
+        key=key,
+    )
+
+    # === run solver
+    result = integrator.run()
+
+    # === return result
+    return result  # noqa: RET504
+
+
+def _check_dsmesolve_args(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    etas: Array,
+    rho0: Array,
+    exp_ops: list[QArray] | None,
+):
+    # === check H shape
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
+
+    # === check Ls shape
+    for i, L in enumerate(Ls):
+        check_shape(L, f'jump_ops[{i}]', '(n, n)')
+
+    if len(Ls) == 0 and rho0.isket():
+        warnings.warns(
+            'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.',
+            stacklevel=2,
+        )
+
+    # === check etas
+    check_shape(etas, 'etas', '(n,)', subs={'n': 'len(jump_ops)'})
+
+    if not len(etas) == len(Ls):
+        raise ValueError(
+            'Argument `etas` should be of the same length as argument `jump_ops`, but'
+            f' len(etas)={len(etas)} and len(jump_ops)={len(Ls)}.'
+        )
+
+    if jnp.all(etas == 0):
+        raise ValueError(
+            'Argument `etas` contains only null values, consider using `dq.mesolve()`'
+            ' to solve the Lindblad master equation.'
+        )
+
+    if not (jnp.all(etas >= 0) and jnp.all(etas <= 1)):
+        raise ValueError(
+            'Argument `etas` should only contain values between 0 and 1, but'
+            f' is {etas}.'
+        )
+
+    # === check rho0 shape
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
+
+    # === check exp_ops shape
+    if exp_ops is not None:
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')

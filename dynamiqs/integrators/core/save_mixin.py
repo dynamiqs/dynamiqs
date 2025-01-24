@@ -6,7 +6,7 @@ import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import PyTree
 
-from ...result import PropagatorSaved, Saved, SolveSaved
+from ...result import DSMESolveSaved, PropagatorSaved, Saved, SolveSaved
 from ...utils.general import expect
 from .interfaces import OptionsInterface
 
@@ -64,3 +64,19 @@ class SolveSaveMixin(AbstractSaveMixin):
         if saved.Esave is not None:
             saved = eqx.tree_at(lambda x: x.Esave, saved, saved.Esave.swapaxes(-1, -2))
         return saved
+
+
+class DSMESolveSaveMixin(SolveSaveMixin):
+    """Mixin to assist diffusive SME integrators computing time evolution with data
+    saving.
+    """
+
+    def save(self, y: PyTree) -> Saved:
+        saved = super().save(y.rho)
+        return DSMESolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
+
+    def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
+        saved = super().postprocess_saved(saved, ylast.rho)
+        # reorder Isave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
+        Isave = saved.Isave.swapaxes(-1, -2)
+        return eqx.tree_at(lambda x: x.Isave, saved, Isave)

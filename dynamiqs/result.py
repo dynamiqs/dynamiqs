@@ -4,7 +4,7 @@ from abc import abstractmethod
 
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
 from .options import Options
@@ -18,8 +18,8 @@ __all__ = [
     'JSSESolveResult',
     'DSSESolveResult',
     'JSMESolveResult',
-    'DSMESolveResult',
     'MESolveResult',
+    'DSMESolveResult',
     'SEPropagatorResult',
     'SESolveResult',
 ]
@@ -56,6 +56,10 @@ class Saved(eqx.Module):
 
 class SolveSaved(Saved):
     Esave: Array | None
+
+
+class DSMESolveSaved(SolveSaved):
+    Isave: Array
 
 
 class PropagatorSaved(Saved):
@@ -207,4 +211,16 @@ class JSMESolveResult(SolveResult):
 
 
 class DSMESolveResult(SolveResult):
-    pass
+    keys: PRNGKeyArray
+
+    @property
+    def measurements(self) -> Array:
+        return self._saved.Isave
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Measurements': array_str(self.measurements)}
+
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, 0)

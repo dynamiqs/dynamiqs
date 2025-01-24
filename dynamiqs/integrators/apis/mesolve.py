@@ -3,13 +3,12 @@ from __future__ import annotations
 import warnings
 from functools import partial
 
-import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
@@ -228,7 +227,7 @@ def mesolve(
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
-    rho0 = _check_hermitian(rho0, 'rho0')
+    rho0 = check_hermitian(rho0, 'rho0')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
@@ -339,12 +338,3 @@ def _check_mesolve_args(
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
-
-
-def _check_hermitian(x: QArray, argname: str) -> QArray:
-    rtol, atol = 1e-5, 1e-5  # TODO: fix hard-coded tolerances
-    return eqx.error_if(
-        x,
-        jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
-        f'Argument {argname} is not hermitian.',
-    )

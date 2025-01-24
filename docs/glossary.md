@@ -13,3 +13,4 @@
 *[SMEs]: stochastic master equations
 *[SSE]: stochastic Schrödinger equation
 *[SSEs]: stochastic Schrödinger equations
+*[PRNG]: pseudorandom number generator
