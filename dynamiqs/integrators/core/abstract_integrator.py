@@ -3,8 +3,9 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
-from jaxtyping import PyTree, Scalar
+from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ...gradient import Gradient
 from ...result import Result, Saved
@@ -50,4 +51,20 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return self.result_class(
             self.ts, self.solver, self.gradient, self.options, saved, infos
+        )
+
+
+class StochasticBaseIntegrator(BaseIntegrator):
+    """Integrator stochastically evolving an initial state over a set of times.
+
+    In addition to `BaseIntegrator`, it includes a PRNG key for the stochastic
+    evolution.
+    """
+
+    key: PRNGKeyArray
+
+    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
+        ts = jnp.asarray(self.ts)  # todo: fix static tsave
+        return self.result_class(
+            ts, self.solver, self.gradient, self.options, saved, infos, self.key
         )

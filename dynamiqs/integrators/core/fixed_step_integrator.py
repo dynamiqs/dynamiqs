@@ -9,12 +9,12 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
+from jaxtyping import ArrayLike, PRNGKeyArray, Scalar
 
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack, sum_qarrays
-from ...result import Result, Saved
-from .abstract_integrator import BaseIntegrator
+from ...result import Result
+from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import DSMEInterface, SolveInterface
 from .save_mixin import DSMESolveSaveMixin
 
@@ -43,24 +43,9 @@ def _is_linearly_spaced(
     return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
 
 
-class SMEBaseIntegrator(BaseIntegrator):
-    """Integrator stochastically evolving an initial state over a set of times, and
-    saving measurement results at another set of times. In addition to `BaseIntegrator`,
-    it includes a PRNG key for the stochastic evolution.
-    """
-
-    # subclasses should implement: discontinuity_ts, run()
-
-    key: PRNGKeyArray
-
-    def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
-        ts = jnp.asarray(self.ts)  # todo: fix static tsave
-        return self.result_class(
-            ts, self.solver, self.gradient, self.options, saved, infos, self.key
-        )
-
-
-class DSMEFixedStepIntegrator(SMEBaseIntegrator, DSMEInterface, DSMESolveSaveMixin):
+class DSMEFixedStepIntegrator(
+    StochasticBaseIntegrator, DSMEInterface, DSMESolveSaveMixin
+):
     """Integrator solving the diffusive SME with a fixed step size integrator."""
 
     def __check_init__(self):
