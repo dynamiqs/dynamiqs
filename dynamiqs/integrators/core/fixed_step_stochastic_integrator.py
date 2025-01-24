@@ -19,14 +19,14 @@ from .interfaces import DSMEInterface, SolveInterface
 from .save_mixin import DSMESolveSaveMixin
 
 
-class YDSME(eqx.Module):
+class DSMEState(eqx.Module):
     """State for the diffusive SME fixed step integrators."""
 
     rho: QArray  # state (integrated from initial to current time)
     Y: Array  # measurement (integrated from initial to current time)
 
-    def __add__(self, other: Any) -> YDSME:
-        return YDSME(self.rho + other.rho, self.Y + other.Y)
+    def __add__(self, other: Any) -> DSMEState:
+        return DSMEState(self.rho + other.rho, self.Y + other.Y)
 
 
 def _is_multiple_of(
@@ -87,8 +87,8 @@ class DSMEFixedStepIntegrator(
         return self.solver.dt
 
     def integrate(
-        self, t0: float, y0: YDSME, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, YDSME]:
+        self, t0: float, y0: DSMEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, DSMEState]:
         # integrate the SME for nsteps of length dt
         nLm = len(self.etas)
 
@@ -107,8 +107,8 @@ class DSMEFixedStepIntegrator(
         return t, y
 
     def integrate_by_chunks(
-        self, t0: float, y0: YDSME, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, YDSME]:
+        self, t0: float, y0: DSMEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, DSMEState]:
         # integrate the SME for nsteps of length dt, splitting the integration in
         # chunks of 1000 dts to ensure a fixed memory usage
 
@@ -149,7 +149,7 @@ class DSMEFixedStepIntegrator(
 
         # === initial state
         # define initial state (rho, Y) = (rho0, 0)
-        y0 = YDSME(self.y0, jnp.zeros(nLm))
+        y0 = DSMEState(self.y0, jnp.zeros(nLm))
         # save initial state at time 0
         saved0 = self.save(y0)
 
@@ -177,7 +177,7 @@ class DSMEFixedStepIntegrator(
         return self.result(saved, infos=self.Infos(nsteps))
 
     @abstractmethod
-    def forward(self, t: Scalar, y: YDSME, dW: Array) -> YDSME:
+    def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
         # return (drho, dY)
         pass
 
@@ -185,7 +185,7 @@ class DSMEFixedStepIntegrator(
 class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
     """Integrator solving the diffusive SME with the Euler-Mayurama method."""
 
-    def forward(self, t: Scalar, y: YDSME, dW: Array) -> YDSME:
+    def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
         # The diffusive SME for a single detector is:
         #   drho = Lcal(rho)     dt + (Ccal(rho) - Tr[Ccal(rho)] rho) dW
         #   dY   = Tr[Ccal(rho)] dt + dW
@@ -214,7 +214,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
         # === measurement Y
         dY = tr_Ccal_rho * self.dt + dW  # (nLm,)
 
-        return YDSME(drho, dY)
+        return DSMEState(drho, dY)
 
 
 dsmesolve_euler_maruyama_integrator_constructor = DSMESolveEulerMayuramaIntegrator
