@@ -96,3 +96,12 @@ def check_type_int(x: Array | QArray, argname: str):
             f'Argument {argname} must be of type integer, but is of type'
             f' {argname}.dtype={x.dtype}.'
         )
+
+
+def check_hermitian(x: QArray, argname: str) -> QArray:
+    rtol, atol = 1e-5, 1e-5  # TODO: fix hard-coded tolerances
+    return eqx.error_if(
+        x,
+        jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
+        f'Argument {argname} is not hermitian.',
+    )

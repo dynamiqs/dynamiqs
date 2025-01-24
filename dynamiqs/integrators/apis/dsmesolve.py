@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
 from ...options import Options
 from ...qarrays.qarray import QArray, QArrayLike
@@ -166,6 +166,7 @@ def dsmesolve(
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
+    rho0 = check_hermitian(rho0, 'rho0')
 
     # === split jump operators
     # split between purely dissipative (eta = 0) and measured (eta != 0)
