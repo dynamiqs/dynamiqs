@@ -242,6 +242,9 @@ def dsmesolve(
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dsmesolve')
 
+    if solver is None:
+        raise ValueError('Argument `solver` must be specified.')
+
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
     rho0 = check_hermitian(rho0, 'rho0')
