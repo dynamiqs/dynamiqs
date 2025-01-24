@@ -23,7 +23,9 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.fixed_step_integrator import dsmesolve_euler_maruyama_integrator_constructor
+from ..core.fixed_step_stochastic_integrator import (
+    dsmesolve_euler_maruyama_integrator_constructor,
+)
 
 
 def dsmesolve(
