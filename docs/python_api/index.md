@@ -4,16 +4,28 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ## Quantum solvers
 
+### General
+
 ::: dynamiqs.integrators
     options:
         table: true
         members:
         - sesolve
         - mesolve
-        - dsmesolve
         - sepropagator
         - mepropagator
         - floquet
+
+### Stochastic
+
+::: dynamiqs.integrators
+    options:
+        table: true
+        members:
+        - jssesolve
+        - dssesolve
+        - jsmesolve
+        - dsmesolve
 
 ## Core
 

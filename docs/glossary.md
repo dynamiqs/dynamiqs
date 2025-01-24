@@ -11,4 +11,6 @@
 *[PWC]: piecewise constant
 *[SME]: stochastic master equation
 *[SMEs]: stochastic master equations
+*[SSE]: stochastic Schrödinger equation
+*[SSEs]: stochastic Schrödinger equations
 *[PRNG]: pseudorandom number generator

@@ -33,22 +33,23 @@ def dsmesolve(
     rho0: QArrayLike,
     tsave: ArrayLike,
     keys: PRNGKeyArray,
-    solver: Solver,
     *,
     exp_ops: list[QArrayLike] | None = None,
+    solver: Solver | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> DSMESolveResult:
     r"""Solve the diffusive stochastic master equation (SME).
 
     Warning:
-        This function is still under test and development. Please
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new) if
-        you encounter any bug.
+        This function has not been implemented yet. The following API is indicative
+        of the planned implementation.
 
-    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
-    starting from an initial state $\rho_0$, according to the diffusive SME in Itô
-    form (with $\hbar=1$ and where time is implicit(1))
+    The diffusive SME describes the evolution of a quantum system measured
+    by a diffusive detector (for example homodyne or heterodyne detection
+    in quantum optics). This function computes the evolution of the density matrix
+    $\rho(t)$ at time $t$, starting from an initial state $\rho_0$, according to the
+    diffusive SME in Itô form ($\hbar=1$, time is implicit(1))
     $$
         \begin{split}
             \dd\rho =&~ -i[H, \rho]\,\dt + \sum_{k=1}^N \left(
@@ -74,46 +75,20 @@ def dsmesolve(
         - $L_k\to L_k(t)$
         - $\dd W_k\to \dd W_k(t)$
 
-    Note-: Diffusive vs. jump SME
-        In quantum optics the _diffusive_ SME corresponds to homodyne or heterodyne
-        detection schemes, as opposed to the _jump_ SME which corresponds to photon
-        counting schemes. No solver for the jump SME is provided yet, if this is needed
-        don't hesitate to
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
-
-    The continuous-time measurements are defined with the Itô process $\dd Y_k$ (again
-    time is implicit):
+    The continuous-time measurements are defined with the Itô processes $\dd Y_k$ (time
+    is implicit)
     $$
         \dd Y_k = \sqrt{\eta_k} \tr{(L_k + L_k^\dag) \rho} \dt + \dd W_k.
     $$
 
     The solver returns the time-averaged measurements $I_k(t_n, t_{n+1})$ defined for
-    each time interval $[t_n, t_{n+1})$ by:
+    each time interval $[t_n, t_{n+1}[$ by
     $$
         I_k(t_n, t_{n+1}) = \frac{Y_k(t_{n+1}) - Y_k(t_n)}{t_{n+1} - t_n}
         = \frac{1}{t_{n+1}-t_n}\int_{t_n}^{t_{n+1}} \dd Y_k(t)
     $$
-    The time intervals $[t_n, t_{n+1})$ are defined by `tsave`, so the number of
+    The time intervals $[t_n, t_{n+1}[$ are defined by `tsave`, so the number of
     returned measurement values for each detector is `len(tsave)-1`.
-
-    Note-: Defining a time-dependent Hamiltonian or jump operator
-        If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See the
-        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
-        tutorial for more details.
-
-    Note-: Running multiple simulations concurrently
-        The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
-        solve multiple SMEs concurrently. All other arguments (including the PRNG key)
-        are common to every batch. See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-
-        Batching on `jump_ops` and `etas` is not yet supported, if this is needed don't
-        hesitate to
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
 
     Warning:
         For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
@@ -129,26 +104,130 @@ def dsmesolve(
         rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
-            `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-            Measurements are time-averaged and saved over each interval defined by
-            `tsave`.
+            `tsave[-1]`. Measurements are time-averaged and saved over each interval
+            defined by `tsave`.
         keys _(list of PRNG keys)_: PRNG keys used to sample the Wiener processes.
             The number of elements defines the number of sampled stochastic
             trajectories.
-        solver: Solver for the integration (supported:
-            [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama]).
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
+        solver: Solver for the integration. No defaults for now, you have to specify a
+            solver (supported: [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama]).
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options (supported: `save_states`, `cartesian_batching`,
+            `save_extra`).
+            ??? "Detailed options API"
+                ```
+                dq.Options(
+                    save_states: bool = True,
+                    cartesian_batching: bool = True,
+                    save_extra: callable[[Array], PyTree] | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **save_states** - If `True`, the state is saved at every time in
+                    `tsave`, otherwise only the final state is returned.
+                - **cartesian_batching** - If `True`, batched arguments are treated as
+                    separated batch dimensions, otherwise the batching is performed over
+                    a single shared batched dimension.
+                - **save_extra** _(function, optional)_ - A function with signature
+                    `f(QArray) -> PyTree` that takes a state as input and returns a
+                    PyTree. This can be used to save additional arbitrary data
+                    during the integration, accessible in `result.extra`.
 
     Returns:
-        [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult] object holding the result of
-            the diffusive SME integration. Use the attributes `states`, `measurements`
-            and `expects` to access saved quantities, more details in
-            [`dq.DSMESolveResult`][dynamiqs.DSMESolveResult].
+        `dq.DSMESolveResult` object holding the result of the diffusive SME integration.
+            Use `result.states` to access the saved states, `result.expects` to access
+            the saved expectation values and `result.measurements` to access the
+            detector measurements.
+
+            ??? "Detailed result API"
+                ```python
+                dq.DSMESolveResult
+                ```
+
+                For the shape indications we define `ntrajs` as the number of
+                trajectories (`ntrajs = len(keys)`) and `nLm` as the number of measured
+                loss channels (those for which the measurement efficiency is not zero).
+
+                **Attributes**
+
+                - **states** _(qarray of shape (..., ntrajs, nsave, n, n))_ - Saved
+                    states with `nsave = ntsave`, or `nsave = 1` if
+                    `options.save_states=False`.
+                - **final_state** _(qarray of shape (..., ntrajs, n, n))_ - Saved final
+                    state.
+                - **expects** _(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)_ - Saved
+                    expectation values, if specified by `exp_ops`.
+                - **measurements** _(array of shape (..., ntrajs, nLm, nsave-1))_ - Saved
+                    measurements.
+                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
+                    specified in `options`.
+                - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
+                    sample the Wiener processes.
+                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **solver** _(Solver)_ - Solver used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Defining a time-dependent Hamiltonian or jump operator
+
+    If the Hamiltonian or the jump operators depend on time, they can be converted
+    to time-arrays using [`dq.pwc()`][dynamiqs.pwc],
+    [`dq.modulated()`][dynamiqs.modulated], or
+    [`dq.timecallable()`][dynamiqs.timecallable]. See the
+    [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+    tutorial for more details.
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H` and the initial density matrix `rho0` can be batched to
+    solve multiple SMEs concurrently. All other arguments (including the PRNG key)
+    are common to every batch. The resulting states, measurements and expectation values
+    are batched according to the leading dimensions of `H` and `rho0`. The
+    behaviour depends on the value of the `cartesian_batching` option.
+
+    === "If `cartesian_batching = True` (default value)"
+        The results leading dimensions are
+        ```
+        ... = ...H, ...rho0
+        ```
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `rho0` has shape _(4, n, n)_,
+
+        then `result.states` has shape _(2, 3, 4, ntrajs, ntsave, n, n)_.
+
+    === "If `cartesian_batching = False`"
+        The results leading dimensions are
+        ```
+        ... = ...H = ...rho0  # (once broadcasted)
+        ```
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `rho0` has shape _(3, n, n)_,
+
+        then `result.states` has shape _(2, 3, ntrajs, ntsave, n, n)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
+
+    Warning:
+        Batching on `jump_ops` and `etas` is not yet supported, if this is
+        needed don't hesitate to
+        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
     # === convert arguments
     H = _astimeqarray(H)

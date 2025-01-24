@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import abstractmethod
+
 import equinox as eqx
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
@@ -13,6 +15,9 @@ from .solver import Solver
 __all__ = [
     'FloquetResult',
     'MEPropagatorResult',
+    'JSSESolveResult',
+    'DSSESolveResult',
+    'JSMESolveResult',
     'MESolveResult',
     'DSMESolveResult',
     'SEPropagatorResult',
@@ -179,6 +184,32 @@ class MESolveResult(SolveResult):
     pass
 
 
+class SEPropagatorResult(PropagatorResult):
+    pass
+
+
+class MEPropagatorResult(PropagatorResult):
+    pass
+
+
+class JSSESolveResult(SolveResult):
+    @abstractmethod
+    def no_jump_state(self) -> Array | None:
+        pass
+
+    @abstractmethod
+    def no_jump_proba(self) -> Array | None:
+        pass
+
+
+class DSSESolveResult(SolveResult):
+    pass
+
+
+class JSMESolveResult(SolveResult):
+    pass
+
+
 class DSMESolveResult(SolveResult):
     keys: PRNGKeyArray
 
@@ -193,11 +224,3 @@ class DSMESolveResult(SolveResult):
     @classmethod
     def out_axes(cls) -> SolveResult:
         return cls(None, None, None, None, 0, 0, 0)
-
-
-class SEPropagatorResult(PropagatorResult):
-    pass
-
-
-class MEPropagatorResult(PropagatorResult):
-    pass
