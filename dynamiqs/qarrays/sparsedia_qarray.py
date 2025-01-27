@@ -203,8 +203,10 @@ class SparseDIAQArray(QArray):
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
 
-    def isherm(self) -> bool:
-        raise NotImplementedError
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        # TODO: Improve this by using a direct QArray comparison function, once it is
+        # implemented. This will avoid materalizing the dense matrix.
+        return jnp.allclose(self.to_jax(), self.dag().to_jax(), rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj | list[Qobj]:
         return self.asdense().to_qutip()
