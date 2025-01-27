@@ -226,6 +226,7 @@ nav:
               - expm: python_api/utils/general/expm.md
               - cosm: python_api/utils/general/cosm.md
               - sinm: python_api/utils/general/sinm.md
+              - signm: python_api/utils/general/signm.md
               - trace: python_api/utils/general/trace.md
               - tracemm: python_api/utils/general/tracemm.md
               - ptrace: python_api/utils/general/ptrace.md
