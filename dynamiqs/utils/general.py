@@ -207,8 +207,8 @@ def signm(x: QArrayLike) -> QArray:
         >>> dq.signm(dq.position(4))
         QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
         [[ 0.   +0.j  0.888+0.j  0.   +0.j -0.46 +0.j]
-         [ 0.888+0.j  0.   +0.j  0.46 +0.j -0.   +0.j]
-         [ 0.   +0.j  0.46 +0.j  0.   +0.j  0.888+0.j]
+         [ 0.888+0.j -0.   +0.j  0.46 +0.j -0.   +0.j]
+         [ 0.   +0.j  0.46 +0.j -0.   +0.j  0.888+0.j]
          [-0.46 +0.j -0.   +0.j  0.888+0.j -0.   +0.j]]
     """
     x = asqarray(x)
