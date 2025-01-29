@@ -751,7 +751,7 @@ class SummedTimeQArray(TimeQArray):
 
     @property
     def dims(self) -> tuple[int, ...]:
-        return self.timearrays[0].dims
+        return self.timeqarrays[0].dims
 
     @property
     def ndiags(self) -> int:
