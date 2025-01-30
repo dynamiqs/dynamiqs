@@ -214,7 +214,7 @@ def _sepropagator(
     solver.assert_supports_gradient(gradient)
 
     # === init integrator
-    y0 = eye(H.shape[-1], layout=dense)
+    y0 = eye(*H.dims, layout=dense)
     integrator = integrator_constructor(
         ts=tsave,
         y0=y0,
