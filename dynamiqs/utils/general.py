@@ -175,8 +175,9 @@ def sinm(x: QArrayLike) -> QArray:
 def signm(x: QArrayLike) -> QArray:
     r"""Returns the operator sign function of a hermitian qarray.
 
-    The operator sign is generally dense, and is different from the element-wise
-    sign of the operator.
+    The operator sign function $\mathrm{sign}(A)$ of a hermitian matrix $A$ is defined
+    as $\mathrm{sign}(A) = U \mathrm{sign}(D) U^\dagger$ where $A = U D U^\dagger$ is
+    the eigendecomposition of $A$, with $D$ the diagonal matrix of eigenvalues.
 
     Args:
         x _(qarray-like of shape (..., n, n))_: Square matrix.
@@ -185,13 +186,8 @@ def signm(x: QArrayLike) -> QArray:
         _(qarray of shape (..., n, n))_ Operator sign function of `x`.
 
     Note:
-        This function uses [`jnp.linalg.eigh()`](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.linalg.eigh.html)
-        to compute the sign of a matrix $A$:
-        $$
-            \mathrm{sign}(A) = U \mathrm{sign}(D) U^\dagger
-        $$
-        where $A = U D U^\dagger$ is the eigendecomposition of $A$, with $D$ the
-        diagonal matrix of eigenvalues.
+        The operator sign is generally dense, and is different from the element-wise
+        sign of the operator.
 
     Examples:
         >>> dq.signm(dq.sigmax())
@@ -216,7 +212,7 @@ def signm(x: QArrayLike) -> QArray:
     L, Q = x.asdense()._eigh()
     sign_L = jnp.diag(jnp.sign(L))
     array = Q @ sign_L @ dag(Q)
-    return asqarray(array)
+    return asqarray(array, dims=x.dims)
 
 
 def trace(x: QArrayLike) -> Array:
