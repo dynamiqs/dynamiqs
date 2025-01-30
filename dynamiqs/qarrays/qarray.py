@@ -454,12 +454,12 @@ class QArray(eqx.Module):
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
-    def __truediv__(self, y: QArrayLike) -> QArray:
+    def __truediv__(self, y: ArrayLike) -> QArray:
         return self * (1 / y)
 
     def __rtruediv__(self, y: QArrayLike) -> QArray:
         raise NotImplementedError(
-            'Division by a qarray with the `/` operator is not supported. '
+            'Division by a qarray with the `/` operator is not supported.'
         )
 
     def __iter__(self):
