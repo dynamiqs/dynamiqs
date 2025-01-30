@@ -955,7 +955,7 @@ def purity(x: QArrayLike) -> Array:
     Examples:
         >>> psi = dq.fock(2, 0)
         >>> dq.purity(psi)
-        Array(1.0, dtype=float32)
+        Array(1., dtype=float32)
         >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
         >>> dq.purity(rho)
         Array(0.5, dtype=float32)
