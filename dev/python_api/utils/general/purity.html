@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/unit.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/utils/general/purity.html">
 
 
-    <link rel="prev" href="norm.html">
+    <link rel="prev" href="fidelity.html">
 
 
-    <link rel="next" href="dissipator.html">
+    <link rel="next" href="entropy_vn.html">
 
 <link rel="mask-icon" href="../../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>unit - Dynamiqs</title>
+        <title>purity - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.utils.general.unit" class="md-skip">
+        <a href="#dynamiqs.utils.general.purity" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                unit
+                purity
               
             </span>
           </div>
@@ -3200,19 +3200,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="unit.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="unit.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3221,7 +3212,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -3525,10 +3515,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="purity.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="purity.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -3537,6 +3536,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -5000,18 +5000,19 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.utils.general.unit" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.unit</span>
+<h1 id="dynamiqs.utils.general.purity" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.purity</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">unit</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QArray</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">purity</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Array</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Normalize a ket, bra or density matrix to unit norm.</p>
-<p>The returned object is divided by its norm (see <a class="autorefs autorefs-internal" href="norm.html#dynamiqs.utils.general.norm"><code>dq.norm()</code></a>).</p>
+        <p>Returns the purity of a ket or density matrix.</p>
+<p>For a ket (a pure state), the purity is <span class="arithmatex">\(1\)</span>. For a density matrix <span class="arithmatex">\(\rho\)</span>, it is
+defined by <span class="arithmatex">\(\tr{\rho^2}\)</span>.</p>
 
     <!-- <p>Parameters:</p> -->
     <p>
@@ -5022,9 +5023,8 @@
           <b>x</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray-like of shape (..., n, 1) or (..., 1, n) or (..., n, n))              </i>
-          – <p>Ket, bra
-or density matrix.</p>
+(qarray-like of shape (..., n, 1) or (..., n, n))              </i>
+          – <p>Ket or density matrix.</p>
         </li>
     </ul>
 
@@ -5034,24 +5034,22 @@ or density matrix.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><a class="autorefs autorefs-internal" title="dynamiqs.qarrays.qarray.QArray" href="../../qarrays/qarray/QArray.html#dynamiqs.qarrays.qarray.QArray">QArray</a></code>
-        – <p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Normalized ket,
-bra or density matrix.</p>
+            <code><span title="jax.Array">Array</span></code>
+        – <p><em>(array of shape (...))</em> Real-valued purity.</p>
       </li>
   </ul> -->
-      <span class="field-body"><p><em>(qarray of shape (..., n, 1) or (..., 1, n) or (..., n, n))</em> Normalized ket,
-bra or density matrix.</p></span>
+      <span class="field-body"><p><em>(array of shape (...))</em> Real-valued purity.</p></span>
 
 <!-- <p><strong>Examples:</strong></p> -->
 <p>
   <strong>Examples</strong>
 </p>
-    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
-<span class="go">Array(1.414, dtype=float32)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">purity</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
 <span class="go">Array(1., dtype=float32)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rho</span> <span class="o">=</span> <span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">dq</span><span class="o">.</span><span class="n">fock_dm</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">purity</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+<span class="go">Array(0.5, dtype=float32)</span>
 </code></pre></div>
 
     </div>
