@@ -21,6 +21,7 @@ __all__ = [
     'expect',
     'expm',
     'fidelity',
+    'purity',
     'isbra',
     'isdm',
     'isherm',
@@ -937,6 +938,33 @@ def _dm_fidelity(x: QArray, y: QArray) -> Array:
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
     w = jnp.where(w < 0, 0, w)
     return jnp.sqrt(w).sum(-1) ** 2
+
+
+def purity(x: QArrayLike) -> Array:
+    r"""Returns the purity of a ket or density matrix.
+
+    For a ket (a pure state), the purity is $1$. For a density matrix $\rho$, it is
+    defined by $\tr{\rho^2}$.
+
+    Args:
+        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued purity.
+
+    Examples:
+        >>> psi = dq.fock(2, 0)
+        >>> dq.purity(psi)
+        Array(1.0, dtype=float32)
+        >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
+        >>> dq.purity(rho)
+        Array(0.5, dtype=float32)
+    """
+    x = asqarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+    if x.isket():
+        return jnp.ones(x.shape[:-2])
+    return tracemm(x, x).real
 
 
 def entropy_vn(x: QArrayLike) -> Array:

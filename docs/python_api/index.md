@@ -159,6 +159,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - braket
         - overlap
         - fidelity
+        - purity
         - entropy_vn
         - bloch_coordinates
         - wigner
