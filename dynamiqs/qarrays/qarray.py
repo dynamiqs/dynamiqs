@@ -175,8 +175,8 @@ class QArray(eqx.Module):
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
     #                                     _eigvals, _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
-    #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
-    #                         __and__, addscalar, elmul, elpow, __getitem__
+    #   - special methods: __mul__, __add__, __matmul__, __rmatmul__, __and__,
+    #                      addscalar, elmul, elpow, __getitem__
 
     dims: tuple[int, ...] = eqx.field(static=True)
     vectorized: bool = eqx.field(static=True)
@@ -454,12 +454,13 @@ class QArray(eqx.Module):
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
-    @abstractmethod
-    def __truediv__(self, y: QArrayLike) -> QArray:
-        pass
+    def __truediv__(self, y: ArrayLike) -> QArray:
+        return self * (1 / y)
 
     def __rtruediv__(self, y: QArrayLike) -> QArray:
-        return self * 1 / y
+        raise NotImplementedError(
+            'Division by a qarray with the `/` operator is not supported.'
+        )
 
     def __iter__(self):
         for i in range(self.shape[0]):

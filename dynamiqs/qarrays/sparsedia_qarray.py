@@ -254,9 +254,6 @@ class SparseDIAQArray(QArray):
         diags = y * self.diags
         return self._replace(diags=diags)
 
-    def __truediv__(self, y: QArrayLike) -> QArray:
-        raise NotImplementedError
-
     def __add__(self, y: QArrayLike) -> QArray:
         super().__add__(y)
 

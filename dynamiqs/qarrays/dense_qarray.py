@@ -10,7 +10,6 @@ from jax import Array, Device
 from jaxtyping import ArrayLike
 from qutip import Qobj
 
-from .._utils import _is_batched_scalar
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
 from .sparsedia_primitives import array_to_sparsedia
@@ -152,20 +151,6 @@ class DenseQArray(QArray):
         super().__mul__(y)
 
         data = y * self.data
-        return self._replace(data=data)
-
-    def __truediv__(self, y: QArrayLike) -> QArray:
-        super().__truediv__(y)
-
-        if _is_batched_scalar(y):
-            data = self.data / y
-        elif isinstance(y, DenseQArray):
-            data = self.data / y.data
-        elif isqarraylike(y):
-            data = self.data / _to_jax(y)
-        else:
-            return NotImplemented
-
         return self._replace(data=data)
 
     def __add__(self, y: QArrayLike) -> QArray:
