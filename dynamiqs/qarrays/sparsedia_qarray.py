@@ -257,7 +257,7 @@ class SparseDIAQArray(QArray):
         return self._replace(diags=diags)
 
     def __add__(self, y: QArrayLike) -> QArray:
-        if isinstance(y, int) and y == 0:
+        if isinstance(y, int | float) and y == 0:
             return self
 
         super().__add__(y)
