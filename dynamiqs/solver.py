@@ -16,7 +16,6 @@ __all__ = [
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
-    'Rouchon2',
     'Tsit5',
 ]
 
@@ -193,29 +192,6 @@ class Rouchon1(_DEFixedStep):
 
     # TODO: fix, strings are not valid JAX types
     # normalize: Literal['sqrt', 'cholesky'] | None = None
-
-
-class Rouchon2(_DEFixedStep):
-    """Second-order Rouchon method (fixed step size ODE solver).
-
-    Warning:
-        This solver has not been ported to JAX yet.
-
-    Args:
-        dt: Fixed time step.
-
-    Note-: Supported gradients
-        This solver supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default).
-    """
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
-
-    # dummy init to have the signature in the documentation
-    def __init__(self, dt: float):
-        super().__init__(dt)
 
 
 class Dopri5(_DEAdaptiveStep):

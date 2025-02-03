@@ -96,7 +96,6 @@ def mesolve(
             [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
             [`Euler`][dynamiqs.solver.Euler],
             [`Rouchon1`][dynamiqs.solver.Rouchon1],
-            [`Rouchon2`][dynamiqs.solver.Rouchon2],
             [`Expm`][dynamiqs.solver.Expm]).
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
