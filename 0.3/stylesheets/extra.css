@@ -244,7 +244,11 @@ p {
 }
 
 .katex-display {
-    margin: 0.75em 0;
+    margin: 0.8em 0 !important;
+}
+
+.katex {
+    line-height: 1.05 !important;
 }
 
 .md-typeset .doc-heading {
@@ -260,7 +264,7 @@ p {
 }
 
 .md-typeset .doc-contents p {
-  margin-top: 1em;
+  margin-top: 0.75em;
   margin-bottom: 0.2em;
 }
 
@@ -335,7 +339,7 @@ p {
 }
 
 /* Fix for two-line parameters when deploying doc */
-.field-body p {
+.field-body p:not(details p) {
   display: inline;
 }
 
