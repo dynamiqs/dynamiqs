@@ -7,7 +7,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array
 
-from .._checks import check_shape
+from .._checks import check_hermitian, check_shape
 from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
 from ..qarrays.utils import _init_dims, asqarray, sum_qarrays, to_jax
 
@@ -41,6 +41,7 @@ __all__ = [
     'trace',
     'tracemm',
     'unit',
+    'signm',
 ]
 
 
@@ -170,6 +171,53 @@ def sinm(x: QArrayLike) -> QArray:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return -0.5j * (expm(1j * x) - expm(-1j * x))
+
+
+def signm(x: QArrayLike) -> QArray:
+    r"""Returns the operator sign function of a hermitian qarray.
+
+    The operator sign function $\mathrm{sign}(A)$ of a hermitian matrix $A$ with
+    eigendecomposition $A = U\, \text{diag}(\lambda_1,\dots,\lambda_n)\, U^\dagger$,
+    with $(\lambda_1,\dots,\lambda_n)\in\R^n$ the eigenvalues of $A$, is defined by
+    $$
+        \mathrm{sign}(A) = U\,\mathrm{diag}(\mathrm{sign}(\lambda_1),\dots,\mathrm{sign}(\lambda_n))\,U^\dagger,
+    $$
+    where $\mathrm{sign}(x)$ is the sign of $x\in\R$.
+
+    Args:
+        x _(qarray-like of shape (..., n, n))_: Square hermitian matrix.
+
+    Returns:
+        _(qarray of shape (..., n, n))_ Operator sign function of `x`.
+
+    Note:
+        The operator sign is generally dense, and is different from the element-wise
+        sign of the operator.
+
+    Examples:
+        >>> dq.signm(dq.sigmax())
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[0.+0.j 1.+0.j]
+         [1.+0.j 0.+0.j]]
+        >>> dq.position(4)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅         ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j     ⋅    ]
+         [    ⋅     0.707+0.j     ⋅     0.866+0.j]
+         [    ⋅         ⋅     0.866+0.j     ⋅    ]]
+        >>> dq.signm(dq.position(4))
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[ 0.   +0.j  0.888+0.j  0.   +0.j -0.46 +0.j]
+         [ 0.888+0.j -0.   +0.j  0.46 +0.j -0.   +0.j]
+         [ 0.   +0.j  0.46 +0.j -0.   +0.j  0.888+0.j]
+         [-0.46 +0.j -0.   +0.j  0.888+0.j -0.   +0.j]]
+    """  # noqa: E501
+    x = asqarray(x)
+    x = check_hermitian(x, 'x')
+    L, Q = x.asdense()._eigh()
+    sign_L = jnp.diag(jnp.sign(L))
+    array = Q @ sign_L @ dag(Q)
+    return asqarray(array, dims=x.dims)
 
 
 def trace(x: QArrayLike) -> Array:

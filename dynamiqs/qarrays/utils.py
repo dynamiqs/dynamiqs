@@ -9,7 +9,6 @@ import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
-from .._checks import check_shape
 from .dense_qarray import DenseQArray, _array_to_qobj_list
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, _get_dims, _to_jax, _to_numpy, isqarraylike
@@ -288,6 +287,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
+    from .._checks import check_shape
+
     if isinstance(x, Qobj):
         return x
     elif isinstance(x, DenseQArray):

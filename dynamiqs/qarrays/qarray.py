@@ -137,6 +137,7 @@ class QArray(eqx.Module):
     | `x.expm()`                                               | Alias of [`dq.expm(x)`][dynamiqs.expm].                        |
     | `x.cosm()`                                               | Alias of [`dq.cosm(x)`][dynamiqs.cosm].                        |
     | `x.sinm()`                                               | Alias of [`dq.sinm(x)`][dynamiqs.sinm].                        |
+    | `x.signm()`                                              | Alias of [`dq.signm(x)`][dynamiqs.signm].                      |
     | `x.trace()`                                              | Alias of [`dq.trace(x)`][dynamiqs.trace].                      |
     | `x.ptrace(keep)`                                         | Alias of [`dq.ptrace(x, keep, dims=x.dims)`][dynamiqs.ptrace]. |
     | `x.norm()`                                               | Alias of [`dq.norm(x)`][dynamiqs.norm].                        |
@@ -302,6 +303,11 @@ class QArray(eqx.Module):
         from ..utils import sinm
 
         return sinm(self)
+
+    def signm(self) -> QArray:
+        from ..utils import signm
+
+        return signm(self)
 
     def unit(self) -> QArray:
         return self / self.norm()[..., None, None]
