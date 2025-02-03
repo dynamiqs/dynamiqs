@@ -163,10 +163,13 @@ class EulerMaruyama(_DEFixedStep):
 
 
 class Rouchon1(_DEFixedStep):
-    """First-order Rouchon method (fixed step size ODE solver).
+    r"""First-order Rouchon method (fixed step size ODE solver).
 
     Args:
         dt: Fixed time step.
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to first order in $\dt$.
 
     Note-: Supported gradients
         This solver supports differentiation with
@@ -176,10 +179,12 @@ class Rouchon1(_DEFixedStep):
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+    normalize: bool
 
     # dummy init to have the signature in the documentation
-    def __init__(self, dt: float):
+    def __init__(self, dt: float, normalize: bool = True):
         super().__init__(dt)
+        self.normalize = normalize
 
     # normalize: The default scheme is trace-preserving at first order only. This
     # parameter sets the normalisation behaviour:
