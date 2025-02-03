@@ -176,12 +176,16 @@ def sinm(x: QArrayLike) -> QArray:
 def signm(x: QArrayLike) -> QArray:
     r"""Returns the operator sign function of a hermitian qarray.
 
-    The operator sign function $\mathrm{sign}(A)$ of a hermitian matrix $A$ is defined
-    as $\mathrm{sign}(A) = U \mathrm{sign}(D) U^\dagger$ where $A = U D U^\dagger$ is
-    the eigendecomposition of $A$, with $D$ the diagonal matrix of eigenvalues.
+    The operator sign function $\mathrm{sign}(A)$ of a hermitian matrix $A$ with
+    eigendecomposition $A = U\, \text{diag}(\lambda_1,\dots,\lambda_n)\, U^\dagger$,
+    with $(\lambda_1,\dots,\lambda_n)\in\R^n$ the eigenvalues of $A$, is defined by
+    $$
+        \mathrm{sign}(A) = U\,\mathrm{diag}(\mathrm{sign}(\lambda_1),\dots,\mathrm{sign}(\lambda_n))\,U^\dagger,
+    $$
+    where $\mathrm{sign}(x)$ is the sign of $x\in\R$.
 
     Args:
-        x _(qarray-like of shape (..., n, n))_: Square matrix.
+        x _(qarray-like of shape (..., n, n))_: Square hermitian matrix.
 
     Returns:
         _(qarray of shape (..., n, n))_ Operator sign function of `x`.
@@ -207,7 +211,7 @@ def signm(x: QArrayLike) -> QArray:
          [ 0.888+0.j -0.   +0.j  0.46 +0.j -0.   +0.j]
          [ 0.   +0.j  0.46 +0.j -0.   +0.j  0.888+0.j]
          [-0.46 +0.j -0.   +0.j  0.888+0.j -0.   +0.j]]
-    """
+    """  # noqa: E501
     x = asqarray(x)
     x = check_hermitian(x, 'x')
     L, Q = x.asdense()._eigh()
