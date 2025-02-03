@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from functools import reduce
 
 import jax.numpy as jnp
 import numpy as np
@@ -356,20 +355,3 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
             f'Argument `dims={dims}` is incompatible with the input shape'
             f' `shape={shape}`.'
         )
-
-
-def sum_qarrays(*args: QArray) -> QArray:
-    # Summing qarrays with Python native's sum() results in unwanted conversions from
-    # sparse to dense qarrays, because they are automatically summed with the
-    # initializer (zero). We instead use `functools.reduce`, which doesn't sum with the
-    # initializer if the list is not empty.
-
-    # Warning: this function will raise an exception if qarrays is an empty list.
-
-    if len(args) == 0:
-        raise ValueError(
-            'Argument `args` is an empty list, but it should contain at least one'
-            ' value.'
-        )
-
-    return reduce(lambda x, y: x + y, args)

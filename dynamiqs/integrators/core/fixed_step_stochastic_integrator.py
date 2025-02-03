@@ -12,7 +12,7 @@ from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray, Scalar
 
 from ...qarrays.qarray import QArray
-from ...qarrays.utils import stack, sum_qarrays
+from ...qarrays.utils import stack
 from ...result import Result
 from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import DSMEInterface, SolveInterface
@@ -196,8 +196,8 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
 
         # === Lcal(rho)
         # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
-        Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
-        tmp = sum_qarrays(Hnh @ y.rho, *[0.5 * _L @ y.rho @ _L.dag() for _L in L])
+        Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
+        tmp = Hnh @ y.rho + sum([0.5 * _L @ y.rho @ _L.dag() for _L in L])
         Lcal_rho = tmp + tmp.dag()
 
         # === Ccal(rho)
