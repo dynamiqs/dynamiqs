@@ -154,6 +154,9 @@ class DenseQArray(QArray):
         return self._replace(data=data)
 
     def __add__(self, y: QArrayLike) -> QArray:
+        if isinstance(y, int | float) and y == 0:
+            return self
+
         super().__add__(y)
 
         if isinstance(y, DenseQArray):

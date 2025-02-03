@@ -10,7 +10,6 @@ from jax import Array
 from jaxtyping import PyTree
 
 from ...gradient import Autograd, CheckpointAutograd
-from ...qarrays.utils import sum_qarrays
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -215,8 +214,8 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
-            tmp = sum_qarrays(Hnh @ y, *[0.5 * _L @ y @ _L.dag() for _L in L])
+            Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
+            tmp = Hnh @ y + sum([0.5 * _L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)

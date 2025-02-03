@@ -9,7 +9,7 @@ from jax import Array
 
 from .._checks import check_hermitian, check_shape
 from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
-from ..qarrays.utils import _init_dims, asqarray, sum_qarrays, to_jax
+from ..qarrays.utils import _init_dims, asqarray, to_jax
 
 __all__ = [
     'bloch_coordinates',
@@ -628,9 +628,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
-    return sum_qarrays(
-        -1j * H @ rho, 1j * rho @ H, *[dissipator(L, rho) for L in jump_ops]
-    )
+    return -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in jump_ops])
 
 
 def isket(x: QArrayLike) -> bool:
