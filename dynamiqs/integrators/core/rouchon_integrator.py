@@ -106,15 +106,13 @@ class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
                 # we want Td^{-1} @ y0 @ T^{-1}
                 rho = rho.to_jax()
                 # solve Td @ x = rho => x = Td^{-1} @ rho
-                rho = jax.scipy.linalg.solve_triangular(T, rho, lower=True, trans='C')
-                # solve x @ T = rho => x = rho @ T^{-1}, but we need to reverse the
-                # system for jax.scipy.linalg.solve_triangular:
-                # x @ T = rho => Td @ xd = rhod
-                #            => xd = Td^{-1} @ rhod
-                #            => x = rho @ T^{-1}
-                rhod = rho.conj().T
-                xd = jax.scipy.linalg.solve_triangular(T, rhod, lower=True, trans='C')
-                rho = xd.conj().T
+                rho = jax.lax.linalg.triangular_solve(
+                    T, rho, lower=True, transpose_a=True, conjugate_a=True
+                )
+                # solve x @ T = rho => x = rho @ T^{-1}
+                rho = jax.lax.linalg.triangular_solve(
+                    T, rho, lower=True, left_side=True
+                )
 
             return M0 @ rho @ dag(M0) + sum([_M @ rho @ dag(_M) for _M in Ms])
 
