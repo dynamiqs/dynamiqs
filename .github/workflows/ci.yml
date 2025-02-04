@@ -25,7 +25,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          # test cache
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install dependencies
