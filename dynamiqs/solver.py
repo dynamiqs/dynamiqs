@@ -163,7 +163,7 @@ class EulerMaruyama(_DEFixedStep):
 
 
 class Rouchon1(_DEFixedStep):
-    r"""First-order Rouchon method (fixed step size ODE solver).
+    r"""First-order Rouchon method (fixed step size ODE/SDE solver).
 
     Args:
         dt: Fixed time step.
