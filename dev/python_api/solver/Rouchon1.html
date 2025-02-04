@@ -14,7 +14,7 @@
     <link rel="prev" href="EulerMaruyama.html">
 
 
-    <link rel="next" href="Rouchon2.html">
+    <link rel="next" href="Expm.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -1596,8 +1596,6 @@
       
         
       
-        
-      
     
     
       
@@ -1813,28 +1811,6 @@
 
       </a>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="Rouchon2.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Rouchon2
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -5197,7 +5173,7 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Rouchon1</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Rouchon1</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5214,6 +5190,13 @@
           <b>dt</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
           – <p>Fixed time step.</p>
+        </li>
+        <li class="field-body">
+          <b>normalize</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>If True, the scheme is trace-preserving to machine precision, which
+is the recommended option because it is much more stable. Otherwise, it is
+only trace-preserving to first order in <span class="arithmatex">\(\dt\)</span>.</p>
         </li>
     </ul>
 
