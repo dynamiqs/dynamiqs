@@ -28,7 +28,7 @@ jobs:
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install dependencies
-        run: uv sync --extra --dev
+        run: uv sync --extra dev
 
       - name: List installed dependencies
         run: uv pip list
