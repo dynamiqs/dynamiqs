@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import diffrax as dx
+import jax
 import jax.numpy as jnp
 from diffrax._custom_types import RealScalarLike, Y
 from diffrax._local_interpolation import LocalLinearInterpolation
 
-from ...qarrays.qarray import QArray
-from ...qarrays.utils import stack
+from ...utils.general import dag
+from ...utils.operators import eye_like
 from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
@@ -58,34 +59,62 @@ class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
     """
 
     @property
-    def Id(self) -> QArray:
-        return jnp.eye(self.H.shape[-1], dtype=self.H.dtype)
-
-    @property
     def terms(self) -> dx.AbstractTerm:
-        def kraus_map_dissipative(t0, t1, y0):  # noqa: ANN202
+        def kraus_map(t0, t1, y0):  # noqa: ANN202
             # The Rouchon update for a single loss channel is:
-            #   rho_{k+1} = M0 @ rho @ M0d + M1 @ rho @ M1d
+            #   rho_{k+1} = M0 @ rho_k @ M0d + M1 @ rho_k @ M1d
             # with
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
+            #
+            # To normalize the scheme, we compute S = M0d @ M0 + M1d @ M1 and replace
+            #   M0 by ~M0 = M0 @ S^{-1/2}
+            #   M1 by ~M1 = M1 @ S^{-1/2}
+            # such that
+            #   ~M0d @ ~M0 + ~M1d @ ~M1 = Sd^{-1/2} (M0d @ M0 + M1d @ M1) S^{-1/2}
+            #                           = Sd^{-1/2} S S^{-1/2}
+            #                           = I
+            #
+            # For efficiency, we use a Cholesky decomposition instead of computing
+            # S^{-1/2} explicitly. We write S = T @ Td with T lower triangular, and we
+            # replace
+            #   M0 by ~M0 = M0 @ Td^{-1}
+            #   M1 by ~M1 = M1 @ Td^{-1}
+            # such that
+            #   ~M0d @ ~M0 + ~M1d @ ~M1 = T^{-1} @ (M0d @ M0 + M1d @ M1) @ Td^{-1}
+            #                           = T^{-1} @ T @ Td @ Td^{-1}
+            #                           = I
+            #
+            # In practice we directly replace rho_k by Td^{-1} @ rho_k @ T^{-1/2}
+            # instead of computing all ~Mks.
 
             delta_t = t1 - t0
-            L = stack(self.L(t0))
-            Ld = L.dag()
-            LdL = (Ld @ L).sum(0)
+            rho = y0
+            L, H = self.L(t0), self.H(t0)
+            I = eye_like(H)
+            LdL = sum([_L.dag() @ _L for _L in L])
 
-            M0 = self.Id - (1j * self.H(t0) + 0.5 * LdL) * delta_t
-            Mk = jnp.sqrt(delta_t) * L
+            M0 = I - (1j * H + 0.5 * LdL) * delta_t
+            Ms = [jnp.sqrt(delta_t) * _L for _L in L]
 
-            return M0 @ y0 @ M0.dag() + (Mk @ y0 @ Mk.dag()).sum(0)
+            if self.solver.normalize:
+                # delta_t is a traced array, so we need to be careful with the sum
+                S = M0.dag() @ M0 + (LdL * delta_t if LdL != 0.0 else 0.0)
 
-        def kraus_map_unitary(t0, t1, y0):  # noqa: ANN202
-            delta_t = t1 - t0
-            M0 = self.Id - 1j * self.H(t0) * delta_t
-            return M0 @ y0 @ M0.dag()
+                T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
-        kraus_map = kraus_map_dissipative if len(self.Ls) > 0 else kraus_map_unitary
+                # we want Td^{-1} @ y0 @ T^{-1}
+                rho = rho.to_jax()
+                # solve Td @ x = rho => x = Td^{-1} @ rho
+                rho = jax.lax.linalg.triangular_solve(
+                    T, rho, lower=True, transpose_a=True, conjugate_a=True
+                )
+                # solve x @ T = rho => x = rho @ T^{-1}
+                rho = jax.lax.linalg.triangular_solve(
+                    T, rho, lower=True, left_side=True
+                )
+
+            return M0 @ rho @ dag(M0) + sum([_M @ rho @ dag(_M) for _M in Ms])
 
         return AbstractRouchonTerm(kraus_map)
 

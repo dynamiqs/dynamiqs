@@ -63,7 +63,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Euler
         - EulerMaruyama
         - Rouchon1
-        - Rouchon2
         - Expm
 
 ### Gradients (dq.gradient)
