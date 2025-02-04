@@ -199,18 +199,16 @@ def signm(x: QArrayLike) -> QArray:
         QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
         [[0.+0.j 1.+0.j]
          [1.+0.j 0.+0.j]]
-        >>> dq.position(4)
-        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=2
-        [[    ⋅     0.5  +0.j     ⋅         ⋅    ]
-         [0.5  +0.j     ⋅     0.707+0.j     ⋅    ]
-         [    ⋅     0.707+0.j     ⋅     0.866+0.j]
-         [    ⋅         ⋅     0.866+0.j     ⋅    ]]
-        >>> dq.signm(dq.position(4))
-        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
-        [[ 0.   +0.j  0.888+0.j  0.   +0.j -0.46 +0.j]
-         [ 0.888+0.j -0.   +0.j  0.46 +0.j -0.   +0.j]
-         [ 0.   +0.j  0.46 +0.j -0.   +0.j  0.888+0.j]
-         [-0.46 +0.j -0.   +0.j  0.888+0.j -0.   +0.j]]
+        >>> dq.position(3)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j]
+         [    ⋅     0.707+0.j     ⋅    ]]
+        >>> dq.signm(dq.position(3))
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
+        [[-0.667+0.j  0.577+0.j  0.471+0.j]
+         [ 0.577+0.j  0.   +0.j  0.816+0.j]
+         [ 0.471+0.j  0.816+0.j -0.333+0.j]]
     """  # noqa: E501
     x = asqarray(x)
     x = check_hermitian(x, 'x')
