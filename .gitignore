@@ -37,3 +37,6 @@ docs/figs_docs/**
 
 # temporary directiry
 .tmp/**
+
+# uv lock file
+uv.lock
