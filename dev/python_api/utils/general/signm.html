@@ -5250,18 +5250,16 @@ sign of the operator.</p>
 <span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense</span>
 <span class="go">[[0.+0.j 1.+0.j]</span>
 <span class="go"> [1.+0.j 0.+0.j]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">position</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="go">QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dia, ndiags=2</span>
-<span class="go">[[    ⋅     0.5  +0.j     ⋅         ⋅    ]</span>
-<span class="go"> [0.5  +0.j     ⋅     0.707+0.j     ⋅    ]</span>
-<span class="go"> [    ⋅     0.707+0.j     ⋅     0.866+0.j]</span>
-<span class="go"> [    ⋅         ⋅     0.866+0.j     ⋅    ]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">signm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">position</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
-<span class="go">QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense</span>
-<span class="go">[[ 0.   +0.j  0.888+0.j  0.   +0.j -0.46 +0.j]</span>
-<span class="go"> [ 0.888+0.j -0.   +0.j  0.46 +0.j -0.   +0.j]</span>
-<span class="go"> [ 0.   +0.j  0.46 +0.j -0.   +0.j  0.888+0.j]</span>
-<span class="go"> [-0.46 +0.j -0.   +0.j  0.888+0.j -0.   +0.j]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">position</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[    ⋅     0.5  +0.j     ⋅    ]</span>
+<span class="go"> [0.5  +0.j     ⋅     0.707+0.j]</span>
+<span class="go"> [    ⋅     0.707+0.j     ⋅    ]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dq</span><span class="o">.</span><span class="n">signm</span><span class="p">(</span><span class="n">dq</span><span class="o">.</span><span class="n">position</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense</span>
+<span class="go">[[-0.667+0.j  0.577+0.j  0.471+0.j]</span>
+<span class="go"> [ 0.577+0.j  0.   +0.j  0.816+0.j]</span>
+<span class="go"> [ 0.471+0.j  0.816+0.j -0.333+0.j]]</span>
 </code></pre></div>
 
     </div>
