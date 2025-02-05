@@ -48,6 +48,10 @@ class MEInterface(AbstractTimeInterface):
         return _concatenate_sort(*ts)
 
 
+class DSSEInterface(MEInterface):
+    """Interface for the diffusive SSE."""
+
+
 class DSMEInterface(AbstractTimeInterface):
     """Interface for the diffusive SME."""
 

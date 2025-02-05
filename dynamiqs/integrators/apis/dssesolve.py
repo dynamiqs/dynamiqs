@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+from functools import partial
+
+import jax
+import jax.numpy as jnp
+from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
+from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
-from ...qarrays.qarray import QArrayLike
+from ...options import Options, check_options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
 from ...result import DSSESolveResult
-from ...solver import Solver
+from ...solver import EulerMaruyama, Solver
 from ...time_qarray import TimeQArray
+from .._utils import (
+    _astimeqarray,
+    assert_solver_supported,
+    cartesian_vmap,
+    catch_xla_runtime_error,
+    multi_vmap,
+)
+from ..core.fixed_step_stochastic_integrator import (
+    dssesolve_euler_maruyama_integrator_constructor,
+)
 
 
 def dssesolve(
@@ -23,10 +40,6 @@ def dssesolve(
     options: Options = Options(),  # noqa: B008
 ) -> DSSESolveResult:
     r"""Solve the diffusive stochastic Schrödinger equation (SSE).
-
-    Warning:
-        This function has not been implemented yet. The following API is indicative
-        of the planned implementation.
 
     The diffusive SSE describes the evolution of a quantum system measured
     by an ideal diffusive detector (for example homodyne or heterodyne detection
@@ -208,4 +221,130 @@ def dssesolve(
         hesitate to
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
-    return NotImplemented
+    # === convert arguments
+    H = _astimeqarray(H)
+    Ls = [_astimeqarray(L) for L in jump_ops]
+    psi0 = asqarray(psi0)
+    tsave = jnp.asarray(tsave)
+    keys = jnp.asarray(keys)
+    if exp_ops is not None:
+        exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+
+    # === check arguments
+    _check_dssesolve_args(H, Ls, psi0, exp_ops)
+    tsave = check_times(tsave, 'tsave')
+    check_options(options, 'dssesolve')
+
+    if solver is None:
+        raise ValueError('Argument `solver` must be specified.')
+
+    # we implement the jitted vectorization in another function to pre-convert QuTiP
+    # objects (which are not JIT-compatible) to JAX arrays
+    tsave = tuple(tsave.tolist())  # todo: fix static tsave
+    return _vectorized_dssesolve(
+        H, Ls, psi0, tsave, keys, exp_ops, solver, gradient, options
+    )
+
+
+@catch_xla_runtime_error
+@partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
+def _vectorized_dssesolve(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSSESolveResult:
+    f = _dssesolve_single_trajectory
+
+    # === vectorize function over stochastic trajectories
+    # the input is vectorized over `key`
+    in_axes = (None, None, None, None, 0, None, None, None, None)
+    # the result is vectorized over `_saved`, `infos` and `keys`
+    out_axes = DSSESolveResult.out_axes()
+    f = jax.vmap(f, in_axes, out_axes)
+
+    # === vectorize function
+    # vectorize input over H and psi0
+    in_axes = (H.in_axes, None, 0, None, None, None, None, None, None)
+
+    if options.cartesian_batching:
+        nvmap = (H.ndim - 2, 0, psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+    else:
+        n = H.shape[-1]
+        bshape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        nvmap = len(bshape)
+        # broadcast all vectorized input to same shape
+        H = H.broadcast_to(*bshape, n, n)
+        psi0 = psi0.broadcast_to(*bshape, n, 1)
+        # vectorize the function
+        f = multi_vmap(f, in_axes, out_axes, nvmap)
+
+    # === apply vectorized function
+    return f(H, Ls, psi0, tsave, keys, exp_ops, solver, gradient, options)
+
+
+def _dssesolve_single_trajectory(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    key: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    solver: Solver,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSSESolveResult:
+    # === select integrator constructor
+    integrator_constructors = {
+        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor
+    }
+    assert_solver_supported(solver, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(solver)]
+
+    # === check gradient is supported
+    solver.assert_supports_gradient(gradient)
+
+    # === init integrator
+    integrator = integrator_constructor(
+        ts=tsave,
+        y0=psi0,
+        solver=solver,
+        gradient=gradient,
+        result_class=DSSESolveResult,
+        options=options,
+        H=H,
+        Ls=Ls,
+        Es=exp_ops,
+        key=key,
+    )
+
+    # === run solver
+    result = integrator.run()
+
+    # === return result
+    return result  # noqa: RET504
+
+
+def _check_dssesolve_args(
+    H: TimeQArray, Ls: list[TimeQArray], psi0: QArray, exp_ops: list[QArray] | None
+):
+    # === check H shape
+    check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
+
+    # === check Ls shape
+    for i, L in enumerate(Ls):
+        check_shape(L, f'jump_ops[{i}]', '(n, n)')
+
+    # === check psi0 shape
+    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
+
+    # === check exp_ops shape
+    if exp_ops is not None:
+        for i, E in enumerate(exp_ops):
+            check_shape(E, f'exp_ops[{i}]', '(n, n)')
