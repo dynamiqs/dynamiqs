@@ -297,7 +297,7 @@ def _vectorized_dsmesolve(
         nvmap = (H.ndim - 2, 0, 0, 0, rho0.ndim - 2, 0, 0, 0, 0, 0, 0)
         f = cartesian_vmap(f, in_axes, out_axes, nvmap)
     else:
-        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, rho0]])
+        bshape = jnp.broadcast_shapes(H.shape[:-2], rho0.shape[:-2])
         nvmap = len(bshape)
         # broadcast all vectorized input to same shape
         n = H.shape[-1]
