@@ -361,7 +361,7 @@ def _check_dsmesolve_args(
     H: TimeQArray,
     Ls: list[TimeQArray],
     etas: Array,
-    rho0: Array,
+    rho0: QArray,
     exp_ops: list[QArray] | None,
 ):
     # === check H shape

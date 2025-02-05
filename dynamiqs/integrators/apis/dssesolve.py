@@ -81,7 +81,7 @@ def dssesolve(
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
             jump operators.
-        psi0 _(qarray-like of shape (...rho0, n, 1))_: Initial state.
+        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`. Measurements are time-averaged and saved over each interval
