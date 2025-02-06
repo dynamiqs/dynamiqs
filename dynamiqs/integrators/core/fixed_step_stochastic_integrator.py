@@ -203,7 +203,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         I = eye_like(H)
 
         # === measurement Y
-        # dY = sqrt(eta) <L+Ld> dt + dW
+        # dY = <L+Ld> dt + dW
         exp = jnp.stack([expect(_L + _L.dag(), psi).real for _L in L])  # (nL)
         dY = exp * self.dt + dW
 
