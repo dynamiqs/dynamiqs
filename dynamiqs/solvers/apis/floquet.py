@@ -20,7 +20,7 @@ from .._utils import (
     cartesian_vmap,
     catch_xla_runtime_error,
 )
-from ..core.floquet_integrator import floquet_integrator_constructor
+from ..core.floquet_solver import floquet_solver_constructor
 
 __all__ = ['floquet']
 
@@ -194,16 +194,16 @@ def _floquet(
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
-    # === select integrator constructor
+    # === select solver constructor
     supported_methods = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
     assert_method_supported(method, supported_methods)
-    integrator_constructor = floquet_integrator_constructor
+    solver_constructor = floquet_solver_constructor
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init integrator
-    integrator = integrator_constructor(
+    # === init solver
+    solver = solver_constructor(
         ts=tsave,
         y0=None,
         H=H,
@@ -214,8 +214,8 @@ def _floquet(
         T=T,
     )
 
-    # === run integrator
-    result = integrator.run()
+    # === run solver
+    result = solver.run()
 
     # === return result
     return result  # noqa: RET504

@@ -11,7 +11,7 @@ import mkdocs_gen_files
 # key: python_api directory path
 # value: (paths to include, namespace)
 doc_sections = {
-    'integrators': (['dynamiqs/integrators/'], 'dq'),
+    'solvers': (['dynamiqs/solvers/'], 'dq'),
     'qarrays/qarray': (['dynamiqs/qarrays/qarray.py'], 'dq'),
     'time_qarray': (['dynamiqs/time_qarray.py'], 'dq'),
     'method': (['dynamiqs/method.py'], 'dq.method'),

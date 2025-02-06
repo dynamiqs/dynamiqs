@@ -22,7 +22,7 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.expm_integrator import mepropagator_expm_integrator_constructor
+from ..core.expm_solver import mepropagator_expm_solver_constructor
 
 
 def mepropagator(
@@ -213,20 +213,20 @@ def _mepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === select integrator constructor
-    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
-    assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    # === select solver constructor
+    solver_constructors = {Expm: mepropagator_expm_solver_constructor}
+    assert_method_supported(method, solver_constructors.keys())
+    solver_constructor = solver_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init integrator
+    # === init solver
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
     # todo: timeqarray should expose dims without having to call at specific time
     y0 = DenseQArray(H(0.0).dims, True, data)
-    integrator = integrator_constructor(
+    solver = solver_constructor(
         ts=tsave,
         y0=y0,
         method=method,
@@ -237,8 +237,8 @@ def _mepropagator(
         Ls=Ls,
     )
 
-    # === run integrator
-    result = integrator.run()
+    # === run solver
+    result = solver.run()
 
     # === return result
     return result  # noqa: RET504

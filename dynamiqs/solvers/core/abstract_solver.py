@@ -13,12 +13,12 @@ from ...result import Result, Saved
 from .interfaces import OptionsInterface
 
 
-class AbstractIntegrator(eqx.Module):
-    """Abstract integrator.
+class AbstractSolver(eqx.Module):
+    """Abstract solver.
 
-    Any integrator should inherit from this class and implement the `run()` method
+    Any solver should inherit from this class and implement the `run()` method
     to specify the main computationally intensive logic. This class is intentionally
-    kept abstract to simplify the implementation of new integrators from scratch.
+    kept abstract to simplify the implementation of new solvers from scratch.
     """
 
     @abstractmethod
@@ -26,10 +26,10 @@ class AbstractIntegrator(eqx.Module):
         pass
 
 
-class BaseIntegrator(AbstractIntegrator, OptionsInterface):
-    """Integrator evolving an initial state over a set of times.
+class BaseSolver(AbstractSolver, OptionsInterface):
+    """Solver evolving an initial state over a set of times.
 
-    This integrator evolves the initial pytree `y0` over a set of times specified by
+    This solver evolves the initial pytree `y0` over a set of times specified by
     `ts`. It support multiple `method` and `gradient`, can be parameterized with
     `options`, and return a `result` object.
     """
@@ -54,10 +54,10 @@ class BaseIntegrator(AbstractIntegrator, OptionsInterface):
         )
 
 
-class StochasticBaseIntegrator(BaseIntegrator):
-    """Integrator stochastically evolving an initial state over a set of times.
+class StochasticBaseSolver(BaseSolver):
+    """Solver stochastically evolving an initial state over a set of times.
 
-    In addition to `BaseIntegrator`, it includes a PRNG key for the stochastic
+    In addition to `BaseSolver`, it includes a PRNG key for the stochastic
     evolution.
     """
 
