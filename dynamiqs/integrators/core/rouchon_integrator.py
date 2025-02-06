@@ -93,7 +93,7 @@ def _cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.
 
 class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
     """Integrator computing the time evolution of the Lindblad master equation using the
-    Rouchon 1 solver.
+    Rouchon 1 method.
     """
 
     @property
@@ -116,7 +116,7 @@ class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
             M0 = I - (1j * H + 0.5 * LdL) * delta_t
             Ms = [jnp.sqrt(delta_t) * _L for _L in L]
 
-            if self.solver.normalize:
+            if self.method.normalize:
                 rho = _cholesky_normalize(M0, LdL, delta_t, rho)
 
             return M0 @ rho @ dag(M0) + sum([_M @ rho @ dag(_M) for _M in Ms])

@@ -8,16 +8,16 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
+from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
 from ...qarrays.layout import dense
 from ...qarrays.qarray import QArrayLike
 from ...result import SEPropagatorResult
-from ...solver import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
     ispwc,
@@ -37,7 +37,7 @@ def sepropagator(
     H: QArrayLike | TimeQArray,
     tsave: ArrayLike,
     *,
-    solver: Solver | None = None,
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> SEPropagatorResult:
@@ -54,26 +54,26 @@ def sepropagator(
 
     If the Hamiltonian is constant or piecewise constant, the propagator is
     computed by directly exponentiating the Hamiltonian. Otherwise, the
-    propagator is computed by solving the Schrödinger equation with an ODE solver.
+    propagator is computed by solving the Schrödinger equation with an ODE method.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators
             are saved. The equation is solved from `tsave[0]` to `tsave[-1]`,
             or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
-        solver: Solver for the integration. Defaults to `None` which redirects
-            to [`dq.solver.Expm`][dynamiqs.solver.Expm] (explicit matrix
-            exponentiation) or [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5]
+        method: Method for the integration. Defaults to `None` which redirects
+            to [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix
+            exponentiation) or [`dq.method.Tsit5`][dynamiqs.method.Tsit5]
             depending on the Hamiltonian type (supported:
-            [`Expm`][dynamiqs.solver.Expm],
-            [`Tsit5`][dynamiqs.solver.Tsit5],
-            [`Dopri5`][dynamiqs.solver.Dopri5],
-            [`Dopri8`][dynamiqs.solver.Dopri8],
-            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
-            [`Euler`][dynamiqs.solver.Euler]).
+            [`Expm`][dynamiqs.method.Expm],
+            [`Tsit5`][dynamiqs.method.Tsit5],
+            [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_propagators`, `progress_meter`, `t0`,
             `save_extra`).
@@ -123,11 +123,11 @@ def sepropagator(
                     propagator.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
-                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
                     saved.
-                - **solver** _(Solver)_ - Solver used.
+                - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
@@ -164,15 +164,15 @@ def sepropagator(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_sepropagator(H, tsave, solver, gradient, options)
+    return _vectorized_sepropagator(H, tsave, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_sepropagator(
     H: TimeQArray,
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
@@ -184,19 +184,19 @@ def _vectorized_sepropagator(
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0)
     f = cartesian_vmap(_sepropagator, in_axes, out_axes, nvmap)
 
-    return f(H, tsave, solver, gradient, options)
+    return f(H, tsave, method, gradient, options)
 
 
 def _sepropagator(
     H: TimeQArray,
     tsave: Array,
-    solver: Solver | None,
+    method: Method | None,
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
     # === select integrator constructor
-    if solver is None:  # default solver
-        solver = Expm() if ispwc(H) else Tsit5()
+    if method is None:  # default method
+        method = Expm() if ispwc(H) else Tsit5()
 
     integrator_constructors = {
         Expm: sepropagator_expm_integrator_constructor,
@@ -207,18 +207,18 @@ def _sepropagator(
         Kvaerno3: sepropagator_kvaerno3_integrator_constructor,
         Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
-    assert_solver_supported(solver, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(solver)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     y0 = eye(*H.dims, layout=dense)
     integrator = integrator_constructor(
         ts=tsave,
         y0=y0,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=SEPropagatorResult,
         options=options,

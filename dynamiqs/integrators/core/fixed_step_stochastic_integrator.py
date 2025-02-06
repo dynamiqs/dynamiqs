@@ -54,7 +54,7 @@ class DiffusiveSolveIntegrator(
         # check that all tsave values are exact multiples of dt
         if not _is_multiple_of(self.ts, self.dt):
             raise ValueError(
-                'Argument `tsave` should only contain exact multiples of the solver '
+                'Argument `tsave` should only contain exact multiples of the method '
                 'fixed step size `dt`.'
             )
 
@@ -65,13 +65,13 @@ class DiffusiveSolveIntegrator(
         # check that options.t0 is not used
         if self.options.t0 is not None:
             raise ValueError(
-                'Option `t0` is invalid for fixed step SSE or SME solvers.'
+                'Option `t0` is invalid for fixed step SSE or SME methods.'
             )
 
         if self.discontinuity_ts is not None:
             warnings.warns(
                 'The Hamiltonian or jump operators are time-dependent with '
-                'discontinuities, which will be ignored by the solver.',
+                'discontinuities, which will be ignored by the method.',
                 stack_level=1,
             )
 
@@ -80,7 +80,7 @@ class DiffusiveSolveIntegrator(
 
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
-                # note: fixed step solvers always make the same number of steps
+                # note: fixed step methods always make the same number of steps
                 return (
                     f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
                 )
@@ -88,7 +88,7 @@ class DiffusiveSolveIntegrator(
 
     @property
     def dt(self) -> float:
-        return self.solver.dt
+        return self.method.dt
 
     def integrate(
         self, t0: float, y0: DiffusiveState, key: PRNGKeyArray, nsteps: int
@@ -313,7 +313,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
             for eta, _Lm in zip(self.etas, Lm, strict=True)
         ] + [self.dt * _Lc for _Lc in Lc]
 
-        if self.solver.normalize:
+        if self.method.normalize:
             rho = _cholesky_normalize(M0, LdL, self.dt, rho)
 
         rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])

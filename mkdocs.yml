@@ -150,7 +150,7 @@ nav:
           - Continuous diffusive measurement: documentation/advanced_examples/continuous-diffusive-measurement.md
   - Python API:
       - python_api/index.md
-      - Quantum solvers:
+      - Solvers:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
           - sepropagator: python_api/integrators/sepropagator.md
@@ -169,16 +169,16 @@ nav:
               - pwc: python_api/time_qarray/pwc.md
               - modulated: python_api/time_qarray/modulated.md
               - timecallable: python_api/time_qarray/timecallable.md
-          - Solvers (dq.solver):
-              - Tsit5: python_api/solver/Tsit5.md
-              - Dopri5: python_api/solver/Dopri5.md
-              - Dopri8: python_api/solver/Dopri8.md
-              - Kvaerno3: python_api/solver/Kvaerno3.md
-              - Kvaerno5: python_api/solver/Kvaerno5.md
-              - Euler: python_api/solver/Euler.md
-              - EulerMaruyama: python_api/solver/EulerMaruyama.md
-              - Rouchon1: python_api/solver/Rouchon1.md
-              - Expm: python_api/solver/Expm.md
+          - Methods (dq.method):
+              - Tsit5: python_api/method/Tsit5.md
+              - Dopri5: python_api/method/Dopri5.md
+              - Dopri8: python_api/method/Dopri8.md
+              - Kvaerno3: python_api/method/Kvaerno3.md
+              - Kvaerno5: python_api/method/Kvaerno5.md
+              - Euler: python_api/method/Euler.md
+              - EulerMaruyama: python_api/method/EulerMaruyama.md
+              - Rouchon1: python_api/method/Rouchon1.md
+              - Expm: python_api/method/Expm.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md

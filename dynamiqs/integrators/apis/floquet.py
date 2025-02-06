@@ -9,14 +9,14 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
-from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
 )
@@ -30,7 +30,7 @@ def floquet(
     T: float,
     tsave: ArrayLike,
     *,
-    solver: Solver = Tsit5(),  # noqa: B008
+    method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> FloquetResult:
@@ -59,14 +59,14 @@ def floquet(
         tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet
             modes. The specified times should be ordered, strictly ascending, and such
             that `tsave[-1] - tsave[0] <= T`.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
-            [`Tsit5`][dynamiqs.solver.Tsit5],
-            [`Dopri5`][dynamiqs.solver.Dopri5],
-            [`Dopri8`][dynamiqs.solver.Dopri8],
-            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
-            [`Euler`][dynamiqs.solver.Euler]).
+        method: Method for the integration. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5],
+            [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient.
         options: Generic options (supported: `progress_meter`, `t0`).
             ??? "Detailed options API"
@@ -104,11 +104,11 @@ def floquet(
                     modes.
                 - **quasienergies** _(array of shape (..., n))_ - Saved quasienergies
                 - **T** _(float)_ - Drive period
-                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
                     saved.
-                - **solver** _(Solver)_ - Solver used.
+                - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
@@ -162,16 +162,16 @@ def floquet(
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_floquet(H, T, tsave, solver, gradient, options)
+    return _vectorized_floquet(H, T, tsave, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_floquet(
     H: TimeQArray,
     T: float,
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
@@ -183,31 +183,31 @@ def _vectorized_floquet(
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0, 0)
     f = cartesian_vmap(_floquet, in_axes, out_axes, nvmap)
 
-    return f(H, T, tsave, solver, gradient, options)
+    return f(H, T, tsave, method, gradient, options)
 
 
 def _floquet(
     H: TimeQArray,
     T: float,
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
     # === select integrator constructor
-    supported_solvers = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
-    assert_solver_supported(solver, supported_solvers)
+    supported_methods = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
+    assert_method_supported(method, supported_methods)
     integrator_constructor = floquet_integrator_constructor
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
         ts=tsave,
         y0=None,
         H=H,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=FloquetResult,
         options=options,

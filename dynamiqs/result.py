@@ -10,7 +10,7 @@ from .gradient import Gradient
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import to_jax
-from .solver import Solver
+from .method import Method
 
 __all__ = [
     'FloquetResult',
@@ -72,7 +72,7 @@ class FloquetSaved(Saved):
 
 class Result(eqx.Module):
     tsave: Array
-    solver: Solver
+    method: Method
     gradient: Gradient | None
     options: Options
     _saved: Saved
@@ -94,7 +94,7 @@ class Result(eqx.Module):
 
     def _str_parts(self) -> dict[str, str | None]:
         return {
-            'Solver': type(self.solver).__name__,
+            'Method': type(self.method).__name__,
             'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),

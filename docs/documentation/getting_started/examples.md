@@ -32,7 +32,7 @@ print(result)
 ```text title="Output"
 |██████████| 100.0% ◆ elapsed 6.30ms ◆ remaining 0.00ms
 ==== MESolveResult ====
-Solver : Tsit5
+Method : Tsit5
 Infos  : 40 steps (40 accepted, 0 rejected)
 States : QArray complex64 (101, 16, 16) | 202.0 Kb
 ```

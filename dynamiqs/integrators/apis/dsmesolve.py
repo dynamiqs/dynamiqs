@@ -10,15 +10,15 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
+from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
-from ...solver import EulerMaruyama, Rouchon1, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
@@ -38,7 +38,7 @@ def dsmesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    solver: Solver | None = None,
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> DSMESolveResult:
@@ -91,7 +91,7 @@ def dsmesolve(
 
     Warning:
         For now, `dsmesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the solver fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -110,11 +110,11 @@ def dsmesolve(
             trajectories.
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the integration. No defaults for now, you have to specify a
-            solver (supported: [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama],
-            [`Rouchon1`][dynamiqs.solver.Rouchon1]).
+        method: Method for the integration. No defaults for now, you have to specify a
+            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama],
+            [`Rouchon1`][dynamiqs.method.Rouchon1]).
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_states`, `cartesian_batching`,
             `save_extra`).
@@ -169,11 +169,11 @@ def dsmesolve(
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the Wiener processes.
-                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
                     saved.
-                - **solver** _(Solver)_ - Solver used.
+                - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
@@ -244,8 +244,8 @@ def dsmesolve(
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dsmesolve')
 
-    if solver is None:
-        raise ValueError('Argument `solver` must be specified.')
+    if method is None:
+        raise ValueError('Argument `method` must be specified.')
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
@@ -261,12 +261,12 @@ def dsmesolve(
     # objects (which are not JIT-compatible) to JAX arrays
     tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dsmesolve(
-        H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, solver, gradient, options
+        H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
 def _vectorized_dsmesolve(
     H: TimeQArray,
     Lcs: list[TimeQArray],
@@ -276,7 +276,7 @@ def _vectorized_dsmesolve(
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
@@ -307,7 +307,7 @@ def _vectorized_dsmesolve(
         f = multi_vmap(f, in_axes, out_axes, nvmap)
 
     # === apply vectorized function
-    return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, solver, gradient, options)
+    return f(H, Lcs, Lms, etas, rho0, tsave, keys, exp_ops, method, gradient, options)
 
 
 def _dsmesolve_single_trajectory(
@@ -319,7 +319,7 @@ def _dsmesolve_single_trajectory(
     tsave: Array,
     key: PRNGKeyArray,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> DSMESolveResult:
@@ -328,17 +328,17 @@ def _dsmesolve_single_trajectory(
         EulerMaruyama: dsmesolve_euler_maruyama_integrator_constructor,
         Rouchon1: dsmesolve_rouchon1_integrator_constructor,
     }
-    assert_solver_supported(solver, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(solver)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
         ts=tsave,
         y0=rho0,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=DSMESolveResult,
         options=options,

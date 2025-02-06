@@ -11,7 +11,7 @@ from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
-from dynamiqs.solver import Solver
+from dynamiqs.method import Method
 from dynamiqs.time_qarray import CallableTimeQArray, modulated
 
 from ..system import System
@@ -28,7 +28,7 @@ class FloquetQubit(System):
 
     def run(
         self,
-        solver: Solver,
+        method: Method,
         *,
         gradient: Gradient | None = None,
         options: Options = Options(),  # noqa: B008
@@ -38,7 +38,7 @@ class FloquetQubit(System):
         H = self.H(params)
         T = 2.0 * jnp.pi / params.omega_d
         return floquet(
-            H, T, params.tsave, solver=solver, gradient=gradient, options=options
+            H, T, params.tsave, method=method, gradient=gradient, options=options
         )
 
     def __init__(

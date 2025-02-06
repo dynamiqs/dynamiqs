@@ -21,7 +21,7 @@ class FixedStepInfos(eqx.Module):
 
     def __str__(self) -> str:
         if self.nsteps.ndim >= 1:
-            # note: fixed step solvers always make the same number of steps
+            # note: fixed step methods always make the same number of steps
             return f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
         return f'{self.nsteps} steps'
 
@@ -56,22 +56,22 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.ConstantStepSize()
         else:
             return dx.PIDController(
-                rtol=self.solver.rtol,
-                atol=self.solver.atol,
-                safety=self.solver.safety_factor,
-                factormin=self.solver.min_factor,
-                factormax=self.solver.max_factor,
+                rtol=self.method.rtol,
+                atol=self.method.atol,
+                safety=self.method.safety_factor,
+                factormin=self.method.min_factor,
+                factormax=self.method.max_factor,
                 jump_ts=self.discontinuity_ts,
             )
 
     @property
     def dt0(self) -> float | None:
-        return self.solver.dt if self.fixed_step else None
+        return self.method.dt if self.fixed_step else None
 
     @property
     def max_steps(self) -> int:
-        # TODO: fix hard-coded max_steps for fixed solvers
-        return 100_000 if self.fixed_step else self.solver.max_steps
+        # TODO: fix hard-coded max_steps for fixed methods
+        return 100_000 if self.fixed_step else self.method.max_steps
 
     @property
     @abstractmethod

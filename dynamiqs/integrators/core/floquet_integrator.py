@@ -17,7 +17,7 @@ class FloquetIntegrator(BaseIntegrator):
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return self.result_class(
-            self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
+            self.ts, self.method, self.gradient, self.options, saved, infos, self.T
         )
 
 
@@ -29,7 +29,7 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
         # compute propagators for all times at once, with the last being one period
         ts = jnp.append(self.ts, self.t0 + self.T)
         seprop_result = _sepropagator(
-            self.H, ts, solver=self.solver, gradient=self.gradient, options=options
+            self.H, ts, method=self.method, gradient=self.gradient, options=options
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0

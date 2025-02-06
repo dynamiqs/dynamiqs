@@ -10,7 +10,7 @@ from dynamiqs import QArray, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.result import Result
-from dynamiqs.solver import Solver
+from dynamiqs.method import Method
 from dynamiqs.time_qarray import TimeQArray
 
 
@@ -69,7 +69,7 @@ class System(ABC):
     @abstractmethod
     def run(
         self,
-        solver: Solver,
+        method: Method,
         *,
         gradient: Gradient | None = None,
         options: Options = Options(),  # noqa: B008

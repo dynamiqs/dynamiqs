@@ -14,7 +14,7 @@ from dynamiqs.gradient import Gradient
 from dynamiqs.options import Options
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
-from dynamiqs.solver import Solver
+from dynamiqs.method import Method
 from dynamiqs.time_qarray import TimeQArray
 
 from ..system import System
@@ -27,7 +27,7 @@ class OpenSystem(System):
 
     def run(
         self,
-        solver: Solver,
+        method: Method,
         *,
         gradient: Gradient | None = None,
         options: Options = Options(),  # noqa: B008
@@ -44,7 +44,7 @@ class OpenSystem(System):
             y0,
             self.tsave,
             exp_ops=Es,
-            solver=solver,
+            method=method,
             gradient=gradient,
             options=options,
         )

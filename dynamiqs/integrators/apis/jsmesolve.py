@@ -3,10 +3,10 @@ from __future__ import annotations
 from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ...gradient import Gradient
+from ...method import Method
 from ...options import Options
 from ...qarrays.qarray import QArrayLike
 from ...result import JSMESolveResult
-from ...solver import Solver
 from ...time_qarray import TimeQArray
 
 
@@ -20,7 +20,7 @@ def jsmesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    solver: Solver | None = None,
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> JSMESolveResult:
@@ -72,7 +72,7 @@ def jsmesolve(
 
     Warning:
         For now, `jsmesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the solver fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -92,10 +92,10 @@ def jsmesolve(
             trajectories.
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the integration. No defaults for now, you have to specify a
-            solver (supported: [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama]).
+        method: Method for the integration. No defaults for now, you have to specify a
+            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama]).
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_states`, `cartesian_batching`,
             `save_extra`, `nmaxclick`).
@@ -154,11 +154,11 @@ def jsmesolve(
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the Wiener processes.
-                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
                     saved.
-                - **solver** _(Solver)_ - Solver used.
+                - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 

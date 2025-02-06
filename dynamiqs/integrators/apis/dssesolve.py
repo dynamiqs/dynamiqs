@@ -9,15 +9,15 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
+from ...method import EulerMaruyama, Method
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import DSSESolveResult
-from ...solver import EulerMaruyama, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
@@ -35,7 +35,7 @@ def dssesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    solver: Solver | None = None,
+    method: Method | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> DSSESolveResult:
@@ -88,7 +88,7 @@ def dssesolve(
 
     Warning:
         For now, `dssesolve()` only supports linearly spaced `tsave` with values that
-        are exact multiples of the solver fixed step size `dt`.
+        are exact multiples of the method fixed step size `dt`.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -104,10 +104,10 @@ def dssesolve(
             trajectories.
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the integration. No defaults for now, you have to specify a
-            solver (supported: [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama]).
+        method: Method for the integration. No defaults for now, you have to specify a
+            method (supported: [`EulerMaruyama`][dynamiqs.method.EulerMaruyama]).
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_states`, `cartesian_batching`,
             `save_extra`).
@@ -161,11 +161,11 @@ def dssesolve(
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
                     sample the Wiener processes.
-                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
                     saved.
-                - **solver** _(Solver)_ - Solver used.
+                - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
@@ -235,19 +235,19 @@ def dssesolve(
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dssesolve')
 
-    if solver is None:
-        raise ValueError('Argument `solver` must be specified.')
+    if method is None:
+        raise ValueError('Argument `method` must be specified.')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     tsave = tuple(tsave.tolist())  # todo: fix static tsave
     return _vectorized_dssesolve(
-        H, Ls, psi0, tsave, keys, exp_ops, solver, gradient, options
+        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -255,7 +255,7 @@ def _vectorized_dssesolve(
     tsave: Array,
     keys: PRNGKeyArray,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
@@ -286,7 +286,7 @@ def _vectorized_dssesolve(
         f = multi_vmap(f, in_axes, out_axes, nvmap)
 
     # === apply vectorized function
-    return f(H, Ls, psi0, tsave, keys, exp_ops, solver, gradient, options)
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
 def _dssesolve_single_trajectory(
@@ -296,7 +296,7 @@ def _dssesolve_single_trajectory(
     tsave: Array,
     key: PRNGKeyArray,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
@@ -304,17 +304,17 @@ def _dssesolve_single_trajectory(
     integrator_constructors = {
         EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor
     }
-    assert_solver_supported(solver, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(solver)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
         ts=tsave,
         y0=psi0,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=DSSESolveResult,
         options=options,
