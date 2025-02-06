@@ -14,8 +14,11 @@ from jaxtyping import ArrayLike, PRNGKeyArray, Scalar
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
 from ...result import Result
+from ...utils.general import dag, expect
+from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import DSMEInterface, SolveInterface
+from .rouchon_integrator import _cholesky_normalize
 from .save_mixin import DSMESolveSaveMixin
 
 
@@ -98,7 +101,7 @@ class DSMEFixedStepIntegrator(
         # iterate over the fixed step size dt
         def step(carry, dW):  # noqa: ANN001, ANN202
             t, y = carry
-            y = y + self.forward(t, y, dW)
+            y = self.forward(t, y, dW)
             t = t + self.dt
             return (t, y), None
 
@@ -178,7 +181,7 @@ class DSMEFixedStepIntegrator(
 
     @abstractmethod
     def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
-        # return (drho, dY)
+        # return (rho_{t+dt}, dY_{t+dt})
         pass
 
 
@@ -193,10 +196,11 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
         # - Lcal the Liouvillian
         # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
         L, Lm, H = self.L(t), self.Lm(t), self.H(t)
+        LdL = sum([_L.dag() @ _L for _L in L])
 
         # === Lcal(rho)
         # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
-        Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
+        Hnh = -1j * H - 0.5 * LdL
         tmp = Hnh @ y.rho + sum([0.5 * _L @ y.rho @ _L.dag() for _L in L])
         Lcal_rho = tmp + tmp.dag()
 
@@ -214,7 +218,54 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
         # === measurement Y
         dY = tr_Ccal_rho * self.dt + dW  # (nLm,)
 
-        return DSMEState(drho, dY)
+        return DSMEState(y.rho + drho, y.Y + dY)
+
+
+class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
+    """Integrator solving the diffusive SME with the Rouchon1 method."""
+
+    def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
+        # The Rouchon update for a single loss channel is:
+        #   rho_{k+1} = M_dY @ rho_k @ M_dY^\dag + M1 @ rho_k @ M1d / Tr[...]
+        #   dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
+        # with
+        #   MdY = I - (iH + 0.5 Ld @ L) dt + sqrt(self.eta) * dY * Lm
+        #   M1 = sqrt(1 - eta) * L sqrt(dt)
+        #
+        # See comment of `_cholesky_normalize()` for the normalisation (computed for the
+        # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
+
+        rho = y.rho
+        L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
+        I = eye_like(H)
+        LdL = sum([_L.dag() @ _L for _L in L])
+
+        # === measurement Y
+        # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
+        trace = jnp.stack([expect(_Lm + _Lm.dag(), rho).real for _Lm in Lm])  # (nLm)
+        dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
+
+        # === state rho
+        M0 = I - (1j * H + 0.5 * LdL) * self.dt
+        M_dY = M0 + sum(
+            [
+                jnp.sqrt(eta) * _dY * _Lm
+                for eta, _dY, _Lm in zip(self.etas, dY, Lm, strict=True)
+            ]
+        )
+        Ms = [
+            jnp.sqrt((1 - eta) * self.dt) * _Lm
+            for eta, _Lm in zip(self.etas, Lm, strict=True)
+        ] + [self.dt * _Lc for _Lc in Lc]
+
+        if self.solver.normalize:
+            rho = _cholesky_normalize(M0, LdL, self.dt, rho)
+
+        rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
+        rho = rho / rho.trace()  # normalise by signal probability
+
+        return DSMEState(rho, y.Y + dY)
 
 
 dsmesolve_euler_maruyama_integrator_constructor = DSMESolveEulerMayuramaIntegrator
+dsmesolve_rouchon1_integrator_constructor = DSMESolveRouchon1Integrator

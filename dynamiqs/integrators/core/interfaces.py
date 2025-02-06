@@ -63,6 +63,9 @@ class DSMEInterface(AbstractTimeInterface):
     def L(self, t: Scalar) -> list[QArray]:
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
+    def Lc(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Lcs]  # (nLc, n, n)
+
     def Lm(self, t: Scalar) -> list[QArray]:
         return [_L(t) for _L in self.Lms]  # (nLm, n, n)
 

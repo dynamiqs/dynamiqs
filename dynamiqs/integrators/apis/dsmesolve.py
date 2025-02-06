@@ -14,7 +14,7 @@ from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import DSMESolveResult
-from ...solver import EulerMaruyama, Solver
+from ...solver import EulerMaruyama, Rouchon1, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
@@ -25,6 +25,7 @@ from .._utils import (
 )
 from ..core.fixed_step_stochastic_integrator import (
     dsmesolve_euler_maruyama_integrator_constructor,
+    dsmesolve_rouchon1_integrator_constructor,
 )
 
 
@@ -110,7 +111,8 @@ def dsmesolve(
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         solver: Solver for the integration. No defaults for now, you have to specify a
-            solver (supported: [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama]).
+            solver (supported: [`EulerMaruyama`][dynamiqs.solver.EulerMaruyama],
+            [`Rouchon1`][dynamiqs.solver.Rouchon1]).
         gradient: Algorithm used to compute the gradient. The default is
             solver-dependent, refer to the documentation of the chosen solver for more
             details.
@@ -251,8 +253,8 @@ def dsmesolve(
 
     # === split jump operators
     # split between purely dissipative (eta = 0) and measured (eta != 0)
-    Lcs = [L for L, eta in zip(Ls, etas, strict=False) if eta == 0]
-    Lms = [L for L, eta in zip(Ls, etas, strict=False) if eta != 0]
+    Lcs = [L for L, eta in zip(Ls, etas, strict=True) if eta == 0]
+    Lms = [L for L, eta in zip(Ls, etas, strict=True) if eta != 0]
     etas = etas[etas != 0]
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
@@ -323,7 +325,8 @@ def _dsmesolve_single_trajectory(
 ) -> DSMESolveResult:
     # === select integrator constructor
     integrator_constructors = {
-        EulerMaruyama: dsmesolve_euler_maruyama_integrator_constructor
+        EulerMaruyama: dsmesolve_euler_maruyama_integrator_constructor,
+        Rouchon1: dsmesolve_rouchon1_integrator_constructor,
     }
     assert_solver_supported(solver, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(solver)]
