@@ -4704,6 +4704,8 @@
       
         
       
+        
+      
     
     
       
@@ -4882,6 +4884,28 @@
   
   <span class="md-ellipsis">
     hinton
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plot/xyz.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    xyz
     
   </span>
   
@@ -5294,13 +5318,7 @@
     <div class="doc doc-contents first">
 
         <p>Solve the diffusive stochastic Schrödinger equation (<abbr title="stochastic Schrödinger equation">SSE</abbr>).</p>
-
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This function has not been implemented yet. The following API is indicative
-of the planned implementation.</p>
-</details>        <p class="annotate">The diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> describes the evolution of a quantum system measured
+<p class="annotate">The diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> describes the evolution of a quantum system measured
 by an ideal diffusive detector (for example homodyne or heterodyne detection
 in quantum optics). This function computes the evolution of the state vector
 <span class="arithmatex">\(\ket{\psi(t)}\)</span> at time <span class="arithmatex">\(t\)</span>, starting from an initial state <span class="arithmatex">\(\ket{\psi_0}\)</span>
@@ -5375,7 +5393,7 @@ jump operators.</p>
           <b>psi0</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray-like of shape (...rho0, n, 1))              </i>
+(qarray-like of shape (...psi0, n, 1))              </i>
           – <p>Initial state.</p>
         </li>
         <li class="field-body">
