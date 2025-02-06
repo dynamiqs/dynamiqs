@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
-from typing import Any
 
 import equinox as eqx
 import jax
@@ -17,19 +16,19 @@ from ...result import Result
 from ...utils.general import dag, expect
 from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
-from .interfaces import DSMEInterface, SolveInterface
+from .interfaces import DSMEInterface, DSSEInterface, SolveInterface
 from .rouchon_integrator import _cholesky_normalize
-from .save_mixin import DSMESolveSaveMixin
+from .save_mixin import DiffusiveSolveSaveMixin
 
 
-class DSMEState(eqx.Module):
-    """State for the diffusive SME fixed step integrators."""
+class DiffusiveState(eqx.Module):
+    """State for the diffusive SSE/SME fixed step integrators."""
 
-    rho: QArray  # state (integrated from initial to current time)
+    state: QArray  # state (integrated from initial to current time)
     Y: Array  # measurement (integrated from initial to current time)
 
-    def __add__(self, other: Any) -> DSMEState:
-        return DSMEState(self.rho + other.rho, self.Y + other.Y)
+    def __add__(self, other: DiffusiveState) -> DiffusiveState:
+        return DiffusiveState(self.state + other.state, self.Y + other.Y)
 
 
 def _is_multiple_of(
@@ -46,10 +45,10 @@ def _is_linearly_spaced(
     return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
 
 
-class DSMEFixedStepIntegrator(
-    StochasticBaseIntegrator, DSMEInterface, DSMESolveSaveMixin
+class DiffusiveSolveIntegrator(
+    StochasticBaseIntegrator, DiffusiveSolveSaveMixin, SolveInterface
 ):
-    """Integrator solving the diffusive SME with a fixed step size integrator."""
+    """Integrator solving the diffusive SSE/SME with a fixed step size integrator."""
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
@@ -65,7 +64,9 @@ class DSMEFixedStepIntegrator(
 
         # check that options.t0 is not used
         if self.options.t0 is not None:
-            raise ValueError('Option `t0` is invalid for fixed step SME solvers.')
+            raise ValueError(
+                'Option `t0` is invalid for fixed step SSE or SME solvers.'
+            )
 
         if self.discontinuity_ts is not None:
             warnings.warns(
@@ -90,13 +91,11 @@ class DSMEFixedStepIntegrator(
         return self.solver.dt
 
     def integrate(
-        self, t0: float, y0: DSMEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, DSMEState]:
-        # integrate the SME for nsteps of length dt
-        nLm = len(self.etas)
-
+        self, t0: float, y0: DiffusiveState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, DiffusiveState]:
+        # integrate the SDE for nsteps of length dt
         # sample wiener
-        dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, nLm))
+        dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
 
         # iterate over the fixed step size dt
         def step(carry, dW):  # noqa: ANN001, ANN202
@@ -110,9 +109,9 @@ class DSMEFixedStepIntegrator(
         return t, y
 
     def integrate_by_chunks(
-        self, t0: float, y0: DSMEState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, DSMEState]:
-        # integrate the SME for nsteps of length dt, splitting the integration in
+        self, t0: float, y0: DiffusiveState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, DiffusiveState]:
+        # integrate the SSE/SME for nsteps of length dt, splitting the integration in
         # chunks of 1000 dts to ensure a fixed memory usage
 
         nsteps_per_chunk = 1000
@@ -140,7 +139,6 @@ class DSMEFixedStepIntegrator(
         # multiple of dt
 
         # === define variables
-        nLm = len(self.etas)
         # number of save interval
         nsave = len(self.ts) - 1
         # total number of steps (of length dt)
@@ -151,13 +149,13 @@ class DSMEFixedStepIntegrator(
         delta_t = self.ts[1] - self.ts[0]
 
         # === initial state
-        # define initial state (rho, Y) = (rho0, 0)
-        y0 = DSMEState(self.y0, jnp.zeros(nLm))
+        # define initial state (state, Y) = (state0, 0)
+        y0 = DiffusiveState(self.y0, jnp.zeros(self.nmeas))
         # save initial state at time 0
         saved0 = self.save(y0)
 
         # === run the simulation
-        # integrate the SME for each save interval
+        # integrate the SSE/SME for each save interval
         def outer_step(carry, key):  # noqa: ANN001, ANN202
             t, y = carry
             t, y = self.integrate_by_chunks(t, y, key, nsteps_per_save)
@@ -179,52 +177,109 @@ class DSMEFixedStepIntegrator(
 
         return self.result(saved, infos=self.Infos(nsteps))
 
+    @property
     @abstractmethod
-    def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
-        # return (rho_{t+dt}, dY_{t+dt})
+    def nmeas(self) -> int:
+        pass
+
+    @abstractmethod
+    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
+        # return (state_{t+dt}, dY_{t+dt})
         pass
 
 
-class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator, SolveInterface):
+class DSSEFixedStepIntegrator(DiffusiveSolveIntegrator, DSSEInterface):
+    @property
+    def nmeas(self) -> int:
+        return len(self.Ls)
+
+
+class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
+    """Integrator solving the diffusive SSE with the Euler-Mayurama method."""
+
+    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
+        psi = y.state
+        L, H = self.L(t), self.H(t)
+        I = eye_like(H)
+
+        # === measurement Y
+        # dY = <L+Ld> dt + dW
+        exp = jnp.stack([expect(_L + _L.dag(), psi).real for _L in L])  # (nL)
+        dY = exp * self.dt + dW
+
+        # === state psi
+        dpsi = (
+            -1j * H * self.dt
+            - 0.5
+            * sum(
+                [
+                    _L.dag() @ _L - _exp * _L + 0.25 * _exp**2 * I
+                    for _L, _exp in zip(L, exp, strict=True)
+                ]
+            )
+            * self.dt
+            + sum(
+                [
+                    (_L - 0.5 * _exp * I) * _dW
+                    for _L, _exp, _dW in zip(L, exp, dW, strict=True)
+                ]
+            )
+        ) @ psi
+
+        return DiffusiveState(psi + dpsi, y.Y + dY)
+
+
+dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
+
+
+class DSMEFixedStepIntegrator(DiffusiveSolveIntegrator, DSMEInterface):
+    @property
+    def nmeas(self) -> int:
+        return len(self.etas)
+
+
+class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
     """Integrator solving the diffusive SME with the Euler-Mayurama method."""
 
-    def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
+    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         # The diffusive SME for a single detector is:
         #   drho = Lcal(rho)     dt + (Ccal(rho) - Tr[Ccal(rho)] rho) dW
         #   dY   = Tr[Ccal(rho)] dt + dW
         # with
         # - Lcal the Liouvillian
         # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
+
+        rho = y.state
         L, Lm, H = self.L(t), self.Lm(t), self.H(t)
         LdL = sum([_L.dag() @ _L for _L in L])
 
         # === Lcal(rho)
         # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
         Hnh = -1j * H - 0.5 * LdL
-        tmp = Hnh @ y.rho + sum([0.5 * _L @ y.rho @ _L.dag() for _L in L])
+        tmp = Hnh @ rho + sum([0.5 * _L @ rho @ _L.dag() for _L in L])
         Lcal_rho = tmp + tmp.dag()
 
         # === Ccal(rho)
-        Lm_rho = stack([_Lm @ y.rho for _Lm in Lm])
+        Lm_rho = stack([_Lm @ rho for _Lm in Lm])
         etas = self.etas[:, None, None]  # (nLm, 1, 1)
         Ccal_rho = jnp.sqrt(etas) * (Lm_rho + Lm_rho.dag())  # (nLm, n, n)
         tr_Ccal_rho = Ccal_rho.trace().real  # (nLm,)
 
         # === state rho
         drho_det = Lcal_rho
-        drho_sto = Ccal_rho - tr_Ccal_rho[:, None, None] * y.rho  # (nLm, n, n)
+        drho_sto = Ccal_rho - tr_Ccal_rho[:, None, None] * rho  # (nLm, n, n)
         drho = drho_det * self.dt + (drho_sto * dW[:, None, None]).sum(0)  # (n, n)
 
         # === measurement Y
         dY = tr_Ccal_rho * self.dt + dW  # (nLm,)
 
-        return DSMEState(y.rho + drho, y.Y + dY)
+        return DiffusiveState(rho + drho, y.Y + dY)
 
 
 class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
     """Integrator solving the diffusive SME with the Rouchon1 method."""
 
-    def forward(self, t: Scalar, y: DSMEState, dW: Array) -> DSMEState:
+    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         # The Rouchon update for a single loss channel is:
         #   rho_{k+1} = M_dY @ rho_k @ M_dY^\dag + M1 @ rho_k @ M1d / Tr[...]
         #   dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -235,7 +290,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         # See comment of `_cholesky_normalize()` for the normalisation (computed for the
         # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
 
-        rho = y.rho
+        rho = y.state
         L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
         I = eye_like(H)
         LdL = sum([_L.dag() @ _L for _L in L])
@@ -264,7 +319,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
         rho = rho / rho.trace()  # normalise by signal probability
 
-        return DSMEState(rho, y.Y + dY)
+        return DiffusiveState(rho, y.Y + dY)
 
 
 dsmesolve_euler_maruyama_integrator_constructor = DSMESolveEulerMayuramaIntegrator

@@ -3,7 +3,7 @@
 !!! Warning "Work in progress."
     This tutorial is under construction, this is a draft version.
 
-In this example, we use the [`dq.dsmesolve()`][dynamiqs.dsmesolve] solver to simulate stochastic trajectories of quantum systems continuously measured by a diffusive detector.
+In this example, we simulate stochastic trajectories of quantum systems that are continuously measured by a diffusive detector. We explain how to use [`dq.dssesolve()`][dynamiqs.dssesolve] to simulate trajectories modelled by the diffusive SSE, and [`dq.dsmesolve()`][dynamiqs.dsmesolve] solvers to simulate trajectories modelled by the diffusive SME.
 
 ```python
 import jax
@@ -17,21 +17,21 @@ dq.plot.mplstyle(dpi=150)  # set custom matplotlib style
 
 ## Qubit
 
-We consider a qubit starting from $\ket{\psi_0}=\ket+_x=(\ket0+\ket1)/\sqrt2$, with no unitary dynamic $H=0$ and a single loss operator $L=\sigma_z$ which is continuously measured by a diffusive detector with efficiency $\eta$. We expect stochastic trajectories to project the qubit onto either of the $\sigma_z$ eigenstates.
+We consider a qubit starting from $\ket{\psi_0}=\ket+_x=(\ket0+\ket1)/\sqrt2$, with no unitary dynamic $H=0$ and a single loss operator $L=\sigma_z$ which is continuously measured by a diffusive detector. We expect stochastic trajectories to project the qubit onto either of the $\sigma_z$ eigenstates.
+
+Let's begin with a perfectly efficient detector. We start with a pure state, and we measure all loss channels with perfect efficiency, so we don't loose any information about the system's state. As a result, it remains pure at all times. We use [`dq.dssesolve()`][dynamiqs.dssesolve] to simulate these quantum trajectories.
 
 ### Simulation
 
 ```python
-# define Hamiltonian, jump operators, efficiencies, initial state
+# define Hamiltonian, jump operators, initial state
 H = dq.zeros(2)
 jump_ops = [dq.sigmaz()]
-etas = [1.0]
 psi0 = (dq.ground() + dq.excited()).unit()
 
 # define save times
-nbins = 100
-delta_t = 1/nbins
-tsave = np.linspace(0, 1.0, nbins+1)
+tsave = np.linspace(0, 1.0, 101)
+delta_t = tsave[1] - tsave[0]
 
 # define a certain number of PRNG key, one for each trajectory
 key = jax.random.PRNGKey(20)
@@ -40,21 +40,21 @@ keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
 solver = dq.solver.EulerMaruyama(dt=1e-3)
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver=solver)
+result = dq.dssesolve(H, jump_ops, psi0, tsave, keys, solver=solver)
 print(result)
 ```
 
 ```text title="Output"
-==== DSMESolveResult ====
+==== DSSESolveResult ====
 Solver       : EulerMaruyama
 Infos        : 1000 steps | infos shape (5,)
-States       : QArray complex64 (5, 101, 2, 2) | 15.8 Kb
+States       : QArray complex64 (5, 101, 2, 1) | 7.9 Kb
 Measurements : Array float32 (5, 1, 100) | 2.0 Kb
 ```
 
 ```pycon
->>> result.states.shape  # (ntrajs, ntsave, n, n)
-(5, 101, 2, 2)
+>>> result.states.shape  # (ntrajs, ntsave, n, 1)
+(5, 101, 2, 1)
 >>> result.measurements.shape  # (ntrajs, nLm, ntsave-1)
 (5, 1, 100)
 ```
@@ -109,7 +109,7 @@ for expects in expects_all:
     plt.gca().set(
         title=r'Time evolution of $\sigma_z$ expectation value',
         xlabel=r'$t$',
-        ylabel=r'$\mathrm{Tr}[\sigma_z\rho_t]$',
+        ylabel=r'$\langle \sigma_z \rangle_t=\langle \psi_t | \sigma_z | \psi_t \rangle$',
         ylim=(-1.1, 1.1),
     )
 
@@ -117,6 +117,53 @@ renderfig('monitored-qubit-sigmaz')
 ```
 
 ![plot_monitored_qubit_sigmaz](../../figs_docs/monitored-qubit-sigmaz.png){.fig}
+
+### Imperfect detection
+
+If the detection is imperfect, the system state is a density matrix. We use [`dq.dsmesolve()`][dynamiqs.dsmesolve] to simulate these quantum trajectories.
+
+```python
+# define efficiencies
+etas = [0.2]
+
+# simulate trajectories
+result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver=solver)
+print(result)
+```
+
+```text title="Output"
+==== DSMESolveResult ====
+Solver       : EulerMaruyama
+Infos        : 1000 steps | infos shape (5,)
+States       : QArray complex64 (5, 101, 2, 2) | 7.9 Kb
+Measurements : Array float32 (5, 1, 100) | 2.0 Kb
+```
+
+```pycon
+>>> result.states.shape  # (ntrajs, ntsave, n, n)
+(5, 101, 2, 2)
+>>> result.measurements.shape  # (ntrajs, nLm, ntsave-1)
+(5, 1, 100)
+```
+
+```python
+expects_all = dq.expect(dq.sigmaz(), result.states).real
+
+for expects in expects_all:
+    plt.plot(tsave, expects, lw=1.5)
+    plt.axhline(-1, ls='--', lw=1.0, color='gray')
+    plt.axhline(1, ls='--', lw=1.0, color='gray')
+    plt.gca().set(
+        title=r'Time evolution of $\sigma_z$ expectation value',
+        xlabel=r'$t$',
+        ylabel=r'$\langle \sigma_z \rangle_t = \mathrm{Tr}[\sigma_z\rho_t]$',
+        ylim=(-1.1, 1.1),
+    )
+
+renderfig('monitored-qubit-sigmaz-eta')
+```
+
+![plot_monitored_qubit_sigmaz_eta](../../figs_docs/monitored-qubit-sigmaz-eta.png){.fig}
 
 ## Quantum harmonic oscillator
 
@@ -137,9 +184,8 @@ etas = [1.0, 1.0]
 psi0 = dq.coherent(n, alpha0)
 
 # define save times
-nbins = 100
-delta_t = 1/nbins
-tsave = np.linspace(0, 1 / kappa, nbins+1)
+tsave = np.linspace(0, 1 / kappa, 101)
+delta_t = tsave[1] - tsave[0]
 
 # define a certain number of PRNG key, one for each trajectory
 key = jax.random.PRNGKey(42)

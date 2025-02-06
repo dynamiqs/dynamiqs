@@ -58,7 +58,7 @@ class SolveSaved(Saved):
     Esave: Array | None
 
 
-class DSMESolveSaved(SolveSaved):
+class DiffusiveSolveSaved(SolveSaved):
     Isave: Array
 
 
@@ -202,15 +202,11 @@ class JSSESolveResult(SolveResult):
         pass
 
 
-class DSSESolveResult(SolveResult):
-    pass
-
-
 class JSMESolveResult(SolveResult):
     pass
 
 
-class DSMESolveResult(SolveResult):
+class DiffusiveSolveResult(SolveResult):
     keys: PRNGKeyArray
 
     @property
@@ -224,3 +220,11 @@ class DSMESolveResult(SolveResult):
     @classmethod
     def out_axes(cls) -> SolveResult:
         return cls(None, None, None, None, 0, 0, 0)
+
+
+class DSSESolveResult(DiffusiveSolveResult):
+    pass
+
+
+class DSMESolveResult(DiffusiveSolveResult):
+    pass
