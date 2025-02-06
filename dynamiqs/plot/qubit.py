@@ -22,8 +22,8 @@ def xyz(
     times: ArrayLike | None = None,
     hlines: bool = True,
 ):
-    r"""Plot the expectation values of the Pauli operators $\sigma_x$, $\sigma_y$ and
-    $\sigma_z$ for a qubit as functions of time.
+    r"""Plot the expectation value of the Pauli operators of a qubit $\sigma_x$,
+    $\sigma_y$ and $\sigma_z$ as a function of time.
 
     Warning:
         Documentation redaction in progress.
