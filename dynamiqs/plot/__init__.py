@@ -2,12 +2,14 @@ from .colormaps import *
 from .fock import *
 from .hinton import *
 from .misc import *
+from .qubit import *
 from .utils import *
 from .wigner import *
 
 __all__ = [
     'fock',
     'fock_evolution',
+    'xyz',
     'gifit',
     'grid',
     'hinton',
