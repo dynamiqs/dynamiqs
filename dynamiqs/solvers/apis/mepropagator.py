@@ -9,20 +9,20 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
+from ...method import Expm, Method
 from ...options import Options, check_options
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
-from ...solver import Expm, Solver
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.expm_integrator import mepropagator_expm_integrator_constructor
+from ..core.expm_solver import mepropagator_expm_solver_constructor
 
 
 def mepropagator(
@@ -30,7 +30,7 @@ def mepropagator(
     jump_ops: list[QArrayLike | TimeQArray],
     tsave: ArrayLike,
     *,
-    solver: Solver = Expm(),  # noqa: B008
+    method: Method = Expm(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MEPropagatorResult:
@@ -56,11 +56,11 @@ def mepropagator(
         tsave _(array-like of shape (ntsave,))_: Times at which the propagators are
             saved. The equation is solved from `tsave[0]` to `tsave[-1]`, or from `t0`
             to `tsave[-1]` if `t0` is specified in `options`.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Expm`][dynamiqs.solver.Expm] (explicit matrix exponentiation),
-            which is the only supported solver for now.
+        method: Method for the integration. Defaults to
+            [`dq.method.Expm`][dynamiqs.method.Expm] (explicit matrix exponentiation),
+            which is the only supported method for now.
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_propagators`, `cartesian_batching`,
             `t0`, `save_extra`).
@@ -106,11 +106,11 @@ def mepropagator(
                     propagator.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
-                - **infos** _(PyTree or None)_ - Solver-dependent information on the
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
                     saved.
-                - **solver** _(Solver)_ - Solver used.
+                - **method** _(Method)_ - Method used.
                 - **gradient** _(Gradient)_ - Gradient used.
                 - **options** _(Options)_ - Options used.
 
@@ -172,16 +172,16 @@ def mepropagator(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_mepropagator(H, Ls, tsave, solver, gradient, options)
+    return _vectorized_mepropagator(H, Ls, tsave, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_mepropagator(
     H: TimeQArray,
     Ls: list[TimeQArray],
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
@@ -202,34 +202,34 @@ def _vectorized_mepropagator(
         # vectorize the function
         f = multi_vmap(_mepropagator, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, tsave, solver, gradient, options)
+    return f(H, Ls, tsave, method, gradient, options)
 
 
 def _mepropagator(
     H: TimeQArray,
     Ls: list[TimeQArray],
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === select integrator constructor
-    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
-    assert_solver_supported(solver, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(solver)]
+    # === select solver constructor
+    solver_constructors = {Expm: mepropagator_expm_solver_constructor}
+    assert_method_supported(method, solver_constructors.keys())
+    solver_constructor = solver_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
-    # === init integrator
+    # === init solver
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
     # todo: timeqarray should expose dims without having to call at specific time
     y0 = DenseQArray(H(0.0).dims, True, data)
-    integrator = integrator_constructor(
+    solver = solver_constructor(
         ts=tsave,
         y0=y0,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=MEPropagatorResult,
         options=options,
@@ -237,8 +237,8 @@ def _mepropagator(
         Ls=Ls,
     )
 
-    # === run integrator
-    result = integrator.run()
+    # === run solver
+    result = solver.run()
 
     # === return result
     return result  # noqa: RET504

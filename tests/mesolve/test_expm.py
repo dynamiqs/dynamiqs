@@ -1,15 +1,15 @@
 import pytest
 
 from dynamiqs.gradient import Autograd
-from dynamiqs.solver import Expm
+from dynamiqs.method import Expm
 
-from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
+from ..solver_tester import SolverTester
 from .open_system import dense_ocavity
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestMESolveExpm(IntegratorTester):
+class TestMESolveExpm(SolverTester):
     def test_correctness(self):
         self._test_correctness(dense_ocavity, Expm())
 

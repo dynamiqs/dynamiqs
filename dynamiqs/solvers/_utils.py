@@ -9,9 +9,9 @@ from jax._src.lib import xla_client
 from jaxtyping import PyTree
 
 from .._utils import obj_type_str
+from ..method import Method, _DEAdaptiveStep
 from ..qarrays.qarray import QArrayLike
 from ..qarrays.utils import asqarray
-from ..solver import Solver, _DEAdaptiveStep
 from ..time_qarray import (
     ConstantTimeQArray,
     PWCTimeQArray,
@@ -58,15 +58,15 @@ def catch_xla_runtime_error(func: callable) -> callable:
         except xla_client.XlaRuntimeError as e:
             # === `max_steps` reached error
             eqx_max_steps_error_msg = (
-                'EqxRuntimeError: The maximum number of solver steps was reached. '
+                'EqxRuntimeError: The maximum number of method steps was reached. '
             )
             if eqx_max_steps_error_msg in str(e):
                 default_max_steps = _DEAdaptiveStep.max_steps
                 raise RuntimeError(
-                    'The maximum number of solver steps has been reached (the default'
+                    'The maximum number of method steps has been reached (the default'
                     f' value is `max_steps={default_max_steps:_}`). Try increasing'
-                    ' `max_steps` with the `solver` argument, e.g.'
-                    ' `solver=dq.solver.Tsit5(max_steps=1_000_000)`.'
+                    ' `max_steps` with the `method` argument, e.g.'
+                    ' `method=dq.method.Tsit5(max_steps=1_000_000)`.'
                 ) from e
             # === other errors
             raise RuntimeError(
@@ -79,12 +79,12 @@ def catch_xla_runtime_error(func: callable) -> callable:
     return wrapper
 
 
-def assert_solver_supported(solver: Solver, supported_solvers: Sequence[Solver]):
-    if not isinstance(solver, tuple(supported_solvers)):
-        supported_str = ', '.join(f'`{x.__name__}`' for x in supported_solvers)
+def assert_method_supported(method: Method, supported_methods: Sequence[Method]):
+    if not isinstance(method, tuple(supported_methods)):
+        supported_str = ', '.join(f'`{x.__name__}`' for x in supported_methods)
         raise TypeError(
-            f'Solver of type `{type(solver).__name__}` is not supported (supported'
-            f' solver types: {supported_str}).'
+            f'Method of type `{type(method).__name__}` is not supported (supported'
+            f' method types: {supported_str}).'
         )
 
 
@@ -110,7 +110,7 @@ def multi_vmap(
 
     Examples:
         >>> import jax.numpy as jnp
-        >>> from dynamiqs.integrators._utils import multi_vmap
+        >>> from dynamiqs.solvers._utils import multi_vmap
         >>>
         >>> def func(x, y):
         ...     return x.T @ y.T
@@ -161,7 +161,7 @@ def cartesian_vmap(
     Examples:
         >>> import jax.numpy as jnp
         >>> import equinox as eqx
-        >>> from dynamiqs.integrators._utils import cartesian_vmap
+        >>> from dynamiqs.solvers._utils import cartesian_vmap
         >>>
         >>> def func(x, y):
         ...     return x.T @ y.T

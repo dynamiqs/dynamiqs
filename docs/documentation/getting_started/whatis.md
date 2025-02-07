@@ -38,7 +38,7 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 ### Solvers
 
-- Choose between a variety of solvers, from **modern** explicit and implicit ODE solvers (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** solvers that preserve the physicality of the evolution (the state trace and positivity are preserved).
+- Choose between a variety of methods for each solver, from **modern** explicit and implicit ODE methods (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** methods that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
 - Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.

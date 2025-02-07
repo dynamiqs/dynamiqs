@@ -71,7 +71,7 @@ The first idea is to explicitly compute the propagator to evolve the state up to
 
 ### Integrating the ODE
 
-The Schrödinger equation is an ODE, for which a wide variety of solvers have been developed. The simplest approach is the Euler method, a first-order ODE solver with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
+The Schrödinger equation is an ODE, for which a wide variety of methods have been developed. The simplest approach is the Euler method, a first-order ODE method with a fixed step size which we describe shortly. Let us write the Taylor series expansion of the state at time $t+\dt$ up to first order:
 $$
     \begin{aligned}
         \ket{\psi(t+\dt)} &= \ket{\psi(t)}+\dt\frac{\dd\ket{\psi(t)}}{\dt}+\mathcal{O}(\dt^2) \\\\
@@ -80,7 +80,7 @@ $$
 $$
 where we used the Schrödinger equation to replace the time derivative of the state. By choosing a sufficiently small step size $\dt$ and starting from $\ket{\psi(0)}$, the state is then iteratively evolved to a final time using the previous equation.
 
-There are two main types of ODE solvers:
+There are two main types of ODE methods:
 
 - **Fixed step size**: as with the Euler method, the step size $\dt$ is fixed during the simulation. The best known higher order methods are the *Runge-Kutta methods*. It is important for all these methods that the time step is sufficiently small to ensure the accuracy of the solution.
 - **Adaptive step size**: the step size is automatically adjusted during the simulation, at each time step. A well-known method is the *Dormand-Prince method*.
@@ -113,7 +113,7 @@ QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
  [0.54+0.841j]]
 ```
 
-If you want to know more about the available solvers or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
+If you want to know more about the available methods or the different options, head to the [`dq.sesolve()`][dynamiqs.sesolve] API documentation.
 
 You can also directly compute the propagator with the [`dq.sepropagator()`][dynamiqs.sepropagator] solver. Continuing the last example:
 

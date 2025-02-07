@@ -8,20 +8,20 @@ from dynamiqs.result import FloquetSaved
 
 from ...result import Result, Saved
 from ..apis.sepropagator import _sepropagator
-from .abstract_integrator import BaseIntegrator
+from .abstract_solver import BaseSolver
 from .interfaces import SEInterface
 
 
-class FloquetIntegrator(BaseIntegrator):
+class FloquetSolver(BaseSolver):
     T: float
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         return self.result_class(
-            self.ts, self.solver, self.gradient, self.options, saved, infos, self.T
+            self.ts, self.method, self.gradient, self.options, saved, infos, self.T
         )
 
 
-class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
+class SEFloquetSolver(FloquetSolver, SEInterface):
     def run(self) -> PyTree:
         # enforce `save_propagators` to be `True` for _sepropagator
         options = eqx.tree_at(lambda opt: opt.save_propagators, self.options, True)
@@ -29,7 +29,7 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
         # compute propagators for all times at once, with the last being one period
         ts = jnp.append(self.ts, self.t0 + self.T)
         seprop_result = _sepropagator(
-            self.H, ts, solver=self.solver, gradient=self.gradient, options=options
+            self.H, ts, method=self.method, gradient=self.gradient, options=options
         )
 
         # diagonalize the final propagator to get the Floquet modes at t=t0
@@ -56,4 +56,4 @@ class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
         return self.result(saved, infos=seprop_result.infos)
 
 
-floquet_integrator_constructor = SEFloquetIntegrator
+floquet_solver_constructor = SEFloquetSolver

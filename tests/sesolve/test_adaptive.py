@@ -1,17 +1,17 @@
 import pytest
 
 from dynamiqs.gradient import Autograd, CheckpointAutograd
-from dynamiqs.solver import Tsit5
+from dynamiqs.method import Tsit5
 
-from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
+from ..solver_tester import SolverTester
 from .closed_system import dense_cavity, dia_cavity, tdqubit
 
 # we only test Tsit5 to keep the unit test suite fast
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestSESolveAdaptive(IntegratorTester):
+class TestSESolveAdaptive(SolverTester):
     @pytest.mark.parametrize('system', [dense_cavity, dia_cavity, tdqubit])
     def test_correctness(self, system):
         self._test_correctness(system, Tsit5())

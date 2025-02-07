@@ -224,7 +224,7 @@ The returned object can be called at different times:
 
 ??? Note "Discontinuous function"
     If there is a discontinuous jump in the function values, you should use the optional
-    argument `discontinuity_ts` to enforce adaptive step size solvers to stop at these
+    argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
     times (i.e., right before, and right after the jump).
 
 ### Arbitrary time-dependent operators
@@ -289,5 +289,5 @@ The returned object can be called at different times:
 
 ??? Note "Discontinuous function"
     If there is a discontinuous jump in the function values, you should use the optional
-    argument `discontinuity_ts` to enforce adaptive step size solvers to stop at these
+    argument `discontinuity_ts` to enforce adaptive step size methods to stop at these
     times (i.e., right before, and right after the jump).

@@ -15,13 +15,13 @@ from ...result import Result, Saved
 from ...utils.general import expm
 from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 from .._utils import ispwc
-from ..core.abstract_integrator import BaseIntegrator
+from .abstract_solver import BaseSolver
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
-    r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
+class ExpmSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
+    r"""Solver solving a linear ODE of the form $dX/dt = AX$ by explicitly
     exponentiating the propagator.
 
     The matrix $A$ of shape (N, N) is a constant or piecewise constant *generator*.
@@ -44,7 +44,7 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
 
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
-                # note: expm solvers can make different number of steps between
+                # note: expm methods can make different number of steps between
                 # batch elements when batching over PWC objects
                 return (
                     f'avg. {self.nsteps.mean():.1f} steps | infos shape'
@@ -93,8 +93,8 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         return self.result(saved, infos=self.Infos(nsteps))
 
 
-class SEExpmIntegrator(ExpmIntegrator, SEInterface):
-    """Integrator solving the Schrödinger equation by explicitly exponentiating the
+class SEExpmSolver(ExpmSolver, SEInterface):
+    """Solver solving the Schrödinger equation by explicitly exponentiating the
     propagator.
     """
 
@@ -102,33 +102,33 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
         # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+                'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
     def generator(self, t: float) -> QArray:
         return -1j * self.H(t)  # (n, n)
 
 
-class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin, SolveInterface):
-    """Integrator computing the time evolution of the Schrödinger equation by
+class SESolveExpmSolver(SEExpmSolver, SolveSaveMixin, SolveInterface):
+    """Solver computing the time evolution of the Schrödinger equation by
     explicitly exponentiating the propagator.
     """
 
 
-sesolve_expm_integrator_constructor = SESolveExpmIntegrator
+sesolve_expm_solver_constructor = SESolveExpmSolver
 
 
-class SEPropagatorExpmIntegrator(SEExpmIntegrator, PropagatorSaveMixin):
-    """Integrator computing the propagator of the Lindblad master equation by
+class SEPropagatorExpmSolver(SEExpmSolver, PropagatorSaveMixin):
+    """Solver computing the propagator of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
 
 
-sepropagator_expm_integrator_constructor = SEPropagatorExpmIntegrator
+sepropagator_expm_solver_constructor = SEPropagatorExpmSolver
 
 
-class MEExpmIntegrator(ExpmIntegrator, MEInterface):
-    """Integrator solving the Lindblad master equation by explicitly exponentiating the
+class MEExpmSolver(ExpmSolver, MEInterface):
+    """Solver solving the Lindblad master equation by explicitly exponentiating the
     propagator.
     """
 
@@ -136,21 +136,21 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
         # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+                'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
         # check that all jump operators are constant or pwc, or a sum of constant/pwc
         if not all(ispwc(L) for L in self.Ls):
             raise TypeError(
-                'Solver `Expm` requires constant or piecewise constant jump operators.'
+                'Method `Expm` requires constant or piecewise constant jump operators.'
             )
 
     def generator(self, t: float) -> QArray:
         return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)
 
 
-class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
-    """Integrator computing the time evolution of the Lindblad master equation by
+class MESolveExpmSolver(MEExpmSolver, SolveSaveMixin, SolveInterface):
+    """Solver computing the time evolution of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
 
@@ -165,13 +165,13 @@ class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
         return super().save(y)
 
 
-mesolve_expm_integrator_constructor = MESolveExpmIntegrator
+mesolve_expm_solver_constructor = MESolveExpmSolver
 
 
-class MEPropagatorExpmIntegrator(MEExpmIntegrator, PropagatorSaveMixin):
-    """Integrator computing the propagator of the Lindblad master equation by
+class MEPropagatorExpmSolver(MEExpmSolver, PropagatorSaveMixin):
+    """Solver computing the propagator of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
 
 
-mepropagator_expm_integrator_constructor = MEPropagatorExpmIntegrator
+mepropagator_expm_solver_constructor = MEPropagatorExpmSolver

@@ -15,14 +15,14 @@ from ...qarrays.utils import stack
 from ...result import Result
 from ...utils.general import dag, expect
 from ...utils.operators import eye_like
-from .abstract_integrator import StochasticBaseIntegrator
+from .abstract_solver import StochasticBaseSolver
 from .interfaces import DSMEInterface, DSSEInterface, SolveInterface
-from .rouchon_integrator import _cholesky_normalize
+from .rouchon_solver import _cholesky_normalize
 from .save_mixin import DiffusiveSolveSaveMixin
 
 
 class DiffusiveState(eqx.Module):
-    """State for the diffusive SSE/SME fixed step integrators."""
+    """State for the diffusive SSE/SME fixed step solvers."""
 
     state: QArray  # state (integrated from initial to current time)
     Y: Array  # measurement (integrated from initial to current time)
@@ -45,16 +45,16 @@ def _is_linearly_spaced(
     return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
 
 
-class DiffusiveSolveIntegrator(
-    StochasticBaseIntegrator, DiffusiveSolveSaveMixin, SolveInterface
+class DiffusiveSolveSolver(
+    StochasticBaseSolver, DiffusiveSolveSaveMixin, SolveInterface
 ):
-    """Integrator solving the diffusive SSE/SME with a fixed step size integrator."""
+    """Solver solving the diffusive SSE/SME with a fixed step size solver."""
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
         if not _is_multiple_of(self.ts, self.dt):
             raise ValueError(
-                'Argument `tsave` should only contain exact multiples of the solver '
+                'Argument `tsave` should only contain exact multiples of the method '
                 'fixed step size `dt`.'
             )
 
@@ -65,13 +65,13 @@ class DiffusiveSolveIntegrator(
         # check that options.t0 is not used
         if self.options.t0 is not None:
             raise ValueError(
-                'Option `t0` is invalid for fixed step SSE or SME solvers.'
+                'Option `t0` is invalid for fixed step SSE or SME methods.'
             )
 
         if self.discontinuity_ts is not None:
             warnings.warns(
                 'The Hamiltonian or jump operators are time-dependent with '
-                'discontinuities, which will be ignored by the solver.',
+                'discontinuities, which will be ignored by the method.',
                 stack_level=1,
             )
 
@@ -80,7 +80,7 @@ class DiffusiveSolveIntegrator(
 
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
-                # note: fixed step solvers always make the same number of steps
+                # note: fixed step methods always make the same number of steps
                 return (
                     f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
                 )
@@ -88,7 +88,7 @@ class DiffusiveSolveIntegrator(
 
     @property
     def dt(self) -> float:
-        return self.solver.dt
+        return self.method.dt
 
     def integrate(
         self, t0: float, y0: DiffusiveState, key: PRNGKeyArray, nsteps: int
@@ -188,14 +188,14 @@ class DiffusiveSolveIntegrator(
         pass
 
 
-class DSSEFixedStepIntegrator(DiffusiveSolveIntegrator, DSSEInterface):
+class DSSEFixedStepSolver(DiffusiveSolveSolver, DSSEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.Ls)
 
 
-class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
-    """Integrator solving the diffusive SSE with the Euler-Mayurama method."""
+class DSSESolveEulerMayuramaSolver(DSSEFixedStepSolver):
+    """Solver solving the diffusive SSE with the Euler-Mayurama method."""
 
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         psi = y.state
@@ -229,17 +229,17 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
+dssesolve_euler_maruyama_solver_constructor = DSSESolveEulerMayuramaSolver
 
 
-class DSMEFixedStepIntegrator(DiffusiveSolveIntegrator, DSMEInterface):
+class DSMEFixedStepSolver(DiffusiveSolveSolver, DSMEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.etas)
 
 
-class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
-    """Integrator solving the diffusive SME with the Euler-Mayurama method."""
+class DSMESolveEulerMayuramaSolver(DSMEFixedStepSolver):
+    """Solver solving the diffusive SME with the Euler-Mayurama method."""
 
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         # The diffusive SME for a single detector is:
@@ -254,7 +254,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         LdL = sum([_L.dag() @ _L for _L in L])
 
         # === Lcal(rho)
-        # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
+        # (see MEDiffraxSolver in `solvers/core/diffrax_solver.py`)
         Hnh = -1j * H - 0.5 * LdL
         tmp = Hnh @ rho + sum([0.5 * _L @ rho @ _L.dag() for _L in L])
         Lcal_rho = tmp + tmp.dag()
@@ -276,8 +276,8 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         return DiffusiveState(rho + drho, y.Y + dY)
 
 
-class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
-    """Integrator solving the diffusive SME with the Rouchon1 method."""
+class DSMESolveRouchon1Solver(DSMEFixedStepSolver, SolveInterface):
+    """Solver solving the diffusive SME with the Rouchon1 method."""
 
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         # The Rouchon update for a single loss channel is:
@@ -313,7 +313,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
             for eta, _Lm in zip(self.etas, Lm, strict=True)
         ] + [self.dt * _Lc for _Lc in Lc]
 
-        if self.solver.normalize:
+        if self.method.normalize:
             rho = _cholesky_normalize(M0, LdL, self.dt, rho)
 
         rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
@@ -322,5 +322,5 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         return DiffusiveState(rho, y.Y + dY)
 
 
-dsmesolve_euler_maruyama_integrator_constructor = DSMESolveEulerMayuramaIntegrator
-dsmesolve_rouchon1_integrator_constructor = DSMESolveRouchon1Integrator
+dsmesolve_euler_maruyama_solver_constructor = DSMESolveEulerMayuramaSolver
+dsmesolve_rouchon1_solver_constructor = DSMESolveRouchon1Solver

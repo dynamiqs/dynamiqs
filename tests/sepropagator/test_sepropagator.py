@@ -3,15 +3,15 @@ import jax.numpy as jnp
 import pytest
 
 from dynamiqs import Options, constant, eye, pwc, random, sepropagator, sigmax, sigmay
-from dynamiqs.solver import Tsit5
+from dynamiqs.method import Tsit5
 
-from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
 from ..sesolve.closed_system import dense_cavity, tdqubit
+from ..solver_tester import SolverTester
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestSEPropagator(IntegratorTester):
+class TestSEPropagator(SolverTester):
     @pytest.mark.parametrize('system', [dense_cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):
         params = system.params_default
@@ -23,15 +23,15 @@ class TestSEPropagator(IntegratorTester):
         assert jnp.allclose(true_ysave, prop_ysave, atol=ysave_atol)
 
     @pytest.mark.parametrize('save_propagators', [True, False])
-    @pytest.mark.parametrize('solver', [None, Tsit5()])
+    @pytest.mark.parametrize('method', [None, Tsit5()])
     @pytest.mark.parametrize('nH', [(), (4,), (4, 5)])
     def test_correctness_complex(
-        self, nH, save_propagators, solver, ysave_atol: float = 3e-4
+        self, nH, save_propagators, method, ysave_atol: float = 3e-4
     ):
         H = constant(random.herm(jax.random.PRNGKey(42), (*nH, 2, 2)))
         tsave = jnp.linspace(1.0, 10.0, 3)
         options = Options(save_propagators=save_propagators, t0=0.0)
-        propresult = sepropagator(H, tsave, solver=solver, options=options)
+        propresult = sepropagator(H, tsave, method=method, options=options)
         propagators = propresult.propagators.to_jax()
         ts = tsave if save_propagators else jnp.asarray([10.0])
         Hts = jnp.einsum('...ij,t->...tij', H.qarray.to_jax(), ts)
@@ -39,15 +39,15 @@ class TestSEPropagator(IntegratorTester):
         assert jnp.allclose(propagators, true_propagators, atol=ysave_atol)
 
     @pytest.mark.parametrize('save_propagators', [True, False])
-    @pytest.mark.parametrize('solver', [None, Tsit5()])
-    def test_correctness_pwc(self, save_propagators, solver, ysave_atol: float = 1e-4):
+    @pytest.mark.parametrize('method', [None, Tsit5()])
+    def test_correctness_pwc(self, save_propagators, method, ysave_atol: float = 1e-4):
         times = [0.0, 1.0, 2.0]
         values = [3.0, -2.0]
         qarray = sigmay()
         H = pwc(times, values, qarray)
         tsave = jnp.asarray([0.5, 1.0, 2.0])
         options = Options(save_propagators=save_propagators)
-        propresult = sepropagator(H, tsave, solver=solver, options=options)
+        propresult = sepropagator(H, tsave, method=method, options=options)
         propagators = propresult.propagators.to_jax()
         U0 = eye(H.shape[-1]).to_jax()
         U1 = jax.scipy.linalg.expm(-1j * H.qarray.to_jax() * 3.0 * 0.5)
@@ -59,9 +59,9 @@ class TestSEPropagator(IntegratorTester):
         assert jnp.allclose(propagators, true_propagators, atol=ysave_atol)
 
     @pytest.mark.parametrize('save_propagators', [True, False])
-    @pytest.mark.parametrize('solver', [None, Tsit5()])
+    @pytest.mark.parametrize('method', [None, Tsit5()])
     def test_correctness_summed_pwc(
-        self, save_propagators, solver, ysave_atol: float = 1e-4
+        self, save_propagators, method, ysave_atol: float = 1e-4
     ):
         times_1 = [0.0, 1.0, 2.0]
         times_2 = [0.0, 0.5, 1.0, 2.5]
@@ -72,7 +72,7 @@ class TestSEPropagator(IntegratorTester):
         H = H1 + H2
         tsave = jnp.asarray([0.5, 1.0, 2.5])
         options = Options(save_propagators=save_propagators)
-        propresult = sepropagator(H, tsave, solver=solver, options=options)
+        propresult = sepropagator(H, tsave, method=method, options=options)
         propagators = propresult.propagators.to_jax()
         H1_array = H1.qarray.to_jax()
         H2_array = H2.qarray.to_jax()

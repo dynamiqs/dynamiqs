@@ -39,14 +39,14 @@ ntrajs = 5
 keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
-solver = dq.solver.EulerMaruyama(dt=1e-3)
-result = dq.dssesolve(H, jump_ops, psi0, tsave, keys, solver=solver)
+method = dq.method.EulerMaruyama(dt=1e-3)
+result = dq.dssesolve(H, jump_ops, psi0, tsave, keys, method=method)
 print(result)
 ```
 
 ```text title="Output"
 ==== DSSESolveResult ====
-Solver       : EulerMaruyama
+Method       : EulerMaruyama
 Infos        : 1000 steps | infos shape (5,)
 States       : QArray complex64 (5, 101, 2, 1) | 7.9 Kb
 Measurements : Array float32 (5, 1, 100) | 2.0 Kb
@@ -127,13 +127,13 @@ If the detection is imperfect, the system state is a density matrix. We use [`dq
 etas = [0.2]
 
 # simulate trajectories
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver=solver)
+result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, method=method)
 print(result)
 ```
 
 ```text title="Output"
 ==== DSMESolveResult ====
-Solver       : EulerMaruyama
+Method       : EulerMaruyama
 Infos        : 1000 steps | infos shape (5,)
 States       : QArray complex64 (5, 101, 2, 2) | 7.9 Kb
 Measurements : Array float32 (5, 1, 100) | 2.0 Kb
@@ -193,15 +193,15 @@ ntrajs = 1000
 keys = jax.random.split(key, ntrajs)
 
 # simulate trajectories
-solver = dq.solver.EulerMaruyama(dt=1e-3)
+method = dq.method.EulerMaruyama(dt=1e-3)
 options = dq.Options(save_states=False)
-result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, solver=solver, options=options)
+result = dq.dsmesolve(H, jump_ops, etas, psi0, tsave, keys, method=method, options=options)
 print(result)
 ```
 
 ```text title="Output"
 ==== SMESolveResult ====
-Solver       : Euler
+Method       : Euler
 Infos        : 1000 steps | infos shape (1000,)
 States       : QArray complex64 (1000, 16, 16) | 2.0 Mb
 Measurements : Array float32 (1000, 2, 100) | 781.2 Kb

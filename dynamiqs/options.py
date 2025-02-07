@@ -89,6 +89,6 @@ def check_options(options: Options, solver_name: str):
             valid_options_str = ', '.join(f'`{x}`' for x in valid_options)
             raise ValueError(
                 f'Option `{key}` was set to `{value}` but is not used by '
-                f'the quantum solver `dq.{solver_name}()` (valid options: '
+                f'the solver `dq.{solver_name}()` (valid options: '
                 f'{valid_options_str}).'
             )
