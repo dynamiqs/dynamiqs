@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solver/Dopri5.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/method/Euler.html">
 
 
-    <link rel="prev" href="Tsit5.html">
+    <link rel="prev" href="Kvaerno5.html">
 
 
-    <link rel="next" href="Dopri8.html">
+    <link rel="next" href="EulerMaruyama.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>Dopri5 - Dynamiqs</title>
+        <title>Euler - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solver.Dopri5" class="md-skip">
+        <a href="#dynamiqs.method.Euler" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                Dopri5
+                Euler
               
             </span>
           </div>
@@ -1038,7 +1038,7 @@
             
   
   <span class="md-ellipsis">
-    Quantum solvers
+    Solvers
     
   </span>
   
@@ -1049,7 +1049,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Quantum solvers
+            Solvers
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1060,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/sesolve.html" class="md-nav__link">
+      <a href="../solvers/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1082,7 +1082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/mesolve.html" class="md-nav__link">
+      <a href="../solvers/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1104,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/sepropagator.html" class="md-nav__link">
+      <a href="../solvers/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1126,7 +1126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/mepropagator.html" class="md-nav__link">
+      <a href="../solvers/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1148,7 +1148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/floquet.html" class="md-nav__link">
+      <a href="../solvers/floquet.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1221,7 +1221,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/jssesolve.html" class="md-nav__link">
+      <a href="../solvers/jssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1243,7 +1243,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/dssesolve.html" class="md-nav__link">
+      <a href="../solvers/dssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1265,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/jsmesolve.html" class="md-nav__link">
+      <a href="../solvers/jsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1287,7 +1287,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../integrators/dsmesolve.html" class="md-nav__link">
+      <a href="../solvers/dsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1615,7 +1615,7 @@
             
   
   <span class="md-ellipsis">
-    Solvers (dq.solver)
+    Methods (dq.method)
     
   </span>
   
@@ -1626,7 +1626,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_3">
             <span class="md-nav__icon md-icon"></span>
-            Solvers (dq.solver)
+            Methods (dq.method)
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1656,19 +1656,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="Dopri5.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="Dopri5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1678,7 +1669,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1754,10 +1744,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="Euler.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="Euler.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1767,6 +1766,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -5192,69 +5192,42 @@
 
 
 
-<h1 id="dynamiqs.solver.Dopri5" class="doc doc-heading">
-  <span class="doc doc-object-name doc-class-name">dq.solver.Dopri5</span>
+<h1 id="dynamiqs.method.Euler" class="doc doc-heading">
+  <span class="doc doc-object-name doc-class-name">dq.method.Euler</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Dopri5</span><span class="p">(</span>
-    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
-    <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span>
-    <span class="n">safety_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
-    <span class="n">min_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">max_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
-    <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Euler</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
 
-        <p>Dormand-Prince method of order 5 (adaptive step size ODE solver).</p>
-<p>This solver is implemented by the <a href="https://docs.kidger.site/diffrax/">Diffrax</a>
-library, see <a href="https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri5"><code>diffrax.Dopri5</code></a>.</p>
+        <p>Euler method (fixed step size ODE method).</p>
+<p>This method is implemented by the <a href="https://docs.kidger.site/diffrax/">Diffrax</a>
+library, see <a href="https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler"><code>diffrax.Euler</code></a>.</p>
 
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>This method is not recommended for general use.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
     </p>
     <ul>
         <li class="field-body">
-          <b>rtol</b>
+          <b>dt</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Relative tolerance.</p>
-        </li>
-        <li class="field-body">
-          <b>atol</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Absolute tolerance.</p>
-        </li>
-        <li class="field-body">
-          <b>safety_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Safety factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>min_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Minimum factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>max_factor</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum factor for adaptive step sizing.</p>
-        </li>
-        <li class="field-body">
-          <b>max_steps</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Maximum number of steps.</p>
+          – <p>Fixed time step.</p>
         </li>
     </ul>
 
 <details class="note"
  >
   <summary>Supported gradients</summary>
-  <p>This solver supports differentiation with
+  <p>This method supports differentiation with
 <a class="autorefs autorefs-internal" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> and
 <a class="autorefs autorefs-internal" href="../gradient/CheckpointAutograd.html#dynamiqs.gradient.CheckpointAutograd"><code>dq.gradient.CheckpointAutograd</code></a>
 (default).</p>
@@ -5362,7 +5335,7 @@ library, see <a href="https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.f13b1293.min.js"></script>
+      <script src="../../assets/javascripts/bundle.f1b6f286.min.js"></script>
       
         <script src="../../javascripts/katex.js"></script>
       

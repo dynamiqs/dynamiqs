@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/floquet.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/method/Expm.html">
 
 
-    <link rel="prev" href="mepropagator.html">
+    <link rel="prev" href="Rouchon1.html">
 
 
-    <link rel="next" href="jssesolve.html">
+    <link rel="next" href="../gradient/Autograd.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,7 +22,7 @@
 
     
       
-        <title>floquet - Dynamiqs</title>
+        <title>Expm - Dynamiqs</title>
       
     
     
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.integrators.floquet" class="md-skip">
+        <a href="#dynamiqs.method.Expm" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                floquet
+                Expm
               
             </span>
           </div>
@@ -999,8 +999,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1029,18 +1027,18 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
         
           
           <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
             
   
   <span class="md-ellipsis">
-    Quantum solvers
+    Solvers
     
   </span>
   
@@ -1048,10 +1046,10 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Quantum solvers
+            Solvers
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1062,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sesolve.html" class="md-nav__link">
+      <a href="../solvers/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1084,7 +1082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mesolve.html" class="md-nav__link">
+      <a href="../solvers/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1106,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sepropagator.html" class="md-nav__link">
+      <a href="../solvers/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1128,7 +1126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mepropagator.html" class="md-nav__link">
+      <a href="../solvers/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1147,31 +1145,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    floquet
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="floquet.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../solvers/floquet.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1181,59 +1158,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--advanced-use-cases" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced use-cases
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Advanced use-cases">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--running-multiple-simulations-concurrently" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running multiple simulations concurrently
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--batching-over-drive-periods" class="md-nav__link">
-    <span class="md-ellipsis">
-      Batching over drive periods
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1297,7 +1221,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jssesolve.html" class="md-nav__link">
+      <a href="../solvers/jssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1319,7 +1243,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dssesolve.html" class="md-nav__link">
+      <a href="../solvers/dssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1341,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="jsmesolve.html" class="md-nav__link">
+      <a href="../solvers/jsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1363,7 +1287,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dsmesolve.html" class="md-nav__link">
+      <a href="../solvers/dsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1398,6 +1322,8 @@
                 
   
   
+    
+  
   
   
     
@@ -1422,11 +1348,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
@@ -1441,7 +1367,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             Core
@@ -1645,8 +1571,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1676,18 +1604,18 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3_3_3" id="__nav_3_3_3_label" tabindex="0">
             
   
   <span class="md-ellipsis">
-    Solvers (dq.solver)
+    Methods (dq.method)
     
   </span>
   
@@ -1695,10 +1623,10 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3_3">
             <span class="md-nav__icon md-icon"></span>
-            Solvers (dq.solver)
+            Methods (dq.method)
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1709,7 +1637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Tsit5.html" class="md-nav__link">
+      <a href="Tsit5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1731,7 +1659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Dopri5.html" class="md-nav__link">
+      <a href="Dopri5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1753,7 +1681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Dopri8.html" class="md-nav__link">
+      <a href="Dopri8.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1775,7 +1703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Kvaerno3.html" class="md-nav__link">
+      <a href="Kvaerno3.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1797,7 +1725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Kvaerno5.html" class="md-nav__link">
+      <a href="Kvaerno5.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1819,7 +1747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Euler.html" class="md-nav__link">
+      <a href="Euler.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1841,7 +1769,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/EulerMaruyama.html" class="md-nav__link">
+      <a href="EulerMaruyama.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1863,7 +1791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solver/Rouchon1.html" class="md-nav__link">
+      <a href="Rouchon1.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1882,10 +1810,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../solver/Expm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="Expm.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1895,6 +1832,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -5234,47 +5172,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--advanced-use-cases" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced use-cases
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Advanced use-cases">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--running-multiple-simulations-concurrently" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running multiple simulations concurrently
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dynamiqs.integrators.floquet--batching-over-drive-periods" class="md-nav__link">
-    <span class="md-ellipsis">
-      Batching over drive periods
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -5291,198 +5188,88 @@
   
 
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-class">
 
 
-<h1 id="dynamiqs.integrators.floquet" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.floquet</span>
+
+<h1 id="dynamiqs.method.Expm" class="doc doc-heading">
+  <span class="doc doc-object-name doc-class-name">dq.method.Expm</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">floquet</span><span class="p">(</span>
-    <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">,</span>
-    <span class="n">T</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">solver</span><span class="p">:</span> <span class="n">Solver</span> <span class="o">=</span> <span class="n">Tsit5</span><span class="p">(),</span>
-    <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FloquetResult</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Expm</span><span class="p">()</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Compute Floquet modes and quasienergies of a periodic closed system.</p>
-<p>The Floquet modes <span class="arithmatex">\(\Phi_{m}(t_0)\)</span> and corresponding quasienergies <span class="arithmatex">\(\epsilon_m\)</span> are
-defined by the eigenvalue equation
+
+        <p>Explicit matrix exponentiation to compute propagators.</p>
+<p>Explicitly batch-compute the propagators for all time intervals in <code>tsave</code>. These
+propagators are then iteratively applied:</p>
+<ul>
+<li>starting from the initial state for <a class="autorefs autorefs-internal" href="../solvers/sesolve.html#dynamiqs.solvers.sesolve"><code>dq.sesolve()</code></a> and
+  <a class="autorefs autorefs-internal" href="../solvers/mesolve.html#dynamiqs.solvers.mesolve"><code>dq.mesolve()</code></a>, to compute states for all times in <code>tsave</code>,</li>
+<li>starting from the identity matrix for <a class="autorefs autorefs-internal" href="../solvers/sepropagator.html#dynamiqs.solvers.sepropagator"><code>dq.sepropagator()</code></a>
+  and <a class="autorefs autorefs-internal" href="../solvers/mepropagator.html#dynamiqs.solvers.mepropagator"><code>dq.mepropagator()</code></a>, to compute propagators for all
+  times in <code>tsave</code>.</li>
+</ul>
+<p>For the Schrödinger equation with constant Hamiltonian <span class="arithmatex">\(H\)</span>, the propagator from
+time <span class="arithmatex">\(t_0\)</span> to time <span class="arithmatex">\(t_1\)</span> is an <span class="arithmatex">\(n\times n\)</span> matrix given by
 $$
-    U(t_0, t_0+T)\Phi_{m}(t_0) = \exp(-i \epsilon_{m} T)\Phi_{m}(t_0),
+    U(t_0, t_1) = \exp(-i (t_1 - t_0) H).
+$$</p>
+<p>For the Lindblad master equation with constant Liouvillian <span class="arithmatex">\(\mathcal{L}\)</span>, the
+problem is vectorized and the propagator from time <span class="arithmatex">\(t_0\)</span> to time <span class="arithmatex">\(t_1\)</span> is an
+<span class="arithmatex">\(n^2\times n^2\)</span> matrix given by
 $$
-where <span class="arithmatex">\(U(t_0, t_0+T)\)</span> is the propagator over a single period <span class="arithmatex">\(T\)</span>, with <span class="arithmatex">\(t_0\)</span> some
-arbitrary initial time (typically <span class="arithmatex">\(t_0 = 0\)</span>). According to the Floquet theorem,
-these Floquet modes are periodic with period <span class="arithmatex">\(T\)</span> and form a complete basis for
-the time evolution of the system. The <span class="arithmatex">\(t=t_0\)</span> Floquet modes are obtained from
-diagonalization of the above propagator, while the <span class="arithmatex">\(t \geq t_0\)</span> Floquet modes are
-obtained by propagating the <span class="arithmatex">\(t=t_0\)</span> Floquet modes forward in time, via
-$$
-    \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
+    \mathcal{U}(t_0, t_1) = \exp((t_1 - t_0)\mathcal{L}).
 $$</p>
 
-    <!-- <p>Parameters:</p> -->
-    <p>
-      <strong>Parameters</strong>
-    </p>
-    <ul>
-        <li class="field-body">
-          <b>H</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(qarray-like or time-qarray of shape (...H, n, n))              </i>
-          – <p>Hamiltonian.</p>
-        </li>
-        <li class="field-body">
-          <b>T</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Period of the Hamiltonian. If the Hamiltonian is batched, the period should
-be common over all elements in the batch. To batch over different periods,
-wrap the call to <code>floquet</code> in a <code>jax.vmap</code>, see above.</p>
-        </li>
-        <li class="field-body">
-          <b>tsave</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(array-like of shape (ntsave,))              </i>
-          – <p>Times at which to compute floquet
-modes. The specified times should be ordered, strictly ascending, and such
-that <code>tsave[-1] - tsave[0] &lt;= T</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>solver</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Solver for the integration. Defaults to
-<a class="autorefs autorefs-internal" href="../solver/Tsit5.html#dynamiqs.solver.Tsit5"><code>dq.solver.Tsit5</code></a> (supported:
-<a class="autorefs autorefs-internal" href="../solver/Tsit5.html#dynamiqs.solver.Tsit5"><code>Tsit5</code></a>,
-<a class="autorefs autorefs-internal" href="../solver/Dopri5.html#dynamiqs.solver.Dopri5"><code>Dopri5</code></a>,
-<a class="autorefs autorefs-internal" href="../solver/Dopri8.html#dynamiqs.solver.Dopri8"><code>Dopri8</code></a>,
-<a class="autorefs autorefs-internal" href="../solver/Kvaerno3.html#dynamiqs.solver.Kvaerno3"><code>Kvaerno3</code></a>,
-<a class="autorefs autorefs-internal" href="../solver/Kvaerno5.html#dynamiqs.solver.Kvaerno5"><code>Kvaerno5</code></a>,
-<a class="autorefs autorefs-internal" href="../solver/Euler.html#dynamiqs.solver.Euler"><code>Euler</code></a>).</p>
-        </li>
-        <li class="field-body">
-          <b>gradient</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Algorithm used to compute the gradient.</p>
-        </li>
-        <li class="field-body">
-          <b>options</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>progress_meter</code>, <code>t0</code>).</p>
-<details>
-<summary>Detailed options API</summary>
-<div class="highlight"><pre><span></span><code>dq.Options(
-    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
-    t0: ScalarLike | None = None,
-)
-</code></pre></div>
-<p><strong>Parameters</strong></p>
-<ul>
-<li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
-    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a>
-    progress meter. Pass <code>None</code> for no output, see other options in
-    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
-    If gradients are computed, the progress meter only displays during
-    the forward pass.</li>
-<li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
-    <code>tsave</code>.</li>
-</ul>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>If the Hamiltonian or jump operators are sparse qarrays, they will be silently
+converted to dense qarrays before computing their matrix exponentials.</p>
 </details>
-        </li>
-    </ul>
-
-    <!-- <p>Returns:</p> -->
-    <p>
-      <strong>Returns</strong>
-    </p>
-    <!-- <ul>
-      <li class="field-body">
-            <code><span title="dynamiqs.result.FloquetResult">FloquetResult</span></code>
-        – <p><code>dq.FloquetResult</code> object holding the result of the Floquet computation. Use
-<code>result.modes</code> to access the saved Floquet modes and <code>result.quasienergies</code>
-for the associated quasienergies.</p>
-<details>
-<summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">FloquetResult</span>
-</code></pre></div>
-<p><strong>Attributes</strong></p>
-<ul>
-<li><strong>modes</strong> <em>(qarray of shape (..., ntsave, n, n, 1))</em> - Saved Floquet
-    modes.</li>
-<li><strong>quasienergies</strong> <em>(array of shape (..., n))</em> - Saved quasienergies</li>
-<li><strong>T</strong> <em>(float)</em> - Drive period</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Solver-dependent information on the
-    resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>solver</strong> <em>(Solver)</em> - Solver used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
-</ul>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>This method is not recommended for open systems of large dimension, due to
+the <span class="arithmatex">\(\mathcal{O}(n^6)\)</span> scaling of computing the Liouvillian exponential.</p>
 </details>
-      </li>
-  </ul> -->
-      <span class="field-body"><p><code>dq.FloquetResult</code> object holding the result of the Floquet computation. Use
-<code>result.modes</code> to access the saved Floquet modes and <code>result.quasienergies</code>
-for the associated quasienergies.</p>
-<details>
-<summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">FloquetResult</span>
-</code></pre></div>
-<p><strong>Attributes</strong></p>
-<ul>
-<li><strong>modes</strong> <em>(qarray of shape (..., ntsave, n, n, 1))</em> - Saved Floquet
-    modes.</li>
-<li><strong>quasienergies</strong> <em>(array of shape (..., n))</em> - Saved quasienergies</li>
-<li><strong>T</strong> <em>(float)</em> - Drive period</li>
-<li><strong>infos</strong> <em>(PyTree or None)</em> - Solver-dependent information on the
-    resolution.</li>
-<li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
-    saved.</li>
-<li><strong>solver</strong> <em>(Solver)</em> - Solver used.</li>
-<li><strong>gradient</strong> <em>(Gradient)</em> - Gradient used.</li>
-<li><strong>options</strong> <em>(Options)</em> - Options used.</li>
-</ul>
-</details></span>
-        <h2 id="dynamiqs.integrators.floquet--advanced-use-cases">Advanced use-cases</h2>
-<h3 id="dynamiqs.integrators.floquet--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
-<p>The Hamiltonian <code>H</code> can be batched to compute multiple Floquet modes and
-quasienergies concurrently. All other arguments are common to every batch. The
-Floquet modes and quasienergies are batched according to the leading dimensions of
-<code>H</code>. For example if <code>H</code> has shape <em>(2, 3, n, n)</em>, then <code>result.modes</code> has shape
-<em>(2, 3, ntsave, n, n, 1)</em>.</p>
-<p>See the
-<a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
-tutorial for more details.</p>
-<h3 id="dynamiqs.integrators.floquet--batching-over-drive-periods">Batching over drive periods</h3>
-<p>The current API does not yet natively support batching over multiple drive
-periods, for instance if you wanted to batch over Hamiltonians with different
-drive frequencies. This however can be achieved straightforwardly with an
-external call to <code>jax.vmap</code>, as follows:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>This method only supports constant or piecewise constant Hamiltonian and jump
+operators.</p>
+</details>
+<details class="note"
+ >
+  <summary>Supported gradients</summary>
+  <p>This method supports differentiation with
+<a class="autorefs autorefs-internal" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a> (default).</p>
+</details>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">single_floquet</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
-    <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">omega</span>
-    <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">dq</span><span class="o">.</span><span class="n">floquet</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
 
 
-<span class="n">omegas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">])</span>
-<span class="n">batched_floquet</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">single_floquet</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">batched_floquet</span><span class="p">(</span><span class="n">omegas</span><span class="p">)</span>
-</code></pre></div>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
 
     </div>
 
@@ -5565,7 +5352,7 @@ external call to <code>jax.vmap</code>, as follows:</p>
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.f13b1293.min.js"></script>
+      <script src="../../assets/javascripts/bundle.f1b6f286.min.js"></script>
       
         <script src="../../javascripts/katex.js"></script>
       
