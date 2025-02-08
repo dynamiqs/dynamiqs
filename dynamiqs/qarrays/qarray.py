@@ -203,10 +203,16 @@ class QArray(eqx.Module):
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
 
+        if self.shape == ():
+            # handles the case where the array is a single scalar. There
+            # is no need to check the shape then
+            return
+
         # === ensure dims is compatible with the shape
         # for vectorized superoperators, we allow that the shape is the square
         # of the product of all dims
         allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
+
         if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
                 'Argument `dims` must be compatible with the shape of the qarray, but '
@@ -567,7 +573,7 @@ class QArray(eqx.Module):
 def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'Qarrays have incompatible Hilbert space dimensions. '
+            'Qarrays have incompatible Hilbert space dimensions. '
             f'Got {dims1} and {dims2}.'
         )
 
