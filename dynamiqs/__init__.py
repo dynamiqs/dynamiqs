@@ -1,4 +1,5 @@
-from . import dark, plot, random
+from . import plot, random
+from .hermitian_conjugate import *
 from .integrators import *
 from .options import *
 from .qarrays import *
@@ -7,7 +8,7 @@ from .result import *
 from .time_qarray import *
 from .utils import *
 
-__version__ = '0.2.3'
+__version__ = '0.3.1'
 
 # set default matmul precision to 'highest'
 set_matmul_precision('highest')

@@ -56,5 +56,36 @@ class MCInterface(MEInterface):
     root_finder: AbstractRootFinder | None
 
 
+class DSSEInterface(MEInterface):
+    """Interface for the diffusive SSE."""
+
+
+class DSMEInterface(AbstractTimeInterface):
+    """Interface for the diffusive SME."""
+
+    H: TimeQArray
+    Lcs: list[TimeQArray]  # (nLc, n, n)
+    Lms: list[TimeQArray]  # (nLm, n, n)
+    etas: Array  # (nLm,)
+
+    @property
+    def Ls(self) -> list[TimeQArray]:
+        return self.Lcs + self.Lms  # (nLc + nLm, n, n)
+
+    def L(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Ls]  # (nLs, n, n)
+
+    def Lc(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Lcs]  # (nLc, n, n)
+
+    def Lm(self, t: Scalar) -> list[QArray]:
+        return [_L(t) for _L in self.Lms]  # (nLm, n, n)
+
+    @property
+    def discontinuity_ts(self) -> Array | None:
+        ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
+        return _concatenate_sort(*ts)
+
+
 class SolveInterface(eqx.Module):
     Es: list[QArray] | None

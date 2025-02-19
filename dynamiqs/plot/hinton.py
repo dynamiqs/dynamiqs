@@ -60,7 +60,7 @@ def _plot_squares(
 
     patch_list = [
         patches.Rectangle(xy, side, side, facecolor=color)
-        for xy, side, color in zip(corners, sides, colors)
+        for xy, side, color in zip(corners, sides, colors, strict=True)
     ]
 
     squares = PatchCollection(
@@ -179,7 +179,9 @@ def hinton(
         >>> _, axs = dq.plot.grid(2)
         >>> x = np.random.uniform(-1.0, 1.0, (10, 10))
         >>> dq.plot.hinton(x, ax=next(axs), vmin=-1.0, vmax=1.0)
-        >>> dq.plot.hinton(jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black')
+        >>> dq.plot.hinton(
+        ...     jnp.abs(x), ax=next(axs), cmap='Greys', vmax=1.0, ecolor='black'
+        ... )
         >>> renderfig('plot_hinton_real')
 
         ![plot_hinton_real](../../figs_code/plot_hinton_real.png){.fig-half}
@@ -189,7 +191,7 @@ def hinton(
         >>> renderfig('plot_hinton_large')
 
         ![plot_hinton_large](../../figs_code/plot_hinton_large.png){.fig}
-    """  # noqa: E501
+    """
     x = to_jax(x)
     check_shape(x, 'x', '(n, n)')
 

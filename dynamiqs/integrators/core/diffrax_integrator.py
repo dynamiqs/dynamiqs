@@ -14,7 +14,7 @@ from jaxtyping import PyTree, Scalar
 
 from ...gradient import Autograd, CheckpointAutograd
 from ...qarrays.qarray import QArray
-from ...qarrays.utils import stack, sum_qarrays
+from ...qarrays.utils import stack
 from ...result import MCJumpResult, MCNoJumpResult, Result, Saved
 from ...utils.general import dag, expect, norm, unit
 from .abstract_integrator import BaseIntegrator
@@ -33,7 +33,7 @@ class FixedStepInfos(eqx.Module):
 
     def __str__(self) -> str:
         if self.nsteps.ndim >= 1:
-            # note: fixed step solvers always make the same number of steps
+            # note: fixed step methods always make the same number of steps
             return f'{int(self.nsteps.mean())} steps | infos shape {self.nsteps.shape}'
         return f'{self.nsteps} steps'
 
@@ -68,22 +68,22 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.ConstantStepSize()
         else:
             return dx.PIDController(
-                rtol=self.solver.rtol,
-                atol=self.solver.atol,
-                safety=self.solver.safety_factor,
-                factormin=self.solver.min_factor,
-                factormax=self.solver.max_factor,
+                rtol=self.method.rtol,
+                atol=self.method.atol,
+                safety=self.method.safety_factor,
+                factormin=self.method.min_factor,
+                factormax=self.method.max_factor,
                 jump_ts=self.discontinuity_ts,
             )
 
     @property
     def dt0(self) -> float | None:
-        return self.solver.dt if self.fixed_step else None
+        return self.method.dt if self.fixed_step else None
 
     @property
     def max_steps(self) -> int:
-        # TODO: fix hard-coded max_steps for fixed solvers
-        return 100_000 if self.fixed_step else self.solver.max_steps
+        # TODO: fix hard-coded max_steps for fixed methods
+        return 100_000 if self.fixed_step else self.method.max_steps
 
     @property
     @abstractmethod
@@ -242,8 +242,8 @@ class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            Hnh = sum_qarrays(-1j * H, *[-0.5 * _L.dag() @ _L for _L in L])
-            tmp = sum_qarrays(Hnh @ y, *[0.5 * _L @ y @ _L.dag() for _L in L])
+            Hnh = -1j * H + sum([-0.5 * _L.dag() @ _L for _L in L])
+            tmp = Hnh @ y + sum([0.5 * _L @ y @ _L.dag() for _L in L])
             return tmp + tmp.dag()
 
         return dx.ODETerm(vector_field)
@@ -317,7 +317,7 @@ class MCSolveDiffraxIntegrator(
     ) -> Result:
         return MCJumpResult(
             self.ts,
-            self.solver,
+            self.method,
             self.gradient,
             self.options,
             saved,
@@ -331,7 +331,7 @@ class MCSolveDiffraxIntegrator(
     ) -> Result:
         return MCNoJumpResult(
             self.ts,
-            self.solver,
+            self.method,
             self.gradient,
             self.options,
             saved,
@@ -348,7 +348,7 @@ class MCSolveDiffraxIntegrator(
     ) -> Result:
         return self.result_class(
             self.ts,
-            self.solver,
+            self.method,
             self.gradient,
             self.options,
             saved,
@@ -361,7 +361,7 @@ class MCSolveDiffraxIntegrator(
     def terms(self) -> dx.AbstractTerm:
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
-            return sum_qarrays(-1j * H @ y, *[-0.5 * _L.dag() @ (_L @ y) for _L in L])
+            return -1j * H @ y + sum([-0.5 * _L.dag() @ (_L @ y) for _L in L])
 
         return dx.ODETerm(vector_field)
 

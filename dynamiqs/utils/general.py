@@ -7,10 +7,9 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Array
 
-from .._checks import check_shape
-from .._utils import on_cpu
+from .._checks import check_hermitian, check_shape
 from ..qarrays.qarray import QArray, QArrayLike, _get_dims, _to_jax
-from ..qarrays.utils import _init_dims, asqarray, sum_qarrays, to_jax
+from ..qarrays.utils import _init_dims, asqarray, to_jax
 
 __all__ = [
     'bloch_coordinates',
@@ -22,6 +21,7 @@ __all__ = [
     'expect',
     'expm',
     'fidelity',
+    'purity',
     'isbra',
     'isdm',
     'isherm',
@@ -41,6 +41,7 @@ __all__ = [
     'trace',
     'tracemm',
     'unit',
+    'signm',
 ]
 
 
@@ -170,6 +171,51 @@ def sinm(x: QArrayLike) -> QArray:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return -0.5j * (expm(1j * x) - expm(-1j * x))
+
+
+def signm(x: QArrayLike) -> QArray:
+    r"""Returns the operator sign function of a hermitian qarray.
+
+    The operator sign function $\mathrm{sign}(A)$ of a hermitian matrix $A$ with
+    eigendecomposition $A = U\, \text{diag}(\lambda_1,\dots,\lambda_n)\, U^\dagger$,
+    with $(\lambda_1,\dots,\lambda_n)\in\R^n$ the eigenvalues of $A$, is defined by
+    $$
+        \mathrm{sign}(A) = U\,\mathrm{diag}(\mathrm{sign}(\lambda_1),\dots,\mathrm{sign}(\lambda_n))\,U^\dagger,
+    $$
+    where $\mathrm{sign}(x)$ is the sign of $x\in\R$.
+
+    Args:
+        x _(qarray-like of shape (..., n, n))_: Square hermitian matrix.
+
+    Returns:
+        _(qarray of shape (..., n, n))_ Operator sign function of `x`.
+
+    Note:
+        The operator sign is generally dense, and is different from the element-wise
+        sign of the operator.
+
+    Examples:
+        >>> dq.signm(dq.sigmax())
+        QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dense
+        [[0.+0.j 1.+0.j]
+         [1.+0.j 0.+0.j]]
+        >>> dq.position(3)
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dia, ndiags=2
+        [[    ⋅     0.5  +0.j     ⋅    ]
+         [0.5  +0.j     ⋅     0.707+0.j]
+         [    ⋅     0.707+0.j     ⋅    ]]
+        >>> dq.signm(dq.position(3))
+        QArray: shape=(3, 3), dims=(3,), dtype=complex64, layout=dense
+        [[-0.667+0.j  0.577+0.j  0.471+0.j]
+         [ 0.577+0.j  0.   +0.j  0.816+0.j]
+         [ 0.471+0.j  0.816+0.j -0.333+0.j]]
+    """  # noqa: E501
+    x = asqarray(x)
+    x = check_hermitian(x, 'x')
+    L, Q = x.asdense()._eigh()
+    sign_L = jnp.diag(jnp.sign(L))
+    array = Q @ sign_L @ dag(Q)
+    return asqarray(array, dims=x.dims)
 
 
 def trace(x: QArrayLike) -> Array:
@@ -580,9 +626,7 @@ def lindbladian(H: QArrayLike, jump_ops: list[QArrayLike], rho: QArrayLike) -> Q
     # === check rho shape
     check_shape(rho, 'rho', '(..., n, n)')
 
-    return sum_qarrays(
-        -1j * H @ rho, 1j * rho @ H, *[dissipator(L, rho) for L in jump_ops]
-    )
+    return -1j * H @ rho + 1j * rho @ H + sum([dissipator(L, rho) for L in jump_ops])
 
 
 def isket(x: QArrayLike) -> bool:
@@ -920,13 +964,11 @@ def fidelity(x: QArrayLike, y: QArrayLike) -> Array:
 
     if isket(x) or isket(y):
         return overlap(x, y)
-    elif on_cpu(x):
-        return _dm_fidelity_cpu(x, y)
     else:
-        return _dm_fidelity_gpu(x, y)
+        return _dm_fidelity(x, y)
 
 
-def _dm_fidelity_cpu(x: QArray, y: QArray) -> Array:
+def _dm_fidelity(x: QArray, y: QArray) -> Array:
     # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
     # x: (..., n, n), y: (..., n, n) -> (...)
 
@@ -935,11 +977,6 @@ def _dm_fidelity_cpu(x: QArray, y: QArray) -> Array:
     # the eigenvalues w_i of the matrix product x @ y and compute the fidelity as
     # F = (\sum_i \sqrt{w_i})^2.
 
-    # This method only works on CPU because we use `jnp.linalg.eigvals` which is only
-    # implemented on the CPU backend (see https://github.com/google/jax/issues/1259
-    # tracking support on GPU). Note that we can't use eigvalsh here, because the
-    # matrix x @ y is not Hermitian.
-
     # note that we can't use `eigvalsh` here because x @ y is not necessarily Hermitian
     w = (x @ y)._eigvals().real
     # we set small negative eigenvalues errors to zero to avoid `nan` propagation
@@ -947,36 +984,31 @@ def _dm_fidelity_cpu(x: QArray, y: QArray) -> Array:
     return jnp.sqrt(w).sum(-1) ** 2
 
 
-def _dm_fidelity_gpu(x: QArray, y: QArray) -> Array:
-    # returns the fidelity of two density matrices: Tr[sqrt(sqrt(x) @ y @ sqrt(x))]^2
-    # x: (..., n, n), y: (..., n, n) -> (...)
+def purity(x: QArrayLike) -> Array:
+    r"""Returns the purity of a ket or density matrix.
 
-    # We compute the eigenvalues w_i of the matrix product sqrt(x) @ y @ sqrt(x)
-    # and compute the fidelity as F = (\sum_i \sqrt{w_i})^2.
+    For a ket (a pure state), the purity is $1$. For a density matrix $\rho$, it is
+    defined by $\tr{\rho^2}$.
 
-    sqrtm_x = _sqrtm_gpu(x)
-    w = (sqrtm_x @ y @ sqrtm_x)._eigvalsh()
-    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    w = jnp.where(w < 0, 0, w)
-    return jnp.sqrt(w).sum(-1) ** 2
+    Args:
+        x _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
 
+    Returns:
+        _(array of shape (...))_ Real-valued purity.
 
-def _sqrtm_gpu(x: QArray) -> Array:
-    # returns the square root of a symmetric or Hermitian positive definite matrix
-    # x: (..., n, n) -> (..., n, n)
-
-    # code inspired by
-    # https://github.com/pytorch/pytorch/issues/25481#issuecomment-1032789228
-
-    # This method is a GPU-compatible implementation of `jax.scipy.linalg.sqrtm` for
-    # symmetric or Hermitian positive definite matrix.
-
-    w, v = x._eigh()
-    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
-    w = jnp.where(w < 0, 0, w)
-    # numerical trick to compute 'v @ jnp.diag(jnp.sqrt(w)) @ v.mT.conj()' faster with
-    # broadcasting
-    return (v * jnp.sqrt(w)[None, :]) @ v.mT.conj()
+    Examples:
+        >>> psi = dq.fock(2, 0)
+        >>> dq.purity(psi)
+        Array(1., dtype=float32)
+        >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
+        >>> dq.purity(rho)
+        Array(0.5, dtype=float32)
+    """
+    x = asqarray(x)
+    check_shape(x, 'x', '(..., n, 1)', '(..., n, n)')
+    if x.isket():
+        return jnp.ones(x.shape[:-2])
+    return tracemm(x, x).real
 
 
 def entropy_vn(x: QArrayLike) -> Array:

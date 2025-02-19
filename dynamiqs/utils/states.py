@@ -114,7 +114,7 @@ def fock(dim: int | tuple[int, ...], number: ArrayLike) -> QArray:
         # has shape (ndim,), number has shape (ndim,) and number = [n0, n1,..., nf]
         # this is the unbatched version of fock()
         idx = 0
-        for d, n in zip(dim, number):
+        for d, n in zip(dim, number, strict=True):
             idx = d * idx + n
         ket = jnp.zeros((prod(dim), 1), dtype=cdtype())
         array = ket.at[idx].set(1.0)
@@ -255,7 +255,7 @@ def coherent(dim: int | tuple[int, ...], alpha: ArrayLike | list[ArrayLike]) -> 
 
     # tackle multi-modes
     if dim.ndim == 1:
-        return tensor(*[coherent(d, a) for d, a in zip(dim, alpha)])
+        return tensor(*[coherent(d, a) for d, a in zip(dim, alpha, strict=True)])
 
     # fact: dim is now an integer
     return displace(int(dim), alpha) @ fock(int(dim), 0)

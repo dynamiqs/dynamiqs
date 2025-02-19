@@ -19,7 +19,7 @@ class Autograd(Gradient):
     through the internals of the solver.
 
     Note:
-        For Diffrax-based solvers, this falls back to the
+        For Diffrax-based methods, this falls back to the
         [`diffrax.DirectAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.DirectAdjoint)
         option.
     """
@@ -40,7 +40,7 @@ class CheckpointAutograd(Gradient):
 
     Note:
         For most problems this is the preferred technique for backpropagating
-        through the quantum solvers.
+        through the solvers.
 
     Warning:
         This cannot be forward-mode autodifferentiated (e.g. using
@@ -50,7 +50,7 @@ class CheckpointAutograd(Gradient):
 
 
     Note:
-        For Diffrax-based solvers, this falls back to the
+        For Diffrax-based methods, this falls back to the
         [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
         option.
 

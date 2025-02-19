@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from math import prod
-from typing import TYPE_CHECKING, Any, Union, get_args
+from typing import TYPE_CHECKING, Any, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -137,6 +137,7 @@ class QArray(eqx.Module):
     | `x.expm()`                                               | Alias of [`dq.expm(x)`][dynamiqs.expm].                        |
     | `x.cosm()`                                               | Alias of [`dq.cosm(x)`][dynamiqs.cosm].                        |
     | `x.sinm()`                                               | Alias of [`dq.sinm(x)`][dynamiqs.sinm].                        |
+    | `x.signm()`                                              | Alias of [`dq.signm(x)`][dynamiqs.signm].                      |
     | `x.trace()`                                              | Alias of [`dq.trace(x)`][dynamiqs.trace].                      |
     | `x.ptrace(keep)`                                         | Alias of [`dq.ptrace(x, keep, dims=x.dims)`][dynamiqs.ptrace]. |
     | `x.norm()`                                               | Alias of [`dq.norm(x)`][dynamiqs.norm].                        |
@@ -175,8 +176,8 @@ class QArray(eqx.Module):
     #   - returning a JAX array or other: norm, trace, sum, squeeze, _eig, _eigh,
     #                                     _eigvals, _eigvalsh, devices, isherm
     #   - conversion/utils methods: to_qutip, to_jax, __array__, block_until_ready
-    #   - special methods: __mul__, __truediv__, __add__, __matmul__, __rmatmul__,
-    #                         __and__, addscalar, elmul, elpow, __getitem__
+    #   - special methods: __mul__, __add__, __matmul__, __rmatmul__, __and__,
+    #                      addscalar, elmul, elpow, __getitem__
 
     dims: tuple[int, ...] = eqx.field(static=True)
     vectorized: bool = eqx.field(static=True)
@@ -302,6 +303,11 @@ class QArray(eqx.Module):
         from ..utils import sinm
 
         return sinm(self)
+
+    def signm(self) -> QArray:
+        from ..utils import signm
+
+        return signm(self)
 
     def unit(self) -> QArray:
         return self / self.norm()[..., None, None]
@@ -454,12 +460,13 @@ class QArray(eqx.Module):
     def __rmul__(self, y: QArrayLike) -> QArray:
         return self * y
 
-    @abstractmethod
-    def __truediv__(self, y: QArrayLike) -> QArray:
-        pass
+    def __truediv__(self, y: ArrayLike) -> QArray:
+        return self * (1 / y)
 
     def __rtruediv__(self, y: QArrayLike) -> QArray:
-        return self * 1 / y
+        raise NotImplementedError(
+            'Division by a qarray with the `/` operator is not supported.'
+        )
 
     def __iter__(self):
         for i in range(self.shape[0]):
@@ -589,8 +596,8 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
 # An object of type `QArrayLike` can be converted to a `QArray` with `asqarray`.
 
 # extended array-like type
-_QArrayLike = Union[ArrayLike, QArray, Qobj]
+_QArrayLike = ArrayLike | QArray | Qobj
 # a type alias for nested sequence of `_QArrayLike`
-_NestedQArrayLikeSequence = Sequence[Union[_QArrayLike, '_NestedQArrayLikeSequence']]
+_NestedQArrayLikeSequence = Sequence[_QArrayLike | '_NestedQArrayLikeSequence']
 # a type alias for any type compatible with asqarray
-QArrayLike = Union[_QArrayLike, _NestedQArrayLikeSequence]
+QArrayLike = _QArrayLike | _NestedQArrayLikeSequence

@@ -1,7 +1,7 @@
 import pytest
 
 from dynamiqs.gradient import Autograd, CheckpointAutograd
-from dynamiqs.solver import Tsit5
+from dynamiqs.method import Tsit5
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG

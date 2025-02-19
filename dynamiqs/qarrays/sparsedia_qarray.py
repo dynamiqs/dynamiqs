@@ -203,8 +203,10 @@ class SparseDIAQArray(QArray):
     def devices(self) -> set[jax.Device]:
         raise NotImplementedError
 
-    def isherm(self) -> bool:
-        raise NotImplementedError
+    def isherm(self, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        # TODO: Improve this by using a direct QArray comparison function, once it is
+        # implemented. This will avoid materalizing the dense matrix.
+        return self.asdense().isherm(rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj | list[Qobj]:
         return self.asdense().to_qutip()
@@ -244,7 +246,7 @@ class SparseDIAQArray(QArray):
             )
 
         # replace with a centered dot of the same length as the matched string
-        replace_with_dot = lambda match: f"{'⋅':^{len(match.group(0))}}"
+        replace_with_dot = lambda match: f'{"⋅":^{len(match.group(0))}}'
         data_str = re.sub(pattern, replace_with_dot, str(self.to_jax()))
         return super().__repr__() + f', ndiags={self.ndiags}\n{data_str}'
 
@@ -254,10 +256,10 @@ class SparseDIAQArray(QArray):
         diags = y * self.diags
         return self._replace(diags=diags)
 
-    def __truediv__(self, y: QArrayLike) -> QArray:
-        raise NotImplementedError
-
     def __add__(self, y: QArrayLike) -> QArray:
+        if isinstance(y, int | float) and y == 0:
+            return self
+
         super().__add__(y)
 
         if isinstance(y, SparseDIAQArray):
@@ -354,7 +356,7 @@ class SparseDIAQArray(QArray):
 def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
     full_slice = slice(None, None, None)
     valid_key = False
-    if isinstance(key, (int, slice)):
+    if isinstance(key, int | slice):
         valid_key = ndim > 2
     if isinstance(key, Array):
         valid_key = key.ndim == 0 and ndim > 2

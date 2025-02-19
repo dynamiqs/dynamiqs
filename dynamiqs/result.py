@@ -1,20 +1,26 @@
 from __future__ import annotations
 
+from abc import abstractmethod
+
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
+from .method import Method
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import to_jax
-from .solver import Solver
 
 __all__ = [
     'FloquetResult',
     'MCSolveResult',
     'MEPropagatorResult',
+    'JSSESolveResult',
+    'DSSESolveResult',
+    'JSMESolveResult',
     'MESolveResult',
+    'DSMESolveResult',
     'SEPropagatorResult',
     'SESolveResult',
 ]
@@ -53,6 +59,10 @@ class SolveSaved(Saved):
     Esave: Array | None
 
 
+class DiffusiveSolveSaved(SolveSaved):
+    Isave: Array
+
+
 class PropagatorSaved(Saved):
     pass
 
@@ -63,7 +73,7 @@ class FloquetSaved(Saved):
 
 class Result(eqx.Module):
     tsave: Array
-    solver: Solver
+    method: Method
     gradient: Gradient | None
     options: Options
     _saved: Saved
@@ -85,7 +95,7 @@ class Result(eqx.Module):
 
     def _str_parts(self) -> dict[str, str | None]:
         return {
-            'Solver': type(self.solver).__name__,
+            'Method': type(self.method).__name__,
             'Gradient': (
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
@@ -145,28 +155,6 @@ class PropagatorResult(Result):
 
 
 class FloquetResult(Result):
-    """Result of the Floquet integration.
-
-    Attributes:
-        modes _(qarray of shape (..., ntsave, n, n, 1))_: Saved Floquet modes.
-        quasienergies _(array of shape (..., n))_: Saved quasienergies
-        T _(float)_: Drive period
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-
-    Note-: Result of running multiple simulations concurrently
-        The resulting Floquet modes and quasienergies are batched according to the
-        leading dimensions of the Hamiltonian `H`. For example if `H` has shape
-        _(2, 3, n, n)_, then `modes` has shape _(2, 3, ntsave, n, n, 1)_.
-
-        See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-    """
-
     T: float
 
     @property
@@ -190,238 +178,23 @@ class FloquetResult(Result):
 
 
 class SESolveResult(SolveResult):
-    r"""Result of the Schrödinger equation integration.
-
-
-    Attributes:
-        states _(qarray of shape (..., nsave, n, 1))_: Saved states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(qarray of shape (..., n, 1))_: Saved final state.
-        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
-            expectation values, if specified by `exp_ops`.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-
-    Note-: Result of running multiple simulations concurrently
-        The resulting states and expectation values are batched according to the
-        leading dimensions of the Hamiltonian `H` and initial state `psi0`. The
-        behaviour depends on the value of the `cartesian_batching` option
-
-        === "If `cartesian_batching = True` (default value)"
-            The results leading dimensions are
-            ```
-            ... = ...H, ...psi0
-            ```
-            For example if:
-
-            - `H` has shape _(2, 3, n, n)_,
-            - `psi0` has shape _(4, n, 1)_,
-
-            then `states` has shape _(2, 3, 4, ntsave, n, 1)_.
-
-        === "If `cartesian_batching = False`"
-            The results leading dimensions are
-            ```
-            ... = ...H = ...psi0  # (once broadcasted)
-            ```
-            For example if:
-
-            - `H` has shape _(2, 3, n, n)_,
-            - `psi0` has shape _(3, n, 1)_,
-
-            then `states` has shape _(2, 3, ntsave, n, 1)_.
-
-        See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-    """
+    pass
 
 
 class MESolveResult(SolveResult):
-    """Result of the Lindblad master equation integration.
-
-    Attributes:
-        states _(qarray of shape (..., nsave, n, n))_: Saved states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(qarray of shape (..., n, n))_: Saved final state.
-        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
-            expectation values, if specified by `exp_ops`.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-
-    Note-: Result of running multiple simulations concurrently
-        The resulting states and expectation values are batched according to the
-        leading dimensions of the Hamiltonian `H`, jump operators `jump_ops` and initial
-        state `rho0`. The behaviour depends on the value of the `cartesian_batching`
-        option
-
-        === "If `cartesian_batching = True` (default value)"
-            The results leading dimensions are
-            ```
-            ... = ...H, ...L0, ...L1, (...), ...rho0
-            ```
-            For example if:
-
-            - `H` has shape _(2, 3, n, n)_,
-            - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
-            - `rho0` has shape _(7, n, n)_,
-
-            then `states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
-        === "If `cartesian_batching = False`"
-            The results leading dimensions are
-            ```
-            ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
-            ```
-            For example if:
-
-            - `H` has shape _(2, 3, n, n)_,
-            - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
-            - `rho0` has shape _(3, n, n)_,
-
-            then `states` has shape _(2, 3, ntsave, n, n)_.
-
-        See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-    """
+    pass
 
 
 class MCJumpResult(SolveResult):
-    """Result of Monte Carlo jump trajectories.
-
-
-    Attributes:
-        states _(qarray of shape (..., ntraj, nsave, n, 1))_: Saved jump states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(qarray of shape (..., ntraj, n, 1))_: Saved final jump state.
-        jump_times _(Array)_: Times at which each trajectory experienced a jump. This
-            quantity has shape ..., options.max_jumps where the array is filled with
-            nans for the final options.max_jumps - num_jumps values.
-        num_jumps _(Array)_: Number of jumps each jump trajectory experienced. The times
-            at which each jump occurred is saved in jump_times.
-        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
-            expectation values, if specified by `exp_ops`.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-    """
-
     jump_times: Array
     num_jumps: Array
 
 
 class MCNoJumpResult(SolveResult):
-    """Result of Monte Carlo no-jump trajectories.
-
-
-    Attributes:
-        states _(qarray of shape (..., nsave, n, 1))_: Saved no-jump states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(qarray of shape (..., n, 1))_: Saved no-jump final state.
-        no_jump_prob _(Array)_: No jump probability.
-        expects _(array of shape (..., len(exp_ops), ntsave) or None)_: Saved
-            expectation values, if specified by `exp_ops`.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-    """
-
     no_jump_prob: Array
 
 
 class MCSolveResult(SolveResult):
-    """Result of Monte Carlo integration.
-
-    Attributes:
-        states _(qarray of shape (..., nsave, n, n))_: Saved states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_state _(qarray of shape (..., n, n))_: Saved final state.
-        no_jump_states _(qarray of shape (..., nsave, n, 1))_: Saved no-jump states with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        no_jump_final_state _(qarray of shape (..., n, 1))_: Saved no-jump final state.
-        jump_states _(qarray of shape (..., ntraj, nsave, n, 1))_: Saved jump states
-            with `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to
-            `False`.
-        jump_final_states _(qarray of shape (..., ntraj, n, 1))_: Saved final jump
-            states.
-        no_jump_prob _(Array)_: No jump probability.
-        jump_times _(Array)_: Times at which each trajectory experienced a jump. This
-            quantity has shape ..., options.max_jumps where the array is filled with
-            nans for the final options.max_jumps - num_jumps values.
-        num_jumps _(Array)_: Number of jumps each jump trajectory experienced. The times
-            at which each jump occurred is saved in jump_times.
-        expects _(Array, optional)_: Saved expectation values.
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-
-
-    Note-: Result of running multiple simulations concurrently
-        The resulting states and expectation values are batched according to the number
-        of trajectories (specified by the number of `keys` passed to `mcsolve`), the
-        leading dimensions of the Hamiltonian `H`, jump operators `jump_ops` and initial
-        state `psi0`. The behaviour depends on the value of the `cartesian_batching`
-        option
-
-        === "If `cartesian_batching = True` (default value)"
-            The results leading dimensions are
-            ```
-            ... = ...H, ...L0, ...L1, (...), ...psi0
-            ```
-            For example if:
-
-            - `H` has shape _(2, 3, n, n)_,
-            - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
-            - `psi0` has shape _(7, n, 1)_,
-            - `keys` has len(keys) == 8
-
-            then `states` (which is an average over the jump and no-jump states) has
-            shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
-            `no_jump_states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, 1)_ and
-            `jump_states` has shape _(2, 3, 4, 5, 6, 7, 8, ntsave, n, 1)_
-        === "If `cartesian_batching = False`"
-            The results leading dimensions are
-            ```
-            ... = ...H = ...L0 = ...L1 = (...) = ...rho0 = ...keys  # (once broadcasted)
-            ```
-            For example if:
-
-            - `H` has shape _(2, 3, n, n)_,
-            - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
-            - `rho0` has shape _(3, n, n)_,
-            - `keys` has shape (2, 3, 4)
-
-            then `states` has shape _(2, 3, ntsave, n, n)_,
-            `no_jump_states` has shape _(2, 3, ntsave, n, 1)_ and
-            `jump_states` has shape _(2, 3, 4, ntsave, n, 1)_ and
-
-        See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-    """
-
     _no_jump_result: MCNoJumpResult
     _jump_result: MCJumpResult
 
@@ -473,75 +246,46 @@ class MCSolveResult(SolveResult):
 
 
 class SEPropagatorResult(PropagatorResult):
-    r"""Result of the Schrödinger equation integration to obtain the propagator.
-
-    Attributes:
-        propagators _(qarray of shape (..., nsave, n, n))_: Saved propagators with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_propagator _(qarray of shape (..., n, n))_: Saved final propagator.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
-
-    Note-: Result of running multiple simulations concurrently
-        The resulting propagators are batched according to the leading
-        dimensions of the Hamiltonian `H`. For example if `H` has shape
-        _(2, 3, n, n)_, then `propagators` has shape _(2, 3, ntsave, n, n)_.
-
-        See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-    """
+    pass
 
 
 class MEPropagatorResult(PropagatorResult):
-    r"""Result of the Lindblad master equation integration to obtain the propagator.
+    pass
 
-    Attributes:
-        propagators _(qarray of shape (..., nsave, n^2, n^2))_: Saved propagators with
-            `nsave = ntsave`, or `nsave = 1` if `options.save_states` is set to `False`.
-        final_propagator _(qarray of shape (..., n^2, n^2))_: Saved final propagator.
-        extra _(PyTree or None)_: Extra data saved with `save_extra()` if
-            specified in `options` (see [`dq.Options`][dynamiqs.Options]).
-        infos _(PyTree or None)_: Solver-dependent information on the resolution.
-        tsave _(array of shape (ntsave,))_: Times for which results were saved.
-        solver _(Solver)_: Solver used.
-        gradient _(Gradient)_: Gradient used.
-        options _(Options)_: Options used.
 
-    Note-: Result of running multiple simulations concurrently
-        The resulting propagators are batched according to the
-        leading dimensions of the Hamiltonian `H` and jump operators `jump_ops`.
-        The behaviour depends on the value of the `cartesian_batching` option
+class JSSESolveResult(SolveResult):
+    @abstractmethod
+    def no_jump_state(self) -> Array | None:
+        pass
 
-        === "If `cartesian_batching = True` (default value)"
-            The results leading dimensions are
-            ```
-            ... = ...H, ...L0, ...L1, (...)
-            ```
-            For example if:
+    @abstractmethod
+    def no_jump_proba(self) -> Array | None:
+        pass
 
-            - `H` has shape _(2, 3, n, n)_,
-            - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
 
-            then `propagators` has shape _(2, 3, 4, 5, 6, ntsave, n, n)_.
-        === "If `cartesian_batching = False`"
-            The results leading dimensions are
-            ```
-            ... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
-            ```
-            For example if:
+class JSMESolveResult(SolveResult):
+    pass
 
-            - `H` has shape _(2, 3, n, n)_,
-            - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
 
-            then `propagators` has shape _(2, 3, ntsave, n, n)_.
+class DiffusiveSolveResult(SolveResult):
+    keys: PRNGKeyArray
 
-        See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-    """
+    @property
+    def measurements(self) -> Array:
+        return self._saved.Isave
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {'Measurements': array_str(self.measurements)}
+
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, 0)
+
+
+class DSSESolveResult(DiffusiveSolveResult):
+    pass
+
+
+class DSMESolveResult(DiffusiveSolveResult):
+    pass

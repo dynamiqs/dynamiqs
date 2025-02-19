@@ -40,7 +40,7 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-copyright: "&copy Copyright 2023-2024, Dynamiqs developers."
+copyright: "&copy Copyright 2023-2025, Dynamiqs developers."
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -83,6 +83,7 @@ plugins:
             show_root_heading: true
             show_root_toc_entry: false
             show_root_full_path: false
+            show_labels: false
             heading_level: 1
             members_order: source
             docstring_section_style: list
@@ -146,16 +147,21 @@ nav:
           - Computing gradients: documentation/basics/computing-gradients.md
       - Advanced examples:
           - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
+          - Continuous diffusive measurement: documentation/advanced_examples/continuous-diffusive-measurement.md
   - Python API:
       - python_api/index.md
-      - Quantum solvers:
+      - Solvers:
           - sesolve: python_api/integrators/sesolve.md
           - mesolve: python_api/integrators/mesolve.md
           - mcsolve: python_api/integrators/mcsolve.md
-          - smesolve: python_api/integrators/smesolve.md
           - sepropagator: python_api/integrators/sepropagator.md
           - mepropagator: python_api/integrators/mepropagator.md
           - floquet: python_api/integrators/floquet.md
+          - stochastic:
+            - jssesolve: python_api/integrators/jssesolve.md
+            - dssesolve: python_api/integrators/dssesolve.md
+            - jsmesolve: python_api/integrators/jsmesolve.md
+            - dsmesolve: python_api/integrators/dsmesolve.md
       - Core:
           - Quantum arrays: python_api/qarrays/qarray/QArray.md
           - Time-dependent qarrays:
@@ -164,33 +170,25 @@ nav:
               - pwc: python_api/time_qarray/pwc.md
               - modulated: python_api/time_qarray/modulated.md
               - timecallable: python_api/time_qarray/timecallable.md
-          - Solvers (dq.solver):
-              - Tsit5: python_api/solver/Tsit5.md
-              - Dopri5: python_api/solver/Dopri5.md
-              - Dopri8: python_api/solver/Dopri8.md
-              - Kvaerno3: python_api/solver/Kvaerno3.md
-              - Kvaerno5: python_api/solver/Kvaerno5.md
-              - Euler: python_api/solver/Euler.md
-              - Rouchon1: python_api/solver/Rouchon1.md
-              - Rouchon2: python_api/solver/Rouchon2.md
-              - Expm: python_api/solver/Expm.md
+          - Methods (dq.method):
+              - Tsit5: python_api/method/Tsit5.md
+              - Dopri5: python_api/method/Dopri5.md
+              - Dopri8: python_api/method/Dopri8.md
+              - Kvaerno3: python_api/method/Kvaerno3.md
+              - Kvaerno5: python_api/method/Kvaerno5.md
+              - Euler: python_api/method/Euler.md
+              - EulerMaruyama: python_api/method/EulerMaruyama.md
+              - Rouchon1: python_api/method/Rouchon1.md
+              - Expm: python_api/method/Expm.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
-          - Options: python_api/options/Options.md
-          - Results:
-              - SESolveResult: python_api/result/SESolveResult.md
-              - MESolveResult: python_api/result/MESolveResult.md
-              - MCSolveResult: python_api/result/MCSolveResult.md
-              - SEPropagatorResult: python_api/result/SEPropagatorResult.md
-              - MEPropagatorResult: python_api/result/MEPropagatorResult.md
-              - FloquetResult: python_api/result/FloquetResult.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
               - eye_like: python_api/utils/operators/eye_like.md
-              - zero: python_api/utils/operators/zero.md
-              - zero_like: python_api/utils/operators/zero_like.md
+              - zeros: python_api/utils/operators/zeros.md
+              - zeros_like: python_api/utils/operators/zeros_like.md
               - destroy: python_api/utils/operators/destroy.md
               - create: python_api/utils/operators/create.md
               - number: python_api/utils/operators/number.md
@@ -228,6 +226,7 @@ nav:
               - expm: python_api/utils/general/expm.md
               - cosm: python_api/utils/general/cosm.md
               - sinm: python_api/utils/general/sinm.md
+              - signm: python_api/utils/general/signm.md
               - trace: python_api/utils/general/trace.md
               - tracemm: python_api/utils/general/tracemm.md
               - ptrace: python_api/utils/general/ptrace.md
@@ -249,6 +248,7 @@ nav:
               - braket: python_api/utils/general/braket.md
               - overlap: python_api/utils/general/overlap.md
               - fidelity: python_api/utils/general/fidelity.md
+              - purity: python_api/utils/general/purity.md
               - entropy_vn: python_api/utils/general/entropy_vn.md
               - bloch_coordinates: python_api/utils/general/bloch_coordinates.md
               - wigner: python_api/utils/general/wigner.md
@@ -291,9 +291,12 @@ nav:
               - fock: python_api/plot/fock.md
               - fock_evolution: python_api/plot/fock_evolution.md
               - hinton: python_api/plot/hinton.md
+              - xyz: python_api/plot/xyz.md
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
               - mplstyle: python_api/plot/mplstyle.md
+          - Magic helpers:
+            - hc: python_api/hermitian_conjugate/hc.md
   - Community:
       - community/index.md
       - Contributing: community/contributing.md

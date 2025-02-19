@@ -1,7 +1,7 @@
 import pytest
 
 from dynamiqs.gradient import Autograd
-from dynamiqs.solver import Expm
+from dynamiqs.method import Expm
 
 from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG

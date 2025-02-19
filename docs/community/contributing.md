@@ -6,7 +6,7 @@ To contribute efficiently, a few guidelines are compiled below.
 
 ## 1. Requirements
 
-The project was written using Python 3.9+, you must have a compatible version of Python (i.e. >= 3.9) installed on your computer.
+The project was written using Python 3.10+, you must have a compatible version of Python (i.e. >= 3.10) installed on your computer.
 
 ## 2. Setup
 

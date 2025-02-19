@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from functools import reduce
 
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Array, ArrayLike, DTypeLike
 from qutip import Qobj
 
-from .._checks import check_shape
 from .dense_qarray import DenseQArray, _array_to_qobj_list
 from .layout import Layout, dense
 from .qarray import QArray, QArrayLike, _get_dims, _to_jax, _to_numpy, isqarraylike
@@ -288,6 +286,8 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
          [0. 0. 0. 0. 1. 0.]
          [0. 0. 0. 0. 0. 1.]]
     """  # noqa: E501
+    from .._checks import check_shape
+
     if isinstance(x, Qobj):
         return x
     elif isinstance(x, DenseQArray):
@@ -355,20 +355,3 @@ def _assert_dims_match_shape(dims: tuple[int, ...], shape: tuple[int, ...]):
             f'Argument `dims={dims}` is incompatible with the input shape'
             f' `shape={shape}`.'
         )
-
-
-def sum_qarrays(*args: QArray) -> QArray:
-    # Summing qarrays with Python native's sum() results in unwanted conversions from
-    # sparse to dense qarrays, because they are automatically summed with the
-    # initializer (zero). We instead use `functools.reduce`, which doesn't sum with the
-    # initializer if the list is not empty.
-
-    # Warning: this function will raise an exception if qarrays is an empty list.
-
-    if len(args) == 0:
-        raise ValueError(
-            'Argument `args` is an empty list, but it should contain at least one'
-            ' value.'
-        )
-
-    return reduce(lambda x, y: x + y, args)

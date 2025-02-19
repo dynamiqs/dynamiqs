@@ -2,7 +2,9 @@
 
 The **Dynamiqs** Python API features two main types of functions: solvers of differential equations describing quantum systems, and various utility functions to ease the creation and manipulation of quantum states and operators.
 
-## Quantum solvers
+## Solvers
+
+### General
 
 ::: dynamiqs.integrators
     options:
@@ -11,10 +13,20 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - sesolve
         - mesolve
         - mcsolve
-        - smesolve
         - sepropagator
         - mepropagator
         - floquet
+
+### Stochastic
+
+::: dynamiqs.integrators
+    options:
+        table: true
+        members:
+        - jssesolve
+        - dssesolve
+        - jsmesolve
+        - dsmesolve
 
 ## Core
 
@@ -38,9 +50,9 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - modulated
         - timecallable
 
-### Solvers (dq.solver)
+### Methods (dq.method)
 
-::: dynamiqs.solver
+::: dynamiqs.method
     options:
         table: true
         members:
@@ -50,8 +62,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Kvaerno3
         - Kvaerno5
         - Euler
+        - EulerMaruyama
         - Rouchon1
-        - Rouchon2
         - Expm
 
 ### Gradients (dq.gradient)
@@ -63,27 +75,6 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - Autograd
         - CheckpointAutograd
 
-### Options
-
-::: dynamiqs.options
-    options:
-        table: true
-        members:
-        - Options
-
-### Results
-
-::: dynamiqs.result
-    options:
-        table: true
-        members:
-        - SESolveResult
-        - MESolveResult
-        - MCSolveResult
-        - SEPropagatorResult
-        - MEPropagatorResult
-        - FloquetResult
-
 ## Utilities
 
 ### Operators
@@ -94,8 +85,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - eye
         - eye_like
-        - zero
-        - zero_like
+        - zeros
+        - zeros_like
         - destroy
         - create
         - number
@@ -147,6 +138,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - expm
         - cosm
         - sinm
+        - signm
         - trace
         - tracemm
         - ptrace
@@ -168,6 +160,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - braket
         - overlap
         - fidelity
+        - purity
         - entropy_vn
         - bloch_coordinates
         - wigner
@@ -252,6 +245,15 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - fock
         - fock_evolution
         - hinton
+        - xyz
         - gifit
         - grid
         - mplstyle
+
+### Magic helpers
+
+::: dynamiqs.hermitian_conjugate
+    options:
+        table: true
+        members:
+        - hc

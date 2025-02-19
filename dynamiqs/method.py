@@ -11,11 +11,11 @@ __all__ = [
     'Dopri5',
     'Dopri8',
     'Euler',
+    'EulerMaruyama',
     'Expm',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
-    'Rouchon2',
     'Tsit5',
 ]
 
@@ -23,8 +23,8 @@ __all__ = [
 _TupleGradient = tuple[type[Gradient], ...]
 
 
-# === generic solvers options
-class Solver(eqx.Module):
+# === generic methods options
+class Method(eqx.Module):
     # should be eqx.AbstractClassVar, but this conflicts with the __future__ imports
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient]
 
@@ -37,7 +37,7 @@ class Solver(eqx.Module):
         if gradient is not None and not cls.supports_gradient(gradient):
             support_str = ', '.join(f'`{x.__name__}`' for x in cls.SUPPORTED_GRADIENT)
             raise ValueError(
-                f'Solver `{cls.__name__}` does not support gradient'
+                f'Method `{cls.__name__}` does not support gradient'
                 f' `{type(gradient).__name__}` (supported gradient types:'
                 f' {support_str}).'
             )
@@ -46,8 +46,8 @@ class Solver(eqx.Module):
         return tree_str_inline(self)
 
 
-# === expm solver options
-class Expm(Solver):
+# === expm method options
+class Expm(Method):
     r"""Explicit matrix exponentiation to compute propagators.
 
     Explicitly batch-compute the propagators for all time intervals in `tsave`. These
@@ -77,15 +77,15 @@ class Expm(Solver):
         converted to dense qarrays before computing their matrix exponentials.
 
     Warning:
-        This solver is not recommended for open systems of large dimension, due to
+        This method is not recommended for open systems of large dimension, due to
         the $\mathcal{O}(n^6)$ scaling of computing the Liouvillian exponential.
 
     Warning:
-        This solver only supports constant or piecewise constant Hamiltonian and jump
+        This method only supports constant or piecewise constant Hamiltonian and jump
         operators.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
     """
 
@@ -96,16 +96,16 @@ class Expm(Solver):
         pass
 
 
-# === generic ODE/SDE solvers options
-class _DESolver(Solver):
+# === generic ODE/SDE methods options
+class _DEMethod(Method):
     pass
 
 
-class _DEFixedStep(_DESolver):
+class _DEFixedStep(_DEMethod):
     dt: float
 
 
-class _DEAdaptiveStep(_DESolver):
+class _DEAdaptiveStep(_DEMethod):
     rtol: float = 1e-6
     atol: float = 1e-6
     safety_factor: float = 0.9
@@ -114,27 +114,48 @@ class _DEAdaptiveStep(_DESolver):
     max_steps: int = 100_000
 
 
-# === public solvers options
+# === public methods options
 class Euler(_DEFixedStep):
-    """Euler method (fixed step size ODE solver).
+    """Euler method (fixed step size ODE method).
 
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Euler`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Euler).
 
     Warning:
-        This solver is not recommended for general use.
+        This method is not recommended for general use.
 
     Args:
         dt: Fixed time step.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float):
+        super().__init__(dt)
+
+
+class EulerMaruyama(_DEFixedStep):
+    r"""Euler-Maruyama method (fixed step size SDE method).
+
+    For a fixed step size $\dt$, it has weak order of convergence $\dt$ and strong order
+    of convergence $\sqrt{\dt}$.
+
+    Args:
+        dt: Fixed time step.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -142,23 +163,28 @@ class Euler(_DEFixedStep):
 
 
 class Rouchon1(_DEFixedStep):
-    """First-order Rouchon method (fixed step size ODE solver).
+    r"""First-order Rouchon method (fixed step size ODE/SDE method).
 
     Args:
         dt: Fixed time step.
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to first order in $\dt$.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).
     """
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+    normalize: bool
 
     # dummy init to have the signature in the documentation
-    def __init__(self, dt: float):
+    def __init__(self, dt: float, normalize: bool = True):
         super().__init__(dt)
+        self.normalize = normalize
 
     # normalize: The default scheme is trace-preserving at first order only. This
     # parameter sets the normalisation behaviour:
@@ -173,33 +199,10 @@ class Rouchon1(_DEFixedStep):
     # normalize: Literal['sqrt', 'cholesky'] | None = None
 
 
-class Rouchon2(_DEFixedStep):
-    """Second-order Rouchon method (fixed step size ODE solver).
-
-    Warning:
-        This solver has not been ported to JAX yet.
-
-    Args:
-        dt: Fixed time step.
-
-    Note-: Supported gradients
-        This solver supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default).
-    """
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
-
-    # dummy init to have the signature in the documentation
-    def __init__(self, dt: float):
-        super().__init__(dt)
-
-
 class Dopri5(_DEAdaptiveStep):
-    """Dormand-Prince method of order 5 (adaptive step size ODE solver).
+    """Dormand-Prince method of order 5 (adaptive step size ODE method).
 
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Dopri5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri5).
 
     Args:
@@ -211,7 +214,7 @@ class Dopri5(_DEAdaptiveStep):
         max_steps: Maximum number of steps.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).
@@ -233,9 +236,9 @@ class Dopri5(_DEAdaptiveStep):
 
 
 class Dopri8(_DEAdaptiveStep):
-    """Dormand-Prince method of order 8 (adaptive step size ODE solver).
+    """Dormand-Prince method of order 8 (adaptive step size ODE method).
 
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Dopri8`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Dopri8).
 
     Args:
@@ -247,7 +250,7 @@ class Dopri8(_DEAdaptiveStep):
         max_steps: Maximum number of steps.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).
@@ -269,9 +272,9 @@ class Dopri8(_DEAdaptiveStep):
 
 
 class Tsit5(_DEAdaptiveStep):
-    """Tsitouras method of order 5 (adaptive step size ODE solver).
+    """Tsitouras method of order 5 (adaptive step size ODE method).
 
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Tsit5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Tsit5).
 
     Args:
@@ -283,7 +286,7 @@ class Tsit5(_DEAdaptiveStep):
         max_steps: Maximum number of steps.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).
@@ -305,14 +308,14 @@ class Tsit5(_DEAdaptiveStep):
 
 
 class Kvaerno3(_DEAdaptiveStep):
-    """Kvaerno's method of order 3 (adaptive step size and implicit ODE solver).
+    """Kvaerno's method of order 3 (adaptive step size and implicit ODE method).
 
     This method is suitable for stiff problems, typically those with Hamiltonians or
     Liouvillians that have eigenvalues spanning different orders of magnitudes. This is
     for instance the case with problems involving high-order polynomials of the bosonic
     annihilation and creation operators, in large dimensions.
 
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno3`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno3).
 
     Warning:
@@ -330,7 +333,7 @@ class Kvaerno3(_DEAdaptiveStep):
         max_steps: Maximum number of steps.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).
@@ -352,14 +355,14 @@ class Kvaerno3(_DEAdaptiveStep):
 
 
 class Kvaerno5(_DEAdaptiveStep):
-    """Kvaerno's method of order 5 (adaptive step size and implicit ODE solver).
+    """Kvaerno's method of order 5 (adaptive step size and implicit ODE method).
 
     This method is suitable for stiff problems, typically those with Hamiltonians or
     Liouvillians that have eigenvalues spanning different orders of magnitudes. This is
     for instance the case with problems involving high-order polynomials of the bosonic
     annihilation and creation operators, in large dimensions.
 
-    This solver is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
+    This method is implemented by the [Diffrax](https://docs.kidger.site/diffrax/)
     library, see [`diffrax.Kvaerno5`](https://docs.kidger.site/diffrax/api/solvers/ode_solvers/#diffrax.Kvaerno5).
 
     Warning:
@@ -377,7 +380,7 @@ class Kvaerno5(_DEAdaptiveStep):
         max_steps: Maximum number of steps.
 
     Note-: Supported gradients
-        This solver supports differentiation with
+        This method supports differentiation with
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
         (default).

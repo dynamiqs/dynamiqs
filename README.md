@@ -8,7 +8,7 @@
 
 [P. Guilmin](https://github.com/pierreguilmin), [R. Gautier](https://github.com/gautierronan), [A. Bocquet](https://github.com/abocquet), [E. Genois](https://github.com/eliegenois), [D. Weiss](https://github.com/dkweiss31)
 
-[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.9%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![ci](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml/badge.svg)](https://github.com/dynamiqs/dynamiqs/actions/workflows/ci.yml?query=branch%3Amain)  ![python version](https://img.shields.io/badge/python-3.10%2B-blue) [![chat](https://badgen.net/badge/icon/on%20slack?icon=slack&label=chat&color=orange)](https://join.slack.com/t/dynamiqs-org/shared_invite/zt-1z4mw08mo-qDLoNx19JBRtKzXlmlFYLA) [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-yellow)](https://github.com/dynamiqs/dynamiqs/blob/main/LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 High-performance quantum systems simulation with JAX.
 
@@ -71,7 +71,7 @@ print(result)
 ```text
 |██████████| 100.0% ◆ elapsed 6.30ms ◆ remaining 0.00ms
 ==== MESolveResult ====
-Solver : Tsit5
+Method : Tsit5
 Infos  : 40 steps (40 accepted, 0 rejected)
 States : QArray complex64 (101, 16, 16) | 202.0 Kb
 ```
@@ -148,12 +148,11 @@ Below are some cool features of **Dynamiqs** that are either already available o
 
 **Solvers**
 
-- Choose between a variety of solvers, from **modern** explicit and implicit ODE solvers (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** solvers that preserve the physicality of the evolution (the state trace and positivity are preserved).
+- Choose between a variety of methods for each solver, from **modern** explicit and implicit ODE methods (e.g. Tsit5 and PID controllers for adaptive step-sizing) to **quantum-tailored** methods that preserve the physicality of the evolution (the state trace and positivity are preserved).
 - Simulate **time-varying problems** (both Hamiltonian and jump operators) with support for various formats (piecewise constant operator, constant operator modulated by a time-dependent factor, etc.).
 - Define a **custom save function** during the evolution (e.g. to register only the state purity, to track a subsystem by taking the partial trace of the full system, or to compute the population in the last Fock states to regularise your QOC problem).
 - Easily implement **your own solvers** by subclassing our base solver class and focusing directly on the solver logic.
 - Simulate SME trajectories **orders of magnitude faster** by batching the simulation over the stochastic trajectories.
-- Use **adaptive step-size solvers** to solve the SME (based on Brownian bridges to generate the correct statistics).
 - **Parallelise** large simulations across multiple CPUs/GPUs.
 
 **Gradients**

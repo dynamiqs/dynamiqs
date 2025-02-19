@@ -5,8 +5,8 @@ import dynamiqs as dq
 from dynamiqs import Options, mcsolve, mesolve, timecallable
 
 
-def test_against_mesolve_oscillator(ysave_atol=1e-1):
-    num_traj = 181
+def test_against_mesolve_oscillator(ysave_atol=5e-2):
+    num_traj = 40
     options = Options(progress_meter=None)
     dim = 4
     a = dq.destroy(dim)
@@ -27,14 +27,12 @@ def test_against_mesolve_oscillator(ysave_atol=1e-1):
         root_finder=None,
     )
     meresult = mesolve(H0, jump_ops, y0, tsave, exp_ops=exp_ops, options=options)
-    fidel = dq.fidelity(meresult.states, mcresult.states)
-    expect_errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
-    assert jnp.all(expect_errs <= ysave_atol)
-    assert jnp.all(1 - fidel <= ysave_atol)
+    assert jnp.allclose(meresult.expects, mcresult.expects, atol=ysave_atol)
+    assert jnp.all(1 - dq.fidelity(meresult.states, mcresult.states) <= ysave_atol)
 
 
-def test_against_mesolve_qubit(ysave_atol=1e-1):
-    num_traj = 181
+def test_against_mesolve_qubit(ysave_atol=5e-2):
+    num_traj = 40
     options = dq.Options(progress_meter=None)
     initial_states = [dq.basis(2, 1)]
     omega = 2.0 * jnp.pi * 1.0
@@ -62,7 +60,5 @@ def test_against_mesolve_qubit(ysave_atol=1e-1):
     meresult = dq.mesolve(
         timecallable(H_func), jump_ops, initial_states, tsave, exp_ops=exp_ops
     )
-    fidel = dq.fidelity(meresult.states, mcresult.states)
-    expect_errs = jnp.linalg.norm(meresult.expects - mcresult.expects, axis=(-2, -1))
-    assert jnp.all(expect_errs <= ysave_atol)
-    assert jnp.all(1 - fidel <= ysave_atol)
+    assert jnp.allclose(meresult.expects, mcresult.expects, atol=ysave_atol)
+    assert jnp.all(1 - dq.fidelity(meresult.states, mcresult.states) <= ysave_atol)

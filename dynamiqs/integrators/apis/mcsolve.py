@@ -11,15 +11,15 @@ from optimistix import AbstractRootFinder
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import MCSolveResult
-from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
@@ -42,7 +42,7 @@ def mcsolve(
     keys: ArrayLike,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
+    method: Method = Tsit5(),  # noqa: B008
     root_finder: AbstractRootFinder | None = None,
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
@@ -94,8 +94,8 @@ def mcsolve(
             dimension determining the number of trajectories.
         exp_ops _(list of qarray-like, of shape (nE, n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5()`](/python_api/solver/Tsit5.html).
+        method: Method for the integration. Defaults to
+            [`dq.method.Tsit5()`](/python_api/method/Tsit5.html).
         root_finder: Root finder passed to dx.diffeqsolve() (see [here](https://docs.kidger.site/diffrax/api/diffeqsolve/))
             to find the exact time an event occurs. Can be `None`, in which case the
             root finding functionality is not utilized. It is recommended to pass a root
@@ -129,12 +129,12 @@ def mcsolve(
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
     return _vectorized_mcsolve(
-        H, Ls, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options
+        H, Ls, psi0, tsave, keys, exp_ops, method, root_finder, gradient, options
     )
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=['solver', 'root_finder', 'gradient', 'options'])
+@partial(jax.jit, static_argnames=['method', 'root_finder', 'gradient', 'options'])
 def _vectorized_mcsolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -142,7 +142,7 @@ def _vectorized_mcsolve(
     tsave: Array,
     keys: Array,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
@@ -204,7 +204,7 @@ def _vectorized_mcsolve(
         # vectorize the function
         f = multi_vmap(_mcsolve, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, psi0, tsave, keys, exp_ops, solver, root_finder, gradient, options)
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, root_finder, gradient, options)
 
 
 def _mcsolve(
@@ -214,7 +214,7 @@ def _mcsolve(
     tsave: Array,
     keys: Array,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     root_finder: AbstractRootFinder,
     gradient: Gradient | None,
     options: Options,
@@ -227,17 +227,17 @@ def _mcsolve(
         Kvaerno3: mcsolve_kvaerno3_integrator_constructor,
         Kvaerno5: mcsolve_kvaerno5_integrator_constructor,
     }
-    assert_solver_supported(solver, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(solver)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
         ts=tsave,
         y0=psi0,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=MCSolveResult,
         options=options,

@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs.solver import Tsit5
+from dynamiqs.method import Tsit5
 
 from ..order import TEST_LONG
 from .floquet_qubit import FloquetQubit

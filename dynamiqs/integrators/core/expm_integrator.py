@@ -44,7 +44,7 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
 
         def __str__(self) -> str:
             if self.nsteps.ndim >= 1:
-                # note: expm solvers can make different number of steps between
+                # note: expm methods can make different number of steps between
                 # batch elements when batching over PWC objects
                 return (
                     f'avg. {self.nsteps.mean():.1f} steps | infos shape'
@@ -102,7 +102,7 @@ class SEExpmIntegrator(ExpmIntegrator, SEInterface):
         # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+                'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
     def generator(self, t: float) -> QArray:
@@ -136,13 +136,13 @@ class MEExpmIntegrator(ExpmIntegrator, MEInterface):
         # check that Hamiltonian is constant or pwc, or a sum of constant/pwc
         if not ispwc(self.H):
             raise TypeError(
-                'Solver `Expm` requires a constant or piecewise constant Hamiltonian.'
+                'Method `Expm` requires a constant or piecewise constant Hamiltonian.'
             )
 
         # check that all jump operators are constant or pwc, or a sum of constant/pwc
         if not all(ispwc(L) for L in self.Ls):
             raise TypeError(
-                'Solver `Expm` requires constant or piecewise constant jump operators.'
+                'Method `Expm` requires constant or piecewise constant jump operators.'
             )
 
     def generator(self, t: float) -> QArray:

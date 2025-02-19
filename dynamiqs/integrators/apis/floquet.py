@@ -9,14 +9,14 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
+from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...options import Options, check_options
 from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
-from ...solver import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Solver, Tsit5
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
 )
@@ -30,7 +30,7 @@ def floquet(
     T: float,
     tsave: ArrayLike,
     *,
-    solver: Solver = Tsit5(),  # noqa: B008
+    method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> FloquetResult:
@@ -51,35 +51,6 @@ def floquet(
         \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
     $$
 
-    Warning:
-        `floquet` is not yet GPU compatible because `jax.numpy.linalg.eig` is only
-        implemented on the CPU backend, [see here](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.linalg.eig.html).
-        However, a GPU implementation of eig is currently in the works, [see here](https://github.com/jax-ml/jax/pull/24663).
-
-    Note-: Batching over drive periods
-        The current API does not yet natively support batching over multiple drive
-        periods, for instance if you wanted to batch over Hamiltonians with different
-        drive frequencies. This however can be achieved straightforwardly with an
-        external call to `jax.vmap`, as follows:
-
-        ```python
-        import jax
-        import jax.numpy as jnp
-        import dynamiqs as dq
-
-
-        def single_floquet(omega):
-            H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
-            T = 2.0 * jnp.pi / omega
-            tsave = jnp.linspace(0.0, T, 11)
-            return dq.floquet(H, T, tsave)
-
-
-        omegas = jnp.array([0.9, 1.0, 1.1])
-        batched_floquet = jax.vmap(single_floquet)
-        result = batched_floquet(omegas)
-        ```
-
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         T: Period of the Hamiltonian. If the Hamiltonian is batched, the period should
@@ -88,22 +59,97 @@ def floquet(
         tsave _(array-like of shape (ntsave,))_: Times at which to compute floquet
             modes. The specified times should be ordered, strictly ascending, and such
             that `tsave[-1] - tsave[0] <= T`.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
-            [`Tsit5`][dynamiqs.solver.Tsit5],
-            [`Dopri5`][dynamiqs.solver.Dopri5],
-            [`Dopri8`][dynamiqs.solver.Dopri8],
-            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
-            [`Euler`][dynamiqs.solver.Euler]).
+        method: Method for the integration. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5],
+            [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
         gradient: Algorithm used to compute the gradient.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options (supported: `progress_meter`, `t0`).
+            ??? "Detailed options API"
+                ```
+                dq.Options(
+                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    t0: ScalarLike | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **progress_meter** - Progress meter indicating how far the solve has
+                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
+                    progress meter. Pass `None` for no output, see other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
+                - **t0** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
 
     Returns:
-        [`dq.FloquetResult`][dynamiqs.FloquetResult] object holding the result of the
-            Floquet computation. Use the attribute `modes` to access the saved
-            Floquet modes, and the attribute `quasienergies` for the associated
-            quasienergies, more details in [`dq.FloquetResult`][dynamiqs.FloquetResult].
+        `dq.FloquetResult` object holding the result of the Floquet computation. Use
+            `result.modes` to access the saved Floquet modes and `result.quasienergies`
+            for the associated quasienergies.
+
+            ??? "Detailed result API"
+                ```python
+                dq.FloquetResult
+                ```
+
+                **Attributes**
+
+                - **modes** _(qarray of shape (..., ntsave, n, n, 1))_ - Saved Floquet
+                    modes.
+                - **quasienergies** _(array of shape (..., n))_ - Saved quasienergies
+                - **T** _(float)_ - Drive period
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **method** _(Method)_ - Method used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H` can be batched to compute multiple Floquet modes and
+    quasienergies concurrently. All other arguments are common to every batch. The
+    Floquet modes and quasienergies are batched according to the leading dimensions of
+    `H`. For example if `H` has shape _(2, 3, n, n)_, then `result.modes` has shape
+    _(2, 3, ntsave, n, n, 1)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
+
+    ## Batching over drive periods
+
+    The current API does not yet natively support batching over multiple drive
+    periods, for instance if you wanted to batch over Hamiltonians with different
+    drive frequencies. This however can be achieved straightforwardly with an
+    external call to `jax.vmap`, as follows:
+
+    ```python
+    import jax
+    import jax.numpy as jnp
+    import dynamiqs as dq
+
+
+    def single_floquet(omega):
+        H = dq.modulated(lambda t: jnp.cos(omega * t), dq.sigmax())
+        T = 2.0 * jnp.pi / omega
+        tsave = jnp.linspace(0.0, T, 11)
+        return dq.floquet(H, T, tsave)
+
+
+    omegas = jnp.array([0.9, 1.0, 1.1])
+    batched_floquet = jax.vmap(single_floquet)
+    result = batched_floquet(omegas)
+    ```
     """
     # === convert arguments
     H = _astimeqarray(H)
@@ -112,19 +158,20 @@ def floquet(
     # === check arguments
     tsave = check_times(tsave, 'tsave')
     H, T, tsave = _check_floquet_args(H, T, tsave)
+    check_options(options, 'floquet')
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_floquet(H, T, tsave, solver, gradient, options)
+    return _vectorized_floquet(H, T, tsave, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_floquet(
     H: TimeQArray,
     T: float,
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
@@ -136,31 +183,31 @@ def _vectorized_floquet(
     nvmap = (H.ndim - 2, 0, 0, 0, 0, 0, 0)
     f = cartesian_vmap(_floquet, in_axes, out_axes, nvmap)
 
-    return f(H, T, tsave, solver, gradient, options)
+    return f(H, T, tsave, method, gradient, options)
 
 
 def _floquet(
     H: TimeQArray,
     T: float,
     tsave: Array,
-    solver: Solver,
+    method: Method,
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
     # === select integrator constructor
-    supported_solvers = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
-    assert_solver_supported(solver, supported_solvers)
+    supported_methods = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
+    assert_method_supported(method, supported_methods)
     integrator_constructor = floquet_integrator_constructor
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
         ts=tsave,
         y0=None,
         H=H,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=FloquetResult,
         options=options,

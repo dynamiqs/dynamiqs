@@ -8,27 +8,27 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
-from ...options import Options
-from ...qarrays.qarray import QArray, QArrayLike
-from ...qarrays.utils import asqarray
-from ...result import MESolveResult
-from ...solver import (
+from ...method import (
     Dopri5,
     Dopri8,
     Euler,
     Expm,
     Kvaerno3,
     Kvaerno5,
+    Method,
     Rouchon1,
-    Solver,
     Tsit5,
 )
+from ...options import Options, check_options
+from ...qarrays.qarray import QArray, QArrayLike
+from ...qarrays.utils import asqarray
+from ...result import MESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
     _astimeqarray,
-    assert_solver_supported,
+    assert_method_supported,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
@@ -52,7 +52,7 @@ def mesolve(
     tsave: ArrayLike,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    solver: Solver = Tsit5(),  # noqa: B008
+    method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> MESolveResult:
@@ -78,21 +78,6 @@ def mesolve(
         - $H\to H(t)$
         - $L_k\to L_k(t)$
 
-    Note-: Defining a time-dependent Hamiltonian or jump operator
-        If the Hamiltonian or the jump operators depend on time, they can be converted
-        to time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
-        [`dq.modulated()`][dynamiqs.modulated], or
-        [`dq.timecallable()`][dynamiqs.timecallable]. See the
-        [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
-        tutorial for more details.
-
-    Note-: Running multiple simulations concurrently
-        The Hamiltonian `H`, the jump operators `jump_ops` and the initial density
-        matrix `rho0` can be batched to solve multiple master equations concurrently.
-        All other arguments are common to every batch. See the
-        [Batching simulations](../../documentation/basics/batching-simulations.md)
-        tutorial for more details.
-
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
@@ -103,26 +88,128 @@ def mesolve(
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
         exp_ops _(list of qarray-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
-        solver: Solver for the integration. Defaults to
-            [`dq.solver.Tsit5`][dynamiqs.solver.Tsit5] (supported:
-            [`Tsit5`][dynamiqs.solver.Tsit5], [`Dopri5`][dynamiqs.solver.Dopri5],
-            [`Dopri8`][dynamiqs.solver.Dopri8],
-            [`Kvaerno3`][dynamiqs.solver.Kvaerno3],
-            [`Kvaerno5`][dynamiqs.solver.Kvaerno5],
-            [`Euler`][dynamiqs.solver.Euler],
-            [`Rouchon1`][dynamiqs.solver.Rouchon1],
-            [`Rouchon2`][dynamiqs.solver.Rouchon2],
-            [`Expm`][dynamiqs.solver.Expm]).
+        method: Method for the integration. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler],
+            [`Rouchon1`][dynamiqs.method.Rouchon1],
+            [`Expm`][dynamiqs.method.Expm]).
         gradient: Algorithm used to compute the gradient. The default is
-            solver-dependent, refer to the documentation of the chosen solver for more
+            method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options, see [`dq.Options`][dynamiqs.Options].
+        options: Generic options (supported: `save_states`, `cartesian_batching`,
+            `progress_meter`, `t0`, `save_extra`).
+            ??? "Detailed options API"
+
+                ```
+                dq.Options(
+                    save_states: bool = True,
+                    cartesian_batching: bool = True,
+                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    t0: ScalarLike | None = None,
+                    save_extra: callable[[Array], PyTree] | None = None,
+                )
+                ```
+
+                **Parameters**
+
+                - **save_states** - If `True`, the state is saved at every time in
+                    `tsave`, otherwise only the final state is returned.
+                - **cartesian_batching** - If `True`, batched arguments are treated as
+                    separated batch dimensions, otherwise the batching is performed over
+                    a single shared batched dimension.
+                - **progress_meter** - Progress meter indicating how far the solve has
+                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
+                    progress meter. Pass `None` for no output, see other options in
+                    [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+                    If gradients are computed, the progress meter only displays during
+                    the forward pass.
+                - **t0** - Initial time. If `None`, defaults to the first time in
+                    `tsave`.
+                - **save_extra** _(function, optional)_ - A function with signature
+                    `f(QArray) -> PyTree` that takes a state as input and returns a
+                    PyTree. This can be used to save additional arbitrary data
+                    during the integration, accessible in `result.extra`.
 
     Returns:
-        [`dq.MESolveResult`][dynamiqs.MESolveResult] object holding the result of the
-            Lindblad master equation integration. Use the attributes `states` and
-            `expects` to access saved quantities, more details in
-            [`dq.MESolveResult`][dynamiqs.MESolveResult].
+        `dq.MESolveResult` object holding the result of the
+            Lindblad master equation integration. Use `result.states` to access the
+            saved states and `result.expects` to access the saved expectation values.
+
+            ??? "Detailed result API"
+                ```python
+                dq.MESolveResult
+                ```
+
+                **Attributes**
+
+                - **states** _(qarray of shape (..., nsave, n, n))_ - Saved states with
+                    `nsave = ntsave`, or `nsave = 1` if `options.save_states=False`.
+                - **final_state** _(qarray of shape (..., n, n))_ - Saved final state.
+                - **expects** _(array of shape (..., len(exp_ops), ntsave) or None)_ - Saved
+                    expectation values, if specified by `exp_ops`.
+                - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
+                    specified in `options`.
+                - **infos** _(PyTree or None)_ - Method-dependent information on the
+                    resolution.
+                - **tsave** _(array of shape (ntsave,))_ - Times for which results were
+                    saved.
+                - **method** _(Method)_ - Method used.
+                - **gradient** _(Gradient)_ - Gradient used.
+                - **options** _(Options)_ - Options used.
+
+    # Advanced use-cases
+
+    ## Defining a time-dependent Hamiltonian or jump operator
+
+    If the Hamiltonian or the jump operators depend on time, they can be converted to
+    time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
+    [`dq.modulated()`][dynamiqs.modulated], or
+    [`dq.timecallable()`][dynamiqs.timecallable]. See the
+    [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
+    tutorial for more details.
+
+    ## Running multiple simulations concurrently
+
+    The Hamiltonian `H`, the jump operators `jump_ops` and the initial density matrix
+    `rho0` can be batched to solve multiple master equations concurrently. All other
+    arguments are common to every batch. The resulting states and expectation values
+    are batched according to the leading dimensions of `H`, `jump_ops` and  `rho0`. The
+    behaviour depends on the value of the `cartesian_batching` option.
+
+    === "If `cartesian_batching = True` (default value)"
+        The results leading dimensions are
+        ```
+        ... = ...H, ...L0, ...L1, (...), ...rho0
+        ```
+
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+        - `rho0` has shape _(7, n, n)_,
+
+        then `result.states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
+    === "If `cartesian_batching = False`"
+        The results leading dimensions are
+        ```
+        ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
+        ```
+
+        For example if:
+
+        - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+        - `rho0` has shape _(3, n, n)_,
+
+        then `result.states` has shape _(2, 3, ntsave, n, n)_.
+
+    See the
+    [Batching simulations](../../documentation/basics/batching-simulations.md)
+    tutorial for more details.
     """  # noqa: E501
     # === convert arguments
     H = _astimeqarray(H)
@@ -135,24 +222,26 @@ def mesolve(
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'mesolve')
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()
+    rho0 = check_hermitian(rho0, 'rho0')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, solver, gradient, options)
+    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('solver', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_mesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
     rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
@@ -174,7 +263,7 @@ def _vectorized_mesolve(
         # vectorize the function
         f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
-    return f(H, Ls, rho0, tsave, exp_ops, solver, gradient, options)
+    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
 def _mesolve(
@@ -183,7 +272,7 @@ def _mesolve(
     rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
-    solver: Solver,
+    method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> MESolveResult:
@@ -198,17 +287,17 @@ def _mesolve(
         Kvaerno5: mesolve_kvaerno5_integrator_constructor,
         Expm: mesolve_expm_integrator_constructor,
     }
-    assert_solver_supported(solver, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(solver)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
-    solver.assert_supports_gradient(gradient)
+    method.assert_supports_gradient(gradient)
 
     # === init integrator
     integrator = integrator_constructor(
         ts=tsave,
         y0=rho0,
-        solver=solver,
+        method=method,
         gradient=gradient,
         result_class=MESolveResult,
         options=options,
