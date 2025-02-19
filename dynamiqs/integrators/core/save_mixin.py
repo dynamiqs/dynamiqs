@@ -12,7 +12,7 @@ from .interfaces import OptionsInterface
 
 
 class AbstractSaveMixin(OptionsInterface):
-    """Mixin to assist solvers with data saving."""
+    """Mixin to assist integrators with data saving."""
 
     @abstractmethod
     def save(self, y: PyTree) -> Saved:
@@ -24,7 +24,7 @@ class AbstractSaveMixin(OptionsInterface):
 
 
 class PropagatorSaveMixin(AbstractSaveMixin):
-    """Mixin to assist solvers computing propagators with data saving."""
+    """Mixin to assist integrators computing propagators with data saving."""
 
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_propagators else None
@@ -42,7 +42,7 @@ class PropagatorSaveMixin(AbstractSaveMixin):
 
 
 class SolveSaveMixin(AbstractSaveMixin):
-    """Mixin to assist solvers computing time evolution with data saving."""
+    """Mixin to assist integrators computing time evolution with data saving."""
 
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_states else None
@@ -67,7 +67,7 @@ class SolveSaveMixin(AbstractSaveMixin):
 
 
 class DiffusiveSolveSaveMixin(SolveSaveMixin):
-    """Mixin to assist diffusive SSE/SME solvers computing time evolution with data
+    """Mixin to assist diffusive SSE/SME integrators computing time evolution with data
     saving.
     """
 

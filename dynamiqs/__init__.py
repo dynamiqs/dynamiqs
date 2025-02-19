@@ -1,10 +1,10 @@
 from . import plot, random
 from .hermitian_conjugate import *
+from .integrators import *
 from .options import *
 from .qarrays import *
 from .qarrays.layout import dense, dia
 from .result import *
-from .solvers import *
 from .time_qarray import *
 from .utils import *
 
