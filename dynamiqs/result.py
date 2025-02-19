@@ -7,10 +7,10 @@ from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
 
 from .gradient import Gradient
-from .method import Method
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import to_jax
+from .method import Method
 
 __all__ = [
     'FloquetResult',

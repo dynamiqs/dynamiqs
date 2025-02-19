@@ -10,10 +10,10 @@ from jaxtyping import ArrayLike, PyTree
 import dynamiqs as dq
 from dynamiqs import QArray
 from dynamiqs.gradient import Gradient
-from dynamiqs.method import Method
 from dynamiqs.options import Options
 from dynamiqs.qarrays.layout import Layout
 from dynamiqs.result import Result
+from dynamiqs.method import Method
 from dynamiqs.time_qarray import TimeQArray
 
 from ..system import System
