@@ -27,18 +27,18 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
     jax.config.update('jax_default_device', jax.devices(device)[index])
 
 
-def set_precision(precision: Literal['simple', 'double']):
+def set_precision(precision: Literal['single', 'double']):
     """Configure the default floating point precision.
 
     Two options are available:
 
-    - `'simple'` sets default precision to `float32` and `complex64` (default setting),
+    - `'single'` sets default precision to `float32` and `complex64` (default setting),
     - `'double'` sets default precision to `float64` and `complex128`.
 
     Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
-        if precision == 'simple':
+        if precision == 'single':
             jax.config.update('jax_enable_x64', False)
         elif precision == 'double':
             jax.config.update('jax_enable_x64', True)
@@ -46,15 +46,15 @@ def set_precision(precision: Literal['simple', 'double']):
          See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
 
     Args:
-        precision _(string 'simple' or 'double')_: Default precision.
+        precision _(string 'single' or 'double')_: Default precision.
     """
-    if precision == 'simple':
+    if precision == 'single':
         jax.config.update('jax_enable_x64', False)
     elif precision == 'double':
         jax.config.update('jax_enable_x64', True)
     else:
         raise ValueError(
-            f"Argument `precision` should be a string 'simple' or 'double', but is"
+            f"Argument `precision` should be a string 'single' or 'double', but is"
             f" '{precision}'."
         )
 

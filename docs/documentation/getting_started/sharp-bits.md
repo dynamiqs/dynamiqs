@@ -15,7 +15,7 @@ The syntax in Dynamiqs is similar to [QuTiP](http://qutip.org/), a popular Pytho
 In Dynamiqs, all objects are represented by default with **single-precision** floating-point numbers (`float32` or `complex64`), whereas the default in QuTiP or NumPy is double-precision (`float64` or `complex128`). We made this choice to match JAX's default, and for **performance** reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using [`dq.set_precision()`][dynamiqs.set_precision]:
 
 ```python
-dq.set_precision('double')  # 'simple' by default
+dq.set_precision('double')  # 'single' by default
 ```
 
 When using single-precision, there are certain limitations to be aware of:
@@ -28,7 +28,7 @@ When using single-precision, there are certain limitations to be aware of:
 
 <!-- set precision back to default
 ```python
-dq.set_precision('simple')
+dq.set_precision('single')
 ```
 -->
 
