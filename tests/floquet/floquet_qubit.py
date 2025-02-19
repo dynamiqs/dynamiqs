@@ -9,9 +9,9 @@ from jaxtyping import PyTree
 from dynamiqs import basis, sigmam, sigmaz, stack
 from dynamiqs.gradient import Gradient
 from dynamiqs.integrators.apis.floquet import floquet
+from dynamiqs.method import Method
 from dynamiqs.options import Options
 from dynamiqs.result import FloquetResult
-from dynamiqs.method import Method
 from dynamiqs.time_qarray import CallableTimeQArray, modulated
 
 from ..system import System

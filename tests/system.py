@@ -8,9 +8,9 @@ from jaxtyping import PyTree
 
 from dynamiqs import QArray, stack
 from dynamiqs.gradient import Gradient
+from dynamiqs.method import Method
 from dynamiqs.options import Options
 from dynamiqs.result import Result
-from dynamiqs.method import Method
 from dynamiqs.time_qarray import TimeQArray
 
 
