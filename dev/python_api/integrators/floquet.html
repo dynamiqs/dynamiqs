@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solvers/mepropagator.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/floquet.html">
 
 
-    <link rel="prev" href="sepropagator.html">
+    <link rel="prev" href="mepropagator.html">
 
 
-    <link rel="next" href="floquet.html">
+    <link rel="next" href="jssesolve.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,11 +22,11 @@
 
     
       
-        <title>mepropagator - Dynamiqs</title>
+        <title>floquet - Dynamiqs</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solvers.mepropagator" class="md-skip">
+        <a href="#dynamiqs.integrators.floquet" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                mepropagator
+                floquet
               
             </span>
           </div>
@@ -1125,6 +1125,28 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="mepropagator.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    mepropagator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1141,7 +1163,7 @@
           
   
   <span class="md-ellipsis">
-    mepropagator
+    floquet
     
   </span>
   
@@ -1149,11 +1171,11 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="mepropagator.html" class="md-nav__link md-nav__link--active">
+      <a href="floquet.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    mepropagator
+    floquet
     
   </span>
   
@@ -1176,7 +1198,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.mepropagator--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.floquet--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -1186,18 +1208,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.mepropagator--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
+  <a href="#dynamiqs.integrators.floquet--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
-      Defining a time-dependent Hamiltonian or jump operator
+      Running multiple simulations concurrently
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.mepropagator--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.floquet--batching-over-drive-periods" class="md-nav__link">
     <span class="md-ellipsis">
-      Running multiple simulations concurrently
+      Batching over drive periods
     </span>
   </a>
   
@@ -1212,28 +1234,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="floquet.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    floquet
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -5241,7 +5241,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.mepropagator--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.floquet--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -5251,18 +5251,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.mepropagator--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
+  <a href="#dynamiqs.integrators.floquet--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
-      Defining a time-dependent Hamiltonian or jump operator
+      Running multiple simulations concurrently
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.mepropagator--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.floquet--batching-over-drive-periods" class="md-nav__link">
     <span class="md-ellipsis">
-      Running multiple simulations concurrently
+      Batching over drive periods
     </span>
   </a>
   
@@ -5294,40 +5294,40 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.solvers.mepropagator" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.mepropagator</span>
+<h1 id="dynamiqs.integrators.floquet" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.floquet</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">mepropagator</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">floquet</span><span class="p">(</span>
     <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">,</span>
-    <span class="n">jump_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">],</span>
+    <span class="n">T</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Expm</span><span class="p">(),</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Tsit5</span><span class="p">(),</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MEPropagatorResult</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FloquetResult</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Compute the propagator of the Lindblad master equation.</p>
-<p>This function computes the propagator <span class="arithmatex">\(\mathcal{U}(t)\)</span> at time <span class="arithmatex">\(t\)</span> of the Lindblad
-master equation (with <span class="arithmatex">\(\hbar=1\)</span>)
+        <p>Compute Floquet modes and quasienergies of a periodic closed system.</p>
+<p>The Floquet modes <span class="arithmatex">\(\Phi_{m}(t_0)\)</span> and corresponding quasienergies <span class="arithmatex">\(\epsilon_m\)</span> are
+defined by the eigenvalue equation
 $$
-    \mathcal{U}(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right),
+    U(t_0, t_0+T)\Phi_{m}(t_0) = \exp(-i \epsilon_{m} T)\Phi_{m}(t_0),
 $$
-where <span class="arithmatex">\(\mathscr{T}\)</span> is the time-ordering symbol and <span class="arithmatex">\(\mathcal{L}\)</span> is the system's
-Liouvillian. The formula simplifies to <span class="arithmatex">\(\mathcal{U}(t)=e^{t\mathcal{L}}\)</span> if the
-Liouvillian does not depend on time.</p>
+where <span class="arithmatex">\(U(t_0, t_0+T)\)</span> is the propagator over a single period <span class="arithmatex">\(T\)</span>, with <span class="arithmatex">\(t_0\)</span> some
+arbitrary initial time (typically <span class="arithmatex">\(t_0 = 0\)</span>). According to the Floquet theorem,
+these Floquet modes are periodic with period <span class="arithmatex">\(T\)</span> and form a complete basis for
+the time evolution of the system. The <span class="arithmatex">\(t=t_0\)</span> Floquet modes are obtained from
+diagonalization of the above propagator, while the <span class="arithmatex">\(t \geq t_0\)</span> Floquet modes are
+obtained by propagating the <span class="arithmatex">\(t=t_0\)</span> Floquet modes forward in time, via
+$$
+    \Phi_{m}(t) = \exp(i\epsilon_{m}t)U(t_0, t_0+t)\Phi_{m}(t_0).
+$$</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This function only supports constant or piecewise constant Hamiltonians and jump
-operators. Support for arbitrary time dependence will be added soon.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
@@ -5341,62 +5341,59 @@ operators. Support for arbitrary time dependence will be added soon.</p>
           – <p>Hamiltonian.</p>
         </li>
         <li class="field-body">
-          <b>jump_ops</b>
+          <b>T</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(list of qarray-like or time-qarray, each of shape (...Lk, n, n))              </i>
-          – <p>List of jump operators.</p>
+          – <p>Period of the Hamiltonian. If the Hamiltonian is batched, the period should
+be common over all elements in the batch. To batch over different periods,
+wrap the call to <code>floquet</code> in a <code>jax.vmap</code>, see above.</p>
         </li>
         <li class="field-body">
           <b>tsave</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (array-like of shape (ntsave,))              </i>
-          – <p>Times at which the propagators are
-saved. The equation is solved from <code>tsave[0]</code> to <code>tsave[-1]</code>, or from <code>t0</code>
-to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
+          – <p>Times at which to compute floquet
+modes. The specified times should be ordered, strictly ascending, and such
+that <code>tsave[-1] - tsave[0] &lt;= T</code>.</p>
         </li>
         <li class="field-body">
           <b>method</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
           – <p>Method for the integration. Defaults to
-<a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>dq.method.Expm</code></a> (explicit matrix exponentiation),
-which is the only supported method for now.</p>
+<a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a> (supported:
+<a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>).</p>
         </li>
         <li class="field-body">
           <b>gradient</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Algorithm used to compute the gradient. The default is
-method-dependent, refer to the documentation of the chosen method for more
-details.</p>
+          – <p>Algorithm used to compute the gradient.</p>
         </li>
         <li class="field-body">
           <b>options</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>save_propagators</code>, <code>cartesian_batching</code>,
-<code>t0</code>, <code>save_extra</code>).</p>
+          – <p>Generic options (supported: <code>progress_meter</code>, <code>t0</code>).</p>
 <details>
 <summary>Detailed options API</summary>
 <div class="highlight"><pre><span></span><code>dq.Options(
-    save_propagators: bool = True,
-    cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
     t0: ScalarLike | None = None,
-    save_extra: callable[[Array], PyTree] | None = None,
 )
 </code></pre></div>
 <p><strong>Parameters</strong></p>
 <ul>
-<li><strong>save_propagators</strong> - If <code>True</code>, the propagator is saved at every
-    time in <code>tsave</code>, otherwise only the final propagator is returned.</li>
-<li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
-    separated batch dimensions, otherwise the batching is performed over
-    a single shared batched dimension.</li>
+<li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
+    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a>
+    progress meter. Pass <code>None</code> for no output, see other options in
+    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
+    If gradients are computed, the progress meter only displays during
+    the forward pass.</li>
 <li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
     <code>tsave</code>.</li>
-<li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
-    <code>f(QArray) -&gt; PyTree</code> that takes a propagator as input and returns
-    a PyTree. This can be used to save additional arbitrary data
-    during the integration, accessible in <code>result.extra</code>.</li>
 </ul>
 </details>
         </li>
@@ -5408,22 +5405,20 @@ details.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="dynamiqs.result.MEPropagatorResult">MEPropagatorResult</span></code>
-        – <p><code>dq.MEPropagatorResult</code> object holding the result of the propagator computation.
-Use <code>result.propagators</code> to access the saved propagators.</p>
+            <code><span title="dynamiqs.result.FloquetResult">FloquetResult</span></code>
+        – <p><code>dq.FloquetResult</code> object holding the result of the Floquet computation. Use
+<code>result.modes</code> to access the saved Floquet modes and <code>result.quasienergies</code>
+for the associated quasienergies.</p>
 <details>
 <summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">MEPropagatorResult</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">FloquetResult</span>
 </code></pre></div>
 <p><strong>Attributes</strong></p>
 <ul>
-<li><strong>propagators</strong> <em>(qarray of shape (..., nsave, n^2, n^2))</em> - Saved
-    propagators with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_propagators=False</code>.</li>
-<li><strong>final_propagator</strong> <em>(qarray of shape (..., n^2, n^2))</em> - Saved final
-    propagator.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
+<li><strong>modes</strong> <em>(qarray of shape (..., ntsave, n, n, 1))</em> - Saved Floquet
+    modes.</li>
+<li><strong>quasienergies</strong> <em>(array of shape (..., n))</em> - Saved quasienergies</li>
+<li><strong>T</strong> <em>(float)</em> - Drive period</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
@@ -5435,21 +5430,19 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
 </details>
       </li>
   </ul> -->
-      <span class="field-body"><p><code>dq.MEPropagatorResult</code> object holding the result of the propagator computation.
-Use <code>result.propagators</code> to access the saved propagators.</p>
+      <span class="field-body"><p><code>dq.FloquetResult</code> object holding the result of the Floquet computation. Use
+<code>result.modes</code> to access the saved Floquet modes and <code>result.quasienergies</code>
+for the associated quasienergies.</p>
 <details>
 <summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">MEPropagatorResult</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">FloquetResult</span>
 </code></pre></div>
 <p><strong>Attributes</strong></p>
 <ul>
-<li><strong>propagators</strong> <em>(qarray of shape (..., nsave, n^2, n^2))</em> - Saved
-    propagators with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_propagators=False</code>.</li>
-<li><strong>final_propagator</strong> <em>(qarray of shape (..., n^2, n^2))</em> - Saved final
-    propagator.</li>
-<li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
-    specified in <code>options</code>.</li>
+<li><strong>modes</strong> <em>(qarray of shape (..., ntsave, n, n, 1))</em> - Saved Floquet
+    modes.</li>
+<li><strong>quasienergies</strong> <em>(array of shape (..., n))</em> - Saved quasienergies</li>
+<li><strong>T</strong> <em>(float)</em> - Drive period</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
@@ -5459,49 +5452,37 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
 <li><strong>options</strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details></span>
-        <h2 id="dynamiqs.solvers.mepropagator--advanced-use-cases">Advanced use-cases</h2>
-<h3 id="dynamiqs.solvers.mepropagator--defining-a-time-dependent-hamiltonian-or-jump-operator">Defining a time-dependent Hamiltonian or jump operator</h3>
-<p>If the Hamiltonian or the jump operators depend on time, they can be converted
-to time-qarrays using <a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>,
-<a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
-<a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
-<a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
-tutorial for more details.</p>
-<h3 id="dynamiqs.solvers.mepropagator--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
-<p>The Hamiltonian <code>H</code> and the jump operators <code>jump_ops</code> can be batched to compute
-multiple propagators concurrently. All other arguments are common to every
-batch. The resulting propagators are batched according to the leading dimensions of
-<code>H</code> and <code>jump_ops</code>. The behaviour depends on the value of the <code>cartesian_batching</code>
-option.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.solvers.mepropagator--__tabbed_1_1" name="dynamiqs.solvers.mepropagator--__tabbed_1" type="radio" /><input id="dynamiqs.solvers.mepropagator--__tabbed_1_2" name="dynamiqs.solvers.mepropagator--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.solvers.mepropagator--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.solvers.mepropagator--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>The results leading dimensions are
-<div class="highlight"><pre><span></span><code>... = ...H, ...L0, ...L1, (...)
-</code></pre></div>
-For example if:</p>
-<ul>
-<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
-<li><code>jump_ops = [L0, L1]</code> has shape <em>[(4, 5, n, n), (6, n, n)]</em>,</li>
-</ul>
-<p>then <code>result.propagators</code> has shape <em>(2, 3, 4, 5, 6, ntsave, n, n)</em>.</p>
-</div>
-<div class="tabbed-block">
-<p>The results leading dimensions are
-<div class="highlight"><pre><span></span><code>... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
-</code></pre></div>
-For example if:</p>
-<ul>
-<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
-<li><code>jump_ops = [L0, L1]</code> has shape <em>[(3, n, n), (2, 1, n, n)]</em>,</li>
-</ul>
-<p>then <code>result.propagators</code> has shape <em>(2, 3, ntsave, n, n)</em>.</p>
-</div>
-</div>
-</div>
+        <h2 id="dynamiqs.integrators.floquet--advanced-use-cases">Advanced use-cases</h2>
+<h3 id="dynamiqs.integrators.floquet--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
+<p>The Hamiltonian <code>H</code> can be batched to compute multiple Floquet modes and
+quasienergies concurrently. All other arguments are common to every batch. The
+Floquet modes and quasienergies are batched according to the leading dimensions of
+<code>H</code>. For example if <code>H</code> has shape <em>(2, 3, n, n)</em>, then <code>result.modes</code> has shape
+<em>(2, 3, ntsave, n, n, 1)</em>.</p>
 <p>See the
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
+<h3 id="dynamiqs.integrators.floquet--batching-over-drive-periods">Batching over drive periods</h3>
+<p>The current API does not yet natively support batching over multiple drive
+periods, for instance if you wanted to batch over Hamiltonians with different
+drive frequencies. This however can be achieved straightforwardly with an
+external call to <code>jax.vmap</code>, as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dynamiqs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dq</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">single_floquet</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">omega</span>
+    <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dq</span><span class="o">.</span><span class="n">floquet</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
+
+
+<span class="n">omegas</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">])</span>
+<span class="n">batched_floquet</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">single_floquet</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">batched_floquet</span><span class="p">(</span><span class="n">omegas</span><span class="p">)</span>
+</code></pre></div>
 
     </div>
 

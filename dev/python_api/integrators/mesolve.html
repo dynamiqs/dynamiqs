@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solvers/dssesolve.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/mesolve.html">
 
 
-    <link rel="prev" href="jssesolve.html">
+    <link rel="prev" href="sesolve.html">
 
 
-    <link rel="next" href="jsmesolve.html">
+    <link rel="next" href="sepropagator.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,11 +22,11 @@
 
     
       
-        <title>dssesolve - Dynamiqs</title>
+        <title>mesolve - Dynamiqs</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solvers.dssesolve" class="md-skip">
+        <a href="#dynamiqs.integrators.mesolve" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                dssesolve
+                mesolve
               
             </span>
           </div>
@@ -1081,10 +1081,31 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="mesolve.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    mesolve
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="mesolve.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1094,6 +1115,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.mesolve--advanced-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced use-cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced use-cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.mesolve--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
+    <span class="md-ellipsis">
+      Defining a time-dependent Hamiltonian or jump operator
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamiqs.integrators.mesolve--running-multiple-simulations-concurrently" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running multiple simulations concurrently
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1169,10 +1243,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -1192,11 +1264,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_6" >
         
           
           <label class="md-nav__link" for="__nav_3_2_6" id="__nav_3_2_6_label" tabindex="0">
@@ -1211,7 +1283,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2_6">
             <span class="md-nav__icon md-icon"></span>
             stochastic
@@ -1244,31 +1316,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    dssesolve
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="dssesolve.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="dssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1278,59 +1329,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.dssesolve--advanced-use-cases" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced use-cases
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Advanced use-cases">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.dssesolve--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
-    <span class="md-ellipsis">
-      Defining a time-dependent Hamiltonian or jump operator
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.dssesolve--running-multiple-simulations-concurrently" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running multiple simulations concurrently
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -5243,7 +5241,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.dssesolve--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mesolve--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -5253,7 +5251,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.dssesolve--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mesolve--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
     <span class="md-ellipsis">
       Defining a time-dependent Hamiltonian or jump operator
     </span>
@@ -5262,7 +5260,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.dssesolve--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mesolve--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
       Running multiple simulations concurrently
     </span>
@@ -5296,79 +5294,49 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.solvers.dssesolve" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.dssesolve</span>
+<h1 id="dynamiqs.integrators.mesolve" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.mesolve</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">dssesolve</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">mesolve</span><span class="p">(</span>
     <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">,</span>
     <span class="n">jump_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">],</span>
-    <span class="n">psi0</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
+    <span class="n">rho0</span><span class="p">:</span> <span class="n">QArrayLike</span><span class="p">,</span>
     <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
-    <span class="n">keys</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">exp_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Tsit5</span><span class="p">(),</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DSSESolveResult</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MESolveResult</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Solve the diffusive stochastic Schrödinger equation (<abbr title="stochastic Schrödinger equation">SSE</abbr>).</p>
-<p class="annotate">The diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> describes the evolution of a quantum system measured
-by an ideal diffusive detector (for example homodyne or heterodyne detection
-in quantum optics). This function computes the evolution of the state vector
-<span class="arithmatex">\(\ket{\psi(t)}\)</span> at time <span class="arithmatex">\(t\)</span>, starting from an initial state <span class="arithmatex">\(\ket{\psi_0}\)</span>
-according to the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> in Itô form (<span class="arithmatex">\(\hbar=1\)</span>, time is implicit(1))
+        <p>Solve the Lindblad master equation.</p>
+<p class="annotate">This function computes the evolution of the density matrix <span class="arithmatex">\(\rho(t)\)</span> at time <span class="arithmatex">\(t\)</span>,
+starting from an initial state <span class="arithmatex">\(\rho_0\)</span>, according to the Lindblad master
+equation (with <span class="arithmatex">\(\hbar=1\)</span> and where time is implicit(1))
 $$
-    \begin{split}
-        \dd\!\ket\psi = \Bigg[
-            &amp;-iH \dt
-            -\frac12 \sum_{k=1}^N \left(
-                L_k^\dag L_k - \braket{L_k + L_k^\dag} L_k
-                + \frac14 \braket{L_k + L_k^\dag }^2
-            \right) \dt \\
-            &amp;+ \sum_{k=1}^N \left(
-                L_k - \frac12 \braket{L_k + L_k^\dag}
-            \right) \dd W_k
-        \Bigg] \!\ket\psi
-    \end{split}
+    \frac{\dd\rho}{\dt} = -i[H, \rho]
+    + \sum_{k=1}^N \left(
+        L_k \rho L_k^\dag
+        - \frac{1}{2} L_k^\dag L_k \rho
+        - \frac{1}{2} \rho L_k^\dag L_k
+    \right),
 $$
-where <span class="arithmatex">\(H\)</span> is the system's Hamiltonian, <span class="arithmatex">\(\{L_k\}\)</span> is a collection of jump operators,
-each continuously measured with perfect efficiency and <span class="arithmatex">\(\dd W_k\)</span> are independent
-Wiener processes.</p>
+where <span class="arithmatex">\(H\)</span> is the system's Hamiltonian and <span class="arithmatex">\(\{L_k\}\)</span> is a collection of jump
+operators.</p>
 <ol>
 <li>With explicit time dependence:<ul>
-<li><span class="arithmatex">\(\ket\psi\to\ket{\psi(t)}\)</span></li>
+<li><span class="arithmatex">\(\rho\to\rho(t)\)</span></li>
 <li><span class="arithmatex">\(H\to H(t)\)</span></li>
 <li><span class="arithmatex">\(L_k\to L_k(t)\)</span></li>
-<li><span class="arithmatex">\(\dd W_k\to \dd W_k(t)\)</span></li>
 </ul>
 </li>
 </ol>
-<p>The continuous-time measurements are defined with the Itô processes <span class="arithmatex">\(\dd Y_k\)</span> (time
-is implicit)
-$$
-    \dd Y_k = \braket{L_k + L_k^\dag} \dt + \dd W_k.
-$$</p>
-<p>The solver returns the time-averaged measurements <span class="arithmatex">\(I_k(t_n, t_{n+1})\)</span> defined for
-each time interval <span class="arithmatex">\([t_n, t_{n+1}[\)</span> by
-$$
-    I_k(t_n, t_{n+1}) = \frac{Y_k(t_{n+1}) - Y_k(t_n)}{t_{n+1} - t_n}
-    = \frac{1}{t_{n+1}-t_n}\int_{t_n}^{t_{n+1}} \dd Y_k(t)
-$$
-The time intervals <span class="arithmatex">\([t_n, t_{n+1}[\)</span> are defined by <code>tsave</code>, so the number of
-returned measurement values for each detector is <code>len(tsave)-1</code>.</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>For now, <code>dssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
-are exact multiples of the method fixed step size <code>dt</code>.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
@@ -5385,15 +5353,14 @@ are exact multiples of the method fixed step size <code>dt</code>.</p>
           <b>jump_ops</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(list of qarray-like or time-qarray, each of shape (n, n))              </i>
-          – <p>List of
-jump operators.</p>
+(list of qarray-like or time-qarray, each of shape (...Lk, n, n))              </i>
+          – <p>List of jump operators.</p>
         </li>
         <li class="field-body">
-          <b>psi0</b>
+          <b>rho0</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(qarray-like of shape (...psi0, n, 1))              </i>
+(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))              </i>
           – <p>Initial state.</p>
         </li>
         <li class="field-body">
@@ -5403,31 +5370,28 @@ jump operators.</p>
 (array-like of shape (ntsave,))              </i>
           – <p>Times at which the states and
 expectation values are saved. The equation is solved from <code>tsave[0]</code> to
-<code>tsave[-1]</code>. Measurements are time-averaged and saved over each interval
-defined by <code>tsave</code>.</p>
-        </li>
-        <li class="field-body">
-          <b>keys</b>
-          <!-- include type annotation only if enclosed by `_` in the docstring -->
-              <i>
-(list of PRNG keys)              </i>
-          – <p><abbr title="pseudorandom number generator">PRNG</abbr> keys used to sample the Wiener processes.
-The number of elements defines the number of sampled stochastic
-trajectories.</p>
+<code>tsave[-1]</code>, or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
         </li>
         <li class="field-body">
           <b>exp_ops</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(list of array-like, each of shape (n, n), optional)              </i>
+(list of qarray-like, each of shape (n, n), optional)              </i>
           – <p>List of
 operators for which the expectation value is computed.</p>
         </li>
         <li class="field-body">
           <b>method</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. No defaults for now, you have to specify a
-method (supported: <a class="autorefs autorefs-internal" href="../method/EulerMaruyama.html#dynamiqs.method.EulerMaruyama"><code>EulerMaruyama</code></a>).</p>
+          – <p>Method for the integration. Defaults to
+<a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a> (supported:
+<a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>, <a class="autorefs autorefs-internal" href="../method/Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Rouchon1.html#dynamiqs.method.Rouchon1"><code>Rouchon1</code></a>,
+<a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>Expm</code></a>).</p>
         </li>
         <li class="field-body">
           <b>gradient</b>
@@ -5440,12 +5404,14 @@ details.</p>
           <b>options</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
           – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
-<code>save_extra</code>).</p>
+<code>progress_meter</code>, <code>t0</code>, <code>save_extra</code>).</p>
 <details>
 <summary>Detailed options API</summary>
 <div class="highlight"><pre><span></span><code>dq.Options(
     save_states: bool = True,
     cartesian_batching: bool = True,
+    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+    t0: ScalarLike | None = None,
     save_extra: callable[[Array], PyTree] | None = None,
 )
 </code></pre></div>
@@ -5456,6 +5422,14 @@ details.</p>
 <li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
     separated batch dimensions, otherwise the batching is performed over
     a single shared batched dimension.</li>
+<li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
+    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a>
+    progress meter. Pass <code>None</code> for no output, see other options in
+    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
+    If gradients are computed, the progress meter only displays during
+    the forward pass.</li>
+<li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
+    <code>tsave</code>.</li>
 <li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
     <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
     PyTree. This can be used to save additional arbitrary data
@@ -5471,32 +5445,23 @@ details.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="dynamiqs.result.DSSESolveResult">DSSESolveResult</span></code>
-        – <p><code>dq.DSSESolveResult</code> object holding the result of the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> integration.
-Use <code>result.states</code> to access the saved states, <code>result.expects</code> to access
-the saved expectation values and <code>result.measurements</code> to access the
-detector measurements.</p>
+            <code><span title="dynamiqs.result.MESolveResult">MESolveResult</span></code>
+        – <p><code>dq.MESolveResult</code> object holding the result of the
+Lindblad master equation integration. Use <code>result.states</code> to access the
+saved states and <code>result.expects</code> to access the saved expectation values.</p>
 <details>
 <summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">DSSESolveResult</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">MESolveResult</span>
 </code></pre></div>
-<p>For the shape indications we define <code>ntrajs</code> as the number of trajectories
-(<code>ntrajs = len(keys)</code>).</p>
 <p><strong>Attributes</strong></p>
 <ul>
-<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
-    states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved final
-    state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
+<li><strong>states</strong> <em>(qarray of shape (..., nsave, n, n))</em> - Saved states with
+    <code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>options.save_states=False</code>.</li>
+<li><strong>final_state</strong> <em>(qarray of shape (..., n, n))</em> - Saved final state.</li>
+<li><strong>expects</strong> <em>(array of shape (..., len(exp_ops), ntsave) or None)</em> - Saved
     expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>measurements</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nsave-1))</em> - Saved
-    measurements.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
-    sample the Wiener processes.</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
@@ -5508,31 +5473,22 @@ detector measurements.</p>
 </details>
       </li>
   </ul> -->
-      <span class="field-body"><p><code>dq.DSSESolveResult</code> object holding the result of the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr> integration.
-Use <code>result.states</code> to access the saved states, <code>result.expects</code> to access
-the saved expectation values and <code>result.measurements</code> to access the
-detector measurements.</p>
+      <span class="field-body"><p><code>dq.MESolveResult</code> object holding the result of the
+Lindblad master equation integration. Use <code>result.states</code> to access the
+saved states and <code>result.expects</code> to access the saved expectation values.</p>
 <details>
 <summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">DSSESolveResult</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">MESolveResult</span>
 </code></pre></div>
-<p>For the shape indications we define <code>ntrajs</code> as the number of trajectories
-(<code>ntrajs = len(keys)</code>).</p>
 <p><strong>Attributes</strong></p>
 <ul>
-<li><strong>states</strong> <em>(qarray of shape (..., ntrajs, nsave, n, 1))</em> - Saved
-    states with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
-    <code>options.save_states=False</code>.</li>
-<li><strong>final_state</strong> <em>(qarray of shape (..., ntrajs, n, 1))</em> - Saved final
-    state.</li>
-<li><strong>expects</strong> <em>(array of shape (..., ntrajs, len(exp_ops), ntsave) or None)</em> - Saved
+<li><strong>states</strong> <em>(qarray of shape (..., nsave, n, n))</em> - Saved states with
+    <code>nsave = ntsave</code>, or <code>nsave = 1</code> if <code>options.save_states=False</code>.</li>
+<li><strong>final_state</strong> <em>(qarray of shape (..., n, n))</em> - Saved final state.</li>
+<li><strong>expects</strong> <em>(array of shape (..., len(exp_ops), ntsave) or None)</em> - Saved
     expectation values, if specified by <code>exp_ops</code>.</li>
-<li><strong>measurements</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nsave-1))</em> - Saved
-    measurements.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
-<li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
-    sample the Wiener processes.</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
@@ -5542,43 +5498,45 @@ detector measurements.</p>
 <li><strong>options</strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details></span>
-        <h2 id="dynamiqs.solvers.dssesolve--advanced-use-cases">Advanced use-cases</h2>
-<h3 id="dynamiqs.solvers.dssesolve--defining-a-time-dependent-hamiltonian-or-jump-operator">Defining a time-dependent Hamiltonian or jump operator</h3>
-<p>If the Hamiltonian or the jump operators depend on time, they can be converted
-to time-arrays using <a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>,
+        <h2 id="dynamiqs.integrators.mesolve--advanced-use-cases">Advanced use-cases</h2>
+<h3 id="dynamiqs.integrators.mesolve--defining-a-time-dependent-hamiltonian-or-jump-operator">Defining a time-dependent Hamiltonian or jump operator</h3>
+<p>If the Hamiltonian or the jump operators depend on time, they can be converted to
+time-qarrays using <a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>,
 <a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
 <a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
 tutorial for more details.</p>
-<h3 id="dynamiqs.solvers.dssesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
-<p>The Hamiltonian <code>H</code> and the initial state <code>psi0</code> can be batched to
-solve multiple <abbr title="stochastic Schrödinger equations">SSEs</abbr> concurrently. All other arguments (including the <abbr title="pseudorandom number generator">PRNG</abbr> key)
-are common to every batch. The resulting states, measurements and expectation values
-are batched according to the leading dimensions of <code>H</code> and <code>psi0</code>. The
+<h3 id="dynamiqs.integrators.mesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
+<p>The Hamiltonian <code>H</code>, the jump operators <code>jump_ops</code> and the initial density matrix
+<code>rho0</code> can be batched to solve multiple master equations concurrently. All other
+arguments are common to every batch. The resulting states and expectation values
+are batched according to the leading dimensions of <code>H</code>, <code>jump_ops</code> and  <code>rho0</code>. The
 behaviour depends on the value of the <code>cartesian_batching</code> option.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.solvers.dssesolve--__tabbed_1_1" name="dynamiqs.solvers.dssesolve--__tabbed_1" type="radio" /><input id="dynamiqs.solvers.dssesolve--__tabbed_1_2" name="dynamiqs.solvers.dssesolve--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.solvers.dssesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.solvers.dssesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.integrators.mesolve--__tabbed_1_1" name="dynamiqs.integrators.mesolve--__tabbed_1" type="radio" /><input id="dynamiqs.integrators.mesolve--__tabbed_1_2" name="dynamiqs.integrators.mesolve--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.integrators.mesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.integrators.mesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>The results leading dimensions are
-<div class="highlight"><pre><span></span><code>... = ...H, ...psi0
-</code></pre></div>
-For example if:</p>
+<div class="highlight"><pre><span></span><code>... = ...H, ...L0, ...L1, (...), ...rho0
+</code></pre></div></p>
+<p>For example if:</p>
 <ul>
 <li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
-<li><code>psi0</code> has shape <em>(4, n, 1)</em>,</li>
+<li><code>jump_ops = [L0, L1]</code> has shape <em>[(4, 5, n, n), (6, n, n)]</em>,</li>
+<li><code>rho0</code> has shape <em>(7, n, n)</em>,</li>
 </ul>
-<p>then <code>result.states</code> has shape <em>(2, 3, 4, ntrajs, ntsave, n, 1)</em>.</p>
+<p>then <code>result.states</code> has shape <em>(2, 3, 4, 5, 6, 7, ntsave, n, n)</em>.</p>
 </div>
 <div class="tabbed-block">
 <p>The results leading dimensions are
-<div class="highlight"><pre><span></span><code>... = ...H = ...psi0  # (once broadcasted)
-</code></pre></div>
-For example if:</p>
+<div class="highlight"><pre><span></span><code>... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
+</code></pre></div></p>
+<p>For example if:</p>
 <ul>
 <li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
-<li><code>psi0</code> has shape <em>(3, n, 1)</em>,</li>
+<li><code>jump_ops = [L0, L1]</code> has shape <em>[(3, n, n), (2, 1, n, n)]</em>,</li>
+<li><code>rho0</code> has shape <em>(3, n, n)</em>,</li>
 </ul>
-<p>then <code>result.states</code> has shape <em>(2, 3, ntrajs, ntsave, n, 1)</em>.</p>
+<p>then <code>result.states</code> has shape <em>(2, 3, ntsave, n, n)</em>.</p>
 </div>
 </div>
 </div>
@@ -5586,13 +5544,6 @@ For example if:</p>
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>Batching on <code>jump_ops</code> is not yet supported, if this is needed don't
-hesitate to
-<a href="https://github.com/dynamiqs/dynamiqs/issues/new">open an issue on GitHub</a>.</p>
-</details>
     </div>
 
 </div>

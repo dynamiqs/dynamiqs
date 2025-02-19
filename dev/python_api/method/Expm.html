@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -1060,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/sesolve.html" class="md-nav__link">
+      <a href="../integrators/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1082,7 +1082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/mesolve.html" class="md-nav__link">
+      <a href="../integrators/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1104,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/sepropagator.html" class="md-nav__link">
+      <a href="../integrators/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1126,7 +1126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/mepropagator.html" class="md-nav__link">
+      <a href="../integrators/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1148,7 +1148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/floquet.html" class="md-nav__link">
+      <a href="../integrators/floquet.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1221,7 +1221,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/jssesolve.html" class="md-nav__link">
+      <a href="../integrators/jssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1243,7 +1243,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/dssesolve.html" class="md-nav__link">
+      <a href="../integrators/dssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1265,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/jsmesolve.html" class="md-nav__link">
+      <a href="../integrators/jsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1287,7 +1287,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvers/dsmesolve.html" class="md-nav__link">
+      <a href="../integrators/dsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5207,10 +5207,10 @@
 <p>Explicitly batch-compute the propagators for all time intervals in <code>tsave</code>. These
 propagators are then iteratively applied:</p>
 <ul>
-<li>starting from the initial state for <a class="autorefs autorefs-internal" href="../solvers/sesolve.html#dynamiqs.solvers.sesolve"><code>dq.sesolve()</code></a> and
-  <a class="autorefs autorefs-internal" href="../solvers/mesolve.html#dynamiqs.solvers.mesolve"><code>dq.mesolve()</code></a>, to compute states for all times in <code>tsave</code>,</li>
-<li>starting from the identity matrix for <a class="autorefs autorefs-internal" href="../solvers/sepropagator.html#dynamiqs.solvers.sepropagator"><code>dq.sepropagator()</code></a>
-  and <a class="autorefs autorefs-internal" href="../solvers/mepropagator.html#dynamiqs.solvers.mepropagator"><code>dq.mepropagator()</code></a>, to compute propagators for all
+<li>starting from the initial state for <a class="autorefs autorefs-internal" href="../integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> and
+  <a class="autorefs autorefs-internal" href="../integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, to compute states for all times in <code>tsave</code>,</li>
+<li>starting from the identity matrix for <a class="autorefs autorefs-internal" href="../integrators/sepropagator.html#dynamiqs.integrators.sepropagator"><code>dq.sepropagator()</code></a>
+  and <a class="autorefs autorefs-internal" href="../integrators/mepropagator.html#dynamiqs.integrators.mepropagator"><code>dq.mepropagator()</code></a>, to compute propagators for all
   times in <code>tsave</code>.</li>
 </ul>
 <p>For the Schrödinger equation with constant Hamiltonian <span class="arithmatex">\(H\)</span>, the propagator from

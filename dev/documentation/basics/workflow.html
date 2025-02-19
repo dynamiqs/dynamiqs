@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -1145,7 +1145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/sesolve.html" class="md-nav__link">
+      <a href="../../python_api/integrators/sesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1167,7 +1167,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/mesolve.html" class="md-nav__link">
+      <a href="../../python_api/integrators/mesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1189,7 +1189,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/sepropagator.html" class="md-nav__link">
+      <a href="../../python_api/integrators/sepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1211,7 +1211,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/mepropagator.html" class="md-nav__link">
+      <a href="../../python_api/integrators/mepropagator.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1233,7 +1233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/floquet.html" class="md-nav__link">
+      <a href="../../python_api/integrators/floquet.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1306,7 +1306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/jssesolve.html" class="md-nav__link">
+      <a href="../../python_api/integrators/jssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1328,7 +1328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/dssesolve.html" class="md-nav__link">
+      <a href="../../python_api/integrators/dssesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1350,7 +1350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/jsmesolve.html" class="md-nav__link">
+      <a href="../../python_api/integrators/jsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1372,7 +1372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python_api/solvers/dsmesolve.html" class="md-nav__link">
+      <a href="../../python_api/integrators/dsmesolve.html" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -5345,7 +5345,7 @@ Hamiltonian of type &lt;class &#39;dynamiqs.qarrays.sparsedia_qarray.SparseDIAQA
 <span class="n">method</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">Dopri5</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="iii-run-the-simulation">III. Run the simulation</h2>
-<p>We can now run the simulation. This is done by calling the <a class="autorefs autorefs-internal" href="../../python_api/solvers/sesolve.html#dynamiqs.solvers.sesolve"><code>dq.sesolve()</code></a> function, which returns an instance of <code>SESolveResult</code>. This object contains the computed states, the observables, and various information about the method.</p>
+<p>We can now run the simulation. This is done by calling the <a class="autorefs autorefs-internal" href="../../python_api/integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> function, which returns an instance of <code>SESolveResult</code>. This object contains the computed states, the observables, and various information about the method.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># run simulation</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">exp_ops</span><span class="o">=</span><span class="n">exp_ops</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span>
 

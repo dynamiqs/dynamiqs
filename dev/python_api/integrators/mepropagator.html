@@ -8,13 +8,13 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solvers/sepropagator.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/mepropagator.html">
 
 
-    <link rel="prev" href="mesolve.html">
+    <link rel="prev" href="sepropagator.html">
 
 
-    <link rel="next" href="mepropagator.html">
+    <link rel="next" href="floquet.html">
 
 <link rel="mask-icon" href="../../media/favicon.svg" color="#ffffff">
 <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="../../media/favicon.svg">
@@ -22,11 +22,11 @@
 
     
       
-        <title>sepropagator - Dynamiqs</title>
+        <title>mepropagator - Dynamiqs</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solvers.sepropagator" class="md-skip">
+        <a href="#dynamiqs.integrators.mepropagator" class="md-skip">
           Skip to content
         </a>
       
@@ -160,7 +160,7 @@
           <div class="md-header__topic" data-md-component="header-topic">
             <span class="md-ellipsis">
               
-                sepropagator
+                mepropagator
               
             </span>
           </div>
@@ -1103,6 +1103,28 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="sepropagator.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    sepropagator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1119,7 +1141,7 @@
           
   
   <span class="md-ellipsis">
-    sepropagator
+    mepropagator
     
   </span>
   
@@ -1127,11 +1149,11 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="sepropagator.html" class="md-nav__link md-nav__link--active">
+      <a href="mepropagator.html" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    sepropagator
+    mepropagator
     
   </span>
   
@@ -1154,7 +1176,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sepropagator--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mepropagator--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -1164,16 +1186,16 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sepropagator--defining-a-time-dependent-hamiltonian" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mepropagator--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
     <span class="md-ellipsis">
-      Defining a time-dependent Hamiltonian
+      Defining a time-dependent Hamiltonian or jump operator
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sepropagator--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mepropagator--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
       Running multiple simulations concurrently
     </span>
@@ -1190,28 +1212,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="mepropagator.html" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    mepropagator
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -5241,7 +5241,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sepropagator--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mepropagator--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -5251,16 +5251,16 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sepropagator--defining-a-time-dependent-hamiltonian" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mepropagator--defining-a-time-dependent-hamiltonian-or-jump-operator" class="md-nav__link">
     <span class="md-ellipsis">
-      Defining a time-dependent Hamiltonian
+      Defining a time-dependent Hamiltonian or jump operator
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sepropagator--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.mepropagator--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
       Running multiple simulations concurrently
     </span>
@@ -5294,36 +5294,40 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.solvers.sepropagator" class="doc doc-heading">
-    <span class="doc doc-object-name doc-function-name">dq.sepropagator</span>
+<h1 id="dynamiqs.integrators.mepropagator" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">dq.mepropagator</span>
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">sepropagator</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">mepropagator</span><span class="p">(</span>
     <span class="n">H</span><span class="p">:</span> <span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">,</span>
+    <span class="n">jump_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span> <span class="o">|</span> <span class="n">TimeQArray</span><span class="p">],</span>
     <span class="n">tsave</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Expm</span><span class="p">(),</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SEPropagatorResult</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MEPropagatorResult</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
-        <p>Compute the propagator of the Schrödinger equation.</p>
-<p>This function computes the propagator <span class="arithmatex">\(U(t)\)</span> at time <span class="arithmatex">\(t\)</span> of the Schrödinger
-equation (with <span class="arithmatex">\(\hbar=1\)</span>)
+        <p>Compute the propagator of the Lindblad master equation.</p>
+<p>This function computes the propagator <span class="arithmatex">\(\mathcal{U}(t)\)</span> at time <span class="arithmatex">\(t\)</span> of the Lindblad
+master equation (with <span class="arithmatex">\(\hbar=1\)</span>)
 $$
-    U(t) = \mathscr{T}\exp\left(-i\int_0^tH(t')\dt'\right),
+    \mathcal{U}(t) = \mathscr{T}\exp\left(\int_0^t\mathcal{L}(t')\dt'\right),
 $$
-where <span class="arithmatex">\(\mathscr{T}\)</span> is the time-ordering symbol and <span class="arithmatex">\(H\)</span> is the system's
-Hamiltonian. The formula simplifies to <span class="arithmatex">\(U(t)=e^{-iHt}\)</span> if the Hamiltonian
-does not depend on time.</p>
-<p>If the Hamiltonian is constant or piecewise constant, the propagator is
-computed by directly exponentiating the Hamiltonian. Otherwise, the
-propagator is computed by solving the Schrödinger equation with an ODE method.</p>
+where <span class="arithmatex">\(\mathscr{T}\)</span> is the time-ordering symbol and <span class="arithmatex">\(\mathcal{L}\)</span> is the system's
+Liouvillian. The formula simplifies to <span class="arithmatex">\(\mathcal{U}(t)=e^{t\mathcal{L}}\)</span> if the
+Liouvillian does not depend on time.</p>
 
+<details class="warning"
+ open >
+  <summary>Warning</summary>
+  <p>This function only supports constant or piecewise constant Hamiltonians and jump
+operators. Support for arbitrary time dependence will be added soon.</p>
+</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
@@ -5337,28 +5341,27 @@ propagator is computed by solving the Schrödinger equation with an ODE method.<
           – <p>Hamiltonian.</p>
         </li>
         <li class="field-body">
+          <b>jump_ops</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+              <i>
+(list of qarray-like or time-qarray, each of shape (...Lk, n, n))              </i>
+          – <p>List of jump operators.</p>
+        </li>
+        <li class="field-body">
           <b>tsave</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
 (array-like of shape (ntsave,))              </i>
-          – <p>Times at which the propagators
-are saved. The equation is solved from <code>tsave[0]</code> to <code>tsave[-1]</code>,
-or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
+          – <p>Times at which the propagators are
+saved. The equation is solved from <code>tsave[0]</code> to <code>tsave[-1]</code>, or from <code>t0</code>
+to <code>tsave[-1]</code> if <code>t0</code> is specified in <code>options</code>.</p>
         </li>
         <li class="field-body">
           <b>method</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. Defaults to <code>None</code> which redirects
-to <a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>dq.method.Expm</code></a> (explicit matrix
-exponentiation) or <a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a>
-depending on the Hamiltonian type (supported:
-<a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>Expm</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>).</p>
+          – <p>Method for the integration. Defaults to
+<a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>dq.method.Expm</code></a> (explicit matrix exponentiation),
+which is the only supported method for now.</p>
         </li>
         <li class="field-body">
           <b>gradient</b>
@@ -5370,13 +5373,13 @@ details.</p>
         <li class="field-body">
           <b>options</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>save_propagators</code>, <code>progress_meter</code>, <code>t0</code>,
-<code>save_extra</code>).</p>
+          – <p>Generic options (supported: <code>save_propagators</code>, <code>cartesian_batching</code>,
+<code>t0</code>, <code>save_extra</code>).</p>
 <details>
 <summary>Detailed options API</summary>
 <div class="highlight"><pre><span></span><code>dq.Options(
     save_propagators: bool = True,
-    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+    cartesian_batching: bool = True,
     t0: ScalarLike | None = None,
     save_extra: callable[[Array], PyTree] | None = None,
 )
@@ -5385,12 +5388,9 @@ details.</p>
 <ul>
 <li><strong>save_propagators</strong> - If <code>True</code>, the propagator is saved at every
     time in <code>tsave</code>, otherwise only the final propagator is returned.</li>
-<li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
-    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a>
-    progress meter. Pass <code>None</code> for no output, see other options in
-    <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
-    If gradients are computed, the progress meter only displays during
-    the forward pass.</li>
+<li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
+    separated batch dimensions, otherwise the batching is performed over
+    a single shared batched dimension.</li>
 <li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
     <code>tsave</code>.</li>
 <li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
@@ -5408,19 +5408,19 @@ details.</p>
     </p>
     <!-- <ul>
       <li class="field-body">
-            <code><span title="dynamiqs.result.SEPropagatorResult">SEPropagatorResult</span></code>
-        – <p><code>dq.SEPropagatorResult</code> object holding the result of the propagator computation.
+            <code><span title="dynamiqs.result.MEPropagatorResult">MEPropagatorResult</span></code>
+        – <p><code>dq.MEPropagatorResult</code> object holding the result of the propagator computation.
 Use <code>result.propagators</code> to access the saved propagators.</p>
 <details>
 <summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">SEPropagatorResult</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">MEPropagatorResult</span>
 </code></pre></div>
 <p><strong>Attributes</strong></p>
 <ul>
-<li><strong>propagators</strong> <em>(qarray of shape (..., nsave, n, n))</em> - Saved
+<li><strong>propagators</strong> <em>(qarray of shape (..., nsave, n^2, n^2))</em> - Saved
     propagators with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
     <code>options.save_propagators=False</code>.</li>
-<li><strong>final_propagator</strong> <em>(qarray of shape (..., n, n))</em> - Saved final
+<li><strong>final_propagator</strong> <em>(qarray of shape (..., n^2, n^2))</em> - Saved final
     propagator.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
@@ -5435,18 +5435,18 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
 </details>
       </li>
   </ul> -->
-      <span class="field-body"><p><code>dq.SEPropagatorResult</code> object holding the result of the propagator computation.
+      <span class="field-body"><p><code>dq.MEPropagatorResult</code> object holding the result of the propagator computation.
 Use <code>result.propagators</code> to access the saved propagators.</p>
 <details>
 <summary>Detailed result API</summary>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">SEPropagatorResult</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">MEPropagatorResult</span>
 </code></pre></div>
 <p><strong>Attributes</strong></p>
 <ul>
-<li><strong>propagators</strong> <em>(qarray of shape (..., nsave, n, n))</em> - Saved
+<li><strong>propagators</strong> <em>(qarray of shape (..., nsave, n^2, n^2))</em> - Saved
     propagators with <code>nsave = ntsave</code>, or <code>nsave = 1</code> if
     <code>options.save_propagators=False</code>.</li>
-<li><strong>final_propagator</strong> <em>(qarray of shape (..., n, n))</em> - Saved final
+<li><strong>final_propagator</strong> <em>(qarray of shape (..., n^2, n^2))</em> - Saved final
     propagator.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
@@ -5459,19 +5459,46 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
 <li><strong>options</strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details></span>
-        <h2 id="dynamiqs.solvers.sepropagator--advanced-use-cases">Advanced use-cases</h2>
-<h3 id="dynamiqs.solvers.sepropagator--defining-a-time-dependent-hamiltonian">Defining a time-dependent Hamiltonian</h3>
-<p>If the Hamiltonian depends on time, it can be converted to a time-qarray using
-<a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
+        <h2 id="dynamiqs.integrators.mepropagator--advanced-use-cases">Advanced use-cases</h2>
+<h3 id="dynamiqs.integrators.mepropagator--defining-a-time-dependent-hamiltonian-or-jump-operator">Defining a time-dependent Hamiltonian or jump operator</h3>
+<p>If the Hamiltonian or the jump operators depend on time, they can be converted
+to time-qarrays using <a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>,
+<a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
 <a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
 tutorial for more details.</p>
-<h3 id="dynamiqs.solvers.sepropagator--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
-<p>The Hamiltonian <code>H</code> can be batched to compute multiple propagators
-concurrently. All other arguments are common to every batch. The resulting
-propagators are batched according to the leading dimensions of <code>H</code>. For example if
-<code>H</code> has shape <em>(2, 3, n, n)</em>, then <code>result.propagators</code> has shape
-<em>(2, 3, ntsave, n, n)</em>.</p>
+<h3 id="dynamiqs.integrators.mepropagator--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
+<p>The Hamiltonian <code>H</code> and the jump operators <code>jump_ops</code> can be batched to compute
+multiple propagators concurrently. All other arguments are common to every
+batch. The resulting propagators are batched according to the leading dimensions of
+<code>H</code> and <code>jump_ops</code>. The behaviour depends on the value of the <code>cartesian_batching</code>
+option.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.integrators.mepropagator--__tabbed_1_1" name="dynamiqs.integrators.mepropagator--__tabbed_1" type="radio" /><input id="dynamiqs.integrators.mepropagator--__tabbed_1_2" name="dynamiqs.integrators.mepropagator--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.integrators.mepropagator--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.integrators.mepropagator--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>The results leading dimensions are
+<div class="highlight"><pre><span></span><code>... = ...H, ...L0, ...L1, (...)
+</code></pre></div>
+For example if:</p>
+<ul>
+<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>jump_ops = [L0, L1]</code> has shape <em>[(4, 5, n, n), (6, n, n)]</em>,</li>
+</ul>
+<p>then <code>result.propagators</code> has shape <em>(2, 3, 4, 5, 6, ntsave, n, n)</em>.</p>
+</div>
+<div class="tabbed-block">
+<p>The results leading dimensions are
+<div class="highlight"><pre><span></span><code>... = ...H = ...L0 = ...L1 = (...)  # (once broadcasted)
+</code></pre></div>
+For example if:</p>
+<ul>
+<li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>jump_ops = [L0, L1]</code> has shape <em>[(3, n, n), (2, 1, n, n)]</em>,</li>
+</ul>
+<p>then <code>result.propagators</code> has shape <em>(2, 3, ntsave, n, n)</em>.</p>
+</div>
+</div>
+</div>
 <p>See the
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>

@@ -8,7 +8,7 @@
 
 
 
-    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/solvers/sesolve.html">
+    <link rel="canonical" href="https://www.dynamiqs.org/stable/python_api/integrators/sesolve.html">
 
 
     <link rel="prev" href="../index.html">
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d7758b05.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8608ea7d.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -110,7 +110,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dynamiqs.solvers.sesolve" class="md-skip">
+        <a href="#dynamiqs.integrators.sesolve" class="md-skip">
           Skip to content
         </a>
       
@@ -1110,7 +1110,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sesolve--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.sesolve--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -1120,7 +1120,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sesolve--defining-a-time-dependent-hamiltonian" class="md-nav__link">
+  <a href="#dynamiqs.integrators.sesolve--defining-a-time-dependent-hamiltonian" class="md-nav__link">
     <span class="md-ellipsis">
       Defining a time-dependent Hamiltonian
     </span>
@@ -1129,7 +1129,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sesolve--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.sesolve--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
       Running multiple simulations concurrently
     </span>
@@ -5241,7 +5241,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sesolve--advanced-use-cases" class="md-nav__link">
+  <a href="#dynamiqs.integrators.sesolve--advanced-use-cases" class="md-nav__link">
     <span class="md-ellipsis">
       Advanced use-cases
     </span>
@@ -5251,7 +5251,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sesolve--defining-a-time-dependent-hamiltonian" class="md-nav__link">
+  <a href="#dynamiqs.integrators.sesolve--defining-a-time-dependent-hamiltonian" class="md-nav__link">
     <span class="md-ellipsis">
       Defining a time-dependent Hamiltonian
     </span>
@@ -5260,7 +5260,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dynamiqs.solvers.sesolve--running-multiple-simulations-concurrently" class="md-nav__link">
+  <a href="#dynamiqs.integrators.sesolve--running-multiple-simulations-concurrently" class="md-nav__link">
     <span class="md-ellipsis">
       Running multiple simulations concurrently
     </span>
@@ -5294,7 +5294,7 @@
 <div class="doc doc-object doc-function">
 
 
-<h1 id="dynamiqs.solvers.sesolve" class="doc doc-heading">
+<h1 id="dynamiqs.integrators.sesolve" class="doc doc-heading">
     <span class="doc doc-object-name doc-function-name">dq.sesolve</span>
 
 
@@ -5482,20 +5482,20 @@ integration.  Use <code>result.states</code> to access the saved states and
 <li><strong>options</strong> <em>(Options)</em> - Options used.</li>
 </ul>
 </details></span>
-        <h2 id="dynamiqs.solvers.sesolve--advanced-use-cases">Advanced use-cases</h2>
-<h3 id="dynamiqs.solvers.sesolve--defining-a-time-dependent-hamiltonian">Defining a time-dependent Hamiltonian</h3>
+        <h2 id="dynamiqs.integrators.sesolve--advanced-use-cases">Advanced use-cases</h2>
+<h3 id="dynamiqs.integrators.sesolve--defining-a-time-dependent-hamiltonian">Defining a time-dependent Hamiltonian</h3>
 <p>If the Hamiltonian depends on time, it can be converted to a time-qarray using
 <a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
 <a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
 tutorial for more details.</p>
-<h3 id="dynamiqs.solvers.sesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
+<h3 id="dynamiqs.integrators.sesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
 <p>Both the Hamiltonian <code>H</code> and the initial state <code>psi0</code> can be batched to
 solve multiple Schrödinger equations concurrently. All other arguments are
 common to every batch. The resulting states and expectation values are batched
 according to the leading dimensions of <code>H</code> and <code>psi0</code>. The behaviour depends on the
 value of the <code>cartesian_batching</code> option.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.solvers.sesolve--__tabbed_1_1" name="dynamiqs.solvers.sesolve--__tabbed_1" type="radio" /><input id="dynamiqs.solvers.sesolve--__tabbed_1_2" name="dynamiqs.solvers.sesolve--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.solvers.sesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.solvers.sesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.integrators.sesolve--__tabbed_1_1" name="dynamiqs.integrators.sesolve--__tabbed_1" type="radio" /><input id="dynamiqs.integrators.sesolve--__tabbed_1_2" name="dynamiqs.integrators.sesolve--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.integrators.sesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.integrators.sesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>The results leading dimensions are
