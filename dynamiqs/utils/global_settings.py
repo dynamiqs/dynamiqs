@@ -71,6 +71,10 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
     - `'highest'` keeps matmul precision to `float32` or `float64` as applicable
         (slowest but most accurate, default setting).
 
+    Note:
+        This setting applies only to single precision matrices (`float32` or
+        `complex64`).
+
     Note-: Equivalent JAX syntax
         This function is equivalent to setting `jax_default_matmul_precision` in
         `jax.config`. See [JAX documentation on matmul precision](https://jax.readthedocs.io/en/latest/_autosummary/jax.default_matmul_precision.html)
