@@ -200,12 +200,18 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         psi = y.state
         L, H = self.L(t), self.H(t)
+        Lpsi = [_L @ psi for _L in L]
 
         # === measurement Y
         # dY = <L+Ld> dt + dW
-        Lpsi = [_L @ psi for _L in L]
-        exp = jnp.stack([expect(_L + _L.dag(), psi).real for _L in L])  # (nL)
-        # todo: can be computed with 2 * (psi.dag() @ Lpsi).real
+        # small trick to compute <L+Ld>
+        #   <L+Ld> = <psi|L+Ld|psi >
+        #          = psi.dag() @ (L + Ld) @ psi
+        #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
+        #          = 2 Re[psi.dag() @ Lpsi]
+        exp = jnp.stack(
+            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
+        )  # (nL)
         dY = exp * self.dt + dW
 
         # === state psi
