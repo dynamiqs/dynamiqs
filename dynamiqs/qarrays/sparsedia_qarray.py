@@ -17,6 +17,7 @@ from .qarray import (
     QArrayLike,
     _in_last_two_dims,
     _include_last_two_dims,
+    _is_key_in_batch_dims,
     _to_jax,
     isqarraylike,
 )
@@ -354,28 +355,7 @@ class SparseDIAQArray(QArray):
 
 
 def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
-    full_slice = slice(None, None, None)
-    valid_key = False
-    if isinstance(key, int | slice):
-        valid_key = ndim > 2
-    if isinstance(key, Array):
-        valid_key = key.ndim == 0 and ndim > 2
-    elif isinstance(key, tuple):
-        if Ellipsis in key:
-            ellipsis_key = key.index(Ellipsis)
-            key = (
-                key[:ellipsis_key]
-                + (full_slice,) * (ndim - len(key) + 1)
-                + key[ellipsis_key + 1 :]
-            )
-
-        valid_key = (
-            len(key) <= ndim - 2
-            or (len(key) == ndim - 1 and key[-1] == full_slice)
-            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
-        )
-
-    if not valid_key:
+    if not _is_key_in_batch_dims(key, ndim):
         raise NotImplementedError(
             'Getting items from non batching dimensions of a `SparseDIAQArray` is not '
             'supported.'

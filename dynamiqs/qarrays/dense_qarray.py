@@ -11,7 +11,14 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
+from .qarray import (
+    QArray,
+    QArrayLike,
+    _in_last_two_dims,
+    _is_key_in_batch_dims,
+    _to_jax,
+    isqarraylike,
+)
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
@@ -225,9 +232,12 @@ class DenseQArray(QArray):
         data = self.data**power
         return self._replace(data=data)
 
-    def __getitem__(self, key: int | slice) -> QArray:
-        data = self.data[key]
-        return self._replace(data=data)
+    def __getitem__(self, key: int | slice) -> QArray | jnp.array:
+        if _is_key_in_batch_dims(key, self.ndim):
+            data = self.data[key]
+            return self._replace(data=data)
+        else:
+            return self.data[*key]
 
 
 def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:

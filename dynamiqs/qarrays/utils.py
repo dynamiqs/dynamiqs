@@ -120,7 +120,7 @@ def _init_dims(
         warnings.warn(
             f'Argument `x` is already an object with `x.dims={xdims}`, but'
             f' different `dims={dims}` were specified as input. Ignoring the '
-            f'provided `dims` and proceeding with the object `x.dims`.',
+            'provided `dims` and proceeding with the object `x.dims`.',
             stacklevel=2,
         )
 

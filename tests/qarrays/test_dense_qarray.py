@@ -16,6 +16,9 @@ class TestDenseQArray:
         self.qother = asqarray(self.other, dims=(2, 2))
         self.scalar = 2 + 2j
         self.bscalar = jnp.ones((3, 2, 1, 1), dtype=jnp.complex64)
+        self.batched = asqarray(
+            jnp.arange(5 * 4 * 3 * 3).reshape(5, 4, 3, 3), dims=(3,)
+        )
 
     def test_dag(self):
         assert jnp.array_equal(self.qarray.dag().data, self.data.mT.conj())
@@ -116,3 +119,12 @@ class TestDenseQArray:
     def test_elpow(self):
         assert jnp.array_equal(self.qarray.elpow(2).data, self.data**2)
         assert jnp.array_equal(self.qarray.elpow(3).data, self.data**3)
+
+    def test_non_batching_dims(self):
+        assert jnp.array_equal(self.batched[0, 0, 0], self.batched.data[0, 0, 0])
+        assert jnp.array_equal(self.batched[:, 0, 0], self.batched.data[:, 0, 0])
+        assert jnp.array_equal(self.batched[:, :, 0], self.batched.data[:, :, 0])
+        assert jnp.array_equal(self.batched[..., 3], self.batched.data[..., 3])
+        assert jnp.array_equal(
+            self.batched[:, :, 2:3, 1:2], self.batched.data[:, :, 2:3, 1:2]
+        )

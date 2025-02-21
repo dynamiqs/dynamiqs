@@ -590,6 +590,31 @@ def _include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> boo
     )
 
 
+def _is_key_in_batch_dims(key: int | slice | tuple, ndim: int) -> bool:
+    full_slice = slice(None, None, None)
+    key_in_batch_dims = False
+    if isinstance(key, int | slice):
+        key_in_batch_dims = ndim > 2
+    if isinstance(key, Array):
+        key_in_batch_dims = key.ndim == 0 and ndim > 2
+    elif isinstance(key, tuple):
+        if Ellipsis in key:
+            ellipsis_key = key.index(Ellipsis)
+            key = (
+                key[:ellipsis_key]
+                + (full_slice,) * (ndim - len(key) + 1)
+                + key[ellipsis_key + 1 :]
+            )
+
+        key_in_batch_dims = (
+            len(key) <= ndim - 2
+            or (len(key) == ndim - 1 and key[-1] == full_slice)
+            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
+        )
+
+    return key_in_batch_dims
+
+
 # In this file we define an extended array type named `QArrayLike`. Most
 # functions in the library take a `QArrayLike` as argument and return a `QArray`.
 # `QArrayLike` can be:
