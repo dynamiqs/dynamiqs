@@ -22,15 +22,15 @@ from .._utils import (
     catch_xla_runtime_error,
     ispwc,
 )
-from ..core.diffrax_solver import (
-    sepropagator_dopri5_solver_constructor,
-    sepropagator_dopri8_solver_constructor,
-    sepropagator_euler_solver_constructor,
-    sepropagator_kvaerno3_solver_constructor,
-    sepropagator_kvaerno5_solver_constructor,
-    sepropagator_tsit5_solver_constructor,
+from ..core.diffrax_integrator import (
+    sepropagator_dopri5_integrator_constructor,
+    sepropagator_dopri8_integrator_constructor,
+    sepropagator_euler_integrator_constructor,
+    sepropagator_kvaerno3_integrator_constructor,
+    sepropagator_kvaerno5_integrator_constructor,
+    sepropagator_tsit5_integrator_constructor,
 )
-from ..core.expm_solver import sepropagator_expm_solver_constructor
+from ..core.expm_integrator import sepropagator_expm_integrator_constructor
 
 
 def sepropagator(
@@ -194,28 +194,28 @@ def _sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === select solver constructor
+    # === select integrator constructor
     if method is None:  # default method
         method = Expm() if ispwc(H) else Tsit5()
 
-    solver_constructors = {
-        Expm: sepropagator_expm_solver_constructor,
-        Euler: sepropagator_euler_solver_constructor,
-        Dopri5: sepropagator_dopri5_solver_constructor,
-        Dopri8: sepropagator_dopri8_solver_constructor,
-        Tsit5: sepropagator_tsit5_solver_constructor,
-        Kvaerno3: sepropagator_kvaerno3_solver_constructor,
-        Kvaerno5: sepropagator_kvaerno5_solver_constructor,
+    integrator_constructors = {
+        Expm: sepropagator_expm_integrator_constructor,
+        Euler: sepropagator_euler_integrator_constructor,
+        Dopri5: sepropagator_dopri5_integrator_constructor,
+        Dopri8: sepropagator_dopri8_integrator_constructor,
+        Tsit5: sepropagator_tsit5_integrator_constructor,
+        Kvaerno3: sepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
-    assert_method_supported(method, solver_constructors.keys())
-    solver_constructor = solver_constructors[type(method)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init solver
+    # === init integrator
     y0 = eye(*H.dims, layout=dense)
-    solver = solver_constructor(
+    integrator = integrator_constructor(
         ts=tsave,
         y0=y0,
         method=method,
@@ -225,8 +225,8 @@ def _sepropagator(
         H=H,
     )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504

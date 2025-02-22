@@ -6,7 +6,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### General
 
-::: dynamiqs.solvers
+::: dynamiqs.integrators
     options:
         table: true
         members:
@@ -18,7 +18,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Stochastic
 
-::: dynamiqs.solvers
+::: dynamiqs.integrators
     options:
         table: true
         members:

@@ -13,14 +13,14 @@ from dynamiqs import (
     vector_to_operator,
 )
 
+from ..integrator_tester import IntegratorTester
 from ..mesolve.open_system import dense_ocavity
 from ..order import TEST_LONG
-from ..solver_tester import SolverTester
 from .mepropagator_utils import rand_mepropagator_args
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestMEPropagator(SolverTester):
+class TestMEPropagator(IntegratorTester):
     def test_correctness(self, ysave_atol: float = 1e-4):
         system = dense_ocavity
         params = system.params_default

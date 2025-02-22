@@ -110,7 +110,7 @@ def multi_vmap(
 
     Examples:
         >>> import jax.numpy as jnp
-        >>> from dynamiqs.solvers._utils import multi_vmap
+        >>> from dynamiqs.integrators._utils import multi_vmap
         >>>
         >>> def func(x, y):
         ...     return x.T @ y.T
@@ -161,7 +161,7 @@ def cartesian_vmap(
     Examples:
         >>> import jax.numpy as jnp
         >>> import equinox as eqx
-        >>> from dynamiqs.solvers._utils import cartesian_vmap
+        >>> from dynamiqs.integrators._utils import cartesian_vmap
         >>>
         >>> def func(x, y):
         ...     return x.T @ y.T

@@ -5,13 +5,13 @@ import pytest
 from dynamiqs import Options, constant, eye, pwc, random, sepropagator, sigmax, sigmay
 from dynamiqs.method import Tsit5
 
+from ..integrator_tester import IntegratorTester
 from ..order import TEST_LONG
 from ..sesolve.closed_system import dense_cavity, tdqubit
-from ..solver_tester import SolverTester
 
 
 @pytest.mark.run(order=TEST_LONG)
-class TestSEPropagator(SolverTester):
+class TestSEPropagator(IntegratorTester):
     @pytest.mark.parametrize('system', [dense_cavity, tdqubit])
     def test_correctness(self, system, ysave_atol: float = 1e-4):
         params = system.params_default
