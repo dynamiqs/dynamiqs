@@ -12,7 +12,7 @@ from diffrax._local_interpolation import LocalLinearInterpolation
 from ...qarrays.qarray import QArray
 from ...utils.general import dag
 from ...utils.operators import eye_like
-from .diffrax_solver import MESolveDiffraxSolver
+from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):
@@ -91,8 +91,8 @@ def _cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.
     return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=True)
 
 
-class MESolveRouchon1Solver(MESolveDiffraxSolver):
-    """Solver computing the time evolution of the Lindblad master equation using the
+class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
+    """Integrator computing the time evolution of the Lindblad master equation using the
     Rouchon 1 method.
     """
 
@@ -124,6 +124,6 @@ class MESolveRouchon1Solver(MESolveDiffraxSolver):
         return AbstractRouchonTerm(kraus_map)
 
 
-mesolve_rouchon1_solver_constructor = lambda **kwargs: MESolveRouchon1Solver(
+mesolve_rouchon1_integrator_constructor = lambda **kwargs: MESolveRouchon1Integrator(
     **kwargs, diffrax_solver=Rouchon1DXSolver(), fixed_step=True
 )

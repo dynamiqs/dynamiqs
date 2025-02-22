@@ -151,16 +151,16 @@ nav:
   - Python API:
       - python_api/index.md
       - Solvers:
-          - sesolve: python_api/solvers/sesolve.md
-          - mesolve: python_api/solvers/mesolve.md
-          - sepropagator: python_api/solvers/sepropagator.md
-          - mepropagator: python_api/solvers/mepropagator.md
-          - floquet: python_api/solvers/floquet.md
+          - sesolve: python_api/integrators/sesolve.md
+          - mesolve: python_api/integrators/mesolve.md
+          - sepropagator: python_api/integrators/sepropagator.md
+          - mepropagator: python_api/integrators/mepropagator.md
+          - floquet: python_api/integrators/floquet.md
           - stochastic:
-            - jssesolve: python_api/solvers/jssesolve.md
-            - dssesolve: python_api/solvers/dssesolve.md
-            - jsmesolve: python_api/solvers/jsmesolve.md
-            - dsmesolve: python_api/solvers/dsmesolve.md
+            - jssesolve: python_api/integrators/jssesolve.md
+            - dssesolve: python_api/integrators/dssesolve.md
+            - jsmesolve: python_api/integrators/jsmesolve.md
+            - dsmesolve: python_api/integrators/dsmesolve.md
       - Core:
           - Quantum arrays: python_api/qarrays/qarray/QArray.md
           - Time-dependent qarrays:
