@@ -136,4 +136,3 @@ def _laguerre_series(i: int, x: Array, rho: Array, n: int) -> Array:
         return y0 - y1 * (i + 1 - x) * (i + 1) ** (-0.5)
 
     return lax.cond(n - i == 1, n_1, lambda: lax.cond(n - i == 2, n_2, n_other))
-
