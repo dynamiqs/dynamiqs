@@ -7,7 +7,8 @@ import jax.numpy as jnp
 from jax import Array
 
 from ._utils import _get_default_dtype
-from .qarrays.qarray import QArray
+from .qarrays.qarray import QArray, QArrayLike
+from .qarrays.utils import asqarray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
 
@@ -110,19 +111,14 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
     )
 
 
-def _warn_non_normalised(x: Array | QArray, argname: str):
-    """Warn if the input array is not properly normalised."""
-    dtype = _get_default_dtype()
-    rtol = 0
-    if dtype is jnp.float32:
-        rtol = 1e-2
-    elif dtype is jnp.float64:
-        rtol = 1e-6
-    norm = dq.norm(x)
-    if jnp.abs(norm - 1.0) > rtol:
+def _warn_non_normalised(x: QArrayLike, argname: str):
+    # issue a warning if the input qarray-like is not normalised
+    x = asqarray(x)
+    atol = 1e-2 if _get_default_dtype() == jnp.float32 else 1e-6
+    norm = x.norm()
+    if not jnp.allclose(norm, 1.0, rtol=0.0, atol=atol):
         warnings.warn(
-            f'Warning: `{argname}` is not properly normalised.'
-            f'Norm=`{norm}`, expected to be around of 1.0 with a rtol of `{rtol}` ',
-            UserWarning,
+            f'Argument {argname} is not normalized (expected norm 1.0 but norm is'
+            f' {norm}).',
             stacklevel=2,
         )
