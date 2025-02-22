@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import warnings
-from dynamiqs._utils import _get_default_dtype
+
 import equinox as eqx
 import jax.numpy as jnp
-import dynamiqs as dq
 from jax import Array
 
+from ._utils import _get_default_dtype
 from .qarrays.qarray import QArray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
