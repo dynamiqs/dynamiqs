@@ -50,7 +50,7 @@ In QuTiP, adding a scalar to a `Qobj` performs an implicit multiplication of the
     >>> sz - 2
     Traceback (most recent call last):
         ...
-    NotImplementedError: Adding a scalar to a qarray with the `+` operator is not supported. To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`. To add a scalar, use `x.addscalar(scalar)`.
+    NotImplementedError: Adding a scalar to a qarray with the `+` operator is not supported. To add a scaled identity matrix, use `x + scalar * dq.eye_like(x)`. To add a scalar, use `x.addscalar(scalar)`.
     ```
 
 If you *actually* want to add a scalar element-wise to an operator, you can use `x.addscalar(scalar)`.
