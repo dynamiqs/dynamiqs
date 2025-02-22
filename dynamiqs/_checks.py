@@ -36,24 +36,6 @@ _cases = {
 }
 
 
-def _warn_non_normalised(x: Array | QArray, argname: str):
-    """Warn if the input array is not properly normalised."""
-    dtype = _get_default_dtype()
-    rtol = 0
-    if dtype is jnp.float32:
-        rtol = 1e-2
-    elif dtype is jnp.float64:
-        rtol = 1e-6
-    norm = dq.norm(x)
-    if jnp.abs(norm - 1.0) > rtol:
-        warnings.warn(
-            f'Warning: `{argname}` is not properly normalised.'
-            f'Norm=`{norm}`, expected to be around of 1.0 with a rtol of `{rtol}` ',
-            UserWarning,
-            stacklevel=2,
-        )
-
-
 def has_shape(x: Array | QArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
@@ -126,3 +108,21 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
         jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
         f'Argument {argname} is not hermitian.',
     )
+
+
+def _warn_non_normalised(x: Array | QArray, argname: str):
+    """Warn if the input array is not properly normalised."""
+    dtype = _get_default_dtype()
+    rtol = 0
+    if dtype is jnp.float32:
+        rtol = 1e-2
+    elif dtype is jnp.float64:
+        rtol = 1e-6
+    norm = dq.norm(x)
+    if jnp.abs(norm - 1.0) > rtol:
+        warnings.warn(
+            f'Warning: `{argname}` is not properly normalised.'
+            f'Norm=`{norm}`, expected to be around of 1.0 with a rtol of `{rtol}` ',
+            UserWarning,
+            stacklevel=2,
+        )
