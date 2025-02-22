@@ -51,7 +51,6 @@ def wigner(
     """  # noqa: E501
     state = to_jax(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
-
     _warn_non_normalised(state, 'state')
 
     # === convert state to density matrix
