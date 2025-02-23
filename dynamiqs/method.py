@@ -238,7 +238,7 @@ class Dopri5(_DEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        super().__init__(rtol, atol, pcoeff, icoeff, dcoeff, safety_factor, min_factor, max_factor, max_steps)
 
 
 class Dopri8(_DEAdaptiveStep):
@@ -277,7 +277,7 @@ class Dopri8(_DEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        super().__init__(rtol, atol, pcoeff, icoeff, dcoeff, safety_factor, min_factor, max_factor, max_steps)
 
 
 class Tsit5(_DEAdaptiveStep):
@@ -316,7 +316,7 @@ class Tsit5(_DEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        super().__init__(rtol, atol, pcoeff, icoeff, dcoeff, safety_factor, min_factor, max_factor, max_steps)
 
 
 class Kvaerno3(_DEAdaptiveStep):
@@ -366,7 +366,7 @@ class Kvaerno3(_DEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        super().__init__(rtol, atol, pcoeff, icoeff, dcoeff, safety_factor, min_factor, max_factor, max_steps)
 
 
 class Kvaerno5(_DEAdaptiveStep):
@@ -416,4 +416,4 @@ class Kvaerno5(_DEAdaptiveStep):
         max_factor: float = 5.0,
         max_steps: int = 100_000,
     ):
-        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        super().__init__(rtol, atol, pcoeff, icoeff, dcoeff, safety_factor, min_factor, max_factor, max_steps)
