@@ -108,6 +108,9 @@ class _DEFixedStep(_DEMethod):
 class _DEAdaptiveStep(_DEMethod):
     rtol: float = 1e-6
     atol: float = 1e-6
+    pcoeff: float = 0.0
+    icoeff: float = 1.0
+    dcoeff: float = 0.0
     safety_factor: float = 0.9
     min_factor: float = 0.2
     max_factor: float = 5.0
