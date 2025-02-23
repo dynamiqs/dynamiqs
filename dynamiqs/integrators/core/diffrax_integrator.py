@@ -58,6 +58,9 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.PIDController(
                 rtol=self.method.rtol,
                 atol=self.method.atol,
+                pcoeff=self.method.pcoeff,
+                icoeff=self.method.icoeff,
+                dcoeff=self.method.dcoeff,
                 safety=self.method.safety_factor,
                 factormin=self.method.min_factor,
                 factormax=self.method.max_factor,
