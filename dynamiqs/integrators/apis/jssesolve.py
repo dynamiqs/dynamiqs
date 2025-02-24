@@ -23,7 +23,7 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.diffrax_integrator import (
+from ..core.event_integrator import (
     jssesolve_event_dopri5_integrator_constructor,
     jssesolve_event_dopri8_integrator_constructor,
     jssesolve_event_euler_integrator_constructor,
