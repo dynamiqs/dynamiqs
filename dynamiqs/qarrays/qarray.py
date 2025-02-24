@@ -182,6 +182,10 @@ class QArray(eqx.Module):
     dims: tuple[int, ...] = eqx.field(static=True)
     vectorized: bool = eqx.field(static=True)
 
+    # Increase __array_priority__ to ensure that a qarray is always returned
+    # In JAX, it is set to 100 by default. In NumPy, it is set to 0.
+    __array_priority__ = 200
+
     def _replace(
         self,
         dims: tuple[int, ...] | None = None,
