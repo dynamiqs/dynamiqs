@@ -3,7 +3,6 @@ from __future__ import annotations
 import equinox as eqx
 import jax.tree_util as jtu
 from jaxtyping import PyTree, ScalarLike
-from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
 from .progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgressMeter
@@ -19,10 +18,7 @@ class Options(eqx.Module):
     progress_meter: AbstractProgressMeter | None = TqdmProgressMeter()
     t0: ScalarLike | None = None
     save_extra: callable[[QArray], PyTree] | None = None
-    max_jumps: int = 100
     nmaxclick: int = 10_000
-    smart_sampling: bool = False
-    root_finder: AbstractRootFinder | None = None
 
     def __init__(
         self,
@@ -32,10 +28,7 @@ class Options(eqx.Module):
         progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),  # noqa: B008
         t0: ScalarLike | None = None,
         save_extra: callable[[QArray], PyTree] | None = None,
-        max_jumps: int = 100,
         nmaxclick: int = 10_000,
-        smart_sampling: bool = False,
-        root_finder: AbstractRootFinder | None = None,
     ):
         if progress_meter is None:
             progress_meter = NoProgressMeter()
@@ -46,12 +39,9 @@ class Options(eqx.Module):
         self.progress_meter = progress_meter
         self.t0 = t0
         self.nmaxclick = nmaxclick
-        self.smart_sampling = smart_sampling
-        self.root_finder = root_finder
 
         # make `save_extra` a valid Pytree with `Partial`
         self.save_extra = jtu.Partial(save_extra) if save_extra is not None else None
-        self.max_jumps = max_jumps
 
     def __str__(self) -> str:
         return tree_str_inline(self)
@@ -82,8 +72,6 @@ def check_options(options: Options, solver_name: str):
             't0',
             'save_extra',
             'nmaxclick',
-            'smart_sampling',
-            'root_finder',
         ),
         'dssesolve': ('save_states', 'cartesian_batching', 'save_extra'),
         'jsmesolve': ('save_states', 'cartesian_batching', 'save_extra', 'nmaxclick'),

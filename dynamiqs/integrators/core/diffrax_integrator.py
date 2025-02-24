@@ -396,7 +396,7 @@ class JSSESolveEventIntegrator(
         # prepare the initial state to loop over
         y = stack([self.y0] * len(self.ts))
         saved = self.reorder_Esave(self.save(y))
-        clicktimes = jnp.full((len(self.Ls), self.options.max_jumps), jnp.nan)
+        clicktimes = jnp.full((len(self.Ls), self.options.nmaxclick), jnp.nan)
         inner_state = JSSEInnerState(saved, 0)
         state = JSSEState(self.y0, self.t0, self.key, 0, clicktimes, inner_state)
 

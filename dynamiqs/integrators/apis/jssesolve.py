@@ -112,8 +112,6 @@ def jssesolve(
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
                     nmaxclick: int = 10_000,
-                    smart_sampling: bool = False,
-                    root_finder: AbstractRootFinder | None = None,
                 )
                 ```
 
