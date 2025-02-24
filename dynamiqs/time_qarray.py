@@ -846,11 +846,11 @@ class BatchedCallable(eqx.Module):
     def layout(self) -> Layout:
         return jax.eval_shape(self.f, 0.0).layout
 
-    def reshape(self, *shape: tuple[int, ...]) -> BatchedCallable:
+    def reshape(self, *shape: int) -> BatchedCallable:
         f = lambda t: self.f(t).reshape(*shape)
         return BatchedCallable(f)
 
-    def broadcast_to(self, *shape: tuple[int, ...]) -> BatchedCallable:
+    def broadcast_to(self, *shape: int) -> BatchedCallable:
         def f(t: float) -> QArrayLike:
             res = self.f(t)
             if isinstance(res, QArray):

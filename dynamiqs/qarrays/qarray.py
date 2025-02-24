@@ -481,7 +481,7 @@ class QArray(eqx.Module):
         if _is_batched_scalar(y):
             raise NotImplementedError(
                 'Adding a scalar to a qarray with the `+` operator is not supported. '
-                'To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`.'
+                'To add a scaled identity matrix, use `x + scalar * dq.eye_like(x)`.'
                 ' To add a scalar, use `x.addscalar(scalar)`.'
             )
 
