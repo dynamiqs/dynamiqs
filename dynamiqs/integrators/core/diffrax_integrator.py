@@ -304,14 +304,14 @@ def loop_buffers(state: JSSEState) -> PyTree:
     return state.inner_state.saved
 
 
-class JSSESolveDiffraxIntegrator(
+class JSSESolveEventIntegrator(
     StochasticBaseIntegrator,
     DiffraxIntegrator,
     JSSEInterface,
     SolveInterface,
     JumpSolveSaveMixin,
 ):
-    """Integrator computing the time evolution of the Jump SSE using Diffrax."""
+    """Integrator computing the time evolution of the Jump SSE using Diffrax events."""
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -451,21 +451,21 @@ class JSSESolveDiffraxIntegrator(
         return Ls[sample_idx], sample_idx
 
 
-jssesolve_euler_integrator_constructor = partial(
-    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+jssesolve_event_euler_integrator_constructor = partial(
+    JSSESolveEventIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
-jssesolve_dopri5_integrator_constructor = partial(
-    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+jssesolve_event_dopri5_integrator_constructor = partial(
+    JSSESolveEventIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
 )
-jssesolve_dopri8_integrator_constructor = partial(
-    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+jssesolve_event_dopri8_integrator_constructor = partial(
+    JSSESolveEventIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
 )
-jssesolve_tsit5_integrator_constructor = partial(
-    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+jssesolve_event_tsit5_integrator_constructor = partial(
+    JSSESolveEventIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
 )
-jssesolve_kvaerno3_integrator_constructor = partial(
-    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+jssesolve_event_kvaerno3_integrator_constructor = partial(
+    JSSESolveEventIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
 )
-jssesolve_kvaerno5_integrator_constructor = partial(
-    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+jssesolve_event_kvaerno5_integrator_constructor = partial(
+    JSSESolveEventIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )

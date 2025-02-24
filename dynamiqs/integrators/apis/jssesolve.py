@@ -10,7 +10,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...method import Dopri5, Dopri8, Euler, Event, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
@@ -24,12 +24,12 @@ from .._utils import (
     multi_vmap,
 )
 from ..core.diffrax_integrator import (
-    jssesolve_dopri5_integrator_constructor,
-    jssesolve_dopri8_integrator_constructor,
-    jssesolve_euler_integrator_constructor,
-    jssesolve_kvaerno3_integrator_constructor,
-    jssesolve_kvaerno5_integrator_constructor,
-    jssesolve_tsit5_integrator_constructor,
+    jssesolve_event_dopri5_integrator_constructor,
+    jssesolve_event_dopri8_integrator_constructor,
+    jssesolve_event_euler_integrator_constructor,
+    jssesolve_event_kvaerno3_integrator_constructor,
+    jssesolve_event_kvaerno5_integrator_constructor,
+    jssesolve_event_tsit5_integrator_constructor,
 )
 
 
@@ -41,7 +41,7 @@ def jssesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    method: Method | None = Tsit5(),  # noqa: B008
+    method: Method | None = Event(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> JSSESolveResult:
@@ -98,7 +98,7 @@ def jssesolve(
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         method: Method for the integration. Defaults to
-            [`dq.method.Tsit5()`](/python_api/method/Tsit5.html).
+            [`dq.method.Event()`](/python_api/method/Event.html).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -132,22 +132,6 @@ def jssesolve(
                     during the integration, accessible in `result.extra`.
                 - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
                     set higher than the expected maximum number of jump event.
-                - **smart_sampling** - If `True`, the no jump trajectory is simulated
-                    only once, and only trajectories with one or more jumps are sampled
-                    in `result.states`. The no jump state is accessible in
-                    `result.nojump_states` with its associated probability
-                    `result.nojump_prob`.
-                - **root_finder** - Root finder passed to dx.diffeqsolve() (see
-                    [here](https://docs.kidger.site/diffrax/api/diffeqsolve/)) to find
-                    the exact time an event occurs. This option is only used if
-                    `smart_samping = True`. Can be `None`, in which case the
-                    root finding functionality is not utilized. It is recommended to
-                    pass a root finder (such as the optimistix Newton root finder, see
-                    [here](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton))
-                    so that event times are not determined by the integration step sizes
-                    in diffeqsolve. However there are cases where the root finding can
-                    fail, causing the whole simulation to fail. Passing `None` for
-                    `root_finder` can alleviate the issue in these cases.
 
     Returns:
         `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
@@ -178,9 +162,9 @@ def jssesolve(
                 - **numclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
                 - **nojump_states** _(..., nsave, n, 1)_ - Saved state for the no jump
-                    trajectory, only if `options.smart_sampling=True`.
+                    trajectory. Only for the `Event()` method with `smart_sampling`.
                 - **nojump_prob** _(..., nsave)_ - Probability of the no jump
-                    trajectory, only if `options.smart_sampling=True`.
+                    trajectory. Only for the `Event()` method with `smart_sampling`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
@@ -320,16 +304,21 @@ def _jssesolve_single_trajectory(
     options: Options,
 ) -> JSSESolveResult:
     # === select integrator constructor
-    integrator_constructors = {
-        Euler: jssesolve_euler_integrator_constructor,
-        Dopri5: jssesolve_dopri5_integrator_constructor,
-        Dopri8: jssesolve_dopri8_integrator_constructor,
-        Tsit5: jssesolve_tsit5_integrator_constructor,
-        Kvaerno3: jssesolve_kvaerno3_integrator_constructor,
-        Kvaerno5: jssesolve_kvaerno5_integrator_constructor,
-    }
-    assert_method_supported(method, integrator_constructors.keys())
-    integrator_constructor = integrator_constructors[type(method)]
+    supported_methods = (Event,)
+    assert_method_supported(method, supported_methods)
+    if isinstance(method, Event):
+        integrator_constructors = {
+            Euler: jssesolve_event_euler_integrator_constructor,
+            Dopri5: jssesolve_event_dopri5_integrator_constructor,
+            Dopri8: jssesolve_event_dopri8_integrator_constructor,
+            Tsit5: jssesolve_event_tsit5_integrator_constructor,
+            Kvaerno3: jssesolve_event_kvaerno3_integrator_constructor,
+            Kvaerno5: jssesolve_event_kvaerno5_integrator_constructor,
+        }
+        integrator_constructor = integrator_constructors[type(method.nojump_method)]
+    else:
+        # temporary until we implement other methods
+        raise NotImplementedError
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
