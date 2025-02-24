@@ -5196,7 +5196,7 @@
 
 
 </h1>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">set_precision</span><span class="p">(</span><span class="n">precision</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;simple&#39;</span><span class="p">,</span> <span class="s1">&#39;double&#39;</span><span class="p">])</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">set_precision</span><span class="p">(</span><span class="n">precision</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;double&#39;</span><span class="p">])</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5204,7 +5204,7 @@
         <p>Configure the default floating point precision.</p>
 <p>Two options are available:</p>
 <ul>
-<li><code>'simple'</code> sets default precision to <code>float32</code> and <code>complex64</code> (default setting),</li>
+<li><code>'single'</code> sets default precision to <code>float32</code> and <code>complex64</code> (default setting),</li>
 <li><code>'double'</code> sets default precision to <code>float64</code> and <code>complex128</code>.</li>
 </ul>
 
@@ -5212,7 +5212,7 @@
  >
   <summary>Equivalent JAX syntax</summary>
   <p>This function is equivalent to
-<div class="highlight"><pre><span></span><code>if precision == &#39;simple&#39;:
+<div class="highlight"><pre><span></span><code>if precision == &#39;single&#39;:
     jax.config.update(&#39;jax_enable_x64&#39;, False)
 elif precision == &#39;double&#39;:
     jax.config.update(&#39;jax_enable_x64&#39;, True)
@@ -5228,7 +5228,7 @@ elif precision == &#39;double&#39;:
           <b>precision</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(string &#39;simple&#39; or &#39;double&#39;)              </i>
+(string &#39;single&#39; or &#39;double&#39;)              </i>
           – <p>Default precision.</p>
         </li>
     </ul>

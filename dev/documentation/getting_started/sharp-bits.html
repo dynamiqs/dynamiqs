@@ -5353,7 +5353,7 @@
 <p>The syntax in Dynamiqs is similar to <a href="http://qutip.org/">QuTiP</a>, a popular Python library for quantum simulation. However, there are some important differences that you should be aware of.</p>
 <h3 id="floating-point-precision">Floating-point precision</h3>
 <p>In Dynamiqs, all objects are represented by default with <strong>single-precision</strong> floating-point numbers (<code>float32</code> or <code>complex64</code>), whereas the default in QuTiP or NumPy is double-precision (<code>float64</code> or <code>complex128</code>). We made this choice to match JAX's default, and for <strong>performance</strong> reasons, as many problems do not require double-precision. If needed, it is possible to switch to double-precision using <a class="autorefs autorefs-internal" href="../../python_api/utils/global_settings/set_precision.html#dynamiqs.utils.global_settings.set_precision"><code>dq.set_precision()</code></a>:</p>
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">set_precision</span><span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>  <span class="c1"># &#39;simple&#39; by default</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">set_precision</span><span class="p">(</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>  <span class="c1"># &#39;single&#39; by default</span>
 </code></pre></div>
 <p>When using single-precision, there are certain limitations to be aware of:</p>
 <ul>
@@ -5365,7 +5365,7 @@
 <p>Most GPUs do not have native support for double-precision, and only perform well in single-precision. However, note that some recent NVIDIA GPUs (e.g. V100, A100, H100) do provide efficient support for double-precision.</p>
 </div>
 <!-- set precision back to default
-<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">set_precision</span><span class="p">(</span><span class="s1">&#39;simple&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">dq</span><span class="o">.</span><span class="n">set_precision</span><span class="p">(</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
 </code></pre></div>
 -->
 
@@ -5386,7 +5386,7 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">-</span> <span class="mi">2</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="w">    </span><span class="o">...</span>
-<span class="gr">NotImplementedError</span>: <span class="n">Adding a scalar to a qarray with the `+` operator is not supported. To add a scaled identity matrix, use `x + scalar * dq.eye(*x.dims)`. To add a scalar, use `x.addscalar(scalar)`.</span>
+<span class="gr">NotImplementedError</span>: <span class="n">Adding a scalar to a qarray with the `+` operator is not supported. To add a scaled identity matrix, use `x + scalar * dq.eye_like(x)`. To add a scalar, use `x.addscalar(scalar)`.</span>
 </code></pre></div>
 </div>
 </div>
