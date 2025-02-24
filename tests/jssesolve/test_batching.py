@@ -5,7 +5,7 @@ import pytest
 import dynamiqs as dq
 
 
-def rand_mcsolve_args(n, nH, nLs, npsi0, nEs):
+def rand_jssesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 4
     kH, *kLs, kpsi0, kEs, kmc = jax.random.split(jax.random.key(31), nkeys)
     H = dq.random.herm(kH, (*nH, n, n))
@@ -25,16 +25,16 @@ def test_cartesian_batching(nH, npsi0, nL):
     nEs = 8
     ntsave = 9
 
-    # run mcsolve
-    H, Ls, psi0, Es, kmc = rand_mcsolve_args(n, nH, nLs, npsi0, nEs)
+    # run jssesolve
+    H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
     keys = jax.random.split(kmc, num=ntraj)
     tsave = jnp.linspace(0, 2.0, ntsave)
     options = dq.Options(progress_meter=None)
-    result = dq.mcsolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
+    result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
 
     # check result shape
     assert result.jump_states.shape == (*nH, *nL, *npsi0, ntraj, ntsave, n, 1)
-    assert result.no_jump_states.shape == (*nH, *nL, *npsi0, ntsave, n, 1)
+    assert result.nojump_states.shape == (*nH, *nL, *npsi0, ntsave, n, 1)
     assert result.expects.shape == (*nH, *nL, *npsi0, nEs, ntsave)
 
 
@@ -50,16 +50,16 @@ def test_flat_batching(nL1, npsi0):
     ntsave = 11
     ntraj = 8
 
-    # run mcsolve
-    H, Ls, psi0, Es, kmc = rand_mcsolve_args(n, nH, nLs, npsi0, nEs)
+    # run jssesolve
+    H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
     bshape = jnp.broadcast_shapes(nH, nL1, npsi0)
     keys = jax.random.split(kmc, num=(*bshape, ntraj))
     tsave = jnp.linspace(0, 2.0, ntsave)
     options = dq.Options(progress_meter=None, cartesian_batching=False)
-    result = dq.mcsolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
+    result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
     assert result.jump_states.shape == (*broadcast_shape, ntraj, ntsave, n, 1)
-    assert result.no_jump_states.shape == (*broadcast_shape, ntsave, n, 1)
+    assert result.nojump_states.shape == (*broadcast_shape, ntsave, n, 1)
     assert result.expects.shape == (*broadcast_shape, nEs, ntsave)

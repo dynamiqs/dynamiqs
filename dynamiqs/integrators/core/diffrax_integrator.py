@@ -10,22 +10,27 @@ import jax
 import jax.numpy as jnp
 from equinox.internal import while_loop
 from jax import Array
-from jaxtyping import PyTree, Scalar
+from jaxtyping import PRNGKeyArray, PyTree, Scalar
 
 from ...gradient import Autograd, CheckpointAutograd
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
-from ...result import MCJumpResult, MCNoJumpResult, Result, Saved
+from ...result import Result
 from ...utils.general import dag, expect, norm, unit
-from .abstract_integrator import BaseIntegrator
+from .abstract_integrator import BaseIntegrator, StochasticBaseIntegrator
 from .interfaces import (
     AbstractTimeInterface,
-    MCInterface,
+    JSSEInterface,
     MEInterface,
     SEInterface,
     SolveInterface,
 )
-from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
+from .save_mixin import (
+    AbstractSaveMixin,
+    JumpSolveSaveMixin,
+    PropagatorSaveMixin,
+    SolveSaveMixin,
+)
 
 
 class FixedStepInfos(eqx.Module):
@@ -275,87 +280,38 @@ mesolve_kvaerno5_integrator_constructor = partial(
 )
 
 
-class SaveState(eqx.Module):
-    ts: Array
+class JSSEInnerState(eqx.Module):
     saved: PyTree
     save_index: int
-    jump_times: Array
 
 
-class State(eqx.Module):
-    save_state: PyTree[SaveState]
-    final_state: Array
-    final_time: float
-    num_jumps: int
-    key: Array
+class JSSEState(eqx.Module):
+    y: QArray  # quantum state
+    t: Scalar  # time
+    key: PRNGKeyArray  # active key
+    numclicks: int  # number of clicks
+    clicktimes: Array  # time of clicks
+    inner_state: JSSEInnerState  # saved quantities
 
 
-def _inner_buffers(save_state: SaveState) -> tuple[Array, Saved, Array]:
-    assert type(save_state) is SaveState
-    return save_state.ts, save_state.saved, save_state.jump_times
+def save_buffers(inner_state: JSSEInnerState) -> PyTree:
+    assert type(inner_state) is JSSEInnerState
+    return inner_state.saved
 
 
-def _outer_buffers(state: State) -> tuple[Array, Saved, Array]:
-    assert type(state) is State
-    save_state = state.save_state
-    return save_state.ts, save_state.saved, save_state.jump_times
+def loop_buffers(state: JSSEState) -> PyTree:
+    assert type(state) is JSSEState
+    return state.inner_state.saved
 
 
-class MCSolveDiffraxIntegrator(
-    DiffraxIntegrator, MCInterface, SolveSaveMixin, SolveInterface
+class JSSESolveDiffraxIntegrator(
+    StochasticBaseIntegrator,
+    DiffraxIntegrator,
+    JSSEInterface,
+    SolveInterface,
+    JumpSolveSaveMixin,
 ):
-    """Integrator computing the time evolution of the Monte-Carlo unraveling of the
-    Lindblad master equation using the Diffrax library.
-    """
-
-    def jump_result(
-        self,
-        saved: Saved,
-        jump_times: Array,
-        num_jumps: Array,
-        infos: PyTree | None = None,
-    ) -> Result:
-        return MCJumpResult(
-            self.ts,
-            self.method,
-            self.gradient,
-            self.options,
-            saved,
-            infos,
-            jump_times,
-            num_jumps,
-        )
-
-    def no_jump_result(
-        self, saved: Saved, no_jump_prob: Array, infos: PyTree | None = None
-    ) -> Result:
-        return MCNoJumpResult(
-            self.ts,
-            self.method,
-            self.gradient,
-            self.options,
-            saved,
-            infos,
-            no_jump_prob,
-        )
-
-    def result(
-        self,
-        saved: Saved,
-        no_jump_result: Result,
-        jump_result: Result,
-        infos: PyTree | None = None,
-    ) -> Result:
-        return self.result_class(
-            self.ts,
-            self.method,
-            self.gradient,
-            self.options,
-            saved,
-            infos,
-            no_jump_result,
-            jump_result,
-        )
+    """Integrator computing the time evolution of the Jump SSE using Diffrax."""
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -366,46 +322,105 @@ class MCSolveDiffraxIntegrator(
         return dx.ODETerm(vector_field)
 
     def run(self) -> Result:
-        # === run no jump, extract no-jump probability
-        no_jump_solution = self._solve_until_jump(self.y0, self.t0, self.ts, 0.0)
-        no_jump_saved = jax.vmap(self.save)(unit(no_jump_solution.ys[0]))
-        no_jump_prob = norm(no_jump_solution.ys[1][0]) ** 2
+        def loop_condition(state: JSSEState) -> bool:
+            return state.t < self.t1
 
-        # === run jump trajectories
-        jump_state_fun = jax.vmap(self._loop_over_jumps, in_axes=(0, None))
-        jump_state = jump_state_fun(self.keys, no_jump_prob)
-        jump_times = jump_state.save_state.jump_times
-        num_jumps = jump_state.num_jumps
+        def loop_body(state: JSSEState) -> JSSEState:
+            # pick a random number for the next detection event
+            key, click_key, jump_key = jax.random.split(state.key, num=3)
+            rand = jax.random.uniform(click_key)
 
-        # === save and postprocess jump and no-jump results
-        no_jump_saved = self.postprocess_saved(
-            no_jump_saved, unit(no_jump_solution.ys[1])
-        )
-        no_jump_result = self.no_jump_result(
-            no_jump_saved, no_jump_prob, infos=self.infos(no_jump_solution.stats)
-        )
-        jump_saved = self.postprocess_saved(
-            jump_state.save_state.saved, jump_state.final_state[None]
-        )
-        # TODO save stats for jumps?
-        jump_result = self.jump_result(jump_saved, jump_times, num_jumps)
+            # solve until the next detection event
+            solution = self._solve_until_click(state.y, state.t, rand)
+            temp_saved = solution.ys[0]
+            yclick = solution.ys[1][0]
+            tclick = solution.ts[1][0]
 
-        rho = self._average_jump_and_no_jump(
-            no_jump_result.states, jump_result.states, no_jump_prob
-        )
-        final_rho = self._average_jump_and_no_jump(
-            no_jump_result.final_state, jump_result.final_state, no_jump_prob
-        )
-        saved = jax.vmap(self.save)(rho)
-        saved = self.postprocess_saved(saved, final_rho)
+            # if the event triggered, update the quantum state and clicktimes
+            # else, the final time was reached, and do nothing
+            def event(
+                yclick: QArray, clicktimes: Array, numclicks: int
+            ) -> tuple[QArray, Array, int]:
+                # find a random jump operator among the provided jump_ops, and apply it
+                jump_op, idx = self._sample_jump_ops(tclick, yclick, jump_key)
+                yclick = unit(jump_op @ yclick)
 
-        return self.result(saved, no_jump_result, jump_result)
+                # update clicktimes
+                clicktimes = clicktimes.at[idx, state.numclicks].set(tclick)
+                numclicks += 1
 
-    def _solve_until_jump(
-        self, y0: QArray, t0: Array, tsave: Array, rand: Array | float
-    ) -> dx.Solution:
+                return yclick, clicktimes, numclicks
+
+            def skip(
+                yclick: QArray, clicktimes: Array, numclicks: int
+            ) -> tuple[QArray, Array, int]:
+                return yclick, clicktimes, numclicks
+
+            yclick, clicktimes, numclicks = jax.lax.cond(
+                solution.event_mask,
+                event,
+                skip,
+                yclick,
+                state.clicktimes,
+                state.numclicks,
+            )
+
+            # save intermediate states and expectation values, based on the code
+            # in diffrax/_integrate.py which can be found at:
+            # https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458
+            def save_cond(inner_state: JSSEInnerState) -> bool:
+                save_index = inner_state.save_index
+                return (self.ts[save_index] <= tclick) & (save_index < len(self.ts))
+
+            def save_body(inner_state: JSSEInnerState) -> JSSEInnerState:
+                idx = inner_state.save_index
+                saved = jax.tree.map(
+                    lambda _temp_saved, _saved: _saved.at[idx].set(_temp_saved[idx]),
+                    temp_saved,
+                    inner_state.saved,
+                )
+                return JSSEInnerState(saved, idx + 1)
+
+            inner_state = while_loop(
+                save_cond,
+                save_body,
+                state.inner_state,
+                max_steps=len(self.ts),
+                buffers=save_buffers,
+                kind='checkpointed',
+            )
+
+            # return updated state
+            return JSSEState(yclick, tclick, key, numclicks, clicktimes, inner_state)
+
+        # prepare the initial state to loop over
+        y = stack([self.y0] * len(self.ts))
+        saved = self.reorder_Esave(self.save(y))
+        clicktimes = jnp.full((len(self.Ls), self.options.max_jumps), jnp.nan)
+        inner_state = JSSEInnerState(saved, 0)
+        state = JSSEState(self.y0, self.t0, self.key, 0, clicktimes, inner_state)
+
+        # loop over no jump evolutions until the final time is reached
+        final_state = while_loop(
+            loop_condition,
+            loop_body,
+            state,
+            kind='checkpointed',
+            buffers=loop_buffers,
+            max_steps=self.options.nmaxclick,
+        )
+
+        # collect and return results
+        saved = final_state.inner_state.saved  # of type SolveSaved
+        clicktimes = final_state.clicktimes
+        saved = self.postprocess_saved(saved, clicktimes)  # of type JumpSolveSaved
+        return self.result(saved, infos=None)
+
+    def _solve_until_click(self, y0: QArray, t0: Array, rand: Array) -> dx.Solution:
         # === prepare saveat
-        subsaveat_a = dx.SubSaveAt(ts=tsave)  # save solution regularly
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        ts = jnp.where(self.ts >= t0, self.ts, t0)  # clip ts to start at t0
+        subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
         saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
@@ -413,121 +428,12 @@ class MCSolveDiffraxIntegrator(
         def cond_fn(t: Scalar, y: QArray, *args, **kwargs) -> Array:
             return norm(y) ** 2 - rand
 
-        event = dx.Event(cond_fn, self.root_finder)
+        event = dx.Event(cond_fn, self.options.root_finder)
 
         # === solve differential equation with diffrax
         return self.diffeqsolve(t0=t0, t1=self.t1, y0=y0, saveat=saveat, event=event)
 
-    def _loop_over_jumps(self, key: Array, no_jump_prob: Array) -> State:
-        # loop over jumps until the simulation reaches the final time
-
-        rand_key, sample_key = jax.random.split(key)
-        rand = jax.random.uniform(rand_key, minval=no_jump_prob)
-        first_result = self._solve_until_jump(self.y0, self.t0, self.ts, rand)
-        first_jump_time = first_result.ts[1][0]
-        time_diffs = self.ts - first_jump_time
-        # want to start with a time after the jump
-        time_diffs = jnp.where(time_diffs < 0, jnp.inf, time_diffs)
-        save_index = jnp.argmin(time_diffs)
-        # allocate memory for the state that is updated during the loop
-        initial_save_state = SaveState(
-            ts=first_result.ts[0],
-            saved=jax.vmap(self.save)(unit(first_result.ys[0])),
-            save_index=save_index,
-            jump_times=jnp.full(self.options.max_jumps, jnp.nan),
-        )
-        initial_state = State(
-            save_state=initial_save_state,
-            final_state=first_result.ys[1][0, :, :],
-            final_time=first_jump_time,
-            num_jumps=0,
-            key=sample_key,
-        )
-
-        def _outer_cond_fun(state: State) -> bool:
-            return state.final_time < self.t1
-
-        def _outer_body_fun(state: State) -> State:
-            jump_time = state.final_time
-            psi = state.final_state
-            _next_key, _rand_key, _sample_key = jax.random.split(state.key, num=3)
-            jump_op = self._sample_jump_ops(jump_time, psi, _sample_key)
-            psi_after_jump = unit(jump_op @ psi)
-            # new_times needs to have a static size: fill it with times from self.ts
-            # and nans. The saved states at times from the original self.ts are saved
-            # below, while the states at the nan times are ignored.
-            new_times = jnp.sort(jnp.where(self.ts > jump_time, self.ts, jnp.nan))
-            # This new random value should be uniform over [0, 1), not restricted to
-            # [no_jump_prob, 1) like in the first case.
-            _rand = jax.random.uniform(_rand_key)
-            result_after_jump = self._solve_until_jump(
-                psi_after_jump, jump_time, new_times, _rand
-            )
-            final_time = result_after_jump.ts[1][0]
-
-            def save_ts_and_states(save_state: SaveState) -> SaveState:
-                # Save intermediate states and expectation values. Based on the code
-                # in diffrax/_integrate.py which can be found at:
-                # https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458  # noqa E501
-                def _inner_cond_fun(_save_state: SaveState) -> bool:
-                    return (self.ts[_save_state.save_index] <= final_time) & (
-                        _save_state.save_index < len(self.ts)
-                    )
-
-                def _inner_body_fun(_save_state: SaveState) -> SaveState:
-                    _t = self.ts[_save_state.save_index]
-                    t_idx_in_new_times = jnp.nanargmin(jnp.abs(new_times - _t))
-                    _y = result_after_jump.ys[0][t_idx_in_new_times]
-                    _ts = _save_state.ts.at[_save_state.save_index].set(_t)
-                    _saved = jax.tree.map(
-                        lambda __y, __saved: __saved.at[_save_state.save_index].set(
-                            __y
-                        ),
-                        self.save(unit(_y)),
-                        _save_state.saved,
-                    )
-                    return SaveState(
-                        ts=_ts,
-                        saved=_saved,
-                        save_index=_save_state.save_index + 1,
-                        jump_times=_save_state.jump_times,
-                    )
-
-                return while_loop(
-                    _inner_cond_fun,
-                    _inner_body_fun,
-                    save_state,
-                    max_steps=len(self.ts),
-                    buffers=_inner_buffers,
-                    kind='checkpointed',
-                )
-
-            save_state = save_ts_and_states(state.save_state)
-            jump_times = save_state.jump_times.at[state.num_jumps].set(jump_time)
-            save_state = SaveState(
-                ts=save_state.ts,
-                saved=save_state.saved,
-                save_index=save_state.save_index,
-                jump_times=jump_times,
-            )
-            return State(
-                save_state=save_state,
-                final_state=result_after_jump.ys[1][0],
-                final_time=final_time,
-                num_jumps=state.num_jumps + 1,
-                key=_next_key,
-            )
-
-        return while_loop(
-            _outer_cond_fun,
-            _outer_body_fun,
-            initial_state,
-            max_steps=self.options.max_jumps,
-            buffers=_outer_buffers,
-            kind='checkpointed',
-        )
-
-    def _sample_jump_ops(self, t: Array, psi: Array, key: Array) -> Array:
+    def _sample_jump_ops(self, t: Array, psi: Array, key: Array) -> tuple[Array, int]:
         # given a state psi at time t that should experience a jump,
         # randomly sample one jump operator from among the provided jump_ops.
         # The probability that a certain jump operator is selected is weighted
@@ -542,33 +448,24 @@ class MCSolveDiffraxIntegrator(
         logits = jnp.log(jnp.real(probs / (jnp.sum(probs))))
         # randomly sample the index of a single jump operator
         sample_idx = jax.random.categorical(key, logits, shape=(1,))[0]
-        return Ls[sample_idx]
-
-    def _average_jump_and_no_jump(
-        self, no_jump_state: QArray, jump_state: QArray, no_jump_prob: Array | float
-    ) -> QArray:
-        no_jump_rho = no_jump_state @ no_jump_state.dag()
-        jump_rho = jax.tree.map(
-            lambda y: jnp.average(y, axis=0), jump_state @ jump_state.dag()
-        )
-        return unit(no_jump_prob * no_jump_rho + (1 - no_jump_prob) * jump_rho)
+        return Ls[sample_idx], sample_idx
 
 
-mcsolve_euler_integrator_constructor = partial(
-    MCSolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+jssesolve_euler_integrator_constructor = partial(
+    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
-mcsolve_dopri5_integrator_constructor = partial(
-    MCSolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+jssesolve_dopri5_integrator_constructor = partial(
+    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
 )
-mcsolve_dopri8_integrator_constructor = partial(
-    MCSolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+jssesolve_dopri8_integrator_constructor = partial(
+    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
 )
-mcsolve_tsit5_integrator_constructor = partial(
-    MCSolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+jssesolve_tsit5_integrator_constructor = partial(
+    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
 )
-mcsolve_kvaerno3_integrator_constructor = partial(
-    MCSolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+jssesolve_kvaerno3_integrator_constructor = partial(
+    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
 )
-mcsolve_kvaerno5_integrator_constructor = partial(
-    MCSolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+jssesolve_kvaerno5_integrator_constructor = partial(
+    JSSESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
