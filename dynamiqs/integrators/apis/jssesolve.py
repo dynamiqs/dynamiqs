@@ -267,7 +267,7 @@ def _vectorized_jssesolve(
     in_axes = (None, None, None, None, 0, None, None, None, None)
     # the result is vectorized over `_saved`, `infos` and `keys`
     out_axes = JSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
+    f = multi_vmap(f, in_axes, out_axes, keys.ndim)
 
     # === vectorize function
     # vectorize input over H, Ls and psi0.

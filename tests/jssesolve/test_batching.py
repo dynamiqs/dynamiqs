@@ -4,6 +4,8 @@ import pytest
 
 import dynamiqs as dq
 
+from ..order import TEST_LONG
+
 
 def rand_jssesolve_args(n, nH, nLs, npsi0, nEs):
     nkeys = len(nLs) + 4
@@ -15,51 +17,50 @@ def rand_jssesolve_args(n, nH, nLs, npsi0, nEs):
     return H, Ls, psi0, Es, kmc
 
 
+@pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nH', [(), (3,), (3, 4)])
 @pytest.mark.parametrize('npsi0', [(), (5,)])
 @pytest.mark.parametrize('nL', [(), (6,)])
 def test_cartesian_batching(nH, npsi0, nL):
     n = 2
     nLs = [nL]
-    ntraj = 7
+    ntrajs = 7
     nEs = 8
     ntsave = 9
 
     # run jssesolve
     H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
-    keys = jax.random.split(kmc, num=ntraj)
+    keys = jax.random.split(kmc, num=ntrajs)
     tsave = jnp.linspace(0, 2.0, ntsave)
     options = dq.Options(progress_meter=None)
     result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
 
     # check result shape
-    assert result.jump_states.shape == (*nH, *nL, *npsi0, ntraj, ntsave, n, 1)
-    assert result.nojump_states.shape == (*nH, *nL, *npsi0, ntsave, n, 1)
-    assert result.expects.shape == (*nH, *nL, *npsi0, nEs, ntsave)
+    assert result.states.shape == (*nH, *nL, *npsi0, ntrajs, ntsave, n, 1)
+    assert result.expects.shape == (*nH, *nL, *npsi0, ntrajs, nEs, ntsave)
 
 
 # H has fixed shape (3, 4, n, n) for the next test case, we test a broad ensemble of
 # compatible broadcastable shape
-@pytest.mark.parametrize('nL1', [(), (5, 1, 4)])
-@pytest.mark.parametrize('npsi0', [(), (1,), (4,), (3, 1), (3, 4), (5, 1, 4)])
-def test_flat_batching(nL1, npsi0):
+@pytest.mark.run(order=TEST_LONG)
+@pytest.mark.parametrize('nL1', [(), (4, 1, 3)])
+@pytest.mark.parametrize('npsi0', [(), (1,), (3,), (2, 1), (2, 3), (4, 1, 3)])
+@pytest.mark.parametrize('ntrajs', [(1,), (5,), (5, 6)])
+def test_flat_batching(nL1, npsi0, ntrajs):
     n = 2
-    nH = (3, 4)
+    nH = (2, 3)
     nLs = [nL1, ()]
-    nEs = 6
-    ntsave = 11
-    ntraj = 8
+    nEs = 7
+    ntsave = 8
 
     # run jssesolve
     H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
-    bshape = jnp.broadcast_shapes(nH, nL1, npsi0)
-    keys = jax.random.split(kmc, num=(*bshape, ntraj))
+    keys = jax.random.split(kmc, num=ntrajs)
     tsave = jnp.linspace(0, 2.0, ntsave)
     options = dq.Options(progress_meter=None, cartesian_batching=False)
     result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
-    assert result.jump_states.shape == (*broadcast_shape, ntraj, ntsave, n, 1)
-    assert result.nojump_states.shape == (*broadcast_shape, ntsave, n, 1)
-    assert result.expects.shape == (*broadcast_shape, nEs, ntsave)
+    assert result.states.shape == (*broadcast_shape, *ntrajs, ntsave, n, 1)
+    assert result.expects.shape == (*broadcast_shape, *ntrajs, nEs, ntsave)
