@@ -13,7 +13,7 @@ from ...result import (
     Saved,
     SolveSaved,
 )
-from ...utils.general import expect
+from ...utils.general import expect, unit
 from .interfaces import OptionsInterface
 
 
@@ -95,6 +95,10 @@ class JumpSolveSaveMixin(SolveSaveMixin):
     """Mixin to assist jump SSE/SME integrators computing time evolution with data
     saving.
     """
+
+    def save(self, y: PyTree) -> Saved:
+        # force state normalization before saving
+        return super().save(unit(y))
 
     def postprocess_saved(self, saved: SolveSaved, clicktimes: Array) -> JumpSolveSaved:
         ylast = saved.ysave[-1]

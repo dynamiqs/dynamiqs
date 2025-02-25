@@ -1,65 +1,68 @@
 import jax.numpy as jnp
 import jax.random
+import pytest
 
 import dynamiqs as dq
-from dynamiqs import Options, jssesolve, mesolve, timecallable
+
+from ..order import TEST_LONG
 
 
-def test_against_mesolve_oscillator(ysave_atol=5e-2):
+@pytest.mark.run(order=TEST_LONG)
+def test_against_mesolve_oscillator(atol=5e-2):
     # parameters
-    num_traj = 100
-    dim = 4
+    ntrajs = 80
+    dim = 10
 
     # solver inputs
     a = dq.destroy(dim)
-    H0 = 0.1 * dq.dag(a) @ a + 0.2 * (a + dq.dag(a))
-    jump_ops = [a]
-    y0 = dq.basis(dim, 0)
-    tsave = jnp.linspace(0.0, 10.0, 11)
-    keys = jax.random.split(jax.random.key(31), num=num_traj)
-    exp_ops = [dq.dag(a) @ a]
-    options = Options(progress_meter=None)
+    H = 0.1 * a.dag() @ a + 0.4 * (a + a.dag())
+    jump_ops = [a, 0.3 * a.dag()]
+    psi0 = dq.basis(dim, 0)
+    tsave = jnp.linspace(0.0, 2.0, 11)
+    keys = jax.random.split(jax.random.key(31), num=ntrajs)
+    exp_ops = [a.dag() @ a]
+    options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = jssesolve(
-        H0, jump_ops, y0, tsave, keys, exp_ops=exp_ops, options=options
+    jsseresult = dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops, options=options
     )
-    meresult = mesolve(H0, jump_ops, y0, tsave, exp_ops=exp_ops, options=options)
+    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
 
     # compare results on average
-    mean_expects = jnp.mean(jsseresult.expects, axis=0)
-    mean_states = jsseresult.states.sum(axis=0) / num_traj
-    assert jnp.allclose(meresult.expects, mean_expects, atol=ysave_atol)
-    assert jnp.allclose(meresult.states, mean_states, atol=ysave_atol)
+    mean_jsse_expects = jnp.mean(jsseresult.expects, axis=0)
+    mean_jsse_states = jsseresult.states.todm().sum(axis=0) / ntrajs
+    assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
+    assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
 
 
-def test_against_mesolve_qubit(ysave_atol=5e-2):
-    num_traj = 40
-    options = dq.Options(progress_meter=None)
-    initial_states = [dq.basis(2, 1)]
-    omega = 2.0 * jnp.pi * 1.0
-    amp = 2.0 * jnp.pi * 0.1
-    tsave = jnp.linspace(0, 10.0, 41)
-    jump_ops = [0.4 * dq.basis(2, 0) @ dq.tobra(dq.basis(2, 1))]
-    exp_ops = [
-        dq.basis(2, 0) @ dq.tobra(dq.basis(2, 0)),
-        dq.basis(2, 1) @ dq.tobra(dq.basis(2, 1)),
-    ]
+@pytest.mark.run(order=TEST_LONG)
+def test_against_mesolve_qubit(atol=5e-2):
+    # parameters
+    ntrajs = 40
+    omega = 2.0 * jnp.pi
+    amp = 0.1 * 2.0 * jnp.pi
 
+    # solver inputs
     def H_func(t):
         return -0.5 * omega * dq.sigmaz() + jnp.cos(omega * t) * amp * dq.sigmax()
 
-    mcresult = dq.jssesolve(
-        timecallable(H_func),
-        jump_ops,
-        initial_states,
-        tsave,
-        keys=jax.random.split(jax.random.key(4242434), num=num_traj),
-        exp_ops=exp_ops,
-        options=options,
+    H = dq.timecallable(H_func)
+    jump_ops = [0.4 * dq.sigmam()]
+    psi0 = [dq.ground(), dq.excited()]
+    tsave = jnp.linspace(0, 1.0, 41)
+    keys = jax.random.split(jax.random.key(42), num=ntrajs)
+    exp_ops = [dq.excited().todm(), dq.ground().todm()]
+    options = dq.Options(progress_meter=None)
+
+    # solve with jssesolve and mesolve
+    jsseresult = dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, options=options
     )
-    meresult = dq.mesolve(
-        timecallable(H_func), jump_ops, initial_states, tsave, exp_ops=exp_ops
-    )
-    assert jnp.allclose(meresult.expects, mcresult.expects, atol=ysave_atol)
-    assert jnp.all(1 - dq.fidelity(meresult.states, mcresult.states) <= ysave_atol)
+    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
+
+    # compare results on average
+    mean_jsse_expects = jnp.mean(jsseresult.expects, axis=1)
+    mean_jsse_states = jsseresult.states.todm().sum(axis=1) / ntrajs
+    assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
+    assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
