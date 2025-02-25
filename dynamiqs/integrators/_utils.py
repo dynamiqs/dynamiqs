@@ -21,7 +21,7 @@ from ..time_qarray import (
 )
 
 
-def _astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
+def astimeqarray(x: QArrayLike | TimeQArray) -> TimeQArray:
     if isinstance(x, TimeQArray):
         return x
     else:

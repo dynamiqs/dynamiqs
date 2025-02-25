@@ -123,7 +123,7 @@ class DenseQArray(QArray):
         return jnp.allclose(self.data, self.data.mT.conj(), rtol=rtol, atol=atol)
 
     def to_qutip(self) -> Qobj | list[Qobj]:
-        return _array_to_qobj_list(self.to_jax(), self.dims)
+        return array_to_qobj_list(self.to_jax(), self.dims)
 
     def to_jax(self) -> Array:
         return self.data
@@ -230,7 +230,7 @@ class DenseQArray(QArray):
         return self._replace(data=data)
 
 
-def _array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
+def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
     # convert dims to qutip
     dims = list(dims)
     if x.shape[-1] == 1:  # [[3], [1]] or [[3, 4], [1, 1]]
