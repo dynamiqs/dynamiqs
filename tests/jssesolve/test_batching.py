@@ -31,7 +31,7 @@ def test_cartesian_batching(nH, npsi0, nL):
     # run jssesolve
     H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
     keys = jax.random.split(kmc, num=ntrajs)
-    tsave = jnp.linspace(0, 2.0, ntsave)
+    tsave = jnp.linspace(0.0, 0.1, ntsave)
     options = dq.Options(progress_meter=None)
     result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
 
@@ -56,7 +56,7 @@ def test_flat_batching(nL1, npsi0, ntrajs):
     # run jssesolve
     H, Ls, psi0, Es, kmc = rand_jssesolve_args(n, nH, nLs, npsi0, nEs)
     keys = jax.random.split(kmc, num=ntrajs)
-    tsave = jnp.linspace(0, 2.0, ntsave)
+    tsave = jnp.linspace(0.0, 0.1, ntsave)
     options = dq.Options(progress_meter=None, cartesian_batching=False)
     result = dq.jssesolve(H, Ls, psi0, tsave, keys=keys, exp_ops=Es, options=options)
 
