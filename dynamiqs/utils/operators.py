@@ -8,9 +8,9 @@ from jax.typing import ArrayLike
 from .._utils import cdtype
 from ..qarrays.dense_qarray import DenseQArray
 from ..qarrays.layout import Layout, dense, get_layout
-from ..qarrays.qarray import QArray, QArrayLike, _to_jax, get_dims
+from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.sparsedia_qarray import SparseDIAQArray
-from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict
+from ..qarrays.utils import asqarray, init_dims, sparsedia_from_dict, to_jax
 from .general import tensor
 
 __all__ = [
@@ -134,7 +134,7 @@ def eye_like(
     """
     xdims = get_dims(x)
     # todo: we should rather use a _get_shape util that never converts to a jax array
-    x = _to_jax(x)
+    x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     return eye(*dims, layout=layout)
 
@@ -230,7 +230,7 @@ def zeros_like(
     """
     xdims = get_dims(x)
     # todo: we should rather use a _get_shape util that never converts to a jax array
-    x = _to_jax(x)
+    x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     return zeros(*dims, layout=layout)
 

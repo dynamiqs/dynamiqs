@@ -8,7 +8,7 @@ import numpy as np
 from jax import Array
 
 from .._checks import check_hermitian, check_shape
-from ..qarrays.qarray import QArray, QArrayLike, _to_jax, get_dims
+from ..qarrays.qarray import QArray, QArrayLike, get_dims
 from ..qarrays.utils import asqarray, init_dims, to_jax
 
 __all__ = [
@@ -330,7 +330,7 @@ def ptrace(
          [0.  0.5]]
     """
     xdims = get_dims(x)
-    x = _to_jax(x)
+    x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
 

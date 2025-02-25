@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _in_last_two_dims, _to_jax, isqarraylike
+from .qarray import QArray, QArrayLike, _in_last_two_dims, isqarraylike, to_jax
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
@@ -162,7 +162,7 @@ class DenseQArray(QArray):
         if isinstance(y, DenseQArray):
             data = self.data + y.data
         elif isinstance(y, get_args(ArrayLike)):
-            data = self.data + _to_jax(y)
+            data = self.data + to_jax(y)
         else:
             return NotImplemented
 
@@ -174,7 +174,7 @@ class DenseQArray(QArray):
         if isinstance(y, DenseQArray):
             data = self.data @ y.data
         elif isqarraylike(y):
-            data = self.data @ _to_jax(y)
+            data = self.data @ to_jax(y)
         else:
             return NotImplemented
 
@@ -189,7 +189,7 @@ class DenseQArray(QArray):
         if isinstance(y, DenseQArray):
             data = y.data @ self.data
         elif isqarraylike(y):
-            data = _to_jax(y) @ self.data
+            data = to_jax(y) @ self.data
         else:
             return NotImplemented
 
@@ -207,7 +207,7 @@ class DenseQArray(QArray):
         return self._replace(dims=dims, data=data)
 
     def addscalar(self, y: ArrayLike) -> QArray:
-        data = self.data + _to_jax(y)
+        data = self.data + to_jax(y)
         return self._replace(data=data)
 
     def elmul(self, y: QArrayLike) -> QArray:
@@ -218,7 +218,7 @@ class DenseQArray(QArray):
         if isinstance(y, SparseDIAQArray):
             return y.elmul(self)
 
-        data = self.data * _to_jax(y)
+        data = self.data * to_jax(y)
         return self._replace(data=data)
 
     def elpow(self, power: int) -> QArray:

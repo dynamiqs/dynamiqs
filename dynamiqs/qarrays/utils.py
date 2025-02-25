@@ -5,12 +5,12 @@ from collections.abc import Sequence
 
 import jax.numpy as jnp
 import numpy as np
-from jaxtyping import Array, ArrayLike, DTypeLike
+from jaxtyping import ArrayLike, DTypeLike
 from qutip import Qobj
 
 from .dense_qarray import DenseQArray, array_to_qobj_list
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _to_jax, _to_numpy, get_dims, isqarraylike
+from .qarray import QArray, QArrayLike, get_dims, isqarraylike, to_jax, to_numpy
 from .sparsedia_primitives import (
     array_to_sparsedia,
     autopad_sparsedia_diags,
@@ -89,7 +89,7 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
         return DenseQArray(x.dims, False, data)
 
     xdims = get_dims(x)
-    x = _to_jax(x)
+    x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     return DenseQArray(dims, False, x)
 
@@ -101,7 +101,7 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray
         return x
 
     xdims = get_dims(x)
-    x = _to_jax(x)
+    x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     offsets, diags = array_to_sparsedia(x)
     return SparseDIAQArray(dims, False, offsets, diags)
@@ -187,60 +187,6 @@ def stack(qarrays: Sequence[QArray], axis: int = 0) -> QArray:
         )
 
 
-def to_jax(x: QArrayLike) -> Array:
-    """Convert a qarray-like into a JAX array.
-
-    Args:
-        x: Object to convert.
-
-    Returns:
-        JAX array.
-
-    Examples:
-        >>> dq.to_jax(dq.fock(3, 1))
-        Array([[0.+0.j],
-               [1.+0.j],
-               [0.+0.j]], dtype=complex64)
-        >>> dq.to_jax([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
-        Array([[[ 0.+0.j,  1.+0.j],
-                [ 1.+0.j,  0.+0.j]],
-        <BLANKLINE>
-               [[ 0.+0.j,  0.-1.j],
-                [ 0.+1.j,  0.+0.j]],
-        <BLANKLINE>
-               [[ 1.+0.j,  0.+0.j],
-                [ 0.+0.j, -1.+0.j]]], dtype=complex64)
-    """
-    return _to_jax(x)
-
-
-def to_numpy(x: QArrayLike) -> np.ndarray:
-    """Convert a qarray-like into a NumPy array.
-
-    Args:
-        x: Object to convert.
-
-    Returns:
-        NumPy array.
-
-    Examples:
-        >>> dq.to_numpy(dq.fock(3, 1))
-        array([[0.+0.j],
-               [1.+0.j],
-               [0.+0.j]], dtype=complex64)
-        >>> dq.to_numpy([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
-        array([[[ 0.+0.j,  1.+0.j],
-                [ 1.+0.j,  0.+0.j]],
-        <BLANKLINE>
-               [[ 0.+0.j,  0.-1.j],
-                [ 0.+1.j,  0.+0.j]],
-        <BLANKLINE>
-               [[ 1.+0.j,  0.+0.j],
-                [ 0.+0.j, -1.+0.j]]])
-    """
-    return _to_numpy(x)
-
-
 def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[Qobj]:
     r"""Convert a qarray-like into a QuTiP Qobj or list of Qobjs.
 
@@ -296,7 +242,7 @@ def to_qutip(x: QArrayLike, dims: tuple[int, ...] | None = None) -> Qobj | list[
         return x.asdense().to_qutip()
 
     xdims = get_dims(x)
-    x = _to_jax(x)
+    x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
     check_shape(x, 'x', '(..., n, 1)', '(..., 1, n)', '(..., n, n)')
     return array_to_qobj_list(x, dims)

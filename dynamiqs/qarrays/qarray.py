@@ -52,13 +52,36 @@ def isqarraylike(x: Any) -> bool:
     return False
 
 
-def _to_jax(x: QArrayLike) -> Array:
+def to_jax(x: QArrayLike) -> Array:
+    """Convert a qarray-like into a JAX array.
+
+    Args:
+        x: Object to convert.
+
+    Returns:
+        JAX array.
+
+    Examples:
+        >>> dq.to_jax(dq.fock(3, 1))
+        Array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_jax([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
+        Array([[[ 0.+0.j,  1.+0.j],
+                [ 1.+0.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 0.+0.j,  0.-1.j],
+                [ 0.+1.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 1.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j]]], dtype=complex64)
+    """
     if isinstance(x, QArray):
         return x.to_jax()
     elif isinstance(x, Qobj):
         return jnp.asarray(x.full())
     elif isinstance(x, Sequence):
-        return jnp.asarray([_to_jax(sub_x) for sub_x in x])
+        return jnp.asarray([to_jax(sub_x) for sub_x in x])
     else:
         return jnp.asarray(x)
 
@@ -76,13 +99,36 @@ def get_dims(x: QArrayLike) -> tuple[int, ...] | None:
         return None
 
 
-def _to_numpy(x: QArrayLike) -> np.ndarray:
+def to_numpy(x: QArrayLike) -> np.ndarray:
+    """Convert a qarray-like into a NumPy array.
+
+    Args:
+        x: Object to convert.
+
+    Returns:
+        NumPy array.
+
+    Examples:
+        >>> dq.to_numpy(dq.fock(3, 1))
+        array([[0.+0.j],
+               [1.+0.j],
+               [0.+0.j]], dtype=complex64)
+        >>> dq.to_numpy([qt.sigmax(), qt.sigmay(), qt.sigmaz()])
+        array([[[ 0.+0.j,  1.+0.j],
+                [ 1.+0.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 0.+0.j,  0.-1.j],
+                [ 0.+1.j,  0.+0.j]],
+        <BLANKLINE>
+               [[ 1.+0.j,  0.+0.j],
+                [ 0.+0.j, -1.+0.j]]])
+    """
     if isinstance(x, QArray):
         return x.to_numpy()
     elif isinstance(x, Qobj):
         return np.asarray(x.full())
     elif isinstance(x, Sequence):
-        return np.asarray([_to_numpy(sub_x) for sub_x in x])
+        return np.asarray([to_numpy(sub_x) for sub_x in x])
     else:
         return np.asarray(x)
 
