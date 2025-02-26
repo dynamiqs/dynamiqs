@@ -246,8 +246,8 @@ def matmul_array_sparsedia(
     for i, offset in enumerate(offsets):
         slice_in = _sparsedia_slice(offset)
         slice_out = _sparsedia_slice(-offset)
-        tmp = array[..., :, slice_out] * diags[..., i, slice_in, None].T
-        out = out.at[..., slice_in, :].add(tmp)
+        tmp = array[..., :, slice_out] * diags[..., i, None, slice_in]
+        out = out.at[..., :, slice_in].add(tmp)
 
     return out
 
