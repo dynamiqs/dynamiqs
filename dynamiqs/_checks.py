@@ -116,9 +116,7 @@ def _warn_non_normalised(x: QArrayLike, argname: str):
     # issue a warning if the input qarray-like is not normalised
     def warn(norm: Array) -> None:
         warnings.warn(
-            f'Argument {argname} is not normalized (expected norm 1.0 but norm is'
-            f' {norm}).',
-            stacklevel=2,
+            f'Argument {argname} is not normalized (expected norm 1).', stacklevel=2
         )
 
     x = asqarray(x)
