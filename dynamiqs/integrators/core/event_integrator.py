@@ -140,7 +140,7 @@ class JSSESolveEventIntegrator(
         inner_state = JSSEInnerState(saved, 0)
         state = JSSEState(self.y0, self.t0, self.key, 0, clicktimes, inner_state)
 
-        # loop over no jump evolutions until the final time is reached
+        # loop over no-click evolutions until the final time is reached
         final_state = while_loop(
             loop_condition,
             loop_body,
