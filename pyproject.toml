@@ -70,7 +70,6 @@ dev = [
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
-exclude = ["examples/*"]
 
 [tool.ruff.format]
 quote-style = "single"
