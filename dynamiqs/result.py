@@ -57,12 +57,12 @@ class SolveSaved(Saved):
     Esave: Array | None
 
 
-class DiffusiveSolveSaved(SolveSaved):
-    Isave: Array
-
-
 class JumpSolveSaved(SolveSaved):
     clicktimes: Array
+
+
+class DiffusiveSolveSaved(SolveSaved):
+    Isave: Array
 
 
 class PropagatorSaved(Saved):
