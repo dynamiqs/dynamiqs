@@ -203,14 +203,14 @@ class JSSESolveResult(SolveResult):
         return self._saved.clicktimes
 
     @property
-    def numclicks(self) -> Array:
+    def nclicks(self) -> Array:
         return jnp.count_nonzero(~jnp.isnan(self.clicktimes), axis=-1)
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
             'Clicktimes': array_str(self.clicktimes),
-            'Numclicks': array_str(self.numclicks),
+            'Nclicks': array_str(self.nclicks),
         }
 
     @classmethod

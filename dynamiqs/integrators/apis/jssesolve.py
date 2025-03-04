@@ -157,7 +157,7 @@ def jssesolve(
                 - **clicktimes** _(array of shape (..., ntrajs, len(jump_ops), nmaxclick))_ - Times
                     at which the detectors clicked. Variable-length array padded with
                     `None` up to `nmaxclick`.
-                - **numclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
+                - **nclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
                 - **noclick_states** _(..., nsave, n, 1)_ - Saved state for the no jump
                     trajectory. Only for the `Event()` method with `smart_sampling`.

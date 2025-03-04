@@ -29,7 +29,7 @@ class JSSEState(eqx.Module):
     y: QArray  # quantum state
     t: Scalar  # time
     key: PRNGKeyArray  # active key
-    numclicks: int  # number of clicks
+    nclicks: int  # number of clicks
     clicktimes: Array  # time of clicks
     inner_state: JSSEInnerState  # saved quantities
 
@@ -79,30 +79,30 @@ class JSSESolveEventIntegrator(
             # if the event triggered, update the quantum state and clicktimes
             # else, the final time was reached, and do nothing
             def event(
-                yclick: QArray, clicktimes: Array, numclicks: int
+                yclick: QArray, clicktimes: Array, nclicks: int
             ) -> tuple[QArray, Array, int]:
                 # find a random jump operator among the provided jump_ops, and apply it
                 jump_op, idx = self._sample_jump_ops(tclick, yclick, jump_key)
                 yclick = unit(jump_op @ yclick)
 
                 # update clicktimes
-                clicktimes = clicktimes.at[idx, state.numclicks].set(tclick)
-                numclicks += 1
+                clicktimes = clicktimes.at[idx, state.nclicks].set(tclick)
+                nclicks += 1
 
-                return yclick, clicktimes, numclicks
+                return yclick, clicktimes, nclicks
 
             def skip(
-                yclick: QArray, clicktimes: Array, numclicks: int
+                yclick: QArray, clicktimes: Array, nclicks: int
             ) -> tuple[QArray, Array, int]:
-                return yclick, clicktimes, numclicks
+                return yclick, clicktimes, nclicks
 
-            yclick, clicktimes, numclicks = jax.lax.cond(
+            yclick, clicktimes, nclicks = jax.lax.cond(
                 solution.event_mask,
                 event,
                 skip,
                 yclick,
                 state.clicktimes,
-                state.numclicks,
+                state.nclicks,
             )
 
             # save intermediate states and expectation values, based on the code
@@ -131,7 +131,7 @@ class JSSESolveEventIntegrator(
             )
 
             # return updated state
-            return JSSEState(yclick, tclick, key, numclicks, clicktimes, inner_state)
+            return JSSEState(yclick, tclick, key, nclicks, clicktimes, inner_state)
 
         # prepare the initial state to loop over
         y = stack([self.y0] * len(self.ts))
