@@ -406,29 +406,31 @@ class Kvaerno5(_DEAdaptiveStep):
 class Event(_DEMethod):
     """Event method for the jump SSE and SME.
 
-    This method uses diffrax's event handling to stop the no-jump integration when jumps
-    are detected. The no-jump integration is performed using the `noclick_method`
-    provided. The exact time of jumps can be refined by providing `root_finder`.
-    Furthermore, if `smart_sampling` is set to True, the no-jump evolution is only
-    sampled once over the whole time interval, and subsequent trajectories are sampled
-    with at least one jump.
+    This method uses the [Diffrax](https://docs.kidger.site/diffrax/) library event
+    handling to interrupt the no-click integration at the next sampled click time,
+    apply the corresponding measurement backaction to the state, and continue the
+    no-click integration until the subsequent sampled click time.
+
+    Note: Click times precision
+        By default, the click time precision is determined by the integration step size.
+        The exact click time can be refined to a chosen precision by specifying the
+        `root_finder` argument, see for example the
+        [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
 
     Args:
-        noclick_method: Method for the no-jump evolution. Defaults to
-            [`Tsit5()`](/python_api/method/Tsit5.html).
-        root_finder: Root finder passed to
-            [`dx.diffeqsolve()`](https://docs.kidger.site/diffrax/api/diffeqsolve/) to
-            find the exact time an event occurs. Can be `None`, in which case the root
-            finding functionality is not utilized. It is recommended to pass a root
-            finder (such as the [optimistix Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton))
-            so that event times are not determined by the integration step sizes in
-            diffeqsolve. However there are cases where the root finding can fail,
-            causing the whole simulation to fail. Passing `None` for `root_finder`
-            can alleviate the issue in these cases.
-        smart_sampling: If `True`, the no jump trajectory is simulated only once, and
-            `result.states` contains only trajectories with one or more jumps. The
-            no jump trajectoriy is accessible with `result.noclick_states`, and its
-            associated probability with `result.noclick_prob`.
+        noclick_method: Method for the no-click evolution. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
+        root_finder: Root finder to refine the click times, defaults to `None`
+            (precision determined by the integration step size).
+        smart_sampling: If `True`, the no-click trajectory is sampled only once, and
+            `result.states` contains only trajectories with one or more clicks. Use
+            `result.noclick_states` to access the no-click trajectory, and
+            `result.noclick_prob` for its associated probability.
 
     Note-: Supported gradients
         This method supports differentiation with
