@@ -33,7 +33,7 @@ _cases = {
 }
 
 
-def has_shape(x: Array | QArray, shape: str) -> bool:
+def _has_shape(x: Array | QArray, shape: str) -> bool:
     if shape in _cases:
         return _cases[shape](x)
     else:
@@ -48,7 +48,7 @@ def check_shape(
     # subs={'?': 'nH?'} to replace the '?' by 'nH?' in the shape specification
 
     for shape in shapes:
-        if has_shape(x, shape):
+        if _has_shape(x, shape):
             return
 
     if len(shapes) == 1:
