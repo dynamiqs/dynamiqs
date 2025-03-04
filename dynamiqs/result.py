@@ -209,8 +209,8 @@ class JSSESolveResult(SolveResult):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'Clicktimes': array_str(self.clicktimes),
-            'Nclicks': array_str(self.nclicks),
+            'Clicktimes': _array_str(self.clicktimes),
+            'Nclicks': _array_str(self.nclicks),
         }
 
     @classmethod
