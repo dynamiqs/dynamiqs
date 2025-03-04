@@ -238,12 +238,12 @@ def dsmesolve(
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
-    options = options.initialise()
 
     # === check arguments
     _check_dsmesolve_args(H, Ls, etas, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dsmesolve')
+    options = options.initialise()
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')

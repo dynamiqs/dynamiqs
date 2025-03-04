@@ -221,12 +221,12 @@ def mesolve(
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
-    options = options.initialise()
 
     # === check arguments
     _check_mesolve_args(H, Ls, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mesolve')
+    options = options.initialise()
 
     # === convert rho0 to density matrix
     rho0 = rho0.todm()

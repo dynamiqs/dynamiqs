@@ -159,12 +159,12 @@ def sepropagator(
     # === convert arguments
     H = astimeqarray(H)
     tsave = jnp.asarray(tsave)
-    options = options.initialise()
 
     # === check arguments
     _check_sepropagator_args(H)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'sepropagator')
+    options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays

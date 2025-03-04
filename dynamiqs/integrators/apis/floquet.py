@@ -157,12 +157,12 @@ def floquet(
     # === convert arguments
     H = astimeqarray(H)
     tsave = jnp.asarray(tsave)
-    options = options.initialise()
 
     # === check arguments
     tsave = check_times(tsave, 'tsave')
     H, T, tsave = _check_floquet_args(H, T, tsave)
     check_options(options, 'floquet')
+    options = options.initialise()
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
