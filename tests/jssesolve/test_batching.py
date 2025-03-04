@@ -44,7 +44,7 @@ def test_cartesian_batching(nH, npsi0, nL):
 @pytest.mark.run(order=TEST_LONG)
 @pytest.mark.parametrize('nL1', [(), (4, 1, 3)])
 @pytest.mark.parametrize('npsi0', [(), (1,), (3,), (2, 1), (2, 3), (4, 1, 3)])
-@pytest.mark.parametrize('ntrajs', [(1,), (5,), (5, 6)])
+@pytest.mark.parametrize('ntrajs', [1, 5])
 def test_flat_batching(nL1, npsi0, ntrajs):
     n = 2
     nH = (2, 3)
@@ -61,5 +61,5 @@ def test_flat_batching(nL1, npsi0, ntrajs):
 
     # check result shape
     broadcast_shape = jnp.broadcast_shapes(nH, nL1, npsi0)
-    assert result.states.shape == (*broadcast_shape, *ntrajs, ntsave, n, 1)
-    assert result.expects.shape == (*broadcast_shape, *ntrajs, nEs, ntsave)
+    assert result.states.shape == (*broadcast_shape, ntrajs, ntsave, n, 1)
+    assert result.expects.shape == (*broadcast_shape, ntrajs, nEs, ntsave)
