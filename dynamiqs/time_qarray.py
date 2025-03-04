@@ -232,10 +232,6 @@ def timecallable(
     return CallableTimeQArray(f, discontinuity_ts)
 
 
-class Shape(tuple):
-    """Helper class to help with Pytree handling."""
-
-
 class TimeQArray(eqx.Module):
     r"""Base class for time-dependent qarrays.
 
