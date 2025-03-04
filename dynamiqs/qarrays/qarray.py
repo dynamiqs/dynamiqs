@@ -376,6 +376,16 @@ class QArray(eqx.Module):
         # todo
         pass
 
+    def mean(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        numerator = self.sum(axis=axis)
+        if axis is None:
+            denominator = prod(self.shape)
+        elif isinstance(axis, int):
+            denominator = self.shape[axis % self.ndim]
+        else:
+            denominator = prod(self.shape[i % self.ndim] for i in axis)
+        return numerator / denominator
+
     @abstractmethod
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # todo
