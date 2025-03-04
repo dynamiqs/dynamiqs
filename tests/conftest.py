@@ -5,7 +5,7 @@ from .order import TEST_INSTANT
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _mpl_backend():
+def mpl_backend():
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
 
