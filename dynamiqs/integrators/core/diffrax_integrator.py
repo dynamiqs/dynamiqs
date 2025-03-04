@@ -9,6 +9,7 @@ import equinox as eqx
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
+from ..._utils import obj_type_str
 from ...gradient import Autograd, CheckpointAutograd
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
@@ -87,7 +88,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         elif isinstance(self.gradient, Autograd):
             return dx.DirectAdjoint()
         else:
-            raise TypeError(f'Unknown gradient type {self.gradient}')
+            raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
 
     def diffeqsolve(
         self,
@@ -125,7 +126,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
         # === solve differential equation
-        solution = self.diffeqsolve(t0=self.t0, t1=self.t1, y0=self.y0, saveat=saveat)
+        solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
         saved = self.postprocess_saved(*solution.ys)
