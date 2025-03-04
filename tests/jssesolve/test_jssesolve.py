@@ -24,9 +24,7 @@ def test_against_mesolve_oscillator(atol=5e-2):
     options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = dq.jssesolve(
-        H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops, options=options
-    )
+    jsseresult = dq.jssesolve(H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops)
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
 
     # compare results on average
@@ -56,9 +54,7 @@ def test_against_mesolve_qubit(atol=5e-2):
     options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = dq.jssesolve(
-        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, options=options
-    )
+    jsseresult = dq.jssesolve(H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops)
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
 
     # compare results on average
