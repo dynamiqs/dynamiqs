@@ -408,14 +408,14 @@ class Event(_DEMethod):
     """Event method for the jump SSE and SME.
 
     This method uses diffrax's event handling to stop the no-jump integration when jumps
-    are detected. The no-jump integration is performed using the `nojump_method`
+    are detected. The no-jump integration is performed using the `noclick_method`
     provided. The exact time of jumps can be refined by providing `root_finder`.
     Furthermore, if `smart_sampling` is set to True, the no-jump evolution is only
     sampled once over the whole time interval, and subsequent trajectories are sampled
     with at least one jump.
 
     Args:
-        nojump_method: Method for the no-jump evolution. Defaults to
+        noclick_method: Method for the no-jump evolution. Defaults to
             [`Tsit5()`](/python_api/method/Tsit5.html).
         root_finder: Root finder passed to
             [`dx.diffeqsolve()`](https://docs.kidger.site/diffrax/api/diffeqsolve/) to
@@ -428,8 +428,8 @@ class Event(_DEMethod):
             can alleviate the issue in these cases.
         smart_sampling: If `True`, the no jump trajectory is simulated only once, and
             `result.states` contains only trajectories with one or more jumps. The
-            no jump trajectoriy is accessible with `result.nojump_states`, and its
-            associated probability with `result.nojump_prob`.
+            no jump trajectoriy is accessible with `result.noclick_states`, and its
+            associated probability with `result.noclick_prob`.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -438,7 +438,7 @@ class Event(_DEMethod):
         (default).
     """
 
-    nojump_method: Method = Tsit5()
+    noclick_method: Method = Tsit5()
     root_finder: AbstractRootFinder | None = None
     smart_sampling: bool = False
 
@@ -447,14 +447,14 @@ class Event(_DEMethod):
     # dummy init to have the signature in the documentation
     def __init__(
         self,
-        nojump_method: Method = Tsit5(),  # noqa: B008
+        noclick_method: Method = Tsit5(),  # noqa: B008
         root_finder: AbstractRootFinder | None = None,
         smart_sampling: bool = False,
     ):
-        self.nojump_method = nojump_method
+        self.noclick_method = noclick_method
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
 
-    # inherit attributes from the nojump_method
+    # inherit attributes from the noclick_method
     def __getattr__(self, attr: str) -> Any:
-        return getattr(self.nojump_method, attr)
+        return getattr(self.noclick_method, attr)

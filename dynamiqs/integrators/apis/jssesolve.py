@@ -159,9 +159,9 @@ def jssesolve(
                     `None` up to `nmaxclick`.
                 - **numclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
-                - **nojump_states** _(..., nsave, n, 1)_ - Saved state for the no jump
+                - **noclick_states** _(..., nsave, n, 1)_ - Saved state for the no jump
                     trajectory. Only for the `Event()` method with `smart_sampling`.
-                - **nojump_prob** _(..., nsave)_ - Probability of the no jump
+                - **noclick_prob** _(..., nsave)_ - Probability of the no jump
                     trajectory. Only for the `Event()` method with `smart_sampling`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
@@ -313,7 +313,7 @@ def _jssesolve_single_trajectory(
             Kvaerno3: jssesolve_event_kvaerno3_integrator_constructor,
             Kvaerno5: jssesolve_event_kvaerno5_integrator_constructor,
         }
-        integrator_constructor = integrator_constructors[type(method.nojump_method)]
+        integrator_constructor = integrator_constructors[type(method.noclick_method)]
     else:
         # temporary until we implement other methods
         raise NotImplementedError
