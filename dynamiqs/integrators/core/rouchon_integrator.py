@@ -54,7 +54,7 @@ class Rouchon1DXSolver(RouchonDXSolver):
         return 1
 
 
-def _cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.Array:
+def cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute S = M0d @ M0 + M1d @ M1 and replace
     #   M0 by ~M0 = M0 @ S^{-1/2}
     #   M1 by ~M1 = M1 @ S^{-1/2}
@@ -105,7 +105,7 @@ class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
             #
-            # See comment of `_cholesky_normalize()` for the normalisation.
+            # See comment of `cholesky_normalize()` for the normalisation.
 
             delta_t = t1 - t0
             rho = y0
@@ -117,7 +117,7 @@ class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
             Ms = [jnp.sqrt(delta_t) * _L for _L in L]
 
             if self.method.normalize:
-                rho = _cholesky_normalize(M0, LdL, delta_t, rho)
+                rho = cholesky_normalize(M0, LdL, delta_t, rho)
 
             return M0 @ rho @ dag(M0) + sum([_M @ rho @ dag(_M) for _M in Ms])
 

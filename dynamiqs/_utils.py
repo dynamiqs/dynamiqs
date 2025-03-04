@@ -19,7 +19,7 @@ def obj_type_str(x: Any) -> str:
     return type_str(type(x))
 
 
-def get_default_dtype() -> jnp.float32 | jnp.float64:
+def _get_default_dtype() -> jnp.float32 | jnp.float64:
     default_dtype = jnp.array(0.0).dtype
     return jnp.float64 if default_dtype == jnp.float64 else jnp.float32
 
@@ -27,7 +27,7 @@ def get_default_dtype() -> jnp.float32 | jnp.float64:
 def cdtype() -> jnp.complex64 | jnp.complex128:
     # the default dtype for complex arrays is determined by the default floating point
     # dtype
-    dtype = get_default_dtype()
+    dtype = _get_default_dtype()
     if dtype is jnp.float32:
         return jnp.complex64
     elif dtype is jnp.float64:

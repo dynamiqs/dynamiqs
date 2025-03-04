@@ -17,7 +17,7 @@ from ...utils.general import dag, expect
 from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import DSMEInterface, DSSEInterface, SolveInterface
-from .rouchon_integrator import _cholesky_normalize
+from .rouchon_integrator import cholesky_normalize
 from .save_mixin import DiffusiveSolveSaveMixin
 
 
@@ -294,7 +294,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         #   MdY = I - (iH + 0.5 Ld @ L) dt + sqrt(self.eta) * dY * Lm
         #   M1 = sqrt(1 - eta) * L sqrt(dt)
         #
-        # See comment of `_cholesky_normalize()` for the normalisation (computed for the
+        # See comment of `cholesky_normalize()` for the normalisation (computed for the
         # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
 
         rho = y.state
@@ -321,7 +321,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         ] + [self.dt * _Lc for _Lc in Lc]
 
         if self.method.normalize:
-            rho = _cholesky_normalize(M0, LdL, self.dt, rho)
+            rho = cholesky_normalize(M0, LdL, self.dt, rho)
 
         rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
         rho = rho / rho.trace()  # normalise by signal probability

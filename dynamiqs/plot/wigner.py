@@ -17,7 +17,7 @@ __all__ = ['wigner', 'wigner_gif', 'wigner_mosaic']
 
 
 @optional_ax
-def plot_wigner_data(
+def _plot_wigner_data(
     wigner: ArrayLike,
     xmax: float,
     ymax: float,
@@ -127,7 +127,7 @@ def wigner(
     ymax = xmax if ymax is None else ymax
     _, _, w = compute_wigner(state, xmax, ymax, npixels)
 
-    plot_wigner_data(
+    _plot_wigner_data(
         w,
         xmax,
         ymax,
@@ -216,7 +216,7 @@ def wigner_mosaic(
 
     # plot individual wigner
     for i, ax in enumerate(axs):
-        plot_wigner_data(
+        _plot_wigner_data(
             wig[i],
             ax=ax,
             xmax=xmax,
@@ -288,7 +288,7 @@ def wigner_gif(
     indices = gif_indices(len(states), nframes)
     _, _, wig = compute_wigner(states[indices], xmax, ymax, npixels)
 
-    return gifit(plot_wigner_data)(
+    return gifit(_plot_wigner_data)(
         wig,
         w=w,
         h=ymax / xmax * w,
