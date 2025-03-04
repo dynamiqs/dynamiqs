@@ -403,7 +403,6 @@ class Kvaerno5(_DEAdaptiveStep):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
 
 
-# === event method options for the jump SSE/SME
 class Event(_DEMethod):
     """Event method for the jump SSE and SME.
 
