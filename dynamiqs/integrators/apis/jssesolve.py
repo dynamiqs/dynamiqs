@@ -102,8 +102,8 @@ def jssesolve(
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
-        options: Generic options (supported: `save_states`, `cartesian_batching`,
-            `save_extra`, `nmaxclick`, `smart_sampling`).
+        options: Generic options (supported: `save_states`, `cartesian_batching`, `t0`,
+            `save_extra`, `nmaxclick`).
             ??? "Detailed options API"
                 ```
                 dq.Options(
