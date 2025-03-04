@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
 from ...method import Dopri5, Dopri8, Euler, Event, Kvaerno3, Kvaerno5, Method, Tsit5
-from ...options import Options
+from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
 from ...result import JSSESolveResult
@@ -41,7 +41,7 @@ def jssesolve(
     keys: PRNGKeyArray,
     *,
     exp_ops: list[QArrayLike] | None = None,
-    method: Method | None = Event(),  # noqa: B008
+    method: Method = Event(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
 ) -> JSSESolveResult:
@@ -98,7 +98,8 @@ def jssesolve(
         exp_ops _(list of array-like, each of shape (n, n), optional)_: List of
             operators for which the expectation value is computed.
         method: Method for the integration. Defaults to
-            [`dq.method.Event()`](/python_api/method/Event.html).
+            [`dq.method.Event`][dynamiqs.method.Event] (supported:
+            [`Event`][dynamiqs.method.Event]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -129,7 +130,7 @@ def jssesolve(
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
                 - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
-                    set higher than the expected maximum number of jump event.
+                    set higher than the expected maximum number of clicks.
 
     Returns:
         `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
@@ -159,14 +160,16 @@ def jssesolve(
                     `None` up to `nmaxclick`.
                 - **nclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
-                - **noclick_states** _(..., nsave, n, 1)_ - Saved state for the no jump
-                    trajectory. Only for the `Event()` method with `smart_sampling`.
-                - **noclick_prob** _(..., nsave)_ - Probability of the no jump
-                    trajectory. Only for the `Event()` method with `smart_sampling`.
+                - **noclick_states** _(array of shape (..., nsave, n, 1))_ - Saved states
+                    for the no-click trajectory. Only for the
+                    [`Event`][dynamiqs.method.Event] method with `smart_sampling=True`.
+                - **noclick_prob** _(array of shape (..., nsave))_ - Probability of the
+                    no-click trajectory. Only for the [`Event`][dynamiqs.method.Event]
+                    method with `smart_sampling=True`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
-                    sample the Wiener processes.
+                    sample the point processes.
                 - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were
@@ -239,6 +242,7 @@ def jssesolve(
     # === check arguments
     _check_jssesolve_args(H, Ls, psi0, exp_ops)
     tsave = check_times(tsave, 'tsave')
+    check_options(options, 'jssesolve')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
@@ -248,7 +252,7 @@ def jssesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=['method', 'gradient', 'options'])
+@partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
 def _vectorized_jssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -267,7 +271,7 @@ def _vectorized_jssesolve(
     in_axes = (None, None, None, None, 0, None, None, None, None)
     # the result is vectorized over `_saved`, `infos` and `keys`
     out_axes = JSSESolveResult.out_axes()
-    f = multi_vmap(f, in_axes, out_axes, keys.ndim)
+    f = jax.vmap(f, in_axes, out_axes)
 
     # === vectorize function
     # vectorize input over H, Ls and psi0.
@@ -350,7 +354,7 @@ def _check_jssesolve_args(
 
     # === check Ls shape
     for i, L in enumerate(Ls):
-        check_shape(L, f'Ls[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0:
         logging.warning(
