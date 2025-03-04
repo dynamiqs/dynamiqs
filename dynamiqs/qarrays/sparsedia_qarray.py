@@ -15,8 +15,8 @@ from .layout import Layout, dia
 from .qarray import (
     QArray,
     QArrayLike,
-    _in_last_two_dims,
-    _include_last_two_dims,
+    in_last_two_dims,
+    include_last_two_dims,
     isqarraylike,
     to_jax,
 )
@@ -148,8 +148,8 @@ class SparseDIAQArray(QArray):
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
         # return array if last two dimensions are modified, qarray otherwise
-        if _in_last_two_dims(axis, self.ndim):
-            if _include_last_two_dims(axis, self.ndim):
+        if in_last_two_dims(axis, self.ndim):
+            if include_last_two_dims(axis, self.ndim):
                 return self.diags.sum(axis)
             else:
                 return self.to_jax().sum(axis)
@@ -159,8 +159,8 @@ class SparseDIAQArray(QArray):
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # return array if last two dimensions are modified, qarray otherwise
-        if _in_last_two_dims(axis, self.ndim):
-            if _include_last_two_dims(axis, self.ndim):
+        if in_last_two_dims(axis, self.ndim):
+            if include_last_two_dims(axis, self.ndim):
                 return self.diags.squeeze(axis)
             else:
                 return self.to_jax().squeeze(axis)

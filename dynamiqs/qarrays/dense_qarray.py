@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike
 from qutip import Qobj
 
 from .layout import Layout, dense
-from .qarray import QArray, QArrayLike, _in_last_two_dims, isqarraylike, to_jax
+from .qarray import QArray, QArrayLike, in_last_two_dims, isqarraylike, to_jax
 from .sparsedia_primitives import array_to_sparsedia
 
 if TYPE_CHECKING:
@@ -89,7 +89,7 @@ class DenseQArray(QArray):
         data = self.data.sum(axis=axis)
 
         # return array if last two dimensions are modified, qarray otherwise
-        if _in_last_two_dims(axis, self.ndim):
+        if in_last_two_dims(axis, self.ndim):
             return data
         else:
             return self._replace(data=data)
@@ -98,7 +98,7 @@ class DenseQArray(QArray):
         data = self.data.squeeze(axis=axis)
 
         # return array if last two dimensions are modified, qarray otherwise
-        if _in_last_two_dims(axis, self.ndim):
+        if in_last_two_dims(axis, self.ndim):
             return data
         else:
             return self._replace(data=data)
