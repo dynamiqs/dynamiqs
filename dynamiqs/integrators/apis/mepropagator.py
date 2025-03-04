@@ -164,6 +164,7 @@ def mepropagator(
     H = astimeqarray(H)
     Ls = [astimeqarray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
+    options = options.initialise()
 
     # === check arguments
     _check_mepropagator_args(H, Ls)

@@ -229,6 +229,7 @@ def dssesolve(
     keys = jnp.asarray(keys)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
+    options = options.initialise()
 
     # === check arguments
     _check_dssesolve_args(H, Ls, psi0, exp_ops)
