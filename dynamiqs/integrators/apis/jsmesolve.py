@@ -121,7 +121,7 @@ def jsmesolve(
                     PyTree. This can be used to save additional arbitrary data
                     during the integration, accessible in `result.extra`.
                 - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
-                    set higher than the expected maximum number of jump event.
+                    set higher than the expected maximum number of clicks.
 
     Returns:
         `dq.JSMESolveResult` object holding the result of the jump SME integration. Use
@@ -153,7 +153,7 @@ def jsmesolve(
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
-                    sample the Wiener processes.
+                    sample the point processes.
                 - **infos** _(PyTree or None)_ - Method-dependent information on the
                     resolution.
                 - **tsave** _(array of shape (ntsave,))_ - Times for which results were

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import equinox as eqx
+from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, Gradient
@@ -17,6 +18,7 @@ __all__ = [
     'Kvaerno5',
     'Rouchon1',
     'Tsit5',
+    'Event',
 ]
 
 
@@ -399,3 +401,61 @@ class Kvaerno5(_DEAdaptiveStep):
         max_steps: int = 100_000,
     ):
         super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+
+
+class Event(_DEMethod):
+    """Event method for the jump SSE and SME.
+
+    This method uses the [Diffrax](https://docs.kidger.site/diffrax/) library event
+    handling to interrupt the no-click integration at the next sampled click time,
+    apply the corresponding measurement backaction to the state, and continue the
+    no-click integration until the subsequent sampled click time.
+
+    Note: Click times precision
+        By default, the click time precision is determined by the integration step size.
+        The exact click time can be refined to a chosen precision by specifying the
+        `root_finder` argument, see for example the
+        [optimistix library Newton root finder](https://docs.kidger.site/optimistix/api/root_find/#optimistix.Newton).
+
+    Args:
+        noclick_method: Method for the no-click evolution. Defaults to
+            [`dq.method.Tsit5`][dynamiqs.method.Tsit5] (supported:
+            [`Tsit5`][dynamiqs.method.Tsit5], [`Dopri5`][dynamiqs.method.Dopri5],
+            [`Dopri8`][dynamiqs.method.Dopri8],
+            [`Kvaerno3`][dynamiqs.method.Kvaerno3],
+            [`Kvaerno5`][dynamiqs.method.Kvaerno5],
+            [`Euler`][dynamiqs.method.Euler]).
+        root_finder: Root finder to refine the click times, defaults to `None`
+            (precision determined by the integration step size).
+        smart_sampling: If `True`, the no-click trajectory is sampled only once, and
+            `result.states` contains only trajectories with one or more clicks. Use
+            `result.noclick_states` to access the no-click trajectory, and
+            `result.noclick_prob` for its associated probability.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] and
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default).
+    """
+
+    noclick_method: Method = Tsit5()
+    root_finder: AbstractRootFinder | None = None
+    smart_sampling: bool = False
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd, CheckpointAutograd)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        noclick_method: Method = Tsit5(),  # noqa: B008
+        root_finder: AbstractRootFinder | None = None,
+        smart_sampling: bool = False,
+    ):
+        self.noclick_method = noclick_method
+        self.root_finder = root_finder
+        self.smart_sampling = smart_sampling
+
+    # inherit attributes from the noclick_method
+    def __getattr__(self, attr: str) -> Any:
+        return getattr(self.noclick_method, attr)
