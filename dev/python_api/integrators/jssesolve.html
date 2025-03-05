@@ -1670,6 +1670,8 @@
       
         
       
+        
+      
     
     
       
@@ -1892,6 +1894,28 @@
   
   <span class="md-ellipsis">
     Expm
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../method/Event.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Event
     
   </span>
   
@@ -5309,7 +5333,7 @@
     <span class="n">keys</span><span class="p">:</span> <span class="n">PRNGKeyArray</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">exp_ops</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(),</span>
     <span class="n">gradient</span><span class="p">:</span> <span class="n">Gradient</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">()</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSSESolveResult</span>
@@ -5318,13 +5342,7 @@
     <div class="doc doc-contents first">
 
         <p>Solve the jump stochastic Schrödinger equation (<abbr title="stochastic Schrödinger equation">SSE</abbr>).</p>
-
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>This function has not been implemented yet. The following API is indicative
-of the planned implementation.</p>
-</details>        <p class="annotate">The jump <abbr title="stochastic Schrödinger equation">SSE</abbr> describes the evolution of a quantum system measured by an ideal jump
+<p class="annotate">The jump <abbr title="stochastic Schrödinger equation">SSE</abbr> describes the evolution of a quantum system measured by an ideal jump
 detector (for example photodetection in quantum optics). This
 function computes the evolution of the state vector <span class="arithmatex">\(\ket{\psi(t)}\)</span> at time <span class="arithmatex">\(t\)</span>,
 starting from an initial state <span class="arithmatex">\(\ket{\psi_0}\)</span>, according to the jump <abbr title="stochastic Schrödinger equation">SSE</abbr> (<span class="arithmatex">\(\hbar=1\)</span>,
@@ -5362,12 +5380,6 @@ $$</p>
 solver returns the times at which the detector clicked,
 <span class="arithmatex">\(I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}\)</span>.</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>For now, <code>jssesolve()</code> only supports linearly spaced <code>tsave</code> with values that
-are exact multiples of the method fixed step size <code>dt</code>.</p>
-</details>
     <!-- <p>Parameters:</p> -->
     <p>
       <strong>Parameters</strong>
@@ -5424,8 +5436,9 @@ operators for which the expectation value is computed.</p>
         <li class="field-body">
           <b>method</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Method for the integration. No defaults for now, you have to specify a
-method (supported: <a class="autorefs autorefs-internal" href="../method/EulerMaruyama.html#dynamiqs.method.EulerMaruyama"><code>EulerMaruyama</code></a>).</p>
+          – <p>Method for the integration. Defaults to
+<a class="autorefs autorefs-internal" href="../method/Event.html#dynamiqs.method.Event"><code>dq.method.Event</code></a> (supported:
+<a class="autorefs autorefs-internal" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a>).</p>
         </li>
         <li class="field-body">
           <b>gradient</b>
@@ -5437,16 +5450,16 @@ details.</p>
         <li class="field-body">
           <b>options</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
-          – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>,
-<code>save_extra</code>, <code>nmaxclick</code>, <code>smart_sampling</code>).</p>
+          – <p>Generic options (supported: <code>save_states</code>, <code>cartesian_batching</code>, <code>t0</code>,
+<code>save_extra</code>, <code>nmaxclick</code>).</p>
 <details>
 <summary>Detailed options API</summary>
 <div class="highlight"><pre><span></span><code>dq.Options(
     save_states: bool = True,
     cartesian_batching: bool = True,
+    t0: ScalarLike | None = None,
     save_extra: callable[[Array], PyTree] | None = None,
     nmaxclick: int = 10_000,
-    smart_sampling: bool = False,
 )
 </code></pre></div>
 <p><strong>Parameters</strong></p>
@@ -5456,17 +5469,14 @@ details.</p>
 <li><strong>cartesian_batching</strong> - If <code>True</code>, batched arguments are treated as
     separated batch dimensions, otherwise the batching is performed over
     a single shared batched dimension.</li>
+<li><strong>t0</strong> - Initial time. If <code>None</code>, defaults to the first time in
+    <code>tsave</code>.</li>
 <li><strong>save_extra</strong> <em>(function, optional)</em> - A function with signature
     <code>f(QArray) -&gt; PyTree</code> that takes a state as input and returns a
     PyTree. This can be used to save additional arbitrary data
     during the integration, accessible in <code>result.extra</code>.</li>
 <li><strong>nmaxclick</strong> - Maximum buffer size for <code>result.clicktimes</code>, should be
-    set higher than the expected maximum number of jump event.</li>
-<li><strong>smart_sampling</strong> - If <code>True</code>, the no jump trajectory is simulated
-    only once, and only trajectories with one or more jumps are sampled
-    in <code>result.states</code>. The no jump state is accessible in
-    <code>result.no_jump_state</code> with its associated probability
-    <code>result.no_jump_proba</code>.</li>
+    set higher than the expected maximum number of clicks.</li>
 </ul>
 </details>
         </li>
@@ -5501,14 +5511,18 @@ trajectories (<code>ntrajs = len(keys)</code>).</p>
 <li><strong>clicktimes</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nmaxclick))</em> - Times
     at which the detectors clicked. Variable-length array padded with
     <code>None</code> up to <code>nmaxclick</code>.</li>
-<li><strong>no_jump_state</strong> <em>(..., nsave, n, 1)</em> - Saved state for the no jump
-    trajectory, only if <code>options.smart_sampling=True</code>.</li>
-<li><strong>no_jump_proba</strong> <em>(..., nsave)</em> - Probability of the no jump
-    trajectory, only if <code>options.smart_sampling=True</code>.</li>
+<li><strong>nclicks</strong> <em>(array of shape (..., ntrajs, len(jump_ops))</em> - Number
+    of clicks for each jump operator.</li>
+<li><strong>noclick_states</strong> <em>(array of shape (..., nsave, n, 1))</em> - Saved states
+    for the no-click trajectory. Only for the
+    <a class="autorefs autorefs-internal" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a> method with <code>smart_sampling=True</code>.</li>
+<li><strong>noclick_prob</strong> <em>(array of shape (..., nsave))</em> - Probability of the
+    no-click trajectory. Only for the <a class="autorefs autorefs-internal" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a>
+    method with <code>smart_sampling=True</code>.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
 <li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
-    sample the Wiener processes.</li>
+    sample the point processes.</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
@@ -5542,14 +5556,18 @@ trajectories (<code>ntrajs = len(keys)</code>).</p>
 <li><strong>clicktimes</strong> <em>(array of shape (..., ntrajs, len(jump_ops), nmaxclick))</em> - Times
     at which the detectors clicked. Variable-length array padded with
     <code>None</code> up to <code>nmaxclick</code>.</li>
-<li><strong>no_jump_state</strong> <em>(..., nsave, n, 1)</em> - Saved state for the no jump
-    trajectory, only if <code>options.smart_sampling=True</code>.</li>
-<li><strong>no_jump_proba</strong> <em>(..., nsave)</em> - Probability of the no jump
-    trajectory, only if <code>options.smart_sampling=True</code>.</li>
+<li><strong>nclicks</strong> <em>(array of shape (..., ntrajs, len(jump_ops))</em> - Number
+    of clicks for each jump operator.</li>
+<li><strong>noclick_states</strong> <em>(array of shape (..., nsave, n, 1))</em> - Saved states
+    for the no-click trajectory. Only for the
+    <a class="autorefs autorefs-internal" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a> method with <code>smart_sampling=True</code>.</li>
+<li><strong>noclick_prob</strong> <em>(array of shape (..., nsave))</em> - Probability of the
+    no-click trajectory. Only for the <a class="autorefs autorefs-internal" href="../method/Event.html#dynamiqs.method.Event"><code>Event</code></a>
+    method with <code>smart_sampling=True</code>.</li>
 <li><strong>extra</strong> <em>(PyTree or None)</em> - Extra data saved with <code>save_extra()</code> if
     specified in <code>options</code>.</li>
 <li><strong>keys</strong> <em>(<abbr title="pseudorandom number generator">PRNG</abbr> key array of shape (ntrajs,))</em> - <abbr title="pseudorandom number generator">PRNG</abbr> keys used to
-    sample the Wiener processes.</li>
+    sample the point processes.</li>
 <li><strong>infos</strong> <em>(PyTree or None)</em> - Method-dependent information on the
     resolution.</li>
 <li><strong>tsave</strong> <em>(array of shape (ntsave,))</em> - Times for which results were
