@@ -25,6 +25,8 @@ class DenseQArray(QArray):
 
     data: Array
 
+    __qarray_matmul_priority__ = 0
+
     def _replace(
         self,
         dims: tuple[int, ...] | None = None,
@@ -169,13 +171,9 @@ class DenseQArray(QArray):
         return self._replace(data=data)
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        from .sparsedia_qarray import SparseDIAQArray
-
         super().__matmul__(y)
         if isinstance(y, DenseQArray):
             data = self.data @ y.data
-        elif isinstance(y, SparseDIAQArray):
-            return NotImplemented
         elif isqarraylike(y):
             data = self.data @ to_jax(y)
         else:
