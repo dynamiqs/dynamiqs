@@ -233,6 +233,9 @@ class QArray(eqx.Module):
     # in NumPy it is set to 0.
     __array_priority__ = 200
 
+    # similar behaviour to __array_priority__ but for qarray matmul
+    __qarray_matmul_priority__ = 0
+
     def _replace(
         self,
         dims: tuple[int, ...] | None = None,
@@ -375,6 +378,16 @@ class QArray(eqx.Module):
     def sum(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # todo
         pass
+
+    def mean(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
+        numerator = self.sum(axis=axis)
+        if axis is None:
+            denominator = prod(self.shape)
+        elif isinstance(axis, int):
+            denominator = self.shape[axis % self.ndim]
+        else:
+            denominator = prod(self.shape[i % self.ndim] for i in axis)
+        return numerator / denominator
 
     @abstractmethod
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
@@ -546,10 +559,16 @@ class QArray(eqx.Module):
 
     @abstractmethod
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
+        if (
+            hasattr(y, '__qarray_matmul_priority__')
+            and self.__qarray_matmul_priority__ < y.__qarray_matmul_priority__
+        ):
+            return NotImplemented
+
         if isinstance(y, QArray):
             check_compatible_dims(self.dims, y.dims)
 
-        if is_batched_scalar(y):
+        if is_batched_scalar(y):  # noqa: RET503
             raise TypeError('Attempted matrix product between a scalar and a qarray.')
 
     @abstractmethod

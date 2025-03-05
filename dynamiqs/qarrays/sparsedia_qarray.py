@@ -44,6 +44,8 @@ class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array = eqx.field(converter=jnp.asarray)
 
+    __qarray_matmul_priority__ = 10
+
     def _replace(
         self,
         dims: tuple[int, ...] | None = None,
