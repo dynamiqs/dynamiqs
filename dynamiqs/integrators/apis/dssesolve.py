@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 import jax
@@ -341,6 +342,12 @@ def _check_dssesolve_args(
     # === check Ls shape
     for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
+
+    if len(Ls) == 0:
+        logging.warning(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
+        )
 
     # === check psi0 shape
     check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
