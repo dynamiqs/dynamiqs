@@ -64,7 +64,6 @@ class Options(eqx.Module):
             t0=self.t0,
             save_extra=self.save_extra,
             nmaxclick=self.nmaxclick,
-            smart_sampling=self.smart_sampling,
         )
 
 
