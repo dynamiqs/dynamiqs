@@ -781,6 +781,13 @@ class SummedTimeQArray(TimeQArray):
 
         self.timeqarrays = timeqarrays
 
+    def _replace(
+        self, timeqarrays: list[TimeQArray] | None = None, **kwargs
+    ) -> TimeQArray:
+        if timeqarrays is None:
+            timeqarrays = self.timeqarrays
+        return type(self)(timeqarrays=timeqarrays, **kwargs)
+
     @property
     def dtype(self) -> jnp.dtype:
         dtypes = [tqarray.dtype for tqarray in self.timeqarrays]
