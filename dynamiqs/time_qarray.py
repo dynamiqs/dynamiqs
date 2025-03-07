@@ -431,10 +431,10 @@ class TimeQArray(eqx.Module):
 class ConstantTimeQArray(TimeQArray):
     qarray: QArray
 
-    def _replace(self, qarray: QArray | None = None) -> TimeQArray:
+    def _replace(self, qarray: QArray | None = None, **kwargs) -> TimeQArray:
         if qarray is None:
             qarray = self.qarray
-        return super()._replace(qarray=qarray)
+        return super()._replace(qarray=qarray, **kwargs)
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -509,13 +509,15 @@ class PWCTimeQArray(TimeQArray):
     qarray: QArray  # (n, n)
 
     def _replace(
-        self, values: Array | None = None, qarray: QArray | None = None
+        self, values: Array | None = None, qarray: QArray | None = None, **kwargs
     ) -> TimeQArray:
         if values is None:
             values = self.values
         if qarray is None:
             qarray = self.qarray
-        return super()._replace(times=self.times, values=values, qarray=qarray)
+        return super()._replace(
+            times=self.times, values=values, qarray=qarray, **kwargs
+        )
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -604,13 +606,13 @@ class ModulatedTimeQArray(TimeQArray):
     _disc_ts: Array | None
 
     def _replace(
-        self, f: BatchedCallable | None = None, qarray: QArray | None = None
+        self, f: BatchedCallable | None = None, qarray: QArray | None = None, **kwargs
     ) -> TimeQArray:
         if f is None:
             f = self.f
         if qarray is None:
             qarray = self.qarray
-        return super()._replace(f=f, qarray=qarray, _disc_ts=self._disc_ts)
+        return super()._replace(f=f, qarray=qarray, _disc_ts=self._disc_ts, **kwargs)
 
     @property
     def dtype(self) -> jnp.dtype:
@@ -686,10 +688,10 @@ class CallableTimeQArray(TimeQArray):
     f: BatchedCallable  # (..., n, n)
     _disc_ts: Array | None
 
-    def _replace(self, f: BatchedCallable | None = None) -> TimeQArray:
+    def _replace(self, f: BatchedCallable | None = None, **kwargs) -> TimeQArray:
         if f is None:
             f = self.f
-        return super()._replace(f=f, _disc_ts=self._disc_ts)
+        return super()._replace(f=f, _disc_ts=self._disc_ts, **kwargs)
 
     @property
     def dtype(self) -> jnp.dtype:
