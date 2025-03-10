@@ -2,10 +2,12 @@ import warnings
 
 import jax.numpy as jnp
 import jax.random as jr
+import numpy as np
 import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from dynamiqs.qarrays import asqarray, layout
 
 from ..order import TEST_SHORT
 
@@ -73,6 +75,10 @@ class TestSparseDIAQArray:
         # scalar
         self.scalar = 2 + 2j
         self.bscalar = jnp.ones((2, 2, 1, 1), dtype=jnp.complex64)
+
+        self.batched = asqarray(
+            jnp.arange(5 * 4 * 3 * 3).reshape(5, 4, 3, 3), dims=(3,), layout=layout.dia
+        )
 
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_convert(self, kA):
@@ -233,6 +239,65 @@ class TestSparseDIAQArray:
         out_dia = s.powm(3).to_jax()
 
         assert _allclose(out_dia, out_dense)
+
+    def test_index_on_batching_dims(self):
+        # TODO: test and handle steps > 1
+        assert jnp.array_equal(
+            self.batched[2, 0, 0, 0], self.batched.asdense()[2, 0, 0, 0]
+        )
+        assert jnp.array_equal(
+            self.batched[:, 0, 0, 0], self.batched.asdense()[:, 0, 0, 0]
+        )
+        assert jnp.array_equal(
+            self.batched[:, :, 0, 0], self.batched.asdense()[:, :, 0, 0]
+        )
+        assert jnp.array_equal(
+            self.batched[:, :, :, 0], self.batched.asdense()[:, :, :, 0]
+        )
+
+        assert jnp.array_equal(self.batched[..., 2], self.batched.asdense()[..., 2])
+        assert jnp.array_equal(
+            self.batched[:, :, 2:3, 1:2], self.batched.asdense()[:, :, 2:3, 1:2]
+        )
+
+    def test_index_on_non_batching_dims_heavily(self):
+        """Fuzzing test that ensures results are true on single diagonal examples."""
+        N = 10
+        Nsamples = 10_000
+        L = jnp.arange(N) + 1
+
+        np.random.seed(42)  # noqa: NPY002
+        indexes = np.random.randint(0, N, (4, Nsamples))  # noqa: NPY002
+        diag_indexes = np.random.randint(-N, N + 1, Nsamples)  # noqa: NPY002
+
+        # make sure all start index are lower than stop index
+        f = indexes[0] > indexes[1]
+        tmp = jnp.copy(indexes[1, f])
+        indexes[1, f] = indexes[0, f]
+        indexes[0, f] = tmp
+
+        # same on second index layer
+        f = indexes[2] > indexes[3]
+        tmp = jnp.copy(indexes[2, f])
+        indexes[2, f] = indexes[3, f]
+        indexes[3, f] = tmp
+
+        for i in range(Nsamples):
+            a, b, c, d = indexes[:, i]
+            di = diag_indexes[i]
+
+            Ld = L[: N - abs(di)]
+            M1 = dq.sparsedia_from_dict({di: Ld})
+            M1 = M1[a:b, c:d]
+            M2 = np.diag(Ld, k=di)[a:b, c:d]
+            assert jnp.allclose(M1, M2), f'Failed on example {i}'
+
+    def test_simple_indexing(self):
+        m = dq.sparsedia_from_dict(
+            {-2: [78], -1: [75, 79], 0: [72, 76, 80], 1: [73, 77], 2: [74]}, dims=(3,)
+        )
+        assert m[0, 0] == 72
+        assert jnp.allclose(m[..., 1], m.to_jax()[..., 1])
 
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):

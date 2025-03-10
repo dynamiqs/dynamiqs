@@ -120,7 +120,7 @@ class TestDenseQArray:
         assert jnp.array_equal(self.qarray.elpow(2).data, self.data**2)
         assert jnp.array_equal(self.qarray.elpow(3).data, self.data**3)
 
-    def test_non_batching_dims(self):
+    def test_index_on_non_batching_dims(self):
         assert jnp.array_equal(self.batched[0, 0, 0], self.batched.data[0, 0, 0])
         assert jnp.array_equal(self.batched[:, 0, 0], self.batched.data[:, 0, 0])
         assert jnp.array_equal(self.batched[:, :, 0], self.batched.data[:, :, 0])
