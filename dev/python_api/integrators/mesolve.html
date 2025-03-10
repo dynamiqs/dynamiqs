@@ -4054,6 +4054,8 @@
       
         
       
+        
+      
     
     
       
@@ -4166,6 +4168,28 @@
   
   <span class="md-ellipsis">
     set_layout
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/global_settings/set_progress_meter.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    set_progress_meter
     
   </span>
   
@@ -5434,7 +5458,7 @@ details.</p>
 <div class="highlight"><pre><span></span><code>dq.Options(
     save_states: bool = True,
     cartesian_batching: bool = True,
-    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+    progress_meter: AbstractProgressMeter | bool | None = None,
     t0: ScalarLike | None = None,
     save_extra: callable[[Array], PyTree] | None = None,
 )
@@ -5447,8 +5471,11 @@ details.</p>
     separated batch dimensions, otherwise the batching is performed over
     a single shared batched dimension.</li>
 <li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
-    progressed. Defaults to a <a href="https://github.com/tqdm/tqdm">tqdm</a>
-    progress meter. Pass <code>None</code> for no output, see other options in
+    progressed. Defaults to <code>None</code> which uses the global default
+    progress meter (see
+    <a class="autorefs autorefs-internal" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
+    <code>True</code> for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter,
+    and <code>False</code> for no output. See other options in
     <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
     If gradients are computed, the progress meter only displays during
     the forward pass.</li>

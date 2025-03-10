@@ -4129,6 +4129,8 @@
       
         
       
+        
+      
     
     
       
@@ -4241,6 +4243,28 @@
   
   <span class="md-ellipsis">
     set_layout
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/utils/global_settings/set_progress_meter.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    set_progress_meter
     
   </span>
   
@@ -5688,7 +5712,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 <span class="c1"># other simulation parameters</span>
 <span class="n">psi0</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="n">tsave</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">options</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">progress_meter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">options</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># running the simulations successively</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_unbatched</span><span class="p">():</span>

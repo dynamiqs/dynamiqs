@@ -4105,6 +4105,8 @@
       
         
       
+        
+      
     
     
       
@@ -4217,6 +4219,28 @@
   
   <span class="md-ellipsis">
     set_layout
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python_api/utils/global_settings/set_progress_meter.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    set_progress_meter
     
   </span>
   
@@ -5678,7 +5702,7 @@ with <span class="arithmatex">\(\kappa\)</span> the rate of single-photon dissip
     <span class="n">H</span> <span class="o">=</span> <span class="n">H0</span> <span class="o">+</span> <span class="n">Hx</span> <span class="o">+</span> <span class="n">Hp</span>
 
     <span class="c1"># run simulation</span>
-    <span class="n">options</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">progress_meter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="c1"># disable progress meter</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">Options</span><span class="p">(</span><span class="n">progress_meter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># disable progress meter</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">mesolve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">jump_ops</span><span class="p">,</span> <span class="n">psi0</span><span class="p">,</span> <span class="n">tsave</span><span class="p">,</span> <span class="n">exp_ops</span><span class="o">=</span><span class="n">exp_ops</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
 
     <span class="c1"># fidelity is now defined as the overlap with |1&gt; at the final time only</span>
