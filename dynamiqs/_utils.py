@@ -41,14 +41,14 @@ def tree_str_inline(x: PyTree) -> str:
     return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
 
 
-def _concatenate_sort(*args: Array | None) -> Array | None:
+def concatenate_sort(*args: Array | None) -> Array | None:
     args = [x for x in args if x is not None]
     if len(args) == 0:
         return None
     return jnp.sort(jnp.concatenate(args))
 
 
-def _is_batched_scalar(y: ArrayLike) -> bool:
+def is_batched_scalar(y: ArrayLike) -> bool:
     # check if a qarray-like is a scalar or a set of scalars of shape (..., 1, 1)
     return isinstance(y, get_args(ScalarLike)) or (
         isinstance(y, get_args(ArrayLike))
@@ -60,7 +60,7 @@ def _is_batched_scalar(y: ArrayLike) -> bool:
     )
 
 
-def _check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
+def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
             f'Qarrays have incompatible dimensions. Got {dims1} and {dims2}.'

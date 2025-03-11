@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from abc import abstractmethod
-
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
 
@@ -25,12 +24,12 @@ __all__ = [
 ]
 
 
-def memory_bytes(x: Array) -> int:
+def _memory_bytes(x: Array) -> int:
     return x.itemsize * x.size
 
 
-def memory_str(x: Array) -> str:
-    mem = memory_bytes(x)
+def _memory_str(x: Array) -> str:
+    mem = _memory_bytes(x)
     if mem < 1024**2:
         return f'{mem / 1024:.1f} Kb'
     elif mem < 1024**3:
@@ -39,13 +38,13 @@ def memory_str(x: Array) -> str:
         return f'{mem / 1024**3:.1f} Gb'
 
 
-def array_str(x: Array | QArray | None) -> str | None:
-    # TODO: implement memory_str for `QArray` rather than converting to JAX array
+def _array_str(x: Array | QArray | None) -> str | None:
+    # TODO: implement _memory_str for `QArray` rather than converting to JAX array
     if x is None:
         return None
     type_name = 'Array' if isinstance(x, Array) else 'QArray'
     x = to_jax(x)
-    return f'{type_name} {x.dtype} {tuple(x.shape)} | {memory_str(x)}'
+    return f'{type_name} {x.dtype} {tuple(x.shape)} | {_memory_str(x)}'
 
 
 # the Saved object holds quantities saved during the equation integration
@@ -56,6 +55,10 @@ class Saved(eqx.Module):
 
 class SolveSaved(Saved):
     Esave: Array | None
+
+
+class JumpSolveSaved(SolveSaved):
+    clicktimes: Array
 
 
 class DiffusiveSolveSaved(SolveSaved):
@@ -134,8 +137,8 @@ class SolveResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'States': array_str(self.states),
-            'Expects': array_str(self.expects),
+            'States': _array_str(self.states),
+            'Expects': _array_str(self.expects),
         }
 
 
@@ -150,7 +153,7 @@ class PropagatorResult(Result):
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {'Propagators': array_str(self.propagators)}
+        return d | {'Propagators': _array_str(self.propagators)}
 
 
 class FloquetResult(Result):
@@ -167,8 +170,8 @@ class FloquetResult(Result):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
-            'Modes': array_str(self.modes),
-            'Quasienergies': array_str(self.quasienergies),
+            'Modes': _array_str(self.modes),
+            'Quasienergies': _array_str(self.quasienergies),
         }
 
     @classmethod
@@ -193,13 +196,26 @@ class MEPropagatorResult(PropagatorResult):
 
 
 class JSSESolveResult(SolveResult):
-    @abstractmethod
-    def no_jump_state(self) -> Array | None:
-        pass
+    keys: PRNGKeyArray
 
-    @abstractmethod
-    def no_jump_proba(self) -> Array | None:
-        pass
+    @property
+    def clicktimes(self) -> Array:
+        return self._saved.clicktimes
+
+    @property
+    def nclicks(self) -> Array:
+        return jnp.count_nonzero(~jnp.isnan(self.clicktimes), axis=-1)
+
+    def _str_parts(self) -> dict[str, str | None]:
+        d = super()._str_parts()
+        return d | {
+            'Clicktimes': _array_str(self.clicktimes),
+            'Nclicks': _array_str(self.nclicks),
+        }
+
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, 0)
 
 
 class JSMESolveResult(SolveResult):
@@ -215,7 +231,7 @@ class DiffusiveSolveResult(SolveResult):
 
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {'Measurements': array_str(self.measurements)}
+        return d | {'Measurements': _array_str(self.measurements)}
 
     @classmethod
     def out_axes(cls) -> SolveResult:

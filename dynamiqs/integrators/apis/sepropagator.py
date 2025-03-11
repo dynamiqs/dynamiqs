@@ -16,21 +16,21 @@ from ...result import SEPropagatorResult
 from ...time_qarray import TimeQArray
 from ...utils.operators import eye
 from .._utils import (
-    _astimeqarray,
     assert_method_supported,
+    astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     ispwc,
 )
-from ..core.diffrax_solver import (
-    sepropagator_dopri5_solver_constructor,
-    sepropagator_dopri8_solver_constructor,
-    sepropagator_euler_solver_constructor,
-    sepropagator_kvaerno3_solver_constructor,
-    sepropagator_kvaerno5_solver_constructor,
-    sepropagator_tsit5_solver_constructor,
+from ..core.diffrax_integrator import (
+    sepropagator_dopri5_integrator_constructor,
+    sepropagator_dopri8_integrator_constructor,
+    sepropagator_euler_integrator_constructor,
+    sepropagator_kvaerno3_integrator_constructor,
+    sepropagator_kvaerno5_integrator_constructor,
+    sepropagator_tsit5_integrator_constructor,
 )
-from ..core.expm_solver import sepropagator_expm_solver_constructor
+from ..core.expm_integrator import sepropagator_expm_integrator_constructor
 
 
 def sepropagator(
@@ -81,7 +81,7 @@ def sepropagator(
                 ```
                 dq.Options(
                     save_propagators: bool = True,
-                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    progress_meter: AbstractProgressMeter | bool | None = None,
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
                 )
@@ -92,8 +92,11 @@ def sepropagator(
                 - **save_propagators** - If `True`, the propagator is saved at every
                     time in `tsave`, otherwise only the final propagator is returned.
                 - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
-                    progress meter. Pass `None` for no output, see other options in
+                    progressed. Defaults to `None` which uses the global default
+                    progress meter (see
+                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
+                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
+                    and `False` for no output. See other options in
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
@@ -154,13 +157,14 @@ def sepropagator(
     tutorial for more details.
     """
     # === convert arguments
-    H = _astimeqarray(H)
+    H = astimeqarray(H)
     tsave = jnp.asarray(tsave)
 
     # === check arguments
     _check_sepropagator_args(H)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'sepropagator')
+    options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
@@ -194,28 +198,28 @@ def _sepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> SEPropagatorResult:
-    # === select solver constructor
+    # === select integrator constructor
     if method is None:  # default method
         method = Expm() if ispwc(H) else Tsit5()
 
-    solver_constructors = {
-        Expm: sepropagator_expm_solver_constructor,
-        Euler: sepropagator_euler_solver_constructor,
-        Dopri5: sepropagator_dopri5_solver_constructor,
-        Dopri8: sepropagator_dopri8_solver_constructor,
-        Tsit5: sepropagator_tsit5_solver_constructor,
-        Kvaerno3: sepropagator_kvaerno3_solver_constructor,
-        Kvaerno5: sepropagator_kvaerno5_solver_constructor,
+    integrator_constructors = {
+        Expm: sepropagator_expm_integrator_constructor,
+        Euler: sepropagator_euler_integrator_constructor,
+        Dopri5: sepropagator_dopri5_integrator_constructor,
+        Dopri8: sepropagator_dopri8_integrator_constructor,
+        Tsit5: sepropagator_tsit5_integrator_constructor,
+        Kvaerno3: sepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: sepropagator_kvaerno5_integrator_constructor,
     }
-    assert_method_supported(method, solver_constructors.keys())
-    solver_constructor = solver_constructors[type(method)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init solver
+    # === init integrator
     y0 = eye(*H.dims, layout=dense)
-    solver = solver_constructor(
+    integrator = integrator_constructor(
         ts=tsave,
         y0=y0,
         method=method,
@@ -225,8 +229,8 @@ def _sepropagator(
         H=H,
     )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504

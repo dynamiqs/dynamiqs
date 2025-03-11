@@ -4,15 +4,21 @@ from abc import abstractmethod
 
 import equinox as eqx
 import jax.numpy as jnp
-from jaxtyping import PyTree
+from jaxtyping import Array, PyTree
 
-from ...result import DiffusiveSolveSaved, PropagatorSaved, Saved, SolveSaved
-from ...utils.general import expect
+from ...result import (
+    DiffusiveSolveSaved,
+    JumpSolveSaved,
+    PropagatorSaved,
+    Saved,
+    SolveSaved,
+)
+from ...utils.general import expect, unit
 from .interfaces import OptionsInterface
 
 
 class AbstractSaveMixin(OptionsInterface):
-    """Mixin to assist solvers with data saving."""
+    """Mixin to assist integrators with data saving."""
 
     @abstractmethod
     def save(self, y: PyTree) -> Saved:
@@ -24,7 +30,7 @@ class AbstractSaveMixin(OptionsInterface):
 
 
 class PropagatorSaveMixin(AbstractSaveMixin):
-    """Mixin to assist solvers computing propagators with data saving."""
+    """Mixin to assist integrators computing propagators with data saving."""
 
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_propagators else None
@@ -42,7 +48,7 @@ class PropagatorSaveMixin(AbstractSaveMixin):
 
 
 class SolveSaveMixin(AbstractSaveMixin):
-    """Mixin to assist solvers computing time evolution with data saving."""
+    """Mixin to assist integrators computing time evolution with data saving."""
 
     def save(self, y: PyTree) -> Saved:
         ysave = y if self.options.save_states else None
@@ -53,21 +59,38 @@ class SolveSaveMixin(AbstractSaveMixin):
             Esave = None
         return SolveSaved(ysave, extra, Esave)
 
+    def reorder_Esave(self, saved: Saved) -> Saved:
+        # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
+        if saved.Esave is not None:
+            saved = eqx.tree_at(lambda x: x.Esave, saved, saved.Esave.swapaxes(-1, -2))
+        return saved
+
     def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
         # if save_states is False save only last state
         if not self.options.save_states:
             saved = eqx.tree_at(
                 lambda x: x.ysave, saved, ylast, is_leaf=lambda x: x is None
             )
+        return self.reorder_Esave(saved)
 
-        # reorder Esave after jax.lax.scan stacking (ntsave, nE) -> (nE, ntsave)
-        if saved.Esave is not None:
-            saved = eqx.tree_at(lambda x: x.Esave, saved, saved.Esave.swapaxes(-1, -2))
-        return saved
+
+class JumpSolveSaveMixin(SolveSaveMixin):
+    """Mixin to assist jump SSE/SME integrators computing time evolution with data
+    saving.
+    """
+
+    def save(self, y: PyTree) -> Saved:
+        # force state normalisation before saving
+        return super().save(unit(y))
+
+    def postprocess_saved(self, saved: SolveSaved, clicktimes: Array) -> JumpSolveSaved:
+        ylast = saved.ysave[-1]
+        saved = super().postprocess_saved(saved, ylast)
+        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, clicktimes)
 
 
 class DiffusiveSolveSaveMixin(SolveSaveMixin):
-    """Mixin to assist diffusive SSE/SME solvers computing time evolution with data
+    """Mixin to assist diffusive SSE/SME integrators computing time evolution with data
     saving.
     """
 

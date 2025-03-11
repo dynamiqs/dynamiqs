@@ -25,12 +25,12 @@ def sybil_setup(namespace):
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _jax_set_printoptions():
+def jax_set_printoptions():
     jnp.set_printoptions(precision=3, suppress=True)
 
 
 @pytest.fixture(scope='session', autouse=True)
-def _mpl_params():
+def mpl_params():
     dynamiqs.plot.mplstyle(dpi=150)
     # use a non-interactive backend for matplotlib, to avoid opening a display window
     matplotlib.use('Agg')
@@ -71,8 +71,8 @@ pytest_collect_file = Sybil(
     excludes=['options.py'],
     setup=sybil_setup,
     fixtures=[
-        '_jax_set_printoptions',
-        '_mpl_params',
+        'jax_set_printoptions',
+        'mpl_params',
         'default_mpl_style',
         'renderfig',
         'rendergif',

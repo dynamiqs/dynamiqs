@@ -15,14 +15,14 @@ from ...qarrays.utils import stack
 from ...result import Result
 from ...utils.general import dag, expect
 from ...utils.operators import eye_like
-from .abstract_solver import StochasticBaseSolver
+from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import DSMEInterface, DSSEInterface, SolveInterface
-from .rouchon_solver import _cholesky_normalize
+from .rouchon_integrator import cholesky_normalize
 from .save_mixin import DiffusiveSolveSaveMixin
 
 
 class DiffusiveState(eqx.Module):
-    """State for the diffusive SSE/SME fixed step solvers."""
+    """State for the diffusive SSE/SME fixed step integrators."""
 
     state: QArray  # state (integrated from initial to current time)
     Y: Array  # measurement (integrated from initial to current time)
@@ -45,10 +45,10 @@ def _is_linearly_spaced(
     return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
 
 
-class DiffusiveSolveSolver(
-    StochasticBaseSolver, DiffusiveSolveSaveMixin, SolveInterface
+class DiffusiveSolveIntegrator(
+    StochasticBaseIntegrator, DiffusiveSolveSaveMixin, SolveInterface
 ):
-    """Solver solving the diffusive SSE/SME with a fixed step size solver."""
+    """Integrator solving the diffusive SSE/SME with a fixed step size integrator."""
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
@@ -188,58 +188,65 @@ class DiffusiveSolveSolver(
         pass
 
 
-class DSSEFixedStepSolver(DiffusiveSolveSolver, DSSEInterface):
+class DSSEFixedStepIntegrator(DiffusiveSolveIntegrator, DSSEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.Ls)
 
 
-class DSSESolveEulerMayuramaSolver(DSSEFixedStepSolver):
-    """Solver solving the diffusive SSE with the Euler-Mayurama method."""
+class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
+    """Integrator solving the diffusive SSE with the Euler-Mayurama method."""
 
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         psi = y.state
         L, H = self.L(t), self.H(t)
-        I = eye_like(H)
+        Lpsi = [_L @ psi for _L in L]
 
         # === measurement Y
         # dY = <L+Ld> dt + dW
-        exp = jnp.stack([expect(_L + _L.dag(), psi).real for _L in L])  # (nL)
+        # small trick to compute <L+Ld>
+        #   <L+Ld> = <psi|L+Ld|psi >
+        #          = psi.dag() @ (L + Ld) @ psi
+        #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
+        #          = 2 Re[psi.dag() @ Lpsi]
+        exp = jnp.stack(
+            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
+        )  # (nL)
         dY = exp * self.dt + dW
 
         # === state psi
         dpsi = (
-            -1j * H * self.dt
+            -1j * self.dt * H @ psi
             - 0.5
+            * self.dt
             * sum(
                 [
-                    _L.dag() @ _L - _exp * _L + 0.25 * _exp**2 * I
-                    for _L, _exp in zip(L, exp, strict=True)
+                    _L.dag() @ _Lpsi - _exp * _Lpsi + 0.25 * _exp**2 * psi
+                    for _L, _Lpsi, _exp in zip(L, Lpsi, exp, strict=True)
                 ]
             )
-            * self.dt
             + sum(
                 [
-                    (_L - 0.5 * _exp * I) * _dW
-                    for _L, _exp, _dW in zip(L, exp, dW, strict=True)
+                    (_Lpsi - 0.5 * _exp * psi) * _dW
+                    for _L, _Lpsi, _exp, _dW in zip(L, Lpsi, exp, dW, strict=True)
                 ]
             )
-        ) @ psi
+        )
 
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
-dssesolve_euler_maruyama_solver_constructor = DSSESolveEulerMayuramaSolver
+dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
 
 
-class DSMEFixedStepSolver(DiffusiveSolveSolver, DSMEInterface):
+class DSMEFixedStepIntegrator(DiffusiveSolveIntegrator, DSMEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.etas)
 
 
-class DSMESolveEulerMayuramaSolver(DSMEFixedStepSolver):
-    """Solver solving the diffusive SME with the Euler-Mayurama method."""
+class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
+    """Integrator solving the diffusive SME with the Euler-Mayurama method."""
 
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         # The diffusive SME for a single detector is:
@@ -254,7 +261,7 @@ class DSMESolveEulerMayuramaSolver(DSMEFixedStepSolver):
         LdL = sum([_L.dag() @ _L for _L in L])
 
         # === Lcal(rho)
-        # (see MEDiffraxSolver in `solvers/core/diffrax_solver.py`)
+        # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
         Hnh = -1j * H - 0.5 * LdL
         tmp = Hnh @ rho + sum([0.5 * _L @ rho @ _L.dag() for _L in L])
         Lcal_rho = tmp + tmp.dag()
@@ -276,8 +283,8 @@ class DSMESolveEulerMayuramaSolver(DSMEFixedStepSolver):
         return DiffusiveState(rho + drho, y.Y + dY)
 
 
-class DSMESolveRouchon1Solver(DSMEFixedStepSolver, SolveInterface):
-    """Solver solving the diffusive SME with the Rouchon1 method."""
+class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
+    """Integrator solving the diffusive SME with the Rouchon1 method."""
 
     def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
         # The Rouchon update for a single loss channel is:
@@ -287,7 +294,7 @@ class DSMESolveRouchon1Solver(DSMEFixedStepSolver, SolveInterface):
         #   MdY = I - (iH + 0.5 Ld @ L) dt + sqrt(self.eta) * dY * Lm
         #   M1 = sqrt(1 - eta) * L sqrt(dt)
         #
-        # See comment of `_cholesky_normalize()` for the normalisation (computed for the
+        # See comment of `cholesky_normalize()` for the normalisation (computed for the
         # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
 
         rho = y.state
@@ -314,7 +321,7 @@ class DSMESolveRouchon1Solver(DSMEFixedStepSolver, SolveInterface):
         ] + [self.dt * _Lc for _Lc in Lc]
 
         if self.method.normalize:
-            rho = _cholesky_normalize(M0, LdL, self.dt, rho)
+            rho = cholesky_normalize(M0, LdL, self.dt, rho)
 
         rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
         rho = rho / rho.trace()  # normalise by signal probability
@@ -322,5 +329,5 @@ class DSMESolveRouchon1Solver(DSMEFixedStepSolver, SolveInterface):
         return DiffusiveState(rho, y.Y + dY)
 
 
-dsmesolve_euler_maruyama_solver_constructor = DSMESolveEulerMayuramaSolver
-dsmesolve_rouchon1_solver_constructor = DSMESolveRouchon1Solver
+dsmesolve_euler_maruyama_integrator_constructor = DSMESolveEulerMayuramaIntegrator
+dsmesolve_rouchon1_integrator_constructor = DSMESolveRouchon1Integrator

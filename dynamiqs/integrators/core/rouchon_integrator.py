@@ -12,7 +12,7 @@ from diffrax._local_interpolation import LocalLinearInterpolation
 from ...qarrays.qarray import QArray
 from ...utils.general import dag
 from ...utils.operators import eye_like
-from .diffrax_solver import MESolveDiffraxSolver
+from .diffrax_integrator import MESolveDiffraxIntegrator
 
 
 class AbstractRouchonTerm(dx.AbstractTerm):
@@ -54,7 +54,7 @@ class Rouchon1DXSolver(RouchonDXSolver):
         return 1
 
 
-def _cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.Array:
+def cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute S = M0d @ M0 + M1d @ M1 and replace
     #   M0 by ~M0 = M0 @ S^{-1/2}
     #   M1 by ~M1 = M1 @ S^{-1/2}
@@ -91,8 +91,8 @@ def _cholesky_normalize(M0: QArray, LdL: QArray, dt: float, rho: QArray) -> jax.
     return jax.lax.linalg.triangular_solve(T, rho, lower=True, left_side=True)
 
 
-class MESolveRouchon1Solver(MESolveDiffraxSolver):
-    """Solver computing the time evolution of the Lindblad master equation using the
+class MESolveRouchon1Integrator(MESolveDiffraxIntegrator):
+    """Integrator computing the time evolution of the Lindblad master equation using the
     Rouchon 1 method.
     """
 
@@ -105,7 +105,7 @@ class MESolveRouchon1Solver(MESolveDiffraxSolver):
             #   M0 = I - (iH + 0.5 Ld @ L) dt
             #   M1 = L sqrt(dt)
             #
-            # See comment of `_cholesky_normalize()` for the normalisation.
+            # See comment of `cholesky_normalize()` for the normalisation.
 
             delta_t = t1 - t0
             rho = y0
@@ -117,13 +117,13 @@ class MESolveRouchon1Solver(MESolveDiffraxSolver):
             Ms = [jnp.sqrt(delta_t) * _L for _L in L]
 
             if self.method.normalize:
-                rho = _cholesky_normalize(M0, LdL, delta_t, rho)
+                rho = cholesky_normalize(M0, LdL, delta_t, rho)
 
             return M0 @ rho @ dag(M0) + sum([_M @ rho @ dag(_M) for _M in Ms])
 
         return AbstractRouchonTerm(kraus_map)
 
 
-mesolve_rouchon1_solver_constructor = lambda **kwargs: MESolveRouchon1Solver(
+mesolve_rouchon1_integrator_constructor = lambda **kwargs: MESolveRouchon1Integrator(
     **kwargs, diffrax_solver=Rouchon1DXSolver(), fixed_step=True
 )

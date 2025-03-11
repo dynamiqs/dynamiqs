@@ -8,20 +8,20 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree
 
-from dynamiqs._utils import _concatenate_sort
+from dynamiqs._utils import concatenate_sort
 
 from ...qarrays.qarray import QArray
 from ...result import Result, Saved
 from ...utils.general import expm
 from ...utils.vectorization import operator_to_vector, slindbladian, vector_to_operator
 from .._utils import ispwc
-from .abstract_solver import BaseSolver
+from ..core.abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
 
-class ExpmSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
-    r"""Solver solving a linear ODE of the form $dX/dt = AX$ by explicitly
+class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
+    r"""Integrator solving a linear ODE of the form $dX/dt = AX$ by explicitly
     exponentiating the propagator.
 
     The matrix $A$ of shape (N, N) is a constant or piecewise constant *generator*.
@@ -63,7 +63,7 @@ class ExpmSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
         disc_ts = self.discontinuity_ts
         if disc_ts is not None:
             disc_ts = disc_ts.clip(self.t0, self.t1)
-        times = _concatenate_sort(jnp.asarray([self.t0]), self.ts, disc_ts)  # (ntimes,)
+        times = concatenate_sort(jnp.asarray([self.t0]), self.ts, disc_ts)  # (ntimes,)
 
         # === compute time differences (null for times outside [t0, t1])
         delta_ts = jnp.diff(times)  # (ntimes-1,)
@@ -93,8 +93,8 @@ class ExpmSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
         return self.result(saved, infos=self.Infos(nsteps))
 
 
-class SEExpmSolver(ExpmSolver, SEInterface):
-    """Solver solving the Schrödinger equation by explicitly exponentiating the
+class SEExpmIntegrator(ExpmIntegrator, SEInterface):
+    """Integrator solving the Schrödinger equation by explicitly exponentiating the
     propagator.
     """
 
@@ -109,26 +109,26 @@ class SEExpmSolver(ExpmSolver, SEInterface):
         return -1j * self.H(t)  # (n, n)
 
 
-class SESolveExpmSolver(SEExpmSolver, SolveSaveMixin, SolveInterface):
-    """Solver computing the time evolution of the Schrödinger equation by
+class SESolveExpmIntegrator(SEExpmIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Schrödinger equation by
     explicitly exponentiating the propagator.
     """
 
 
-sesolve_expm_solver_constructor = SESolveExpmSolver
+sesolve_expm_integrator_constructor = SESolveExpmIntegrator
 
 
-class SEPropagatorExpmSolver(SEExpmSolver, PropagatorSaveMixin):
-    """Solver computing the propagator of the Lindblad master equation by
+class SEPropagatorExpmIntegrator(SEExpmIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
 
 
-sepropagator_expm_solver_constructor = SEPropagatorExpmSolver
+sepropagator_expm_integrator_constructor = SEPropagatorExpmIntegrator
 
 
-class MEExpmSolver(ExpmSolver, MEInterface):
-    """Solver solving the Lindblad master equation by explicitly exponentiating the
+class MEExpmIntegrator(ExpmIntegrator, MEInterface):
+    """Integrator solving the Lindblad master equation by explicitly exponentiating the
     propagator.
     """
 
@@ -149,8 +149,8 @@ class MEExpmSolver(ExpmSolver, MEInterface):
         return slindbladian(self.H(t), self.L(t))  # (n^2, n^2)
 
 
-class MESolveExpmSolver(MEExpmSolver, SolveSaveMixin, SolveInterface):
-    """Solver computing the time evolution of the Lindblad master equation by
+class MESolveExpmIntegrator(MEExpmIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
 
@@ -165,13 +165,13 @@ class MESolveExpmSolver(MEExpmSolver, SolveSaveMixin, SolveInterface):
         return super().save(y)
 
 
-mesolve_expm_solver_constructor = MESolveExpmSolver
+mesolve_expm_integrator_constructor = MESolveExpmIntegrator
 
 
-class MEPropagatorExpmSolver(MEExpmSolver, PropagatorSaveMixin):
-    """Solver computing the propagator of the Lindblad master equation by
+class MEPropagatorExpmIntegrator(MEExpmIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Lindblad master equation by
     explicitly exponentiating the propagator.
     """
 
 
-mepropagator_expm_solver_constructor = MEPropagatorExpmSolver
+mepropagator_expm_integrator_constructor = MEPropagatorExpmIntegrator

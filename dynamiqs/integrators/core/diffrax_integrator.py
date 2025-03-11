@@ -7,11 +7,12 @@ from functools import partial
 import diffrax as dx
 import equinox as eqx
 from jax import Array
-from jaxtyping import PyTree
+from jaxtyping import PyTree, Scalar
 
+from ..._utils import obj_type_str
 from ...gradient import Autograd, CheckpointAutograd
 from ...result import Result
-from .abstract_solver import BaseSolver
+from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
 
@@ -44,8 +45,8 @@ class AdaptiveStepInfos(eqx.Module):
         )
 
 
-class DiffraxSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
-    """Solver using the Diffrax library."""
+class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
+    """Integrator using the Diffrax library."""
 
     diffrax_solver: dx.AbstractSolver
     fixed_step: bool
@@ -78,38 +79,54 @@ class DiffraxSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
     def terms(self) -> dx.AbstractTerm:
         pass
 
-    def run(self) -> Result:
+    @property
+    def adjoint(self) -> dx.AbstractAdjoint:
+        if self.gradient is None:
+            return dx.RecursiveCheckpointAdjoint()
+        elif isinstance(self.gradient, CheckpointAutograd):
+            return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+        elif isinstance(self.gradient, Autograd):
+            return dx.DirectAdjoint()
+        else:
+            raise TypeError(f'Unknown gradient type {obj_type_str(self.gradient)}.')
+
+    def diffeqsolve(
+        self,
+        t0: Scalar,
+        t1: Scalar,
+        y0: PyTree,
+        saveat: dx.SaveAt,
+        event: dx.Event | None = None,
+    ) -> dx.Solution:
         with warnings.catch_warnings():
             # TODO: remove once complex support is stabilized in diffrax
             warnings.simplefilter('ignore', UserWarning)
 
-            # === prepare diffrax arguments
-            fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-            subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
-            subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-            saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
-
-            if self.gradient is None:
-                adjoint = dx.RecursiveCheckpointAdjoint()
-            elif isinstance(self.gradient, CheckpointAutograd):
-                adjoint = dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
-            elif isinstance(self.gradient, Autograd):
-                adjoint = dx.DirectAdjoint()
-
             # === solve differential equation with diffrax
-            solution = dx.diffeqsolve(
+            return dx.diffeqsolve(
                 self.terms,
                 self.diffrax_solver,
-                t0=self.t0,
-                t1=self.t1,
+                t0=t0,
+                t1=t1,
                 dt0=self.dt0,
-                y0=self.y0,
+                y0=y0,
                 saveat=saveat,
                 stepsize_controller=self.stepsize_controller,
-                adjoint=adjoint,
+                adjoint=self.adjoint,
+                event=event,
                 max_steps=self.max_steps,
                 progress_meter=self.options.progress_meter.to_diffrax(),
             )
+
+    def run(self) -> Result:
+        # === prepare diffrax arguments
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+        # === solve differential equation
+        solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
 
         # === collect and return results
         saved = self.postprocess_saved(*solution.ys)
@@ -126,8 +143,8 @@ class DiffraxSolver(BaseSolver, AbstractSaveMixin, AbstractTimeInterface):
             )
 
 
-class SEDiffraxSolver(DiffraxSolver, SEInterface):
-    """Solver solving the Schrödinger equation with Diffrax."""
+class SEDiffraxIntegrator(DiffraxIntegrator, SEInterface):
+    """Integrator solving the Schrödinger equation with Diffrax."""
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -136,60 +153,60 @@ class SEDiffraxSolver(DiffraxSolver, SEInterface):
         return dx.ODETerm(vector_field)
 
 
-class SEPropagatorDiffraxSolver(SEDiffraxSolver, PropagatorSaveMixin):
-    """Solver computing the propagator of the Schrödinger equation using the Diffrax
+class SEPropagatorDiffraxIntegrator(SEDiffraxIntegrator, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Schrödinger equation using the Diffrax
     library.
     """
 
 
-sepropagator_euler_solver_constructor = partial(
-    SEPropagatorDiffraxSolver, diffrax_solver=dx.Euler(), fixed_step=True
+sepropagator_euler_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
-sepropagator_dopri5_solver_constructor = partial(
-    SEPropagatorDiffraxSolver, diffrax_solver=dx.Dopri5(), fixed_step=False
+sepropagator_dopri5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
 )
-sepropagator_dopri8_solver_constructor = partial(
-    SEPropagatorDiffraxSolver, diffrax_solver=dx.Dopri8(), fixed_step=False
+sepropagator_dopri8_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
 )
-sepropagator_tsit5_solver_constructor = partial(
-    SEPropagatorDiffraxSolver, diffrax_solver=dx.Tsit5(), fixed_step=False
+sepropagator_tsit5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
 )
-sepropagator_kvaerno3_solver_constructor = partial(
-    SEPropagatorDiffraxSolver, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+sepropagator_kvaerno3_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
 )
-sepropagator_kvaerno5_solver_constructor = partial(
-    SEPropagatorDiffraxSolver, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+sepropagator_kvaerno5_integrator_constructor = partial(
+    SEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
 
 
-class SESolveDiffraxSolver(SEDiffraxSolver, SolveSaveMixin, SolveInterface):
-    """Solver computing the time evolution of the Schrödinger equation using the
+class SESolveDiffraxIntegrator(SEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Schrödinger equation using the
     Diffrax library.
     """
 
 
-sesolve_euler_solver_constructor = partial(
-    SESolveDiffraxSolver, diffrax_solver=dx.Euler(), fixed_step=True
+sesolve_euler_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
-sesolve_dopri5_solver_constructor = partial(
-    SESolveDiffraxSolver, diffrax_solver=dx.Dopri5(), fixed_step=False
+sesolve_dopri5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
 )
-sesolve_dopri8_solver_constructor = partial(
-    SESolveDiffraxSolver, diffrax_solver=dx.Dopri8(), fixed_step=False
+sesolve_dopri8_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
 )
-sesolve_tsit5_solver_constructor = partial(
-    SESolveDiffraxSolver, diffrax_solver=dx.Tsit5(), fixed_step=False
+sesolve_tsit5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
 )
-sesolve_kvaerno3_solver_constructor = partial(
-    SESolveDiffraxSolver, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+sesolve_kvaerno3_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
 )
-sesolve_kvaerno5_solver_constructor = partial(
-    SESolveDiffraxSolver, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+sesolve_kvaerno5_integrator_constructor = partial(
+    SESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
 
 
-class MEDiffraxSolver(DiffraxSolver, MEInterface):
-    """Solver solving the Lindblad master equation with Diffrax."""
+class MEDiffraxIntegrator(DiffraxIntegrator, MEInterface):
+    """Integrator solving the Lindblad master equation with Diffrax."""
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -221,27 +238,27 @@ class MEDiffraxSolver(DiffraxSolver, MEInterface):
         return dx.ODETerm(vector_field)
 
 
-class MESolveDiffraxSolver(MEDiffraxSolver, SolveSaveMixin, SolveInterface):
-    """Solver computing the time evolution of the Lindblad master equation using the
+class MESolveDiffraxIntegrator(MEDiffraxIntegrator, SolveSaveMixin, SolveInterface):
+    """Integrator computing the time evolution of the Lindblad master equation using the
     Diffrax library.
     """
 
 
-mesolve_euler_solver_constructor = partial(
-    MESolveDiffraxSolver, diffrax_solver=dx.Euler(), fixed_step=True
+mesolve_euler_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
 )
-mesolve_dopri5_solver_constructor = partial(
-    MESolveDiffraxSolver, diffrax_solver=dx.Dopri5(), fixed_step=False
+mesolve_dopri5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
 )
-mesolve_dopri8_solver_constructor = partial(
-    MESolveDiffraxSolver, diffrax_solver=dx.Dopri8(), fixed_step=False
+mesolve_dopri8_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
 )
-mesolve_tsit5_solver_constructor = partial(
-    MESolveDiffraxSolver, diffrax_solver=dx.Tsit5(), fixed_step=False
+mesolve_tsit5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
 )
-mesolve_kvaerno3_solver_constructor = partial(
-    MESolveDiffraxSolver, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+mesolve_kvaerno3_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
 )
-mesolve_kvaerno5_solver_constructor = partial(
-    MESolveDiffraxSolver, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+mesolve_kvaerno5_integrator_constructor = partial(
+    MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )

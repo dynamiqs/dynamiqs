@@ -8,11 +8,11 @@ from dynamiqs.result import FloquetSaved
 
 from ...result import Result, Saved
 from ..apis.sepropagator import _sepropagator
-from .abstract_solver import BaseSolver
+from .abstract_integrator import BaseIntegrator
 from .interfaces import SEInterface
 
 
-class FloquetSolver(BaseSolver):
+class FloquetIntegrator(BaseIntegrator):
     T: float
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
@@ -21,7 +21,7 @@ class FloquetSolver(BaseSolver):
         )
 
 
-class SEFloquetSolver(FloquetSolver, SEInterface):
+class SEFloquetIntegrator(FloquetIntegrator, SEInterface):
     def run(self) -> PyTree:
         # enforce `save_propagators` to be `True` for _sepropagator
         options = eqx.tree_at(lambda opt: opt.save_propagators, self.options, True)
@@ -56,4 +56,4 @@ class SEFloquetSolver(FloquetSolver, SEInterface):
         return self.result(saved, infos=seprop_result.infos)
 
 
-floquet_solver_constructor = SEFloquetSolver
+floquet_integrator_constructor = SEFloquetIntegrator

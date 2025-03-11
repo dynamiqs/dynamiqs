@@ -4,9 +4,18 @@ from typing import Literal
 
 import jax
 
+from ..progress_meter import AbstractProgressMeter, NoProgressMeter, TqdmProgressMeter
 from ..qarrays.layout import dense, dia, set_global_layout
 
-__all__ = ['set_device', 'set_layout', 'set_matmul_precision', 'set_precision']
+__all__ = [
+    'set_device',
+    'set_layout',
+    'set_matmul_precision',
+    'set_precision',
+    'set_progress_meter',
+]
+
+_DEFAULT_PROGRESS_METER: AbstractProgressMeter = TqdmProgressMeter()
 
 
 def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
@@ -27,18 +36,18 @@ def set_device(device: Literal['cpu', 'gpu', 'tpu'], index: int = 0):
     jax.config.update('jax_default_device', jax.devices(device)[index])
 
 
-def set_precision(precision: Literal['simple', 'double']):
+def set_precision(precision: Literal['single', 'double']):
     """Configure the default floating point precision.
 
     Two options are available:
 
-    - `'simple'` sets default precision to `float32` and `complex64` (default setting),
+    - `'single'` sets default precision to `float32` and `complex64` (default setting),
     - `'double'` sets default precision to `float64` and `complex128`.
 
     Note-: Equivalent JAX syntax
         This function is equivalent to
         ```
-        if precision == 'simple':
+        if precision == 'single':
             jax.config.update('jax_enable_x64', False)
         elif precision == 'double':
             jax.config.update('jax_enable_x64', True)
@@ -46,15 +55,15 @@ def set_precision(precision: Literal['simple', 'double']):
          See [JAX documentation on double precision](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision).
 
     Args:
-        precision _(string 'simple' or 'double')_: Default precision.
+        precision _(string 'single' or 'double')_: Default precision.
     """
-    if precision == 'simple':
+    if precision == 'single':
         jax.config.update('jax_enable_x64', False)
     elif precision == 'double':
         jax.config.update('jax_enable_x64', True)
     else:
         raise ValueError(
-            f"Argument `precision` should be a string 'simple' or 'double', but is"
+            f"Argument `precision` should be a string 'single' or 'double', but is"
             f" '{precision}'."
         )
 
@@ -70,6 +79,10 @@ def set_matmul_precision(matmul_precision: Literal['low', 'high', 'highest']):
         (faster but less accurate),
     - `'highest'` keeps matmul precision to `float32` or `float64` as applicable
         (slowest but most accurate, default setting).
+
+    Note:
+        This setting applies only to single precision matrices (`float32` or
+        `complex64`).
 
     Note-: Equivalent JAX syntax
         This function is equivalent to setting `jax_default_matmul_precision` in
@@ -131,3 +144,33 @@ def set_layout(layout: Literal['dense', 'dia']):
         )
 
     set_global_layout(layouts[layout])
+
+
+def set_progress_meter(progress_meter: AbstractProgressMeter | bool):
+    """Configure the default progress meter.
+
+    Args:
+        progress_meter: Default progress meter. Set to `True` for a [tqdm](https://github.com/tqdm/tqdm)
+            progress meter, and `False` for no output. See other options in
+            [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
+    """
+    global _DEFAULT_PROGRESS_METER  # noqa: PLW0603
+
+    if progress_meter is True:
+        progress_meter = TqdmProgressMeter()
+    elif progress_meter is False:
+        progress_meter = NoProgressMeter()
+
+    _DEFAULT_PROGRESS_METER = progress_meter
+
+
+def get_progress_meter(
+    progress_meter: AbstractProgressMeter | bool | None,
+) -> AbstractProgressMeter:
+    if progress_meter is None:
+        return _DEFAULT_PROGRESS_METER
+    elif progress_meter is True:
+        return TqdmProgressMeter()
+    elif progress_meter is False:
+        return NoProgressMeter()
+    return progress_meter

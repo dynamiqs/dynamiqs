@@ -15,12 +15,12 @@ from ...qarrays.qarray import QArrayLike
 from ...result import FloquetResult
 from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimeqarray,
     assert_method_supported,
+    astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
 )
-from ..core.floquet_solver import floquet_solver_constructor
+from ..core.floquet_integrator import floquet_integrator_constructor
 
 __all__ = ['floquet']
 
@@ -72,7 +72,7 @@ def floquet(
             ??? "Detailed options API"
                 ```
                 dq.Options(
-                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    progress_meter: AbstractProgressMeter | bool | None = None,
                     t0: ScalarLike | None = None,
                 )
                 ```
@@ -80,8 +80,11 @@ def floquet(
                 **Parameters**
 
                 - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
-                    progress meter. Pass `None` for no output, see other options in
+                    progressed. Defaults to `None` which uses the global default
+                    progress meter (see
+                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
+                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
+                    and `False` for no output. See other options in
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
@@ -152,13 +155,14 @@ def floquet(
     ```
     """
     # === convert arguments
-    H = _astimeqarray(H)
+    H = astimeqarray(H)
     tsave = jnp.asarray(tsave)
 
     # === check arguments
     tsave = check_times(tsave, 'tsave')
     H, T, tsave = _check_floquet_args(H, T, tsave)
     check_options(options, 'floquet')
+    options = options.initialise()
 
     # We implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
@@ -194,16 +198,16 @@ def _floquet(
     gradient: Gradient,
     options: Options,
 ) -> FloquetResult:
-    # === select solver constructor
+    # === select integrator constructor
     supported_methods = (Tsit5, Dopri5, Dopri8, Kvaerno3, Kvaerno5, Euler)
     assert_method_supported(method, supported_methods)
-    solver_constructor = floquet_solver_constructor
+    integrator_constructor = floquet_integrator_constructor
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_constructor(
+    # === init integrator
+    integrator = integrator_constructor(
         ts=tsave,
         y0=None,
         H=H,
@@ -214,8 +218,8 @@ def _floquet(
         T=T,
     )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504

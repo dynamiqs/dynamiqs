@@ -16,13 +16,13 @@ from ...qarrays.qarray import QArrayLike
 from ...result import MEPropagatorResult
 from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimeqarray,
     assert_method_supported,
+    astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.expm_solver import mepropagator_expm_solver_constructor
+from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
 
 def mepropagator(
@@ -161,14 +161,15 @@ def mepropagator(
     tutorial for more details.
     """
     # === convert arguments
-    H = _astimeqarray(H)
-    Ls = [_astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H)
+    Ls = [astimeqarray(L) for L in jump_ops]
     tsave = jnp.asarray(tsave)
 
     # === check arguments
     _check_mepropagator_args(H, Ls)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'mepropagator')
+    options = options.initialise()
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
@@ -213,20 +214,20 @@ def _mepropagator(
     gradient: Gradient | None,
     options: Options,
 ) -> MEPropagatorResult:
-    # === select solver constructor
-    solver_constructors = {Expm: mepropagator_expm_solver_constructor}
-    assert_method_supported(method, solver_constructors.keys())
-    solver_constructor = solver_constructors[type(method)]
+    # === select integrator constructor
+    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init solver
+    # === init integrator
     # todo: replace with vectorized utils constructor for eye
     data = jnp.eye(H.shape[-1] ** 2, dtype=H.dtype)
     # todo: timeqarray should expose dims without having to call at specific time
     y0 = DenseQArray(H(0.0).dims, True, data)
-    solver = solver_constructor(
+    integrator = integrator_constructor(
         ts=tsave,
         y0=y0,
         method=method,
@@ -237,8 +238,8 @@ def _mepropagator(
         Ls=Ls,
     )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504

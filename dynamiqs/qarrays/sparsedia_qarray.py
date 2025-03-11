@@ -15,11 +15,11 @@ from .layout import Layout, dia
 from .qarray import (
     QArray,
     QArrayLike,
-    _in_last_two_dims,
-    _include_last_two_dims,
     _is_key_in_batch_dims,
-    _to_jax,
+    in_last_two_dims,
+    include_last_two_dims,
     isqarraylike,
+    to_jax,
 )
 from .sparsedia_primitives import (
     _sparsedia_slice,
@@ -45,6 +45,8 @@ __all__ = ['SparseDIAQArray']
 class SparseDIAQArray(QArray):
     offsets: tuple[int, ...] = eqx.field(static=True)
     diags: Array = eqx.field(converter=jnp.asarray)
+
+    __qarray_matmul_priority__ = 10
 
     def _replace(
         self,
@@ -150,8 +152,8 @@ class SparseDIAQArray(QArray):
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> Array:
         # return array if last two dimensions are modified, qarray otherwise
-        if _in_last_two_dims(axis, self.ndim):
-            if _include_last_two_dims(axis, self.ndim):
+        if in_last_two_dims(axis, self.ndim):
+            if include_last_two_dims(axis, self.ndim):
                 return self.diags.sum(axis)
             else:
                 return self.to_jax().sum(axis)
@@ -161,8 +163,8 @@ class SparseDIAQArray(QArray):
 
     def squeeze(self, axis: int | tuple[int, ...] | None = None) -> QArray | Array:
         # return array if last two dimensions are modified, qarray otherwise
-        if _in_last_two_dims(axis, self.ndim):
-            if _include_last_two_dims(axis, self.ndim):
+        if in_last_two_dims(axis, self.ndim):
+            if include_last_two_dims(axis, self.ndim):
                 return self.diags.squeeze(axis)
             else:
                 return self.to_jax().squeeze(axis)
@@ -234,10 +236,10 @@ class SparseDIAQArray(QArray):
         # === array representation with dots instead of zeros
         if jnp.issubdtype(self.dtype, jnp.complexfloating):
             # match '0. +0.j' with any number of spaces
-            pattern = r'(?<!\d)0\.\s*(\+|\-)0\.j'
+            pattern = r'(?<!\d)0\.(?:0+)?(?:e[+-]0+)?\s*[+-]\s*0\.(?:0+)?(?:e[+-]0+)?j'
         elif jnp.issubdtype(self.dtype, jnp.floating):
             # match '0.' with any number of spaces
-            pattern = r'(?<!\d)0\.\s*'
+            pattern = r'(?<!\d)0\.(?:0+)?(?:e[+-]0+)?\s*'
         elif jnp.issubdtype(self.dtype, jnp.integer):
             # match '0' with any number of spaces
             pattern = r'(?<!\d)0\s*'
@@ -288,7 +290,7 @@ class SparseDIAQArray(QArray):
             )
             return self._replace(offsets=offsets, diags=diags)
         elif isqarraylike(y):
-            y = _to_jax(y)
+            y = to_jax(y)
             data = matmul_sparsedia_array(self.offsets, self.diags, y)
             return DenseQArray(self.dims, self.vectorized, data)
 
@@ -298,7 +300,7 @@ class SparseDIAQArray(QArray):
         super().__rmatmul__(y)
 
         if isqarraylike(y):
-            y = _to_jax(y)
+            y = to_jax(y)
             data = matmul_array_sparsedia(y, self.offsets, self.diags)
             return DenseQArray(self.dims, self.vectorized, data)
 
@@ -338,7 +340,7 @@ class SparseDIAQArray(QArray):
                 self.offsets, self.diags, y.offsets, y.diags
             )
         else:
-            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, _to_jax(y))
+            offsets, diags = mul_sparsedia_array(self.offsets, self.diags, to_jax(y))
 
         return self._replace(offsets=offsets, diags=diags)
 

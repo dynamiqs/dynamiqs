@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 import jax
@@ -16,14 +17,14 @@ from ...qarrays.utils import asqarray
 from ...result import DSSESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimeqarray,
     assert_method_supported,
+    astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.fixed_step_stochastic_solver import (
-    dssesolve_euler_maruyama_solver_constructor,
+from ..core.fixed_step_stochastic_integrator import (
+    dssesolve_euler_maruyama_integrator_constructor,
 )
 
 
@@ -222,8 +223,8 @@ def dssesolve(
         [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
     # === convert arguments
-    H = _astimeqarray(H)
-    Ls = [_astimeqarray(L) for L in jump_ops]
+    H = astimeqarray(H)
+    Ls = [astimeqarray(L) for L in jump_ops]
     psi0 = asqarray(psi0)
     tsave = jnp.asarray(tsave)
     keys = jnp.asarray(keys)
@@ -234,6 +235,7 @@ def dssesolve(
     _check_dssesolve_args(H, Ls, psi0, exp_ops)
     tsave = check_times(tsave, 'tsave')
     check_options(options, 'dssesolve')
+    options = options.initialise()
 
     if method is None:
         raise ValueError('Argument `method` must be specified.')
@@ -300,16 +302,18 @@ def _dssesolve_single_trajectory(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    # === select solver constructor
-    solver_constructors = {EulerMaruyama: dssesolve_euler_maruyama_solver_constructor}
-    assert_method_supported(method, solver_constructors.keys())
-    solver_constructor = solver_constructors[type(method)]
+    # === select integrator constructor
+    integrator_constructors = {
+        EulerMaruyama: dssesolve_euler_maruyama_integrator_constructor
+    }
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_constructor(
+    # === init integrator
+    integrator = integrator_constructor(
         ts=tsave,
         y0=psi0,
         method=method,
@@ -323,7 +327,7 @@ def _dssesolve_single_trajectory(
     )
 
     # === run solver
-    result = solver.run()
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504
@@ -338,6 +342,12 @@ def _check_dssesolve_args(
     # === check Ls shape
     for i, L in enumerate(Ls):
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
+
+    if len(Ls) == 0:
+        logging.warning(
+            'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
+            ' solve the Schrödinger equation.'
+        )
 
     # === check psi0 shape
     check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})

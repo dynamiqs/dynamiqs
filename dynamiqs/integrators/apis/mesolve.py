@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import partial
 
 import jax
@@ -7,60 +8,81 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_shape, check_times
+from ..._checks import check_hermitian, check_shape, check_times
 from ...gradient import Gradient
-from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...method import (
+    Dopri5,
+    Dopri8,
+    Euler,
+    Expm,
+    Kvaerno3,
+    Kvaerno5,
+    Method,
+    Rouchon1,
+    Tsit5,
+)
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
-from ...result import SESolveResult
+from ...result import MESolveResult
 from ...time_qarray import TimeQArray
 from .._utils import (
-    _astimeqarray,
     assert_method_supported,
+    astimeqarray,
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.diffrax_solver import (
-    sesolve_dopri5_solver_constructor,
-    sesolve_dopri8_solver_constructor,
-    sesolve_euler_solver_constructor,
-    sesolve_kvaerno3_solver_constructor,
-    sesolve_kvaerno5_solver_constructor,
-    sesolve_tsit5_solver_constructor,
+from ..core.diffrax_integrator import (
+    mesolve_dopri5_integrator_constructor,
+    mesolve_dopri8_integrator_constructor,
+    mesolve_euler_integrator_constructor,
+    mesolve_kvaerno3_integrator_constructor,
+    mesolve_kvaerno5_integrator_constructor,
+    mesolve_tsit5_integrator_constructor,
 )
-from ..core.expm_solver import sesolve_expm_solver_constructor
+from ..core.expm_integrator import mesolve_expm_integrator_constructor
+from ..core.rouchon_integrator import mesolve_rouchon1_integrator_constructor
 
 
-def sesolve(
+def mesolve(
     H: QArrayLike | TimeQArray,
-    psi0: QArrayLike,
+    jump_ops: list[QArrayLike | TimeQArray],
+    rho0: QArrayLike,
     tsave: ArrayLike,
     *,
     exp_ops: list[QArrayLike] | None = None,
     method: Method = Tsit5(),  # noqa: B008
     gradient: Gradient | None = None,
     options: Options = Options(),  # noqa: B008
-) -> SESolveResult:
-    r"""Solve the Schrödinger equation.
+) -> MESolveResult:
+    r"""Solve the Lindblad master equation.
 
-    This function computes the evolution of the state vector $\ket{\psi(t)}$ at time
-    $t$, starting from an initial state $\ket{\psi_0}$, according to the Schrödinger
+    This function computes the evolution of the density matrix $\rho(t)$ at time $t$,
+    starting from an initial state $\rho_0$, according to the Lindblad master
     equation (with $\hbar=1$ and where time is implicit(1))
     $$
-        \frac{\dd\ket{\psi}}{\dt} = -i H \ket{\psi},
+        \frac{\dd\rho}{\dt} = -i[H, \rho]
+        + \sum_{k=1}^N \left(
+            L_k \rho L_k^\dag
+            - \frac{1}{2} L_k^\dag L_k \rho
+            - \frac{1}{2} \rho L_k^\dag L_k
+        \right),
     $$
-    where $H$ is the system's Hamiltonian.
+    where $H$ is the system's Hamiltonian and $\{L_k\}$ is a collection of jump
+    operators.
     { .annotate }
 
     1. With explicit time dependence:
-        - $\ket\psi\to\ket{\psi(t)}$
+        - $\rho\to\rho(t)$
         - $H\to H(t)$
+        - $L_k\to L_k(t)$
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
+        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+            List of jump operators.
+        rho0 _(qarray-like of shape (...rho0, n, 1) or (...rho0, n, n))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
             `tsave[-1]`, or from `t0` to `tsave[-1]` if `t0` is specified in `options`.
@@ -73,6 +95,7 @@ def sesolve(
             [`Kvaerno3`][dynamiqs.method.Kvaerno3],
             [`Kvaerno5`][dynamiqs.method.Kvaerno5],
             [`Euler`][dynamiqs.method.Euler],
+            [`Rouchon1`][dynamiqs.method.Rouchon1],
             [`Expm`][dynamiqs.method.Expm]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
@@ -80,11 +103,12 @@ def sesolve(
         options: Generic options (supported: `save_states`, `cartesian_batching`,
             `progress_meter`, `t0`, `save_extra`).
             ??? "Detailed options API"
+
                 ```
                 dq.Options(
                     save_states: bool = True,
                     cartesian_batching: bool = True,
-                    progress_meter: AbstractProgressMeter | None = TqdmProgressMeter(),
+                    progress_meter: AbstractProgressMeter | bool | None = None,
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
                 )
@@ -98,8 +122,11 @@ def sesolve(
                     separated batch dimensions, otherwise the batching is performed over
                     a single shared batched dimension.
                 - **progress_meter** - Progress meter indicating how far the solve has
-                    progressed. Defaults to a [tqdm](https://github.com/tqdm/tqdm)
-                    progress meter. Pass `None` for no output, see other options in
+                    progressed. Defaults to `None` which uses the global default
+                    progress meter (see
+                    [`dq.set_progress_meter()`][dynamiqs.set_progress_meter]). Set to
+                    `True` for a [tqdm](https://github.com/tqdm/tqdm) progress meter,
+                    and `False` for no output. See other options in
                     [dynamiqs/progress_meter.py](https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py).
                     If gradients are computed, the progress meter only displays during
                     the forward pass.
@@ -111,20 +138,20 @@ def sesolve(
                     during the integration, accessible in `result.extra`.
 
     Returns:
-        `dq.SESolveResult` object holding the result of the Schrödinger equation
-            integration.  Use `result.states` to access the saved states and
-            `result.expects` to access the saved expectation values.
+        `dq.MESolveResult` object holding the result of the
+            Lindblad master equation integration. Use `result.states` to access the
+            saved states and `result.expects` to access the saved expectation values.
 
             ??? "Detailed result API"
                 ```python
-                dq.SESolveResult
+                dq.MESolveResult
                 ```
 
                 **Attributes**
 
-                - **states** _(qarray of shape (..., nsave, n, 1))_ - Saved states with
+                - **states** _(qarray of shape (..., nsave, n, n))_ - Saved states with
                     `nsave = ntsave`, or `nsave = 1` if `options.save_states=False`.
-                - **final_state** _(qarray of shape (..., n, 1))_ - Saved final state.
+                - **final_state** _(qarray of shape (..., n, n))_ - Saved final state.
                 - **expects** _(array of shape (..., len(exp_ops), ntsave) or None)_ - Saved
                     expectation values, if specified by `exp_ops`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
@@ -139,148 +166,176 @@ def sesolve(
 
     # Advanced use-cases
 
-    ## Defining a time-dependent Hamiltonian
+    ## Defining a time-dependent Hamiltonian or jump operator
 
-    If the Hamiltonian depends on time, it can be converted to a time-qarray using
-    [`dq.pwc()`][dynamiqs.pwc], [`dq.modulated()`][dynamiqs.modulated], or
+    If the Hamiltonian or the jump operators depend on time, they can be converted to
+    time-qarrays using [`dq.pwc()`][dynamiqs.pwc],
+    [`dq.modulated()`][dynamiqs.modulated], or
     [`dq.timecallable()`][dynamiqs.timecallable]. See the
     [Time-dependent operators](../../documentation/basics/time-dependent-operators.md)
     tutorial for more details.
 
     ## Running multiple simulations concurrently
 
-    Both the Hamiltonian `H` and the initial state `psi0` can be batched to
-    solve multiple Schrödinger equations concurrently. All other arguments are
-    common to every batch. The resulting states and expectation values are batched
-    according to the leading dimensions of `H` and `psi0`. The behaviour depends on the
-    value of the `cartesian_batching` option.
+    The Hamiltonian `H`, the jump operators `jump_ops` and the initial density matrix
+    `rho0` can be batched to solve multiple master equations concurrently. All other
+    arguments are common to every batch. The resulting states and expectation values
+    are batched according to the leading dimensions of `H`, `jump_ops` and  `rho0`. The
+    behaviour depends on the value of the `cartesian_batching` option.
 
     === "If `cartesian_batching = True` (default value)"
         The results leading dimensions are
         ```
-        ... = ...H, ...psi0
+        ... = ...H, ...L0, ...L1, (...), ...rho0
         ```
+
         For example if:
 
         - `H` has shape _(2, 3, n, n)_,
-        - `psi0` has shape _(4, n, 1)_,
+        - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+        - `rho0` has shape _(7, n, n)_,
 
-        then `result.states` has shape _(2, 3, 4, ntsave, n, 1)_.
-
+        then `result.states` has shape _(2, 3, 4, 5, 6, 7, ntsave, n, n)_.
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...psi0  # (once broadcasted)
+        ... = ...H = ...L0 = ...L1 = (...) = ...rho0  # (once broadcasted)
         ```
+
         For example if:
 
         - `H` has shape _(2, 3, n, n)_,
-        - `psi0` has shape _(3, n, 1)_,
+        - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
+        - `rho0` has shape _(3, n, n)_,
 
-        then `result.states` has shape _(2, 3, ntsave, n, 1)_.
+        then `result.states` has shape _(2, 3, ntsave, n, n)_.
 
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
     tutorial for more details.
     """  # noqa: E501
     # === convert arguments
-    H = _astimeqarray(H)
-    psi0 = asqarray(psi0)
+    H = astimeqarray(H)
+    Ls = [astimeqarray(L) for L in jump_ops]
+    rho0 = asqarray(rho0)
     tsave = jnp.asarray(tsave)
     if exp_ops is not None:
         exp_ops = [asqarray(E) for E in exp_ops] if len(exp_ops) > 0 else None
 
     # === check arguments
-    _check_sesolve_args(H, psi0, exp_ops)
+    _check_mesolve_args(H, Ls, rho0, exp_ops)
     tsave = check_times(tsave, 'tsave')
-    check_options(options, 'sesolve')
+    check_options(options, 'mesolve')
+    options = options.initialise()
+
+    # === convert rho0 to density matrix
+    rho0 = rho0.todm()
+    rho0 = check_hermitian(rho0, 'rho0')
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to qarrays
-    return _vectorized_sesolve(H, psi0, tsave, exp_ops, method, gradient, options)
+    return _vectorized_mesolve(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
 @partial(jax.jit, static_argnames=('method', 'gradient', 'options'))
-def _vectorized_sesolve(
+def _vectorized_mesolve(
     H: TimeQArray,
-    psi0: QArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
     options: Options,
-) -> SESolveResult:
-    # vectorize input over H and psi0
-    in_axes = (H.in_axes, 0, None, None, None, None, None)
-    out_axes = SESolveResult.out_axes()
+) -> MESolveResult:
+    # vectorize input over H, Ls and rho0
+    in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, None, None, None, None, None)
+    out_axes = MESolveResult.out_axes()
 
     if options.cartesian_batching:
-        nvmap = (H.ndim - 2, psi0.ndim - 2, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(_sesolve, in_axes, out_axes, nvmap)
+        nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], rho0.ndim - 2, 0, 0, 0, 0, 0)
+        f = cartesian_vmap(_mesolve, in_axes, out_axes, nvmap)
     else:
-        n = H.shape[-1]
-        bshape = jnp.broadcast_shapes(H.shape[:-2], psi0.shape[:-2])
+        bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, rho0]])
         nvmap = len(bshape)
         # broadcast all vectorized input to same shape
+        n = H.shape[-1]
         H = H.broadcast_to(*bshape, n, n)
-        psi0 = psi0.broadcast_to(*bshape, n, 1)
+        Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
+        rho0 = rho0.broadcast_to(*bshape, n, n)
         # vectorize the function
-        f = multi_vmap(_sesolve, in_axes, out_axes, nvmap)
+        f = multi_vmap(_mesolve, in_axes, out_axes, nvmap)
 
-    return f(H, psi0, tsave, exp_ops, method, gradient, options)
+    return f(H, Ls, rho0, tsave, exp_ops, method, gradient, options)
 
 
-def _sesolve(
+def _mesolve(
     H: TimeQArray,
-    psi0: QArray,
+    Ls: list[TimeQArray],
+    rho0: QArray,
     tsave: Array,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
     options: Options,
-) -> SESolveResult:
-    # === select solver constructor
-    solver_constructors = {
-        Euler: sesolve_euler_solver_constructor,
-        Dopri5: sesolve_dopri5_solver_constructor,
-        Dopri8: sesolve_dopri8_solver_constructor,
-        Tsit5: sesolve_tsit5_solver_constructor,
-        Kvaerno3: sesolve_kvaerno3_solver_constructor,
-        Kvaerno5: sesolve_kvaerno5_solver_constructor,
-        Expm: sesolve_expm_solver_constructor,
+) -> MESolveResult:
+    # === select integrator constructor
+    integrator_constructors = {
+        Euler: mesolve_euler_integrator_constructor,
+        Rouchon1: mesolve_rouchon1_integrator_constructor,
+        Dopri5: mesolve_dopri5_integrator_constructor,
+        Dopri8: mesolve_dopri8_integrator_constructor,
+        Tsit5: mesolve_tsit5_integrator_constructor,
+        Kvaerno3: mesolve_kvaerno3_integrator_constructor,
+        Kvaerno5: mesolve_kvaerno5_integrator_constructor,
+        Expm: mesolve_expm_integrator_constructor,
     }
-    assert_method_supported(method, solver_constructors.keys())
-    solver_constructor = solver_constructors[type(method)]
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
 
-    # === init solver
-    solver = solver_constructor(
+    # === init integrator
+    integrator = integrator_constructor(
         ts=tsave,
-        y0=psi0,
+        y0=rho0,
         method=method,
         gradient=gradient,
-        result_class=SESolveResult,
+        result_class=MESolveResult,
         options=options,
         H=H,
+        Ls=Ls,
         Es=exp_ops,
     )
 
-    # === run solver
-    result = solver.run()
+    # === run integrator
+    result = integrator.run()
 
     # === return result
     return result  # noqa: RET504
 
 
-def _check_sesolve_args(H: TimeQArray, psi0: QArray, exp_ops: list[QArray] | None):
+def _check_mesolve_args(
+    H: TimeQArray, Ls: list[TimeQArray], rho0: QArray, exp_ops: list[QArray] | None
+):
     # === check H shape
     check_shape(H, 'H', '(..., n, n)', subs={'...': '...H'})
 
-    # === check psi0 shape
-    check_shape(psi0, 'psi0', '(..., n, 1)', subs={'...': '...psi0'})
+    # === check Ls shape
+    for i, L in enumerate(Ls):
+        check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
+
+    if len(Ls) == 0 and rho0.isket():
+        warnings.warn(
+            'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
+            ' consider using `dq.sesolve()` to solve the Schrödinger equation.',
+            stacklevel=2,
+        )
+
+    # === check rho0 shape
+    check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
 
     # === check exp_ops shape
     if exp_ops is not None:

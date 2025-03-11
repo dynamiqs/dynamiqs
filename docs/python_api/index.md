@@ -6,7 +6,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### General
 
-::: dynamiqs.solvers
+::: dynamiqs.integrators
     options:
         table: true
         members:
@@ -18,7 +18,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
 
 ### Stochastic
 
-::: dynamiqs.solvers
+::: dynamiqs.integrators
     options:
         table: true
         members:
@@ -64,6 +64,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - EulerMaruyama
         - Rouchon1
         - Expm
+        - Event
 
 ### Gradients (dq.gradient)
 
@@ -190,6 +191,7 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         - set_precision
         - set_matmul_precision
         - set_layout
+        - set_progress_meter
 
 
 ### Vectorization
