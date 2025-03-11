@@ -238,7 +238,7 @@ class DenseQArray(QArray):
             data = self.data[key]
             return self._replace(data=data)
         else:
-            return self.data[*key]
+            return self.data[key]
 
 
 def array_to_qobj_list(x: Array, dims: tuple[int, ...]) -> Qobj | list[Qobj]:
