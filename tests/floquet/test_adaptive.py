@@ -20,7 +20,7 @@ class TestFloquet:
         omega_d = omega_d_frac * omega
         floquet_qubit = FloquetQubit(omega, omega_d, amp, tsave)
         floquet_result = floquet_qubit.run(Tsit5())
-        modes = floquet_result.modes.to_jax()
+        modes = floquet_result.modes
         state_phases = jnp.angle(modes[..., :, 0, 0])
         modes = jnp.einsum('...ijk,...i->...ijk', modes, jnp.exp(-1j * state_phases))
         quasienergies = floquet_result.quasienergies

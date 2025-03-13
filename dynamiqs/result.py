@@ -49,7 +49,7 @@ def _array_str(x: Array | QArray | None) -> str | None:
 
 # the Saved object holds quantities saved during the equation integration
 class Saved(eqx.Module):
-    ysave: QArray
+    ysave: QArray | Array
     extra: PyTree | None
 
 
@@ -102,7 +102,7 @@ class Result(eqx.Module):
                 type(self.gradient).__name__ if self.gradient is not None else None
             ),
             'Infos': self.infos if self.infos is not None else None,
-            'Extra': (eqx.tree_pformat(self.extra) if self.extra is not None else None),
+            'Extra': eqx.tree_pformat(self.extra) if self.extra is not None else None,
         }
 
     def __str__(self) -> str:
@@ -144,11 +144,12 @@ class SolveResult(Result):
 
 class PropagatorResult(Result):
     @property
-    def propagators(self) -> QArray:
+    def propagators(self) -> Array:
         return self._saved.ysave
 
     @property
-    def final_propagator(self) -> QArray:
+    def final_propagator(self) -> Array:
+        # TODO: this could be a QArray, it has the good shape
         return self.propagators[..., -1, :, :]
 
     def _str_parts(self) -> dict[str, str | None]:
@@ -160,7 +161,7 @@ class FloquetResult(Result):
     T: float
 
     @property
-    def modes(self) -> QArray:
+    def modes(self) -> Array:
         return self._saved.ysave
 
     @property

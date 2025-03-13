@@ -667,6 +667,8 @@ def _is_key_in_batch_dims(key: int | slice | tuple, ndim: int) -> bool:
         key_in_batch_dims = ndim > 2
     if isinstance(key, Array):
         key_in_batch_dims = key.ndim == 0 and ndim > 2
+    elif key is None:
+        key_in_batch_dims = True
     elif isinstance(key, tuple):
         if Ellipsis in key:
             ellipsis_key = key.index(Ellipsis)
@@ -676,10 +678,15 @@ def _is_key_in_batch_dims(key: int | slice | tuple, ndim: int) -> bool:
                 + key[ellipsis_key + 1 :]
             )
 
+        len_key_no_none = len(list(filter(lambda x: x is not None, key)))
         key_in_batch_dims = (
-            len(key) <= ndim - 2
-            or (len(key) == ndim - 1 and key[-1] == full_slice)
-            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
+            len_key_no_none <= ndim - 2
+            or (len_key_no_none == ndim - 1 and key[-1] == full_slice)
+            or (
+                len_key_no_none == ndim
+                and key[-2] == full_slice
+                and key[-1] == full_slice
+            )
         )
 
     return key_in_batch_dims
