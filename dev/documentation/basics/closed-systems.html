@@ -5488,8 +5488,8 @@ QArray: shape=(2, 1), dims=(2,), dtype=complex64, layout=dense
 [[0.  +0.j   ]
  [0.54+0.841j]]
 </code></pre></div>
-<p>If you want to know more about the available methods or the different options, head to the <a class="autorefs autorefs-internal" href="../../python_api/integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> API documentation.</p>
-<p>You can also directly compute the propagator with the <a class="autorefs autorefs-internal" href="../../python_api/integrators/sepropagator.html#dynamiqs.integrators.sepropagator"><code>dq.sepropagator()</code></a> solver. Continuing the last example:</p>
+<p>If you want to know more about the available methods or the different options, head to the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.sesolve&lt;/span&gt;" href="../../python_api/integrators/sesolve.html#dynamiqs.integrators.sesolve"><code>dq.sesolve()</code></a> API documentation.</p>
+<p>You can also directly compute the propagator with the <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.sepropagator&lt;/span&gt;" href="../../python_api/integrators/sepropagator.html#dynamiqs.integrators.sepropagator"><code>dq.sepropagator()</code></a> solver. Continuing the last example:</p>
 <div class="highlight"><pre><span></span><code><span class="n">res</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">sepropagator</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">tsave</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">propagators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># print the final propagator</span>
 </code></pre></div>

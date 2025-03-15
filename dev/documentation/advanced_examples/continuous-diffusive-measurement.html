@@ -5482,7 +5482,7 @@
 <p class="admonition-title">Work in progress.</p>
 <p>This tutorial is under construction, this is a draft version.</p>
 </div>
-<p>In this example, we simulate stochastic trajectories of quantum systems that are continuously measured by a diffusive detector. We explain how to use <a class="autorefs autorefs-internal" href="../../python_api/integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> to simulate trajectories modelled by the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr>, and <a class="autorefs autorefs-internal" href="../../python_api/integrators/dsmesolve.html#dynamiqs.integrators.dsmesolve"><code>dq.dsmesolve()</code></a> solvers to simulate trajectories modelled by the diffusive <abbr title="stochastic master equation">SME</abbr>.</p>
+<p>In this example, we simulate stochastic trajectories of quantum systems that are continuously measured by a diffusive detector. We explain how to use <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../../python_api/integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> to simulate trajectories modelled by the diffusive <abbr title="stochastic Schrödinger equation">SSE</abbr>, and <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dsmesolve&lt;/span&gt;" href="../../python_api/integrators/dsmesolve.html#dynamiqs.integrators.dsmesolve"><code>dq.dsmesolve()</code></a> solvers to simulate trajectories modelled by the diffusive <abbr title="stochastic master equation">SME</abbr>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -5493,7 +5493,7 @@
 </code></pre></div>
 <h2 id="qubit">Qubit</h2>
 <p>We consider a qubit starting from <span class="arithmatex">\(\ket{\psi_0}=\ket+_x=(\ket0+\ket1)/\sqrt2\)</span>, with no unitary dynamic <span class="arithmatex">\(H=0\)</span> and a single loss operator <span class="arithmatex">\(L=\sigma_z\)</span> which is continuously measured by a diffusive detector. We expect stochastic trajectories to project the qubit onto either of the <span class="arithmatex">\(\sigma_z\)</span> eigenstates.</p>
-<p>Let's begin with a perfectly efficient detector. We start with a pure state, and we measure all loss channels with perfect efficiency, so we don't loose any information about the system's state. As a result, it remains pure at all times. We use <a class="autorefs autorefs-internal" href="../../python_api/integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> to simulate these quantum trajectories.</p>
+<p>Let's begin with a perfectly efficient detector. We start with a pure state, and we measure all loss channels with perfect efficiency, so we don't loose any information about the system's state. As a result, it remains pure at all times. We use <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dssesolve&lt;/span&gt;" href="../../python_api/integrators/dssesolve.html#dynamiqs.integrators.dssesolve"><code>dq.dssesolve()</code></a> to simulate these quantum trajectories.</p>
 <h3 id="simulation">Simulation</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># define Hamiltonian, jump operators, initial state</span>
 <span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
@@ -5568,7 +5568,7 @@ Measurements : Array float32 (5, 1, 100) | 2.0 Kb
 </code></pre></div>
 <p><a class="glightbox" href="../../figs_docs/monitored-qubit-sigmaz.png" data-type="image" data-width="70%" data-height="auto" data-desc-position="bottom"><img alt="plot_monitored_qubit_sigmaz" class="fig" src="../../figs_docs/monitored-qubit-sigmaz.png" /></a></p>
 <h3 id="imperfect-detection">Imperfect detection</h3>
-<p>If the detection is imperfect, the system state is a density matrix. We use <a class="autorefs autorefs-internal" href="../../python_api/integrators/dsmesolve.html#dynamiqs.integrators.dsmesolve"><code>dq.dsmesolve()</code></a> to simulate these quantum trajectories.</p>
+<p>If the detection is imperfect, the system state is a density matrix. We use <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.dsmesolve&lt;/span&gt;" href="../../python_api/integrators/dsmesolve.html#dynamiqs.integrators.dsmesolve"><code>dq.dsmesolve()</code></a> to simulate these quantum trajectories.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># define efficiencies</span>
 <span class="n">etas</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">]</span>
 

@@ -5397,16 +5397,16 @@ or from <code>t0</code> to <code>tsave[-1]</code> if <code>t0</code> is specifie
           <b>method</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
           – <p>Method for the integration. Defaults to <code>None</code> which redirects
-to <a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>dq.method.Expm</code></a> (explicit matrix
-exponentiation) or <a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a>
+to <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Expm&lt;/span&gt;" href="../method/Expm.html#dynamiqs.method.Expm"><code>dq.method.Expm</code></a> (explicit matrix
+exponentiation) or <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Tsit5&lt;/span&gt;" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>dq.method.Tsit5</code></a>
 depending on the Hamiltonian type (supported:
-<a class="autorefs autorefs-internal" href="../method/Expm.html#dynamiqs.method.Expm"><code>Expm</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
-<a class="autorefs autorefs-internal" href="../method/Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>).</p>
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Expm&lt;/span&gt;" href="../method/Expm.html#dynamiqs.method.Expm"><code>Expm</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Tsit5&lt;/span&gt;" href="../method/Tsit5.html#dynamiqs.method.Tsit5"><code>Tsit5</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Dopri5&lt;/span&gt;" href="../method/Dopri5.html#dynamiqs.method.Dopri5"><code>Dopri5</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Dopri8&lt;/span&gt;" href="../method/Dopri8.html#dynamiqs.method.Dopri8"><code>Dopri8</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno3&lt;/span&gt;" href="../method/Kvaerno3.html#dynamiqs.method.Kvaerno3"><code>Kvaerno3</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Kvaerno5&lt;/span&gt;" href="../method/Kvaerno5.html#dynamiqs.method.Kvaerno5"><code>Kvaerno5</code></a>,
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.method.Euler&lt;/span&gt;" href="../method/Euler.html#dynamiqs.method.Euler"><code>Euler</code></a>).</p>
         </li>
         <li class="field-body">
           <b>gradient</b>
@@ -5436,7 +5436,7 @@ details.</p>
 <li><strong>progress_meter</strong> - Progress meter indicating how far the solve has
     progressed. Defaults to <code>None</code> which uses the global default
     progress meter (see
-    <a class="autorefs autorefs-internal" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
+    <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.set_progress_meter&lt;/span&gt;" href="../utils/global_settings/set_progress_meter.html#dynamiqs.utils.global_settings.set_progress_meter"><code>dq.set_progress_meter()</code></a>). Set to
     <code>True</code> for a <a href="https://github.com/tqdm/tqdm">tqdm</a> progress meter,
     and <code>False</code> for no output. See other options in
     <a href="https://github.com/dynamiqs/dynamiqs/blob/main/dynamiqs/progress_meter.py">dynamiqs/progress_meter.py</a>.
@@ -5513,8 +5513,8 @@ Use <code>result.propagators</code> to access the saved propagators.</p>
         <h2 id="dynamiqs.integrators.sepropagator--advanced-use-cases">Advanced use-cases</h2>
 <h3 id="dynamiqs.integrators.sepropagator--defining-a-time-dependent-hamiltonian">Defining a time-dependent Hamiltonian</h3>
 <p>If the Hamiltonian depends on time, it can be converted to a time-qarray using
-<a class="autorefs autorefs-internal" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
-<a class="autorefs autorefs-internal" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.pwc&lt;/span&gt;" href="../time_qarray/pwc.html#dynamiqs.time_qarray.pwc"><code>dq.pwc()</code></a>, <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.modulated&lt;/span&gt;" href="../time_qarray/modulated.html#dynamiqs.time_qarray.modulated"><code>dq.modulated()</code></a>, or
+<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.timecallable&lt;/span&gt;" href="../time_qarray/timecallable.html#dynamiqs.time_qarray.timecallable"><code>dq.timecallable()</code></a>. See the
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
 tutorial for more details.</p>
 <h3 id="dynamiqs.integrators.sepropagator--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
@@ -5526,6 +5526,7 @@ propagators are batched according to the leading dimensions of <code>H</code>. F
 <p>See the
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
+
 
     </div>
 

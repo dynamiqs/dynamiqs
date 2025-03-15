@@ -5558,7 +5558,7 @@ where <code>...x</code> indicates the batching shape of <code>x</code>, i.e. its
 </div>
 </div>
 <h3 id="flat-batching">Flat batching</h3>
-<p>The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing <code>options=dq.Options(cartesian_batching=False)</code>. In particular for <a class="autorefs autorefs-internal" href="../../python_api/integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, each jump operator can be batched independently from the others.</p>
+<p>The simulation runs for each set of Hamiltonians, jump operators and initial states using broadcasting. This mode can be activated by passing <code>options=dq.Options(cartesian_batching=False)</code>. In particular for <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;dq.mesolve&lt;/span&gt;" href="../../python_api/integrators/mesolve.html#dynamiqs.integrators.mesolve"><code>dq.mesolve()</code></a>, each jump operator can be batched independently from the others.</p>
 <details class="note">
 <summary>What is broadcasting?</summary>
 <p>JAX and NumPy broadcasting semantics are very powerful and allow you to write concise and efficient code. For more information, see the <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html">NumPy documentation on broadcasting</a>.</p>
@@ -5660,7 +5660,7 @@ where <code>... = jnp.broadcast_shapes(H, L0, L1, ..., rho0)</code> is the broad
 </div>
 </div>
 <h3 id="batching-over-a-time-qarray">Batching over a time-qarray</h3>
-<p>We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched <a class="autorefs autorefs-internal" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a>, in short:</p>
+<p>We have seen how to batch over time-independent objects, but how about time-dependent ones? It's essentially the same, you have to pass a batched <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt;" href="../../python_api/time_qarray/TimeQArray.html#dynamiqs.time_qarray.TimeQArray"><code>TimeQArray</code></a>, in short:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="5:3"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">For a <code>PWCTimeQArray</code></label><label for="__tabbed_5_2">For a <code>ModulatedTimeQArray</code></label><label for="__tabbed_5_3">For a <code>CallableTimeQArray</code></label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
