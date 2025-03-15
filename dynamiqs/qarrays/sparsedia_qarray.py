@@ -15,12 +15,14 @@ from .layout import Layout, dia
 from .qarray import (
     QArray,
     QArrayLike,
+    _is_key_in_batch_dims,
     in_last_two_dims,
     include_last_two_dims,
     isqarraylike,
     to_jax,
 )
 from .sparsedia_primitives import (
+    _sparsedia_slice,
     add_sparsedia_sparsedia,
     and_sparsedia_sparsedia,
     broadcast_sparsedia,
@@ -346,39 +348,122 @@ class SparseDIAQArray(QArray):
         diags = self.diags**power
         return self._replace(diags=diags)
 
-    def __getitem__(self, key: int | slice | tuple) -> QArray:
+    def __getitem__(self, key: int | slice | tuple) -> QArray | jax.Array:
         if key in (slice(None, None, None), Ellipsis):
             return self
 
-        _check_key_in_batch_dims(key, self.ndim)
-        diags = self.diags[key]
-        return self._replace(diags=diags)
+        if _is_key_in_batch_dims(key, self.ndim):
+            diags = self.diags[key]
+            return self._replace(diags=diags)
+        else:
+            # todo: handle out of bounds indexes
+            # return a jax qarray that materializes the sparse array
+            full_slice = slice(None, None, None)
+            if Ellipsis in key:
+                ellipsis_key = key.index(Ellipsis)
+                key = (
+                    key[:ellipsis_key]
+                    + (full_slice,) * (self.ndim - len(key) + 1)
+                    + key[ellipsis_key + 1 :]
+                )
 
+            normalized_key = key
+            # for normalized key to scribe each dimension
+            while len(normalized_key) < len(self.shape):
+                normalized_key.append(slice(None, None, None))
 
-def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
-    full_slice = slice(None, None, None)
-    valid_key = False
-    if isinstance(key, int | slice):
-        valid_key = ndim > 2
-    if isinstance(key, Array):
-        valid_key = key.ndim == 0 and ndim > 2
-    elif isinstance(key, tuple):
-        if Ellipsis in key:
-            ellipsis_key = key.index(Ellipsis)
-            key = (
-                key[:ellipsis_key]
-                + (full_slice,) * (ndim - len(key) + 1)
-                + key[ellipsis_key + 1 :]
+            normalized_key = normalized_key[:-2] + tuple(
+                [
+                    normalize_slice(s, k)
+                    for (s, k) in zip(
+                        normalized_key[-2:], self.shape[-2:], strict=False
+                    )
+                ]
+            )
+            normalized_batch_key = normalized_key[:-2]
+
+            result = jnp.vectorize(
+                materialize_single_matrix,
+                signature='(a,b)->(c,d)',
+                excluded=('offsets', 'key', 'normalized_key', 'dtype'),
+            )(
+                self.diags[normalized_batch_key],
+                offsets=self.offsets,
+                normalized_key=normalized_key,
+                dtype=self.dtype,
             )
 
-        valid_key = (
-            len(key) <= ndim - 2
-            or (len(key) == ndim - 1 and key[-1] == full_slice)
-            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
+            # since we converted integer indexes on the non batching dimension
+            # to slices, we have to squeeze them back if needed
+            to_squeeze = []
+            for i in range(2):
+                ik = len(self.shape[:-2]) + i
+                if len(key) > ik and isinstance(key[ik], int):
+                    to_squeeze.append(-2 + i)
+            if len(to_squeeze) > 0:
+                result = jnp.squeeze(result, axis=to_squeeze)
+
+            return result
+
+
+def materialize_single_matrix(
+    diags: Array, offsets: (int, ...), normalized_key: (slice, ...), dtype: jnp.dtype
+) -> Array:
+    slice_x = normalized_key[-2]
+    slice_y = normalized_key[-1]
+
+    final_dimension = (slice_x.stop - slice_x.start, slice_y.stop - slice_y.start)
+
+    result = jnp.zeros(final_dimension, dtype=dtype)
+    if (slice_x.start == slice_x.stop) or (slice_y.start == slice_y.stop):
+        return result
+
+    for i, offset in enumerate(offsets):
+        slice_in = _sparsedia_slice(offset)
+        diagonal_coefficients = diags[i, slice_in]
+        to_update = update_diagonal(
+            diagonal_coefficients,
+            slice_x.start,
+            slice_x.stop,
+            slice_y.start,
+            slice_y.stop,
+            offset,
         )
 
-    if not valid_key:
-        raise NotImplementedError(
-            'Getting items from non batching dimensions of a `SparseDIAQArray` is not '
-            'supported.'
-        )
+        result = result.at[
+            : slice_x.stop - slice_x.start, : slice_y.stop - slice_y.start
+        ].add(to_update)
+
+    return result
+
+
+def update_diagonal(L: Array, i1: int, i2: int, j1: int, j2: int, d: int = 0) -> Array:
+    M = jnp.zeros((i2 - i1, j2 - j1), dtype=L.dtype)
+    n = len(L)
+
+    if (i2 <= i1) or (j2 <= j1):
+        return M
+
+    a = max(0, i1 + min(d, 0), j1 - max(d, 0))
+    b = min(n, i2 + min(d, 0), j2 - max(d, 0))
+    if b <= a:
+        return M
+
+    size = b - a
+    row_start = a - i1 - min(d, 0)
+    col_start = a - j1 + max(d, 0)
+
+    L_diag = jnp.diag(L[a:b])
+    return M.at[row_start : row_start + size, col_start : col_start + size].set(L_diag)
+
+
+def normalize_slice(s: slice | int, n: int) -> slice:
+    if isinstance(s, slice):
+        if s.start is None:
+            s = slice(0, s.stop, s.step)
+        if s.stop is None:
+            s = slice(s.start, n, s.step)
+    else:
+        s = slice(s, s + 1, None)
+
+    return s
