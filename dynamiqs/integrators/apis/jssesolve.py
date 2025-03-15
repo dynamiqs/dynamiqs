@@ -265,17 +265,11 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    f = _jssesolve_single_trajectory
+    f = _vectorized_jumps_jssesolve
 
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, 0, None, None, None, None)
+    # === vectorize function over H, Ls and psi0.
     # the result is vectorized over `_saved`, `infos` and `keys`
     out_axes = JSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
-    # vectorize input over H, Ls and psi0.
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
 
     if options.cartesian_batching:
@@ -295,12 +289,53 @@ def _vectorized_jssesolve(
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
+def _vectorized_jumps_jssesolve(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> JSSESolveResult:
+    f = _jssesolve_single_trajectory
+    out_axes = JSSESolveResult.out_axes()
+    # === vectorize function over stochastic trajectories
+    # the input is vectorized over `key`
+    in_axes = (None, None, None, None, 0, None, None, None, None, None, None)
+    f = jax.vmap(f, in_axes, out_axes)
+    if options.smart_sampling:
+        nojump_args = (keys[0], True, 0.0)
+        nojump_result = _jssesolve_single_trajectory(
+            H, Ls, psi0, tsave, *nojump_args, exp_ops, method, gradient, options,
+        )
+        jump_args = (keys[1:], False, nojump_result.final_state_norm)
+        jump_result = f(
+            H, Ls, psi0, tsave, *jump_args, exp_ops, method, gradient, options,
+        )
+
+        def _concat(x, y):
+            if isinstance(x, float | int | bool) or len(x.shape) == len(y.shape):
+                return x
+            return jnp.concatenate((x[None], y))
+        return jax.tree.map(
+            lambda x, y: _concat(x, y), nojump_result, jump_result
+        )
+    return f(
+        H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options
+    )
+
+
 def _jssesolve_single_trajectory(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
     tsave: Array,
     key: PRNGKeyArray,
+    nojump: bool,
+    nojump_prob: float,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
@@ -338,6 +373,8 @@ def _jssesolve_single_trajectory(
         Ls=Ls,
         Es=exp_ops,
         key=key,
+        nojump=nojump,
+        nojump_prob=nojump_prob,
     )
 
     # === run integrator

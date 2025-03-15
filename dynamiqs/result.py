@@ -59,6 +59,7 @@ class SolveSaved(Saved):
 
 class JumpSolveSaved(SolveSaved):
     clicktimes: Array
+    final_state_norm: Array
 
 
 class DiffusiveSolveSaved(SolveSaved):
@@ -206,11 +207,16 @@ class JSSESolveResult(SolveResult):
     def nclicks(self) -> Array:
         return jnp.count_nonzero(~jnp.isnan(self.clicktimes), axis=-1)
 
+    @property
+    def final_state_norm(self) -> Array:
+        return self._saved.final_state_norm
+
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
             'Clicktimes': _array_str(self.clicktimes),
             'Nclicks': _array_str(self.nclicks),
+            'final_state_norm': _array_str(self.final_state_norm)
         }
 
     @classmethod
