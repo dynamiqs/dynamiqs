@@ -56,13 +56,14 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         if self.fixed_step:
             return dx.ConstantStepSize()
         else:
+            jump_ts = None if len(self.discontinuity_ts) == 0 else self.discontinuity_ts
             return dx.PIDController(
                 rtol=self.method.rtol,
                 atol=self.method.atol,
                 safety=self.method.safety_factor,
                 factormin=self.method.min_factor,
                 factormax=self.method.max_factor,
-                jump_ts=self.discontinuity_ts,
+                jump_ts=jump_ts,
             )
 
     @property

@@ -167,9 +167,11 @@ def modulated(
     check_shape(qarray, 'qarray', '(n, n)')
 
     # discontinuity_ts
-    if discontinuity_ts is not None:
-        discontinuity_ts = jnp.asarray(discontinuity_ts)
-        discontinuity_ts = jnp.sort(discontinuity_ts)
+    discontinuity_ts = (
+        jnp.empty(0)
+        if discontinuity_ts is None
+        else jnp.sort(jnp.asarray(discontinuity_ts))
+    )
 
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
@@ -221,9 +223,11 @@ def timecallable(
         )
 
     # discontinuity_ts
-    if discontinuity_ts is not None:
-        discontinuity_ts = jnp.asarray(discontinuity_ts)
-        discontinuity_ts = jnp.sort(discontinuity_ts)
+    discontinuity_ts = (
+        jnp.empty(0)
+        if discontinuity_ts is None
+        else jnp.sort(jnp.asarray(discontinuity_ts))
+    )
 
     # make f a valid PyTree that is vmap-compatible
     f = BatchedCallable(f)
@@ -248,7 +252,7 @@ class TimeQArray(eqx.Module):
         vectorized _(bool)_: Whether the underlying qarray is non-vectorized (ket, bra
             or operator) or vectorized (operator in vector form or superoperator in
             matrix form).
-        discontinuity_ts _(Array | None)_: Times at which there is a discontinuous jump
+        discontinuity_ts _(Array)_: Times at which there is a discontinuous jump
             in the time-qarray values (the array is always sorted, but does not
             necessarily contain unique values).
 
@@ -313,7 +317,7 @@ class TimeQArray(eqx.Module):
 
     @property
     @abstractmethod
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         # must be sorted, not necessarily unique values
         pass
 
@@ -471,8 +475,8 @@ class ConstantTimeQArray(TimeQArray):
         return ConstantTimeQArray(0)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
-        return None
+    def discontinuity_ts(self) -> Array:
+        return jnp.empty(0)
 
     def reshape(self, *shape: int) -> TimeQArray:
         qarray = self.qarray.reshape(*shape)
@@ -553,7 +557,7 @@ class PWCTimeQArray(TimeQArray):
         return PWCTimeQArray(None, 0, None)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         return self.times
 
     def reshape(self, *shape: int) -> TimeQArray:
@@ -594,7 +598,7 @@ class PWCTimeQArray(TimeQArray):
 class ModulatedTimeQArray(TimeQArray):
     f: BatchedCallable  # (...)
     qarray: QArray  # (n, n)
-    _disc_ts: Array | None
+    _disc_ts: Array
 
     def _replace(
         self, f: BatchedCallable | None = None, qarray: QArray | None = None, **kwargs
@@ -639,7 +643,7 @@ class ModulatedTimeQArray(TimeQArray):
         return ModulatedTimeQArray(0, None, None)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         return self._disc_ts
 
     def reshape(self, *shape: int) -> TimeQArray:
@@ -668,7 +672,7 @@ class ModulatedTimeQArray(TimeQArray):
 
 class CallableTimeQArray(TimeQArray):
     f: BatchedCallable  # (..., n, n)
-    _disc_ts: Array | None
+    _disc_ts: Array
 
     def _replace(self, f: BatchedCallable | None = None, **kwargs) -> TimeQArray:
         if f is None:
@@ -709,7 +713,7 @@ class CallableTimeQArray(TimeQArray):
         return CallableTimeQArray(0, None)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         return self._disc_ts
 
     def reshape(self, *shape: int) -> TimeQArray:
@@ -796,7 +800,7 @@ class SummedTimeQArray(TimeQArray):
         return SummedTimeQArray(in_axes_list, check=False)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         ts = [tqarray.discontinuity_ts for tqarray in self.timeqarrays]
         return concatenate_sort(*ts)
 

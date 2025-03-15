@@ -61,8 +61,7 @@ class ExpmIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface):
         # find all times where the solution should be saved (self.ts) or at which the
         # generator changes (self.discontinuity_ts)
         disc_ts = self.discontinuity_ts
-        if disc_ts is not None:
-            disc_ts = disc_ts.clip(self.t0, self.t1)
+        disc_ts = disc_ts.clip(self.t0, self.t1)
         times = concatenate_sort(jnp.asarray([self.t0]), self.ts, disc_ts)  # (ntimes,)
 
         # === compute time differences (null for times outside [t0, t1])
