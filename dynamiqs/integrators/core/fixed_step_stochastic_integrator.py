@@ -69,10 +69,10 @@ class DiffusiveSolveIntegrator(
             )
 
         if len(self.discontinuity_ts) > 0:
-            warnings.warns(
+            warnings.warn(
                 'The Hamiltonian or jump operators are time-dependent with '
                 'discontinuities, which will be ignored by the method.',
-                stack_level=1,
+                stacklevel=1,
             )
 
     class Infos(eqx.Module):
