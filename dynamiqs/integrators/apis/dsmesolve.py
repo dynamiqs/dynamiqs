@@ -373,7 +373,7 @@ def _check_dsmesolve_args(
         check_shape(L, f'jump_ops[{i}]', '(n, n)')
 
     if len(Ls) == 0 and rho0.isket():
-        warnings.warns(
+        warnings.warn(
             'Argument `jump_ops` is an empty list and argument `rho0` is a ket,'
             ' consider using `dq.sesolve()` to solve the Schrödinger equation.',
             stacklevel=2,
