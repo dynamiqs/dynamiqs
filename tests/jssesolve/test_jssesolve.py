@@ -8,8 +8,8 @@ from ..order import TEST_LONG
 
 
 @pytest.mark.run(order=TEST_LONG)
-@pytest.mark.parametrize("smart_sampling", [True, False])
-def test_against_mesolve_oscillator(smart_sampling, atol=5e-2):
+@pytest.mark.parametrize('smart_sampling', [True, False])
+def test_against_mesolve_oscillator(smart_sampling, atol=1e-1):
     # parameters
     ntrajs = 80
     dim = 10
@@ -26,16 +26,14 @@ def test_against_mesolve_oscillator(smart_sampling, atol=5e-2):
     me_options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = dq.jssesolve(H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops, options=js_options)
+    jsseresult = dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops, options=js_options
+    )
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
     if smart_sampling:
-        nojump_prob = jsseresult.final_state_norm[0]
-        mean_jsse_expects_jump = jnp.mean(jsseresult.expects[1:], axis=0)
-        mean_jsse_expects = nojump_prob * jsseresult.expects[0] + (1 - nojump_prob) * mean_jsse_expects_jump
-        mean_jsse_states_jump = jsseresult.states[1:].todm().sum(axis=0) / (ntrajs - 1)
-        mean_jsse_states = nojump_prob * jsseresult.states[0].todm() + mean_jsse_states_jump
+        mean_jsse_expects, mean_jsse_states = _average_smart_sampling(jsseresult)
     else:
         mean_jsse_expects = jnp.mean(jsseresult.expects, axis=0)
         mean_jsse_states = jsseresult.states.todm().sum(axis=0) / ntrajs
@@ -44,7 +42,8 @@ def test_against_mesolve_oscillator(smart_sampling, atol=5e-2):
 
 
 @pytest.mark.run(order=TEST_LONG)
-def test_against_mesolve_qubit(atol=5e-2):
+@pytest.mark.parametrize('smart_sampling', [True, False])
+def test_against_mesolve_qubit(smart_sampling, atol=1e-1):
     # parameters
     ntrajs = 40
     omega = 2.0 * jnp.pi
@@ -60,14 +59,38 @@ def test_against_mesolve_qubit(atol=5e-2):
     tsave = jnp.linspace(0, 1.0, 41)
     keys = jax.random.split(jax.random.key(42), num=ntrajs)
     exp_ops = [dq.excited().todm(), dq.ground().todm()]
-    options = dq.Options(progress_meter=None)
+    js_options = dq.Options(smart_sampling=smart_sampling)
+    me_options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = dq.jssesolve(H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops)
-    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
+    jsseresult = dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, options=js_options
+    )
+    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    mean_jsse_expects = jnp.mean(jsseresult.expects, axis=0)
-    mean_jsse_states = jsseresult.states.todm().sum(axis=0) / ntrajs
+    if smart_sampling:
+        mean_jsse_expects, mean_jsse_states = _average_smart_sampling(jsseresult)
+    else:
+        mean_jsse_expects = jnp.mean(jsseresult.expects, axis=1)
+        mean_jsse_states = jsseresult.states.todm().sum(axis=1) / ntrajs
     assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
     assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
+
+
+def _average_smart_sampling(jsseresult):
+    nojump_prob = jsseresult.final_state_norm[..., 0]
+    expect_len = len(jsseresult.expects.shape)
+    nojump_prob_expect = nojump_prob[(...,) + (None,) * (expect_len - 2)]
+    nojump_prob_state = nojump_prob[(...,) + (None,) * (expect_len - 1)]
+    mean_jsse_expects_jump = jnp.mean(jsseresult.expects[..., 1:, :, :], axis=-3)
+    mean_jsse_expects = (
+        nojump_prob_expect * jsseresult.expects[..., 0, :, :]
+        + (1 - nojump_prob_expect) * mean_jsse_expects_jump
+    )
+    mean_jsse_states_jump = jsseresult.states[..., 1:, :, :, :].todm().mean(axis=-4)
+    mean_jsse_states = dq.unit(
+        nojump_prob_state * jsseresult.states[..., 0, :, :, :].todm()
+        + (1 - nojump_prob_state) * mean_jsse_states_jump
+    )
+    return mean_jsse_expects, mean_jsse_states

@@ -6,7 +6,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -301,31 +301,37 @@ def _vectorized_jumps_jssesolve(
     options: Options,
 ) -> JSSESolveResult:
     f = _jssesolve_single_trajectory
-    out_axes = JSSESolveResult.out_axes()
+
     # === vectorize function over stochastic trajectories
     # the input is vectorized over `key`
+    # the result is vectorized over `_saved`, `infos` and `keys`
+    out_axes = JSSESolveResult.out_axes()
     in_axes = (None, None, None, None, 0, None, None, None, None, None, None)
     f = jax.vmap(f, in_axes, out_axes)
+
     if options.smart_sampling:
+        # consume the first key for the no-jump trajectory
         nojump_args = (keys[0], True, 0.0)
         nojump_result = _jssesolve_single_trajectory(
-            H, Ls, psi0, tsave, *nojump_args, exp_ops, method, gradient, options,
+            H, Ls, psi0, tsave, *nojump_args, exp_ops, method, gradient, options
         )
+        # consume the remaining keys for the jump trajectories, using the norm of the
+        # no-jump state as the minimum value for random numbers triggering a jump
         jump_args = (keys[1:], False, nojump_result.final_state_norm)
         jump_result = f(
-            H, Ls, psi0, tsave, *jump_args, exp_ops, method, gradient, options,
+            H, Ls, psi0, tsave, *jump_args, exp_ops, method, gradient, options
         )
 
-        def _concat(x, y):
+        def _concatenate_results(x: PyTree, y: PyTree) -> PyTree:
             if isinstance(x, float | int | bool) or len(x.shape) == len(y.shape):
                 return x
             return jnp.concatenate((x[None], y))
+
+        # concatenate the no-jump and jump results
         return jax.tree.map(
-            lambda x, y: _concat(x, y), nojump_result, jump_result
+            lambda x, y: _concatenate_results(x, y), nojump_result, jump_result
         )
-    return f(
-        H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options
-    )
+    return f(H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options)
 
 
 def _jssesolve_single_trajectory(

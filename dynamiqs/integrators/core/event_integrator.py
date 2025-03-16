@@ -156,7 +156,8 @@ class JSSESolveEventIntegrator(
         # collect and return results
         saved = final_state.inner_state.saved  # of type SolveSaved
         clicktimes = final_state.clicktimes
-        saved = self.postprocess_saved(saved, final_state.y, clicktimes)  # of type JumpSolveSaved
+        # saved of type JumpSolveSaved
+        saved = self.postprocess_saved(saved, final_state.y, clicktimes)
         return self.result(saved, infos=None)
 
     def _solve_until_click(self, y0: QArray, t0: Array, rand: Array) -> dx.Solution:

@@ -83,9 +83,13 @@ class JumpSolveSaveMixin(SolveSaveMixin):
         # force state normalisation before saving
         return super().save(unit(y))
 
-    def postprocess_saved(self, saved: SolveSaved, ylast: PyTree, clicktimes: Array) -> JumpSolveSaved:
+    def postprocess_saved(
+        self, saved: SolveSaved, ylast: PyTree, clicktimes: Array
+    ) -> JumpSolveSaved:
         saved = super().postprocess_saved(saved, unit(ylast))
-        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, clicktimes, ylast.norm())
+        return JumpSolveSaved(
+            saved.ysave, saved.extra, saved.Esave, clicktimes, ylast.norm()
+        )
 
 
 class DiffusiveSolveSaveMixin(SolveSaveMixin):

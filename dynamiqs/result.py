@@ -216,7 +216,7 @@ class JSSESolveResult(SolveResult):
         return d | {
             'Clicktimes': _array_str(self.clicktimes),
             'Nclicks': _array_str(self.nclicks),
-            'final_state_norm': _array_str(self.final_state_norm)
+            'final_state_norm': _array_str(self.final_state_norm),
         }
 
     @classmethod
