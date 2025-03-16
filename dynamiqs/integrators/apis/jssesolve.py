@@ -84,6 +84,11 @@ def jssesolve(
     solver returns the times at which the detector clicked,
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
+    !!! Note
+        If you are looking for the equivalent of QuTiP's `mcsolve`, look no further!
+        `jssesolve` computes the very same quanitites, albeit under a different name in
+        this library.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
@@ -104,7 +109,7 @@ def jssesolve(
             method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_states`, `cartesian_batching`, `t0`,
-            `save_extra`, `nmaxclick`).
+            `save_extra`, `nmaxclick`, `smart_sampling`).
             ??? "Detailed options API"
                 ```
                 dq.Options(
@@ -113,6 +118,7 @@ def jssesolve(
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
                     nmaxclick: int = 10_000,
+                    smart_sampling: bool = False,
                 )
                 ```
 
@@ -131,6 +137,10 @@ def jssesolve(
                     during the integration, accessible in `result.extra`.
                 - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
                     set higher than the expected maximum number of clicks.
+                - **smart_sampling** - If `True`, the improved sampling algorithm of
+                    [Abdelhafez et al. (2019)](https://doi.org/10.1103/PhysRevA.99.052327)
+                    is used whereby the no-jump trajectory is sampled only once, and all
+                    remaining trajectories contain at least one jump.
 
     Returns:
         `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
