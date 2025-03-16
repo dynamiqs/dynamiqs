@@ -275,7 +275,7 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    f = _vectorized_jumps_jssesolve
+    f = _vectorized_clicks_jssesolve
 
     # === vectorize function over H, Ls and psi0.
     # the result is vectorized over `_saved`, `infos` and `keys`
@@ -299,7 +299,7 @@ def _vectorized_jssesolve(
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
-def _vectorized_jumps_jssesolve(
+def _vectorized_clicks_jssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
@@ -320,16 +320,16 @@ def _vectorized_jumps_jssesolve(
     f = jax.vmap(f, in_axes, out_axes)
 
     if options.smart_sampling:
-        # consume the first key for the no-jump trajectory
-        nojump_args = (keys[0], True, 0.0)
-        nojump_result = _jssesolve_single_trajectory(
-            H, Ls, psi0, tsave, *nojump_args, exp_ops, method, gradient, options
+        # consume the first key for the no-click trajectory
+        noclick_args = (keys[0], True, 0.0)
+        noclick_result = _jssesolve_single_trajectory(
+            H, Ls, psi0, tsave, *noclick_args, exp_ops, method, gradient, options
         )
-        # consume the remaining keys for the jump trajectories, using the norm of the
-        # no-jump state as the minimum value for random numbers triggering a jump
-        jump_args = (keys[1:], False, nojump_result.final_state_norm)
-        jump_result = f(
-            H, Ls, psi0, tsave, *jump_args, exp_ops, method, gradient, options
+        # consume the remaining keys for the click trajectories, using the norm of the
+        # no-click state as the minimum value for random numbers triggering a click
+        click_args = (keys[1:], False, noclick_result.final_state_norm)
+        click_result = f(
+            H, Ls, psi0, tsave, *click_args, exp_ops, method, gradient, options
         )
 
         def _concatenate_results(x: PyTree, y: PyTree) -> PyTree:
@@ -337,9 +337,9 @@ def _vectorized_jumps_jssesolve(
                 return x
             return jnp.concatenate((x[None], y))
 
-        # concatenate the no-jump and jump results
+        # concatenate the no-click and click results
         return jax.tree.map(
-            lambda x, y: _concatenate_results(x, y), nojump_result, jump_result
+            lambda x, y: _concatenate_results(x, y), noclick_result, click_result
         )
     return f(H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options)
 
@@ -350,8 +350,8 @@ def _jssesolve_single_trajectory(
     psi0: QArray,
     tsave: Array,
     key: PRNGKeyArray,
-    nojump: bool,
-    nojump_prob: float,
+    noclick: bool,
+    noclick_prob: float,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
@@ -389,8 +389,8 @@ def _jssesolve_single_trajectory(
         Ls=Ls,
         Es=exp_ops,
         key=key,
-        nojump=nojump,
-        nojump_prob=nojump_prob,
+        noclick=noclick,
+        noclick_prob=noclick_prob,
     )
 
     # === run integrator

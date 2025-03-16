@@ -62,8 +62,8 @@ class StochasticBaseIntegrator(BaseIntegrator):
     """
 
     key: PRNGKeyArray
-    nojump: bool
-    nojump_prob: float
+    noclick: bool
+    noclick_prob: float
 
     def result(self, saved: Saved, infos: PyTree | None = None) -> Result:
         ts = jnp.asarray(self.ts)  # todo: fix static tsave

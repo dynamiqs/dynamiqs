@@ -79,18 +79,18 @@ def test_against_mesolve_qubit(smart_sampling, atol=1e-1):
 
 
 def _average_smart_sampling(jsseresult):
-    nojump_prob = jsseresult.final_state_norm[..., 0]
+    noclick_prob = jsseresult.final_state_norm[..., 0]
     expect_len = len(jsseresult.expects.shape)
-    nojump_prob_expect = nojump_prob[(...,) + (None,) * (expect_len - 2)]
-    nojump_prob_state = nojump_prob[(...,) + (None,) * (expect_len - 1)]
-    mean_jsse_expects_jump = jnp.mean(jsseresult.expects[..., 1:, :, :], axis=-3)
+    noclick_prob_expect = noclick_prob[(...,) + (None,) * (expect_len - 2)]
+    noclick_prob_state = noclick_prob[(...,) + (None,) * (expect_len - 1)]
+    mean_jsse_expects_click = jnp.mean(jsseresult.expects[..., 1:, :, :], axis=-3)
     mean_jsse_expects = (
-        nojump_prob_expect * jsseresult.expects[..., 0, :, :]
-        + (1 - nojump_prob_expect) * mean_jsse_expects_jump
+        noclick_prob_expect * jsseresult.expects[..., 0, :, :]
+        + (1 - noclick_prob_expect) * mean_jsse_expects_click
     )
-    mean_jsse_states_jump = jsseresult.states[..., 1:, :, :, :].todm().mean(axis=-4)
+    mean_jsse_states_click = jsseresult.states[..., 1:, :, :, :].todm().mean(axis=-4)
     mean_jsse_states = dq.unit(
-        nojump_prob_state * jsseresult.states[..., 0, :, :, :].todm()
-        + (1 - nojump_prob_state) * mean_jsse_states_jump
+        noclick_prob_state * jsseresult.states[..., 0, :, :, :].todm()
+        + (1 - noclick_prob_state) * mean_jsse_states_click
     )
     return mean_jsse_expects, mean_jsse_states

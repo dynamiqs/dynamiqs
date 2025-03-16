@@ -68,10 +68,10 @@ class JSSESolveEventIntegrator(
         def loop_body(state: JSSEState) -> JSSEState:
             # pick a random number for the next detection event
             key, click_key, jump_key = jax.random.split(state.key, num=3)
-            if self.nojump:
+            if self.noclick:
                 rand = 0.0
             else:
-                rand = jax.random.uniform(key, minval=self.nojump_prob)
+                rand = jax.random.uniform(key, minval=self.noclick_prob)
 
             # solve until the next detection event
             solution = self._solve_until_click(state.y, state.t, rand)
