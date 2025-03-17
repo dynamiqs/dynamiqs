@@ -53,6 +53,9 @@ class JSSESolveEventIntegrator(
 ):
     """Integrator computing the time evolution of the Jump SSE using Diffrax events."""
 
+    noclick: bool
+    noclick_min_prob: float
+
     @property
     def terms(self) -> dx.AbstractTerm:
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
@@ -71,7 +74,7 @@ class JSSESolveEventIntegrator(
             if self.noclick:
                 rand = 0.0
             else:
-                rand = jax.random.uniform(key, minval=self.noclick_prob)
+                rand = jax.random.uniform(key, minval=self.noclick_min_prob)
 
             # solve until the next detection event
             solution = self._solve_until_click(state.y, state.t, rand)
