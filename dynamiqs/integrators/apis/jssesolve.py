@@ -351,7 +351,7 @@ def _jssesolve_single_trajectory(
     tsave: Array,
     key: PRNGKeyArray,
     noclick: bool,
-    noclick_prob: float,
+    noclick_min_prob: float,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
@@ -390,7 +390,7 @@ def _jssesolve_single_trajectory(
         Es=exp_ops,
         key=key,
         noclick=noclick,
-        noclick_prob=noclick_prob,
+        noclick_min_prob=noclick_min_prob,
     )
 
     # === run integrator
