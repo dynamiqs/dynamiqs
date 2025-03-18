@@ -339,7 +339,7 @@ def _vectorized_clicks_jssesolve(
 
         # concatenate the no-click and click results
         return jax.tree.map(
-            lambda x, y: _concatenate_results(x, y), noclick_result, click_result
+            _concatenate_results, noclick_result, click_result
         )
     return f(H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options)
 
