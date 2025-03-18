@@ -327,7 +327,7 @@ def _vectorized_clicks_jssesolve(
         )
         # consume the remaining keys for the click trajectories, using the norm of the
         # no-click state as the minimum value for random numbers triggering a click
-        click_args = (keys[1:], False, noclick_result.final_state_norm)
+        click_args = (keys[1:], False, noclick_result.final_state_norm ** 2)
         click_result = f(
             H, Ls, psi0, tsave, *click_args, exp_ops, method, gradient, options
         )
