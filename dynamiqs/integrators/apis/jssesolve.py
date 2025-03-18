@@ -85,8 +85,8 @@ def jssesolve(
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
-        jump_ops _(list of qarray-like or time-qarray, each of shape (n, n))_: List of
-            jump operators.
+        jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
+            List of jump operators.
         psi0 _(qarray-like of shape (...psi0, n, 1))_: Initial state.
         tsave _(array-like of shape (ntsave,))_: Times at which the states and
             expectation values are saved. The equation is solved from `tsave[0]` to
@@ -190,32 +190,35 @@ def jssesolve(
 
     ## Running multiple simulations concurrently
 
-    The Hamiltonian `H` and the initial state `psi0` can be batched to
-    solve multiple SSEs concurrently. All other arguments (including the PRNG key)
-    are common to every batch. The resulting states, click times and expectation values
-    are batched according to the leading dimensions of `H` and `psi0`. The
-    behaviour depends on the value of the `cartesian_batching` option.
+    The Hamiltonian `H`, the jump operators `jump_ops` and the initial state `psi0` can
+    be batched to solve multiple SSEs concurrently. All other arguments (including the
+    PRNG key) are common to every batch. The resulting states, measurements and
+    expectation values are batched according to the leading dimensions of `H`,
+    `jump_ops` and `psi0`. The behaviour depends on the value of the
+    `cartesian_batching` option.
 
     === "If `cartesian_batching = True` (default value)"
         The results leading dimensions are
         ```
-        ... = ...H, ...psi0
+        ... = ...H, ...L0, ...L1, (...), ...psi0
         ```
         For example if:
 
         - `H` has shape _(2, 3, n, n)_,
-        - `psi0` has shape _(4, n, 1)_,
+        - `jump_ops = [L0, L1]` has shape _[(4, 5, n, n), (6, n, n)]_,
+        - `psi0` has shape _(7, n, 1)_,
 
-        then `result.states` has shape _(2, 3, 4, ntrajs, ntsave, n, 1)_.
+        then `result.states` has shape _(2, 3, 4, 5, 6, 7, ntrajs, ntsave, n, 1)_.
 
     === "If `cartesian_batching = False`"
         The results leading dimensions are
         ```
-        ... = ...H = ...psi0  # (once broadcasted)
+        ... = ...H = ...L0 = ...L1 = (...) = ...psi0  # (once broadcasted)
         ```
         For example if:
 
         - `H` has shape _(2, 3, n, n)_,
+        - `jump_ops = [L0, L1]` has shape _[(3, n, n), (2, 1, n, n)]_,
         - `psi0` has shape _(3, n, 1)_,
 
         then `result.states` has shape _(2, 3, ntrajs, ntsave, n, 1)_.
@@ -223,11 +226,6 @@ def jssesolve(
     See the
     [Batching simulations](../../documentation/basics/batching-simulations.md)
     tutorial for more details.
-
-    Warning:
-        Batching on `jump_ops` is not yet supported, if this is needed don't
-        hesitate to
-        [open an issue on GitHub](https://github.com/dynamiqs/dynamiqs/issues/new).
     """  # noqa: E501
     # === convert arguments
     H = astimeqarray(H)
@@ -274,7 +272,7 @@ def _vectorized_jssesolve(
     f = jax.vmap(f, in_axes, out_axes)
 
     # === vectorize function
-    # vectorize input over H, Ls and psi0.
+    # vectorize input over H, Ls and psi0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
 
     if options.cartesian_batching:
