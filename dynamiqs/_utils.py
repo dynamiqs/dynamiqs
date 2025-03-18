@@ -41,10 +41,7 @@ def tree_str_inline(x: PyTree) -> str:
     return eqx.tree_pformat(x, indent=0).replace('\n', '').replace(',', ', ')
 
 
-def concatenate_sort(*args: Array | None) -> Array | None:
-    args = [x for x in args if x is not None]
-    if len(args) == 0:
-        return None
+def concatenate_sort(*args: Array) -> Array:
     return jnp.sort(jnp.concatenate(args))
 
 
