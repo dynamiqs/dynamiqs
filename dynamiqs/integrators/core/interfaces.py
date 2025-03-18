@@ -19,7 +19,7 @@ class OptionsInterface(eqx.Module):
 class AbstractTimeInterface(eqx.Module):
     @property
     @abstractmethod
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         pass
 
 
@@ -29,7 +29,7 @@ class SEInterface(AbstractTimeInterface):
     H: TimeQArray
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         return self.H.discontinuity_ts
 
 
@@ -43,7 +43,7 @@ class MEInterface(AbstractTimeInterface):
         return [_L(t) for _L in self.Ls]  # (nLs, n, n)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return concatenate_sort(*ts)
 
@@ -78,7 +78,7 @@ class DSMEInterface(AbstractTimeInterface):
         return [_L(t) for _L in self.Lms]  # (nLm, n, n)
 
     @property
-    def discontinuity_ts(self) -> Array | None:
+    def discontinuity_ts(self) -> Array:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return concatenate_sort(*ts)
 
