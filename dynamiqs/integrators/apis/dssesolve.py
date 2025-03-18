@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from functools import partial
 
 import jax
@@ -343,7 +342,7 @@ def _check_dssesolve_args(
         check_shape(L, f'jump_ops[{i}]', '(..., n, n)', subs={'...': f'...L{i}'})
 
     if len(Ls) == 0:
-        logging.warning(
+        raise ValueError(
             'Argument `jump_ops` is an empty list, consider using `dq.sesolve()` to'
             ' solve the Schrödinger equation.'
         )
