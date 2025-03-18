@@ -332,15 +332,13 @@ def _vectorized_clicks_jssesolve(
             H, Ls, psi0, tsave, *click_args, exp_ops, method, gradient, options
         )
 
-        def _concatenate_results(x: PyTree, y: PyTree) -> PyTree:
-            if isinstance(x, float | int | bool) or len(x.shape) == len(y.shape):
-                return x
-            return jnp.concatenate((x[None], y))
+        def _concatenate_results(path, leaf1, leaf2):
+            if getattr(out_axes, path[0].name) is None:
+                return leaf1
+            else:
+                return jnp.concatenate((leaf1[None], leaf2))
 
-        # concatenate the no-click and click results
-        return jax.tree.map(
-            _concatenate_results, noclick_result, click_result
-        )
+        return jax.tree.map_with_path(_concatenate_results, noclick_result, click_result)
     return f(H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options)
 
 
