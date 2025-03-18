@@ -86,7 +86,7 @@ def jssesolve(
 
     !!! Note
         If you are looking for the equivalent of QuTiP's `mcsolve`, look no further!
-        `jssesolve` computes the very same quanitites, albeit under a different name in
+        `jssesolve` computes the very same quantities, albeit under a different name in
         this library.
 
     Args:
