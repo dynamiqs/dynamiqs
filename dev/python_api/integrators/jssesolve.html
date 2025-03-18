@@ -5420,9 +5420,8 @@ solver returns the times at which the detector clicked,
           <b>jump_ops</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
               <i>
-(list of qarray-like or time-qarray, each of shape (n, n))              </i>
-          – <p>List of
-jump operators.</p>
+(list of qarray-like or time-qarray, each of shape (...Lk, n, n))              </i>
+          – <p>List of jump operators.</p>
         </li>
         <li class="field-body">
           <b>psi0</b>
@@ -5610,31 +5609,34 @@ to time-arrays using <a class="autorefs autorefs-internal" title="&lt;span class
 <a href="../../documentation/basics/time-dependent-operators.html">Time-dependent operators</a>
 tutorial for more details.</p>
 <h3 id="dynamiqs.integrators.jssesolve--running-multiple-simulations-concurrently">Running multiple simulations concurrently</h3>
-<p>The Hamiltonian <code>H</code> and the initial state <code>psi0</code> can be batched to
-solve multiple <abbr title="stochastic Schrödinger equations">SSEs</abbr> concurrently. All other arguments (including the <abbr title="pseudorandom number generator">PRNG</abbr> key)
-are common to every batch. The resulting states, click times and expectation values
-are batched according to the leading dimensions of <code>H</code> and <code>psi0</code>. The
-behaviour depends on the value of the <code>cartesian_batching</code> option.</p>
+<p>The Hamiltonian <code>H</code>, the jump operators <code>jump_ops</code> and the initial state <code>psi0</code> can
+be batched to solve multiple <abbr title="stochastic Schrödinger equations">SSEs</abbr> concurrently. All other arguments (including the
+<abbr title="pseudorandom number generator">PRNG</abbr> key) are common to every batch. The resulting states, measurements and
+expectation values are batched according to the leading dimensions of <code>H</code>,
+<code>jump_ops</code> and <code>psi0</code>. The behaviour depends on the value of the
+<code>cartesian_batching</code> option.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="dynamiqs.integrators.jssesolve--__tabbed_1_1" name="dynamiqs.integrators.jssesolve--__tabbed_1" type="radio" /><input id="dynamiqs.integrators.jssesolve--__tabbed_1_2" name="dynamiqs.integrators.jssesolve--__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="dynamiqs.integrators.jssesolve--__tabbed_1_1">If <code>cartesian_batching = True</code> (default value)</label><label for="dynamiqs.integrators.jssesolve--__tabbed_1_2">If <code>cartesian_batching = False</code></label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>The results leading dimensions are
-<div class="highlight"><pre><span></span><code>... = ...H, ...psi0
+<div class="highlight"><pre><span></span><code>... = ...H, ...L0, ...L1, (...), ...psi0
 </code></pre></div>
 For example if:</p>
 <ul>
 <li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
-<li><code>psi0</code> has shape <em>(4, n, 1)</em>,</li>
+<li><code>jump_ops = [L0, L1]</code> has shape <em>[(4, 5, n, n), (6, n, n)]</em>,</li>
+<li><code>psi0</code> has shape <em>(7, n, 1)</em>,</li>
 </ul>
-<p>then <code>result.states</code> has shape <em>(2, 3, 4, ntrajs, ntsave, n, 1)</em>.</p>
+<p>then <code>result.states</code> has shape <em>(2, 3, 4, 5, 6, 7, ntrajs, ntsave, n, 1)</em>.</p>
 </div>
 <div class="tabbed-block">
 <p>The results leading dimensions are
-<div class="highlight"><pre><span></span><code>... = ...H = ...psi0  # (once broadcasted)
+<div class="highlight"><pre><span></span><code>... = ...H = ...L0 = ...L1 = (...) = ...psi0  # (once broadcasted)
 </code></pre></div>
 For example if:</p>
 <ul>
 <li><code>H</code> has shape <em>(2, 3, n, n)</em>,</li>
+<li><code>jump_ops = [L0, L1]</code> has shape <em>[(3, n, n), (2, 1, n, n)]</em>,</li>
 <li><code>psi0</code> has shape <em>(3, n, 1)</em>,</li>
 </ul>
 <p>then <code>result.states</code> has shape <em>(2, 3, ntrajs, ntsave, n, 1)</em>.</p>
@@ -5645,13 +5647,6 @@ For example if:</p>
 <a href="../../documentation/basics/batching-simulations.html">Batching simulations</a>
 tutorial for more details.</p>
 
-<details class="warning"
- open >
-  <summary>Warning</summary>
-  <p>Batching on <code>jump_ops</code> is not yet supported, if this is needed don't
-hesitate to
-<a href="https://github.com/dynamiqs/dynamiqs/issues/new">open an issue on GitHub</a>.</p>
-</details>
 
     </div>
 
