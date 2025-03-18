@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import logging
 from functools import partial
+from typing import Any
 
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, PyTree
+from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
@@ -327,18 +328,20 @@ def _vectorized_clicks_jssesolve(
         )
         # consume the remaining keys for the click trajectories, using the norm of the
         # no-click state as the minimum value for random numbers triggering a click
-        click_args = (keys[1:], False, noclick_result.final_state_norm ** 2)
+        click_args = (keys[1:], False, noclick_result.final_state_norm**2)
         click_result = f(
             H, Ls, psi0, tsave, *click_args, exp_ops, method, gradient, options
         )
 
-        def _concatenate_results(path, leaf1, leaf2):
+        def _concatenate_results(path: tuple, leaf1: Any, leaf2: Any) -> Any:
             if getattr(out_axes, path[0].name) is None:
                 return leaf1
             else:
                 return jnp.concatenate((leaf1[None], leaf2))
 
-        return jax.tree.map_with_path(_concatenate_results, noclick_result, click_result)
+        return jax.tree.map_with_path(
+            _concatenate_results, noclick_result, click_result
+        )
     return f(H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options)
 
 
