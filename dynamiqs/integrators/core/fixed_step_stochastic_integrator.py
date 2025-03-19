@@ -68,11 +68,11 @@ class DiffusiveSolveIntegrator(
                 'Option `t0` is invalid for fixed step SSE or SME methods.'
             )
 
-        if self.discontinuity_ts is not None:
-            warnings.warns(
+        if len(self.discontinuity_ts) > 0:
+            warnings.warn(
                 'The Hamiltonian or jump operators are time-dependent with '
                 'discontinuities, which will be ignored by the method.',
-                stack_level=1,
+                stacklevel=1,
             )
 
     class Infos(eqx.Module):
