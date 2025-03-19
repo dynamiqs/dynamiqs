@@ -7,7 +7,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 
-from dynamiqs.gradient import Gradient
+from dynamiqs.gradient import ForwardAutograd, Gradient
 from dynamiqs.method import Method
 from dynamiqs.options import Options
 
@@ -70,8 +70,14 @@ class IntegratorTester:
             res = system.run(method, gradient=gradient, options=options, params=params)
             return system.loss_state(res.states[-1])
 
+        # jax.grad uses reverse mode by default
+        if isinstance(gradient, ForwardAutograd):
+            jax_grad, jax_jac = jax.jacfwd, jax.jacfwd
+        else:
+            jax_grad, jax_jac = jax.grad, jax.jacrev
+
         true_grads_ysave = system.grads_state(system.tsave[-1])
-        grads_ysave = jax.grad(loss_ysave)(system.params_default)
+        grads_ysave = jax_grad(loss_ysave)(system.params_default)
 
         logging.warning(f'true_grads_ysave = {true_grads_ysave}')
         logging.warning(f'grads_ysave      = {grads_ysave}')
@@ -84,7 +90,7 @@ class IntegratorTester:
             return system.loss_expect(res.expects[:, -1])
 
         true_grads_Esave = system.grads_expect(system.tsave[-1])
-        grads_Esave = jax.jacrev(loss_Esave)(system.params_default)
+        grads_Esave = jax_jac(loss_Esave)(system.params_default)
 
         logging.warning(f'true_grads_Esave = {true_grads_Esave}')
         logging.warning(f'grads_Esave      = {grads_Esave}')

@@ -4,7 +4,7 @@ import equinox as eqx
 
 from ._utils import tree_str_inline
 
-__all__ = ['Autograd', 'CheckpointAutograd']
+__all__ = ['Autograd', 'CheckpointAutograd', 'ForwardAutograd']
 
 
 class Gradient(eqx.Module):
@@ -71,3 +71,39 @@ class CheckpointAutograd(Gradient):
     # dummy init to have the signature in the documentation
     def __init__(self, ncheckpoints: int | None = None):
         self.ncheckpoints = ncheckpoints
+
+
+class ForwardAutograd(Gradient):
+    """Forward-mode automatic differentiation.
+
+    Enables support for forward-mode automatic differentiation
+    (like [`jax.jvp`](https://docs.jax.dev/en/latest/_autosummary/jax.jvp.html)
+      or [`jax.jacfwd`](https://docs.jax.dev/en/latest/_autosummary/jax.jacfwd.html)).
+
+    Note:
+        This is the most efficient when there are more outputs than inputs in the
+        function. For instance, it's the preferred method when computing the Jacobian
+        of the simulation of a Lindbladian parametrized with a few values.
+
+    Warning:
+        This cannot be backward-mode autodifferentiated (e.g. using
+        [`jax.jacrev`](https://docs.jax.dev/en/latest/_autosummary/jax.jacrev.html)).
+        Try using
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd] if that
+        is something you need.
+
+    Warning:
+        By default
+         [`jax.grad`](https://jax.readthedocs.io/en/latest/_autosummary/jax.grad.html)
+        uses reverse mode. Use [`jax.jacfwd`](https://jax.readthedocs.io/en/latest/_autosummary/jax.jacfwd.html)
+        to compute the gradient in forward mode.
+
+    Note:
+        For Diffrax-based methods, this falls back to the
+        [`diffrax.ForwardMode`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.ForwardMode)
+        option.
+    """
+
+    # dummy init to have the signature in the documentation
+    def __init__(self):
+        pass
