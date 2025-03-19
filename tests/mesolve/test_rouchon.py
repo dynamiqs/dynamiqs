@@ -1,6 +1,6 @@
 import pytest
 
-from dynamiqs.gradient import Autograd, CheckpointAutograd
+from dynamiqs.gradient import Autograd, CheckpointAutograd, ForwardAutograd
 from dynamiqs.method import Rouchon1
 
 from ..integrator_tester import IntegratorTester
@@ -18,7 +18,9 @@ class TestMESolveRouchon1(IntegratorTester):
 
     @pytest.mark.parametrize('system', [dense_ocavity, dia_ocavity, otdqubit])
     @pytest.mark.parametrize('normalize', [True, False])
-    @pytest.mark.parametrize('gradient', [Autograd(), CheckpointAutograd()])
+    @pytest.mark.parametrize(
+        'gradient', [Autograd(), CheckpointAutograd(), ForwardAutograd()]
+    )
     def test_gradient(self, system, normalize, gradient):
         method = Rouchon1(dt=1e-4, normalize=normalize)
         self._test_gradient(system, method, gradient, rtol=1e-3, atol=1e-3)
