@@ -48,7 +48,6 @@ class CheckpointAutograd(Gradient):
         ). Try using [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] if that
         is something you need.
 
-
     Note:
         For Diffrax-based methods, this falls back to the
         [`diffrax.RecursiveCheckpointAdjoint`](https://docs.kidger.site/diffrax/api/adjoints/#diffrax.RecursiveCheckpointAdjoint)
