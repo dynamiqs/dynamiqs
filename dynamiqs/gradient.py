@@ -80,9 +80,11 @@ class ForwardAutograd(Gradient):
       or [`jax.jacfwd`](https://docs.jax.dev/en/latest/_autosummary/jax.jacfwd.html)).
 
     Note:
-        This is the most efficient when there are more outputs than inputs in the
-        function. For instance, it's the preferred method when computing the Jacobian
-        of the simulation of a Lindbladian parametrized with a few values.
+        This is the most efficient when the function has more outputs than inputs. For
+        instance, it's the preferred method when simulating a Lindbladian parameterized
+        with a few values and computing the Jacobian of a function returning the
+        expectation values of many observables (or the same observable at many different
+        times).
 
     Warning:
         This cannot be backward-mode autodifferentiated (e.g. using
