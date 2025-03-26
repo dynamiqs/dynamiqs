@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_shape, check_times
+from ..._checks import check_hermitian, check_shape, check_times, check_layout
 from ...gradient import Gradient
 from ...method import (
     Dopri5,
@@ -341,3 +341,6 @@ def _check_mesolve_args(
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
+
+    # === check layout
+    check_layout(rho0,'rho0')

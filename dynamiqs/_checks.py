@@ -105,3 +105,11 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
         jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
         f'Argument {argname} is not hermitian.',
     )
+
+def check_layout(rho0: QArray, argname: str):
+    # to check if the initial state is dense when reprsented by density matrix
+    
+    if rho0.layout != dq.dense:
+        raise ValueError(
+            f'Argument {argname} must be dense but is {rho0.layout}'
+        )
