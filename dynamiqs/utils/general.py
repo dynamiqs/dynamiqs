@@ -1085,13 +1085,12 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     nrvals = jnp.where(rvals < 0, 0, rvals)
     nsvals = jnp.where(svals < 0, 0, svals)
 
-    S = jnp.nan_to_num(
+    return jnp.nan_to_num(
         nrvals
         * (jnp.log(nrvals) - (P * jnp.expand_dims(jnp.log(nsvals), (-2))).sum(-1)),
         posinf=jnp.inf,
         neginf=-jnp.inf,
     ).sum(-1)
-    return S
 
 
 def bloch_coordinates(x: QArrayLike) -> Array:
