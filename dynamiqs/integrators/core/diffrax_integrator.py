@@ -10,7 +10,7 @@ from jax import Array
 from jaxtyping import PyTree, Scalar
 
 from ..._utils import obj_type_str
-from ...gradient import Autograd, CheckpointAutograd
+from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd
 from ...result import Result
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
@@ -86,6 +86,8 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             return dx.RecursiveCheckpointAdjoint()
         elif isinstance(self.gradient, CheckpointAutograd):
             return dx.RecursiveCheckpointAdjoint(self.gradient.ncheckpoints)
+        elif isinstance(self.gradient, ForwardAutograd):
+            return dx.ForwardMode()
         elif isinstance(self.gradient, Autograd):
             return dx.DirectAdjoint()
         else:
