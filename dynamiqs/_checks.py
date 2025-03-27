@@ -107,9 +107,9 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
     )
 
 
-def check_qarray_is_dense(rho0: QArray, argname: str):
+def check_qarray_is_dense(x: QArray, argname: str):
     # to check if the layout of qarray is dense
-    if rho0.layout != dq.dense:
+    if x.layout != dq.dense:
         raise ValueError(
-            f'Argument {argname} must have layout dense but has layout {argname}.layout= {rho0.layout}.'
+            f'Argument {argname} must have layout dense but has layout {argname}.layout= {x.layout}.'
         )
