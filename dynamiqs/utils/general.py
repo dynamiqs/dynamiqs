@@ -1064,7 +1064,7 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
         >>> Array(inf, dtype=float64)
         >>> dq.entropy_relative(sigma, rho)
         >>> Array(0.69314718, dtype=float64)
-    """
+    """  # noqa: E501
     rho = asqarray(rho)
     sigma = asqarray(sigma)
     check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
