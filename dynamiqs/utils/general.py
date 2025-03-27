@@ -18,6 +18,7 @@ __all__ = [
     'dag',
     'dissipator',
     'entropy_vn',
+    'entropy_relative',
     'expect',
     'expm',
     'fidelity',
@@ -1041,6 +1042,56 @@ def entropy_vn(x: QArrayLike) -> Array:
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
+
+
+def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
+    r"""Returns the quantum relative entropy between two kets or density matrices.
+
+    It is defined by $S_{KL}(\rho || \sigma) = \tr{\rho (\ln \rho - \ln \sigma)}$.
+    Note: The relative entropy is not symmetric.
+
+    Args:
+        rho _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        sigma _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued Von Neumann entropy.
+
+    Examples:
+        >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
+        >>> sigma = dq.fock_dm(2, 0)
+        >>> dq.entropy_relative(rho, sigma)
+        >>> Array(inf, dtype=float64)
+        >>> dq.entropy_relative(sigma, rho)
+        >>> Array(0.69314718, dtype=float64)
+    """
+    rho = asqarray(rho)
+    sigma = asqarray(sigma)
+    check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
+    check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
+    # check_compatible_dims(x.shape, y.shape)
+
+    if isket(rho):
+        rho = todm(rho)
+
+    if isket(sigma):
+        sigma = todm(sigma)
+
+    svals, svecs = sigma._eigh()
+    rvals, rvecs = rho._eigh()
+
+    P = jnp.abs(rvecs.mT @ svecs.conj()) ** 2
+
+    nrvals = jnp.where(rvals < 0, 0, rvals)
+    nsvals = jnp.where(svals < 0, 0, svals)
+
+    S = jnp.nan_to_num(
+        nrvals
+        * (jnp.log(nrvals) - (P * jnp.expand_dims(jnp.log(nsvals), (-2))).sum(-1)),
+        posinf=jnp.inf,
+        neginf=-jnp.inf,
+    ).sum(-1)
+    return S
 
 
 def bloch_coordinates(x: QArrayLike) -> Array:

@@ -105,6 +105,100 @@ def test_ket_dm_fidelity_batching():
     assert dq.fidelity(psi, rho).shape == (b1, b2)
 
 
+"""Begin"""
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_ket_entropy_relative_correctness():
+    n = 8
+
+    # qutip
+    psi = qt.rand_ket(n, seed=42)
+    phi = qt.rand_ket(n, seed=43)
+    qt_fid = qt.entropy_relative(psi, phi)
+
+    # Dynamiqs
+    psi = qobj_to_array(psi)
+    phi = qobj_to_array(phi)
+    dq_fid = dq.entropy_relative(psi, phi).item()
+
+    # compare
+    assert qt_fid == pytest.approx(dq_fid)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_ket_entropy_relative_batching():
+    b1, b2, n = 3, 5, 8
+    psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
+    phi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, 1)
+    psi = qobj_to_array(psi)
+    phi = qobj_to_array(phi)
+    assert dq.entropy_relative(psi, phi).shape == (b1, b2)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_dm_entropy_relative_correctness():
+    n = 8
+
+    # qutip
+    rho = qt.rand_dm(n, n, seed=42)
+    sigma = qt.rand_dm(n, n, seed=43)
+    qt_fid = qt.entropy_relative(rho, sigma)
+
+    # Dynamiqs
+    rho = qobj_to_array(rho)
+    sigma = qobj_to_array(sigma)
+    dq_fid = dq.entropy_relative(rho, sigma).item()
+
+    # compare
+    assert qt_fid == pytest.approx(dq_fid, abs=1e-5)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_dm_entropy_relative_batching():
+    b1, b2, n = 3, 5, 8
+    rho = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
+    sigma = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
+    rho = qobj_to_array(rho)
+    sigma = qobj_to_array(sigma)
+    assert dq.entropy_relative(rho, sigma).shape == (b1, b2)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_ket_dm_entropy_relative_correctness():
+    n = 8
+
+    # qutip
+    psi = qt.rand_ket(n, seed=42)
+    rho = qt.rand_dm(n, n, seed=43)
+    qt_fid_ket_dm = qt.entropy_relative(psi, rho)
+    qt_fid_dm_ket = qt.entropy_relative(rho, psi)
+
+    # Dynamiqs
+    psi = qobj_to_array(psi)
+    rho = qobj_to_array(rho)
+    dq_fid_ket_dm = dq.entropy_relative(psi, rho).item()
+    dq_fid_dm_ket = dq.entropy_relative(rho, psi).item()
+
+    # compare
+    assert qt_fid_ket_dm == pytest.approx(dq_fid_ket_dm, abs=1e-6)
+    assert qt_fid_dm_ket == pytest.approx(dq_fid_dm_ket, abs=1e-6)
+
+
+@pytest.mark.run(order=TEST_INSTANT)
+def test_ket_dm_entropy_relative_batching():
+    b1, b2, n = 3, 5, 8
+    psi = [[qt.rand_ket(n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n)
+    rho = [[qt.rand_dm(n, n) for _ in range(b2)] for _ in range(b1)]  # (b1, b2, n, n)
+    psi = qobj_to_array(psi)
+    rho = qobj_to_array(rho)
+    assert dq.entropy_relative(rho, psi).shape == (b1, b2)
+    assert dq.entropy_relative(psi, rho).shape == (b1, b2)
+
+
+"""End"""
+
+
 @pytest.mark.run(order=TEST_INSTANT)
 def test_hadamard():
     # one qubit
