@@ -7,7 +7,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike, PRNGKeyArray
 
-from ..._checks import check_hermitian, check_shape, check_times, check_layout
+from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import EulerMaruyama, Method, Rouchon1
 from ...options import Options, check_options
@@ -405,7 +405,7 @@ def _check_dsmesolve_args(
 
     # === check rho0 shape and layout
     check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
-    check_layout(rho0, 'rho0')
+    check_qarray_is_dense(rho0, 'rho0')
 
     # === check exp_ops shape
     if exp_ops is not None:
