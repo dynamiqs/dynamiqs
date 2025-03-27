@@ -4,6 +4,7 @@ import equinox as eqx
 import jax.numpy as jnp
 from jax import Array
 
+from .qarrays.layout import dense
 from .qarrays.qarray import QArray
 
 _is_perfect_square = lambda n: int(n**0.5) ** 2 == n
@@ -105,3 +106,12 @@ def check_hermitian(x: QArray, argname: str) -> QArray:
         jnp.logical_not(x.isherm(rtol=rtol, atol=atol)),
         f'Argument {argname} is not hermitian.',
     )
+
+
+def check_qarray_is_dense(x: QArray, argname: str):
+    # check if the layout of x is dense
+    if x.layout != dense:
+        raise ValueError(
+            f'Argument {argname} must have layout `dense` but has layout '
+            f'{argname}.layout={x.layout}.'
+        )

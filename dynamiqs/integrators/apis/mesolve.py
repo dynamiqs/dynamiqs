@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from jax import Array
 from jaxtyping import ArrayLike
 
-from ..._checks import check_hermitian, check_shape, check_times
+from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
     Dopri5,
@@ -334,8 +334,9 @@ def _check_mesolve_args(
             stacklevel=2,
         )
 
-    # === check rho0 shape
+    # === check rho0 shape and layout
     check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
+    check_qarray_is_dense(rho0, 'rho0')
 
     # === check exp_ops shape
     if exp_ops is not None:
