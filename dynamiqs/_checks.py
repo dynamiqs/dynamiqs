@@ -112,5 +112,6 @@ def check_qarray_is_dense(x: QArray, argname: str):
     # check if the layout of x is dense
     if x.layout != dense:
         raise ValueError(
-            f'Argument {argname} must have layout dense but has layout {argname}.layout= {x.layout}.'
+            f'Argument {argname} must have layout `dense` but has layout '
+            f'{argname}.layout={x.layout}.'
         )
