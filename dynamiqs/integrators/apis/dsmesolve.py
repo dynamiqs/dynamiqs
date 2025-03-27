@@ -403,13 +403,13 @@ def _check_dsmesolve_args(
             f' is {etas}.'
         )
 
-    # === check rho0 shape
+    # === check rho0 
     check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
+    check_layout(rho0, 'rho0')
 
     # === check exp_ops shape
     if exp_ops is not None:
         for i, E in enumerate(exp_ops):
             check_shape(E, f'exp_ops[{i}]', '(n, n)')
 
-    # === check layout
-    check_layout(rho0, 'rho0')
+   
