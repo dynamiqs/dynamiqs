@@ -105,9 +105,6 @@ def test_ket_dm_fidelity_batching():
     assert dq.fidelity(psi, rho).shape == (b1, b2)
 
 
-"""Begin"""
-
-
 @pytest.mark.run(order=TEST_INSTANT)
 def test_ket_entropy_relative_correctness():
     n = 8
@@ -194,9 +191,6 @@ def test_ket_dm_entropy_relative_batching():
     rho = qobj_to_array(rho)
     assert dq.entropy_relative(rho, psi).shape == (b1, b2)
     assert dq.entropy_relative(psi, rho).shape == (b1, b2)
-
-
-"""End"""
 
 
 @pytest.mark.run(order=TEST_INSTANT)
