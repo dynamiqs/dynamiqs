@@ -334,7 +334,7 @@ def _check_mesolve_args(
             stacklevel=2,
         )
 
-    # === check rho0 shape
+    # === check rho0 shape and layout
     check_shape(rho0, 'rho0', '(..., n, 1)', '(..., n, n)', subs={'...': '...rho0'})
     check_layout(rho0, 'rho0')
 
