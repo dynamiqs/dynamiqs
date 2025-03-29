@@ -1070,15 +1070,13 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     """
     rho = asqarray(rho)
     sigma = asqarray(sigma)
-    check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
-    check_shape(sigma, 'x', '(..., n, 1)', '(..., n, n)')
-    # check_compatible_dims(x.shape, y.shape)
+    check_shape(rho, 'rho', '(..., n, 1)', '(..., n, n)')
+    check_shape(sigma, 'sigma', '(..., n, 1)', '(..., n, n)')
 
-    if isket(rho):
-        rho = todm(rho)
+    # todo: implement faster version for kets
+    rho = todm(rho)
+    sigma = todm(sigma)
 
-    if isket(sigma):
-        sigma = todm(sigma)
 
     svals, svecs = sigma._eigh()
     rvals, rvecs = rho._eigh()
