@@ -183,6 +183,7 @@ nav:
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
+              - ForwardAutograd: python_api/gradient/ForwardAutograd.md
       - Utilities:
           - Operators:
               - eye: python_api/utils/operators/eye.md
