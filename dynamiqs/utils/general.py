@@ -1077,18 +1077,17 @@ def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     rho = todm(rho)
     sigma = todm(sigma)
 
+    w_rho, v_rho = rho._eigh()
+    w_sigma, v_sigma = sigma._eigh()
 
-    svals, svecs = sigma._eigh()
-    rvals, rvecs = rho._eigh()
+    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
+    w_rho = jnp.where(w_rho < 0, 0, w_rho)
+    w_sigma = jnp.where(w_sigma < 0, 0, w_sigma)
 
-    P = jnp.abs(rvecs.mT @ svecs.conj()) ** 2
-
-    nrvals = jnp.where(rvals < 0, 0, rvals)
-    nsvals = jnp.where(svals < 0, 0, svals)
+    P = jnp.abs(v_rho.mT @ v_sigma.conj()) ** 2
 
     return jnp.nan_to_num(
-        nrvals
-        * (jnp.log(nrvals) - (P * jnp.expand_dims(jnp.log(nsvals), (-2))).sum(-1)),
+        w_rho * (jnp.log(w_rho) - (P * jnp.log(w_sigma)[..., None]).sum(-1)),
         posinf=jnp.inf,
         neginf=-jnp.inf,
     ).sum(-1)
