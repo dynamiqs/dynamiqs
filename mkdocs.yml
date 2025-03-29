@@ -250,6 +250,7 @@ nav:
               - fidelity: python_api/utils/general/fidelity.md
               - purity: python_api/utils/general/purity.md
               - entropy_vn: python_api/utils/general/entropy_vn.md
+              - entropy_relative: python_api/utils/general/entropy_relative.md
               - bloch_coordinates: python_api/utils/general/bloch_coordinates.md
               - wigner: python_api/utils/general/wigner.md
           - QArray utilities:
