@@ -1047,24 +1047,27 @@ def entropy_vn(x: QArrayLike) -> Array:
 def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
     r"""Returns the quantum relative entropy between two kets or density matrices.
 
-    It is defined by $S_{KL}(\rho || \sigma) = \tr{\rho (\ln \rho - \ln \sigma)}$.
-    Note: The relative entropy is not symmetric.
+    It is defined by $S(\rho \,||\, \sigma) = \tr{\rho (\log \rho - \log \sigma)}$.
+
+    Note:
+        The relative entropy is not symmetric.
 
     Args:
         rho _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
-        sigma _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        sigma _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density
+            matrix.
 
     Returns:
-        _(array of shape (...))_ Real-valued Von Neumann entropy.
+        _(array of shape (...))_ Real-valued quantum relative entropy.
 
     Examples:
         >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
         >>> sigma = dq.fock_dm(2, 0)
         >>> dq.entropy_relative(rho, sigma)
-        >>> Array(inf, dtype=float64)
+        Array(-0.347, dtype=float32)
         >>> dq.entropy_relative(sigma, rho)
-        >>> Array(0.69314718, dtype=float64)
-    """  # noqa: E501
+        Array(0.693, dtype=float32)
+    """
     rho = asqarray(rho)
     sigma = asqarray(sigma)
     check_shape(rho, 'x', '(..., n, 1)', '(..., n, n)')
