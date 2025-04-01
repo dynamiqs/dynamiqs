@@ -257,10 +257,16 @@ class QArray(eqx.Module):
                 f'Argument `dims` must be a tuple of ints, but is {self.dims}.'
             )
 
+        if self.shape == ():
+            # handles the case where the array is a single scalar. There
+            # is no need to check the shape then
+            return
+
         # === ensure dims is compatible with the shape
         # for vectorized superoperators, we allow that the shape is the square
         # of the product of all dims
         allowed_shapes = (prod(self.dims), prod(self.dims) ** 2)
+
         if not (self.shape[-1] in allowed_shapes or self.shape[-2] in allowed_shapes):
             raise ValueError(
                 'Argument `dims` must be compatible with the shape of the qarray, but '
@@ -637,7 +643,7 @@ class QArray(eqx.Module):
 def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
     if dims1 != dims2:
         raise ValueError(
-            f'Qarrays have incompatible Hilbert space dimensions. '
+            'Qarrays have incompatible Hilbert space dimensions. '
             f'Got {dims1} and {dims2}.'
         )
 
@@ -652,6 +658,38 @@ def include_last_two_dims(axis: int | tuple[int, ...] | None, ndim: int) -> bool
     return axis is None or (
         ndim - 1 in [a % ndim for a in axis] and ndim - 2 in [a % ndim for a in axis]
     )
+
+
+def _is_key_in_batch_dims(key: int | slice | tuple, ndim: int) -> bool:
+    full_slice = slice(None, None, None)
+    key_in_batch_dims = False
+    if isinstance(key, int | slice):
+        key_in_batch_dims = ndim > 2
+    if isinstance(key, Array):
+        key_in_batch_dims = key.ndim == 0 and ndim > 2
+    elif key is None:
+        key_in_batch_dims = True
+    elif isinstance(key, tuple):
+        if Ellipsis in key:
+            ellipsis_key = key.index(Ellipsis)
+            key = (
+                key[:ellipsis_key]
+                + (full_slice,) * (ndim - len(key) + 1)
+                + key[ellipsis_key + 1 :]
+            )
+
+        len_key_no_none = len(list(filter(lambda x: x is not None, key)))
+        key_in_batch_dims = (
+            len_key_no_none <= ndim - 2
+            or (len_key_no_none == ndim - 1 and key[-1] == full_slice)
+            or (
+                len_key_no_none == ndim
+                and key[-2] == full_slice
+                and key[-1] == full_slice
+            )
+        )
+
+    return key_in_batch_dims
 
 
 # In this file we define an extended array type named `QArrayLike`. Most

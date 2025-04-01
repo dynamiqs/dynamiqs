@@ -6,8 +6,9 @@ import pytest
 from equinox import EquinoxRuntimeError
 
 import dynamiqs as dq
+from dynamiqs.qarrays import asqarray, layout
 
-from ..order import TEST_SHORT
+from ..order import TEST_INSTANT, TEST_SHORT
 
 # list of all pairs of operations that are legal
 # i.e. all pairs except 'batch-batch'
@@ -74,11 +75,17 @@ class TestSparseDIAQArray:
         self.scalar = 2 + 2j
         self.bscalar = jnp.ones((2, 2, 1, 1), dtype=jnp.complex64)
 
+        self.batched = asqarray(
+            jnp.arange(5 * 4 * 3 * 3).reshape(5, 4, 3, 3), dims=(3,), layout=layout.dia
+        )
+
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_convert(self, kA):
         d = self.denseA[kA]
         assert _allclose(d.to_jax(), d.assparsedia().to_jax())
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
     def test_add(self, kA, kB):
         dA, sA = self.denseA[kA], self.sparseA[kA]
@@ -107,6 +114,7 @@ class TestSparseDIAQArray:
         with pytest.raises(NotImplementedError):
             sA + self.bscalar
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_scalaradd(self, kA):
         d, s = self.denseA[kA], self.sparseA[kA]
@@ -116,6 +124,7 @@ class TestSparseDIAQArray:
         assert _allclose(s.addscalar(self.scalar).to_jax(), s.to_jax() + self.scalar)
         assert _allclose(s.addscalar(self.bscalar).to_jax(), s.to_jax() + self.bscalar)
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
     def test_sub(self, kA, kB):
         dA, sA = self.denseA[kA], self.sparseA[kA]
@@ -144,6 +153,7 @@ class TestSparseDIAQArray:
         with pytest.raises(NotImplementedError):
             sA - self.bscalar
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize('kA', ['simple', 'batch', 'batch_broadcast'])
     def test_mul(self, kA):
         d, s = self.denseA[kA], self.sparseA[kA]
@@ -159,6 +169,7 @@ class TestSparseDIAQArray:
         with pytest.raises(NotImplementedError):
             s * s
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
     def test_elmul(self, kA, kB):
         dA, sA = self.denseA[kA], self.sparseA[kA]
@@ -177,6 +188,7 @@ class TestSparseDIAQArray:
         out_dense_dia = dA.elmul(sB).to_jax()
         assert _allclose(out_dense_dense, out_dense_dia)
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize(('kA', 'kB'), valid_operation_keys)
     def test_matmul(self, kA, kB):
         dA, sA = self.denseA[kA], self.sparseA[kA]
@@ -193,6 +205,7 @@ class TestSparseDIAQArray:
         out_dense_dia = (dA @ sB).to_jax()
         assert _allclose(out_dense_dense, out_dense_dia)
 
+    @pytest.mark.run(order=TEST_INSTANT)
     def test_kronecker(self):
         dA, sA = self.denseA['simple'], self.sparseA['simple']
         dB, sB = self.denseB['simple'], self.sparseB['simple']
@@ -205,6 +218,7 @@ class TestSparseDIAQArray:
         out_dia_dense = (sA & dB).to_jax()
         assert _allclose(out_dense_dense, out_dia_dense)
 
+    @pytest.mark.run(order=TEST_INSTANT)
     def test_outofbounds(self):
         # set up matrix
         N = 10
@@ -216,6 +230,7 @@ class TestSparseDIAQArray:
         with pytest.raises(EquinoxRuntimeError, match=error_str):
             dq.SparseDIAQArray((N,), False, offsets, diags)
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
     def test_elpow(self, k):
         d, s = self.denseA[k], self.sparseA[k]
@@ -225,6 +240,7 @@ class TestSparseDIAQArray:
 
         assert _allclose(out_dia, out_dense)
 
+    @pytest.mark.run(order=TEST_INSTANT)
     @pytest.mark.parametrize('k', ['simple', 'batch', 'batch_broadcast'])
     def test_powm(self, k):
         d, s = self.denseA[k], self.sparseA[k]
@@ -233,6 +249,27 @@ class TestSparseDIAQArray:
         out_dia = s.powm(3).to_jax()
 
         assert _allclose(out_dia, out_dense)
+
+    @pytest.mark.run(order=TEST_INSTANT)
+    def test_index_on_batching_dims(self):
+        # TODO: test and handle steps > 1
+        assert jnp.array_equal(
+            self.batched[2, 0, 0, 0], self.batched.asdense()[2, 0, 0, 0]
+        )
+        assert jnp.array_equal(
+            self.batched[:, 0, 0, 0], self.batched.asdense()[:, 0, 0, 0]
+        )
+        assert jnp.array_equal(
+            self.batched[:, :, 0, 0], self.batched.asdense()[:, :, 0, 0]
+        )
+        assert jnp.array_equal(
+            self.batched[:, :, :, 0], self.batched.asdense()[:, :, :, 0]
+        )
+
+        assert jnp.array_equal(self.batched[..., 2], self.batched.asdense()[..., 2])
+        assert jnp.array_equal(
+            self.batched[:, :, 2:3, 1:2], self.batched.asdense()[:, :, 2:3, 1:2]
+        )
 
 
 def _allclose(a, b, rtol=1e-05, atol=1e-08):
