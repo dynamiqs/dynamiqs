@@ -215,8 +215,8 @@ class JSSESolveResult(SolveResult):
         d = super()._str_parts()
         return d | {
             'Clicktimes': _array_str(self.clicktimes),
-            'Nclicks': _array_str(self.nclicks),
-            'final_state_norm': _array_str(self.final_state_norm),
+            'Number of clicks': _array_str(self.nclicks),
+            'Final state norm': _array_str(self.final_state_norm),
         }
 
     @classmethod
