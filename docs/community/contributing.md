@@ -23,7 +23,7 @@ To install the library with all its dependencies, as well as the developer depen
   ```shell
   uv sync --extra dev
   ```
-- **If you use `pip`**, we strongly recommend creating a virtual environment to install the project dependencies. You can then install the library in editable mode:
+- **If you use `pip`**, we strongly recommend creating a virtual environment to install the project dependencies. You can follow [this guide](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) to set one up. You can then install the library in editable mode:
   ```shell
   pip install -e ".[dev]"
   ```
