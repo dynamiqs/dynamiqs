@@ -43,13 +43,10 @@ def test_against_mesolve_oscillator(smart_sampling, atol=5e-2):
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    if smart_sampling:
-        mean_jsse_expects, mean_jsse_states = _average_smart_sampling(jsseresult)
-    else:
-        mean_jsse_expects = jnp.mean(jsseresult.expects, axis=0)
-        mean_jsse_states = jsseresult.states.todm().sum(axis=0) / ntrajs
-    assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
-    assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
+    assert jnp.allclose(meresult.expects, jsseresult.mean_expects, atol=atol)
+    assert jnp.allclose(
+        meresult.states.to_jax(), jsseresult.mean_states.to_jax(), atol=atol
+    )
 
 
 @pytest.mark.run(order=TEST_LONG)
@@ -80,28 +77,7 @@ def test_against_mesolve_qubit(smart_sampling, atol=5e-2):
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    if smart_sampling:
-        mean_jsse_expects, mean_jsse_states = _average_smart_sampling(jsseresult)
-    else:
-        mean_jsse_expects = jnp.mean(jsseresult.expects, axis=1)
-        mean_jsse_states = jsseresult.states.todm().sum(axis=1) / ntrajs
-    assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
-    assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
-
-
-def _average_smart_sampling(jsseresult):
-    noclick_prob = jsseresult.final_state_norm[..., 0] ** 2
-    expect_len = len(jsseresult.expects.shape)
-    noclick_prob_expect = noclick_prob[(...,) + (None,) * (expect_len - 2)]
-    noclick_prob_state = noclick_prob[(...,) + (None,) * (expect_len - 1)]
-    mean_jsse_expects_click = jnp.mean(jsseresult.expects[..., 1:, :, :], axis=-3)
-    mean_jsse_expects = (
-        noclick_prob_expect * jsseresult.expects[..., 0, :, :]
-        + (1 - noclick_prob_expect) * mean_jsse_expects_click
+    assert jnp.allclose(meresult.expects, jsseresult.mean_expects, atol=atol)
+    assert jnp.allclose(
+        meresult.states.to_jax(), jsseresult.mean_states.to_jax(), atol=atol
     )
-    mean_jsse_states_click = jsseresult.states[..., 1:, :, :, :].todm().mean(axis=-4)
-    mean_jsse_states = dq.unit(
-        noclick_prob_state * jsseresult.states[..., 0, :, :, :].todm()
-        + (1 - noclick_prob_state) * mean_jsse_states_click
-    )
-    return mean_jsse_expects, mean_jsse_states
