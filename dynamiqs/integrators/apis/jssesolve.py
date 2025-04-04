@@ -317,19 +317,23 @@ def _vectorized_clicks_jssesolve(
     in_axes = (None, None, None, None, 0, None, None, None, None, None, None)
     f = jax.vmap(f, in_axes, out_axes)
 
+    # === define common arguments
+    core_args = (H, Ls, psi0, tsave)
+    other_args = (exp_ops, method, gradient, options)
+
     if options.smart_sampling:
         # consume the first key for the no-click trajectory
         noclick_args = (keys[0], True, 0.0)
         noclick_result = _jssesolve_single_trajectory(
-            H, Ls, psi0, tsave, *noclick_args, exp_ops, method, gradient, options
+            *core_args, *noclick_args, *other_args
         )
+
         # consume the remaining keys for the click trajectories, using the norm of the
         # no-click state as the minimum value for random numbers triggering a click
         click_args = (keys[1:], False, noclick_result.final_state_norm**2)
-        click_result = f(
-            H, Ls, psi0, tsave, *click_args, exp_ops, method, gradient, options
-        )
+        click_result = f(*core_args, *click_args, *other_args)
 
+        # concatenate the results of the no-click and click trajectories
         def _concatenate_results(path: tuple, leaf1: Any, leaf2: Any) -> Any:
             if getattr(out_axes, path[0].name) is None:
                 return leaf1
@@ -339,7 +343,9 @@ def _vectorized_clicks_jssesolve(
         return jax.tree.map_with_path(
             _concatenate_results, noclick_result, click_result
         )
-    return f(H, Ls, psi0, tsave, keys, False, 0.0, exp_ops, method, gradient, options)
+    else:
+        click_args = (keys, False, 0.0)
+        return f(*core_args, *click_args, *other_args)
 
 
 def _jssesolve_single_trajectory(
