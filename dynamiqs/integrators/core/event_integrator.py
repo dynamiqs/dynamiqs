@@ -74,7 +74,8 @@ class JSSESolveEventIntegrator(
             if self.noclick:
                 rand = 0.0
             else:
-                rand = jax.random.uniform(click_key, minval=self.noclick_min_prob)
+                minval = jnp.where(state.nclicks > 0, 0.0, self.noclick_min_prob)
+                rand = jax.random.uniform(click_key, minval=minval)
 
             # solve until the next detection event
             solution = self._solve_until_click(state.y, state.t, rand)
