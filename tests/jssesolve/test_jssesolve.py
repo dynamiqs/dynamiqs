@@ -1,5 +1,7 @@
 import jax.numpy as jnp
 import jax.random
+import jax.tree_util as jtu
+import optimistix as optx
 import pytest
 
 import dynamiqs as dq
@@ -8,7 +10,8 @@ from ..order import TEST_LONG
 
 
 @pytest.mark.run(order=TEST_LONG)
-def test_against_mesolve_oscillator(atol=5e-2):
+@pytest.mark.parametrize('smart_sampling', [True, False])
+def test_against_mesolve_oscillator(smart_sampling, atol=5e-2):
     # parameters
     ntrajs = 80
     dim = 10
@@ -21,21 +24,34 @@ def test_against_mesolve_oscillator(atol=5e-2):
     tsave = jnp.linspace(0.0, 2.0, 11)
     keys = jax.random.split(jax.random.key(31), num=ntrajs)
     exp_ops = [a.dag() @ a]
-    options = dq.Options(progress_meter=None)
+    js_options = dq.Options(smart_sampling=smart_sampling)
+    me_options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = dq.jssesolve(H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops)
-    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
+    root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
+    solver = dq.method.Event(root_finder=root_finder)
+    jsseresult = dq.jssesolve(
+        H,
+        jump_ops,
+        psi0,
+        tsave,
+        keys,
+        exp_ops=exp_ops,
+        options=js_options,
+        method=solver,
+    )
+    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    mean_jsse_expects = jnp.mean(jsseresult.expects, axis=0)
-    mean_jsse_states = jsseresult.states.todm().sum(axis=0) / ntrajs
-    assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
-    assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
+    assert jnp.allclose(meresult.expects, jsseresult.mean_expects, atol=atol)
+    assert jnp.allclose(
+        meresult.states.to_jax(), jsseresult.mean_states.to_jax(), atol=atol
+    )
 
 
 @pytest.mark.run(order=TEST_LONG)
-def test_against_mesolve_qubit(atol=5e-2):
+@pytest.mark.parametrize('smart_sampling', [True, False])
+def test_against_mesolve_qubit(smart_sampling, atol=5e-2):
     # parameters
     ntrajs = 40
     omega = 2.0 * jnp.pi
@@ -51,14 +67,17 @@ def test_against_mesolve_qubit(atol=5e-2):
     tsave = jnp.linspace(0, 1.0, 41)
     keys = jax.random.split(jax.random.key(42), num=ntrajs)
     exp_ops = [dq.excited().todm(), dq.ground().todm()]
-    options = dq.Options(progress_meter=None)
+    js_options = dq.Options(smart_sampling=smart_sampling)
+    me_options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
-    jsseresult = dq.jssesolve(H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops)
-    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=options)
+    jsseresult = dq.jssesolve(
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, options=js_options
+    )
+    meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    mean_jsse_expects = jnp.mean(jsseresult.expects, axis=1)
-    mean_jsse_states = jsseresult.states.todm().sum(axis=1) / ntrajs
-    assert jnp.allclose(meresult.expects, mean_jsse_expects, atol=atol)
-    assert jnp.allclose(meresult.states.to_jax(), mean_jsse_states.to_jax(), atol=atol)
+    assert jnp.allclose(meresult.expects, jsseresult.mean_expects, atol=atol)
+    assert jnp.allclose(
+        meresult.states.to_jax(), jsseresult.mean_states.to_jax(), atol=atol
+    )
