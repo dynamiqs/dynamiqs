@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
