@@ -191,7 +191,7 @@ class Rouchon1(_DEFixedStep):
         CheckpointAutograd,
         ForwardAutograd,
     )
-    normalize: bool
+    normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float, normalize: bool = True):
@@ -476,7 +476,7 @@ class Event(_DEMethod):
     """
 
     noclick_method: Method = Tsit5()
-    root_finder: AbstractRootFinder | None = None
+    root_finder: AbstractRootFinder | None = eqx.field(static=True, default=None)
     smart_sampling: bool = False
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
