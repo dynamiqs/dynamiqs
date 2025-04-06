@@ -3,10 +3,12 @@ from __future__ import annotations
 from typing import Any, ClassVar
 
 import equinox as eqx
+from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from .options import Options
 
 __all__ = [
     'Dopri5',
@@ -14,6 +16,7 @@ __all__ = [
     'Euler',
     'EulerMaruyama',
     'Expm',
+    'JumpMonteCarlo',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
@@ -505,3 +508,26 @@ class Event(_DEMethod):
     # inherit attributes from the noclick_method
     def __getattr__(self, attr: str) -> Any:
         return getattr(self.noclick_method, attr)
+
+
+class JumpMonteCarlo(_DEMethod):
+    keys: PRNGKeyArray
+    jsse_method: Method = Event()
+    jsse_options: Options = eqx.field(static=True, default=Options())
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        keys: PRNGKeyArray,
+        jsse_method: Method = Event(),  # noqa: B008
+        jsse_options: Options = Options(),  # noqa: B008
+    ):
+        self.keys = keys
+        self.jsse_method = jsse_method
+        self.jsse_options = jsse_options
