@@ -9,7 +9,7 @@ from jaxtyping import Array, ArrayLike
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import Expm, Method
+from ...method import Dopri5, Dopri8, Euler, Expm, Kvaerno3, Kvaerno5, Method, Tsit5
 from ...options import Options, check_options
 from ...qarrays.dense_qarray import DenseQArray
 from ...qarrays.qarray import QArrayLike
@@ -21,6 +21,14 @@ from .._utils import (
     cartesian_vmap,
     catch_xla_runtime_error,
     multi_vmap,
+)
+from ..core.diffrax_integrator import (
+    mepropagator_dopri5_integrator_constructor,
+    mepropagator_dopri8_integrator_constructor,
+    mepropagator_euler_integrator_constructor,
+    mepropagator_kvaerno3_integrator_constructor,
+    mepropagator_kvaerno5_integrator_constructor,
+    mepropagator_tsit5_integrator_constructor,
 )
 from ..core.expm_integrator import mepropagator_expm_integrator_constructor
 
@@ -215,7 +223,15 @@ def _mepropagator(
     options: Options,
 ) -> MEPropagatorResult:
     # === select integrator constructor
-    integrator_constructors = {Expm: mepropagator_expm_integrator_constructor}
+    integrator_constructors = {
+        Expm: mepropagator_expm_integrator_constructor,
+        Euler: mepropagator_euler_integrator_constructor,
+        Dopri5: mepropagator_dopri5_integrator_constructor,
+        Dopri8: mepropagator_dopri8_integrator_constructor,
+        Tsit5: mepropagator_tsit5_integrator_constructor,
+        Kvaerno3: mepropagator_kvaerno3_integrator_constructor,
+        Kvaerno5: mepropagator_kvaerno5_integrator_constructor,
+    }
     assert_method_supported(method, integrator_constructors.keys())
     integrator_constructor = integrator_constructors[type(method)]
 
