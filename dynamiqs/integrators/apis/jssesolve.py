@@ -85,9 +85,9 @@ def jssesolve(
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     !!! Note
-        If you are looking for the equivalent of QuTiP's `mcsolve`, look no further!
-        `jssesolve` computes the very same quantities, albeit under a different name in
-        this library.
+        If you are only interested in an efficient method to compute the master
+        equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
+        [`dq.method.JumpMonteCarlo()`][dynamiqs.method.JumpMonteCarlo] method.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
