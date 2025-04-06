@@ -113,7 +113,7 @@ class _DEAdaptiveStep(_DEMethod):
     safety_factor: float = 0.9
     min_factor: float = 0.2
     max_factor: float = 5.0
-    max_steps: int = 100_000
+    max_steps: int = eqx.field(static=True, default=100_000)
 
 
 # === public methods options
