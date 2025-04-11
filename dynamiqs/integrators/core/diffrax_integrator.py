@@ -268,8 +268,8 @@ mesolve_kvaerno5_integrator_constructor = partial(
 )
 
 
-class MELindbladianDiffraxIntegrator(DiffraxIntegrator, MEInterface):
-    """Integrator computing the propagator the Lindblad master equation with Diffrax."""
+class MEPropagatorDiffraxIntegrator(DiffraxIntegrator, MEInterface, PropagatorSaveMixin):
+    """Integrator computing the propagator of the Lindblad master equation with Diffrax."""
 
     @property
     def terms(self) -> dx.AbstractTerm:
@@ -281,14 +281,6 @@ class MELindbladianDiffraxIntegrator(DiffraxIntegrator, MEInterface):
             return slindbladian(H, L) @ y
 
         return dx.ODETerm(vector_field)
-
-
-class MEPropagatorDiffraxIntegrator(
-    MELindbladianDiffraxIntegrator, PropagatorSaveMixin
-):
-    """Integrator computing the propagator of the Lindblad master equation
-    using the Diffrax library.
-    """
 
 
 mepropagator_euler_integrator_constructor = partial(
