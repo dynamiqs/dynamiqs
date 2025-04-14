@@ -1,8 +1,7 @@
 import jax.numpy as jnp
 import pytest
 
-from dynamiqs import dag, mepropagator, operator_to_vector, vector_to_operator
-from dynamiqs.method import Tsit5
+from dynamiqs import mepropagator, operator_to_vector, vector_to_operator
 
 from ..integrator_tester import IntegratorTester
 from ..mesolve.open_system import dense_ocavity, otdqubit
@@ -17,8 +16,8 @@ class TestMEPropagator(IntegratorTester):
         H = system.H(params)
         Ls = system.Ls(params)
         y0 = system.y0(params)
-        rho0 = y0 @ dag(y0)
-        propresult = mepropagator(H, Ls, system.tsave, method=Tsit5())
+        rho0 = y0.todm()
+        propresult = mepropagator(H, Ls, system.tsave)
         true_ysave = system.states(system.tsave).to_jax()
         prop_ysave = (
             vector_to_operator(propresult.propagators @ operator_to_vector(rho0))
