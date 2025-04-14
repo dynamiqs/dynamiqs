@@ -268,13 +268,17 @@ mesolve_kvaerno5_integrator_constructor = partial(
 )
 
 
-class MEPropagatorDiffraxIntegrator(DiffraxIntegrator, MEInterface, PropagatorSaveMixin):
-    """Integrator computing the propagator of the Lindblad master equation with Diffrax."""
+class MEPropagatorDiffraxIntegrator(
+    DiffraxIntegrator, MEInterface, PropagatorSaveMixin
+):
+    """Integrator computing the propagator of the Lindblad master equation using the
+    Diffrax library.
+    """
 
     @property
     def terms(self) -> dx.AbstractTerm:
-        # define vector field for Lindblad eqn in Liousville super-operator form
-        # d/dt rho(t) = \mathcal{L}(\rho(t))
+        # define vector field for Lindblad equation in superoperator form
+        # drho/dt = \mathcal{L}(\rho)
 
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
             L, H = self.L(t), self.H(t)
