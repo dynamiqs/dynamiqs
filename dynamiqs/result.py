@@ -10,7 +10,6 @@ from .method import Method
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import to_jax
-from .utils.general import unit
 
 __all__ = [
     'FloquetResult',
@@ -60,7 +59,6 @@ class SolveSaved(Saved):
 
 class JumpSolveSaved(SolveSaved):
     clicktimes: Array
-    final_state_norm: Array
 
 
 class DiffusiveSolveSaved(SolveSaved):
@@ -197,9 +195,15 @@ class MEPropagatorResult(PropagatorResult):
     pass
 
 
-class JSSESolveResult(SolveResult):
+class StochasticSolveResult(SolveResult):
     keys: PRNGKeyArray
 
+    @classmethod
+    def out_axes(cls) -> SolveResult:
+        return cls(None, None, None, None, 0, 0, 0)
+
+
+class JumpSolveResult(StochasticSolveResult):
     @property
     def clicktimes(self) -> Array:
         return self._saved.clicktimes
@@ -208,63 +212,20 @@ class JSSESolveResult(SolveResult):
     def nclicks(self) -> Array:
         return jnp.count_nonzero(~jnp.isnan(self.clicktimes), axis=-1)
 
-    @property
-    def final_state_norm(self) -> Array:
-        return self._saved.final_state_norm
-
-    def noclick_states(self) -> QArray:
-        return self.states[..., 0, :, :, :]
-
-    @property
-    def noclick_prob(self) -> Array:
-        # todo: fix
-        return None
-
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
-        return d | {
-            'Clicktimes': _array_str(self.clicktimes),
-            'Number of clicks': _array_str(self.nclicks),
-            'No click probability': _array_str(self.noclick_prob),
-        }
-
-    @classmethod
-    def out_axes(cls) -> SolveResult:
-        return cls(None, None, None, None, 0, 0, 0)
-
-    @property
-    def mean_states(self) -> QArray:
-        if self.method.smart_sampling:
-            noclick_prob = self.final_state_norm[..., 0, None, None, None] ** 2
-            states_noclick = self.states[..., 0, :, :, :].todm()
-            states_click = self.states[..., 1:, :, :, :].todm().mean(axis=-4)
-            return unit(
-                noclick_prob * states_noclick + (1 - noclick_prob) * states_click
-            )
-        else:
-            return self.states.todm().mean(axis=-4)
-
-    @property
-    def mean_expects(self) -> Array:
-        if self.expects is None:
-            return None
-
-        if self.method.smart_sampling:
-            noclick_prob = self.final_state_norm[..., 0, None, None] ** 2
-            expects_noclick = self.expects[..., 0, :, :]
-            expects_click = self.expects[..., 1:, :, :].mean(axis=-3)
-            return noclick_prob * expects_noclick + (1 - noclick_prob) * expects_click
-        else:
-            return self.expects.mean(axis=-3)
+        return d | {'Clicktimes': _array_str(self.clicktimes)}
 
 
-class JSMESolveResult(SolveResult):
+class JSSESolveResult(JumpSolveResult):
     pass
 
 
-class DiffusiveSolveResult(SolveResult):
-    keys: PRNGKeyArray
+class JSMESolveResult(JumpSolveResult):
+    pass
 
+
+class DiffusiveSolveResult(StochasticSolveResult):
     @property
     def measurements(self) -> Array:
         return self._saved.Isave
@@ -272,10 +233,6 @@ class DiffusiveSolveResult(SolveResult):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {'Measurements': _array_str(self.measurements)}
-
-    @classmethod
-    def out_axes(cls) -> SolveResult:
-        return cls(None, None, None, None, 0, 0, 0)
 
 
 class DSSESolveResult(DiffusiveSolveResult):

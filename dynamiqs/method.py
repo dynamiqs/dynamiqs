@@ -12,6 +12,7 @@ __all__ = [
     'Dopri5',
     'Dopri8',
     'Euler',
+    'EulerJump',
     'EulerMaruyama',
     'Expm',
     'Kvaerno3',
@@ -142,6 +143,27 @@ class Euler(_DEFixedStep):
         CheckpointAutograd,
         ForwardAutograd,
     )
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float):
+        super().__init__(dt)
+
+
+class EulerJump(_DEFixedStep):
+    r"""Euler-Jump method (fixed step size SDE method).
+
+    Args:
+        dt: Fixed time step.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):

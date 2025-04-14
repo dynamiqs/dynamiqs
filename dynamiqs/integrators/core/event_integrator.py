@@ -17,7 +17,13 @@ from ...utils.general import dag, expect, norm, unit
 from .abstract_integrator import StochasticBaseIntegrator
 from .diffrax_integrator import DiffraxIntegrator
 from .interfaces import JSSEInterface, SolveInterface
-from .save_mixin import JumpSolveSaveMixin
+
+
+class JSSESolveEventIntegrator:
+    pass
+
+
+jssesolve_event_integrator_constructor = JSSESolveEventIntegrator
 
 
 class JSSEInnerState(eqx.Module):
@@ -49,7 +55,7 @@ class JSSESolveEventIntegrator(
     DiffraxIntegrator,
     JSSEInterface,
     SolveInterface,
-    JumpSolveSaveMixin,
+    # JumpSolveSaveMixin,
 ):
     """Integrator computing the time evolution of the Jump SSE using Diffrax events."""
 

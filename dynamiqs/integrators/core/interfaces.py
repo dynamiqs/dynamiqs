@@ -56,13 +56,12 @@ class DSSEInterface(MEInterface):
     """Interface for the diffusive SSE."""
 
 
-class DSMEInterface(AbstractTimeInterface):
-    """Interface for the diffusive SME."""
+class SMEInterface(AbstractTimeInterface):
+    """Interface for the jump or diffusive SME."""
 
     H: TimeQArray
     Lcs: list[TimeQArray]  # (nLc, n, n)
     Lms: list[TimeQArray]  # (nLm, n, n)
-    etas: Array  # (nLm,)
 
     @property
     def Ls(self) -> list[TimeQArray]:
@@ -81,6 +80,19 @@ class DSMEInterface(AbstractTimeInterface):
     def discontinuity_ts(self) -> Array:
         ts = [x.discontinuity_ts for x in [self.H, *self.Ls]]
         return concatenate_sort(*ts)
+
+
+class JSMEInterface(SMEInterface):
+    """Interface for the jump SME."""
+
+    thetas: Array  # (nLm,)
+    etas: Array  # (nLm,)
+
+
+class DSMEInterface(SMEInterface):
+    """Interface for the diffusive SME."""
+
+    etas: Array  # (nLm,)
 
 
 class SolveInterface(eqx.Module):
