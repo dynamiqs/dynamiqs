@@ -24,21 +24,13 @@ def test_against_mesolve_oscillator(smart_sampling, atol=1e-2):
     tsave = jnp.linspace(0.0, 2.0, 11)
     keys = jax.random.split(jax.random.key(31), num=ntrajs)
     exp_ops = [a.dag() @ a]
-    js_options = dq.Options(smart_sampling=smart_sampling)
     me_options = dq.Options(progress_meter=None)
 
     # solve with jssesolve and mesolve
     root_finder = optx.Newton(1e-4, 1e-4, jtu.Partial(optx.rms_norm))
-    solver = dq.method.Event(root_finder=root_finder)
+    method = dq.method.Event(root_finder=root_finder, smart_sampling=smart_sampling)
     jsseresult = dq.jssesolve(
-        H,
-        jump_ops,
-        psi0,
-        tsave,
-        keys,
-        exp_ops=exp_ops,
-        options=js_options,
-        method=solver,
+        H, jump_ops, psi0, tsave, keys, exp_ops=exp_ops, method=method
     )
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
@@ -67,21 +59,13 @@ def test_against_mesolve_qubit(smart_sampling, atol=1e-2):
     tsave = jnp.linspace(0, 1.0, 41)
     keys = jax.random.split(jax.random.key(31), num=ntrajs)
     exp_ops = [dq.excited().todm(), dq.ground().todm()]
-    js_options = dq.Options(smart_sampling=smart_sampling)
     me_options = dq.Options(progress_meter=None)
     root_finder = optx.Newton(1e-3, 1e-3, jtu.Partial(optx.rms_norm))
-    solver = dq.method.Event(root_finder=root_finder)
+    method = dq.method.Event(root_finder=root_finder, smart_sampling=smart_sampling)
 
     # solve with jssesolve and mesolve
     jsseresult = dq.jssesolve(
-        H,
-        jump_ops,
-        psi0,
-        tsave,
-        keys=keys,
-        exp_ops=exp_ops,
-        options=js_options,
-        method=solver,
+        H, jump_ops, psi0, tsave, keys=keys, exp_ops=exp_ops, method=method
     )
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 

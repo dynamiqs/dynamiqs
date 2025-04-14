@@ -109,7 +109,7 @@ def jssesolve(
             method-dependent, refer to the documentation of the chosen method for more
             details.
         options: Generic options (supported: `save_states`, `cartesian_batching`, `t0`,
-            `save_extra`, `nmaxclick`, `smart_sampling`).
+            `save_extra`, `nmaxclick`).
             ??? "Detailed options API"
                 ```
                 dq.Options(
@@ -118,7 +118,6 @@ def jssesolve(
                     t0: ScalarLike | None = None,
                     save_extra: callable[[Array], PyTree] | None = None,
                     nmaxclick: int = 10_000,
-                    smart_sampling: bool = False,
                 )
                 ```
 
@@ -137,10 +136,6 @@ def jssesolve(
                     during the integration, accessible in `result.extra`.
                 - **nmaxclick** - Maximum buffer size for `result.clicktimes`, should be
                     set higher than the expected maximum number of clicks.
-                - **smart_sampling** - If `True`, the improved sampling algorithm of
-                    [Abdelhafez et al. (2019)](https://doi.org/10.1103/PhysRevA.99.052327)
-                    is used whereby the no-jump trajectory is sampled only once, and all
-                    remaining trajectories contain at least one jump.
 
     Returns:
         `dq.JSSESolveResult` object holding the result of the jump SSE integration. Use
@@ -321,7 +316,7 @@ def _vectorized_clicks_jssesolve(
     core_args = (H, Ls, psi0, tsave)
     other_args = (exp_ops, method, gradient, options)
 
-    if options.smart_sampling:
+    if method.smart_sampling:
         # consume the first key for the no-click trajectory
         noclick_args = (keys[0], True, 0.0)
         noclick_result = _jssesolve_single_trajectory(

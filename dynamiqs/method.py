@@ -462,6 +462,10 @@ class Event(_DEMethod):
             [`Euler`][dynamiqs.method.Euler]).
         root_finder: Root finder to refine the click times, defaults to `None`
             (precision determined by the integration step size).
+        smart_sampling: If `True`, the no-click trajectory is sampled only once, and
+            `result.states` contains only trajectories with one or more clicks. Use
+            `result.noclick_states` to access the no-click trajectory, and
+            `result.noclick_prob` for its associated probability.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -473,6 +477,7 @@ class Event(_DEMethod):
 
     noclick_method: Method = Tsit5()
     root_finder: AbstractRootFinder | None = None
+    smart_sampling: bool = False
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
@@ -485,9 +490,11 @@ class Event(_DEMethod):
         self,
         noclick_method: Method = Tsit5(),  # noqa: B008
         root_finder: AbstractRootFinder | None = None,
+        smart_sampling: bool = False,
     ):
         self.noclick_method = noclick_method
         self.root_finder = root_finder
+        self.smart_sampling = smart_sampling
 
     # inherit attributes from the noclick_method
     def __getattr__(self, attr: str) -> Any:
