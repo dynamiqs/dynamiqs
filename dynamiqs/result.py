@@ -212,12 +212,20 @@ class JSSESolveResult(SolveResult):
     def final_state_norm(self) -> Array:
         return self._saved.final_state_norm
 
+    def noclick_states(self) -> QArray:
+        return self.states[..., 0, :, :, :]
+
+    @property
+    def noclick_prob(self) -> Array:
+        # todo: fix
+        return None
+
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {
             'Clicktimes': _array_str(self.clicktimes),
             'Number of clicks': _array_str(self.nclicks),
-            'Final state norm': _array_str(self.final_state_norm),
+            'No click probability': _array_str(self.noclick_prob),
         }
 
     @classmethod
