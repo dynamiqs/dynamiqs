@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import Any
 
 import jax
 import jax.numpy as jnp
@@ -82,6 +83,11 @@ def jssesolve(
     The continuous-time measurements are defined by the point processes $\dd N_k$. The
     solver returns the times at which the detector clicked,
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
+
+    !!! Note
+        If you are looking for the equivalent of QuTiP's `mcsolve`, look no further!
+        `jssesolve` computes the very same quantities, albeit under a different name in
+        this library.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
@@ -262,17 +268,11 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    f = _jssesolve_single_trajectory
+    f = _vectorized_clicks_jssesolve
 
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, 0, None, None, None, None)
+    # === vectorize function over H, Ls and psi0.
     # the result is vectorized over `_saved`, `infos` and `keys`
     out_axes = JSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
-    # vectorize input over H, Ls and psi0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
 
     if options.cartesian_batching:
@@ -292,12 +292,65 @@ def _vectorized_jssesolve(
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
+def _vectorized_clicks_jssesolve(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> JSSESolveResult:
+    f = _jssesolve_single_trajectory
+
+    # === vectorize function over stochastic trajectories
+    # the input is vectorized over `key`
+    # the result is vectorized over `_saved`, `infos` and `keys`
+    out_axes = JSSESolveResult.out_axes()
+    in_axes = (None, None, None, None, 0, None, None, None, None, None, None)
+    f = jax.vmap(f, in_axes, out_axes)
+
+    # === define common arguments
+    core_args = (H, Ls, psi0, tsave)
+    other_args = (exp_ops, method, gradient, options)
+
+    if method.smart_sampling:
+        # consume the first key for the no-click trajectory
+        noclick_args = (keys[0], True, 0.0)
+        noclick_result = _jssesolve_single_trajectory(
+            *core_args, *noclick_args, *other_args
+        )
+
+        # consume the remaining keys for the click trajectories, using the norm of the
+        # no-click state as the minimum value for random numbers triggering a click
+        click_args = (keys[1:], False, noclick_result.final_state_norm**2)
+        click_result = f(*core_args, *click_args, *other_args)
+
+        # concatenate the results of the no-click and click trajectories
+        def _concatenate_results(path: tuple, leaf1: Any, leaf2: Any) -> Any:
+            if getattr(out_axes, path[0].name) is None:
+                return leaf1
+            else:
+                return jnp.concatenate((leaf1[None], leaf2))
+
+        return jax.tree.map_with_path(
+            _concatenate_results, noclick_result, click_result
+        )
+    else:
+        click_args = (keys, False, 0.0)
+        return f(*core_args, *click_args, *other_args)
+
+
 def _jssesolve_single_trajectory(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
     tsave: Array,
     key: PRNGKeyArray,
+    noclick: bool,
+    noclick_min_prob: float,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
@@ -335,6 +388,8 @@ def _jssesolve_single_trajectory(
         Ls=Ls,
         Es=exp_ops,
         key=key,
+        noclick=noclick,
+        noclick_min_prob=noclick_min_prob,
     )
 
     # === run integrator
