@@ -53,6 +53,9 @@ class JSSESolveEventIntegrator(
 ):
     """Integrator computing the time evolution of the Jump SSE using Diffrax events."""
 
+    noclick: bool
+    noclick_min_prob: float
+
     @property
     def terms(self) -> dx.AbstractTerm:
         def vector_field(t, y, _):  # noqa: ANN001, ANN202
@@ -68,7 +71,11 @@ class JSSESolveEventIntegrator(
         def loop_body(state: JSSEState) -> JSSEState:
             # pick a random number for the next detection event
             key, click_key, jump_key = jax.random.split(state.key, num=3)
-            rand = jax.random.uniform(click_key)
+            if self.noclick:
+                rand = 0.0
+            else:
+                minval = jnp.where(state.nclicks > 0, 0.0, self.noclick_min_prob)
+                rand = jax.random.uniform(click_key, minval=minval)
 
             # solve until the next detection event
             solution = self._solve_until_click(state.y, state.t, rand)
@@ -153,7 +160,8 @@ class JSSESolveEventIntegrator(
         # collect and return results
         saved = final_state.inner_state.saved  # of type SolveSaved
         clicktimes = final_state.clicktimes
-        saved = self.postprocess_saved(saved, clicktimes)  # of type JumpSolveSaved
+        # saved of type JumpSolveSaved
+        saved = self.postprocess_saved(saved, final_state.y, clicktimes)
         return self.result(saved, infos=None)
 
     def _solve_until_click(self, y0: QArray, t0: Array, rand: Array) -> dx.Solution:
