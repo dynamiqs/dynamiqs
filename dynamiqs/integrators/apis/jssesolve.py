@@ -89,6 +89,9 @@ def jssesolve(
         equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
         [`dq.method.JumpMonteCarlo()`][dynamiqs.method.JumpMonteCarlo] method.
 
+    !!! Note
+        This function is the Dynamiqs counterpart of QuTiP's `mcsolve` function.
+
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
         jump_ops _(list of qarray-like or time-qarray, each of shape (...Lk, n, n))_:
