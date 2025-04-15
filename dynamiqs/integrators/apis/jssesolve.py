@@ -316,7 +316,7 @@ def _vectorized_clicks_jssesolve(
     core_args = (H, Ls, psi0, tsave)
     other_args = (exp_ops, method, gradient, options)
 
-    if method.smart_sampling:
+    def true_fn() -> JSSESolveResult:
         # consume the first key for the no-click trajectory
         noclick_args = (keys[0], True, 0.0)
         noclick_result = _jssesolve_single_trajectory(
@@ -338,9 +338,12 @@ def _vectorized_clicks_jssesolve(
         return jax.tree.map_with_path(
             _concatenate_results, noclick_result, click_result
         )
-    else:
+
+    def false_fn() -> JSSESolveResult:
         click_args = (keys, False, 0.0)
         return f(*core_args, *click_args, *other_args)
+
+    return jax.lax.cond(method.smart_sampling, true_fn, false_fn)
 
 
 def _jssesolve_single_trajectory(
