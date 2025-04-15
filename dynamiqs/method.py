@@ -162,10 +162,10 @@ class EulerMaruyama(_DEFixedStep):
         [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
     """
 
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
     # todo: fix static dt (similar issue as static tsave in dssesolve)
     dt: float = eqx.field(static=True)
-
-    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
