@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import equinox as eqx
-import jax
 import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PRNGKeyArray, PyTree
@@ -235,34 +234,28 @@ class JSSESolveResult(SolveResult):
 
     @property
     def mean_states(self) -> QArray:
-        def true_fn() -> QArray:
+        if self.method.smart_sampling:
             noclick_prob = self.final_state_norm[..., 0, None, None, None] ** 2
             states_noclick = self.states[..., 0, :, :, :].todm()
             states_click = self.states[..., 1:, :, :, :].todm().mean(axis=-4)
             return unit(
                 noclick_prob * states_noclick + (1 - noclick_prob) * states_click
             )
-
-        def false_fn() -> QArray:
+        else:
             return self.states.todm().mean(axis=-4)
-
-        return jax.lax.cond(self.method.smart_sampling, true_fn, false_fn)
 
     @property
     def mean_expects(self) -> Array:
         if self.expects is None:
             return None
 
-        def true_fn() -> Array:
+        if self.method.smart_sampling:
             noclick_prob = self.final_state_norm[..., 0, None, None] ** 2
             expects_noclick = self.expects[..., 0, :, :]
             expects_click = self.expects[..., 1:, :, :].mean(axis=-3)
             return noclick_prob * expects_noclick + (1 - noclick_prob) * expects_click
-
-        def false_fn() -> Array:
+        else:
             return self.expects.mean(axis=-3)
-
-        return jax.lax.cond(self.method.smart_sampling, true_fn, false_fn)
 
 
 class JSMESolveResult(SolveResult):

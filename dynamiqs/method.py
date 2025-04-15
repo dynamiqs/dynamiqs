@@ -477,7 +477,7 @@ class Event(_DEMethod):
 
     noclick_method: Method = Tsit5()
     root_finder: AbstractRootFinder | None = eqx.field(static=True, default=None)
-    smart_sampling: bool = False
+    smart_sampling: bool = eqx.field(static=True, default=False)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
