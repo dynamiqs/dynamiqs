@@ -194,6 +194,9 @@ class Rouchon1(_DEFixedStep):
         CheckpointAutograd,
         ForwardAutograd,
     )
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
     normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
