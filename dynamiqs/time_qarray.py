@@ -173,10 +173,10 @@ def modulated(
         else jnp.sort(jnp.asarray(discontinuity_ts))
     )
 
-    # make f a valid PyTree that is vmap-compatible
-    f = BatchedCallable(f)
+    # make f a valid PyTree that is vmap-compatible and convert its output to an array
+    pytree_f = BatchedCallable(lambda t: jnp.asarray(f(t)))
 
-    return ModulatedTimeQArray(f, qarray, discontinuity_ts)
+    return ModulatedTimeQArray(pytree_f, qarray, discontinuity_ts)
 
 
 def timecallable(
