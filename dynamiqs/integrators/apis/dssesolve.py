@@ -246,7 +246,7 @@ def dssesolve(
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'method', 'gradient', 'options'))
+@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_dssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],

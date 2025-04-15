@@ -246,6 +246,9 @@ class JSSESolveResult(SolveResult):
 
     @property
     def mean_expects(self) -> Array:
+        if self.expects is None:
+            return None
+
         if self.method.smart_sampling:
             noclick_prob = self.final_state_norm[..., 0, None, None] ** 2
             expects_noclick = self.expects[..., 0, :, :]

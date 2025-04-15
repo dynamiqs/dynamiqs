@@ -113,7 +113,7 @@ class _DEAdaptiveStep(_DEMethod):
     safety_factor: float = 0.9
     min_factor: float = 0.2
     max_factor: float = 5.0
-    max_steps: int = 100_000
+    max_steps: int = eqx.field(static=True, default=100_000)
 
 
 # === public methods options
@@ -164,6 +164,9 @@ class EulerMaruyama(_DEFixedStep):
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
 
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
         super().__init__(dt)
@@ -191,7 +194,10 @@ class Rouchon1(_DEFixedStep):
         CheckpointAutograd,
         ForwardAutograd,
     )
-    normalize: bool
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+    normalize: bool = eqx.field(static=True, default=True)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float, normalize: bool = True):
@@ -476,8 +482,8 @@ class Event(_DEMethod):
     """
 
     noclick_method: Method = Tsit5()
-    root_finder: AbstractRootFinder | None = None
-    smart_sampling: bool = False
+    root_finder: AbstractRootFinder | None = eqx.field(static=True, default=None)
+    smart_sampling: bool = eqx.field(static=True, default=False)
 
     SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
         Autograd,
