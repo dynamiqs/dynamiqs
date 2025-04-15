@@ -147,6 +147,7 @@ nav:
           - Computing gradients: documentation/basics/computing-gradients.md
       - Advanced examples:
           - Driven-dissipative Kerr oscillator: documentation/advanced_examples/kerr-oscillator.md
+          - Continuous jump measurement: documentation/advanced_examples/continuous-jump-measurement.md
           - Continuous diffusive measurement: documentation/advanced_examples/continuous-diffusive-measurement.md
   - Python API:
       - python_api/index.md
