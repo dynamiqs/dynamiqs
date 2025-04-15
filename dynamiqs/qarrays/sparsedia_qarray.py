@@ -15,6 +15,7 @@ from .layout import Layout, dia
 from .qarray import (
     QArray,
     QArrayLike,
+    _is_key_in_batch_dims,
     in_last_two_dims,
     include_last_two_dims,
     isqarraylike,
@@ -346,39 +347,12 @@ class SparseDIAQArray(QArray):
         diags = self.diags**power
         return self._replace(diags=diags)
 
-    def __getitem__(self, key: int | slice | tuple) -> QArray:
+    def __getitem__(self, key: int | slice | tuple) -> QArray | jax.Array:
         if key in (slice(None, None, None), Ellipsis):
             return self
 
-        _check_key_in_batch_dims(key, self.ndim)
-        diags = self.diags[key]
-        return self._replace(diags=diags)
-
-
-def _check_key_in_batch_dims(key: int | slice | tuple, ndim: int):
-    full_slice = slice(None, None, None)
-    valid_key = False
-    if isinstance(key, int | slice):
-        valid_key = ndim > 2
-    if isinstance(key, Array):
-        valid_key = key.ndim == 0 and ndim > 2
-    elif isinstance(key, tuple):
-        if Ellipsis in key:
-            ellipsis_key = key.index(Ellipsis)
-            key = (
-                key[:ellipsis_key]
-                + (full_slice,) * (ndim - len(key) + 1)
-                + key[ellipsis_key + 1 :]
-            )
-
-        valid_key = (
-            len(key) <= ndim - 2
-            or (len(key) == ndim - 1 and key[-1] == full_slice)
-            or (len(key) == ndim and key[-2] == full_slice and key[-1] == full_slice)
-        )
-
-    if not valid_key:
-        raise NotImplementedError(
-            'Getting items from non batching dimensions of a `SparseDIAQArray` is not '
-            'supported.'
-        )
+        if _is_key_in_batch_dims(key, self.ndim):
+            diags = self.diags[key]
+            return self._replace(diags=diags)
+        else:
+            return self.asdense()[key]
