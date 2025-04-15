@@ -12,6 +12,7 @@ from jaxtyping import PyTree, Scalar
 from ..._utils import obj_type_str
 from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd
 from ...result import Result
+from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
 from .interfaces import AbstractTimeInterface, MEInterface, SEInterface, SolveInterface
 from .save_mixin import AbstractSaveMixin, PropagatorSaveMixin, SolveSaveMixin
@@ -264,4 +265,43 @@ mesolve_kvaerno3_integrator_constructor = partial(
 )
 mesolve_kvaerno5_integrator_constructor = partial(
     MESolveDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class MEPropagatorDiffraxIntegrator(
+    DiffraxIntegrator, MEInterface, PropagatorSaveMixin
+):
+    """Integrator computing the propagator of the Lindblad master equation using the
+    Diffrax library.
+    """
+
+    @property
+    def terms(self) -> dx.AbstractTerm:
+        # define vector field for Lindblad equation in superoperator form
+        # drho/dt = \mathcal{L}(\rho)
+
+        def vector_field(t, y, _):  # noqa: ANN001, ANN202
+            L, H = self.L(t), self.H(t)
+            return slindbladian(H, L) @ y
+
+        return dx.ODETerm(vector_field)
+
+
+mepropagator_euler_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+mepropagator_dopri5_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+mepropagator_dopri8_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+mepropagator_tsit5_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+mepropagator_kvaerno3_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+mepropagator_kvaerno5_integrator_constructor = partial(
+    MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
