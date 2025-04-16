@@ -10,6 +10,7 @@ from .method import Method
 from .options import Options
 from .qarrays.qarray import QArray
 from .qarrays.utils import to_jax
+from .utils.general import unit
 
 __all__ = [
     'FloquetResult',
@@ -215,6 +216,31 @@ class JumpSolveResult(StochasticSolveResult):
     def _str_parts(self) -> dict[str, str | None]:
         d = super()._str_parts()
         return d | {'Clicktimes': _array_str(self.clicktimes)}
+
+    def mean_states(self) -> QArray:
+        # todo: document
+        if self.method.smart_sampling:
+            noclick_prob = 0
+            noclick_prob = self.infos.noclick_prob[..., None, None, None]
+            return unit(
+                noclick_prob * self.infos.noclick_states.todm()
+                + (1 - noclick_prob) * self.states.todm().mean(axis=-4)
+            )
+        else:
+            return self.states.todm().mean(axis=-4)
+
+    def mean_expects(self) -> Array | None:
+        # todo: document
+        if self.expects is None:
+            return None
+
+        if self.method.smart_sampling:
+            noclick_prob = self.infos.noclick_prob[..., None, None]
+            return noclick_prob * self.infos.noclick_expects + (
+                1 - noclick_prob
+            ) * self.expects.mean(axis=-3)
+        else:
+            return self.expects.mean(axis=-3)
 
 
 class JSSESolveResult(JumpSolveResult):

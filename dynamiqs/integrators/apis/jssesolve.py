@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from functools import partial
-
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -161,12 +159,6 @@ def jssesolve(
                     `jnp.nan` up to `nmaxclick`.
                 - **nclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
-                - **noclick_states** _(array of shape (..., nsave, n, 1))_ - Saved states
-                    for the no-click trajectory. Only for the
-                    [`Event`][dynamiqs.method.Event] method with `smart_sampling=True`.
-                - **noclick_prob** _(array of shape (...))_ - Probability of the
-                    no-click trajectory. Only for the [`Event`][dynamiqs.method.Event]
-                    method with `smart_sampling=True`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
@@ -246,14 +238,16 @@ def jssesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    tsave = tuple(tsave.tolist())  # todo: fix static tsave
-    return _vectorized_jssesolve(
-        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
-    )
+    f = _vectorized_jssesolve
+    if isinstance(method, EulerJump):
+        tsave = tuple(tsave.tolist())  # todo: fix static tsave
+        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
+    else:
+        f = jax.jit(f, static_argnames=('gradient', 'options'))
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('tsave', 'gradient', 'options'))
 def _vectorized_jssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -297,10 +291,17 @@ def _jssesolve_many_trajectories(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    # vectorize input over keys
-    in_axes = (None, None, None, None, 0, None, None, None, None)
-    out_axes = JSSESolveResult(None, None, None, None, 0, 0, 0)
-    f = jax.vmap(_jssesolve_single_trajectory, in_axes, out_axes)
+    f = _jssesolve_single_trajectory
+
+    if isinstance(method, Event):
+        # vectorization over keys is handled by the integrator
+        pass
+    else:
+        # vectorize input over keys
+        in_axes = (None, None, None, None, 0, None, None, None, None)
+        out_axes = JSSESolveResult(None, None, None, None, 0, 0, 0)
+        f = jax.vmap(f, in_axes, out_axes)
+
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 

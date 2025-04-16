@@ -1,225 +1,213 @@
 from __future__ import annotations
 
-from functools import partial
-
 import diffrax as dx
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from equinox.internal import while_loop
 from jax import Array
-from jaxtyping import PRNGKeyArray, PyTree, Scalar
+from jaxtyping import PRNGKeyArray, PyTree
 
+from ...options import Options
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
-from ...result import Result
-from ...utils.general import dag, expect, norm, unit
+from ...result import JSSESolveResult, JumpSolveSaved, Result, Saved, SolveSaved
+from ...utils.general import expect
 from .abstract_integrator import StochasticBaseIntegrator
-from .diffrax_integrator import DiffraxIntegrator
+from .diffrax_integrator import basic_diffeqsolve
 from .interfaces import JSSEInterface, SolveInterface
+from .save_mixin import SolveSaveMixin
 
 
-class JSSESolveEventIntegrator:
-    pass
+def _replace(x: PyTree, **kwargs) -> PyTree:
+    for key, value in kwargs.items():
+        x = eqx.tree_at(lambda x: getattr(x, key), x, value)  # noqa: B023
+    return x
 
 
-jssesolve_event_integrator_constructor = JSSESolveEventIntegrator
+class EventInfos(eqx.Module):
+    noclick_states: QArray
+    noclick_prob: float
+    noclick_expects: Array | None
+
+    def __str__(self) -> str:
+        # return super().__str__()  # todo: custom print
+        return 'EventInfos(...)'
 
 
-class JSSEInnerState(eqx.Module):
-    saved: PyTree
+class JumpState(eqx.Module):
+    """State for the jump SSE event integrator."""
+
+    psi: QArray  # state (integrated from initial to current time)
+    t: float  # current time
+    key: PRNGKeyArray  # active key
+    clicktimes: Array  # click times of shape (nLs, nmaxclick)
+    indices: Array  # last click time indices of shape (nLs,)
+    saved: SolveSaved  # saved states, expectation values and extras
     save_index: int
 
+    def new_click(self, idx: int, t: float) -> tuple[Array, Array]:
+        clicktimes = self.clicktimes.at[idx, self.indices[idx]].set(t)
+        indices = self.indices.at[idx].add(1)
+        return clicktimes, indices
 
-class JSSEState(eqx.Module):
-    y: QArray  # quantum state
-    t: Scalar  # time
-    key: PRNGKeyArray  # active key
-    nclicks: int  # number of clicks
-    clicktimes: Array  # time of clicks
-    inner_state: JSSEInnerState  # saved quantities
-
-
-def save_buffers(inner_state: JSSEInnerState) -> PyTree:
-    assert type(inner_state) is JSSEInnerState
-    return inner_state.saved
-
-
-def loop_buffers(state: JSSEState) -> PyTree:
-    assert type(state) is JSSEState
-    return state.inner_state.saved
+    def new_save(self, new: SolveSaved) -> JumpState:
+        idx = self.save_index
+        saved = jax.tree.map(
+            lambda _new, _saved: _saved.at[idx].set(_new[idx]), new, self.saved
+        )
+        return _replace(self, saved=saved, save_index=idx + 1)
 
 
 class JSSESolveEventIntegrator(
-    StochasticBaseIntegrator,
-    DiffraxIntegrator,
-    JSSEInterface,
-    SolveInterface,
-    # JumpSolveSaveMixin,
+    StochasticBaseIntegrator, JSSEInterface, SolveInterface, SolveSaveMixin
 ):
     """Integrator computing the time evolution of the Jump SSE using Diffrax events."""
 
-    noclick: bool
-    noclick_min_prob: float
-
-    @property
-    def terms(self) -> dx.AbstractTerm:
-        def vector_field(t, y, _):  # noqa: ANN001, ANN202
-            L, H = self.L(t), self.H(t)
-            return -1j * H @ y + sum([-0.5 * _L.dag() @ (_L @ y) for _L in L])
-
-        return dx.ODETerm(vector_field)
-
     def run(self) -> Result:
-        def loop_condition(state: JSSEState) -> bool:
-            return state.t < self.t1
+        if self.method.smart_sampling:
+            # sample a no-click trajectory and compute its probability
+            solution = self.simulate_noclick(self.ts, self.y0)
+            psis = solution.ys[0]
+            noclick_psis = psis.unit()
+            noclick_prob = psis[-1].norm() ** 2
+            noclick_expects = None if self.Es is None else expect(self.Es, noclick_psis)
+            infos = EventInfos(noclick_psis, noclick_prob, noclick_expects)
+        else:
+            noclick_prob = None
+            infos = None
 
-        def loop_body(state: JSSEState) -> JSSEState:
-            # pick a random number for the next detection event
-            key, click_key, jump_key = jax.random.split(state.key, num=3)
-            if self.noclick:
-                rand = 0.0
-            else:
-                minval = jnp.where(state.nclicks > 0, 0.0, self.noclick_min_prob)
-                rand = jax.random.uniform(click_key, minval=minval)
+        # vectorize over keys
+        out_axes = JumpSolveSaved(0, 0, 0, 0)
+        f = lambda key: self.simulate_single_trajectory(key, noclick_prob)
+        saved = jax.vmap(f, 0, out_axes)(self.key)
+        saved = self.reorder_Esave(saved)
+        return self.result(saved, infos)
 
-            # solve until the next detection event
-            solution = self._solve_until_click(state.y, state.t, rand)
-            temp_saved = solution.ys[0]
-            yclick = solution.ys[1][0]
-            tclick = solution.ts[1][0]
-
-            # if the event triggered, update the quantum state and clicktimes
-            # else, the final time was reached, and do nothing
-            def event(
-                yclick: QArray, clicktimes: Array, nclicks: int
-            ) -> tuple[QArray, Array, int]:
-                # find a random jump operator among the provided jump_ops, and apply it
-                jump_op, idx = self._sample_jump_ops(tclick, yclick, jump_key)
-                yclick = unit(jump_op @ yclick)
-
-                # update clicktimes
-                clicktimes = clicktimes.at[idx, state.nclicks].set(tclick)
-                nclicks += 1
-
-                return yclick, clicktimes, nclicks
-
-            def skip(
-                yclick: QArray, clicktimes: Array, nclicks: int
-            ) -> tuple[QArray, Array, int]:
-                return yclick, clicktimes, nclicks
-
-            yclick, clicktimes, nclicks = jax.lax.cond(
-                solution.event_mask,
-                event,
-                skip,
-                yclick,
-                state.clicktimes,
-                state.nclicks,
-            )
-
-            # save intermediate states and expectation values, based on the code
-            # in diffrax/_integrate.py which can be found at:
-            # https://github.com/patrick-kidger/diffrax/blob/main/diffrax/_integrate.py#L427-L458
-            def save_cond(inner_state: JSSEInnerState) -> bool:
-                save_index = inner_state.save_index
-                return (self.ts[save_index] <= tclick) & (save_index < len(self.ts))
-
-            def save_body(inner_state: JSSEInnerState) -> JSSEInnerState:
-                idx = inner_state.save_index
-                saved = jax.tree.map(
-                    lambda _temp_saved, _saved: _saved.at[idx].set(_temp_saved[idx]),
-                    temp_saved,
-                    inner_state.saved,
-                )
-                return JSSEInnerState(saved, idx + 1)
-
-            inner_state = while_loop(
-                save_cond,
-                save_body,
-                state.inner_state,
-                max_steps=len(self.ts),
-                buffers=save_buffers,
-                kind='checkpointed',
-            )
-
-            # return updated state
-            return JSSEState(yclick, tclick, key, nclicks, clicktimes, inner_state)
-
-        # prepare the initial state to loop over
-        y = stack([self.y0] * len(self.ts))
-        saved = self.reorder_Esave(self.save(y))
-        clicktimes = jnp.full((len(self.Ls), self.options.nmaxclick), jnp.nan)
-        inner_state = JSSEInnerState(saved, 0)
-        state = JSSEState(self.y0, self.t0, self.key, 0, clicktimes, inner_state)
-
-        # loop over no-click evolutions until the final time is reached
-        final_state = while_loop(
-            loop_condition,
-            loop_body,
-            state,
-            kind='checkpointed',
-            buffers=loop_buffers,
-            max_steps=self.options.nmaxclick,
+    def simulate_noclick(
+        self,
+        ts: Array,
+        psi0: Array,
+        event: dx.Event | None = None,
+        save: callable | None = None,
+    ) -> dx.Solution:
+        terms = dx.ODETerm(
+            lambda t, y, _: -1j * self.H(t) @ y
+            + sum([-0.5 * _L.dag() @ (_L @ y) for _L in self.L(t)])
         )
 
-        # collect and return results
-        saved = final_state.inner_state.saved  # of type SolveSaved
-        clicktimes = final_state.clicktimes
-        # saved of type JumpSolveSaved
-        saved = self.postprocess_saved(saved, final_state.y, clicktimes)
-        return self.result(saved, infos=None)
+        return basic_diffeqsolve(
+            ts,
+            psi0,
+            terms,
+            self.method.noclick_method,
+            self.gradient,
+            Options(progress_meter=False).initialise(),
+            self.discontinuity_ts,
+            event=event,
+            save=save,
+        )
 
-    def _solve_until_click(self, y0: QArray, t0: Array, rand: Array) -> dx.Solution:
-        # === prepare saveat
-        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
-        ts = jnp.where(self.ts >= t0, self.ts, t0)  # clip ts to start at t0
-        subsaveat_a = dx.SubSaveAt(ts=ts, fn=fn)  # save solution regularly
-        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
-        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+    def save(self, y: PyTree) -> Saved:
+        return super().save(y.unit())
 
-        # === prepare event
-        def cond_fn(t: Scalar, y: QArray, *args, **kwargs) -> Array:
-            return norm(y) ** 2 - rand
-
+    def _solve_until_click(
+        self, y: JumpState, rand: float
+    ) -> tuple[JumpState, SolveSaved, bool]:
+        # === solve until the next click event
+        cond_fn = lambda t, y, *a, **kw: y.norm() ** 2 - rand  # noqa: ARG005
         event = dx.Event(cond_fn, self.method.root_finder)
+        ts = jnp.where(self.ts >= y.t, self.ts, y.t)  # clip times to start at y.t
+        solution = self.simulate_noclick(ts, y.psi, event=event, save=self.save)
 
-        # === solve differential equation with diffrax
-        return self.diffeqsolve(t0=t0, t1=self.t1, y0=y0, saveat=saveat, event=event)
+        # === collect solve result
+        new_saved = solution.ys[0]
+        psiclick, tclick = solution.ys[1][0], solution.ts[1][0]
+        y = _replace(y, psi=psiclick, t=tclick)
+        click_occurred = solution.event_mask
 
-    def _sample_jump_ops(self, t: Array, psi: Array, key: Array) -> tuple[Array, int]:
-        # given a state psi at time t that should experience a jump,
-        # randomly sample one jump operator from among the provided jump_ops.
-        # The probability that a certain jump operator is selected is weighted
-        # by the probability that such a jump can occur. For instance for a qubit
-        # experiencing amplitude damping, if it is in the ground state then
-        # there is probability zero of experiencing an amplitude damping event.
+        # === save intermediate states, expectation values and extras
+        save_cond = lambda y: (
+            (self.ts[y.save_index] <= y.t) & (y.save_index < len(self.ts))
+        )
+        save_body = lambda y: y.new_save(new_saved)
+        y = while_loop(
+            save_cond,
+            save_body,
+            y,
+            max_steps=len(self.ts),
+            buffers=lambda x: x.saved,
+            kind='checkpointed',
+        )
 
-        Ls = stack([L(t) for L in self.Ls])
-        Lsd = dag(Ls)
-        probs = expect(Lsd @ Ls, psi)
-        # for categorical we pass in the log of the probabilities
-        logits = jnp.log(jnp.real(probs / (jnp.sum(probs))))
-        # randomly sample the index of a single jump operator
-        sample_idx = jax.random.categorical(key, logits, shape=(1,))[0]
-        return Ls[sample_idx], sample_idx
+        return y, click_occurred
+
+    def simulate_single_trajectory(
+        self, key: PRNGKeyArray, noclick_prob: float | None
+    ) -> JSSESolveResult:
+        def loop_body(y: JumpState) -> JumpState:
+            # === pick a random number for the next click event
+            newkey, key_click, key_jump_choice = jax.random.split(y.key, 3)
+            y = _replace(y, key=newkey)  # update key
+            minval = 0.0
+            if noclick_prob is not None:
+                # when smart_sampling = True, and if no jump occurred yet we choose
+                # minval = noclick_prob to ensure that all trajectories are sampled
+                # with at least one click
+                minval = jax.lax.cond(
+                    jnp.any(y.indices > 0), lambda: 0.0, lambda: noclick_prob
+                )
+            rand = jax.random.uniform(key_click, minval=minval)
+
+            # === solve until the next click event
+            y, click_occurred = self._solve_until_click(y, rand)
+
+            # === apply click
+            # if the click triggered, update the quantum state and clicktimes,
+            # else, the final time was reached, and do nothing
+            def click(y: JumpState) -> JumpState:
+                psi = y.psi
+                L = stack(self.L(y.t))  # todo: remove stack
+                LdL = L.dag() @ L
+                exp_LdL = expect(LdL, psi).real
+                L_probas = exp_LdL / sum(exp_LdL)
+
+                # sample one of the jump operators
+                idx = jax.random.choice(key_jump_choice, len(self.Ls), p=L_probas)
+
+                # apply the jump operator
+                psi = L[idx] @ psi / jnp.sqrt(exp_LdL[idx])
+
+                # update click time and index
+                clicktimes, indices = y.new_click(idx, y.t)
+
+                return _replace(y, psi=psi, clicktimes=clicktimes, indices=indices)
+
+            skip = lambda y: y
+            return jax.lax.cond(click_occurred, click, skip, y)
+
+        # === prepare the initial state to loop over
+        clicktimes = jnp.full((len(self.Ls), self.options.nmaxclick), jnp.nan)
+        indices = jnp.zeros(len(self.Ls), dtype=int)
+        y = stack([self.y0] * len(self.ts))
+        saved = self.reorder_Esave(self.save(y))
+        y0 = JumpState(self.y0, self.t0, key, clicktimes, indices, saved, 0)
+
+        # === loop over no-click evolutions until the final time is reached
+        loop_condition = lambda y: y.t < self.t1
+        yend = while_loop(
+            loop_condition,
+            loop_body,
+            y0,
+            max_steps=self.options.nmaxclick,
+            buffers=lambda x: x.saved,
+            kind='checkpointed',
+        )
+
+        # === return result
+        return JumpSolveSaved(
+            yend.saved.ysave, yend.saved.extra, yend.saved.Esave, yend.clicktimes
+        )
 
 
-jssesolve_event_euler_integrator_constructor = partial(
-    JSSESolveEventIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
-)
-jssesolve_event_dopri5_integrator_constructor = partial(
-    JSSESolveEventIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
-)
-jssesolve_event_dopri8_integrator_constructor = partial(
-    JSSESolveEventIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
-)
-jssesolve_event_tsit5_integrator_constructor = partial(
-    JSSESolveEventIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
-)
-jssesolve_event_kvaerno3_integrator_constructor = partial(
-    JSSESolveEventIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
-)
-jssesolve_event_kvaerno5_integrator_constructor = partial(
-    JSSESolveEventIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
-)
+jssesolve_event_integrator_constructor = JSSESolveEventIntegrator
