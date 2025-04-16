@@ -258,22 +258,13 @@ def _vectorized_dssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> DSSESolveResult:
-    f = _dssesolve_single_trajectory
-
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    in_axes = (None, None, None, None, 0, None, None, None, None)
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = DSSESolveResult.out_axes()
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === vectorize function
-    # vectorize input over H, Ls and psi0
+    # vectorize input over H, Ls and rho0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    out_axes = DSSESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
         nvmap = len(bshape)
@@ -283,9 +274,26 @@ def _vectorized_dssesolve(
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
         # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        f = multi_vmap(_dssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
-    # === apply vectorized function
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
+
+
+def _dssesolve_many_trajectories(
+    H: TimeQArray,
+    Ls: list[TimeQArray],
+    psi0: QArray,
+    tsave: Array,
+    keys: PRNGKeyArray,
+    exp_ops: list[QArray] | None,
+    method: Method,
+    gradient: Gradient | None,
+    options: Options,
+) -> DSSESolveResult:
+    # vectorize input over keys
+    in_axes = (None, None, None, None, 0, None, None, None, None)
+    out_axes = DSSESolveResult(None, None, None, None, 0, 0, 0)
+    f = jax.vmap(_dssesolve_single_trajectory, in_axes, out_axes)
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 

@@ -3,7 +3,7 @@
 !!! Warning "Work in progress."
     This tutorial is under construction, this is a draft version.
 
-In this example, we simulate stochastic trajectories of quantum systems that are continuously measured by a diffusive detector. We explain how to use [`dq.dssesolve()`][dynamiqs.dssesolve] to simulate trajectories modelled by the diffusive SSE, and [`dq.dsmesolve()`][dynamiqs.dsmesolve] solvers to simulate trajectories modelled by the diffusive SME.
+In this example, we simulate stochastic trajectories of quantum systems that are continuously measured by a diffusive detector. We explain how to use [`dq.dssesolve()`][dynamiqs.dssesolve] to simulate trajectories modelled by the diffusive SSE, and [`dq.dsmesolve()`][dynamiqs.dsmesolve] to simulate trajectories modelled by the diffusive SME.
 
 ```python
 import jax
@@ -68,16 +68,17 @@ Iks = result.measurements[:, 0]
 ```python
 for Ik in Iks:
     plt.plot(tsave[:-1], Ik, lw=1.5)
-    plt.gca().set(
-        title=rf'Simulated measurements for 5 trajectories',
-        xlabel=r'$t$',
-        ylabel=r'$I^{[t,t+\Delta t)}$',
-    )
 
-renderfig('monitored-qubit-trajs')
+plt.gca().set(
+    title=rf'Simulated measurements for 5 trajectories',
+    xlabel=r'$t$',
+    ylabel=r'$I^{[t,t+\Delta t)}$',
+)
+
+renderfig('diffusive-monitored-qubit-trajs')
 ```
 
-![plot_monitored_qubit_trajs](../../figs_docs/monitored-qubit-trajs.png){.fig}
+![plot_diffusive_monitored_qubit_trajs](../../figs_docs/diffusive-monitored-qubit-trajs.png){.fig}
 
 ### Cumulative measurements
 
@@ -85,12 +86,13 @@ renderfig('monitored-qubit-trajs')
 for Ik in Iks:
     cumsum_Ik = jnp.cumsum(Ik)
     plt.plot(tsave[1:], cumsum_Ik, lw=1.5)
-    plt.axhline(0, ls='--', lw=1.0, color='gray')
-    plt.gca().set(
-        title=r'Integral of the measurement record',
-        xlabel=r'$t$',
-        ylabel=r'$Y_t=\int_0^t \mathrm{d}Y_s$',
-    )
+
+plt.axhline(0, ls='--', lw=1.0, color='gray')
+plt.gca().set(
+    title=r'Integral of the measurement record',
+    xlabel=r'$t$',
+    ylabel=r'$Y_t=\int_0^t \mathrm{d}Y_s$',
+)
 
 renderfig('monitored-qubit-cumsum-trajs')
 ```
@@ -104,14 +106,15 @@ expects_all = dq.expect(dq.sigmaz(), result.states).real
 
 for expects in expects_all:
     plt.plot(tsave, expects, lw=1.5)
-    plt.axhline(-1, ls='--', lw=1.0, color='gray')
-    plt.axhline(1, ls='--', lw=1.0, color='gray')
-    plt.gca().set(
-        title=r'Time evolution of $\sigma_z$ expectation value',
-        xlabel=r'$t$',
-        ylabel=r'$\langle \sigma_z \rangle_t=\langle \psi_t | \sigma_z | \psi_t \rangle$',
-        ylim=(-1.1, 1.1),
-    )
+
+plt.axhline(-1, ls='--', lw=1.0, color='gray')
+plt.axhline(1, ls='--', lw=1.0, color='gray')
+plt.gca().set(
+    title=r'Time evolution of $\sigma_z$ expectation value',
+    xlabel=r'$t$',
+    ylabel=r'$\langle \sigma_z \rangle_t=\langle \psi_t | \sigma_z | \psi_t \rangle$',
+    ylim=(-1.1, 1.1),
+)
 
 renderfig('monitored-qubit-sigmaz')
 ```
@@ -151,14 +154,15 @@ expects_all = dq.expect(dq.sigmaz(), result.states).real
 
 for expects in expects_all:
     plt.plot(tsave, expects, lw=1.5)
-    plt.axhline(-1, ls='--', lw=1.0, color='gray')
-    plt.axhline(1, ls='--', lw=1.0, color='gray')
-    plt.gca().set(
-        title=r'Time evolution of $\sigma_z$ expectation value',
-        xlabel=r'$t$',
-        ylabel=r'$\langle \sigma_z \rangle_t = \mathrm{Tr}[\sigma_z\rho_t]$',
-        ylim=(-1.1, 1.1),
-    )
+
+plt.axhline(-1, ls='--', lw=1.0, color='gray')
+plt.axhline(1, ls='--', lw=1.0, color='gray')
+plt.gca().set(
+    title=r'Time evolution of $\sigma_z$ expectation value',
+    xlabel=r'$t$',
+    ylabel=r'$\langle \sigma_z \rangle_t = \mathrm{Tr}[\sigma_z\rho_t]$',
+    ylim=(-1.1, 1.1),
+)
 
 renderfig('monitored-qubit-sigmaz-eta')
 ```
@@ -167,7 +171,7 @@ renderfig('monitored-qubit-sigmaz-eta')
 
 ## Quantum harmonic oscillator
 
-We consider a quantum harmonic oscillator starting from $\ket\alpha$, with Hamiltonian $H=\omega a^\dagger a$ and a single loss operator $L=\sqrt\kappa a$ which is continuously measured by heterodyne detection along the $X$ and $P$ quadratures with efficiency $\eta$, resulting in two a diffusive measurement records $I_X$ and $I_P$. For this example the measurement backaction is null.
+We consider a quantum harmonic oscillator starting from the coherent state $\ket\alpha$, with Hamiltonian $H=\omega a^\dagger a$ and a single loss operator $L=\sqrt\kappa a$ which is continuously measured by heterodyne detection along the $X$ and $P$ quadratures with efficiency $\eta$, resulting in two a diffusive measurement records $I_X$ and $I_P$. For this example the measurement backaction is null.
 
 ### Simulation
 
@@ -225,17 +229,19 @@ ax0, ax1 = list(axs)
 
 for Ik_x in Iks_x[:3]:
     ax0.plot(tsave[:-1], Ik_x / np.sqrt(2), lw=1.5)
-    ax0.set(
-        title=rf'Simulated measurements for 3 trajectories',
-        ylabel=r'$I_X^{[t,t+\Delta t)}/\sqrt{2}$',
-    )
+
+ax0.set(
+    title=rf'Simulated measurements for 3 trajectories',
+    ylabel=r'$I_X^{[t,t+\Delta t)}/\sqrt{2}$',
+)
 
 for Ik_p in Iks_p[:3]:
     ax1.plot(tsave[:-1], Ik_p / np.sqrt(2), lw=1.5)
-    ax1.set(
-        xlabel=r'$t$',
-        ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$',
-    )
+
+ax1.set(
+    xlabel=r'$t$',
+    ylabel=r'$I_P^{[t,t+\Delta t)}/\sqrt{2}$',
+)
 
 renderfig('monitored-oscillator-IxIp')
 ```

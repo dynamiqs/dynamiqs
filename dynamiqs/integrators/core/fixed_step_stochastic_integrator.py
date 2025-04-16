@@ -8,27 +8,23 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Array
-from jaxtyping import ArrayLike, PRNGKeyArray, Scalar
+from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
-from ...result import Result
+from ...result import DiffusiveSolveSaved, JumpSolveSaved, Result, Saved
 from ...utils.general import dag, expect
 from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
-from .interfaces import DSMEInterface, DSSEInterface, SolveInterface
+from .interfaces import (
+    DSMEInterface,
+    DSSEInterface,
+    JSMEInterface,
+    JSSEInterface,
+    SolveInterface,
+)
 from .rouchon_integrator import cholesky_normalize
-from .save_mixin import DiffusiveSolveSaveMixin
-
-
-class DiffusiveState(eqx.Module):
-    """State for the diffusive SSE/SME fixed step integrators."""
-
-    state: QArray  # state (integrated from initial to current time)
-    Y: Array  # measurement (integrated from initial to current time)
-
-    def __add__(self, other: DiffusiveState) -> DiffusiveState:
-        return DiffusiveState(self.state + other.state, self.Y + other.Y)
+from .save_mixin import SolveSaveMixin
 
 
 def _is_multiple_of(
@@ -45,10 +41,16 @@ def _is_linearly_spaced(
     return np.allclose(diffs, diffs[0], rtol=rtol, atol=atol)
 
 
-class DiffusiveSolveIntegrator(
-    StochasticBaseIntegrator, DiffusiveSolveSaveMixin, SolveInterface
+class SDEState(eqx.Module):
+    """State for the jump/diffusive SSE/SME fixed step integrators."""
+
+
+class StochasticSolveFixedStepIntegrator(
+    StochasticBaseIntegrator, SolveInterface, SolveSaveMixin
 ):
-    """Integrator solving the diffusive SSE/SME with a fixed step size integrator."""
+    """Integrator solving the jump/diffusive SSE/SME with a fixed step size
+    integrator.
+    """
 
     def __check_init__(self):
         # check that all tsave values are exact multiples of dt
@@ -90,28 +92,44 @@ class DiffusiveSolveIntegrator(
     def dt(self) -> float:
         return self.method.dt
 
+    @abstractmethod
+    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> Array:
+        pass
+
+    @abstractmethod
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+        # return SDE state y_{t+dt} from a random variable sample dX and the current
+        # state y_t
+        pass
+
+    @abstractmethod
+    def sde_y0(self, key: PRNGKeyArray) -> SDEState:
+        # define initial SDE state
+        pass
+
     def integrate(
-        self, t0: float, y0: DiffusiveState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, DiffusiveState]:
+        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, SDEState]:
         # integrate the SDE for nsteps of length dt
-        # sample wiener
-        dWs = jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
+
+        # sample random variable driving the SME
+        dXs = self.sample_rv(key, nsteps)
 
         # iterate over the fixed step size dt
-        def step(carry, dW):  # noqa: ANN001, ANN202
+        def step(carry, dX):  # noqa: ANN001, ANN202
             t, y = carry
-            y = self.forward(t, y, dW)
+            y = self.forward(t, y, dX)
             t = t + self.dt
             return (t, y), None
 
-        (t, y), _ = jax.lax.scan(step, (t0, y0), dWs)
+        (t, y), _ = jax.lax.scan(step, (t0, y0), dXs)
 
         return t, y
 
     def integrate_by_chunks(
-        self, t0: float, y0: DiffusiveState, key: PRNGKeyArray, nsteps: int
-    ) -> tuple[float, DiffusiveState]:
-        # integrate the SSE/SME for nsteps of length dt, splitting the integration in
+        self, t0: float, y0: SDEState, key: PRNGKeyArray, nsteps: int
+    ) -> tuple[float, SDEState]:
+        # integrate the SDE for nsteps of length dt, splitting the integration in
         # chunks of 1000 dts to ensure a fixed memory usage
 
         nsteps_per_chunk = 1000
@@ -145,14 +163,13 @@ class DiffusiveSolveIntegrator(
         nsteps = int((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
         nsteps_per_save = int(nsteps // nsave)
-        # save time
-        delta_t = self.ts[1] - self.ts[0]
 
         # === initial state
-        # define initial state (state, Y) = (state0, 0)
-        y0 = DiffusiveState(self.y0, jnp.zeros(self.nmeas))
-        # save initial state at time 0
-        saved0 = self.save(y0)
+        # define initial SDE state
+        key0, key = jax.random.split(self.key)
+        sde_y0 = self.sde_y0(key0)
+        # save initial SDE state at time 0
+        saved0 = self.save(sde_y0)
 
         # === run the simulation
         # integrate the SSE/SME for each save interval
@@ -162,33 +179,207 @@ class DiffusiveSolveIntegrator(
             return (t, y), self.save(y)
 
         # split the key for each save interval
-        keys = jax.random.split(self.key, nsave)
-        ylast, saved = jax.lax.scan(outer_step, (self.t0, y0), keys)
+        keys = jax.random.split(key, nsave)
+        ylast, saved = jax.lax.scan(outer_step, (self.t0, sde_y0), keys)
         ylast = ylast[1]
 
         # === collect and format results
         # insert the initial saved result
         saved = jax.tree.map(lambda x, y: jnp.insert(x, 0, y, axis=0), saved, saved0)
-        # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
-        # Y which is integrated between ts[0] and ts[-1].
-        Isave = jnp.diff(saved.Isave, axis=0) / delta_t
-        saved = eqx.tree_at(lambda x: x.Isave, saved, Isave)
+        # postprocess the saved results
         saved = self.postprocess_saved(saved, ylast)
 
         return self.result(saved, infos=self.Infos(nsteps))
+
+
+class JumpState(SDEState):
+    """State for the jump SSE/SME fixed step integrators."""
+
+    state: QArray  # state (integrated from initial to current time)
+    clicktimes: Array  # click times of shape (nLs, nmaxclick)
+    indices: Array  # last click time indices of shape (nLs,)
+    key_jump_choice: PRNGKeyArray  # random key to sample a click jump operator
+
+    def new_click(self, idx: int, t: float) -> tuple[Array, Array]:
+        clicktimes = self.clicktimes.at[idx, self.indices[idx]].set(t)
+        indices = self.indices.at[idx].add(1)
+        return clicktimes, indices
+
+
+class JumpSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
+    """Integrator solving the jump SSE/SME with a fixed step size integrator."""
 
     @property
     @abstractmethod
     def nmeas(self) -> int:
         pass
 
+    def sde_y0(self, key: PRNGKeyArray) -> SDEState:
+        clicktimes = jnp.full((self.nmeas, self.options.nmaxclick), jnp.nan)
+        indices = jnp.zeros(self.nmeas, dtype=int)
+        key_jump_choice = key
+        return JumpState(self.y0, clicktimes, indices, key_jump_choice)
+
+    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> Array:
+        return jax.random.uniform(key, nsteps)  # sample uniform between 0 and 1
+
+    def save(self, y: PyTree) -> Saved:
+        return super().save(y.state)
+
+    def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
+        saved = super().postprocess_saved(saved, ylast.state)
+        return JumpSolveSaved(saved.ysave, saved.extra, saved.Esave, ylast.clicktimes)
+
+
+class JSSESolveFixedStepIntegrator(JumpSolveFixedStepIntegrator, JSSEInterface):
+    @property
+    def nmeas(self) -> int:
+        return len(self.Ls)
+
+
+class JSSESolveEulerJumpIntegrator(JSSESolveFixedStepIntegrator):
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+        psi = y.state
+        L, H = self.L(t), self.H(t)
+        L = stack(L)  # todo: remove stack
+        I = eye_like(H)
+        LdL = L.dag() @ L
+
+        exp_LdL = expect(LdL, psi).real
+        tmp = exp_LdL * self.dt
+        any_click_proba = sum(tmp)
+        L_probas = tmp / any_click_proba
+
+        def click(y: JumpState) -> JumpState:
+            # sample one of the jump operators
+            key, newkey = jax.random.split(y.key_jump_choice)
+            idx = jax.random.choice(key, self.nmeas, p=L_probas)
+
+            # apply the jump operator
+            psi = L[idx] @ y.state / jnp.sqrt(exp_LdL[idx])
+
+            # update click time and index
+            clicktimes, indices = y.new_click(idx, t)
+
+            return JumpState(psi, clicktimes, indices, newkey)
+
+        def noclick(y: JumpState) -> JumpState:
+            psi = y.state
+            psi -= (
+                self.dt * (1j * H + 0.5 * sum(LdL - exp_LdL[:, None, None] * I)) @ psi
+            )
+            return eqx.tree_at(lambda y: y.state, y, psi)
+
+        return jax.lax.cond(dX < any_click_proba, click, noclick, y)
+
+
+jssesolve_euler_jump_integrator_constructor = JSSESolveEulerJumpIntegrator
+
+
+class JSMESolveFixedStepIntegrator(JumpSolveFixedStepIntegrator, JSMEInterface):
+    @property
+    def nmeas(self) -> int:
+        return len(self.etas)
+
+
+class JSMESolveEulerJumpIntegrator(JSMESolveFixedStepIntegrator):
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+        # The jump SME for a single detector is:
+        #   drho = Lcal(rho) dt
+        #        + (Ccal(rho) / Tr[Ccal(rho)] - rho) (dN - Tr[Ccal(rho)] dt)
+        #   P[dN=1] = Tr[Ccal(rho)] dt
+        # with
+        # - Lcal the Liouvillian
+        # - Ccal the superoperator defined by Ccal(rho) = theta rho + eta L @ rho @ Ld
+
+        rho = y.state
+        L, H = self.L(t), self.H(t)
+        L = stack(L)  # todo: remove stack
+        Lm = stack(self.Lm(t))
+
+        # === Ccal(rho)
+        Lm_rho_Lmdag = Lm @ rho @ Lm.dag()  # (nLm, n, n)
+        thetas = self.thetas[:, None, None]  # (nLm, 1, 1)
+        etas = self.etas[:, None, None]  # (nLm, 1, 1)
+        Ccal_rho = thetas * rho + etas * Lm_rho_Lmdag  # (nLm, n, n)
+        tr_Ccal_rho = Ccal_rho.trace().real  # (nLm,)
+
+        click_probas = tr_Ccal_rho * self.dt
+        any_click_proba = sum(click_probas)
+
+        def click(y):  # noqa: ANN001, ANN202
+            # sample one of the jump operators
+            key, newkey = jax.random.split(y.key_jump_choice)
+            idx = jax.random.choice(key, self.nmeas, p=click_probas / any_click_proba)
+
+            # apply the measurement backaction superoperator
+            rho = Ccal_rho[idx] / tr_Ccal_rho[idx]
+
+            # update click time and index
+            clicktimes, indices = y.new_click(idx, t)
+
+            return JumpState(rho, clicktimes, indices, newkey)
+
+        def noclick(y):  # noqa: ANN001, ANN202
+            rho = y.state
+
+            # === Lcal(rho)
+            # (see MEDiffraxIntegrator in `integrators/core/diffrax_integrator.py`)
+            Hnh = -1j * H - 0.5 * sum(L.dag() @ L)
+            tmp = Hnh @ rho + 0.5 * sum(Lm_rho_Lmdag)
+            Lcal_rho = tmp + tmp.dag()
+
+            rho += Lcal_rho * self.dt + self.dt * sum(
+                tr_Ccal_rho[:, None, None] * rho - Ccal_rho
+            )
+            return eqx.tree_at(lambda y: y.state, y, rho)
+
+        return jax.lax.cond(dX < any_click_proba, click, noclick, y)
+
+
+jsmesolve_euler_jump_integrator_constructor = JSMESolveEulerJumpIntegrator
+
+
+class DiffusiveState(SDEState):
+    """State for the diffusive SSE/SME fixed step integrators."""
+
+    state: QArray  # state (integrated from initial to current time)
+    Y: Array  # measurement (integrated from initial to current time)
+
+
+class DiffusiveSolveFixedStepIntegrator(StochasticSolveFixedStepIntegrator):
+    """Integrator solving the diffusive SSE/SME with a fixed step size integrator."""
+
+    @property
     @abstractmethod
-    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
-        # return (state_{t+dt}, dY_{t+dt})
+    def nmeas(self) -> int:
         pass
 
+    def sde_y0(self, key: PRNGKeyArray) -> SDEState:  # noqa: ARG002
+        # define initial SDE state (state, Y) = (state0, 0)
+        return DiffusiveState(self.y0, jnp.zeros(self.nmeas))
 
-class DSSEFixedStepIntegrator(DiffusiveSolveIntegrator, DSSEInterface):
+    def sample_rv(self, key: PRNGKeyArray, nsteps: int) -> Array:
+        return jnp.sqrt(self.dt) * jax.random.normal(key, (nsteps, self.nmeas))
+
+    def save(self, y: PyTree) -> Saved:
+        saved = super().save(y.state)
+        return DiffusiveSolveSaved(saved.ysave, saved.extra, saved.Esave, y.Y)
+
+    def postprocess_saved(self, saved: Saved, ylast: PyTree) -> Saved:
+        saved = super().postprocess_saved(saved, ylast.state)
+
+        # The averaged measurement I^{(ta, tb)} is recovered by diffing the measurement
+        # I which is integrated between ts[0] and ts[-1]
+        delta_t = self.ts[1] - self.ts[0]
+        Isave = jnp.diff(saved.Isave, axis=0) / delta_t
+
+        # reorder Isave after jax.lax.scan stacking (ntsave, nLm) -> (nLm, ntsave)
+        Isave = Isave.swapaxes(-1, -2)
+        return eqx.tree_at(lambda x: x.Isave, saved, Isave)
+
+
+class DSSEFixedStepIntegrator(DiffusiveSolveFixedStepIntegrator, DSSEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.Ls)
@@ -197,8 +388,9 @@ class DSSEFixedStepIntegrator(DiffusiveSolveIntegrator, DSSEInterface):
 class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Euler-Mayurama method."""
 
-    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
+        dW = dX
         L, H = self.L(t), self.H(t)
         Lpsi = [_L @ psi for _L in L]
 
@@ -239,7 +431,7 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
 dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
 
 
-class DSMEFixedStepIntegrator(DiffusiveSolveIntegrator, DSMEInterface):
+class DSMEFixedStepIntegrator(DiffusiveSolveFixedStepIntegrator, DSMEInterface):
     @property
     def nmeas(self) -> int:
         return len(self.etas)
@@ -248,7 +440,7 @@ class DSMEFixedStepIntegrator(DiffusiveSolveIntegrator, DSMEInterface):
 class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
     """Integrator solving the diffusive SME with the Euler-Mayurama method."""
 
-    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         # The diffusive SME for a single detector is:
         #   drho = Lcal(rho)     dt + (Ccal(rho) - Tr[Ccal(rho)] rho) dW
         #   dY   = Tr[Ccal(rho)] dt + dW
@@ -257,6 +449,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
         # - Ccal the superoperator defined by Ccal(rho) = sqrt(eta) (L @ rho + rho @ Ld)
 
         rho = y.state
+        dW = dX
         L, Lm, H = self.L(t), self.Lm(t), self.H(t)
         LdL = sum([_L.dag() @ _L for _L in L])
 
@@ -286,7 +479,7 @@ class DSMESolveEulerMayuramaIntegrator(DSMEFixedStepIntegrator):
 class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
     """Integrator solving the diffusive SME with the Rouchon1 method."""
 
-    def forward(self, t: Scalar, y: DiffusiveState, dW: Array) -> DiffusiveState:
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         # The Rouchon update for a single loss channel is:
         #   rho_{k+1} = M_dY @ rho_k @ M_dY^\dag + M1 @ rho_k @ M1d / Tr[...]
         #   dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -298,6 +491,7 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
 
         rho = y.state
+        dW = dX
         L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
         I = eye_like(H)
         LdL = sum([_L.dag() @ _L for _L in L])
