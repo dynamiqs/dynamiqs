@@ -200,7 +200,7 @@ class StochasticSolveResult(SolveResult):
 
     @classmethod
     def out_axes(cls) -> SolveResult:
-        return cls(None, None, None, None, 0, 0, 0)
+        return cls(None, None, None, None, 0, 0, None)
 
 
 class JumpSolveResult(StochasticSolveResult):
