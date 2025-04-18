@@ -231,6 +231,7 @@ nav:
               - trace: python_api/utils/general/trace.md
               - tracemm: python_api/utils/general/tracemm.md
               - trace_norm: python_api/utils/general/trace_norm.md
+              - trace_distance: python_api/utils/general/trace_distance.md
               - ptrace: python_api/utils/general/ptrace.md
               - tensor: python_api/utils/general/tensor.md
               - expect: python_api/utils/general/expect.md
