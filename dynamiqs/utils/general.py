@@ -265,7 +265,7 @@ def trace_norm(x: QArrayLike) -> Array:
     check_shape(x, 'x', '(..., n, n)')
     x = check_hermitian(x, 'x')
     eigvals = x._eigvalsh()
-    return jnp.sum(jnp.abs(eigvals), axis=-1)
+    return jnp.abs(eigvals).sum(-1)
 
 
 def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
