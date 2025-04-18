@@ -262,6 +262,7 @@ def trace_norm(x: QArrayLike) -> Array:
         Array(1., dtype=float32)
     """
     x = asqarray(x)
+    check_shape(x, 'x', '(..., n, n)')
     x = check_hermitian(x, 'x')
     eigvals = x._eigvalsh()
     return jnp.sum(jnp.abs(eigvals), axis=-1)
