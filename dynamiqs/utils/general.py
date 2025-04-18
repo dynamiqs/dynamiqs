@@ -40,6 +40,7 @@ __all__ = [
     'toket',
     'trace',
     'tracemm',
+    'trace_norm',
     'unit',
     'signm',
 ]
@@ -235,6 +236,35 @@ def trace(x: QArrayLike) -> Array:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return x.trace()
+
+
+def trace_norm(x: QArrayLike) -> Array:
+    r"""Returns the trace norm of a Hermitian matrix, such as a density matrix.
+
+    The trace norm (also known as nuclear norm) is defined as:
+    \[
+    \|A\|_1 = \sum_i |λ_i|
+    \]
+    where \(λ_i\) are the eigenvalues of \(A\).
+
+    Args:
+        x: Square hermitian matrix.
+
+    Returns:
+        Trace norm of the matrix.
+
+    Examples:
+        >>> # Compute trace distance between |0⟩⟨0| and |1⟩⟨1|
+        >>> rho = dq.fock_dm(2, 0)  # |0⟩⟨0|
+        >>> sigma = dq.fock_dm(2, 1)  # |1⟩⟨1|
+        >>> distance = 0.5 * dq.trace_norm(rho - sigma)  # eigenvalues are 1 and -1
+        >>> distance
+        Array(1., dtype=float32)
+    """
+    x = asqarray(x)
+    x = check_hermitian(x, 'x')
+    eigvals = x._eigvalsh()
+    return jnp.sum(jnp.abs(eigvals), axis=-1)
 
 
 def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
