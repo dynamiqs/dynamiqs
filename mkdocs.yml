@@ -170,133 +170,133 @@ nav:
               - modulated: python_api/time_qarray/modulated.md
               - timecallable: python_api/time_qarray/timecallable.md
           - Methods (dq.method):
-              - Tsit5: python_api/method/Tsit5.md
               - Dopri5: python_api/method/Dopri5.md
               - Dopri8: python_api/method/Dopri8.md
-              - Kvaerno3: python_api/method/Kvaerno3.md
-              - Kvaerno5: python_api/method/Kvaerno5.md
               - Euler: python_api/method/Euler.md
               - EulerMaruyama: python_api/method/EulerMaruyama.md
-              - Rouchon1: python_api/method/Rouchon1.md
-              - Expm: python_api/method/Expm.md
               - Event: python_api/method/Event.md
+              - Expm: python_api/method/Expm.md
+              - Kvaerno3: python_api/method/Kvaerno3.md
+              - Kvaerno5: python_api/method/Kvaerno5.md
+              - Rouchon1: python_api/method/Rouchon1.md
+              - Tsit5: python_api/method/Tsit5.md
           - Gradients (dq.gradient):
               - Autograd: python_api/gradient/Autograd.md
               - CheckpointAutograd: python_api/gradient/CheckpointAutograd.md
               - ForwardAutograd: python_api/gradient/ForwardAutograd.md
       - Utilities:
           - Operators:
+              - cnot: python_api/utils/operators/cnot.md
+              - create: python_api/utils/operators/create.md
+              - destroy: python_api/utils/operators/destroy.md
+              - displace: python_api/utils/operators/displace.md
               - eye: python_api/utils/operators/eye.md
               - eye_like: python_api/utils/operators/eye_like.md
-              - zeros: python_api/utils/operators/zeros.md
-              - zeros_like: python_api/utils/operators/zeros_like.md
-              - destroy: python_api/utils/operators/destroy.md
-              - create: python_api/utils/operators/create.md
+              - hadamard: python_api/utils/operators/hadamard.md
+              - momentum: python_api/utils/operators/momentum.md
               - number: python_api/utils/operators/number.md
               - parity: python_api/utils/operators/parity.md
-              - displace: python_api/utils/operators/displace.md
-              - squeeze: python_api/utils/operators/squeeze.md
-              - quadrature: python_api/utils/operators/quadrature.md
               - position: python_api/utils/operators/position.md
-              - momentum: python_api/utils/operators/momentum.md
-              - sigmax: python_api/utils/operators/sigmax.md
-              - sigmay: python_api/utils/operators/sigmay.md
-              - sigmaz: python_api/utils/operators/sigmaz.md
-              - sigmap: python_api/utils/operators/sigmap.md
-              - sigmam: python_api/utils/operators/sigmam.md
-              - hadamard: python_api/utils/operators/hadamard.md
+              - quadrature: python_api/utils/operators/quadrature.md
               - rx: python_api/utils/operators/rx.md
               - ry: python_api/utils/operators/ry.md
               - rz: python_api/utils/operators/rz.md
               - sgate: python_api/utils/operators/sgate.md
+              - sigmam: python_api/utils/operators/sigmam.md
+              - sigmap: python_api/utils/operators/sigmap.md
+              - sigmax: python_api/utils/operators/sigmax.md
+              - sigmay: python_api/utils/operators/sigmay.md
+              - sigmaz: python_api/utils/operators/sigmaz.md
+              - squeeze: python_api/utils/operators/squeeze.md
               - tgate: python_api/utils/operators/tgate.md
-              - cnot: python_api/utils/operators/cnot.md
               - toffoli: python_api/utils/operators/toffoli.md
+              - zeros: python_api/utils/operators/zeros.md
+              - zeros_like: python_api/utils/operators/zeros_like.md
           - States:
-              - fock: python_api/utils/states/fock.md
-              - fock_dm: python_api/utils/states/fock_dm.md
               - basis: python_api/utils/states/basis.md
               - basis_dm: python_api/utils/states/basis_dm.md
               - coherent: python_api/utils/states/coherent.md
               - coherent_dm: python_api/utils/states/coherent_dm.md
-              - ground: python_api/utils/states/ground.md
               - excited: python_api/utils/states/excited.md
+              - fock: python_api/utils/states/fock.md
+              - fock_dm: python_api/utils/states/fock_dm.md
+              - ground: python_api/utils/states/ground.md
           - Quantum utilities:
-              - dag: python_api/utils/general/dag.md
-              - powm: python_api/utils/general/powm.md
-              - expm: python_api/utils/general/expm.md
+              - bloch_coordinates: python_api/utils/general/bloch_coordinates.md
+              - braket: python_api/utils/general/braket.md
               - cosm: python_api/utils/general/cosm.md
-              - sinm: python_api/utils/general/sinm.md
-              - signm: python_api/utils/general/signm.md
-              - trace: python_api/utils/general/trace.md
-              - tracemm: python_api/utils/general/tracemm.md
-              - ptrace: python_api/utils/general/ptrace.md
-              - tensor: python_api/utils/general/tensor.md
-              - expect: python_api/utils/general/expect.md
-              - norm: python_api/utils/general/norm.md
-              - unit: python_api/utils/general/unit.md
+              - dag: python_api/utils/general/dag.md
               - dissipator: python_api/utils/general/dissipator.md
-              - lindbladian: python_api/utils/general/lindbladian.md
-              - isket: python_api/utils/general/isket.md
+              - entropy_vn: python_api/utils/general/entropy_vn.md
+              - expect: python_api/utils/general/expect.md
+              - expm: python_api/utils/general/expm.md
+              - fidelity: python_api/utils/general/fidelity.md
               - isbra: python_api/utils/general/isbra.md
               - isdm: python_api/utils/general/isdm.md
-              - isop: python_api/utils/general/isop.md
               - isherm: python_api/utils/general/isherm.md
-              - toket: python_api/utils/general/toket.md
+              - isket: python_api/utils/general/isket.md
+              - isop: python_api/utils/general/isop.md
+              - lindbladian: python_api/utils/general/lindbladian.md
+              - norm: python_api/utils/general/norm.md
+              - overlap: python_api/utils/general/overlap.md
+              - powm: python_api/utils/general/powm.md
+              - proj: python_api/utils/general/proj.md
+              - ptrace: python_api/utils/general/ptrace.md
+              - purity: python_api/utils/general/purity.md
+              - signm: python_api/utils/general/signm.md
+              - sinm: python_api/utils/general/sinm.md
+              - tensor: python_api/utils/general/tensor.md
               - tobra: python_api/utils/general/tobra.md
               - todm: python_api/utils/general/todm.md
-              - proj: python_api/utils/general/proj.md
-              - braket: python_api/utils/general/braket.md
-              - overlap: python_api/utils/general/overlap.md
-              - fidelity: python_api/utils/general/fidelity.md
-              - purity: python_api/utils/general/purity.md
-              - entropy_vn: python_api/utils/general/entropy_vn.md
-              - bloch_coordinates: python_api/utils/general/bloch_coordinates.md
+              - toket: python_api/utils/general/toket.md
+              - trace: python_api/utils/general/trace.md
+              - tracemm: python_api/utils/general/tracemm.md
+              - unit: python_api/utils/general/unit.md
               - wigner: python_api/utils/general/wigner.md
           - QArray utilities:
               - asqarray: python_api/qarrays/utils/asqarray.md
               - isqarraylike: python_api/qarrays/utils/isqarraylike.md
+              - sparsedia_from_dict: python_api/qarrays/utils/sparsedia_from_dict.md
               - stack: python_api/qarrays/utils/stack.md
               - to_jax: python_api/qarrays/utils/to_jax.md
               - to_numpy: python_api/qarrays/utils/to_numpy.md
               - to_qutip: python_api/qarrays/utils/to_qutip.md
-              - sparsedia_from_dict: python_api/qarrays/utils/sparsedia_from_dict.md
           - Global settings:
               - set_device: python_api/utils/global_settings/set_device.md
-              - set_precision: python_api/utils/global_settings/set_precision.md
-              - set_matmul_precision: python_api/utils/global_settings/set_matmul_precision.md
               - set_layout: python_api/utils/global_settings/set_layout.md
+              - set_matmul_precision: python_api/utils/global_settings/set_matmul_precision.md
+              - set_precision: python_api/utils/global_settings/set_precision.md
               - set_progress_meter: python_api/utils/global_settings/set_progress_meter.md
           - Vectorization:
               - operator_to_vector: python_api/utils/vectorization/operator_to_vector.md
-              - vector_to_operator: python_api/utils/vectorization/vector_to_operator.md
-              - spre: python_api/utils/vectorization/spre.md
-              - spost: python_api/utils/vectorization/spost.md
-              - sprepost: python_api/utils/vectorization/sprepost.md
               - sdissipator: python_api/utils/vectorization/sdissipator.md
               - slindbladian: python_api/utils/vectorization/slindbladian.md
+              - spre: python_api/utils/vectorization/spre.md
+              - sprepost: python_api/utils/vectorization/sprepost.md
+              - spost: python_api/utils/vectorization/spost.md
+              - vector_to_operator: python_api/utils/vectorization/vector_to_operator.md
           - Quantum optimal control:
-              - snap_gate: python_api/utils/optimal_control/snap_gate.md
               - cd_gate: python_api/utils/optimal_control/cd_gate.md
+              - snap_gate: python_api/utils/optimal_control/snap_gate.md
           - Random (dq.random):
-              - real: python_api/random/real.md
               - complex: python_api/random/complex.md
-              - herm: python_api/random/herm.md
-              - psd: python_api/random/psd.md
               - dm: python_api/random/dm.md
+              - herm: python_api/random/herm.md
               - ket: python_api/random/ket.md
+              - psd: python_api/random/psd.md
+              - real: python_api/random/real.md
           - Plotting (dq.plot):
-              - wigner: python_api/plot/wigner.md
-              - wigner_mosaic: python_api/plot/wigner_mosaic.md
-              - wigner_gif: python_api/plot/wigner_gif.md
-              - pwc_pulse: python_api/plot/pwc_pulse.md
               - fock: python_api/plot/fock.md
               - fock_evolution: python_api/plot/fock_evolution.md
-              - hinton: python_api/plot/hinton.md
-              - xyz: python_api/plot/xyz.md
               - gifit: python_api/plot/gifit.md
               - grid: python_api/plot/grid.md
+              - hinton: python_api/plot/hinton.md
               - mplstyle: python_api/plot/mplstyle.md
+              - pwc_pulse: python_api/plot/pwc_pulse.md
+              - wigner: python_api/plot/wigner.md
+              - wigner_gif: python_api/plot/wigner_gif.md
+              - wigner_mosaic: python_api/plot/wigner_mosaic.md
+              - xyz: python_api/plot/xyz.md
           - Magic helpers:
             - hc: python_api/hermitian_conjugate/hc.md
   - Community:

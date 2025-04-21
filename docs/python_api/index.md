@@ -55,16 +55,16 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - Tsit5
         - Dopri5
         - Dopri8
-        - Kvaerno3
-        - Kvaerno5
         - Euler
         - EulerMaruyama
-        - Rouchon1
-        - Expm
         - Event
+        - Expm
+        - Kvaerno3
+        - Kvaerno5
+        - Rouchon1
+        - Tsit5
 
 ### Gradients (dq.gradient)
 
@@ -84,33 +84,32 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
+        - cnot
+        - create
+        - destroy
+        - displace
         - eye
         - eye_like
-        - zeros
-        - zeros_like
-        - destroy
-        - create
+        - hadamard
+        - momentum
         - number
         - parity
-        - displace
-        - squeeze
-        - quadrature
         - position
-        - momentum
-        - sigmax
-        - sigmay
-        - sigmaz
-        - sigmap
-        - sigmam
-        - hadamard
+        - quadrature
         - rx
         - ry
         - rz
         - sgate
+        - sigmam
+        - sigmap
+        - sigmax
+        - sigmay
+        - sigmaz
+        - squeeze
         - tgate
-        - cnot
         - toffoli
-
+        - zeros
+        - zeros_like
 
 ### States
 
@@ -118,15 +117,14 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - fock
-        - fock_dm
         - basis
         - basis_dm
         - coherent
         - coherent_dm
-        - ground
         - excited
-
+        - fock
+        - fock_dm
+        - ground
 
 ### Quantum utilities
 
@@ -134,39 +132,38 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - dag
-        - powm
-        - expm
+        - bloch_coordinates
+        - braket
         - cosm
-        - sinm
-        - signm
-        - trace
-        - tracemm
-        - ptrace
-        - tensor
-        - expect
-        - norm
-        - unit
+        - dag
         - dissipator
-        - lindbladian
-        - isket
+        - entropy_vn
+        - expect
+        - expm
+        - fidelity
         - isbra
         - isdm
-        - isop
         - isherm
-        - toket
+        - isket
+        - isop
+        - lindbladian
+        - norm
+        - overlap
+        - powm
+        - proj
+        - ptrace
+        - purity
+        - signm
+        - sinm
+        - tensor
         - tobra
         - todm
-        - proj
-        - braket
-        - overlap
-        - fidelity
-        - purity
-        - entropy_vn
-        - bloch_coordinates
+        - toket
+        - trace
+        - tracemm
+        - unit
         - wigner
         namespace: utils/general/
-
 
 ### QArray utilities
 
@@ -176,11 +173,11 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         members:
         - asqarray
         - isqarraylike
+        - sparsedia_from_dict
         - stack
         - to_jax
         - to_numpy
         - to_qutip
-        - sparsedia_from_dict
 
 ### Global settings
 
@@ -189,11 +186,10 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - set_device
-        - set_precision
-        - set_matmul_precision
         - set_layout
+        - set_matmul_precision
+        - set_precision
         - set_progress_meter
-
 
 ### Vectorization
 
@@ -202,13 +198,12 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
         table: true
         members:
         - operator_to_vector
-        - vector_to_operator
-        - spre
-        - spost
-        - sprepost
         - sdissipator
         - slindbladian
-
+        - spre
+        - sprepost
+        - spost
+        - vector_to_operator
 
 ### Quantum optimal control
 
@@ -216,9 +211,8 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - snap_gate
         - cd_gate
-
+        - snap_gate
 
 ### Random (dq.random)
 
@@ -226,13 +220,12 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - real
         - complex
-        - herm
-        - psd
         - dm
+        - herm
         - ket
-
+        - psd
+        - real
 
 ### Plotting (dq.plot)
 
@@ -240,17 +233,17 @@ The **Dynamiqs** Python API features two main types of functions: solvers of dif
     options:
         table: true
         members:
-        - wigner
-        - wigner_mosaic
-        - wigner_gif
-        - pwc_pulse
         - fock
         - fock_evolution
-        - hinton
-        - xyz
         - gifit
         - grid
+        - hinton
         - mplstyle
+        - pwc_pulse
+        - wigner
+        - wigner_gif
+        - wigner_mosaic
+        - xyz
 
 ### Magic helpers
 
