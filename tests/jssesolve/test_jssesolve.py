@@ -35,9 +35,9 @@ def test_against_mesolve_oscillator(smart_sampling, atol=1e-2):
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    assert jnp.allclose(meresult.expects, jsseresult.mean_expects, atol=atol)
+    assert jnp.allclose(meresult.expects, jsseresult.mean_expects(), atol=atol)
     assert jnp.allclose(
-        meresult.states.to_jax(), jsseresult.mean_states.to_jax(), atol=atol
+        meresult.states.to_jax(), jsseresult.mean_states().to_jax(), atol=atol
     )
 
 
@@ -70,7 +70,7 @@ def test_against_mesolve_qubit(smart_sampling, atol=1e-2):
     meresult = dq.mesolve(H, jump_ops, psi0, tsave, exp_ops=exp_ops, options=me_options)
 
     # compare results on average
-    assert jnp.allclose(meresult.expects, jsseresult.mean_expects, atol=atol)
+    assert jnp.allclose(meresult.expects, jsseresult.mean_expects(), atol=atol)
     assert jnp.allclose(
-        meresult.states.to_jax(), jsseresult.mean_states.to_jax(), atol=atol
+        meresult.states.to_jax(), jsseresult.mean_states().to_jax(), atol=atol
     )
