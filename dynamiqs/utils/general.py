@@ -18,6 +18,7 @@ __all__ = [
     'dag',
     'dissipator',
     'entropy_vn',
+    'entropy_relative',
     'expect',
     'expm',
     'fidelity',
@@ -1041,6 +1042,55 @@ def entropy_vn(x: QArrayLike) -> Array:
     # we set small negative or null eigenvalues to 1.0 to avoid `nan` propagation
     w = jnp.where(w <= 0, 1.0, w)
     return -(w * jnp.log(w)).sum(-1)
+
+
+def entropy_relative(rho: QArrayLike, sigma: QArrayLike) -> Array:
+    r"""Returns the quantum relative entropy between two kets or density matrices.
+
+    It is defined by $S(\rho \,||\, \sigma) = \tr{\rho (\log \rho - \log \sigma)}$.
+
+    Note:
+        The relative entropy is not symmetric.
+
+    Args:
+        rho _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density matrix.
+        sigma _(qarray-like of shape (..., n, 1) or (..., n, n))_: Ket or density
+            matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued quantum relative entropy.
+
+    Examples:
+        >>> rho = (dq.fock_dm(2, 0) + dq.fock_dm(2, 1)).unit()
+        >>> sigma = dq.fock_dm(2, 0)
+        >>> dq.entropy_relative(rho, sigma)
+        Array(-0.347, dtype=float32)
+        >>> dq.entropy_relative(sigma, rho)
+        Array(0.693, dtype=float32)
+    """
+    rho = asqarray(rho)
+    sigma = asqarray(sigma)
+    check_shape(rho, 'rho', '(..., n, 1)', '(..., n, n)')
+    check_shape(sigma, 'sigma', '(..., n, 1)', '(..., n, n)')
+
+    # todo: implement faster version for kets
+    rho = todm(rho)
+    sigma = todm(sigma)
+
+    w_rho, v_rho = rho._eigh()
+    w_sigma, v_sigma = sigma._eigh()
+
+    # we set small negative eigenvalues errors to zero to avoid `nan` propagation
+    w_rho = jnp.where(w_rho < 0, 0, w_rho)
+    w_sigma = jnp.where(w_sigma < 0, 0, w_sigma)
+
+    P = jnp.abs(v_rho.mT @ v_sigma.conj()) ** 2
+
+    return jnp.nan_to_num(
+        w_rho * (jnp.log(w_rho) - (P * jnp.log(w_sigma)[..., None]).sum(-1)),
+        posinf=jnp.inf,
+        neginf=-jnp.inf,
+    ).sum(-1)
 
 
 def bloch_coordinates(x: QArrayLike) -> Array:
