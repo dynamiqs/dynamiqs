@@ -40,6 +40,8 @@ __all__ = [
     'toket',
     'trace',
     'tracemm',
+    'trace_norm',
+    'trace_distance',
     'unit',
     'signm',
 ]
@@ -235,6 +237,73 @@ def trace(x: QArrayLike) -> Array:
     x = asqarray(x)
     check_shape(x, 'x', '(..., n, n)')
     return x.trace()
+
+
+def trace_norm(x: QArrayLike) -> Array:
+    r"""Returns the trace norm of a Hermitian matrix.
+
+    The trace norm (also known as nuclear norm) is defined for a Hermitian matrix $A$
+    by:
+    $$
+        \\|A\\|_1 = \tr{\sqrt{A^\dag A}} = \sum_i |\lambda_i|
+    $$
+    where $\lambda_i$ are the eigenvalues of $A$.
+
+    Args:
+        x _(qarray-like of shape (..., n, n))_: Square Hermitian matrix.
+
+    Returns:
+        _(array of shape (...)_ Trace norm of `x`.
+
+    See also:
+        - [`dq.trace_distance()`][dynamiqs.trace_distance]: returns the trace distance
+            between two density matrices.
+
+    Examples:
+        >>> x = jnp.array([[1, 0], [0, -1]])
+        >>> dq.trace_norm(x)
+        Array(2., dtype=float32)
+    """
+    x = asqarray(x)
+    check_shape(x, 'x', '(..., n, n)')
+    x = check_hermitian(x, 'x')
+    eigvals = x._eigvalsh()
+    return jnp.abs(eigvals).sum(-1)
+
+
+def trace_distance(x: QArrayLike, y: QArrayLike) -> Array:
+    r"""Returns the trace distance between two density matrices.
+
+    The trace distance between two density matrices $\rho$ and $\sigma$ is defined by
+    $$
+        T(\rho, \sigma) = \frac12 \\|\rho-\sigma\\|_1
+    $$
+    where $\| \cdot \|_1$ is the trace norm.
+
+    Args:
+        x _(qarray-like of shape (..., n, n))_: Density matrix.
+        y _(qarray-like of shape (..., n, n))_: Density matrix.
+
+    Returns:
+        _(array of shape (...))_ Real-valued trace distance between `x` and `y`.
+
+    See also:
+        - [`dq.trace_norm()`][dynamiqs.trace_norm]: returns the trace norm of a
+            Hermitian matrix.
+
+    Examples:
+        Compute the trace distance between $\rho=\ket{0}\bra{0}$ and
+        $\sigma=\ket{1}\bra{1}$:
+        >>> rho = dq.basis_dm(2, 0)
+        >>> sigma = dq.basis_dm(2, 1)
+        >>> dq.trace_distance(rho, sigma)
+        Array(1., dtype=float32)
+    """
+    x = asqarray(x)
+    y = asqarray(y)
+    check_shape(x, 'x', '(..., n, n)')
+    check_shape(y, 'y', '(..., n, n)')
+    return trace_norm(x - y) / 2
 
 
 def tracemm(x: QArrayLike, y: QArrayLike) -> Array:
