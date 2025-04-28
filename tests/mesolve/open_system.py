@@ -97,6 +97,9 @@ class OCavity(OpenSystem):
     def state(self, t: float) -> QArray:
         return dq.coherent_dm(self.n, self._alpha(t))
 
+    def steady_state(self) -> QArray:
+        return dq.coherent_dm(self.n, 0.0)
+
     def expect(self, t: float) -> Array:
         alpha_t = self._alpha(t)
         exp_x = alpha_t.real
@@ -242,3 +245,10 @@ dia_ocavity = OCavity(
 
 tsave = np.linspace(0.0, 1.0, 11)
 otdqubit = OTDQubit(eps=3.0, omega=10.0, gamma=1.0, tsave=tsave)
+
+# steady state solutions
+tsave_steady = np.logspace(-3.0, 5.0, num=11)
+# tsave_steady = np.linspace(0.0, 1e5, 11)
+dense_ocavity_steady = OCavity(
+    n=8, delta=1.0 * Hz, alpha0=0.5, kappa=1.0 * Hz, tsave=tsave_steady, layout=dense
+)

@@ -6,11 +6,13 @@ from functools import partial
 
 import diffrax as dx
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..._utils import obj_type_str
+from ..._utils import fill_invalid, obj_type_str
 from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd
+from ...qarrays.utils import asqarray
 from ...result import Result
 from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
@@ -129,11 +131,26 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
         subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
         saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
 
+        steady_state_event = dx.steady_state_event(atol=1e-5, rtol=1e-5)
+        event = (
+            dx.Event(steady_state_event) if self.options.steady_state else None
+        )  # terminate at steady state if requested
+
         # === solve differential equation
-        solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat)
+        solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat, event=event)
 
         # === collect and return results
         saved = self.postprocess_saved(*solution.ys)
+
+        # if we reached a steady state event, diffrax will return
+        # infs for all times and states after the event triggers
+        if self.options.steady_state:
+            # Find valid indices where ts is finite (before event triggers)
+            finite_mask = jnp.isfinite(solution.ts[0])
+            filled = fill_invalid(saved.ysave.to_jax(), finite_mask)
+            filled = asqarray(filled)
+            saved = eqx.tree_at(lambda x: x.ysave, saved, filled)
+
         return self.result(saved, infos=self.infos(solution.stats))
 
     def infos(self, stats: dict[str, Array]) -> PyTree:
