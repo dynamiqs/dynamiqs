@@ -4,7 +4,7 @@ from typing import Any, get_args
 
 import equinox as eqx
 import jax.numpy as jnp
-from jax import Array
+from jax import Array, lax
 from jaxtyping import ArrayLike, PyTree, ScalarLike
 
 
@@ -62,3 +62,16 @@ def check_compatible_dims(dims1: tuple[int, ...], dims2: tuple[int, ...]):
         raise ValueError(
             f'Qarrays have incompatible dimensions. Got {dims1} and {dims2}.'
         )
+
+
+def fill_invalid(orig: ArrayLike, valid_mask: ArrayLike) -> ArrayLike:
+    def body_fn(carry: ArrayLike, inputs: ArrayLike) -> ArrayLike:
+        valid_prev = carry
+        mask, y = inputs
+        new_valid = jnp.where(mask, y, valid_prev)
+        return new_valid, new_valid
+
+    # Run scan over (valid_mask, orig)
+    init = orig[0]
+    _, filled = lax.scan(body_fn, init, (valid_mask, orig))
+    return filled
