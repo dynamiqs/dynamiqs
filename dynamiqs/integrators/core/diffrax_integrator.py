@@ -6,11 +6,13 @@ from functools import partial
 
 import diffrax as dx
 import equinox as eqx
+import jax.numpy as jnp
 from jax import Array
 from jaxtyping import PyTree, Scalar
 
-from ..._utils import obj_type_str
+from ..._utils import fill_invalid, obj_type_str
 from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd
+from ...qarrays.utils import asqarray
 from ...result import Result
 from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
@@ -304,4 +306,56 @@ mepropagator_kvaerno3_integrator_constructor = partial(
 )
 mepropagator_kvaerno5_integrator_constructor = partial(
     MEPropagatorDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
+)
+
+
+class MESteadyStateDiffraxIntegrator(
+    MEDiffraxIntegrator, SolveSaveMixin, SolveInterface
+):
+    """Diffrax Integrator that stops early upon reaching a steady state condition."""
+
+    def run(self) -> Result:
+        # === prepare diffrax arguments
+        fn = lambda t, y, args: self.save(y)  # noqa: ARG005
+        subsaveat_a = dx.SubSaveAt(ts=self.ts, fn=fn)  # save solution regularly
+        subsaveat_b = dx.SubSaveAt(t1=True)  # save last state
+        saveat = dx.SaveAt(subs=[subsaveat_a, subsaveat_b])
+
+        steady_state_event = dx.steady_state_event(atol=1e-5, rtol=1e-5)
+        event = dx.Event(steady_state_event)  # terminate at steady state
+
+        # === solve differential equation
+        solution = self.diffeqsolve(self.t0, self.t1, self.y0, saveat, event=event)
+
+        # === collect and return results
+        saved = self.postprocess_saved(*solution.ys)
+
+        # if we reached a steady state event, diffrax will return
+        # infs for all times and states after the event triggers
+        # Find valid indices where ts is finite (before event triggers)
+        finite_mask = jnp.isfinite(solution.ts[0])
+        filled = fill_invalid(saved.ysave.to_jax(), finite_mask)
+        filled = asqarray(filled)
+        saved = eqx.tree_at(lambda x: x.ysave, saved, filled)
+
+        return self.result(saved, infos=self.infos(solution.stats))
+
+
+mesteadystate_euler_integrator_constructor = partial(
+    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Euler(), fixed_step=True
+)
+mesteadystate_dopri5_integrator_constructor = partial(
+    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Dopri5(), fixed_step=False
+)
+mesteadystate_dopri8_integrator_constructor = partial(
+    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Dopri8(), fixed_step=False
+)
+mesteadystate_tsit5_integrator_constructor = partial(
+    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Tsit5(), fixed_step=False
+)
+mesteadystate_kvaerno3_integrator_constructor = partial(
+    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Kvaerno3(), fixed_step=False
+)
+mesteadystate_kvaerno5_integrator_constructor = partial(
+    MESteadyStateDiffraxIntegrator, diffrax_solver=dx.Kvaerno5(), fixed_step=False
 )
