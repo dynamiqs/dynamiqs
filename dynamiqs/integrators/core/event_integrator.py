@@ -67,7 +67,7 @@ class JSSESolveEventIntegrator(
     def run(self) -> Result:
         if self.method.smart_sampling:
             # sample a no-click trajectory and compute its probability
-            solution = self.simulate_noclick(self.ts, self.y0)
+            solution = self._solve_noclick(self.ts, self.y0)
             psis = solution.ys[0]
             noclick_psis = psis.unit()
             noclick_prob = psis[-1].norm() ** 2
@@ -79,12 +79,12 @@ class JSSESolveEventIntegrator(
 
         # vectorize over keys
         out_axes = JumpSolveSaved(0, 0, 0, 0)
-        f = lambda key: self.simulate_single_trajectory(key, noclick_prob)
+        f = lambda key: self._solve_single_trajectory(key, noclick_prob)
         saved = jax.vmap(f, 0, out_axes)(self.key)
         saved = self.reorder_Esave(saved)
         return self.result(saved, infos)
 
-    def simulate_noclick(
+    def _solve_noclick(
         self,
         ts: Array,
         psi0: Array,
@@ -118,7 +118,7 @@ class JSSESolveEventIntegrator(
         cond_fn = lambda t, y, *a, **kw: y.norm() ** 2 - rand  # noqa: ARG005
         event = dx.Event(cond_fn, self.method.root_finder)
         ts = jnp.where(self.ts >= y.t, self.ts, y.t)  # clip times to start at y.t
-        solution = self.simulate_noclick(ts, y.psi, event=event, save=self.save)
+        solution = self._solve_noclick(ts, y.psi, event=event, save=self.save)
 
         # === collect solve result
         new_saved = solution.ys[0]
@@ -142,7 +142,7 @@ class JSSESolveEventIntegrator(
 
         return y, click_occurred
 
-    def simulate_single_trajectory(
+    def _solve_single_trajectory(
         self, key: PRNGKeyArray, noclick_prob: float | None
     ) -> JSSESolveResult:
         def loop_body(y: JumpState) -> JumpState:
