@@ -27,3 +27,4 @@ Familiarize yourself with Dynamiqs. Learn how to simulate quantum systems, defin
 Explore advanced examples and tutorials to deepen your understanding of Dynamiqs.
 
 - [Driven-dissipative Kerr oscillator](advanced_examples/kerr-oscillator.md)
+- [Continuous diffusive measurement](advanced_examples/continuous-diffusive-measurement.md)
