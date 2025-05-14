@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import equinox as eqx
 from jaxtyping import PRNGKeyArray
@@ -14,6 +14,7 @@ __all__ = [
     'Dopri5',
     'Dopri8',
     'Euler',
+    'EulerJump',
     'EulerMaruyama',
     'Expm',
     'JumpMonteCarlo',
@@ -145,6 +146,27 @@ class Euler(_DEFixedStep):
         CheckpointAutograd,
         ForwardAutograd,
     )
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float):
+        super().__init__(dt)
+
+
+class EulerJump(_DEFixedStep):
+    r"""Euler-Jump method (fixed step size SDE method).
+
+    Args:
+        dt: Fixed time step.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd] (default).
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (Autograd,)
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
 
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float):
@@ -472,16 +494,21 @@ class Event(_DEMethod):
         root_finder: Root finder to refine the click times, defaults to `None`
             (precision determined by the integration step size).
         smart_sampling: If `True`, the no-click trajectory is sampled only once, and
-            `result.states` contains only trajectories with one or more clicks. Use
-            `result.noclick_states` to access the no-click trajectory, and
-            `result.noclick_prob` for its associated probability.
+            `result.states` contains only trajectories with one or more clicks.
+            Information about the no-click trajectory are stored in `result.infos`:
+
+            - `result.infos.noclick_states` _(qarray of shape (..., nsave, n, 1))_ -
+                No-click trajectory.
+            - `result.infos.noclick_prob` _(array of shape (...))_ - Probability of
+                the no-click trajectory.
+            - `result.infos.noclick_expects` _(array of shape
+                (..., len(exp_ops), ntsave) or None)_ - No-click trajectory expectation
+                values.
 
     Note-: Supported gradients
         This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
         [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        (default).
     """
 
     noclick_method: Method = Tsit5()
@@ -504,10 +531,6 @@ class Event(_DEMethod):
         self.noclick_method = noclick_method
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
-
-    # inherit attributes from the noclick_method
-    def __getattr__(self, attr: str) -> Any:
-        return getattr(self.noclick_method, attr)
 
 
 class JumpMonteCarlo(_DEMethod):

@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from functools import partial
-from typing import Any
-
 import jax
 import jax.numpy as jnp
 from jax import Array
@@ -10,7 +7,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray
 
 from ..._checks import check_shape, check_times
 from ...gradient import Gradient
-from ...method import Dopri5, Dopri8, Euler, Event, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...method import EulerJump, Event, Method
 from ...options import Options, check_options
 from ...qarrays.qarray import QArray, QArrayLike
 from ...qarrays.utils import asqarray
@@ -23,13 +20,9 @@ from .._utils import (
     catch_xla_runtime_error,
     multi_vmap,
 )
-from ..core.event_integrator import (
-    jssesolve_event_dopri5_integrator_constructor,
-    jssesolve_event_dopri8_integrator_constructor,
-    jssesolve_event_euler_integrator_constructor,
-    jssesolve_event_kvaerno3_integrator_constructor,
-    jssesolve_event_kvaerno5_integrator_constructor,
-    jssesolve_event_tsit5_integrator_constructor,
+from ..core.event_integrator import jssesolve_event_integrator_constructor
+from ..core.fixed_step_stochastic_integrator import (
+    jssesolve_euler_jump_integrator_constructor,
 )
 
 
@@ -107,7 +100,8 @@ def jssesolve(
             operators for which the expectation value is computed.
         method: Method for the integration. Defaults to
             [`dq.method.Event`][dynamiqs.method.Event] (supported:
-            [`Event`][dynamiqs.method.Event]).
+            [`Event`][dynamiqs.method.Event],
+            [`EulerJump`][dynamiqs.method.EulerJump]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
             details.
@@ -165,15 +159,9 @@ def jssesolve(
                     expectation values, if specified by `exp_ops`.
                 - **clicktimes** _(array of shape (..., ntrajs, len(jump_ops), nmaxclick))_ - Times
                     at which the detectors clicked. Variable-length array padded with
-                    `None` up to `nmaxclick`.
+                    `jnp.nan` up to `nmaxclick`.
                 - **nclicks** _(array of shape (..., ntrajs, len(jump_ops))_ - Number
                     of clicks for each jump operator.
-                - **noclick_states** _(array of shape (..., nsave, n, 1))_ - Saved states
-                    for the no-click trajectory. Only for the
-                    [`Event`][dynamiqs.method.Event] method with `smart_sampling=True`.
-                - **noclick_prob** _(array of shape (..., nsave))_ - Probability of the
-                    no-click trajectory. Only for the [`Event`][dynamiqs.method.Event]
-                    method with `smart_sampling=True`.
                 - **extra** _(PyTree or None)_ - Extra data saved with `save_extra()` if
                     specified in `options`.
                 - **keys** _(PRNG key array of shape (ntrajs,))_ - PRNG keys used to
@@ -253,13 +241,16 @@ def jssesolve(
 
     # we implement the jitted vectorization in another function to pre-convert QuTiP
     # objects (which are not JIT-compatible) to JAX arrays
-    return _vectorized_jssesolve(
-        H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options
-    )
+    f = _vectorized_jssesolve
+    if isinstance(method, EulerJump):
+        tsave = tuple(tsave.tolist())  # todo: fix static tsave
+        f = jax.jit(f, static_argnames=('tsave', 'gradient', 'options'))
+    else:
+        f = jax.jit(f, static_argnames=('gradient', 'options'))
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
 @catch_xla_runtime_error
-@partial(jax.jit, static_argnames=('gradient', 'options'))
 def _vectorized_jssesolve(
     H: TimeQArray,
     Ls: list[TimeQArray],
@@ -271,16 +262,13 @@ def _vectorized_jssesolve(
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
-    f = _vectorized_clicks_jssesolve
-
-    # === vectorize function over H, Ls and psi0.
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = JSSESolveResult.out_axes()
+    # vectorize input over H, Ls and psi0
     in_axes = (H.in_axes, [L.in_axes for L in Ls], 0, *(None,) * 6)
+    out_axes = JSSESolveResult.out_axes()
 
     if options.cartesian_batching:
         nvmap = (H.ndim - 2, [L.ndim - 2 for L in Ls], psi0.ndim - 2, 0, 0, 0, 0, 0, 0)
-        f = cartesian_vmap(f, in_axes, out_axes, nvmap)
+        f = cartesian_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
     else:
         bshape = jnp.broadcast_shapes(*[x.shape[:-2] for x in [H, *Ls, psi0]])
         nvmap = len(bshape)
@@ -290,12 +278,12 @@ def _vectorized_jssesolve(
         Ls = [L.broadcast_to(*bshape, n, n) for L in Ls]
         psi0 = psi0.broadcast_to(*bshape, n, 1)
         # vectorize the function
-        f = multi_vmap(f, in_axes, out_axes, nvmap)
+        f = multi_vmap(_jssesolve_many_trajectories, in_axes, out_axes, nvmap)
 
     return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
-def _vectorized_clicks_jssesolve(
+def _jssesolve_many_trajectories(
     H: TimeQArray,
     Ls: list[TimeQArray],
     psi0: QArray,
@@ -308,42 +296,16 @@ def _vectorized_clicks_jssesolve(
 ) -> JSSESolveResult:
     f = _jssesolve_single_trajectory
 
-    # === vectorize function over stochastic trajectories
-    # the input is vectorized over `key`
-    # the result is vectorized over `_saved`, `infos` and `keys`
-    out_axes = JSSESolveResult.out_axes()
-    in_axes = (None, None, None, None, 0, None, None, None, None, None, None)
-    f = jax.vmap(f, in_axes, out_axes)
-
-    # === define common arguments
-    core_args = (H, Ls, psi0, tsave)
-    other_args = (exp_ops, method, gradient, options)
-
-    if method.smart_sampling:
-        # consume the first key for the no-click trajectory
-        noclick_args = (keys[0], True, 0.0)
-        noclick_result = _jssesolve_single_trajectory(
-            *core_args, *noclick_args, *other_args
-        )
-
-        # consume the remaining keys for the click trajectories, using the norm of the
-        # no-click state as the minimum value for random numbers triggering a click
-        click_args = (keys[1:], False, noclick_result.final_state_norm**2)
-        click_result = f(*core_args, *click_args, *other_args)
-
-        # concatenate the results of the no-click and click trajectories
-        def _concatenate_results(path: tuple, leaf1: Any, leaf2: Any) -> Any:
-            if getattr(out_axes, path[0].name) is None:
-                return leaf1
-            else:
-                return jnp.concatenate((leaf1[None], leaf2))
-
-        return jax.tree.map_with_path(
-            _concatenate_results, noclick_result, click_result
-        )
+    if isinstance(method, Event):
+        # vectorization over keys is handled by the integrator
+        pass
     else:
-        click_args = (keys, False, 0.0)
-        return f(*core_args, *click_args, *other_args)
+        # vectorize input over keys
+        in_axes = (None, None, None, None, 0, None, None, None, None)
+        out_axes = JSSESolveResult(None, None, None, None, 0, 0, 0)
+        f = jax.vmap(f, in_axes, out_axes)
+
+    return f(H, Ls, psi0, tsave, keys, exp_ops, method, gradient, options)
 
 
 def _jssesolve_single_trajectory(
@@ -352,29 +314,18 @@ def _jssesolve_single_trajectory(
     psi0: QArray,
     tsave: Array,
     key: PRNGKeyArray,
-    noclick: bool,
-    noclick_min_prob: float,
     exp_ops: list[QArray] | None,
     method: Method,
     gradient: Gradient | None,
     options: Options,
 ) -> JSSESolveResult:
     # === select integrator constructor
-    supported_methods = (Event,)
-    assert_method_supported(method, supported_methods)
-    if isinstance(method, Event):
-        integrator_constructors = {
-            Euler: jssesolve_event_euler_integrator_constructor,
-            Dopri5: jssesolve_event_dopri5_integrator_constructor,
-            Dopri8: jssesolve_event_dopri8_integrator_constructor,
-            Tsit5: jssesolve_event_tsit5_integrator_constructor,
-            Kvaerno3: jssesolve_event_kvaerno3_integrator_constructor,
-            Kvaerno5: jssesolve_event_kvaerno5_integrator_constructor,
-        }
-        integrator_constructor = integrator_constructors[type(method.noclick_method)]
-    else:
-        # temporary until we implement other methods
-        raise NotImplementedError
+    integrator_constructors = {
+        EulerJump: jssesolve_euler_jump_integrator_constructor,
+        Event: jssesolve_event_integrator_constructor,
+    }
+    assert_method_supported(method, integrator_constructors.keys())
+    integrator_constructor = integrator_constructors[type(method)]
 
     # === check gradient is supported
     method.assert_supports_gradient(gradient)
@@ -391,8 +342,6 @@ def _jssesolve_single_trajectory(
         Ls=Ls,
         Es=exp_ops,
         key=key,
-        noclick=noclick,
-        noclick_min_prob=noclick_min_prob,
     )
 
     # === run integrator
