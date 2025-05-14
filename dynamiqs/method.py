@@ -3,10 +3,12 @@ from __future__ import annotations
 from typing import ClassVar
 
 import equinox as eqx
+from jaxtyping import PRNGKeyArray
 from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
+from .options import Options, check_options
 
 __all__ = [
     'Dopri5',
@@ -15,6 +17,7 @@ __all__ = [
     'EulerJump',
     'EulerMaruyama',
     'Expm',
+    'JumpMonteCarlo',
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
@@ -528,3 +531,51 @@ class Event(_DEMethod):
         self.noclick_method = noclick_method
         self.root_finder = root_finder
         self.smart_sampling = smart_sampling
+
+
+class JumpMonteCarlo(_DEMethod):
+    """Jump Monte Carlo method for the Lindblad master equation.
+
+    This method calls [`dq.jssesolve()`][dynamiqs.jssesolve] to compute stochastic
+    trajectories of the unit-efficiency jump unraveling of the Lindblad master equation
+    (ME). These trajectories are then averaged to obtain an approximation of the ME
+    solution.
+
+    Note:
+        This method is solely a wrapper around [`dq.jssesolve()`][dynamiqs.jssesolve].
+        If you are looking for direct access to individual trajectories, use
+        [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
+
+    Args:
+        keys _(list of PRNG keys)_: Keys used for the jump SSE solver. See
+            [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
+        jsse_method: Method used for the jump SSE solver. See
+            [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
+        jsse_options: Options for the jump SSE solver. See
+            [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
+
+    Note-: Supported gradients
+        See the documentation of the chosen `jsse_method`.
+    """
+
+    keys: PRNGKeyArray
+    jsse_method: Method = Event()
+    jsse_options: Options = eqx.field(static=True, default=Options())
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        keys: PRNGKeyArray,
+        jsse_method: Method = Event(),  # noqa: B008
+        jsse_options: Options = Options(),  # noqa: B008
+    ):
+        self.keys = keys
+        self.jsse_method = jsse_method
+        check_options(jsse_options, 'jssesolve')
+        self.jsse_options = jsse_options.initialise()
