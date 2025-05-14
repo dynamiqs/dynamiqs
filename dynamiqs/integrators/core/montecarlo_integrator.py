@@ -1,7 +1,6 @@
 import equinox as eqx
 from jaxtyping import Array
 
-from ...options import check_options
 from ...result import Result, SolveSaved
 from ..apis.jssesolve import _vectorized_jssesolve
 from .abstract_integrator import BaseIntegrator
@@ -15,11 +14,6 @@ class JumpMonteCarloExtra(eqx.Module):
 
 class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterface):
     def run(self) -> Result:
-        # initialize options
-        jsse_options = self.method.jsse_options
-        check_options(jsse_options, 'jssesolve')
-        jsse_options = jsse_options.initialise()
-
         # call _vectorized_jssesolve to compute the jump SSE results
         jsse_result = _vectorized_jssesolve(
             self.H,
@@ -30,7 +24,7 @@ class MESolveJumpMonteCarloIntegrator(BaseIntegrator, MEInterface, SolveInterfac
             self.Es,
             self.method.jsse_method,
             self.gradient,
-            jsse_options,
+            self.method.jsse_options,
         )
 
         # compute saved with the mean results

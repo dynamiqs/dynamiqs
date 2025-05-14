@@ -8,7 +8,7 @@ from optimistix import AbstractRootFinder
 
 from ._utils import tree_str_inline
 from .gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
-from .options import Options
+from .options import Options, check_options
 
 __all__ = [
     'Dopri5',
@@ -577,4 +577,5 @@ class JumpMonteCarlo(_DEMethod):
     ):
         self.keys = keys
         self.jsse_method = jsse_method
-        self.jsse_options = jsse_options
+        check_options(jsse_options, 'jssesolve')
+        self.jsse_options = jsse_options.initialise()
