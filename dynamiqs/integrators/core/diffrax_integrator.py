@@ -149,7 +149,7 @@ class DiffraxIntegrator(BaseIntegrator, AbstractSaveMixin, AbstractTimeInterface
             )
 
 
-def basic_diffeqsolve(
+def call_diffeqsolve(
     ts: Array,
     y0: PyTree,
     terms: dx.AbstractTerm,

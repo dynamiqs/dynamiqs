@@ -14,7 +14,7 @@ from ...qarrays.utils import stack
 from ...result import JSSESolveResult, JumpSolveSaved, Result, Saved, SolveSaved
 from ...utils.general import expect
 from .abstract_integrator import StochasticBaseIntegrator
-from .diffrax_integrator import basic_diffeqsolve
+from .diffrax_integrator import call_diffeqsolve
 from .interfaces import JSSEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
 
@@ -96,7 +96,7 @@ class JSSESolveEventIntegrator(
             + sum([-0.5 * _L.dag() @ (_L @ y) for _L in self.L(t)])
         )
 
-        return basic_diffeqsolve(
+        return call_diffeqsolve(
             ts,
             psi0,
             terms,
