@@ -291,6 +291,7 @@ nav:
               - wigner: python_api/plot/wigner.md
               - wigner_mosaic: python_api/plot/wigner_mosaic.md
               - wigner_gif: python_api/plot/wigner_gif.md
+              - wigner_data: python_api/plot/wigner_data.md
               - pwc_pulse: python_api/plot/pwc_pulse.md
               - fock: python_api/plot/fock.md
               - fock_evolution: python_api/plot/fock_evolution.md
