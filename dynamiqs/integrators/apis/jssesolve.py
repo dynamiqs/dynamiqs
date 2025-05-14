@@ -78,12 +78,12 @@ def jssesolve(
     $I_k = \{t \in [t_0, t_\text{end}[ \,|\, \dd N_k(t)=1\}$.
 
     !!! Note
-        If you are only interested in an efficient method to compute the master
-        equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
-        [`dq.method.JumpMonteCarlo()`][dynamiqs.method.JumpMonteCarlo] method.
+        If you are only interested in simulating trajectories to solve the Lindblad
+        master equation, consider using [`dq.mesolve()`][dynamiqs.mesolve] with the
+        [`dq.method.JumpMonteCarlo`][dynamiqs.method.JumpMonteCarlo] method.
 
     !!! Note
-        This function is the Dynamiqs counterpart of QuTiP's `mcsolve` function.
+        This function is the Dynamiqs counterpart of QuTiP's `mcsolve()` function.
 
     Args:
         H _(qarray-like or time-qarray of shape (...H, n, n))_: Hamiltonian.
