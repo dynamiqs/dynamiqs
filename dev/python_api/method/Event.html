@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.2afb09e1.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -858,6 +858,8 @@
       
         
       
+        
+      
     
     
     
@@ -907,6 +909,29 @@
   
   <span class="md-ellipsis">
     Driven-dissipative Kerr oscillator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../documentation/advanced_examples/continuous-jump-measurement.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Continuous jump measurement
     
   </span>
   
@@ -1650,6 +1675,8 @@
       
         
       
+        
+      
     
     
     
@@ -1814,6 +1841,29 @@
   
   <span class="md-ellipsis">
     Euler
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="EulerJump.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    EulerJump
     
   </span>
   
@@ -5518,9 +5568,17 @@ The exact click time can be refined to a chosen precision by specifying the
           <b>smart_sampling</b>
           <!-- include type annotation only if enclosed by `_` in the docstring -->
           – <p>If <code>True</code>, the no-click trajectory is sampled only once, and
-<code>result.states</code> contains only trajectories with one or more clicks. Use
-<code>result.noclick_states</code> to access the no-click trajectory, and
-<code>result.noclick_prob</code> for its associated probability.</p>
+<code>result.states</code> contains only trajectories with one or more clicks.
+Information about the no-click trajectory are stored in <code>result.infos</code>:</p>
+<ul>
+<li><code>result.infos.noclick_states</code> <em>(qarray of shape (..., nsave, n, 1))</em> -
+    No-click trajectory.</li>
+<li><code>result.infos.noclick_prob</code> <em>(array of shape (...))</em> - Probability of
+    the no-click trajectory.</li>
+<li><code>result.infos.noclick_expects</code> <em>(array of shape
+    (..., len(exp_ops), ntsave) or None)</em> - No-click trajectory expectation
+    values.</li>
+</ul>
         </li>
     </ul>
 
@@ -5528,10 +5586,8 @@ The exact click time can be refined to a chosen precision by specifying the
  >
   <summary>Supported gradients</summary>
   <p>This method supports differentiation with
-<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.Autograd&lt;/span&gt;" href="../gradient/Autograd.html#dynamiqs.gradient.Autograd"><code>dq.gradient.Autograd</code></a>,
 <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.CheckpointAutograd&lt;/span&gt;" href="../gradient/CheckpointAutograd.html#dynamiqs.gradient.CheckpointAutograd"><code>dq.gradient.CheckpointAutograd</code></a>
-(default)
-and <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.gradient.ForwardAutograd&lt;/span&gt;" href="../gradient/ForwardAutograd.html#dynamiqs.gradient.ForwardAutograd"><code>dq.gradient.ForwardAutograd</code></a>.</p>
+(default).</p>
 </details>
 
 
@@ -5636,10 +5692,10 @@ and <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-ob
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
         <script src="../../javascripts/katex.js"></script>
       
