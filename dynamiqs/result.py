@@ -220,7 +220,6 @@ class JumpSolveResult(StochasticSolveResult):
     def mean_states(self) -> QArray:
         # todo: document
         if self.method.smart_sampling:
-            noclick_prob = 0
             noclick_prob = self.infos.noclick_prob[..., None, None, None]
             return unit(
                 noclick_prob * self.infos.noclick_states.todm()
