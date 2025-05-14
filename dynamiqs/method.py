@@ -534,11 +534,12 @@ class Event(_DEMethod):
 
 
 class JumpMonteCarlo(_DEMethod):
-    """Jump Monte Carlo method for the ME.
+    """Jump Monte Carlo method for the Lindblad master equation.
 
     This method calls [`dq.jssesolve()`][dynamiqs.jssesolve] to compute stochastic
-    trajectories of the unit-efficiency jump unraveling to the Lindblad master equation
-    (ME). These trajectories are then averaged to obtain an approximation of the ME.
+    trajectories of the unit-efficiency jump unraveling of the Lindblad master equation
+    (ME). These trajectories are then averaged to obtain an approximation of the ME
+    solution.
 
     Note:
         This method is solely a wrapper around [`dq.jssesolve()`][dynamiqs.jssesolve].
@@ -546,20 +547,15 @@ class JumpMonteCarlo(_DEMethod):
         [`dq.jssesolve()`][dynamiqs.jssesolve] instead.
 
     Args:
-        keys _(list of PRNG keys)_: PRNG keys used to sample the point processes.
-            The number of elements defines the number of sampled stochastic
-            trajectories.
-        jsse_method (Method): Method used for jump SSE solver. See
+        keys _(list of PRNG keys)_: Keys used for the jump SSE solver. See
+            [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
+        jsse_method: Method used for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
         jsse_options: Options for the jump SSE solver. See
             [`dq.jssesolve()`][dynamiqs.jssesolve] for more details.
 
     Note-: Supported gradients
-        This method supports differentiation with
-        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
-        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
-        (default)
-        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+        See the documentation of the chosen `jsse_method`.
     """
 
     keys: PRNGKeyArray
