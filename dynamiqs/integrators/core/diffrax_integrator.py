@@ -3,7 +3,6 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 from functools import partial
-from ssl import Options
 
 import diffrax as dx
 import equinox as eqx
@@ -13,6 +12,7 @@ from jaxtyping import PyTree, Scalar
 from ..._utils import obj_type_str
 from ...gradient import Autograd, CheckpointAutograd, ForwardAutograd, Gradient
 from ...method import Dopri5, Dopri8, Euler, Kvaerno3, Kvaerno5, Method, Tsit5
+from ...options import Options
 from ...result import Result, Saved
 from ...utils.vectorization import slindbladian
 from .abstract_integrator import BaseIntegrator
