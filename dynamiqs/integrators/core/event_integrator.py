@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import diffrax as dx
 import equinox as eqx
 import jax
@@ -17,12 +19,6 @@ from .abstract_integrator import StochasticBaseIntegrator
 from .diffrax_integrator import call_diffeqsolve
 from .interfaces import JSSEInterface, SolveInterface
 from .save_mixin import SolveSaveMixin
-
-
-def _replace(x: PyTree, **kwargs) -> PyTree:
-    for key, value in kwargs.items():
-        x = eqx.tree_at(lambda x: getattr(x, key), x, value)  # noqa: B023
-    return x
 
 
 class EventInfos(eqx.Module):
@@ -56,7 +52,7 @@ class JumpState(eqx.Module):
         saved = jax.tree.map(
             lambda _new, _saved: _saved.at[idx].set(_new[idx]), new, self.saved
         )
-        return _replace(self, saved=saved, save_index=idx + 1)
+        return replace(self, saved=saved, save_index=idx + 1)
 
 
 class JSSESolveEventIntegrator(
@@ -123,7 +119,7 @@ class JSSESolveEventIntegrator(
         # === collect solve result
         new_saved = solution.ys[0]
         psiclick, tclick = solution.ys[1][0], solution.ts[1][0]
-        y = _replace(y, psi=psiclick, t=tclick)
+        y = replace(y, psi=psiclick, t=tclick)
         click_occurred = solution.event_mask
 
         # === save intermediate states, expectation values and extras
@@ -148,7 +144,7 @@ class JSSESolveEventIntegrator(
         def loop_body(y: JumpState) -> JumpState:
             # === pick a random number for the next click event
             newkey, key_click, key_jump_choice = jax.random.split(y.key, 3)
-            y = _replace(y, key=newkey)  # update key
+            y = replace(y, key=newkey)  # update key
             minval = 0.0
             if noclick_prob is not None:
                 # when smart_sampling = True, and if no jump occurred yet we choose
@@ -181,7 +177,7 @@ class JSSESolveEventIntegrator(
                 # update click time and index
                 clicktimes, indices = y.new_click(idx, y.t)
 
-                return _replace(y, psi=psi, clicktimes=clicktimes, indices=indices)
+                return replace(y, psi=psi, clicktimes=clicktimes, indices=indices)
 
             skip = lambda y: y
             return jax.lax.cond(click_occurred, click, skip, y)
