@@ -32,9 +32,18 @@ __all__ = [
 
 
 def asqarray(
-    x: QArrayLike, dims: tuple[int, ...] | None = None, layout: Layout | None = None
+    x: QArrayLike,
+    dims: tuple[int, ...] | None = None,
+    layout: Layout | None = None,
+    *,
+    offsets: tuple[int, ...] | None = None,
 ) -> QArray:
     """Converts a qarray-like into a qarray.
+
+    Because the sparse DIA layout is data-dependent, the function is not compatible with
+    JIT and other JAX transformations when `layout==dq.dia`. The optional `offsets`
+    argument can be passed statically to retrieve compatibility with JAX
+    transformations.
 
     Args:
         x: Object to convert.
@@ -43,6 +52,9 @@ def asqarray(
             available, single Hilbert space `dims=(n,)` otherwise).
         layout _(dq.dense, dq.dia or None)_: Matrix layout. If `None`, the default
             layout is `dq.dense`, except for qarrays that are directly returned.
+        offsets _(tuple of ints or None)_: If specified, the diagonal offsets in the
+            input `x` object. This argument is used to make the function compatible with
+            JAX transformations.
 
     Returns:
         Qarray representation of the input.
@@ -78,7 +90,7 @@ def asqarray(
     if layout is dense:
         return _asdense(x, dims)
     else:
-        return _assparsedia(x, dims)
+        return _assparsedia(x, dims, offsets)
 
 
 def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
@@ -94,7 +106,9 @@ def _asdense(x: QArrayLike, dims: tuple[int, ...] | None) -> DenseQArray:
     return DenseQArray(dims, False, x)
 
 
-def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray:
+def _assparsedia(
+    x: QArrayLike, dims: tuple[int, ...] | None, offsets: tuple[int, ...] | None
+) -> SparseDIAQArray:
     # TODO: improve this by directly extracting the diags and offsets in case
     # the Qobj is already in sparse DIA format (only for QuTiP 5)
     if isinstance(x, SparseDIAQArray):
@@ -103,7 +117,7 @@ def _assparsedia(x: QArrayLike, dims: tuple[int, ...] | None) -> SparseDIAQArray
     xdims = get_dims(x)
     x = to_jax(x)
     dims = init_dims(xdims, dims, x.shape)
-    offsets, diags = array_to_sparsedia(x)
+    offsets, diags = array_to_sparsedia(x, offsets)
     return SparseDIAQArray(dims, False, offsets, diags)
 
 
