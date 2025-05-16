@@ -139,7 +139,9 @@ def eye_like(
     return eye(*dims, layout=layout)
 
 
-def zeros(*dims: int, layout: Layout | None = None) -> QArray:
+def zeros(
+    *dims: int, layout: Layout | None = None, offsets: tuple[int, ...] | None = None
+) -> QArray:
     r"""Returns the null operator.
 
     If multiple dimensions are provided $\mathtt{dims}=(n_1,\dots,n_N)$, it returns the
@@ -151,6 +153,8 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
     Args:
         *dims: Hilbert space dimension of each subsystem.
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
+        offsets _(tuple of ints or None)_: For `layout=dq.dia`, the offsets of the
+            diagonals.
 
     Returns:
         _(qarray of shape (n, n))_ Null operator, with _n = prod(dims)_.
@@ -184,8 +188,9 @@ def zeros(*dims: int, layout: Layout | None = None) -> QArray:
         array = jnp.zeros((dim, dim), dtype=cdtype())
         return asqarray(array, dims=dims)
     else:
-        diags = jnp.zeros((0, dim), dtype=cdtype())
-        return SparseDIAQArray(dims, False, (), diags)
+        offsets = offsets if offsets is not None else ()
+        diags = jnp.zeros((len(offsets), dim), dtype=cdtype())
+        return SparseDIAQArray(dims, False, offsets, diags)
 
 
 def zeros_like(
