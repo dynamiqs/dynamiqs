@@ -18,6 +18,8 @@ __all__ = [
     'Kvaerno3',
     'Kvaerno5',
     'Rouchon1',
+    'Rouchon2',
+    'Rouchon3',
     'Tsit5',
     'Event',
 ]
@@ -202,6 +204,9 @@ class Rouchon1(_DEFixedStep):
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to first order in $\dt$.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of loosing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
 
     Note-: Supported gradients
         This method supports differentiation with
@@ -220,23 +225,89 @@ class Rouchon1(_DEFixedStep):
     # todo: fix static dt (similar issue as static tsave in dssesolve)
     dt: float = eqx.field(static=True)
     normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
 
     # dummy init to have the signature in the documentation
-    def __init__(self, dt: float, normalize: bool = True):
+    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
         super().__init__(dt)
         self.normalize = normalize
+        self.exact_expm = exact_expm
 
-    # normalize: The default scheme is trace-preserving at first order only. This
-    # parameter sets the normalisation behaviour:
-    # - `None`: The scheme is not normalized.
-    # - `'sqrt'`: The Kraus map is renormalized with a matrix square root. Ideal
-    #   for stiff problems, recommended for time-independent problems.
-    # - `cholesky`: The Kraus map is renormalized at each time step using a Cholesky
-    #   decomposition. Ideal for stiff problems, recommended for time-dependent
-    #   problems.
 
-    # TODO: fix, strings are not valid JAX types
-    # normalize: Literal['sqrt', 'cholesky'] | None = None
+class Rouchon2(_DEFixedStep):
+    r"""Second-order Rouchon method (fixed step size ODE method).
+
+    Args:
+        dt: Fixed time step.
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to second order in $\dt$.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of loosing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default)
+        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
+        super().__init__(dt)
+        self.normalize = normalize
+        self.exact_expm = exact_expm
+
+
+class Rouchon3(_DEFixedStep):
+    r"""Third-order Rouchon method (fixed step size ODE method).
+
+    Args:
+        dt: Fixed time step.
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to second order in $\dt$.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of loosing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default)
+        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    # todo: fix static dt (similar issue as static tsave in dssesolve)
+    dt: float = eqx.field(static=True)
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
+
+    # dummy init to have the signature in the documentation
+    def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
+        super().__init__(dt)
+        self.normalize = normalize
+        self.exact_expm = exact_expm
 
 
 class Dopri5(_DEAdaptiveStep):
