@@ -205,7 +205,7 @@ class Rouchon1(_DEFixedStep):
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to first order in $\dt$.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of loosing sparsity), otherwise it uses a Taylor expansion up to
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
 
     Note-: Supported gradients
@@ -243,7 +243,7 @@ class Rouchon2(_DEFixedStep):
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to second order in $\dt$.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of loosing sparsity), otherwise it uses a Taylor expansion up to
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
 
     Note-: Supported gradients
@@ -281,7 +281,7 @@ class Rouchon3(_DEFixedStep):
             is the recommended option because it is much more stable. Otherwise, it is
             only trace-preserving to second order in $\dt$.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
-            the cost of loosing sparsity), otherwise it uses a Taylor expansion up to
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
 
     Note-: Supported gradients
