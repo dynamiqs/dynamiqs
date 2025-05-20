@@ -20,6 +20,8 @@ __all__ = [
     'Rouchon1',
     'Rouchon2',
     'Rouchon3',
+    'AdaptiveRouchon12',
+    'AdaptiveRouchon23',
     'Tsit5',
     'Event',
 ]
@@ -306,6 +308,102 @@ class Rouchon3(_DEFixedStep):
     # dummy init to have the signature in the documentation
     def __init__(self, dt: float, normalize: bool = True, exact_expm: bool = False):
         super().__init__(dt)
+        self.normalize = normalize
+        self.exact_expm = exact_expm
+
+
+class AdaptiveRouchon12(_DEAdaptiveStep):
+    r"""Adaptive second-order Rouchon method (adaptive step size ODE method).
+
+    The error is estimated using the difference between the first-order and
+    second-order.
+
+    Args:
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to the scheme order in $\dt$.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default)
+        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+        normalize: bool = True,
+        exact_expm: bool = False,
+    ):
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
+        self.normalize = normalize
+        self.exact_expm = exact_expm
+
+
+class AdaptiveRouchon23(_DEAdaptiveStep):
+    r"""Adaptive third-order Rouchon method (adaptive step size ODE method).
+
+    The error is estimated using the difference between the second-order and
+    third-order.
+
+    Args:
+        normalize: If True, the scheme is trace-preserving to machine precision, which
+            is the recommended option because it is much more stable. Otherwise, it is
+            only trace-preserving to the scheme order in $\dt$.
+        exact_expm: If True, the scheme uses the exact matrix exponential internally (at
+            the cost of losing sparsity), otherwise it uses a Taylor expansion up to
+            the scheme order.
+
+    Note-: Supported gradients
+        This method supports differentiation with
+        [`dq.gradient.Autograd`][dynamiqs.gradient.Autograd],
+        [`dq.gradient.CheckpointAutograd`][dynamiqs.gradient.CheckpointAutograd]
+        (default)
+        and [`dq.gradient.ForwardAutograd`][dynamiqs.gradient.ForwardAutograd].
+    """
+
+    SUPPORTED_GRADIENT: ClassVar[_TupleGradient] = (
+        Autograd,
+        CheckpointAutograd,
+        ForwardAutograd,
+    )
+
+    normalize: bool = eqx.field(static=True, default=True)
+    exact_expm: bool = eqx.field(static=True, default=False)
+
+    # dummy init to have the signature in the documentation
+    def __init__(
+        self,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
+        safety_factor: float = 0.9,
+        min_factor: float = 0.2,
+        max_factor: float = 5.0,
+        max_steps: int = 100_000,
+        normalize: bool = True,
+        exact_expm: bool = False,
+    ):
+        super().__init__(rtol, atol, safety_factor, min_factor, max_factor, max_steps)
         self.normalize = normalize
         self.exact_expm = exact_expm
 
