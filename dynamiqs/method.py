@@ -203,7 +203,7 @@ class Rouchon1(_DEFixedStep):
         dt: Fixed time step.
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to first order in $\dt$.
+            only trace-preserving to the scheme order in $\dt$.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
             the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
@@ -241,7 +241,7 @@ class Rouchon2(_DEFixedStep):
         dt: Fixed time step.
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to second order in $\dt$.
+            only trace-preserving to the scheme order in $\dt$.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
             the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
@@ -279,7 +279,7 @@ class Rouchon3(_DEFixedStep):
         dt: Fixed time step.
         normalize: If True, the scheme is trace-preserving to machine precision, which
             is the recommended option because it is much more stable. Otherwise, it is
-            only trace-preserving to second order in $\dt$.
+            only trace-preserving to the scheme order in $\dt$.
         exact_expm: If True, the scheme uses the exact matrix exponential internally (at
             the cost of losing sparsity), otherwise it uses a Taylor expansion up to
             the scheme order.
