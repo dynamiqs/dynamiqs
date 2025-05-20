@@ -11,6 +11,8 @@ from jaxtyping import ArrayLike
 from ..._checks import check_hermitian, check_qarray_is_dense, check_shape, check_times
 from ...gradient import Gradient
 from ...method import (
+    AdaptiveRouchon12,
+    AdaptiveRouchon23,
     Dopri5,
     Dopri8,
     Euler,
@@ -45,6 +47,8 @@ from ..core.diffrax_integrator import (
 )
 from ..core.expm_integrator import mesolve_expm_integrator_constructor
 from ..core.rouchon_integrator import (
+    mesolve_adaptive_rouchon12_integrator_constructor,
+    mesolve_adaptive_rouchon23_integrator_constructor,
     mesolve_rouchon1_integrator_constructor,
     mesolve_rouchon2_integrator_constructor,
     mesolve_rouchon3_integrator_constructor,
@@ -104,6 +108,8 @@ def mesolve(
             [`Rouchon1`][dynamiqs.method.Rouchon1],
             [`Rouchon2`][dynamiqs.method.Rouchon2],
             [`Rouchon3`][dynamiqs.method.Rouchon3],
+            [`AdaptiveRouchon12`][dynamiqs.method.AdaptiveRouchon12],
+            [`AdaptiveRouchon23`][dynamiqs.method.AdaptiveRouchon23],
             [`Expm`][dynamiqs.method.Expm]).
         gradient: Algorithm used to compute the gradient. The default is
             method-dependent, refer to the documentation of the chosen method for more
@@ -294,6 +300,8 @@ def _mesolve(
         Rouchon1: mesolve_rouchon1_integrator_constructor,
         Rouchon2: mesolve_rouchon2_integrator_constructor,
         Rouchon3: mesolve_rouchon3_integrator_constructor,
+        AdaptiveRouchon12: mesolve_adaptive_rouchon12_integrator_constructor,
+        AdaptiveRouchon23: mesolve_adaptive_rouchon23_integrator_constructor,
         Dopri5: mesolve_dopri5_integrator_constructor,
         Dopri8: mesolve_dopri8_integrator_constructor,
         Tsit5: mesolve_tsit5_integrator_constructor,

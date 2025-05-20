@@ -182,6 +182,8 @@ nav:
               - Rouchon1: python_api/method/Rouchon1.md
               - Rouchon2: python_api/method/Rouchon2.md
               - Rouchon3: python_api/method/Rouchon3.md
+              - AdaptiveRouchon12: python_api/method/AdaptiveRouchon12.md
+              - AdaptiveRouchon23: python_api/method/AdaptiveRouchon23.md
               - Expm: python_api/method/Expm.md
               - Event: python_api/method/Event.md
           - Gradients (dq.gradient):
