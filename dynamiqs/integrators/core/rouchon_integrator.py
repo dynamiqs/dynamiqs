@@ -120,7 +120,9 @@ class MESolveFixedRouchonIntegrator(MESolveDiffraxIntegrator):
             if self.method.normalize:
                 rho = cholesky_normalize(Ms, rho)
 
-            return sum([M @ rho @ M.dag() for M in Ms])
+            # AdaptiveRouchon integrator estimates the error
+            # For fixed step size, we return None
+            return sum([M @ rho @ M.dag() for M in Ms]), None
 
         return AbstractRouchonTerm(kraus_map)
 
