@@ -221,7 +221,7 @@ class MESolveAdaptiveRouchon12Integrator(MESolveDiffraxIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             rho = y0
-            t = t0
+            t = (t0 + t1) / 2
             dt = t1 - t0
 
             L, H = self.L(t), self.H(t)
@@ -257,7 +257,7 @@ class MESolveAdaptiveRouchon23Integrator(MESolveDiffraxIntegrator):
     def terms(self) -> dx.AbstractTerm:
         def kraus_map(t0, t1, y0):  # noqa: ANN202
             rho = y0
-            t = t0
+            t = (t0 + t1) / 2
             dt = t1 - t0
 
             L, H = self.L(t), self.H(t)
