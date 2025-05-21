@@ -55,6 +55,10 @@ class RouchonDXSolver(dx.AbstractSolver):
         return self._order
 
 
+class AdaptiveRouchonDXSolver(dx.AbstractAdaptiveSolver, RouchonDXSolver):
+    pass
+
+
 def cholesky_normalize(Ms: list[QArray], rho: QArray) -> jax.Array:
     # To normalize the scheme, we compute
     #   S = sum_k Mk^† @ Mk
@@ -243,7 +247,7 @@ class MESolveAdaptiveRouchon12Integrator(MESolveDiffraxIntegrator):
 
 mesolve_adaptive_rouchon12_integrator_constructor = (
     lambda **kwargs: MESolveAdaptiveRouchon12Integrator(
-        **kwargs, diffrax_solver=RouchonDXSolver(2), fixed_step=False
+        **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(2), fixed_step=False
     )
 )
 
@@ -279,6 +283,6 @@ class MESolveAdaptiveRouchon23Integrator(MESolveDiffraxIntegrator):
 
 mesolve_adaptive_rouchon23_integrator_constructor = (
     lambda **kwargs: MESolveAdaptiveRouchon23Integrator(
-        **kwargs, diffrax_solver=RouchonDXSolver(3), fixed_step=False
+        **kwargs, diffrax_solver=AdaptiveRouchonDXSolver(3), fixed_step=False
     )
 )
