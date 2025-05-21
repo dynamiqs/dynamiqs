@@ -113,7 +113,9 @@ class MESolveRouchonIntegrator(MESolveDiffraxIntegrator):
             # See comment of `cholesky_normalize()` for the normalisation.
 
             rho = y0
-            Ms = self._kraus_ops(t0, t1 - t0)
+            t = (t0 + t1) / 2
+            dt = t1 - t0
+            Ms = self._kraus_ops(t, dt)
 
             if self.method.normalize:
                 rho = cholesky_normalize(Ms, rho)
