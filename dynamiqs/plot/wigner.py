@@ -30,10 +30,19 @@ def wigner_data(
     cross: bool = False,
     clear: bool = False,
 ):
-    r"""Plot the Wigner function for pre-computed Wigner data.
+    r"""Plot a pre-computed Wigner function.
+
+    Warning:
+        Documentation redaction in progress.
 
     Note:
-        See [`dq.plot.wigner()`][dynamiqs.plot.wigner] for more details.
+        Choose a diverging colormap `cmap` for better results.
+
+    See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
+        - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
+            state.
     """
     w = to_jax(wigner)
     check_shape(w, 'wigner', '(n, n)')
@@ -107,6 +116,8 @@ def wigner(
         different from the default behaviour of `qutip.plot_wigner()`.
 
     See also:
+        - [`dq.wigner()`][dynamiqs.wigner]: compute the Wigner distribution of a ket or
+            density matrix.
         - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
             Wigner function.
 
