@@ -388,7 +388,7 @@ class DSSEFixedStepIntegrator(DiffusiveSolveFixedStepIntegrator, DSSEInterface):
 class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
     """Integrator solving the diffusive SSE with the Euler-Mayurama method."""
 
-    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+    def forward_(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
         psi = y.state
         dW = dX
         L, H = self.L(t), self.H(t)
@@ -426,6 +426,38 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         )
 
         return DiffusiveState(psi + dpsi, y.Y + dY)
+
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+        psi = y.state
+        dW = dX
+        L, H = self.L(t), self.H(t)
+        I = eye_like(H)
+        Lpsi = [_L @ psi for _L in L]
+        LdL = sum([_L.dag() @ _L for _L in L])
+
+        # === measurement Y
+        # dY = <L+Ld> dt + dW
+        # small trick to compute <L+Ld>
+        #   <L+Ld> = <psi|L+Ld|psi >
+        #          = psi.dag() @ (L + Ld) @ psi
+        #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
+        #          = 2 Re[psi.dag() @ Lpsi]
+        exp = jnp.stack(
+            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
+        )  # (nL)
+        dY = exp * self.dt + dW
+
+        # === state psi
+        M0 = I - (1j * H + 0.5 * LdL) * self.dt
+        M_dY = M0 + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
+
+        S = M0.dag() @ M0 + (LdL * self.dt if LdL != 0.0 else 0.0)
+        T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
+        M_dY = M_dY @ jnp.linalg.inv(T).mT.conj()  # M_dY @ Td^{-1}
+
+        psi = (M_dY @ psi).unit()
+
+        return DiffusiveState(psi, y.Y + dY)
 
 
 dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
