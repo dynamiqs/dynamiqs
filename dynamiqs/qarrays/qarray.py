@@ -236,18 +236,6 @@ class QArray(eqx.Module):
     # similar behaviour to __array_priority__ but for qarray matmul
     __qarray_matmul_priority__ = 0
 
-    def _replace(
-        self,
-        dims: tuple[int, ...] | None = None,
-        vectorized: bool | None = None,
-        **kwargs,
-    ) -> QArray:
-        if dims is None:
-            dims = self.dims
-        if vectorized is None:
-            vectorized = self.vectorized
-        return type(self)(dims=dims, vectorized=vectorized, **kwargs)
-
     def __check_init__(self):
         # === ensure dims is a tuple of ints
         if not isinstance(self.dims, tuple) or not all(
