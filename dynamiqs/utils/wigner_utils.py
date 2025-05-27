@@ -48,6 +48,12 @@ def wigner(
             - **yvec** _(array of shape (npixels,) or (nyvec,))_ -- $y$ coordinates, or
                 `yvec` if specified.
             - **w** _(array of shape (..., npixels, npixels) or (..., nyvec, nxvec))_ -- Wigner distribution.
+
+    See also:
+        - [`dq.plot.wigner()`][dynamiqs.plot.wigner]: plot the Wigner function of a
+            state.
+        - [`dq.plot.wigner_data()`][dynamiqs.plot.wigner_data]: plot a pre-computed
+            Wigner function.
     """  # noqa: E501
     state = to_jax(state)
     check_shape(state, 'state', '(..., n, 1)', '(..., n, n)')
