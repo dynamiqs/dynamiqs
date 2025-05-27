@@ -13,10 +13,9 @@ from jaxtyping import ArrayLike, PyTree, Scalar, ScalarLike
 
 from ._checks import check_shape, check_times
 from ._utils import cdtype, concatenate_sort, obj_type_str
-from .qarrays.layout import Layout, dense, dia, promote_layouts
+from .qarrays.layout import Layout, dia, promote_layouts
 from .qarrays.qarray import QArray, QArrayLike, isqarraylike
 from .qarrays.utils import asqarray
-from .utils.operators import zeros
 
 __all__ = ['TimeQArray', 'constant', 'modulated', 'pwc', 'timecallable']
 
@@ -432,24 +431,12 @@ class TimeQArray(eqx.Module):
         Returns:
             Qarray evaluated at time $t$.
         """
-
-        def zero() -> QArray:
-            # we need to specify offsets to ensure that for `jax.lax.cond` the
-            # `true_fun` and the `false_fun` outputs have the same type structure,
-            # otherwise JAX will raise an error
-            offsets = None if self.layout is dense else self.offsets
-            return zeros(*self.dims, layout=self.layout, offsets=offsets)
-
-        call = lambda: self._call(t)
-        if self.tstart is not None and self.tend is not None:
-            return jax.lax.cond(
-                jnp.logical_or(t < self.tstart, t >= self.tend), zero, call
-            )
-        elif self.tstart is not None:
-            return jax.lax.cond(t < self.tstart, zero, call)
-        elif self.tend is not None:
-            return jax.lax.cond(t >= self.tend, zero, call)
-        return call()
+        clip = False
+        if self.tstart is not None:
+            clip |= t < self.tstart
+        if self.tend is not None:
+            clip |= t >= self.tend
+        return jax.lax.select(clip, 0, 1) * self._call(t)
 
     @abstractmethod
     def _call(self, t: ScalarLike) -> QArray:
@@ -649,16 +636,12 @@ class PWCTimeQArray(TimeQArray):
         return replace(self, values=values, qarray=qarray)
 
     def prefactor(self, t: ScalarLike) -> Array:
-        def _zero(_: float) -> Array:
-            return jnp.zeros_like(self.values[..., 0])  # (...)
+        zero = jnp.zeros_like(self.values[..., 0])  # (...)
 
-        def _pwc(t: float) -> Array:
-            idx = jnp.searchsorted(self.times, t, side='right') - 1
-            return self.values[..., idx]  # (...)
+        idx = jnp.searchsorted(self.times, t, side='right') - 1
+        pwc = self.values[..., idx]  # (...)
 
-        return jax.lax.cond(
-            jnp.logical_or(t < self.times[0], t >= self.times[-1]), _zero, _pwc, t
-        )
+        return jax.lax.select((t < self.times[0]) | (t >= self.times[-1]), zero, pwc)
 
     def _call(self, t: ScalarLike) -> QArray:
         return self.prefactor(t)[..., None, None] * self.qarray
