@@ -819,8 +819,8 @@ class SummedTimeQArray(TimeQArray):
         timeqarrays: list[TimeQArray],
         check: bool = True,
         *,
-        tstart: float | None = None,  # ARG002
-        tend: float | None = None,  # ARG002
+        tstart: float | None = None,  # noqa: ARG002
+        tend: float | None = None,  # noqa: ARG002
     ):
         super().__init__(tstart=None, tend=None)
         if check:
