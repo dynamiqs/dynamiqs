@@ -18,4 +18,5 @@ __all__ = [
     'wigner',
     'wigner_gif',
     'wigner_mosaic',
+    'wigner_data',
 ]
