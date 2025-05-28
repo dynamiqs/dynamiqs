@@ -471,11 +471,11 @@ def cholesky_normalize_ket(Ms: list[QArray], psi: QArray) -> jax.Array:
     S = sum([M.dag() @ M for M in Ms])
     T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
 
-    psi = psi.to_jax()
+    psi = psi.to_jax()[:, 0]  # (n, 1) -> (n,)
     # solve T^† @ x = psi => x = T^{†(-1)} @ psi
     return jax.lax.linalg.triangular_solve(
         T, psi, lower=True, transpose_a=True, conjugate_a=True
-    )
+    )[:, None]  # (n,) -> (n, 1)
 
 
 class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
