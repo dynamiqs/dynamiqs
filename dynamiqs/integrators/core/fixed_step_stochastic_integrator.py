@@ -160,7 +160,7 @@ class StochasticSolveFixedStepIntegrator(
         # number of save interval
         nsave = len(self.ts) - 1
         # total number of steps (of length dt)
-        nsteps = int((self.t1 - self.t0) / self.dt)
+        nsteps = round((self.t1 - self.t0) / self.dt)
         # number of steps per save interval
         nsteps_per_save = int(nsteps // nsave)
 
