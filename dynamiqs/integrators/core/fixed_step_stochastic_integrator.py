@@ -463,7 +463,56 @@ class DSSESolveEulerMayuramaIntegrator(DSSEFixedStepIntegrator):
         return DiffusiveState(psi + dpsi, y.Y + dY)
 
 
+def cholesky_normalize_ket(Ms: list[QArray], psi: QArray) -> jax.Array:
+    # See comment of `cholesky_normalize()`.
+    # For a ket we compute ~M @ psi = M @ T^{†(-1)} @ psi, so we directly replace psi by
+    # T^{†(-1)} @ psi.
+
+    S = sum([M.dag() @ M for M in Ms])
+    T = jnp.linalg.cholesky(S.to_jax())  # T lower triangular
+
+    psi = psi.to_jax()
+    # solve T^† @ x = psi => x = T^{†(-1)} @ psi
+    return jax.lax.linalg.triangular_solve(
+        T, psi, lower=True, transpose_a=True, conjugate_a=True
+    )
+
+
+class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
+    """Integrator solving the diffusive SSE with the Rouchon1 method."""
+
+    def forward(self, t: Scalar, y: SDEState, dX: Array) -> SDEState:
+        psi = y.state
+        dW = dX
+        L, H = self.L(t), self.H(t)
+        Lpsi = [_L @ psi for _L in L]
+
+        # === measurement Y
+        # dY = <L+Ld> dt + dW
+        # small trick to compute <L+Ld>
+        #   <L+Ld> = <psi|L+Ld|psi >
+        #          = psi.dag() @ (L + Ld) @ psi
+        #          = psi.dag() @ L @ psi + (psi.dag() @ L @ psi).dag()
+        #          = 2 Re[psi.dag() @ Lpsi]
+        exp = jnp.stack(
+            [2 * (psi.dag() @ _Lpsi).squeeze((-1, -2)).real for _Lpsi in Lpsi]
+        )  # (nL)
+        dY = exp * self.dt + dW
+
+        # === state psi
+        Ms_average = MESolveRouchon1Integrator.Ms(H, L, self.dt, self.method.exact_expm)
+        if self.method.normalize:
+            psi = cholesky_normalize_ket(Ms_average, psi)
+
+        M_dY = Ms_average[0] + sum([_dY * _L for _dY, _L in zip(dY, L, strict=True)])
+
+        psi = (M_dY @ psi).unit()  # normalise by signal probability
+
+        return DiffusiveState(psi, y.Y + dY)
+
+
 dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
+dssesolve_rouchon1_integrator_constructor = DSSESolveEulerMayuramaIntegrator
 
 
 class DSMEFixedStepIntegrator(DiffusiveSolveFixedStepIntegrator, DSMEInterface):
