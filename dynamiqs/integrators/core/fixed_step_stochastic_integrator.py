@@ -512,7 +512,7 @@ class DSSESolveRouchon1Integrator(DSSEFixedStepIntegrator):
 
 
 dssesolve_euler_maruyama_integrator_constructor = DSSESolveEulerMayuramaIntegrator
-dssesolve_rouchon1_integrator_constructor = DSSESolveEulerMayuramaIntegrator
+dssesolve_rouchon1_integrator_constructor = DSSESolveRouchon1Integrator
 
 
 class DSMEFixedStepIntegrator(DiffusiveSolveFixedStepIntegrator, DSMEInterface):
