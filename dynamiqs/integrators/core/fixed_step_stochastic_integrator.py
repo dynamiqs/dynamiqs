@@ -13,7 +13,7 @@ from jaxtyping import ArrayLike, PRNGKeyArray, PyTree, Scalar
 from ...qarrays.qarray import QArray
 from ...qarrays.utils import stack
 from ...result import DiffusiveSolveSaved, JumpSolveSaved, Result, Saved
-from ...utils.general import dag, expect
+from ...utils.general import expect
 from ...utils.operators import eye_like
 from .abstract_integrator import StochasticBaseIntegrator
 from .interfaces import (
@@ -23,7 +23,7 @@ from .interfaces import (
     JSSEInterface,
     SolveInterface,
 )
-from .rouchon_integrator import cholesky_normalize
+from .rouchon_integrator import MESolveRouchon1Integrator, cholesky_normalize
 from .save_mixin import SolveSaveMixin
 
 
@@ -523,13 +523,11 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         #   M1 = sqrt(1 - eta) * L sqrt(dt)
         #
         # See comment of `cholesky_normalize()` for the normalisation (computed for the
-        # "average" Kraus operators M0 = I - (iH + 0.5 Ld @ L) dt and M1 = L sqrt(dt)).
+        # "average" Kraus operator).
 
         rho = y.state
         dW = dX
         L, Lc, Lm, H = self.L(t), self.Lc(t), self.Lm(t), self.H(t)
-        I = eye_like(H)
-        LdL = sum([_L.dag() @ _L for _L in L])
 
         # === measurement Y
         # dY_{k+1} = sqrt(eta) Tr[(L+Ld) @ rho_k)] dt + dW
@@ -537,22 +535,26 @@ class DSMESolveRouchon1Integrator(DSMEFixedStepIntegrator, SolveInterface):
         dY = jnp.sqrt(self.etas) * trace * self.dt + dW  # (nLm,)
 
         # === state rho
-        M0 = I - (1j * H + 0.5 * LdL) * self.dt
-        M_dY = M0 + sum(
+        Ms_average = MESolveRouchon1Integrator.Ms(H, L, self.dt, self.method.exact_expm)
+        if self.method.normalize:
+            rho = cholesky_normalize(Ms_average, rho)
+
+        M_dY = Ms_average[0] + sum(
             [
                 jnp.sqrt(eta) * _dY * _Lm
                 for eta, _dY, _Lm in zip(self.etas, dY, Lm, strict=True)
             ]
         )
-        Ms = [
-            jnp.sqrt((1 - eta) * self.dt) * _Lm
-            for eta, _Lm in zip(self.etas, Lm, strict=True)
-        ] + [self.dt * _Lc for _Lc in Lc]
+        Ms = (
+            [M_dY]
+            + [
+                jnp.sqrt((1 - eta) * self.dt) * _Lm
+                for eta, _Lm in zip(self.etas, Lm, strict=True)
+            ]
+            + [self.dt * _Lc for _Lc in Lc]
+        )
 
-        if self.method.normalize:
-            rho = cholesky_normalize(M0, LdL, self.dt, rho)
-
-        rho = M_dY @ rho @ dag(M_dY) + sum([_M @ rho @ dag(_M) for _M in Ms])
+        rho = sum([M @ rho @ M.dag() for M in Ms])
         rho = rho / rho.trace()  # normalise by signal probability
 
         return DiffusiveState(rho, y.Y + dY)
