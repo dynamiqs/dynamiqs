@@ -683,14 +683,14 @@ def sigmaz(*, layout: Layout | None = None) -> QArray:
 
 
 def xyz(*, layout: Layout | None = None) -> QArray:
-    r"""Returns the Pauli $\sigma_x$, $\sigma_y$, $\sigma_z$ operators.
+    r"""Returns the Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$ operators.
 
     Args:
         layout: Matrix layout (`dq.dense`, `dq.dia` or `None`).
 
     Returns:
-        _(qarray of shape (3, 2, 2))_ Pauli $\sigma_x$, $\sigma_y$, $\sigma_z$
-        operators.
+        _(qarray of shape (3, 2, 2))_ Pauli $\sigma_x$, $\sigma_y$ and $\sigma_z$
+            operators.
 
     Examples:
         >>> dq.xyz()
