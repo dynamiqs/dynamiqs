@@ -266,7 +266,9 @@ class SparseDIAQArray(QArray):
         return NotImplemented
 
     def __matmul__(self, y: QArrayLike) -> QArray:
-        super().__matmul__(y)
+        out = super().__matmul__(y)
+        if out is NotImplemented:
+            return NotImplemented
 
         if isinstance(y, SparseDIAQArray):
             offsets, diags = matmul_sparsedia_sparsedia(
