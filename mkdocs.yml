@@ -204,6 +204,7 @@ nav:
               - sigmax: python_api/utils/operators/sigmax.md
               - sigmay: python_api/utils/operators/sigmay.md
               - sigmaz: python_api/utils/operators/sigmaz.md
+              - xyz: python_api/utils/operators/xyz.md
               - sigmap: python_api/utils/operators/sigmap.md
               - sigmam: python_api/utils/operators/sigmam.md
               - hadamard: python_api/utils/operators/hadamard.md

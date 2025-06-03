@@ -87,6 +87,10 @@ def test_operators_dispatch():
     )
 
     assert jnp.allclose(
+        dq.xyz(layout=dq.dense).to_jax(), dq.xyz(layout=dq.dia).to_jax()
+    )
+
+    assert jnp.allclose(
         dq.sigmax(layout=dq.dense).to_jax(), dq.sigmax(layout=dq.dia).to_jax()
     )
 
