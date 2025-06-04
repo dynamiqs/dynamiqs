@@ -632,7 +632,7 @@ class PWCTimeQArray(TimeQArray):
 
         return super()._prefactor(t) * pwc_prefactor
 
-    def _operator(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
@@ -712,7 +712,7 @@ class ModulatedTimeQArray(TimeQArray):
     def _prefactor(self, t: ScalarLike) -> Array:
         return super()._prefactor(t) * self.f(t)
 
-    def _operator(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
