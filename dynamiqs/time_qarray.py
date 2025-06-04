@@ -269,7 +269,7 @@ class TimeQArray(eqx.Module):
     # Subclasses should implement:
     # - the properties: dtype, shape, dims, ndiags, vectorized, layout, mT,
     #                   in_axes, discontinuity_ts
-    # - the methods: reshape, broadcast_to, conj, _call, __mul__
+    # - the methods: reshape, broadcast_to, conj, _operator, __mul__
 
     tstart: float | None
     tend: float | None
@@ -390,10 +390,10 @@ class TimeQArray(eqx.Module):
         """Squeeze a time-qarray.
 
         Args:
-            axis: Axis to squeeze. If `none`, all axes with dimension 1 are squeezed.
+            axis: Axis to squeeze. If `None`, all axes with dimension 1 are squeezed.
 
         Returns:
-            New time-qarray with squeezed_shape
+            New time-qarray with squeezed shape.
         """
         if axis is None:
             shape = self.shape
@@ -409,25 +409,31 @@ class TimeQArray(eqx.Module):
             )
         return self.reshape(*self.shape[:axis], *self.shape[axis + 1 :])
 
-    def __call__(self, t: ScalarLike) -> QArray:
-        """Returns the time-qarray evaluated at a given time.
-
-        Args:
-            t: Time at which to evaluate the time-qarray.
-
-        Returns:
-            Qarray evaluated at time $t$.
-        """
+    def _prefactor(self, t: ScalarLike) -> Array:
         clip = False
         if self.tstart is not None:
             clip |= t < self.tstart
         if self.tend is not None:
             clip |= t >= self.tend
-        return jax.lax.select(clip, 0, 1) * self._call(t)
+        return jax.lax.select(clip, jnp.array(0), jnp.array(1))
+
+    def prefactor(self, ts: ArrayLike) -> Array:
+        """Returns the time-qarray prefactor at specific times.
+
+        Args:
+            ts _(array-like of shape (...))_: Times at which to evaluate the prefactor.
+
+        Returns:
+            _(array of shape (...))_ Prefactor values at times `ts`.
+        """
+        ts = jnp.asarray(ts)
+        return jnp.vectorize(self._prefactor)(ts)
+
+    def __call__(self, t: ScalarLike) -> QArray:
+        return self._prefactor(t)[..., None, None] * self._operator(t)
 
     @abstractmethod
-    def _call(self, t: ScalarLike) -> QArray:
-        # self.tstart <= t < self.tend
+    def _operator(self, t: ScalarLike) -> QArray:
         pass
 
     def __neg__(self) -> TimeQArray:
@@ -524,7 +530,7 @@ class ConstantTimeQArray(TimeQArray):
         qarray = self.qarray.conj()
         return replace(self, qarray=qarray)
 
-    def _call(self, t: ScalarLike) -> QArray:  # noqa: ARG002
+    def _operator(self, t: ScalarLike) -> QArray:  # noqa: ARG002
         return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
@@ -614,16 +620,20 @@ class PWCTimeQArray(TimeQArray):
         qarray = self.qarray.conj()
         return replace(self, values=values, qarray=qarray)
 
-    def prefactor(self, t: ScalarLike) -> Array:
+    def _prefactor(self, t: ScalarLike) -> Array:
         zero = jnp.zeros_like(self.values[..., 0])  # (...)
 
         idx = jnp.searchsorted(self.times, t, side='right') - 1
         pwc = self.values[..., idx]  # (...)
 
-        return jax.lax.select((t < self.times[0]) | (t >= self.times[-1]), zero, pwc)
+        pwc_prefactor = jax.lax.select(
+            (t < self.times[0]) | (t >= self.times[-1]), zero, pwc
+        )
 
-    def _call(self, t: ScalarLike) -> QArray:
-        return self.prefactor(t)[..., None, None] * self.qarray
+        return super()._prefactor(t) * pwc_prefactor
+
+    def _operator(self, t: ScalarLike) -> QArray:
+        return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
@@ -699,8 +709,11 @@ class ModulatedTimeQArray(TimeQArray):
         qarray = self.qarray.conj()
         return replace(self, f=f, qarray=qarray)
 
-    def _call(self, t: ScalarLike) -> QArray:
-        return self.f(t)[..., None, None] * self.qarray
+    def _prefactor(self, t: ScalarLike) -> Array:
+        return super()._prefactor(t) * self.f(t)
+
+    def _operator(self, t: ScalarLike) -> QArray:
+        return self.qarray
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
         qarray = self.qarray * y
@@ -772,7 +785,7 @@ class CallableTimeQArray(TimeQArray):
         f = self.f.conj()
         return replace(self, f=f)
 
-    def _call(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: ScalarLike) -> QArray:
         return self.f(t)
 
     def __mul__(self, y: QArrayLike) -> TimeQArray:
@@ -863,12 +876,17 @@ class SummedTimeQArray(TimeQArray):
         timeqarrays = [tqarray.conj() for tqarray in self.timeqarrays]
         return SummedTimeQArray(timeqarrays)
 
+    def prefactor(self, ts: ArrayLike) -> Array:
+        raise NotImplementedError(
+            'SummedTimeQArray does not support the `prefactor` method. '
+        )
+
     def __call__(self, t: ScalarLike) -> QArray:
         return ft.reduce(
             lambda x, y: x + y, [tqarray(t) for tqarray in self.timeqarrays]
         )
 
-    def _call(self, t: ScalarLike) -> QArray:
+    def _operator(self, t: ScalarLike) -> QArray:
         # this will never be called because we directly override __call__
         raise NotImplementedError
 
