@@ -368,26 +368,29 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> Array:
             product of thermal states, with _n = prod(dims)_.
 
     Examples:
-        Single-mode thermal state at thermal photon number $n_{th}=0.1$:
+        Single-mode thermal state with thermal photon number $n_{th}=0.1$:
         >>> dq.thermal_dm(4, 0.1)
-        Array([[0.675, 0.   , 0.   , 0.   ],
-               [0.   , 0.225, 0.   , 0.   ],
-               [0.   , 0.   , 0.075, 0.   ],
-               [0.   , 0.   , 0.   , 0.025]], dtype=float32)
+        QArray: shape=(4, 4), dims=(4,), dtype=complex64, layout=dense
+        [[0.909+0.j 0.   +0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.083+0.j 0.   +0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.008+0.j 0.   +0.j]
+         [0.   +0.j 0.   +0.j 0.   +0.j 0.001+0.j]]
 
-        Batched single-mode thermal states for three thermal photon numbers
-        $n_{th}=0.1, 0.2, 0.3$:
-        >>> rhos = dq.thermal_dm(4, [0.1, 0.2, 0.3]).shape
-        >>> rhos.shape
+        Batched single-mode thermal states:
+        >>> dq.thermal_dm(4, [0.1, 0.2, 0.3]).shape
         (3, 4, 4)
 
-        Multi-mode thermal state for two modes,
-        each with dimension 3, at thermal photon number \(n_{th}=0.581\):
-        >>> dm = dq.thermal_dm((3, 3), (0.581, 0.581))
-        >>> dm.shape
-        (9, 9)
+        Multi-mode thermal state:
+        >>> dq.thermal_dm((4, 3), (0.1, 0.2)).shape
+        (12, 12)
+
+        Batched multi-mode thermal states:
+        >>> nths = [(0.1, 0.2), (0.2, 0.1), (0.2, 0.2)]
+        >>> dq.thermal_dm((4, 3), nths).shape
+        (3, 12, 12)
+
     """
-    dim = jnp.asarray(dim)
+    dim = np.asarray(dim)
     nth = jnp.asarray(nth)
     check_type_int(dim, 'dim')
 
@@ -408,21 +411,28 @@ def thermal_dm(dim: int | tuple[int, ...], nth: ArrayLike) -> Array:
         )
 
     # compute all density matrices
-    nth = nth.swapaxes(0, -1)  # (len(dim), ...)
-    dms = [_single_thermal_dm(d, n) for d, n in zip(dim, nth, strict=False)]
-    return tensor(*dms)
+    def _thermal_dm(nth: Array) -> QArray:
+        dms = [_single_thermal_dm(d, n) for d, n in zip(dim, nth, strict=True)]
+        return tensor(*dms)
+
+    _vectorized_thermal_dm = jnp.vectorize(
+        _thermal_dm, signature='(ndim)->(prod_ndim,prod_ndim)'
+    )
+    return _vectorized_thermal_dm(nth)
 
 
 def _single_thermal_dm(dim: int, nth: Array) -> Array:
     """Returns the density matrix of a thermal state for a single mode."""
-    ks = jnp.arange(dim)
-
     # compute the unnormalized diagonal elements of the density matrix
-    rho_diag = (nth**ks) / ((1 + nth) ** (1 + ks))
+    fock_indices = jnp.arange(dim)
+    rho_diag = (nth**fock_indices) / ((1 + nth) ** (1 + fock_indices))
+
+    # cast to complex dtype
+    rho_diag = rho_diag.astype(cdtype())
 
     # construct the density matrix
     bdiag = jnp.vectorize(jnp.diag, signature='(a)->(a,a)')
-    rho = bdiag(rho_diag)
+    rho = asqarray(bdiag(rho_diag), dims=(dim.item(),))
 
     # normalize the density matrix
     return rho.unit()
