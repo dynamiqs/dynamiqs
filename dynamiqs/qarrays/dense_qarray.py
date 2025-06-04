@@ -162,7 +162,10 @@ class DenseQArray(QArray):
         return replace(self, data=data)
 
     def __matmul__(self, y: QArrayLike) -> QArray | Array:
-        super().__matmul__(y)
+        out = super().__matmul__(y)
+        if out is NotImplemented:
+            return NotImplemented
+
         if isinstance(y, DenseQArray):
             data = self.data @ y.data
         elif isqarraylike(y):
