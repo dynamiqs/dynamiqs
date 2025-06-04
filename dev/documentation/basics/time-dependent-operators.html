@@ -851,6 +851,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#clipping-a-time-qarray" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clipping a time-qarray
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -5724,6 +5733,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#clipping-a-time-qarray" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clipping a time-qarray
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6029,6 +6047,21 @@ where <span class="arithmatex">\(f(t)\)</span> is a time-dependent operator. In 
 argument <code>discontinuity_ts</code> to enforce adaptive step size methods to stop at these
 times (i.e., right before, and right after the jump).</p>
 </details>
+<h2 id="clipping-a-time-qarray">Clipping a time-qarray</h2>
+<p>Time-dependent operators can be clipped to a given time interval, outside which the
+returned qarray is null. For example:
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">dq</span><span class="o">.</span><span class="n">modulated</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dq</span><span class="o">.</span><span class="n">sigmax</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[  ⋅    1.+0.j]</span>
+<span class="go"> [1.+0.j   ⋅   ]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># clip to 0 &lt;= t &lt; 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">QArray: shape=(2, 2), dims=(2,), dtype=complex64, layout=dia, ndiags=2</span>
+<span class="go">[[  ⋅      ⋅   ]</span>
+<span class="go"> [  ⋅      ⋅   ]]</span>
+</code></pre></div></p>
 
 
 

@@ -1580,6 +1580,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.time_qarray.TimeQArray.clip" class="md-nav__link">
+    <span class="md-ellipsis">
+      clip
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.time_qarray.TimeQArray.reshape" class="md-nav__link">
     <span class="md-ellipsis">
       reshape
@@ -5661,6 +5670,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#dynamiqs.time_qarray.TimeQArray.clip" class="md-nav__link">
+    <span class="md-ellipsis">
+      clip
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dynamiqs.time_qarray.TimeQArray.reshape" class="md-nav__link">
     <span class="md-ellipsis">
       reshape
@@ -5741,7 +5759,8 @@
 
 
 </h1>
-
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">TimeQArray</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">tstart</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tend</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
 
     <div class="doc doc-contents first">
 
@@ -5800,6 +5819,20 @@ or operator) or vectorized (operator in vector form or superoperator in
 matrix form).</p>
         </li>
         <li class="field-body">
+          <b>tstart</b>
+              <i>
+(float | None)              </i>
+          – <p>The returned qarray is null for all times
+<span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored if <code>None</code>).</p>
+        </li>
+        <li class="field-body">
+          <b>tend</b>
+              <i>
+(float | None)              </i>
+          – <p>The returned qarray is null for all times
+<span class="arithmatex">\(t \geq t_{end}\)</span> (ignored if <code>None</code>).</p>
+        </li>
+        <li class="field-body">
           <b>discontinuity_ts</b>
               <i>
 (Array)              </i>
@@ -5833,6 +5866,57 @@ necessarily contain unique values).</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="dynamiqs.time_qarray.TimeQArray.clip" class="doc doc-heading">
+    <span class="doc doc-object-name doc-function-name">TimeQArray.clip</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">clip</span><span class="p">(</span><span class="n">tstart</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tend</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeQArray</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Set the start and/or end time beyond which the returned qarray is null.</p>
+
+    <!-- <p>Parameters:</p> -->
+    <p>
+      <strong>Parameters</strong>
+    </p>
+    <ul>
+        <li class="field-body">
+          <b>tstart</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>The returned qarray is null for all times <span class="arithmatex">\(t &lt; t_{start}\)</span> (ignored
+if <code>None</code>).</p>
+        </li>
+        <li class="field-body">
+          <b>tend</b>
+          <!-- include type annotation only if enclosed by `_` in the docstring -->
+          – <p>The returned qarray is null for all times <span class="arithmatex">\(t \geq t_{end}\)</span> (ignored
+if <code>None</code>).</p>
+        </li>
+    </ul>
+
+    <!-- <p>Returns:</p> -->
+    <p>
+      <strong>Returns</strong>
+    </p>
+    <!-- <ul>
+      <li class="field-body">
+            <code><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;dq.TimeQArray&lt;/span&gt; (&lt;code&gt;dynamiqs.time_qarray.TimeQArray&lt;/code&gt;)" href="#dynamiqs.time_qarray.TimeQArray">TimeQArray</a></code>
+        – <p>New time-qarray with the given time bounds.</p>
+      </li>
+  </ul> -->
+      <span class="field-body"><p>New time-qarray with the given time bounds.</p></span>
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
