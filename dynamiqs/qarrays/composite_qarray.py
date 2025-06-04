@@ -78,7 +78,9 @@ class CompositeQArray(QArray):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        bshape = ()  # TODO: find broadcasted batching shape with jnp.broadcast_shapes
+        bshape = jnp.broadcast_shapes(
+            *[factor.shape[:-2] for factor in self._all_factors()]
+        )
         ns = [factor.shape[-1] for factor in self._first_term]
         ntot = prod(ns)
         return (*bshape, ntot, ntot)
