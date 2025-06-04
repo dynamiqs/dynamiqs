@@ -334,14 +334,8 @@ class TimeQArray(eqx.Module):
             times += [self.tend]
         return jnp.array(times) if len(times) > 0 else jnp.empty(0)
 
-    def clip(
-        self, tstart: float | None = None, tend: float | None = None
-    ) -> TimeQArray:
+    def clip(self, tstart: float | None, tend: float | None) -> TimeQArray:
         r"""Set the start and/or end time beyond which the returned qarray is null.
-
-        Warning:
-            Calling this method always modifies both the `tstart` and `tend` attributes,
-            even if they are not specified.
 
         Args:
             tstart: The returned qarray is null for all times $t < t_{start}$ (ignored
@@ -352,8 +346,6 @@ class TimeQArray(eqx.Module):
         Returns:
             New time-qarray with the given time bounds.
         """
-        tstart = self.tstart if tstart is None else tstart
-        tend = self.tend if tend is None else tend
         return replace(self, tstart=tstart, tend=tend)
 
     @abstractmethod
