@@ -25,21 +25,13 @@ class CompositeQArray(QArray):
 
     @property
     def _first_term(self) -> tuple[QArray, ...]:
-        """Return the first term of the sum, raise if there's none."""
-        try:
-            return self.terms[0]
-        except IndexError as e:
-            raise ValueError('The CompositeQArray is empty.') from e
+        """Return the first term."""
+        return self.terms[0]
 
     @property
     def _first_factor(self) -> QArray:
-        """Return the first factor of the first term of the sum, raise if there's
-        none.
-        """
-        try:
-            return self._first_term[0]
-        except IndexError as e:
-            raise ValueError('The first term of the CompositeQArray is empty') from e
+        """Return the first factor of the first term."""
+        return self._first_term[0]
 
     @property
     def dtype(self) -> jnp.dtype:
